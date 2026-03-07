@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "name": "TDPilot",
+  "slug": "tdpilot",
+  "version": "1.1.0",
+  "repository": "https://github.com/dreamrec/TDPilot",
+  "description": "MCP server for TouchDesigner with live graph control, diagnostics, safety, streaming, and technique memory.",
+  "entrypoints": {
+    "npm": {
+      "command": "npx",
+      "args": ["-y", "tdpilot"]
+    },
+    "python": {
+      "command": "uv",
+      "args": ["run", "--directory", "<repo-path>", "tdpilot"]
+    }
+  },
+  "defaults": {
+    "env": {
+      "TD_MCP_HOST": "127.0.0.1",
+      "TD_MCP_PORT": "9981",
+      "TD_MCP_WS_PORT": "9982"
+    },
+    "transport": "stdio"
+  },
+  "surface": {
+    "tool_count": 63,
+    "resource_template_count": 7
+  },
+  "artifacts": {
+    "td_component_tox": "td_component/mcp_server_codex.tox",
+    "profiles_dir": "mcp/profiles"
+  }
+}

@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        run: python -m pip install --upgrade uv
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run tests
+        run: uv run pytest tests/ -q
+
+      - name: Run registry smoke check
+        run: uv run python scripts/smoke_mcp_registry.py
+
+      - name: Run doctor (offline mode)
+        run: uv run tdpilot doctor --json --skip-td-check
+
+      - name: Validate release-gate checker
+        run: |
+          cat > /tmp/bench.json <<'JSON'
+          {
+            "benchmarks": {
+              "td_get_nodes": {"latency_ms": {"p95": 250.0}},
+              "td_get_params": {"latency_ms": {"p95": 200.0}},
+              "td_set_params": {"latency_ms": {"p95": 150.0}},
+              "td_capture_and_analyze_capture_only": {"latency_ms": {"p95": 600.0}}
+            }
+          }
+          JSON
+          uv run python scripts/check_release_gates.py --bench-report /tmp/bench.json --require-complete
+
+      - name: Ensure no legacy repo/path drift
+        run: |
+          if rg -n "TDPilot-v1\.0|TDPilot-claude-refactor" README.md pyproject.toml src npm install.sh install.ps1 mcp scripts td_component; then
+            echo "Legacy references found."
+            exit 1
+          fi

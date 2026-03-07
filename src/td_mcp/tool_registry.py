@@ -1,0 +1,3299 @@
+#!/usr/bin/env python3
+"""Tool registry and runtime lifecycle for TouchDesigner MCP."""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import logging
+import math
+import os
+import re
+import statistics
+import sys
+import time
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+from mcp.server.fastmcp import Context, FastMCP
+
+from td_mcp.audit import AuditLogger
+from td_mcp.capabilities import detect_capabilities
+from td_mcp.errors import format_tool_error
+from td_mcp.events import EventManager
+from td_mcp.events.uri import (
+    chop_uri,
+    cook_uri,
+    decode_td_path,
+    error_uri,
+    par_uri,
+    top_frame_uri,
+)
+from td_mcp.jobs import JobManager
+from td_mcp.macros import MacroEngine
+from td_mcp.memory import SnapshotManager, TechniqueStore, PreferenceStore
+from td_mcp.memory.analyzer import analyze_network
+from td_mcp.models import (
+    AdjustableParamInput,
+    CHOPDataInput,
+    CaptureAndAnalyzeInput,
+    ClearBoundsInput,
+    ConnectNodesInput,
+    CookingInfoInput,
+    CopyNodeInput,
+    CreateMacroInput,
+    CreateNodeInput,
+    CustomParametersInput,
+    DeleteNodeInput,
+    DetectInstabilityInput,
+    DiffSnapshotsInput,
+    DisconnectInput,
+    GetContentInput,
+    GetErrorsInput,
+    GetEventsInput,
+    GetMacroParamsInput,
+    GetNodesInput,
+    GetParamsInput,
+    POPInspectInput,
+    MemoryFavoriteInput,
+    MemoryLearnInput,
+    MemoryListInput,
+    MemoryPreferencesInput,
+    MemoryPromoteInput,
+    MemoryRecallInput,
+    MemoryReplayInput,
+    MemorySaveInput,
+    NodePathInput,
+    OptimizeVisualInput,
+    PulseParamInput,
+    PythonHelpInput,
+    RenameNodeInput,
+    RestoreSnapshotInput,
+    ResponseFormat,
+    SearchNodesInput,
+    SetBoundsInput,
+    SetContentInput,
+    SetParamsInput,
+    ProjectLifecycleInput,
+    SnapshotInput,
+    ScreenshotInput,
+    GeometryDataInput,
+    StateVectorInput,
+    StopMonitorInput,
+    StopStreamTopInput,
+    StreamTopInput,
+    SubscribeInput,
+    TemporalAnalysisInput,
+    TimescaleStateInput,
+    TimelineSetInput,
+    UnsubscribeInput,
+    VisualMonitorInput,
+    ListSnapshotsInput,
+    ExecPythonInput,
+)
+from td_mcp.safety import SafetyManager
+from td_mcp.services import ServiceContainer
+from td_mcp.td_client import TDClient, TouchDesignerConnectionError
+from td_mcp.telemetry import TelemetryCollector
+from td_mcp.vision import TopStreamer, VisualMonitor
+
+logger = logging.getLogger("td_mcp")
+
+
+def _read_float_env(name: str, default: float) -> float:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        return float(raw)
+    except ValueError:
+        return default
+
+
+def _read_int_env(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
+
+
+def _normalize_exec_mode(value: str) -> str:
+    mode = (value or "restricted").strip().lower()
+    if mode not in {"off", "restricted", "full"}:
+        return "restricted"
+    return mode
+
+
+TD_HOST = os.environ.get("TD_MCP_HOST", "127.0.0.1")
+TD_PORT = _read_int_env("TD_MCP_PORT", 9981)
+TD_WS_PORT = _read_int_env("TD_MCP_WS_PORT", 9982)
+TD_HTTP_HOST = os.environ.get("TD_MCP_HTTP_HOST", "127.0.0.1")
+TD_HTTP_PORT = _read_int_env("TD_MCP_HTTP_PORT", 8765)
+TD_TRANSPORT = os.environ.get("TD_MCP_TRANSPORT", "stdio").strip().lower()
+TD_EVENT_BUFFER = _read_int_env("TD_MCP_EVENT_BUFFER", 1000)
+TD_CAPTURE_QUALITY = _read_float_env("TD_MCP_CAPTURE_QUALITY", 0.3)
+TD_STREAM_MAX_FPS = _read_float_env("TD_MCP_STREAM_MAX_FPS", 15.0)
+TD_MAX_SNAPSHOTS = _read_int_env("TD_MCP_MAX_SNAPSHOTS", 50)
+TD_STATE_VECTOR_TTL = _read_float_env("TD_MCP_STATE_VECTOR_TTL", 2.0)
+TD_SNAPSHOT_DIR = (os.environ.get("TD_MCP_SNAPSHOT_DIR") or "").strip() or None
+TD_TEMPLATE_DIR = (os.environ.get("TD_MCP_TEMPLATE_DIR") or "").strip() or None
+TD_AUDIT_LOG = (os.environ.get("TD_MCP_AUDIT_LOG") or "").strip() or None
+TD_SHARED_SECRET = (os.environ.get("TD_MCP_SHARED_SECRET") or "").strip() or None
+TD_EXEC_MODE = _normalize_exec_mode(os.environ.get("TD_MCP_EXEC_MODE", "restricted"))
+
+RESTRICTED_IMPORT_RE = re.compile(r"(?m)^\s*(import|from)\s+\w+")
+RESTRICTED_TOKENS = (
+    "__import__(",
+    "open(",
+    "compile(",
+    "input(",
+    "subprocess",
+    "socket",
+    "requests",
+    "httpx",
+    "urllib",
+    "pathlib",
+    "shutil",
+    "os.system",
+    "os.popen",
+)
+
+_STATE_VECTOR_CACHE: Dict[str, Dict[str, Any]] = {}
+
+
+@asynccontextmanager
+async def server_lifespan(app: FastMCP):
+    """Initialize and clean up runtime services for the MCP server."""
+    td_client = TDClient(
+        host=TD_HOST,
+        port=TD_PORT,
+        shared_secret=TD_SHARED_SECRET,
+    )
+    telemetry = TelemetryCollector()
+    audit = AuditLogger(TD_AUDIT_LOG)
+    macro_engine = MacroEngine(td_client=td_client, user_template_dir=TD_TEMPLATE_DIR)
+    event_manager = EventManager(mcp_server=app, port=TD_WS_PORT, max_history=TD_EVENT_BUFFER)
+    visual_monitor = VisualMonitor(td_client=td_client, event_manager=event_manager)
+    top_streamer = TopStreamer(
+        td_client=td_client,
+        event_manager=event_manager,
+        max_fps=TD_STREAM_MAX_FPS,
+    )
+    safety_manager = SafetyManager()
+    snapshot_manager = SnapshotManager(
+        max_snapshots=TD_MAX_SNAPSHOTS,
+        storage_dir=TD_SNAPSHOT_DIR,
+    )
+    job_manager = JobManager(mcp_server=app)
+
+    # Technique memory
+    project_name = os.environ.get("TDPILOT_PROJECT_NAME", "")
+    memory_base = os.environ.get("TDPILOT_MEMORY_DIR", "")
+    technique_store = TechniqueStore(
+        base_dir=memory_base or None,
+        project_name=project_name or None,
+    )
+    preference_store = PreferenceStore(
+        base_dir=memory_base or None,
+        project_name=project_name or None,
+    )
+
+    logger.info("TouchDesigner MCP server starting (TD %s:%s)", TD_HOST, TD_PORT)
+
+    try:
+        await td_client.health_check()
+        logger.info("TouchDesigner connection healthy")
+    except TouchDesignerConnectionError as exc:
+        logger.warning("TouchDesigner not reachable at startup: %s", exc)
+
+    try:
+        await event_manager.start()
+        logger.info("Event websocket listener active on ws://127.0.0.1:%s", TD_WS_PORT)
+    except Exception as exc:
+        logger.warning("Could not start event websocket listener on %s: %s", TD_WS_PORT, exc)
+
+    services = ServiceContainer(
+        td_client=td_client,
+        macro_engine=macro_engine,
+        event_manager=event_manager,
+        visual_monitor=visual_monitor,
+        top_streamer=top_streamer,
+        safety_manager=safety_manager,
+        snapshot_manager=snapshot_manager,
+        job_manager=job_manager,
+        technique_store=technique_store,
+        preference_store=preference_store,
+        telemetry=telemetry,
+        audit=audit,
+    )
+
+    try:
+        yield {
+            "services": services,
+            "td_client": td_client,
+            "macro_engine": macro_engine,
+            "event_manager": event_manager,
+            "visual_monitor": visual_monitor,
+            "top_streamer": top_streamer,
+            "safety_manager": safety_manager,
+            "snapshot_manager": snapshot_manager,
+            "job_manager": job_manager,
+            "technique_store": technique_store,
+            "preference_store": preference_store,
+            "telemetry": telemetry,
+            "audit": audit,
+        }
+    finally:
+        try:
+            await top_streamer.stop()
+        except Exception:
+            pass
+        try:
+            await visual_monitor.stop()
+        except Exception:
+            pass
+        try:
+            await event_manager.stop()
+        except Exception:
+            pass
+        try:
+            await job_manager.shutdown()
+        except Exception:
+            pass
+        try:
+            await td_client.close()
+        except Exception:
+            pass
+        logger.info("TouchDesigner MCP server stopped")
+
+
+mcp = FastMCP(
+    "touchdesigner_mcp",
+    host=TD_HTTP_HOST,
+    port=TD_HTTP_PORT,
+    lifespan=server_lifespan,
+)
+
+
+def _get_lifespan_state(ctx: Context) -> Dict[str, Any]:
+    # MCP Python currently exposes request-scoped startup payload as
+    # `lifespan_context` (older code used `lifespan_state`).
+    state = getattr(ctx.request_context, "lifespan_context", None)
+    if state is None:
+        state = getattr(ctx.request_context, "lifespan_state", None)
+    if isinstance(state, dict):
+        return state
+    return {}
+
+
+def _get_services(ctx: Context) -> ServiceContainer:
+    state = _get_lifespan_state(ctx)
+    services = state.get("services")
+    if isinstance(services, ServiceContainer):
+        return services
+    # Fallback for old state shape.
+    return ServiceContainer(
+        td_client=state.get("td_client"),
+        macro_engine=state.get("macro_engine"),
+        event_manager=state.get("event_manager"),
+        visual_monitor=state.get("visual_monitor"),
+        top_streamer=state.get("top_streamer"),
+        safety_manager=state.get("safety_manager"),
+        snapshot_manager=state.get("snapshot_manager"),
+                job_manager=state.get("job_manager"),
+        telemetry=state.get("telemetry"),
+        audit=state.get("audit"),
+    )
+
+
+def _get_client(ctx: Context) -> TDClient:
+    services = _get_services(ctx)
+    if not isinstance(services.td_client, TDClient):
+        raise RuntimeError("TD client unavailable in lifespan state")
+    return services.td_client
+
+
+def _get_event_manager(ctx: Context) -> EventManager:
+    services = _get_services(ctx)
+    if not isinstance(services.event_manager, EventManager):
+        raise RuntimeError("Event manager unavailable in lifespan state")
+    return services.event_manager
+
+
+def _get_macro_engine(ctx: Context) -> MacroEngine:
+    services = _get_services(ctx)
+    if not isinstance(services.macro_engine, MacroEngine):
+        raise RuntimeError("Macro engine unavailable in lifespan state")
+    return services.macro_engine
+
+
+def _get_visual_monitor(ctx: Context) -> VisualMonitor:
+    services = _get_services(ctx)
+    if not isinstance(services.visual_monitor, VisualMonitor):
+        raise RuntimeError("Visual monitor unavailable in lifespan state")
+    return services.visual_monitor
+
+
+def _get_top_streamer(ctx: Context) -> TopStreamer:
+    services = _get_services(ctx)
+    if not isinstance(services.top_streamer, TopStreamer):
+        raise RuntimeError("Top streamer unavailable in lifespan state")
+    return services.top_streamer
+
+
+def _get_safety_manager(ctx: Context) -> SafetyManager:
+    services = _get_services(ctx)
+    if not isinstance(services.safety_manager, SafetyManager):
+        raise RuntimeError("Safety manager unavailable in lifespan state")
+    return services.safety_manager
+
+
+def _get_snapshot_manager(ctx: Context) -> SnapshotManager:
+    services = _get_services(ctx)
+    if not isinstance(services.snapshot_manager, SnapshotManager):
+        raise RuntimeError("Snapshot manager unavailable in lifespan state")
+    return services.snapshot_manager
+
+
+def _get_technique_store(ctx: Context) -> "TechniqueStore":
+    services = _get_services(ctx)
+    if not isinstance(services.technique_store, TechniqueStore):
+        raise RuntimeError("Technique store unavailable in lifespan state")
+    return services.technique_store
+
+
+def _get_preference_store(ctx: Context) -> "PreferenceStore":
+    services = _get_services(ctx)
+    if not isinstance(services.preference_store, PreferenceStore):
+        raise RuntimeError("Preference store unavailable in lifespan state")
+    return services.preference_store
+
+
+def _get_job_manager(ctx: Context) -> JobManager:
+    services = _get_services(ctx)
+    if not isinstance(services.job_manager, JobManager):
+        raise RuntimeError("Job manager unavailable in lifespan state")
+    return services.job_manager
+
+
+def _get_telemetry(ctx: Context) -> Optional[TelemetryCollector]:
+    services = _get_services(ctx)
+    return services.telemetry if isinstance(services.telemetry, TelemetryCollector) else None
+
+
+def _get_audit(ctx: Context) -> Optional[AuditLogger]:
+    services = _get_services(ctx)
+    return services.audit if isinstance(services.audit, AuditLogger) else None
+
+
+def _start_tool(ctx: Context, tool_name: str) -> Callable[[], None]:
+    telemetry = _get_telemetry(ctx)
+    if telemetry is None:
+        return lambda: None
+
+    telemetry.increment("tools.calls_total")
+    telemetry.increment(f"tools.{tool_name}.calls")
+    return telemetry.timed(tool_name)
+
+
+def _record_tool_error(ctx: Context, tool_name: str) -> None:
+    telemetry = _get_telemetry(ctx)
+    if telemetry is None:
+        return
+    telemetry.increment("tools.errors_total")
+    telemetry.increment(f"tools.{tool_name}.errors")
+
+
+def _audit_log(ctx: Context, event: str, details: Dict[str, Any]) -> None:
+    audit = _get_audit(ctx)
+    if audit is None:
+        return
+    audit.log(event, details)
+
+
+def _as_json_output(value: Any) -> str:
+    if isinstance(value, str):
+        return value
+    return json.dumps(value, indent=2, default=str)
+
+
+def _vision_token_notice(include_image: bool) -> Dict[str, Any]:
+    if include_image:
+        return {
+            "mode": "full_image_payloads",
+            "advice": (
+                "Continuous base64 frames can consume many tokens. "
+                "Use this mode only after explicit user confirmation."
+            ),
+            "ask_user_prompt": (
+                "Do you want me to inspect live output frames now? "
+                "This will increase token usage."
+            ),
+        }
+
+    return {
+        "mode": "metadata_only",
+        "advice": (
+            "Base64 frame payloads are omitted to reduce token usage. "
+            "Call td_screenshot for on-demand frame inspection."
+        ),
+        "ask_user_prompt": (
+            "Do you want me to inspect the visual output now? "
+            "I can fetch a frame on demand."
+        ),
+    }
+
+
+def _vision_confirmation_required_response() -> str:
+    return _as_json_output(
+        {
+            "success": False,
+            "requires_confirmation": True,
+            "message": (
+                "High-token vision mode was requested (include_image=true) "
+                "without explicit confirmation."
+            ),
+            "ask_user_prompt": (
+                "Do you want me to enable continuous full-frame output now? "
+                "This can increase token usage significantly."
+            ),
+            "next_step": (
+                "After user approval, call again with confirm_high_token_mode=true."
+            ),
+        }
+    )
+
+
+def _capture_confirmation_required_response() -> str:
+    return _as_json_output(
+        {
+            "success": False,
+            "requires_confirmation": True,
+            "message": (
+                "Image capture was requested without explicit confirmation."
+            ),
+            "ask_user_prompt": (
+                "Do you want me to capture and inspect output now? "
+                "This will add image payload tokens."
+            ),
+            "next_step": (
+                "After user approval, call again with confirm_image_capture=true."
+            ),
+        }
+    )
+
+
+async def _forward(
+    ctx: Context,
+    tool_name: str,
+    endpoint: str,
+    body: Optional[Dict[str, Any]] = None,
+    *,
+    audit_event: Optional[str] = None,
+    audit_details: Optional[Dict[str, Any]] = None,
+) -> str:
+    finish = _start_tool(ctx, tool_name)
+    try:
+        data = await _get_client(ctx).request(endpoint, body)
+        if audit_event:
+            _audit_log(ctx, audit_event, audit_details or (body or {}))
+        return _as_json_output(data)
+    except Exception as exc:
+        _record_tool_error(ctx, tool_name)
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+def _current_exec_mode() -> str:
+    # Keep tests patching td_mcp.server.TD_EXEC_MODE compatible.
+    server_mod = sys.modules.get("td_mcp.server")
+    if server_mod is not None and hasattr(server_mod, "TD_EXEC_MODE"):
+        return _normalize_exec_mode(str(getattr(server_mod, "TD_EXEC_MODE")))
+    return _normalize_exec_mode(TD_EXEC_MODE)
+
+
+def _restricted_exec_violation(code: str) -> Optional[str]:
+    if RESTRICTED_IMPORT_RE.search(code):
+        return "restricted mode blocks import statements"
+
+    lowered = code.lower()
+    for token in RESTRICTED_TOKENS:
+        if token in lowered:
+            return f"restricted mode blocks token: {token}"
+
+    return None
+
+
+def _enforce_exec_mode(code: str) -> None:
+    mode = _current_exec_mode()
+
+    if mode == "off":
+        raise PermissionError("Python execution is disabled by TD_MCP_EXEC_MODE=off")
+
+    if mode == "restricted":
+        violation = _restricted_exec_violation(code)
+        if violation:
+            raise PermissionError(violation)
+
+
+def _is_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _apply_safety_to_set_params(
+    safety_manager: Optional[SafetyManager],
+    path: str,
+    params: Dict[str, Any],
+) -> tuple[Dict[str, Any], list[str]]:
+    """Clamp/reject numeric param writes according to configured bounds."""
+    if safety_manager is None:
+        return dict(params), []
+
+    adjusted: Dict[str, Any] = {}
+    warnings: list[str] = []
+
+    for param_name, param_value in params.items():
+        bound_key = f"{path}/{param_name}"
+
+        if _is_number(param_value):
+            new_value, warning = safety_manager.apply(bound_key, float(param_value))
+            adjusted[param_name] = new_value
+            if warning:
+                warnings.append(warning)
+            continue
+
+        if isinstance(param_value, dict):
+            copied = dict(param_value)
+            maybe_val = copied.get("val")
+            if _is_number(maybe_val):
+                new_value, warning = safety_manager.apply(bound_key, float(maybe_val))
+                copied["val"] = new_value
+                if warning:
+                    warnings.append(warning)
+            adjusted[param_name] = copied
+            continue
+
+        adjusted[param_name] = param_value
+
+    return adjusted, warnings
+
+
+def _format_nodes_markdown(nodes: list[dict[str, Any]], title: str = "Nodes") -> str:
+    if not nodes:
+        return f"No {title.lower()} found."
+
+    lines = [f"## {title} ({len(nodes)})\n"]
+    for node in nodes:
+        lines.append(f"- **{node.get('name', '?')}** `{node.get('path', '?')}` - {node.get('type', '?')}")
+        if node.get("errors"):
+            lines.append(f"  - Error: {node['errors']}")
+    return "\n".join(lines)
+
+
+def _format_params_markdown(parameters: Dict[str, Any], path: str) -> str:
+    if not parameters:
+        return f"No parameters found for `{path}`."
+
+    lines = [f"## Parameters for `{path}`\n"]
+    current_page = None
+
+    def sort_key(item: tuple[str, Any]) -> tuple[str, str]:
+        name, info = item
+        if not isinstance(info, dict):
+            return "", name
+        return str(info.get("page", "")), name
+
+    for name, info in sorted(parameters.items(), key=sort_key):
+        if not isinstance(info, dict):
+            continue
+
+        page = str(info.get("page", ""))
+        if page != current_page:
+            current_page = page
+            lines.append(f"\n### {page or 'Default'}\n")
+
+        value = info.get("value", "")
+        default = info.get("default", "")
+        label = info.get("label", name)
+        marker = " (modified)" if value != default else ""
+        lines.append(f"- **{label}** (`{name}`): `{value}`{marker}")
+
+    return "\n".join(lines)
+
+
+async def _collect_scene_state(
+    client: TDClient,
+    root_path: str,
+    *,
+    max_nodes: int = 1000,
+) -> Dict[str, Any]:
+    queue = [root_path]
+    visited: set[str] = set()
+    nodes: Dict[str, Dict[str, Any]] = {}
+    connection_set: set[tuple[str, str, int, int]] = set()
+
+    while queue and len(visited) < max_nodes:
+        current = queue.pop(0)
+        if current in visited:
+            continue
+
+        visited.add(current)
+        detail = await client.request("node/detail", {"path": current})
+        if detail.get("error"):
+            continue
+
+        node_path = detail.get("path", current)
+        nodes[node_path] = {
+            "name": detail.get("name"),
+            "type": detail.get("type"),
+            "family": detail.get("family"),
+            "params": detail.get("parameters", {}),
+        }
+
+        for conn in detail.get("inputs", []):
+            if not isinstance(conn, dict):
+                continue
+            source = conn.get("from")
+            target = node_path
+            source_index = int(conn.get("from_index", 0) or 0)
+            target_index = int(conn.get("to_index", 0) or 0)
+            if isinstance(source, str) and source:
+                connection_set.add((source, target, source_index, target_index))
+
+        if detail.get("isCOMP"):
+            child_offset = 0
+            while len(visited) + len(queue) < max_nodes:
+                children = await client.request(
+                    "nodes",
+                    {
+                        "path": node_path,
+                        "limit": 200,
+                        "offset": child_offset,
+                        "include_params": False,
+                    },
+                )
+                child_nodes = children.get("nodes", []) if isinstance(children, dict) else []
+                if not child_nodes:
+                    break
+
+                for child in child_nodes:
+                    if not isinstance(child, dict):
+                        continue
+                    child_path = child.get("path")
+                    if isinstance(child_path, str) and child_path and child_path not in visited:
+                        queue.append(child_path)
+
+                if not children.get("has_more"):
+                    break
+                child_offset += len(child_nodes)
+
+    connections = [
+        {
+            "from": source,
+            "to": target,
+            "source_index": source_index,
+            "target_index": target_index,
+        }
+        for source, target, source_index, target_index in sorted(connection_set)
+    ]
+
+    return {
+        "snapshot_schema_version": 1,
+        "captured_at": datetime.now(timezone.utc).isoformat(),
+        "root_path": root_path,
+        "nodes": nodes,
+        "connections": connections,
+        "truncated": bool(queue),
+        "captured_nodes": len(nodes),
+    }
+
+
+async def _capture_snapshot_payload(
+    ctx: Context,
+    *,
+    path: str,
+    include_visual: bool,
+) -> Dict[str, Any]:
+    client = _get_client(ctx)
+    return await _capture_snapshot_payload_for_client(
+        client,
+        path=path,
+        include_visual=include_visual,
+    )
+
+
+async def _capture_snapshot_payload_for_client(
+    client: TDClient,
+    *,
+    path: str,
+    include_visual: bool,
+) -> Dict[str, Any]:
+    scene = await _collect_scene_state(client, path)
+
+    if include_visual:
+        try:
+            visual = await client.request(
+                "screenshot",
+                {
+                    "path": path,
+                    "quality": max(0.0, min(1.0, TD_CAPTURE_QUALITY)),
+                },
+            )
+            scene["visual"] = {
+                "path": visual.get("path", path),
+                "format": visual.get("format", "jpeg"),
+                "size_bytes": visual.get("size_bytes"),
+                "data_base64": visual.get("data_base64"),
+            }
+        except Exception as exc:
+            scene["visual_error"] = str(exc)
+
+    return scene
+
+
+def _extract_restore_values(node_snapshot: Dict[str, Any]) -> Dict[str, Any]:
+    params = node_snapshot.get("params", node_snapshot.get("parameters", {}))
+    if not isinstance(params, dict):
+        return {}
+
+    result: Dict[str, Any] = {}
+    for name, info in params.items():
+        if not isinstance(name, str):
+            continue
+        if isinstance(info, dict) and "value" in info:
+            result[name] = info.get("value")
+    return result
+
+
+def _build_subscription_resource_uris(config: SubscribeInput) -> list[str]:
+    uris: list[str] = []
+    event_types = set(config.event_types)
+
+    if "timeline" in event_types:
+        uris.append("td://timeline/state")
+
+    if "chop_change" in event_types:
+        channels = config.channels or ["*"]
+        uris.extend(chop_uri(config.path, channel) for channel in channels)
+
+    if "par_change" in event_types:
+        names = config.params or ["*"]
+        uris.extend(par_uri(config.path, name) for name in names)
+
+    if "cook_complete" in event_types:
+        uris.append(cook_uri(config.path))
+
+    if "node_error" in event_types:
+        uris.append(error_uri(config.path))
+
+    return uris
+
+
+async def _safe_request(
+    client: TDClient,
+    endpoint: str,
+    body: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    try:
+        data = await client.request(endpoint, body)
+        if isinstance(data, dict):
+            return data
+        return {"value": data}
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+def _event_rate_per_sec(events: list[Dict[str, Any]]) -> float:
+    timestamps: list[float] = []
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        value = event.get("timestamp")
+        if isinstance(value, (int, float)):
+            timestamps.append(float(value))
+    if len(timestamps) < 2:
+        return 0.0
+    timestamps.sort()
+    duration = max(0.000001, timestamps[-1] - timestamps[0])
+    return len(timestamps) / duration
+
+
+def _compute_timescale_from_timeline(
+    timeline: Dict[str, Any],
+    *,
+    bpm: float,
+    beats_per_bar: int,
+) -> Dict[str, Any]:
+    seconds = float(timeline.get("seconds", 0.0) or 0.0)
+    fps = float(timeline.get("fps", 60.0) or 60.0)
+    frame = int(timeline.get("frame", 0) or 0)
+
+    beats_per_second = bpm / 60.0
+    total_beats = seconds * beats_per_second
+    beat_index = int(total_beats)
+    bar_index = beat_index // beats_per_bar
+
+    beat_phase = total_beats % 1.0
+    bar_phase = (total_beats / float(beats_per_bar)) % 1.0
+    phrase_bars = 8
+    section_bars = 32
+    arc_bars = 128
+    phrase_phase = (bar_index % phrase_bars + bar_phase) / float(phrase_bars)
+    section_phase = (bar_index % section_bars + bar_phase) / float(section_bars)
+    arc_phase = (bar_index % arc_bars + bar_phase) / float(arc_bars)
+
+    seconds_per_beat = 60.0 / bpm
+    seconds_per_bar = seconds_per_beat * float(beats_per_bar)
+    seconds_per_phrase = seconds_per_bar * float(phrase_bars)
+    seconds_to_next_beat = max(0.0, seconds_per_beat * (1.0 - beat_phase))
+    seconds_to_next_bar = max(0.0, seconds_per_bar * (1.0 - bar_phase))
+    seconds_to_next_phrase = max(0.0, seconds_per_phrase * (1.0 - phrase_phase))
+
+    fps_target = 60.0
+    fps_health = max(0.0, min(1.0, fps / fps_target))
+    collapse_risk = max(0.0, min(1.0, (30.0 - fps) / 30.0))
+    plateau_risk = max(0.0, min(1.0, abs(phrase_phase - 0.5) * 0.6))
+
+    arc_stage = "intro"
+    if arc_phase >= 0.75:
+        arc_stage = "release"
+    elif arc_phase >= 0.5:
+        arc_stage = "plateau"
+    elif arc_phase >= 0.25:
+        arc_stage = "build"
+
+    return {
+        "frame": frame,
+        "seconds": seconds,
+        "fps": fps,
+        "bpm": bpm,
+        "beats_per_bar": beats_per_bar,
+        "beat_index": beat_index,
+        "bar_index": bar_index,
+        "phrase_index_8bar": bar_index // phrase_bars,
+        "section_index_32bar": bar_index // section_bars,
+        "arc_index_128bar": bar_index // arc_bars,
+        "beat_phase": beat_phase,
+        "bar_phase": bar_phase,
+        "phrase_phase_8bar": phrase_phase,
+        "section_phase_32bar": section_phase,
+        "arc_phase_128bar": arc_phase,
+        "seconds_to_next_beat": seconds_to_next_beat,
+        "seconds_to_next_bar": seconds_to_next_bar,
+        "seconds_to_next_phrase_8bar": seconds_to_next_phrase,
+        "frames_to_next_beat": int(round(seconds_to_next_beat * fps)),
+        "frames_to_next_bar": int(round(seconds_to_next_bar * fps)),
+        "frames_to_next_phrase_8bar": int(round(seconds_to_next_phrase * fps)),
+        "tempo_health": fps_health,
+        "plateau_risk": plateau_risk,
+        "collapse_risk": collapse_risk,
+        "arc_stage": arc_stage,
+    }
+
+
+async def _build_state_vector(path: str, ctx: Context) -> Dict[str, Any]:
+    client = _get_client(ctx)
+    manager = _get_event_manager(ctx)
+    monitor = _get_visual_monitor(ctx)
+    safety = _get_safety_manager(ctx)
+    snapshots = _get_snapshot_manager(ctx)
+    jobs = _get_job_manager(ctx)
+
+    info, timeline, cooking, errors = await asyncio.gather(
+        _safe_request(client, "info"),
+        _safe_request(client, "timeline"),
+        _safe_request(
+            client,
+            "cooking",
+            {"path": path, "recurse": True, "limit": 20, "sort_by": "cookTime"},
+        ),
+        _safe_request(
+            client,
+            "node/errors",
+            {"path": path, "recurse": True, "max_depth": 10},
+        ),
+    )
+
+    recent_events = manager.get_recent_events(limit=200)
+    subscriptions = manager.list_subscriptions()
+    active_monitors = monitor.active_monitors()
+    issues = errors.get("issues", []) if isinstance(errors, dict) else []
+    top_nodes = cooking.get("nodes", []) if isinstance(cooking, dict) else []
+    fps = float(cooking.get("fps", timeline.get("fps", 0.0)) if isinstance(cooking, dict) else 0.0)
+
+    return {
+        "schema_version": 1,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "path": path,
+        "project": {
+            "name": info.get("project_name"),
+            "version": info.get("version"),
+            "build": info.get("build"),
+        },
+        "timeline": {
+            "frame": timeline.get("frame"),
+            "seconds": timeline.get("seconds"),
+            "fps": timeline.get("fps"),
+            "playing": timeline.get("playing"),
+        },
+        "health": {
+            "fps": fps,
+            "issues_count": len(issues),
+            "event_rate_per_sec": _event_rate_per_sec(recent_events),
+            "unstable": fps < 30.0 or len(issues) > 0,
+        },
+        "performance": {
+            "top_nodes": top_nodes[:10],
+            "realtime": cooking.get("realTime") if isinstance(cooking, dict) else None,
+        },
+        "events": {
+            "recent_count": len(recent_events),
+            "subscriptions": len(subscriptions),
+            "subscription_paths": sorted(subscriptions.keys()),
+        },
+        "monitoring": {
+            "visual_monitors": len(active_monitors),
+            "visual_paths": sorted(active_monitors.keys()),
+        },
+        "safety": safety.stats(),
+        "snapshots": snapshots.stats(),
+        "jobs": jobs.stats(),
+    }
+
+
+def _contains_any(text: str, needles: Tuple[str, ...]) -> bool:
+    return any(token in text for token in needles)
+
+
+def _clamp_objective(value: float) -> float:
+    return max(-1.0, min(1.0, float(value)))
+
+
+def _param_roles(param_name: str) -> set[str]:
+    name = param_name.lower()
+    roles: set[str] = set()
+
+    if any(token in name for token in ("bright", "exposure", "gain", "amp", "opacity", "mult", "level")):
+        roles.add("brightness")
+    if any(token in name for token in ("contrast", "gamma", "black", "white")):
+        roles.add("contrast")
+    if any(token in name for token in ("noise", "seed", "detail", "octave", "jitter", "blur", "radius", "feedback")):
+        roles.add("complexity")
+    if any(token in name for token in ("phase", "speed", "period", "freq", "frequency", "beat", "pulse", "bpm")):
+        roles.add("motion_rhythm")
+    if any(token in name for token in ("feedback", "gain", "opacity", "weight", "displace", "blur", "radius")):
+        roles.add("risk")
+
+    return roles
+
+
+def _sign(value: float) -> int:
+    if value > 0:
+        return 1
+    if value < 0:
+        return -1
+    return 0
+
+
+def _optimizer_direction_for_param(param_name: str, goal_profile: Dict[str, float]) -> int:
+    roles = _param_roles(param_name)
+    direction = 0
+
+    if "brightness" in roles:
+        direction += _sign(goal_profile.get("brightness", 0))
+    if "contrast" in roles:
+        direction += _sign(goal_profile.get("contrast", 0))
+    if "complexity" in roles:
+        direction += _sign(goal_profile.get("complexity", 0))
+    if "motion_rhythm" in roles:
+        direction += _sign(goal_profile.get("motion_rhythm", 0))
+    if "risk" in roles:
+        # Positive stability goal drives risk params downward.
+        direction -= _sign(goal_profile.get("stability", 0))
+        # Positive complexity goal can tolerate slightly higher risk.
+        direction += _sign(goal_profile.get("complexity", 0))
+
+    return _sign(direction)
+
+
+def _optimizer_step_multiplier(profile: str) -> float:
+    if profile == "conservative":
+        return 0.5
+    if profile == "aggressive":
+        return 1.5
+    return 1.0
+
+
+def _normalize_unit(value: float, min_val: float, max_val: float) -> float:
+    span = max_val - min_val
+    if span <= 0:
+        return 0.5
+    return max(0.0, min(1.0, (value - min_val) / span))
+
+
+def _optimizer_score(
+    current_values: Dict[Tuple[str, str], float],
+    adjustable_params: List[AdjustableParamInput],
+    directions: Dict[Tuple[str, str], int],
+    *,
+    unstable: bool,
+) -> float:
+    scores: List[float] = []
+    for adjustable in adjustable_params:
+        key = (adjustable.path, adjustable.param)
+        value = current_values.get(key)
+        if value is None:
+            continue
+
+        direction = directions.get(key, 0)
+        if direction > 0:
+            target = 1.0
+        elif direction < 0:
+            target = 0.0
+        else:
+            target = 0.5
+
+        position = _normalize_unit(value, adjustable.min_val, adjustable.max_val)
+        scores.append(1.0 - abs(position - target))
+
+    if not scores:
+        return 0.0
+
+    score = sum(scores) / len(scores)
+    if unstable:
+        score *= 0.6
+    return max(0.0, min(1.0, score))
+
+
+async def _read_adjustable_values(
+    client: TDClient,
+    adjustable_params: List[AdjustableParamInput],
+) -> Dict[Tuple[str, str], float]:
+    by_path: Dict[str, set[str]] = {}
+    for adjustable in adjustable_params:
+        by_path.setdefault(adjustable.path, set()).add(adjustable.param)
+
+    values: Dict[Tuple[str, str], float] = {}
+    for path, param_names in by_path.items():
+        payload = await _safe_request(client, "node/params", {"path": path, "names": sorted(param_names)})
+        parameters = payload.get("parameters", {}) if isinstance(payload, dict) else {}
+        if not isinstance(parameters, dict):
+            continue
+
+        for param_name in param_names:
+            info = parameters.get(param_name)
+            if not isinstance(info, dict):
+                continue
+            raw = info.get("value")
+            if isinstance(raw, bool):
+                continue
+            if isinstance(raw, (int, float)):
+                values[(path, param_name)] = float(raw)
+                continue
+            try:
+                values[(path, param_name)] = float(raw)
+            except Exception:
+                continue
+
+    return values
+
+
+def _build_optimizer_plan(
+    adjustable_params: List[AdjustableParamInput],
+    current_values: Dict[Tuple[str, str], float],
+    goal_profile: Dict[str, float],
+    *,
+    safety_profile: str,
+) -> tuple[List[Dict[str, Any]], Dict[Tuple[str, str], int]]:
+    step_multiplier = _optimizer_step_multiplier(safety_profile)
+    plan: List[Dict[str, Any]] = []
+    directions: Dict[Tuple[str, str], int] = {}
+
+    for adjustable in adjustable_params:
+        key = (adjustable.path, adjustable.param)
+        current = current_values.get(key)
+        if current is None:
+            continue
+
+        direction = _optimizer_direction_for_param(adjustable.param, goal_profile)
+        directions[key] = direction
+        if direction == 0:
+            continue
+
+        step = adjustable.step * step_multiplier
+        proposed = current + direction * step
+        clamped = max(adjustable.min_val, min(adjustable.max_val, proposed))
+
+        if math.isclose(clamped, current, rel_tol=0.0, abs_tol=1e-9):
+            continue
+
+        plan.append(
+            {
+                "path": adjustable.path,
+                "param": adjustable.param,
+                "current": current,
+                "proposed": clamped,
+                "direction": direction,
+                "step": step,
+            }
+        )
+
+    return plan, directions
+
+
+async def _apply_optimizer_plan(
+    client: TDClient,
+    safety_manager: SafetyManager,
+    plan: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    by_path: Dict[str, Dict[str, Any]] = {}
+    for item in plan:
+        by_path.setdefault(item["path"], {})[item["param"]] = item["proposed"]
+
+    applied: List[Dict[str, Any]] = []
+    failed: List[Dict[str, Any]] = []
+    safety_warnings: List[str] = []
+
+    for path, params in by_path.items():
+        try:
+            adjusted, warnings = _apply_safety_to_set_params(safety_manager, path, params)
+            safety_warnings.extend(warnings)
+            await client.request("node/params/set", {"path": path, "params": adjusted})
+            for name, value in adjusted.items():
+                applied.append({"path": path, "param": name, "value": value})
+        except Exception as exc:
+            for name in params.keys():
+                failed.append({"path": path, "param": name, "error": str(exc)})
+
+    return {
+        "applied": applied,
+        "failed": failed,
+        "safety_warnings": safety_warnings,
+    }
+
+
+async def _compute_instability_snapshot(client: TDClient, path: str) -> Dict[str, Any]:
+    cooking = await _safe_request(
+        client,
+        "cooking",
+        {"path": path, "recurse": True, "limit": 50, "sort_by": "cookTime"},
+    )
+    errors = await _safe_request(
+        client,
+        "node/errors",
+        {"path": path, "recurse": True, "max_depth": 10},
+    )
+
+    fps = float(cooking.get("fps", 0.0) or 0.0) if isinstance(cooking, dict) else 0.0
+    issues = errors.get("issues", []) if isinstance(errors, dict) else []
+    heavy_nodes = [
+        node
+        for node in (cooking.get("nodes", []) if isinstance(cooking, dict) else [])
+        if isinstance(node, dict) and float(node.get("cookTime", 0.0) or 0.0) >= 0.01
+    ]
+    unstable = fps < 30.0 or bool(issues) or len(heavy_nodes) >= 5
+
+    return {
+        "unstable": unstable,
+        "fps": fps,
+        "issues_count": len(issues),
+        "heavy_nodes_count": len(heavy_nodes),
+        "heavy_nodes": heavy_nodes[:10],
+        "issues": issues[:20],
+    }
+
+
+async def _restore_snapshot_nodes(
+    client: TDClient,
+    safety: SafetyManager,
+    snapshot_nodes: Dict[str, Any],
+    *,
+    partial_filters: Optional[List[str]] = None,
+    dry_run: bool = False,
+) -> Dict[str, Any]:
+    restored: List[Dict[str, Any]] = []
+    skipped: List[Dict[str, Any]] = []
+    failures: List[Dict[str, Any]] = []
+    warnings: List[str] = []
+
+    filters = partial_filters or []
+    for node_path, node_snapshot in snapshot_nodes.items():
+        if filters and not any(node_path.startswith(prefix) for prefix in filters):
+            skipped.append({"path": node_path, "reason": "filtered"})
+            continue
+
+        values = _extract_restore_values(node_snapshot if isinstance(node_snapshot, dict) else {})
+        if not values:
+            skipped.append({"path": node_path, "reason": "no_params"})
+            continue
+
+        adjusted, safety_warnings = _apply_safety_to_set_params(safety, node_path, values)
+        warnings.extend(safety_warnings)
+
+        if dry_run:
+            restored.append(
+                {
+                    "path": node_path,
+                    "param_count": len(adjusted),
+                    "dry_run": True,
+                }
+            )
+            continue
+
+        try:
+            await client.request("node/params/set", {"path": node_path, "params": adjusted})
+            restored.append({"path": node_path, "param_count": len(adjusted)})
+        except Exception as exc:
+            failures.append({"path": node_path, "error": str(exc)})
+
+    return {
+        "restored": restored,
+        "skipped": skipped,
+        "failures": failures,
+        "safety_warnings": warnings,
+    }
+
+
+async def _run_optimizer_iterations(
+    *,
+    client: TDClient,
+    safety: SafetyManager,
+    jobs: JobManager,
+    job_id: str,
+    adjustable_params: List[AdjustableParamInput],
+    goal_profile: Dict[str, float],
+    max_iterations: int,
+    convergence_threshold: float,
+    safety_profile: str,
+    root_path: str,
+    progress_start: float = 0.0,
+    progress_end: float = 1.0,
+    phase_label: str = "optimize",
+) -> Dict[str, Any]:
+    iteration_logs: List[Dict[str, Any]] = []
+    converged = False
+    emergency_stop = False
+    stop_reason = "max_iterations"
+    final_score = 0.0
+
+    if max_iterations <= 0:
+        return {
+            "converged": False,
+            "emergency_stop": False,
+            "stop_reason": "max_iterations_zero",
+            "iterations": [],
+            "iterations_completed": 0,
+            "final_score": 0.0,
+            "final_params": [],
+        }
+
+    for index in range(max_iterations):
+        current_values = await _read_adjustable_values(client, adjustable_params)
+        plan, directions = _build_optimizer_plan(
+            adjustable_params,
+            current_values,
+            goal_profile,
+            safety_profile=safety_profile,
+        )
+
+        if not plan:
+            stop_reason = "no_adjustable_changes"
+            break
+
+        apply_result = await _apply_optimizer_plan(client, safety, plan)
+        instability = await _compute_instability_snapshot(client, root_path)
+        updated_values = await _read_adjustable_values(client, adjustable_params)
+
+        final_score = _optimizer_score(
+            updated_values,
+            adjustable_params,
+            directions,
+            unstable=bool(instability["unstable"]),
+        )
+
+        entry = {
+            "phase": phase_label,
+            "iteration": index + 1,
+            "score": final_score,
+            "applied_count": len(apply_result["applied"]),
+            "failed_count": len(apply_result["failed"]),
+            "safety_warnings": apply_result["safety_warnings"],
+            "instability": instability,
+            "applied": apply_result["applied"],
+            "failed": apply_result["failed"],
+        }
+        iteration_logs.append(entry)
+
+        phase_progress = float(index + 1) / float(max_iterations)
+        progress = progress_start + (progress_end - progress_start) * phase_progress
+        jobs.update_job(
+            job_id,
+            progress=max(0.0, min(1.0, progress)),
+            result={
+                "phase": phase_label,
+                "latest_iteration": entry,
+                "iterations_completed": index + 1,
+            },
+        )
+
+        if instability["unstable"] and safety_profile in {"conservative", "balanced"}:
+            try:
+                await client.request("timeline/set", {"action": "pause"})
+            except Exception:
+                pass
+            emergency_stop = True
+            stop_reason = "instability_guard"
+            break
+
+        if final_score >= convergence_threshold:
+            converged = True
+            stop_reason = "converged"
+            break
+
+    final_values = await _read_adjustable_values(client, adjustable_params)
+    final_params = [
+        {"path": path, "param": name, "value": value}
+        for (path, name), value in sorted(final_values.items())
+    ]
+
+    return {
+        "converged": converged,
+        "emergency_stop": emergency_stop,
+        "stop_reason": stop_reason,
+        "iterations": iteration_logs,
+        "iterations_completed": len(iteration_logs),
+        "final_score": final_score,
+        "final_params": final_params,
+    }
+
+
+def _linear_slope(values: List[float]) -> float:
+    if len(values) < 2:
+        return 0.0
+    n = float(len(values))
+    x_mean = (n - 1.0) / 2.0
+    y_mean = sum(values) / n
+    numerator = 0.0
+    denominator = 0.0
+    for i, value in enumerate(values):
+        dx = float(i) - x_mean
+        dy = value - y_mean
+        numerator += dx * dy
+        denominator += dx * dx
+    if denominator <= 0.0:
+        return 0.0
+    return numerator / denominator
+
+
+def _classify_temporal_character(samples: List[Dict[str, Any]]) -> Dict[str, Any]:
+    if not samples:
+        return {
+            "overall_character": "static",
+            "energy_level": "low",
+            "predictability": "high",
+            "fps_trend": "stable",
+        }
+
+    fps_values = [float(sample.get("fps", 0.0) or 0.0) for sample in samples]
+    event_rates = [float(sample.get("event_rate", 0.0) or 0.0) for sample in samples]
+    issue_counts = [int(sample.get("issues_count", 0) or 0) for sample in samples]
+    heavy_counts = [int(sample.get("heavy_nodes_count", 0) or 0) for sample in samples]
+
+    fps_mean = statistics.fmean(fps_values) if fps_values else 0.0
+    fps_stdev = statistics.pstdev(fps_values) if len(fps_values) > 1 else 0.0
+    event_mean = statistics.fmean(event_rates) if event_rates else 0.0
+    issues_mean = statistics.fmean(issue_counts) if issue_counts else 0.0
+    heavy_mean = statistics.fmean(heavy_counts) if heavy_counts else 0.0
+
+    fps_slope = _linear_slope(fps_values)
+    if fps_slope > 0.05:
+        fps_trend = "increasing"
+    elif fps_slope < -0.05:
+        fps_trend = "decreasing"
+    else:
+        fps_trend = "stable"
+
+    if issues_mean > 0.5 or heavy_mean > 5.0:
+        overall = "chaotic"
+        predictability = "low"
+    elif event_mean > 8.0 and fps_stdev < 4.0:
+        overall = "rhythmic"
+        predictability = "medium"
+    elif fps_stdev < 1.0 and event_mean < 1.0:
+        overall = "static"
+        predictability = "high"
+    elif fps_stdev < 3.0:
+        overall = "slowly_evolving"
+        predictability = "high"
+    else:
+        overall = "transitioning"
+        predictability = "medium"
+
+    if event_mean < 1.0 and fps_stdev < 1.0:
+        energy = "low"
+    elif event_mean < 5.0:
+        energy = "medium"
+    else:
+        energy = "high"
+
+    return {
+        "overall_character": overall,
+        "energy_level": energy,
+        "predictability": predictability,
+        "fps_trend": fps_trend,
+        "fps_mean": fps_mean,
+        "fps_stdev": fps_stdev,
+        "event_rate_mean": event_mean,
+    }
+
+
+# Resources
+
+
+@mcp.resource("td://timeline/state", name="td_timeline_state")
+async def td_resource_timeline(ctx: Context) -> Dict[str, Any]:
+    manager = _get_event_manager(ctx)
+    cached = manager.get_state("td://timeline/state")
+    if cached is not None:
+        return cached
+
+    timeline = await _get_client(ctx).request("timeline")
+    return {
+        "resource_schema_version": 1,
+        "resource_uri": "td://timeline/state",
+        "source": "pull",
+        "state": timeline,
+    }
+
+
+@mcp.resource("td://chop/path/{encoded_path}/channel/{channel}", name="td_chop_channel")
+async def td_resource_chop_channel(encoded_path: str, channel: str, ctx: Context) -> Dict[str, Any]:
+    path = decode_td_path(encoded_path)
+    uri = chop_uri(path, channel)
+    cached = _get_event_manager(ctx).get_state(uri)
+    if cached is not None:
+        return cached
+    return {
+        "resource_schema_version": 1,
+        "resource_uri": uri,
+        "path": path,
+        "channel": channel,
+        "available": False,
+    }
+
+
+@mcp.resource("td://par/path/{encoded_path}/name/{name}", name="td_parameter")
+async def td_resource_parameter(encoded_path: str, name: str, ctx: Context) -> Dict[str, Any]:
+    path = decode_td_path(encoded_path)
+    uri = par_uri(path, name)
+    cached = _get_event_manager(ctx).get_state(uri)
+    if cached is not None:
+        return cached
+    return {
+        "resource_schema_version": 1,
+        "resource_uri": uri,
+        "path": path,
+        "name": name,
+        "available": False,
+    }
+
+
+@mcp.resource("td://cook/path/{encoded_path}", name="td_cook_state")
+async def td_resource_cook(encoded_path: str, ctx: Context) -> Dict[str, Any]:
+    path = decode_td_path(encoded_path)
+    uri = cook_uri(path)
+    cached = _get_event_manager(ctx).get_state(uri)
+    if cached is not None:
+        return cached
+    return {
+        "resource_schema_version": 1,
+        "resource_uri": uri,
+        "path": path,
+        "available": False,
+    }
+
+
+@mcp.resource("td://error/path/{encoded_path}", name="td_error_state")
+async def td_resource_error(encoded_path: str, ctx: Context) -> Dict[str, Any]:
+    path = decode_td_path(encoded_path)
+    uri = error_uri(path)
+    cached = _get_event_manager(ctx).get_state(uri)
+    if cached is not None:
+        return cached
+    return {
+        "resource_schema_version": 1,
+        "resource_uri": uri,
+        "path": path,
+        "available": False,
+    }
+
+
+@mcp.resource("td://top/path/{encoded_path}/frame", name="td_top_frame")
+async def td_resource_top_frame(encoded_path: str, ctx: Context) -> Dict[str, Any]:
+    path = decode_td_path(encoded_path)
+    uri = top_frame_uri(path)
+    cached = _get_event_manager(ctx).get_state(uri)
+    if cached is not None:
+        return cached
+    return {
+        "resource_schema_version": 1,
+        "resource_uri": uri,
+        "path": path,
+        "available": False,
+    }
+
+
+@mcp.resource("td://job/{job_id}", name="td_job_state")
+async def td_resource_job(job_id: str, ctx: Context) -> Dict[str, Any]:
+    job = _get_job_manager(ctx).get_job(job_id)
+    if job is None:
+        return {
+            "resource_schema_version": 1,
+            "resource_uri": f"td://job/{job_id}",
+            "job_id": job_id,
+            "available": False,
+        }
+    return {
+        "resource_schema_version": 1,
+        "resource_uri": f"td://job/{job_id}",
+        "job": job,
+    }
+
+
+# Core tools (v1)
+
+
+@mcp.tool(name="td_get_info")
+async def td_get_info(ctx: Context) -> str:
+    return await _forward(ctx, "td_get_info", "info")
+
+
+@mcp.tool(name="td_list_families")
+async def td_list_families(ctx: Context) -> str:
+    return await _forward(ctx, "td_list_families", "families")
+
+
+@mcp.tool(name="td_get_nodes")
+async def td_get_nodes(params: GetNodesInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_get_nodes")
+    try:
+        data = await _get_client(ctx).request(
+            "nodes",
+            params.model_dump(exclude={"response_format"}, exclude_none=True),
+        )
+        if params.response_format == ResponseFormat.MARKDOWN:
+            return _format_nodes_markdown(data.get("nodes", []), f"Children of {params.path}")
+        return _as_json_output(data)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_get_nodes")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_get_node_detail")
+async def td_get_node_detail(params: NodePathInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_get_node_detail")
+    try:
+        data = await _get_client(ctx).request("node/detail", {"path": params.path})
+        if params.response_format == ResponseFormat.MARKDOWN:
+            lines = [f"## {data.get('name', '?')} (`{data.get('path', '?')}`)"]
+            lines.append(f"- Type: {data.get('type', '?')} ({data.get('family', '?')})")
+            if data.get("errors"):
+                lines.append(f"- Errors: {data['errors']}")
+            if data.get("warnings"):
+                lines.append(f"- Warnings: {data['warnings']}")
+            if data.get("parameters"):
+                lines.append(_format_params_markdown(data["parameters"], params.path))
+            return "\n".join(lines)
+        return _as_json_output(data)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_get_node_detail")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_get_params")
+async def td_get_params(params: GetParamsInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_get_params")
+    try:
+        data = await _get_client(ctx).request(
+            "node/params",
+            params.model_dump(exclude={"response_format"}, exclude_none=True),
+        )
+        if params.response_format == ResponseFormat.MARKDOWN:
+            return _format_params_markdown(data.get("parameters", {}), params.path)
+        return _as_json_output(data)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_get_params")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_set_params")
+async def td_set_params(params: SetParamsInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_set_params")
+    try:
+        body = params.model_dump()
+        adjusted, warnings = _apply_safety_to_set_params(
+            _get_safety_manager(ctx),
+            params.path,
+            dict(body.get("params", {})),
+        )
+        body["params"] = adjusted
+
+        data = await _get_client(ctx).request("node/params/set", body)
+        if warnings:
+            data["safety_warnings"] = warnings
+
+        _audit_log(
+            ctx,
+            "td_set_params",
+            {
+                "path": params.path,
+                "param_count": len(adjusted),
+                "warnings": warnings,
+            },
+        )
+        return _as_json_output(data)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_set_params")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_create_node")
+async def td_create_node(params: CreateNodeInput, ctx: Context) -> str:
+    return await _forward(
+        ctx,
+        "td_create_node",
+        "node/create",
+        params.model_dump(exclude_none=True),
+        audit_event="td_create_node",
+    )
+
+
+@mcp.tool(name="td_delete_node")
+async def td_delete_node(params: DeleteNodeInput, ctx: Context) -> str:
+    return await _forward(
+        ctx,
+        "td_delete_node",
+        "node/delete",
+        params.model_dump(),
+        audit_event="td_delete_node",
+    )
+
+
+@mcp.tool(name="td_copy_node")
+async def td_copy_node(params: CopyNodeInput, ctx: Context) -> str:
+    return await _forward(
+        ctx,
+        "td_copy_node",
+        "node/copy",
+        params.model_dump(exclude_none=True),
+        audit_event="td_copy_node",
+    )
+
+
+@mcp.tool(name="td_rename_node")
+async def td_rename_node(params: RenameNodeInput, ctx: Context) -> str:
+    return await _forward(
+        ctx,
+        "td_rename_node",
+        "node/rename",
+        params.model_dump(),
+        audit_event="td_rename_node",
+    )
+
+
+@mcp.tool(name="td_connect_nodes")
+async def td_connect_nodes(params: ConnectNodesInput, ctx: Context) -> str:
+    return await _forward(
+        ctx,
+        "td_connect_nodes",
+        "node/connect",
+        params.model_dump(),
+        audit_event="td_connect_nodes",
+    )
+
+
+@mcp.tool(name="td_disconnect")
+async def td_disconnect(params: DisconnectInput, ctx: Context) -> str:
+    return await _forward(
+        ctx,
+        "td_disconnect",
+        "node/disconnect",
+        params.model_dump(),
+        audit_event="td_disconnect",
+    )
+
+
+@mcp.tool(name="td_get_connections")
+async def td_get_connections(params: NodePathInput, ctx: Context) -> str:
+    return await _forward(
+        ctx,
+        "td_get_connections",
+        "node/connections",
+        {"path": params.path},
+    )
+
+
+@mcp.tool(name="td_get_content")
+async def td_get_content(params: GetContentInput, ctx: Context) -> str:
+    return await _forward(ctx, "td_get_content", "node/content", params.model_dump())
+
+
+@mcp.tool(name="td_set_content")
+async def td_set_content(params: SetContentInput, ctx: Context) -> str:
+    return await _forward(
+        ctx,
+        "td_set_content",
+        "node/content/set",
+        params.model_dump(exclude_none=True),
+        audit_event="td_set_content",
+    )
+
+
+@mcp.tool(name="td_custom_parameters")
+async def td_custom_parameters(params: CustomParametersInput, ctx: Context) -> str:
+    return await _forward(
+        ctx,
+        "td_custom_parameters",
+        "custom-parameters",
+        params.model_dump(),
+        audit_event="td_custom_parameters",
+    )
+
+
+@mcp.tool(name="td_exec_python")
+async def td_exec_python(params: ExecPythonInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_exec_python")
+    try:
+        _enforce_exec_mode(params.code)
+        mode = _current_exec_mode()
+        data = await _get_client(ctx).request(
+            "exec",
+            {
+                "code": params.code,
+                "exec_mode": mode,
+            },
+        )
+        _audit_log(
+            ctx,
+            "td_exec_python",
+            {
+                "exec_mode": mode,
+                "code_length": len(params.code),
+            },
+        )
+        return _as_json_output(data)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_exec_python")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_screenshot")
+async def td_screenshot(params: ScreenshotInput, ctx: Context) -> str:
+    """Capture a TOP frame.
+
+    Ask the user before repeated screenshots because each base64 image can
+    consume significant tokens in model context.
+    """
+    return await _forward(ctx, "td_screenshot", "screenshot", params.model_dump())
+
+
+@mcp.tool(name="td_chop_data")
+async def td_chop_data(params: CHOPDataInput, ctx: Context) -> str:
+    return await _forward(
+        ctx,
+        "td_chop_data",
+        "chop/data",
+        params.model_dump(exclude_none=True),
+    )
+
+
+@mcp.tool(name="td_geometry_data")
+async def td_geometry_data(params: GeometryDataInput, ctx: Context) -> str:
+    return await _forward(ctx, "td_geometry_data", "geometry/data", params.model_dump())
+
+
+@mcp.tool(name="td_pop_inspect")
+async def td_pop_inspect(params: POPInspectInput, ctx: Context) -> str:
+    return await _forward(ctx, "td_pop_inspect", "pop/inspect", params.model_dump())
+
+
+@mcp.tool(name="td_cooking_info")
+async def td_cooking_info(params: CookingInfoInput, ctx: Context) -> str:
+    return await _forward(ctx, "td_cooking_info", "cooking", params.model_dump())
+
+
+@mcp.tool(name="td_search_nodes")
+async def td_search_nodes(params: SearchNodesInput, ctx: Context) -> str:
+    return await _forward(ctx, "td_search_nodes", "search", params.model_dump())
+
+
+@mcp.tool(name="td_get_errors")
+async def td_get_errors(params: GetErrorsInput, ctx: Context) -> str:
+    return await _forward(ctx, "td_get_errors", "node/errors", params.model_dump())
+
+
+@mcp.tool(name="td_timeline")
+async def td_timeline(ctx: Context) -> str:
+    return await _forward(ctx, "td_timeline", "timeline")
+
+
+@mcp.tool(name="td_timeline_set")
+async def td_timeline_set(params: TimelineSetInput, ctx: Context) -> str:
+    return await _forward(
+        ctx,
+        "td_timeline_set",
+        "timeline/set",
+        params.model_dump(exclude_none=True),
+        audit_event="td_timeline_set",
+    )
+
+
+@mcp.tool(name="td_project_lifecycle")
+async def td_project_lifecycle(params: ProjectLifecycleInput, ctx: Context) -> str:
+    return await _forward(
+        ctx,
+        "td_project_lifecycle",
+        "project/lifecycle",
+        params.model_dump(),
+        audit_event="td_project_lifecycle",
+    )
+
+
+@mcp.tool(name="td_pulse_param")
+async def td_pulse_param(params: PulseParamInput, ctx: Context) -> str:
+    return await _forward(
+        ctx,
+        "td_pulse_param",
+        "pulse",
+        params.model_dump(),
+        audit_event="td_pulse_param",
+    )
+
+
+@mcp.tool(name="td_python_help")
+async def td_python_help(params: PythonHelpInput, ctx: Context) -> str:
+    return await _forward(ctx, "td_python_help", "python/help", params.model_dump())
+
+
+@mcp.tool(name="td_python_classes")
+async def td_python_classes(ctx: Context) -> str:
+    return await _forward(ctx, "td_python_classes", "python/classes")
+
+
+# Extended tools
+
+
+@mcp.tool(name="td_create_macro")
+async def td_create_macro(params: CreateMacroInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_create_macro")
+    try:
+        engine = _get_macro_engine(ctx)
+        data = await engine.create_macro(
+            parent_path=params.parent_path,
+            macro_type=params.macro_type.value,
+            name_prefix=params.name,
+            node_x=params.nodeX,
+            node_y=params.nodeY,
+            overrides=params.params,
+        )
+        _audit_log(
+            ctx,
+            "td_create_macro",
+            {
+                "macro_type": params.macro_type.value,
+                "parent_path": params.parent_path,
+                "name_prefix": params.name,
+            },
+        )
+        return _as_json_output(data)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_create_macro")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_list_macros")
+async def td_list_macros(ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_list_macros")
+    try:
+        data = _get_macro_engine(ctx).list_macros()
+        return _as_json_output(data)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_list_macros")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_get_macro_params")
+async def td_get_macro_params(params: GetMacroParamsInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_get_macro_params")
+    try:
+        data = _get_macro_engine(ctx).get_macro_params(params.macro_type.value)
+        return _as_json_output(data)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_get_macro_params")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_get_capabilities")
+async def td_get_capabilities(ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_get_capabilities")
+    try:
+        capabilities = detect_capabilities(ctx)
+        payload = {
+            "schema_version": 1,
+            "client_capabilities": capabilities.to_dict(),
+            "runtime": {
+                "transport": TD_TRANSPORT,
+                "exec_mode": _current_exec_mode(),
+                "shared_secret_enabled": bool(TD_SHARED_SECRET),
+                "event_ws_port": TD_WS_PORT,
+                "snapshot_persistence": bool(TD_SNAPSHOT_DIR),
+                "stream_max_fps": TD_STREAM_MAX_FPS,
+            },
+        }
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_get_capabilities")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_get_server_metrics")
+async def td_get_server_metrics(ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_get_server_metrics")
+    try:
+        telemetry = _get_telemetry(ctx)
+        event_manager = _get_event_manager(ctx)
+        visual_monitor = _get_visual_monitor(ctx)
+        top_streamer = _get_top_streamer(ctx)
+        safety_manager = _get_safety_manager(ctx)
+        snapshot_manager = _get_snapshot_manager(ctx)
+        job_manager = _get_job_manager(ctx)
+
+        payload = {
+            "schema_version": 1,
+            "runtime": {
+                "transport": TD_TRANSPORT,
+                "exec_mode": _current_exec_mode(),
+                "host": TD_HOST,
+                "port": TD_PORT,
+                "event_ws_port": TD_WS_PORT,
+                "stream_max_fps": TD_STREAM_MAX_FPS,
+            },
+            "telemetry": telemetry.snapshot() if telemetry else {},
+            "events": event_manager.stats(),
+            "visual_monitor": {
+                "active": visual_monitor.active_monitors(),
+            },
+            "top_stream": top_streamer.stats(),
+            "safety": safety_manager.stats(),
+            "snapshots": snapshot_manager.stats(),
+            "jobs": job_manager.stats(),
+            "audit_enabled": bool(_get_audit(ctx) and _get_audit(ctx).enabled()),
+        }
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_get_server_metrics")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_subscribe")
+async def td_subscribe(params: SubscribeInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_subscribe")
+    try:
+        body = params.model_dump(exclude_none=True)
+        provisioning = await _get_client(ctx).request("monitor/subscribe", body)
+
+        event_manager = _get_event_manager(ctx)
+        event_manager.register_subscription(params.path, body)
+
+        payload = {
+            "success": True,
+            "path": params.path,
+            "subscription": body,
+            "resource_uris": _build_subscription_resource_uris(params),
+            "provisioning": provisioning,
+            "active_subscriptions": len(event_manager.list_subscriptions()),
+        }
+        _audit_log(
+            ctx,
+            "td_subscribe",
+            {
+                "path": params.path,
+                "event_types": params.event_types,
+            },
+        )
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_subscribe")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_unsubscribe")
+async def td_unsubscribe(params: UnsubscribeInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_unsubscribe")
+    try:
+        provisioning = await _get_client(ctx).request(
+            "monitor/unsubscribe",
+            params.model_dump(),
+        )
+
+        event_manager = _get_event_manager(ctx)
+        removed = event_manager.unregister_subscription(params.path)
+
+        payload = {
+            "success": bool(removed),
+            "path": params.path,
+            "provisioning": provisioning,
+            "active_subscriptions": len(event_manager.list_subscriptions()),
+        }
+        _audit_log(ctx, "td_unsubscribe", {"path": params.path})
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_unsubscribe")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_get_events")
+async def td_get_events(params: GetEventsInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_get_events")
+    try:
+        manager = _get_event_manager(ctx)
+        events = manager.get_recent_events(event_type=params.event_type, limit=params.limit)
+        payload = {
+            "schema_version": 1,
+            "event_type": params.event_type,
+            "count": len(events),
+            "events": events,
+        }
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_get_events")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_capture_and_analyze")
+async def td_capture_and_analyze(params: CaptureAndAnalyzeInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_capture_and_analyze")
+    try:
+        if not params.confirm_image_capture:
+            return _capture_confirmation_required_response()
+
+        screenshot = await _get_client(ctx).request(
+            "screenshot",
+            {
+                "path": params.path,
+                "quality": params.quality,
+            },
+        )
+
+        capabilities = detect_capabilities(ctx)
+        analysis = None
+
+        if params.analyze:
+            if capabilities.supports_sampling:
+                analysis = {
+                    "status": "not_implemented",
+                    "message": "Sampling capability detected but this runtime does not expose a sampling API.",
+                    "prompt": params.analysis_prompt,
+                }
+            else:
+                analysis = {
+                    "status": "unsupported",
+                    "message": "Client sampling capability not available.",
+                }
+
+        payload = {
+            "schema_version": 1,
+            "capture": screenshot,
+            "analysis": analysis,
+            "compare_with": params.compare_with,
+            "token_notice": {
+                "advice": (
+                    "Image payloads include base64 data and can consume many tokens when repeated. "
+                    "Ask the user before running capture loops."
+                ),
+                "ask_user_prompt": (
+                    "Do you want me to inspect output frames now? "
+                    "I can do one screenshot first to keep token usage low."
+                ),
+            },
+        }
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_capture_and_analyze")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_monitor_visual")
+async def td_monitor_visual(params: VisualMonitorInput, ctx: Context) -> str:
+    """Start periodic monitor for a TOP.
+
+    Default mode omits base64 frames to keep token usage low.
+    """
+    finish = _start_tool(ctx, "td_monitor_visual")
+    try:
+        if params.include_image and not params.confirm_high_token_mode:
+            return _vision_confirmation_required_response()
+
+        monitor = _get_visual_monitor(ctx)
+        config = await monitor.start_monitor(
+            path=params.path,
+            interval=params.interval,
+            quality=params.quality,
+            include_image=params.include_image,
+        )
+
+        payload = {
+            "success": True,
+            "monitor": config,
+            "resource_uri": top_frame_uri(params.path),
+            "active_monitors": monitor.active_monitors(),
+            "token_notice": _vision_token_notice(params.include_image),
+        }
+
+        if params.auto_analyze:
+            payload["note"] = "auto_analyze requested; monitor captures are active but auto sampling is not implemented in this runtime."
+
+        _audit_log(
+            ctx,
+            "td_monitor_visual",
+            {
+                "path": params.path,
+                "interval": params.interval,
+                "quality": params.quality,
+                "include_image": params.include_image,
+                "confirm_high_token_mode": params.confirm_high_token_mode,
+            },
+        )
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_monitor_visual")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_stop_monitor_visual")
+async def td_stop_monitor_visual(params: StopMonitorInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_stop_monitor_visual")
+    try:
+        monitor = _get_visual_monitor(ctx)
+        stopped = await monitor.stop_monitor(params.path)
+        payload = {
+            "success": stopped,
+            "path": params.path,
+            "active_monitors": monitor.active_monitors(),
+        }
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_stop_monitor_visual")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_stream_top")
+async def td_stream_top(params: StreamTopInput, ctx: Context) -> str:
+    """Start continuous TOP stream.
+
+    Default mode omits base64 frames to keep token usage low.
+    """
+    finish = _start_tool(ctx, "td_stream_top")
+    try:
+        if params.include_image and not params.confirm_high_token_mode:
+            return _vision_confirmation_required_response()
+
+        streamer = _get_top_streamer(ctx)
+        normalized_fps = max(0.5, min(float(params.fps), TD_STREAM_MAX_FPS))
+        config = await streamer.start_stream(
+            path=params.path,
+            fps=normalized_fps,
+            quality=params.quality,
+            include_image=params.include_image,
+            emit_unchanged=params.emit_unchanged,
+        )
+        payload = {
+            "success": True,
+            "stream": config,
+            "resource_uri": top_frame_uri(params.path),
+            "active_streams": streamer.active_streams(),
+            "token_notice": _vision_token_notice(params.include_image),
+            "limits": {
+                "requested_fps": params.fps,
+                "applied_fps": normalized_fps,
+                "max_fps": TD_STREAM_MAX_FPS,
+            },
+        }
+        _audit_log(
+            ctx,
+            "td_stream_top",
+            {
+                "path": params.path,
+                "fps": normalized_fps,
+                "quality": params.quality,
+                "include_image": params.include_image,
+                "confirm_high_token_mode": params.confirm_high_token_mode,
+                "emit_unchanged": params.emit_unchanged,
+            },
+        )
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_stream_top")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_stop_stream_top")
+async def td_stop_stream_top(params: StopStreamTopInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_stop_stream_top")
+    try:
+        streamer = _get_top_streamer(ctx)
+        stopped = await streamer.stop_stream(params.path)
+        payload = {
+            "success": stopped,
+            "path": params.path,
+            "active_streams": streamer.active_streams(),
+            "stats": streamer.stats(),
+        }
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_stop_stream_top")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_optimize_visual")
+async def td_optimize_visual(params: OptimizeVisualInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_optimize_visual")
+    try:
+        client = _get_client(ctx)
+        safety = _get_safety_manager(ctx)
+        snapshots = _get_snapshot_manager(ctx)
+        jobs = _get_job_manager(ctx)
+        capabilities = detect_capabilities(ctx)
+
+        # Build goal profile from explicit weights or sensible defaults.
+        default_weights: Dict[str, float] = {
+            "brightness": 0.0,
+            "contrast": 0.0,
+            "stability": 0.4,
+            "complexity": 0.3,
+            "motion_rhythm": 0.0,
+        }
+        goal_profile: Dict[str, float] = dict(default_weights)
+        if params.objective_weights:
+            for key, value in params.objective_weights.items():
+                if key in goal_profile:
+                    try:
+                        goal_profile[key] = max(-1.0, min(1.0, float(value)))
+                    except Exception:
+                        continue
+
+        baseline_snapshot_id: Optional[str] = None
+        snapshot_warning: Optional[str] = None
+        if params.snapshot_before:
+            try:
+                snapshot_payload = await _capture_snapshot_payload(
+                    ctx,
+                    path=params.root_path,
+                    include_visual=False,
+                )
+                saved = snapshots.add_snapshot(
+                    snapshot_payload,
+                    name=f"optimize_start_{params.output_top.strip('/').replace('/', '_') or 'top'}",
+                )
+                baseline_snapshot_id = saved["snapshot_id"]
+            except Exception as exc:
+                snapshot_warning = str(exc)
+
+        async def runner(job_id: str) -> Dict[str, Any]:
+            optimize_result = await _run_optimizer_iterations(
+                client=client,
+                safety=safety,
+                jobs=jobs,
+                job_id=job_id,
+                adjustable_params=params.adjustable_params,
+                goal_profile=goal_profile,
+                max_iterations=params.max_iterations,
+                convergence_threshold=params.convergence_threshold,
+                safety_profile=params.safety_profile,
+                root_path=params.root_path,
+                phase_label="optimize_visual",
+            )
+
+            return {
+                "schema_version": 1,
+                "mode": "bounded_search",
+                "sampling_supported": capabilities.supports_sampling,
+                "goal": params.goal,
+                "goal_profile": goal_profile,
+                "output_top": params.output_top,
+                "root_path": params.root_path,
+                "safety_profile": params.safety_profile,
+                "snapshot_before": params.snapshot_before,
+                "baseline_snapshot_id": baseline_snapshot_id,
+                "snapshot_warning": snapshot_warning,
+                "converged": optimize_result["converged"],
+                "emergency_stop": optimize_result["emergency_stop"],
+                "stop_reason": optimize_result["stop_reason"],
+                "iterations_completed": optimize_result["iterations_completed"],
+                "max_iterations": params.max_iterations,
+                "convergence_threshold": params.convergence_threshold,
+                "final_score": optimize_result["final_score"],
+                "iterations": optimize_result["iterations"],
+                "final_params": optimize_result["final_params"],
+                "next": [
+                    "Read td://job/{job_id} for incremental updates while running.",
+                    "If results are unstable, use td_restore_snapshot with baseline_snapshot_id.",
+                ],
+            }
+
+        job = jobs.start_async(
+            description=f"Optimize visual goal: {params.goal}",
+            runner=runner,
+        )
+
+        _audit_log(
+            ctx,
+            "td_optimize_visual",
+            {
+                "goal": params.goal,
+                "output_top": params.output_top,
+                "adjustable_count": len(params.adjustable_params),
+                "max_iterations": params.max_iterations,
+                "safety_profile": params.safety_profile,
+                "goal_profile": goal_profile,
+                "baseline_snapshot_id": baseline_snapshot_id,
+            },
+        )
+
+        payload = {
+            "success": True,
+            "job": job,
+            "job_id": job["job_id"],
+            "job_resource_uri": f"td://job/{job['job_id']}",
+            "mode": "bounded_search",
+            "sampling_supported": capabilities.supports_sampling,
+            "baseline_snapshot_id": baseline_snapshot_id,
+            "snapshot_warning": snapshot_warning,
+            "goal_profile": goal_profile,
+        }
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_optimize_visual")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_describe_dynamics")
+async def td_describe_dynamics(params: TemporalAnalysisInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_describe_dynamics")
+    try:
+        client = _get_client(ctx)
+        jobs = _get_job_manager(ctx)
+        event_manager = _get_event_manager(ctx)
+
+        sample_interval = max(1.0 / params.sample_rate, 0.01)
+        target_samples = max(1, int(round(params.observation_window * params.sample_rate)))
+
+        async def runner(job_id: str) -> Dict[str, Any]:
+            samples: List[Dict[str, Any]] = []
+            started = time.perf_counter()
+
+            for index in range(target_samples):
+                tick_started = time.perf_counter()
+
+                timeline, cooking, errors = await asyncio.gather(
+                    _safe_request(client, "timeline"),
+                    _safe_request(
+                        client,
+                        "cooking",
+                        {"path": params.path, "recurse": True, "limit": 20, "sort_by": "cookTime"},
+                    ),
+                    _safe_request(
+                        client,
+                        "node/errors",
+                        {"path": params.path, "recurse": True, "max_depth": 10},
+                    ),
+                )
+
+                heavy_nodes = [
+                    node
+                    for node in (cooking.get("nodes", []) if isinstance(cooking, dict) else [])
+                    if isinstance(node, dict) and float(node.get("cookTime", 0.0) or 0.0) >= 0.01
+                ]
+                issues = errors.get("issues", []) if isinstance(errors, dict) else []
+                recent_events = event_manager.get_recent_events(limit=200)
+
+                sample = {
+                    "index": index + 1,
+                    "captured_at": datetime.now(timezone.utc).isoformat(),
+                    "frame": int(timeline.get("frame", 0) or 0) if isinstance(timeline, dict) else 0,
+                    "seconds": float(timeline.get("seconds", 0.0) or 0.0) if isinstance(timeline, dict) else 0.0,
+                    "playing": bool(timeline.get("playing", False)) if isinstance(timeline, dict) else False,
+                    "fps": float(cooking.get("fps", 0.0) or 0.0) if isinstance(cooking, dict) else 0.0,
+                    "issues_count": len(issues),
+                    "heavy_nodes_count": len(heavy_nodes),
+                    "event_rate": _event_rate_per_sec(recent_events),
+                }
+                samples.append(sample)
+
+                jobs.update_job(
+                    job_id,
+                    progress=float(index + 1) / float(target_samples),
+                    result={
+                        "latest_sample": sample,
+                        "samples_collected": index + 1,
+                        "target_samples": target_samples,
+                    },
+                )
+
+                elapsed_tick = time.perf_counter() - tick_started
+                await asyncio.sleep(max(0.0, sample_interval - elapsed_tick))
+
+            elapsed = time.perf_counter() - started
+            classifications = _classify_temporal_character(samples)
+
+            return {
+                "schema_version": 1,
+                "path": params.path,
+                "observation": {
+                    "duration_sec": elapsed,
+                    "requested_window_sec": params.observation_window,
+                    "sample_rate": params.sample_rate,
+                    "samples": len(samples),
+                    "fps_during_mean": classifications.get("fps_mean", 0.0),
+                },
+                "samples": samples,
+                "classifications": classifications,
+                "notes": [
+                    "Current classifier is heuristic and intended for fast diagnostics.",
+                    "Use td_get_state_vector alongside this report for broader context.",
+                ],
+            }
+
+        job = jobs.start_async(
+            description=f"Describe dynamics for {params.path}",
+            runner=runner,
+        )
+
+        _audit_log(
+            ctx,
+            "td_describe_dynamics",
+            {
+                "path": params.path,
+                "observation_window": params.observation_window,
+                "sample_rate": params.sample_rate,
+            },
+        )
+
+        payload = {
+            "success": True,
+            "job": job,
+            "job_id": job["job_id"],
+            "job_resource_uri": f"td://job/{job['job_id']}",
+            "path": params.path,
+            "observation_window": params.observation_window,
+            "sample_rate": params.sample_rate,
+            "target_samples": target_samples,
+        }
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_describe_dynamics")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_set_param_bounds")
+async def td_set_param_bounds(params: SetBoundsInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_set_param_bounds")
+    try:
+        safety = _get_safety_manager(ctx)
+        safety.set_mode(params.enforce_mode)
+
+        for bound in params.bounds:
+            key = f"{bound.path}/{bound.param}"
+            safety.set_bound(
+                key,
+                min_val=bound.min_val,
+                max_val=bound.max_val,
+                max_rate=bound.max_rate,
+            )
+
+        payload = {
+            "success": True,
+            "mode": safety.get_mode(),
+            "bounds_count": len(safety.list_bounds()),
+            "bounds": safety.list_bounds(),
+        }
+
+        _audit_log(
+            ctx,
+            "td_set_param_bounds",
+            {
+                "mode": params.enforce_mode,
+                "count": len(params.bounds),
+            },
+        )
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_set_param_bounds")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_clear_param_bounds")
+async def td_clear_param_bounds(params: ClearBoundsInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_clear_param_bounds")
+    try:
+        safety = _get_safety_manager(ctx)
+
+        cleared = 0
+        if params.paths:
+            keys = list(safety.list_bounds().keys())
+            for key in keys:
+                if any(key.startswith(path.rstrip("/") + "/") or key == path for path in params.paths):
+                    if safety.clear_bound(key):
+                        cleared += 1
+        else:
+            cleared = safety.clear_all()
+
+        payload = {
+            "success": True,
+            "cleared": cleared,
+            "remaining": len(safety.list_bounds()),
+            "mode": safety.get_mode(),
+        }
+        _audit_log(
+            ctx,
+            "td_clear_param_bounds",
+            {"paths": params.paths, "cleared": cleared},
+        )
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_clear_param_bounds")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_detect_instability")
+async def td_detect_instability(params: DetectInstabilityInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_detect_instability")
+    try:
+        client = _get_client(ctx)
+        cooking = await client.request(
+            "cooking",
+            {
+                "path": params.path,
+                "recurse": True,
+                "limit": 50,
+                "sort_by": "cookTime",
+            },
+        )
+        errors = await client.request(
+            "node/errors",
+            {
+                "path": params.path,
+                "recurse": True,
+                "max_depth": 10,
+            },
+        )
+
+        fps = float(cooking.get("fps", 0.0) or 0.0)
+        heavy_nodes = [
+            node
+            for node in cooking.get("nodes", [])
+            if isinstance(node, dict) and float(node.get("cookTime", 0.0) or 0.0) >= 0.01
+        ]
+        issues = errors.get("issues", []) if isinstance(errors, dict) else []
+
+        unstable = fps < 30.0 or bool(issues) or len(heavy_nodes) >= 5
+
+        payload = {
+            "schema_version": 1,
+            "path": params.path,
+            "unstable": unstable,
+            "signals": {
+                "fps": fps,
+                "realtime": bool(cooking.get("realTime", False)),
+                "issues_count": len(issues),
+                "heavy_nodes_count": len(heavy_nodes),
+            },
+            "heavy_nodes": heavy_nodes[:10],
+            "issues": issues[:20],
+            "suggested_actions": [
+                "Pause timeline and inspect top cook-time operators.",
+                "Clamp unstable parameters via td_set_param_bounds.",
+                "Use td_snapshot_scene before large edits.",
+            ],
+        }
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_detect_instability")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_emergency_stabilize")
+async def td_emergency_stabilize(params: DetectInstabilityInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_emergency_stabilize")
+    try:
+        client = _get_client(ctx)
+        snapshots = _get_snapshot_manager(ctx)
+
+        snapshot_payload = await _capture_snapshot_payload(
+            ctx,
+            path=params.path,
+            include_visual=False,
+        )
+        saved = snapshots.add_snapshot(snapshot_payload, name="emergency_pre_stabilize")
+
+        actions = []
+        timeline = await client.request("timeline")
+        if timeline.get("playing"):
+            await client.request("timeline/set", {"action": "pause"})
+            actions.append("timeline_paused")
+
+        safety = _get_safety_manager(ctx)
+        if safety.get_mode() != "clamp":
+            safety.set_mode("clamp")
+            actions.append("safety_mode_clamp")
+
+        payload = {
+            "success": True,
+            "path": params.path,
+            "actions": actions,
+            "snapshot": {
+                "snapshot_id": saved["snapshot_id"],
+                "name": saved["name"],
+                "timestamp": saved["timestamp"],
+            },
+            "next": [
+                "Inspect td_detect_instability for current bottlenecks.",
+                "Restore from snapshot if needed with td_restore_snapshot.",
+            ],
+        }
+
+        _audit_log(
+            ctx,
+            "td_emergency_stabilize",
+            {
+                "path": params.path,
+                "actions": actions,
+                "snapshot_id": saved["snapshot_id"],
+            },
+        )
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_emergency_stabilize")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_snapshot_scene")
+async def td_snapshot_scene(params: SnapshotInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_snapshot_scene")
+    try:
+        payload = await _capture_snapshot_payload(
+            ctx,
+            path=params.path,
+            include_visual=params.include_visual,
+        )
+        snapshot = _get_snapshot_manager(ctx).add_snapshot(payload, name=params.name)
+
+        result = {
+            "success": True,
+            "snapshot_id": snapshot["snapshot_id"],
+            "name": snapshot["name"],
+            "timestamp": snapshot["timestamp"],
+            "summary": {
+                "captured_nodes": payload.get("captured_nodes", 0),
+                "connection_count": len(payload.get("connections", [])),
+                "truncated": payload.get("truncated", False),
+                "include_visual": params.include_visual,
+            },
+        }
+        return _as_json_output(result)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_snapshot_scene")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_list_snapshots")
+async def td_list_snapshots(params: ListSnapshotsInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_list_snapshots")
+    try:
+        snapshots = _get_snapshot_manager(ctx).list_snapshots(limit=params.limit)
+        return _as_json_output(
+            {
+                "schema_version": 1,
+                "count": len(snapshots),
+                "snapshots": snapshots,
+            }
+        )
+    except Exception as exc:
+        _record_tool_error(ctx, "td_list_snapshots")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_diff_snapshots")
+async def td_diff_snapshots(params: DiffSnapshotsInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_diff_snapshots")
+    try:
+        manager = _get_snapshot_manager(ctx)
+
+        snap_a = manager.get_snapshot(params.snapshot_a)
+        if snap_a is None:
+            raise ValueError(f"Snapshot not found: {params.snapshot_a}")
+
+        if params.snapshot_b:
+            snap_b = manager.get_snapshot(params.snapshot_b)
+            if snap_b is None:
+                raise ValueError(f"Snapshot not found: {params.snapshot_b}")
+            compare_target = {
+                "type": "snapshot",
+                "snapshot_id": params.snapshot_b,
+            }
+            snapshot_b_payload = snap_b["snapshot"]
+        else:
+            live = await _capture_snapshot_payload(ctx, path=snap_a["snapshot"].get("root_path", "/project1"), include_visual=False)
+            compare_target = {
+                "type": "live",
+                "path": live.get("root_path", "/project1"),
+            }
+            snapshot_b_payload = live
+
+        diff = manager.diff(snap_a["snapshot"], snapshot_b_payload)
+        payload = {
+            "schema_version": 1,
+            "snapshot_a": params.snapshot_a,
+            "compare_target": compare_target,
+            "diff": diff,
+        }
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_diff_snapshots")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_restore_snapshot")
+async def td_restore_snapshot(params: RestoreSnapshotInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_restore_snapshot")
+    try:
+        manager = _get_snapshot_manager(ctx)
+        snapshot = manager.get_snapshot(params.snapshot_id)
+        if snapshot is None:
+            raise ValueError(f"Snapshot not found: {params.snapshot_id}")
+
+        snapshot_nodes = snapshot.get("snapshot", {}).get("nodes", {})
+        if not isinstance(snapshot_nodes, dict):
+            snapshot_nodes = {}
+
+        client = _get_client(ctx)
+        safety = _get_safety_manager(ctx)
+        restore_result = await _restore_snapshot_nodes(
+            client,
+            safety,
+            snapshot_nodes,
+            partial_filters=params.partial or [],
+            dry_run=params.dry_run,
+        )
+        restored = restore_result["restored"]
+        skipped = restore_result["skipped"]
+        failures = restore_result["failures"]
+        warnings = restore_result["safety_warnings"]
+
+        payload = {
+            "success": not failures,
+            "snapshot_id": params.snapshot_id,
+            "dry_run": params.dry_run,
+            "restored_count": len(restored),
+            "skipped_count": len(skipped),
+            "failure_count": len(failures),
+            "restored": restored,
+            "skipped": skipped,
+            "failures": failures,
+            "safety_warnings": warnings,
+        }
+
+        if not params.dry_run:
+            _audit_log(
+                ctx,
+                "td_restore_snapshot",
+                {
+                    "snapshot_id": params.snapshot_id,
+                    "restored_count": len(restored),
+                    "failure_count": len(failures),
+                    "partial": params.partial,
+                },
+            )
+
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_restore_snapshot")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_get_state_vector")
+async def td_get_state_vector(params: StateVectorInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_get_state_vector")
+    try:
+        cache_key = params.path
+        cached = _STATE_VECTOR_CACHE.get(cache_key)
+        now = time.time()
+
+        if not params.force_refresh and cached:
+            cached_at = float(cached.get("cached_at", 0.0) or 0.0)
+            age = now - cached_at
+            if age <= max(0.0, TD_STATE_VECTOR_TTL):
+                payload = dict(cached["data"])
+                payload["cache"] = {
+                    "hit": True,
+                    "age_sec": age,
+                    "ttl_sec": TD_STATE_VECTOR_TTL,
+                }
+                return _as_json_output(payload)
+
+        state_vector = await _build_state_vector(params.path, ctx)
+        _STATE_VECTOR_CACHE[cache_key] = {
+            "cached_at": now,
+            "data": state_vector,
+        }
+        state_vector["cache"] = {
+            "hit": False,
+            "ttl_sec": TD_STATE_VECTOR_TTL,
+        }
+        return _as_json_output(state_vector)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_get_state_vector")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_get_timescale_state")
+async def td_get_timescale_state(params: TimescaleStateInput, ctx: Context) -> str:
+    finish = _start_tool(ctx, "td_get_timescale_state")
+    try:
+        timeline = await _get_client(ctx).request("timeline")
+        bpm = float(params.bpm_hint if params.bpm_hint is not None else 120.0)
+        beats_per_bar = int(params.beats_per_bar)
+
+        payload = {
+            "schema_version": 1,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "timeline": timeline,
+            "timescale": _compute_timescale_from_timeline(
+                timeline if isinstance(timeline, dict) else {},
+                bpm=bpm,
+                beats_per_bar=beats_per_bar,
+            ),
+            "notes": [
+                "BPM is currently hint-based; use an external detector to feed live BPM.",
+                "Beat/bar/phrase phases can drive modulation curves or macro transitions.",
+            ],
+        }
+        return _as_json_output(payload)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_get_timescale_state")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+# ─────────────────────────────────────────────────────────────
+# Technique Memory Tools
+# ─────────────────────────────────────────────────────────────
+
+
+@mcp.tool()
+async def td_memory_learn(params: MemoryLearnInput, ctx: Context) -> dict:
+    """Analyze a network subtree and extract a reusable technique recipe.
+
+    Auto-detects complexity:
+    - small (<10 nodes): full recipe with all params and expressions
+    - medium (10-20): full recipe
+    - large (>20): structure summary + key params only
+
+    Returns the technique dict — pass it to td_memory_save to persist.
+    """
+    client = _get_client(ctx)
+    technique = await analyze_network(
+        client,
+        params.path,
+        max_depth=params.max_depth,
+        name=params.name,
+        description=params.description,
+        tags=params.tags,
+    )
+    return {"status": "ok", "technique": technique}
+
+
+@mcp.tool()
+async def td_memory_save(params: MemorySaveInput, ctx: Context) -> dict:
+    """Save a technique to the project or global library.
+
+    Use the output of td_memory_learn as the technique input,
+    or construct a technique dict manually.
+    """
+    store = _get_technique_store(ctx)
+    technique_id = store.add(
+        technique=params.technique,
+        scope=params.scope,
+        name=params.name,
+        description=params.description,
+        tags=params.tags,
+        notes=params.notes,
+    )
+    return {"status": "ok", "technique_id": technique_id, "scope": params.scope}
+
+
+@mcp.tool()
+async def td_memory_recall(params: MemoryRecallInput, ctx: Context) -> dict:
+    """Search the technique library by text query and/or tags.
+
+    Returns summaries (not full recipes). Use td_memory_replay to rebuild a found technique.
+    """
+    store = _get_technique_store(ctx)
+    results = store.search(
+        query=params.query,
+        tags=params.tags if params.tags else None,
+        scope=params.scope,
+        limit=params.limit,
+    )
+    return {"status": "ok", "count": len(results), "techniques": results}
+
+
+@mcp.tool()
+async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
+    """Rebuild a saved technique in a new location in the TD project.
+
+    Creates nodes, sets parameters and expressions, wires connections.
+    Only works for techniques with a full recipe (small/medium complexity).
+    """
+    store = _get_technique_store(ctx)
+    entry = store.get(params.technique_id, scope=params.scope)
+    if not entry:
+        return {"status": "error", "message": f"Technique {params.technique_id} not found in {params.scope} scope."}
+
+    technique = entry.get("technique", {})
+    recipe = technique.get("recipe")
+    if not recipe:
+        return {
+            "status": "error",
+            "message": "This technique has no full recipe (large network — only key params were captured). "
+            "You can use the key_params and structure info to manually recreate it.",
+            "key_params": technique.get("key_params"),
+            "families": technique.get("families"),
+            "op_types": technique.get("op_types"),
+        }
+
+    client = _get_client(ctx)
+    parent = params.parent_path.rstrip("/") or "/"
+    prefix = params.name_prefix.strip()
+
+    recipe_nodes = recipe.get("nodes", {})
+    if not isinstance(recipe_nodes, dict) or not recipe_nodes:
+        return {"status": "error", "message": "Technique recipe has no nodes to replay."}
+
+    created_nodes: Dict[str, str] = {"/": parent}
+    skipped_nodes: List[Dict[str, str]] = []
+
+    # Build shallow-to-deep so nested paths can resolve their parent container.
+    create_order = sorted(
+        (
+            rel_path
+            for rel_path in recipe_nodes.keys()
+            if isinstance(rel_path, str) and rel_path and rel_path != "/"
+        ),
+        key=lambda rel_path: rel_path.count("/"),
+    )
+
+    created_count = 0
+    for rel_path in create_order:
+        node_info = recipe_nodes.get(rel_path, {})
+        if not isinstance(node_info, dict):
+            skipped_nodes.append({"path": rel_path, "reason": "invalid_node_payload"})
+            continue
+
+        raw_type = str(node_info.get("type", "")).strip()
+        family = str(node_info.get("family", "")).strip().upper()
+        if not raw_type:
+            skipped_nodes.append({"path": rel_path, "reason": "missing_type"})
+            continue
+
+        suffix_by_family = {
+            "TOP": "TOP",
+            "CHOP": "CHOP",
+            "SOP": "SOP",
+            "DAT": "DAT",
+            "COMP": "COMP",
+            "MAT": "MAT",
+            "POP": "POP",
+        }
+
+        op_type_candidates: List[str] = []
+        upper_type = raw_type.upper()
+        if any(upper_type.endswith(suffix) for suffix in suffix_by_family.values()):
+            op_type_candidates.append(raw_type)
+        else:
+            suffix = suffix_by_family.get(family)
+            if suffix:
+                op_type_candidates.append(f"{raw_type}{suffix}")
+            op_type_candidates.append(raw_type)
+
+        # Deduplicate while preserving order.
+        op_type_candidates = list(dict.fromkeys(op_type_candidates))
+
+        parts = rel_path.strip("/").split("/")
+        if len(parts) <= 1:
+            parent_rel = "/"
+        else:
+            parent_rel = "/" + "/".join(parts[:-1])
+
+        target_parent = created_nodes.get(parent_rel)
+        if not target_parent:
+            skipped_nodes.append({"path": rel_path, "reason": f"missing_parent:{parent_rel}"})
+            continue
+
+        base_name = str(node_info.get("name", "")).strip() or parts[-1] or raw_type
+        node_name = f"{prefix}_{base_name}" if prefix else base_name
+
+        result: Optional[Dict[str, Any]] = None
+        create_error: Optional[str] = None
+        for candidate_type in op_type_candidates:
+            try:
+                create_result = await client.request(
+                    "node/create",
+                    {
+                        "parent_path": target_parent,
+                        "node_type": candidate_type,
+                        "name": node_name,
+                    },
+                )
+                if isinstance(create_result, dict):
+                    result = create_result
+                    break
+                result = {"node": {"path": ""}}
+                break
+            except Exception as exc:
+                create_error = str(exc)
+
+        if result is None:
+            skipped_nodes.append(
+                {
+                    "path": rel_path,
+                    "reason": f"create_failed:{create_error or 'unknown'}",
+                }
+            )
+            continue
+
+        node_obj = result.get("node", {}) if isinstance(result, dict) else {}
+        actual_path = node_obj.get("path") if isinstance(node_obj, dict) else None
+        if not isinstance(actual_path, str) or not actual_path:
+            fallback_path = result.get("path") if isinstance(result, dict) else None
+            if isinstance(fallback_path, str) and fallback_path:
+                actual_path = fallback_path
+            else:
+                actual_path = f"{target_parent.rstrip('/')}/{node_name}".replace("//", "/")
+
+        created_nodes[rel_path] = actual_path
+        created_count += 1
+
+        params_to_set = node_info.get("params", {})
+        if isinstance(params_to_set, dict):
+            clean_params = {key: value for key, value in params_to_set.items() if value is not None}
+            if clean_params:
+                await client.request(
+                    "node/params/set",
+                    {
+                        "path": actual_path,
+                        "params": clean_params,
+                    },
+                )
+
+        expressions = node_info.get("expressions", {})
+        if isinstance(expressions, dict):
+            expr_params = {
+                key: {"expr": value}
+                for key, value in expressions.items()
+                if isinstance(value, str) and value
+            }
+            if expr_params:
+                await client.request(
+                    "node/params/set",
+                    {
+                        "path": actual_path,
+                        "params": expr_params,
+                    },
+                )
+
+    wired = 0
+    skipped_connections: List[Dict[str, str]] = []
+    for conn in recipe.get("connections", []):
+        if not isinstance(conn, dict):
+            continue
+
+        src_rel = str(conn.get("from", "")).strip()
+        dst_rel = str(conn.get("to", "")).strip()
+        src_path = created_nodes.get(src_rel)
+        dst_path = created_nodes.get(dst_rel)
+
+        if not src_path or not dst_path:
+            skipped_connections.append(
+                {
+                    "from": src_rel,
+                    "to": dst_rel,
+                    "reason": "missing_node_mapping",
+                }
+            )
+            continue
+
+        await client.request(
+            "node/connect",
+            {
+                "source_path": src_path,
+                "target_path": dst_path,
+                "source_index": int(conn.get("from_index", 0) or 0),
+                "target_index": int(conn.get("to_index", 0) or 0),
+            },
+        )
+        wired += 1
+
+    created_paths = {key: value for key, value in created_nodes.items() if key != "/"}
+    return {
+        "status": "ok",
+        "nodes_created": created_count,
+        "connections_wired": wired,
+        "created_paths": created_paths,
+        "skipped_nodes": skipped_nodes,
+        "skipped_connections": skipped_connections,
+    }
+
+
+@mcp.tool()
+async def td_memory_favorite(params: MemoryFavoriteInput, ctx: Context) -> dict:
+    """Mark a technique as favorite and/or rate it (0-5)."""
+    store = _get_technique_store(ctx)
+    ok = store.set_favorite(params.technique_id, params.favorite, scope=params.scope)
+    if not ok:
+        return {"status": "error", "message": f"Technique {params.technique_id} not found."}
+    if params.rating >= 0:
+        store.set_rating(params.technique_id, params.rating, scope=params.scope)
+    return {"status": "ok", "technique_id": params.technique_id, "favorite": params.favorite, "rating": params.rating}
+
+
+@mcp.tool()
+async def td_memory_promote(params: MemoryPromoteInput, ctx: Context) -> dict:
+    """Copy a project technique to the global library so it's available across all projects."""
+    store = _get_technique_store(ctx)
+    new_id = store.promote(params.technique_id)
+    if not new_id:
+        return {"status": "error", "message": f"Technique {params.technique_id} not found in project scope."}
+    return {"status": "ok", "global_technique_id": new_id, "promoted_from": params.technique_id}
+
+
+@mcp.tool()
+async def td_memory_preferences(params: MemoryPreferencesInput, ctx: Context) -> dict:
+    """Get, set, list, or delete user preferences.
+
+    Preferences store things like: preferred color palettes, default resolutions,
+    favorite operator types, naming conventions, etc.
+    """
+    pref = _get_preference_store(ctx)
+    action = params.action.lower()
+
+    if action == "get":
+        if not params.key:
+            return {"status": "error", "message": "Key is required for 'get'."}
+        value = pref.get(params.key, scope=params.scope)
+        return {"status": "ok", "key": params.key, "value": value}
+
+    elif action == "set":
+        if not params.key:
+            return {"status": "error", "message": "Key is required for 'set'."}
+        pref.set(params.key, params.value, scope=params.scope)
+        return {"status": "ok", "key": params.key, "value": params.value}
+
+    elif action == "list":
+        all_prefs = pref.list_all(scope=params.scope)
+        return {"status": "ok", "preferences": all_prefs, "count": len(all_prefs)}
+
+    elif action == "delete":
+        if not params.key:
+            return {"status": "error", "message": "Key is required for 'delete'."}
+        deleted = pref.delete(params.key, scope=params.scope)
+        return {"status": "ok", "deleted": deleted, "key": params.key}
+
+    else:
+        return {"status": "error", "message": f"Unknown action '{action}'. Use get/set/list/delete."}
+
+
+@mcp.tool()
+async def td_memory_list(params: MemoryListInput, ctx: Context) -> dict:
+    """List saved techniques with optional filtering by scope, tags, and favorites."""
+    store = _get_technique_store(ctx)
+    results = store.list_techniques(
+        scope=params.scope,
+        tags=params.tags if params.tags else None,
+        favorites_only=params.favorites_only,
+        limit=params.limit,
+    )
+    return {"status": "ok", "count": len(results), "techniques": results}
+
+
+# ─────────────────────────────────────────────────────────────
+# CLI entrypoint
+# ─────────────────────────────────────────────────────────────
+
+def main() -> None:
+    """Run the MCP server via FastMCP."""
+    mcp.run(transport=TD_TRANSPORT)

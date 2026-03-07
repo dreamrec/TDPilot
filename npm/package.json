@@ -1,0 +1,20 @@
+{
+  "name": "tdpilot",
+  "version": "1.1.0",
+  "description": "TDPilot v1.1 — AI copilot for TouchDesigner with live MCP control.",
+  "keywords": ["touchdesigner", "mcp", "ai", "model-context-protocol", "creative-coding"],
+  "author": "dreamrec",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dreamrec/TDPilot"
+  },
+  "homepage": "https://github.com/dreamrec/TDPilot#readme",
+  "bin": {
+    "tdpilot": "./run.js"
+  },
+  "files": ["run.js", "README.md"],
+  "engines": {
+    "node": ">=16"
+  }
+}

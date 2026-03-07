@@ -1,0 +1,49 @@
+[project]
+name = "tdpilot"
+version = "1.1.0"
+description = "MCP server for live control of TouchDesigner — create, inspect, connect, and manipulate nodes via AI agents"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "silviu" },
+]
+keywords = ["mcp", "touchdesigner", "ai", "creative-coding", "derivative"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Artistic Software",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "mcp>=1.0",
+    "httpx>=0.27",
+    "pydantic>=2.0",
+    "websockets>=12.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
+
+[project.scripts]
+tdpilot = "td_mcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/dreamrec/TDPilot"
+Repository = "https://github.com/dreamrec/TDPilot"
+Issues = "https://github.com/dreamrec/TDPilot/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/td_mcp"]
