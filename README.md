@@ -28,6 +28,23 @@ It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networ
 - A technique memory system that learns from your projects and builds a reusable library.
 - 86-tool runtime surface with knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, and custom parameter authoring.
 
+## Start Here: Core Workflow
+
+You don't need all 86 tools. Start with these and expand as needed:
+
+| Step | Tools | What You're Doing |
+|------|-------|-------------------|
+| **Inspect** | `td_get_info`, `td_get_nodes`, `td_get_params`, `td_get_errors` | Understand current state before touching anything |
+| **Check memory** | `td_memory_recall` | See if a reusable technique already exists |
+| **Build** | `td_create_node`, `td_connect_nodes`, `td_set_params` | Make changes in small, reversible steps |
+| **Verify** | `td_get_errors`, `td_cooking_info`, `td_screenshot` | Prove the change worked |
+| **Protect** | `td_snapshot_scene`, `td_restore_snapshot` | Save milestones, roll back if needed |
+| **Remember** | `td_memory_learn`, `td_memory_save` | Save successful patterns for reuse |
+
+**The loop:** Inspect -> Build -> Verify -> Snapshot -> Repeat.
+
+Everything else (vision, streaming, optimization, planning, TD2025 inspection) builds on top of this core.
+
 ## What's New In 1.3.2
 
 - **Vision diagnostics** — `td_capture_frame` and `td_analyze_frame` for MCP-side and TD-side pixel analysis (histogram, luminance, alpha, dominant color, ROI diff).
