@@ -71,8 +71,22 @@ def test_tool_registry_contains_core_and_v2_surfaces():
         "td_preflight_patch",
         "td_validate_recipe",
         "td_audit_project",
+        # v1.3.2 vision diagnostics
+        "td_capture_frame",
+        "td_analyze_frame",
+        # v1.3.2 TD 2025 native system tools
+        "td_python_env_status",
+        "td_threading_status",
+        "td_logger_status",
+        "td_tdresources_inspect",
+        "td_component_standardize",
+        "td_color_pipeline",
+        # v1.3.2 official recommendation tools
+        "td_recommend_official_component",
+        "td_find_official_example",
+        "td_explain_better_way",
     }
 
     missing = expected - names
     assert not missing, f"Missing expected tools: {sorted(missing)}"
-    assert len(names) >= 75
+    assert len(names) >= 86

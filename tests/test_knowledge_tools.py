@@ -25,7 +25,7 @@ def test_knowledge_tools_registered():
     assert not missing, f"Missing knowledge tools: {sorted(missing)}"
 
 
-def test_total_tool_count_at_least_75():
-    """Total tool count should be >= 75 after planning tools are added."""
+def test_total_tool_count_at_least_86():
+    """Total tool count should be >= 86 after v1.3.2 tools are added."""
     tools = asyncio.run(server.mcp.list_tools())
-    assert len(tools) >= 75, f"Expected >= 75 tools, got {len(tools)}"
+    assert len(tools) >= 86, f"Expected >= 86 tools, got {len(tools)}"
