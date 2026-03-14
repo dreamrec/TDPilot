@@ -1,0 +1,12 @@
+{
+  "card_type": "palette",
+  "component_name": "info",
+  "palette_path": "Tools/info",
+  "summary": "Component information display that shows metadata, version, author, and help text for a COMP. Standard way to document reusable components.",
+  "when_to_use": "When building distributable components that need embedded documentation and version tracking.",
+  "callback_model": null,
+  "key_params": [],
+  "compatibility": "2025.30000+",
+  "docs_url": "https://docs.derivative.ca/Palette:info",
+  "last_verified": "2026-03-14"
+}

@@ -1,0 +1,20 @@
+{
+  "card_type": "operator",
+  "op_type": "sphereSOP",
+  "family": "SOP",
+  "display_name": "Sphere SOP",
+  "docs_url": "https://docs.derivative.ca/Sphere_SOP",
+  "summary": "Creates a sphere mesh with configurable type (primitive, polygon, mesh), radius, and tessellation. A fundamental 3D primitive.",
+  "key_params": [
+    {"name": "type", "type": "Menu", "note": "Geometry type: Primitive (NURBS), Polygon, Mesh"},
+    {"name": "rad", "type": "Float", "note": "Radius of the sphere (XYZ can be set independently for ellipsoids)"},
+    {"name": "rows", "type": "Int", "note": "Latitudinal subdivisions"},
+    {"name": "cols", "type": "Int", "note": "Longitudinal subdivisions"}
+  ],
+  "common_gotchas": [
+    "Primitive type is not renderable with Phong/PBR materials — switch to Polygon or Mesh for standard rendering."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

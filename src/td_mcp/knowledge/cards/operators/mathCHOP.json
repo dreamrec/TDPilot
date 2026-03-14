@@ -1,0 +1,22 @@
+{
+  "card_type": "operator",
+  "op_type": "mathCHOP",
+  "family": "CHOP",
+  "display_name": "Math CHOP",
+  "docs_url": "https://docs.derivative.ca/Math_CHOP",
+  "summary": "Performs arithmetic operations on CHOP channels: range mapping, clamping, gain, offset, and multi-input combine operations (Add, Multiply, etc.).",
+  "key_params": [
+    {"name": "preoff", "type": "Float", "note": "Offset added before multiplication (pre-offset)"},
+    {"name": "gain", "type": "Float", "note": "Multiplier applied to channel values"},
+    {"name": "postoff", "type": "Float", "note": "Offset added after multiplication (post-offset)"},
+    {"name": "fromrange1", "type": "Float", "note": "Input range start for range mapping"},
+    {"name": "torange1", "type": "Float", "note": "Output range start for range mapping"}
+  ],
+  "common_gotchas": [
+    "The Range page is only active when the Combine CHOPs parameter on the Mult-Add page is Off.",
+    "With multiple inputs, the Combine CHOPs mode determines how channels across inputs are merged."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

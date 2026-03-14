@@ -1,0 +1,19 @@
+{
+  "card_type": "operator",
+  "op_type": "switchTOP",
+  "family": "TOP",
+  "display_name": "Switch TOP",
+  "docs_url": "https://docs.derivative.ca/Switch_TOP",
+  "summary": "Selects one of multiple texture inputs based on an index value, with optional blending between adjacent inputs for smooth transitions.",
+  "key_params": [
+    {"name": "index", "type": "Float", "note": "Which input to pass through (0-based); fractional values blend between adjacent inputs"},
+    {"name": "blend", "type": "Toggle", "note": "Enable smooth cross-fade between inputs when index is fractional"}
+  ],
+  "common_gotchas": [
+    "Index is 0-based: the first input is 0, not 1.",
+    "When blend is off, fractional index values are rounded — enable blend for smooth transitions."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

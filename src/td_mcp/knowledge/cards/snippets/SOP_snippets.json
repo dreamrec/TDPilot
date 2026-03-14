@@ -1,0 +1,12 @@
+{
+  "card_type": "snippet",
+  "snippet_id": "SOP_snippets",
+  "family": "SOP",
+  "summary": "Common SOP workflow snippets for geometry creation, transformation, and instancing preparation.",
+  "examples": [
+    "sop_grid_instance: Grid SOP with point attributes for GPU instancing",
+    "sop_merge_transform: Merge multiple transformed SOPs into one geometry",
+    "sop_noise_deform: Noise SOP deforming a grid for terrain-like surfaces",
+    "sop_particle_prep: Point generation and attribute setup for particle systems"
+  ]
+}

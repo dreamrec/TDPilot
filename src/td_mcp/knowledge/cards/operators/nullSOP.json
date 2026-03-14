@@ -1,0 +1,15 @@
+{
+  "card_type": "operator",
+  "op_type": "nullSOP",
+  "family": "SOP",
+  "display_name": "Null SOP",
+  "docs_url": "https://docs.derivative.ca/Null_SOP",
+  "summary": "A pass-through that marks a clean output point in a SOP chain. End every SOP network with a Null for stable referencing by Geometry COMPs.",
+  "key_params": [],
+  "common_gotchas": [
+    "Geometry COMPs should reference the Null SOP, not upstream operators, so restructuring does not break references."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

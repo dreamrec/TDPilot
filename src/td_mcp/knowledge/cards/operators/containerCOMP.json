@@ -1,0 +1,21 @@
+{
+  "card_type": "operator",
+  "op_type": "containerCOMP",
+  "family": "COMP",
+  "display_name": "Container COMP",
+  "docs_url": "https://docs.derivative.ca/Container_COMP",
+  "summary": "A UI-oriented container that displays child panels and supports layout, background colors, and interactive panel features. Used for building control panels and interfaces.",
+  "key_params": [
+    {"name": "alignorder", "type": "Menu", "note": "How child panels are arranged: Left to Right, Top to Bottom, etc."},
+    {"name": "bgcolorr", "type": "Float", "note": "Background color red channel"},
+    {"name": "hmode", "type": "Menu", "note": "Horizontal sizing mode: Fixed, Fill, etc."},
+    {"name": "vmode", "type": "Menu", "note": "Vertical sizing mode: Fixed, Fill, etc."}
+  ],
+  "common_gotchas": [
+    "Container COMPs render as panels — use Base COMPs instead if you do not need panel/UI features.",
+    "Panel sizing modes (Fill vs Fixed) interact with parent containers and can produce unexpected layouts."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

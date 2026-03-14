@@ -1,0 +1,20 @@
+{
+  "card_type": "operator",
+  "op_type": "constantTOP",
+  "family": "TOP",
+  "display_name": "Constant TOP",
+  "docs_url": "https://docs.derivative.ca/Constant_TOP",
+  "summary": "Outputs a solid-color texture. Useful as backgrounds, masks, or as a base for further processing.",
+  "key_params": [
+    {"name": "colorr", "type": "Float", "note": "Red channel value (0-1)"},
+    {"name": "colorg", "type": "Float", "note": "Green channel value (0-1)"},
+    {"name": "colorb", "type": "Float", "note": "Blue channel value (0-1)"},
+    {"name": "colora", "type": "Float", "note": "Alpha channel value (0-1)"}
+  ],
+  "common_gotchas": [
+    "Alpha defaults to 1; set it to 0 if you need a transparent base for compositing."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

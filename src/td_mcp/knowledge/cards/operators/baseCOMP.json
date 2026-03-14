@@ -1,0 +1,20 @@
+{
+  "card_type": "operator",
+  "op_type": "baseCOMP",
+  "family": "COMP",
+  "display_name": "Base COMP",
+  "docs_url": "https://docs.derivative.ca/Base_COMP",
+  "summary": "A generic container component that can hold any operators inside it. The foundation for building reusable modules, custom components, and organizational hierarchy.",
+  "key_params": [
+    {"name": "externaltox", "type": "String", "note": "Path to an external .tox file to load/save this component"},
+    {"name": "enablecloning", "type": "Toggle", "note": "Enable cloning from a master component"},
+    {"name": "extension1", "type": "String", "note": "Python extension class to attach to this component"}
+  ],
+  "common_gotchas": [
+    "External .tox references are not auto-saved — you must explicitly save or enable auto-export.",
+    "Extensions are initialized on component creation; changing the extension class requires reinitializing."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

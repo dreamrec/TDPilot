@@ -1,0 +1,12 @@
+{
+  "card_type": "palette",
+  "component_name": "tdPyEnvManager",
+  "palette_path": "Tools/tdPyEnvManager",
+  "summary": "Manages Python virtual environments for TouchDesigner projects. Installs pip packages into isolated venvs and adds them to sys.path at startup.",
+  "when_to_use": "When your project needs external Python packages (e.g., requests, numpy, opencv) that are not bundled with TouchDesigner.",
+  "callback_model": null,
+  "key_params": [],
+  "compatibility": "2025.30000+",
+  "docs_url": "https://docs.derivative.ca/Palette:tdPyEnvManager",
+  "last_verified": "2026-03-14"
+}

@@ -1,0 +1,22 @@
+{
+  "card_type": "operator",
+  "op_type": "cameraCOMP",
+  "family": "COMP",
+  "display_name": "Camera COMP",
+  "docs_url": "https://docs.derivative.ca/Camera_COMP",
+  "summary": "Defines a virtual camera for 3D rendering. Controls position, rotation, field of view, near/far clipping, and projection type (perspective or orthographic).",
+  "key_params": [
+    {"name": "tx", "type": "Float", "note": "Camera position X"},
+    {"name": "ty", "type": "Float", "note": "Camera position Y"},
+    {"name": "tz", "type": "Float", "note": "Camera position Z"},
+    {"name": "fov", "type": "Float", "note": "Field of view in degrees (perspective mode)"},
+    {"name": "near", "type": "Float", "note": "Near clipping plane distance"}
+  ],
+  "common_gotchas": [
+    "Default position is at the origin looking down -Z; move it back (positive Z) to see geometry at the origin.",
+    "Near plane too close to 0 causes Z-fighting artifacts — keep it as large as your scene allows."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

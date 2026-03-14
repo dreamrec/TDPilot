@@ -1,0 +1,12 @@
+{
+  "card_type": "snippet",
+  "snippet_id": "POP_snippets",
+  "family": "POP",
+  "summary": "Common POP (particle/point) workflow snippets for simulation, physics, and generative geometry.",
+  "examples": [
+    "pop_particle_basic: Basic particle system with emitter, forces, and rendering",
+    "pop_strange_attractor: Strange attractor point cloud with color mapping",
+    "pop_mesh_fill: Fill a mesh volume with evenly distributed points",
+    "pop_soft_body: XPBD soft body simulation setup"
+  ]
+}

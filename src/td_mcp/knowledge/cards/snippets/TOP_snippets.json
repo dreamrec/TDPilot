@@ -1,0 +1,12 @@
+{
+  "card_type": "snippet",
+  "snippet_id": "TOP_snippets",
+  "family": "TOP",
+  "summary": "Common TOP workflow snippets for image processing, compositing, feedback effects, and rendering.",
+  "examples": [
+    "top_feedback_trail: Feedback TOP with Level TOP decay for motion trails",
+    "top_composite_layers: Multi-layer compositing with Composite TOP and masks",
+    "top_noise_displace: Noise TOP driving a Displace TOP for organic distortion",
+    "top_render_basic: Minimal Render TOP setup with Camera, Geo, and Light"
+  ]
+}

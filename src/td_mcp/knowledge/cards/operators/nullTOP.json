@@ -1,0 +1,18 @@
+{
+  "card_type": "operator",
+  "op_type": "nullTOP",
+  "family": "TOP",
+  "display_name": "Null TOP",
+  "docs_url": "https://docs.derivative.ca/Null_TOP",
+  "summary": "A pass-through that marks a clean output point in a texture chain. Best practice is to end every TOP chain with a Null for stable referencing.",
+  "key_params": [
+    {"name": "cook", "type": "Menu", "note": "Cook behavior: Always, Off, or dependent on viewers/exports"}
+  ],
+  "common_gotchas": [
+    "A Null TOP with no input will not error but will output black — ensure it is actually wired.",
+    "Use Nulls as stable reference points so downstream references do not break when you restructure."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

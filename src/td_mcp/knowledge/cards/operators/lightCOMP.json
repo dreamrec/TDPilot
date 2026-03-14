@@ -1,0 +1,22 @@
+{
+  "card_type": "operator",
+  "op_type": "lightCOMP",
+  "family": "COMP",
+  "display_name": "Light COMP",
+  "docs_url": "https://docs.derivative.ca/Light_COMP",
+  "summary": "Defines a light source for 3D rendering. Supports Point, Directional, Spot, and Cone light types with color, intensity, and shadow controls.",
+  "key_params": [
+    {"name": "lighttype", "type": "Menu", "note": "Light type: Point, Directional, Spot, Cone"},
+    {"name": "dimmer", "type": "Float", "note": "Light intensity multiplier (0-1+)"},
+    {"name": "lightcolorr", "type": "Float", "note": "Light color red channel"},
+    {"name": "tx", "type": "Float", "note": "Light position X"},
+    {"name": "shadowtype", "type": "Menu", "note": "Shadow mode: Off, Static, Dynamic"}
+  ],
+  "common_gotchas": [
+    "Lights must be listed in the Render TOP's 'lights' parameter to take effect.",
+    "Dynamic shadows are expensive — use static shadows or limit shadow-casting geometry for performance."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

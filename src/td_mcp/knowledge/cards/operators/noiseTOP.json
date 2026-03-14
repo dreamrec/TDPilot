@@ -1,0 +1,22 @@
+{
+  "card_type": "operator",
+  "op_type": "noiseTOP",
+  "family": "TOP",
+  "display_name": "Noise TOP",
+  "docs_url": "https://docs.derivative.ca/Noise_TOP",
+  "summary": "Generates procedural noise patterns (Perlin, Simplex, Sparse, etc.) as a texture. Commonly used for driving displacements, masks, or generative visual effects.",
+  "key_params": [
+    {"name": "type", "type": "Menu", "note": "Noise algorithm: Perlin, Simplex, Sparse, Alligator, etc."},
+    {"name": "amp", "type": "Float", "note": "Overall amplitude/brightness of the noise output"},
+    {"name": "period", "type": "Float", "note": "Spatial frequency of noise — smaller values yield coarser patterns"},
+    {"name": "t", "type": "Float", "note": "Time offset for animating noise; link to absTime.seconds for smooth motion"},
+    {"name": "monochrome", "type": "Toggle", "note": "When on, outputs greyscale noise; off gives per-channel RGB noise"}
+  ],
+  "common_gotchas": [
+    "Forgetting to animate the 't' parameter results in a static image — wire absTime.seconds or a CHOP to it.",
+    "Resolution defaults to 256x256; set it explicitly or use an input to inherit resolution."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

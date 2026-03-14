@@ -1,0 +1,19 @@
+{
+  "card_type": "operator",
+  "op_type": "selectCHOP",
+  "family": "CHOP",
+  "display_name": "Select CHOP",
+  "docs_url": "https://docs.derivative.ca/Select_CHOP",
+  "summary": "References channels from any CHOP in the project by path, with optional channel name filtering. Essential for routing data between components.",
+  "key_params": [
+    {"name": "chop", "type": "String", "note": "Path to the source CHOP to reference"},
+    {"name": "channames", "type": "String", "note": "Whitespace-separated channel name patterns to select (supports wildcards)"}
+  ],
+  "common_gotchas": [
+    "If the referenced CHOP is deleted or the path changes, the Select outputs zero channels silently.",
+    "Channel name patterns are case-sensitive — 'tx' will not match 'TX'."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

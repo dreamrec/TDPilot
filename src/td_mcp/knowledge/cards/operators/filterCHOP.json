@@ -1,0 +1,20 @@
+{
+  "card_type": "operator",
+  "op_type": "filterCHOP",
+  "family": "CHOP",
+  "display_name": "Filter CHOP",
+  "docs_url": "https://docs.derivative.ca/Filter_CHOP",
+  "summary": "Smooths CHOP channel values over time using various filter types (lowpass, spring, etc.). Essential for removing jitter from sensors, audio, or noisy inputs.",
+  "key_params": [
+    {"name": "filtertype", "type": "Menu", "note": "Filter algorithm: Gaussian, Box, Edge Detect, or custom"},
+    {"name": "filterwidth", "type": "Float", "note": "Width/duration of the smoothing window in seconds or samples"},
+    {"name": "resetcondition", "type": "Menu", "note": "When to reset the filter state"}
+  ],
+  "common_gotchas": [
+    "Higher filter width adds more lag — balance smoothness vs. responsiveness for real-time control.",
+    "Filter introduces latency proportional to the filter width; for zero-latency smoothing use a Lag CHOP instead."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

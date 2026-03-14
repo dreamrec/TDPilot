@@ -1,0 +1,20 @@
+{
+  "card_type": "operator",
+  "op_type": "constantCHOP",
+  "family": "CHOP",
+  "display_name": "Constant CHOP",
+  "docs_url": "https://docs.derivative.ca/Constant_CHOP",
+  "summary": "Outputs one or more channels with static values that you define. The simplest way to create named control channels for parameters or logic.",
+  "key_params": [
+    {"name": "name0", "type": "String", "note": "Name of the first channel"},
+    {"name": "value0", "type": "Float", "note": "Value of the first channel"},
+    {"name": "name1", "type": "String", "note": "Name of the second channel (additional channels added similarly)"},
+    {"name": "value1", "type": "Float", "note": "Value of the second channel"}
+  ],
+  "common_gotchas": [
+    "Channel names must be unique within the node; duplicate names are silently renamed with a suffix."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

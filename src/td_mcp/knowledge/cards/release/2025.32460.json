@@ -1,0 +1,22 @@
+{
+  "card_type": "release",
+  "build": "2025.32460",
+  "release_date": "2026-03-10",
+  "highlights": ["Text POP", "Trace POP", "DMX POPs", "Layer Mix TOP", "Color management overhaul", "Python 3.11.10"],
+  "new_ops": [
+    {"type": "textPOP", "family": "POP"},
+    {"type": "tracePOP", "family": "POP"},
+    {"type": "dmxInPOP", "family": "POP"},
+    {"type": "dmxOutPOP", "family": "POP"},
+    {"type": "layerMixTOP", "family": "TOP"}
+  ],
+  "changed_ops": [
+    {"type": "particlePOP", "change": "Added jitter parameters"},
+    {"type": "polygonizePOP", "change": "Now 3D-only input"}
+  ],
+  "migration_warnings": [
+    "Polygonize POP now 3D-only input, use Trace POP for 2D",
+    "Color management defaults changed — check project settings"
+  ],
+  "docs_url": "https://docs.derivative.ca/Release_Notes"
+}

@@ -1,0 +1,17 @@
+{
+  "card_type": "operator",
+  "op_type": "nullCHOP",
+  "family": "CHOP",
+  "display_name": "Null CHOP",
+  "docs_url": "https://docs.derivative.ca/Null_CHOP",
+  "summary": "A pass-through that marks a clean output point in a CHOP chain. Best practice is to end CHOP networks with a Null for stable export referencing.",
+  "key_params": [
+    {"name": "cook", "type": "Menu", "note": "Cook behavior: Always, Off, or dependent on exports/viewers"}
+  ],
+  "common_gotchas": [
+    "Always name your Null CHOPs descriptively (e.g., null_audio_level) so exports and references remain clear."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

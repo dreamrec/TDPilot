@@ -1,0 +1,22 @@
+{
+  "card_type": "operator",
+  "op_type": "timerCHOP",
+  "family": "CHOP",
+  "display_name": "Timer CHOP",
+  "docs_url": "https://docs.derivative.ca/Timer_CHOP",
+  "summary": "Multi-segment timer with callbacks for cue-based sequencing, countdowns, and timed events. Outputs normalized fraction, elapsed time, and segment info.",
+  "key_params": [
+    {"name": "length", "type": "Float", "note": "Duration of the timer segment (in seconds or frames depending on units)"},
+    {"name": "play", "type": "Toggle", "note": "Start/stop the timer"},
+    {"name": "initialize", "type": "Toggle", "note": "Pulse to reset the timer to the beginning"},
+    {"name": "callbacks", "type": "String", "note": "Path to a DAT containing onDone, onSegmentEnter callbacks"},
+    {"name": "cycle", "type": "Toggle", "note": "Loop the timer when it reaches the end"}
+  ],
+  "common_gotchas": [
+    "The timer will not start until you pulse 'initialize' then set 'play' to 1 — both are required.",
+    "Callback DATs must define the correct function signatures or they will be silently ignored."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

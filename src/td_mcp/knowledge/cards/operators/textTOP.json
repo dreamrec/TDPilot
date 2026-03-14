@@ -1,0 +1,22 @@
+{
+  "card_type": "operator",
+  "op_type": "textTOP",
+  "family": "TOP",
+  "display_name": "Text TOP",
+  "docs_url": "https://docs.derivative.ca/Text_TOP",
+  "summary": "Renders text strings into a texture with control over font, size, color, alignment, and word-wrapping. Supports expressions and dynamic text via DAT references.",
+  "key_params": [
+    {"name": "text", "type": "String", "note": "The text string to render; supports Python expressions with backtick syntax"},
+    {"name": "fontfile", "type": "String", "note": "Path to a .ttf or .otf font file"},
+    {"name": "fontsizex", "type": "Float", "note": "Font size in pixels"},
+    {"name": "alignx", "type": "Menu", "note": "Horizontal alignment: Left, Center, Right"},
+    {"name": "aligny", "type": "Menu", "note": "Vertical alignment: Top, Center, Bottom"}
+  ],
+  "common_gotchas": [
+    "Large font sizes with word-wrap can be slow — consider caching via a Cache TOP for static text.",
+    "For dynamic text, reference a DAT or use expressions; hard-coded text does not update at runtime."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

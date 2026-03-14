@@ -1,0 +1,18 @@
+{
+  "card_type": "operator",
+  "op_type": "selectTOP",
+  "family": "TOP",
+  "display_name": "Select TOP",
+  "docs_url": "https://docs.derivative.ca/Select_TOP",
+  "summary": "References a TOP from anywhere in the project by path, allowing you to use its output without a direct wire connection.",
+  "key_params": [
+    {"name": "top", "type": "String", "note": "Path to the source TOP to reference (absolute or relative)"}
+  ],
+  "common_gotchas": [
+    "If the referenced path is invalid or the target is deleted, the Select silently outputs nothing.",
+    "Overusing Selects across many COMPs can obscure data flow — prefer exports or In/Out TOPs for structured designs."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

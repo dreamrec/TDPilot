@@ -1,0 +1,12 @@
+{
+  "card_type": "palette",
+  "component_name": "logger",
+  "palette_path": "Tools/logger",
+  "summary": "Structured logging utility for TouchDesigner projects. Provides leveled logging (debug, info, warning, error) with timestamps and optional file output.",
+  "when_to_use": "When you need persistent, filterable logging beyond print() statements — especially for debugging production shows.",
+  "callback_model": null,
+  "key_params": [],
+  "compatibility": "2025.30000+",
+  "docs_url": "https://docs.derivative.ca/Palette:logger",
+  "last_verified": "2026-03-14"
+}

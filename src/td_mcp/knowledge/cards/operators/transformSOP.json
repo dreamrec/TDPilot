@@ -1,0 +1,22 @@
+{
+  "card_type": "operator",
+  "op_type": "transformSOP",
+  "family": "SOP",
+  "display_name": "Transform SOP",
+  "docs_url": "https://docs.derivative.ca/Transform_SOP",
+  "summary": "Applies translate, rotate, and scale transformations to SOP geometry at the vertex level. Unlike COMP transforms, this bakes the transform into the point positions.",
+  "key_params": [
+    {"name": "tx", "type": "Float", "note": "Translate X"},
+    {"name": "ty", "type": "Float", "note": "Translate Y"},
+    {"name": "tz", "type": "Float", "note": "Translate Z"},
+    {"name": "rx", "type": "Float", "note": "Rotate X in degrees"},
+    {"name": "sx", "type": "Float", "note": "Scale X"}
+  ],
+  "common_gotchas": [
+    "Transforms are baked into vertex positions — this is permanent within the SOP chain, unlike COMP-level transforms.",
+    "For animated transforms, prefer COMP-level xform parameters for better performance, unless vertex-level deformation is needed."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

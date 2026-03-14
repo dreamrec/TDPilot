@@ -1,0 +1,22 @@
+{
+  "card_type": "operator",
+  "op_type": "renderTOP",
+  "family": "TOP",
+  "display_name": "Render TOP",
+  "docs_url": "https://docs.derivative.ca/Render_TOP",
+  "summary": "Renders a 3D scene from a Camera COMP, Geometry COMPs, and Light COMPs into a 2D texture. The primary bridge between 3D and 2D workflows.",
+  "key_params": [
+    {"name": "camera", "type": "String", "note": "Path to the Camera COMP used for rendering"},
+    {"name": "geometry", "type": "String", "note": "Path(s) to Geometry COMPs to render (space-separated or wildcard)"},
+    {"name": "lights", "type": "String", "note": "Path(s) to Light COMPs (space-separated or wildcard)"},
+    {"name": "resolutionw", "type": "Int", "note": "Output resolution width in pixels"},
+    {"name": "resolutionh", "type": "Int", "note": "Output resolution height in pixels"}
+  ],
+  "common_gotchas": [
+    "An empty Geometry or Camera parameter produces a black output with no error — always verify paths.",
+    "Render is GPU-intensive at high resolutions; use instancing in Geometry COMPs rather than duplicating geometry."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

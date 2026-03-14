@@ -1,0 +1,20 @@
+{
+  "card_type": "operator",
+  "op_type": "lineSOP",
+  "family": "SOP",
+  "display_name": "Line SOP",
+  "docs_url": "https://docs.derivative.ca/Line_SOP",
+  "summary": "Creates a line between two points with configurable number of divisions. Useful as a curve primitive for sweeps, instancing paths, and wire-frame effects.",
+  "key_params": [
+    {"name": "dist", "type": "Float", "note": "Length of the line"},
+    {"name": "points", "type": "Int", "note": "Number of points along the line (more points = smoother curves when deformed)"},
+    {"name": "direction", "type": "Menu", "note": "Direction axis for the line: X, Y, or Z"}
+  ],
+  "common_gotchas": [
+    "A line with only 2 points cannot be smoothly deformed — increase points for curve-like operations.",
+    "Lines are not renderable by default in most materials; use a Wire MAT or convert to tubes."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

@@ -1,0 +1,12 @@
+{
+  "card_type": "palette",
+  "component_name": "threadManagerClient",
+  "palette_path": "Tools/threadManagerClient",
+  "summary": "Thread-safe Python task execution for TouchDesigner. Runs Python functions on background threads and returns results to the main thread safely.",
+  "when_to_use": "When you need to run blocking operations (HTTP requests, file I/O, heavy computation) without freezing the UI or dropping frames.",
+  "callback_model": "Submit a callable via the extension; results are delivered via a callback on the main thread in a subsequent frame.",
+  "key_params": [],
+  "compatibility": "2025.30000+",
+  "docs_url": "https://docs.derivative.ca/Palette:threadManagerClient",
+  "last_verified": "2026-03-14"
+}

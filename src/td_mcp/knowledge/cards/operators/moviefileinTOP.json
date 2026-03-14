@@ -1,0 +1,22 @@
+{
+  "card_type": "operator",
+  "op_type": "moviefileinTOP",
+  "family": "TOP",
+  "display_name": "Movie File In TOP",
+  "docs_url": "https://docs.derivative.ca/Movie_File_In_TOP",
+  "summary": "Loads image or video files (PNG, JPG, EXR, MP4, HAP, NotchLC, etc.) from disk into a texture. Supports image sequences and looping.",
+  "key_params": [
+    {"name": "file", "type": "String", "note": "File path to the image or video file"},
+    {"name": "play", "type": "Toggle", "note": "Enable/disable playback for video files"},
+    {"name": "index", "type": "Float", "note": "Frame index for image sequences or seek position in video"},
+    {"name": "reload", "type": "Toggle", "note": "Pulse to force-reload the file from disk"},
+    {"name": "preread", "type": "Toggle", "note": "Pre-read frames ahead for smoother playback"}
+  ],
+  "common_gotchas": [
+    "HAP and NotchLC codecs offer GPU-decoded playback and are vastly faster than H.264 for real-time use.",
+    "Large image sequences can consume significant RAM — use pre-read carefully and monitor memory."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

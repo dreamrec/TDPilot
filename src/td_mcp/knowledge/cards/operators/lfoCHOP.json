@@ -1,0 +1,22 @@
+{
+  "card_type": "operator",
+  "op_type": "lfoCHOP",
+  "family": "CHOP",
+  "display_name": "LFO CHOP",
+  "docs_url": "https://docs.derivative.ca/LFO_CHOP",
+  "summary": "Generates low-frequency oscillator waveforms (sine, square, triangle, ramp, pulse) as CHOP channels. Commonly used for cyclic animation and parameter modulation.",
+  "key_params": [
+    {"name": "type", "type": "Menu", "note": "Waveform shape: Sin, Gaussian, Triangle, Ramp, Square, Pulse"},
+    {"name": "frequency", "type": "Float", "note": "Oscillation frequency in Hz"},
+    {"name": "amplitude", "type": "Float", "note": "Peak amplitude of the waveform"},
+    {"name": "offset", "type": "Float", "note": "Vertical offset added to the waveform"},
+    {"name": "phase", "type": "Float", "note": "Phase offset in cycles (0-1)"}
+  ],
+  "common_gotchas": [
+    "Default output range is -1 to 1 for sine; use a Math CHOP to remap to 0-1 if needed for parameters.",
+    "LFO is time-dependent — if the timeline is paused, the LFO will also pause unless set to independent time."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

@@ -1,0 +1,12 @@
+{
+  "card_type": "snippet",
+  "snippet_id": "CHOP_snippets",
+  "family": "CHOP",
+  "summary": "Common CHOP workflow snippets for channel manipulation, audio analysis, sensor smoothing, and parameter control.",
+  "examples": [
+    "chop_smooth_sensor: Smooth noisy sensor input with Filter CHOP and Lag CHOP",
+    "chop_audio_analysis: Extract audio bands using Audio Spectrum CHOP and Math CHOP",
+    "chop_lfo_modulation: Use LFO CHOP to modulate parameters with sine/ramp waves",
+    "chop_timer_sequence: Multi-segment Timer CHOP with callbacks for show control"
+  ]
+}

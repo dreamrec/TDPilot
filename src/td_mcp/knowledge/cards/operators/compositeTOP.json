@@ -1,0 +1,20 @@
+{
+  "card_type": "operator",
+  "op_type": "compositeTOP",
+  "family": "TOP",
+  "display_name": "Composite TOP",
+  "docs_url": "https://docs.derivative.ca/Composite_TOP",
+  "summary": "Combines two or more texture inputs using blend operations (Over, Add, Multiply, Screen, etc.). The workhorse for layering images and building visual composites.",
+  "key_params": [
+    {"name": "operand", "type": "Menu", "note": "Blend mode: Over, Under, Add, Subtract, Multiply, Screen, etc."},
+    {"name": "opacity", "type": "Float", "note": "Master opacity for the compositing operation (0-1)"},
+    {"name": "prefit", "type": "Menu", "note": "How to handle resolution mismatches between inputs"}
+  ],
+  "common_gotchas": [
+    "Input order matters: the first input is the background, subsequent inputs composite on top.",
+    "Ensure both inputs have matching resolution and pixel format to avoid unexpected scaling or clamping."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

@@ -1,0 +1,18 @@
+{
+  "card_type": "operator",
+  "op_type": "switchSOP",
+  "family": "SOP",
+  "display_name": "Switch SOP",
+  "docs_url": "https://docs.derivative.ca/Switch_SOP",
+  "summary": "Selects one of multiple SOP inputs based on an index value. Unlike the TOP version, SOP Switch does not support blending between inputs.",
+  "key_params": [
+    {"name": "index", "type": "Int", "note": "Which input to pass through (0-based)"}
+  ],
+  "common_gotchas": [
+    "Index is 0-based and integer-only — fractional values are truncated, not blended.",
+    "All inputs still cook even when not selected, which can waste performance; use cooking flags to optimize."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

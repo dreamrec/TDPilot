@@ -1,0 +1,22 @@
+{
+  "card_type": "operator",
+  "op_type": "gridSOP",
+  "family": "SOP",
+  "display_name": "Grid SOP",
+  "docs_url": "https://docs.derivative.ca/Grid_SOP",
+  "summary": "Creates a flat rectangular grid mesh with configurable rows, columns, and size. One of the most common geometry primitives for 2D surfaces and instancing layouts.",
+  "key_params": [
+    {"name": "rows", "type": "Int", "note": "Number of rows (subdivisions in Y)"},
+    {"name": "cols", "type": "Int", "note": "Number of columns (subdivisions in X)"},
+    {"name": "sizex", "type": "Float", "note": "Width of the grid"},
+    {"name": "sizey", "type": "Float", "note": "Height of the grid"},
+    {"name": "orient", "type": "Menu", "note": "Orientation plane: XY, XZ, or YZ"}
+  ],
+  "common_gotchas": [
+    "Default orientation is XZ (horizontal floor); switch to XY for a vertical screen-facing plane.",
+    "High row/col counts increase vertex count quadratically — 1000x1000 = 1M vertices."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

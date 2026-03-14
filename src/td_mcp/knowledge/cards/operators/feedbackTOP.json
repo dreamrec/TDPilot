@@ -1,0 +1,20 @@
+{
+  "card_type": "operator",
+  "op_type": "feedbackTOP",
+  "family": "TOP",
+  "display_name": "Feedback TOP",
+  "docs_url": "https://docs.derivative.ca/Feedback_TOP",
+  "summary": "Outputs the previous frame's result of a downstream TOP, enabling recursive visual feedback loops for trails, echoes, and iterative effects.",
+  "key_params": [
+    {"name": "top", "type": "String", "note": "Path to the target TOP whose previous-frame output is fed back"},
+    {"name": "resetpulse", "type": "Toggle", "note": "Pulse to clear the feedback buffer to black"},
+    {"name": "resetcondition", "type": "Menu", "note": "When to auto-reset: None, On First Frame, On Parameter Change"}
+  ],
+  "common_gotchas": [
+    "The Target TOP parameter must point to a TOP *downstream* of this node; pointing upstream creates no loop.",
+    "Feedback runs one frame behind — combine with a Composite or Level TOP to decay or the image will saturate."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

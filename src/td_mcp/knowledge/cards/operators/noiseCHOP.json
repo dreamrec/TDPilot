@@ -1,0 +1,21 @@
+{
+  "card_type": "operator",
+  "op_type": "noiseCHOP",
+  "family": "CHOP",
+  "display_name": "Noise CHOP",
+  "docs_url": "https://docs.derivative.ca/Noise_CHOP",
+  "summary": "Generates procedural noise as CHOP channels over time. Useful for organic motion, parameter randomization, and audio-like signals.",
+  "key_params": [
+    {"name": "type", "type": "Menu", "note": "Noise type: Sparse, Hermite, Harmonic, Random"},
+    {"name": "amp", "type": "Float", "note": "Output amplitude of the noise"},
+    {"name": "period", "type": "Float", "note": "Time period of the noise in seconds — lower is faster"},
+    {"name": "roughness", "type": "Float", "note": "Fractal roughness (how much high-frequency detail)"},
+    {"name": "seed", "type": "Int", "note": "Random seed — different seeds produce different patterns"}
+  ],
+  "common_gotchas": [
+    "Noise is time-based by default; if the timeline is paused, the output will freeze unless you use an independent time source."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

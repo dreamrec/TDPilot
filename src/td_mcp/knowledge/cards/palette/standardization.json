@@ -1,0 +1,12 @@
+{
+  "card_type": "palette",
+  "component_name": "standardization",
+  "palette_path": "Tools/standardization",
+  "summary": "Component standardization checker that validates COMPs against TouchDesigner best practices for naming, documentation, and structure.",
+  "when_to_use": "When preparing components for distribution or enforcing team coding standards across a project.",
+  "callback_model": null,
+  "key_params": [],
+  "compatibility": "2025.30000+",
+  "docs_url": "https://docs.derivative.ca/Palette:standardization",
+  "last_verified": "2026-03-14"
+}

@@ -1,0 +1,22 @@
+{
+  "card_type": "operator",
+  "op_type": "geometryCOMP",
+  "family": "COMP",
+  "display_name": "Geometry COMP",
+  "docs_url": "https://docs.derivative.ca/Geometry_COMP",
+  "summary": "Holds SOP geometry and a material for 3D rendering. Place SOPs inside it, assign a MAT, and reference it from a Render TOP to display 3D objects.",
+  "key_params": [
+    {"name": "material", "type": "String", "note": "Path to the MAT operator for surface material"},
+    {"name": "tx", "type": "Float", "note": "Translate X in world space"},
+    {"name": "ty", "type": "Float", "note": "Translate Y in world space"},
+    {"name": "tz", "type": "Float", "note": "Translate Z in world space"},
+    {"name": "instanceop", "type": "String", "note": "Path to CHOP/DAT for GPU instancing data"}
+  ],
+  "common_gotchas": [
+    "Geometry COMP must contain at least one SOP (ending in a Null SOP) and have a material assigned to render.",
+    "For instancing, the instance CHOP/DAT must have channels named tx, ty, tz (and optionally rx, ry, rz, sx, sy, sz)."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

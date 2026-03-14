@@ -1,0 +1,16 @@
+{
+  "card_type": "operator",
+  "op_type": "mergeSOP",
+  "family": "SOP",
+  "display_name": "Merge SOP",
+  "docs_url": "https://docs.derivative.ca/Merge_SOP",
+  "summary": "Combines multiple SOP inputs into a single geometry output. The geometry remains as separate primitives but lives in one operator for unified processing.",
+  "key_params": [],
+  "common_gotchas": [
+    "Merge does not fuse overlapping points — use a Fuse SOP afterward if you need a watertight mesh.",
+    "Large numbers of merged inputs can slow down cooking; consider instancing instead for repeated geometry."
+  ],
+  "related_snippets": [],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-03-14"
+}

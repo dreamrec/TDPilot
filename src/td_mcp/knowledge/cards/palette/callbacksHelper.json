@@ -1,0 +1,12 @@
+{
+  "card_type": "palette",
+  "component_name": "callbacksHelper",
+  "palette_path": "Tools/callbacksHelper",
+  "summary": "Standardized callback plumbing for COMPs. Automatically creates and manages callback DATs with proper function signatures for common events.",
+  "when_to_use": "When building reusable components that need user-customizable callbacks (e.g., on value change, on cook, on pulse).",
+  "callback_model": "Creates a callback DAT with stub functions that the user fills in; the helper wires them to the component's events.",
+  "key_params": [],
+  "compatibility": "2025.30000+",
+  "docs_url": "https://docs.derivative.ca/Palette:callbacksHelper",
+  "last_verified": "2026-03-14"
+}
