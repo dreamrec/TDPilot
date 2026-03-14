@@ -10,7 +10,7 @@ TDPilot v1.3.2 provides 88 MCP tools for live control of TouchDesigner projects 
 ### Skills
 - **tdpilot-core** — Core patching discipline: 88-tool reference, node layout, color coding, expressions, error verification, visual checks, technique memory, v1.1 features (custom parameters, project lifecycle, POP inspection)
 - **tdpilot-production** — Production-safe workflow: staged edits, undo blocks, snapshots, completion gates, failure protocol
-- **popx-touchdesigner** — POPX operator knowledge base: 59 GPU-accelerated operators (generators, falloffs, modifiers, tools, simulations), 54 shipped examples with working values, full reference corpus, and search tools for building POPX-based particle/instance setups
+- **popx-touchdesigner** — POPX workflow skill for 59 GPU-accelerated operators. References must be built locally from your own licensed POPx copy (see `references/BUILD.md`)
 
 ### Commands
 - **/td-check** — Run a comprehensive health check on the current TD project

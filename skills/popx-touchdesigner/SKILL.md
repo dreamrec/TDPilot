@@ -9,20 +9,23 @@ description: >
 
 # POPX TouchDesigner
 
-Use the bundled POPX corpus before guessing. This skill is backed by:
+POPx is a paid plugin — its documentation is copyrighted and not distributed with TDPilot.
+You must build the reference files locally from your own licensed copy (see `references/BUILD.md`).
 
-- A generated reference catalog in `references/`
-- A bundled snapshot of shipped POPX examples and working values
+This skill is backed by:
+
+- A locally-generated reference catalog in `references/` (user must build — see `references/BUILD.md`)
 - A live example loader in the open TouchDesigner project at `/EXAMPLE_LOADER`
-- Optional local source folders only when explicitly rebuilding the references
+- Build scripts in `scripts/` for generating references from your own POPx installation
 
 If you are modifying the live TouchDesigner project with `td_` tools, also follow the `tdpilot-core` skill.
 
 ## Quick Start
 
-1. Open `references/overview.md`.
-2. Run `python3 scripts/search_popx_refs.py "<query>"` if the request is broad or ambiguous.
-3. Open the smallest relevant reference file:
+1. Build references first if not done: see `references/BUILD.md`.
+2. Open `references/overview.md`.
+3. Run `python3 scripts/search_popx_refs.py "<query>"` if the request is broad or ambiguous.
+4. Open the smallest relevant reference file:
    - `references/guides.md`
    - `references/operators-generators.md`
    - `references/operators-falloffs.md`
@@ -91,11 +94,13 @@ python3 scripts/search_popx_refs.py "path tracer glass" --examples
 python3 scripts/search_popx_refs.py "attribute to index" --docs
 ```
 
-To rebuild the bundled references from fresh local sources, pass the locations explicitly (requires `pip install beautifulsoup4`):
+To build or rebuild references from your licensed POPx copy (requires `pip install beautifulsoup4`):
 
 ```bash
 python3 scripts/build_popx_refs.py --docs-root "/path/to/popsextension.com/docs" --examples-root "/path/to/POPX_1_2_1"
 ```
+
+See `references/BUILD.md` for full instructions.
 
 Search first when:
 
