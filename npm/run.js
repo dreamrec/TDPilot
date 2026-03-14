@@ -105,7 +105,8 @@ const env = {
 };
 
 // Run the Python MCP server via uv
-const child = spawn("uv", ["run", "--directory", INSTALL_DIR, "tdpilot"], {
+const userArgs = process.argv.slice(2);
+const child = spawn("uv", ["run", "--directory", INSTALL_DIR, "tdpilot", ...userArgs], {
   stdio: "inherit",
   env,
   shell: os.platform() === "win32",

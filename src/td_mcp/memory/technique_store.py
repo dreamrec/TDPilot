@@ -348,7 +348,12 @@ class TechniqueStore:
     def _save_scope(self, scope: str) -> None:
         if scope == "global":
             self._write_file(self._global_dir / "techniques.json", self._global)
-        elif self._project_dir:
+        elif scope == "project":
+            if not self._project_dir:
+                raise ValueError(
+                    "Cannot save project-scoped data: TDPILOT_PROJECT_NAME is not set. "
+                    "Set the environment variable or use scope='global'."
+                )
             self._write_file(self._project_dir / "techniques.json", self._project)
 
     def _write_file(self, path: Path, data: Dict[str, Dict[str, Any]]) -> None:

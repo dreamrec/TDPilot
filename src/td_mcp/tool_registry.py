@@ -3135,12 +3135,16 @@ async def td_memory_save(params: MemorySaveInput, ctx: Context) -> dict:
         compatibility["min_build"] = td_build
     if required_op_types:
         compatibility["required_ops"] = required_op_types
+    # Fall back to values from the technique dict if caller didn't provide them
+    name = params.name or (tech.get("name", "") if isinstance(tech, dict) else "")
+    description = params.description or (tech.get("description", "") if isinstance(tech, dict) else "")
+    tags = params.tags or (tech.get("tags", []) if isinstance(tech, dict) else [])
     technique_id = store.add(
         technique=params.technique,
         scope=params.scope,
-        name=params.name,
-        description=params.description,
-        tags=params.tags,
+        name=name,
+        description=description,
+        tags=tags,
         notes=params.notes,
         compatibility=compatibility or None,
     )
@@ -3195,19 +3199,16 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
             or []
         )
         if required_ops:
-            try:
-                op_info = await _get_client(ctx).request("op_types", {})
-                available_ops = set(op_info.get("op_types", []) if isinstance(op_info, dict) else [])
-                if available_ops:
-                    missing_ops = [op for op in required_ops if op not in available_ops]
-                    if missing_ops:
-                        return {
-                            "status": "blocked",
-                            "reason": "Missing operator types",
-                            "missing_ops": missing_ops,
-                        }
-            except Exception:
-                pass  # If we can't check, allow replay (non-fatal)
+            svc = _get_services(ctx)
+            idx = getattr(svc, "card_index", None)
+            if idx is not None:
+                missing_ops = [op for op in required_ops if idx.get_operator(op) is None]
+                if missing_ops:
+                    return {
+                        "status": "blocked",
+                        "reason": "Missing operator types in knowledge corpus",
+                        "missing_ops": missing_ops,
+                    }
 
     client = _get_client(ctx)
     parent = params.parent_path.rstrip("/") or "/"
@@ -3866,11 +3867,17 @@ async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> Dict[
                 warnings.append("Recipe missing field: '{}'".format(field))
 
         # Validate each node op_type against knowledge corpus
-        nodes = recipe.get("nodes", [])
+        nodes = recipe.get("nodes", {})
+        if isinstance(nodes, dict):
+            node_items = nodes.values()
+        elif isinstance(nodes, list):
+            node_items = nodes
+        else:
+            node_items = []
         unknown_types = []
         compat_issues = []
 
-        for node in nodes:
+        for node in node_items:
             if not isinstance(node, dict):
                 continue
             op_type = node.get("type", "")
@@ -3885,7 +3892,7 @@ async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> Dict[
                     if svc.td_build:
                         try:
                             compat = idx.check_compatibility(op_type, svc.td_build)
-                            if not compat.get("compatible", True):
+                            if compat.get("status") == "incompatible":
                                 compat_issues.append({
                                     "op_type": op_type,
                                     "reason": compat.get("reason", "unknown"),
@@ -3978,7 +3985,7 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> Dict[str,
                 elif card is not None and svc.td_build:
                     try:
                         compat = idx.check_compatibility(op_type, svc.td_build)
-                        if not compat.get("compatible", True):
+                        if compat.get("status") == "incompatible":
                             compat_issues.append({
                                 "node": name,
                                 "op_type": op_type,
@@ -4316,9 +4323,16 @@ async def td_component_standardize(params: ComponentStandardizeInput, ctx: Conte
 
         if fix:
             fix_code = (
+                "        page = None\n"
+                "        for p in comp.customPages:\n"
+                "            if p.name == 'Meta':\n"
+                "                page = p\n"
+                "                break\n"
+                "        if page is None:\n"
+                "            page = comp.appendCustomPage('Meta')[0]\n"
                 "        for par_name in ('Version', 'Help', 'Creator'):\n"
                 "            if not hasattr(comp.par, par_name):\n"
-                "                comp.appendString(par_name, label=par_name)\n"
+                "                page.appendStr(par_name, label=par_name)\n"
                 "                result['fixed'].append('Added parameter: ' + par_name)\n"
             )
             audit_code = audit_code + fix_code
@@ -4365,22 +4379,13 @@ async def td_color_pipeline(params: ColorPipelineInput, ctx: Context) -> Dict[st
         code = (
             "import json\n"
             "result = {}\n"
-            "try:\n"
-            "    result['monitor_gamma'] = project.monitorGamma\n"
-            "except Exception:\n"
-            "    pass\n"
-            "try:\n"
-            "    result['default_color_space'] = project.defaultColorSpace\n"
-            "except Exception:\n"
-            "    pass\n"
-            "try:\n"
-            "    result['linear_color_working_space'] = getattr(project, 'linearColorWorkingSpace', None)\n"
-            "except Exception:\n"
-            "    pass\n"
-            "try:\n"
-            "    result['hdr_display'] = getattr(project, 'hdrDisplay', None)\n"
-            "except Exception:\n"
-            "    pass\n"
+            "result['defaultParameterColorSpace'] = getattr(project, 'defaultParameterColorSpace', None)\n"
+            "result['workingColorSpace'] = getattr(project, 'workingColorSpace', None)\n"
+            "result['editorWindowPixelFormat'] = getattr(project, 'editorWindowPixelFormat', None)\n"
+            "result['sdrReferenceWhiteNits'] = getattr(project, 'sdrReferenceWhiteNits', None)\n"
+            "result['hdrReferenceWhiteNits'] = getattr(project, 'hdrReferenceWhiteNits', None)\n"
+            "# Legacy fallbacks\n"
+            "result['monitorGamma'] = getattr(project, 'monitorGamma', None)\n"
             "__result__ = json.dumps(result, default=str)"
         )
         resp = await client.request("exec", {"code": code, "exec_mode": "standard"})
