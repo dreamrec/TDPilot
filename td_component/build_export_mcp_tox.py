@@ -6,11 +6,13 @@ Run inside TouchDesigner Textport:
 
     exec(open("/ABS/PATH/td_component/build_export_mcp_tox.py").read(), globals(), globals())
 
-Optional before running:
+By default the component is installed into /local so it persists across
+project opens within the same TD session.  Override with:
 
     import os
     os.environ["TD_MCP_REPO_ROOT"] = "/ABS/PATH/TDPilot"
-    os.environ["TD_MCP_PARENT_PATH"] = "/project1"  # optional install target
+    os.environ["TD_MCP_PARENT_PATH"] = "/project1"   # per-project install
+    os.environ["TD_MCP_PARENT_PATH"] = ""             # export only, no install
 """
 
 import os
@@ -20,8 +22,10 @@ from urllib.parse import urlparse
 
 
 # Configuration
-# If set, also install/update /<target>/mcp_server after exporting the .tox.
-INSTALL_PARENT_PATH = os.environ.get("TD_MCP_PARENT_PATH", "").strip()
+# Default install target is /local (persists across project opens).
+# Set TD_MCP_PARENT_PATH to override (e.g. "/project1") or to "" for export-only.
+_env_parent = os.environ.get("TD_MCP_PARENT_PATH")
+INSTALL_PARENT_PATH = _env_parent.strip() if _env_parent is not None else "/local"
 COMP_NAME = "mcp_server"
 TEMP_CONTAINER_NAME = "__tdpilot_export__"
 WEB_PORT = 9981
@@ -169,6 +173,12 @@ def _resolve_install_parent_comp():
     node = op(INSTALL_PARENT_PATH)
     if node is not None and getattr(node, "isCOMP", False):
         return node
+    # /local is a built-in TD container — if it somehow isn't found, warn clearly.
+    if INSTALL_PARENT_PATH == "/local":
+        raise RuntimeError(
+            "Could not find /local container. This is a built-in TD container "
+            "that should always exist. Please check your TouchDesigner version."
+        )
     raise RuntimeError(
         "Install target not found: {}. Set TD_MCP_PARENT_PATH to a valid COMP path.".format(
             INSTALL_PARENT_PATH
@@ -336,7 +346,9 @@ def build_and_export():
     print("[TDPilot] WebSocket URL: {}".format(WS_URL))
     print("[TDPilot] Exported TOX: {}".format(export_path))
     if install_parent is None:
-        print("[TDPilot] No live project install requested. Import the TOX where needed.")
+        print("[TDPilot] No live install requested (TD_MCP_PARENT_PATH='').")
+        print("[TDPilot] Import the TOX manually, or re-run without setting TD_MCP_PARENT_PATH")
+        print("[TDPilot] to auto-install into /local (persists across project opens).")
     return export_path
 
 

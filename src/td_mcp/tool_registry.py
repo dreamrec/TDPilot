@@ -3191,7 +3191,7 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
             "op_types": technique.get("op_types"),
         }
 
-    # Pre-replay prerequisite check: verify required op types are available
+    # Pre-replay prerequisite check: verify required op types exist in the target TD install
     if not params.force:
         required_ops: List[str] = (
             technique.get("required_op_types")
@@ -3199,16 +3199,24 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
             or []
         )
         if required_ops:
-            svc = _get_services(ctx)
-            idx = getattr(svc, "card_index", None)
-            if idx is not None:
-                missing_ops = [op for op in required_ops if idx.get_operator(op) is None]
-                if missing_ops:
-                    return {
-                        "status": "blocked",
-                        "reason": "Missing operator types in knowledge corpus",
-                        "missing_ops": missing_ops,
-                    }
+            client = _get_client(ctx)
+            try:
+                families_resp = await client.request("families", {})
+                available_types: set = set()
+                if isinstance(families_resp, dict):
+                    for fam_types in families_resp.values():
+                        if isinstance(fam_types, list):
+                            available_types.update(fam_types)
+                if available_types:
+                    missing_ops = [t for t in required_ops if t not in available_types]
+                    if missing_ops:
+                        return {
+                            "status": "blocked",
+                            "reason": "Missing operator types in target TD install",
+                            "missing_ops": missing_ops,
+                        }
+            except Exception:
+                pass  # If we can't verify, allow replay (checked at create time anyway)
 
     client = _get_client(ctx)
     parent = params.parent_path.rstrip("/") or "/"
@@ -3952,11 +3960,28 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> Dict[str,
         svc = _get_services(ctx)
         idx = getattr(svc, "card_index", None)
 
-        # Fetch all nodes at root
-        all_nodes = []
+        # Recursively fetch all nodes in the subtree (breadth-first)
+        all_nodes: List[Dict[str, Any]] = []
+        max_depth = 10
         try:
-            node_data = await client.request("nodes", {"path": params.root_path, "limit": 500})
-            all_nodes = node_data if isinstance(node_data, list) else node_data.get("nodes", [])
+            queue: List[tuple] = [(params.root_path, 0)]
+            visited: set = set()
+            while queue:
+                container_path, depth = queue.pop(0)
+                if container_path in visited:
+                    continue
+                visited.add(container_path)
+                node_data = await client.request("nodes", {"path": container_path, "limit": 500})
+                children = node_data if isinstance(node_data, list) else node_data.get("nodes", [])
+                for child in children:
+                    if not isinstance(child, dict):
+                        continue
+                    all_nodes.append(child)
+                    # Recurse into COMPs (containers that can have children)
+                    if depth < max_depth and child.get("isCOMP", False):
+                        child_path = child.get("path", "")
+                        if child_path and child_path not in visited:
+                            queue.append((child_path, depth + 1))
         except Exception as exc:
             return {"error": "Could not fetch nodes at '{}': {}".format(params.root_path, exc)}
 
@@ -4336,7 +4361,7 @@ async def td_component_standardize(params: ComponentStandardizeInput, ctx: Conte
                 "                page = p\n"
                 "                break\n"
                 "        if page is None:\n"
-                "            page = comp.appendCustomPage('Meta')[0]\n"
+                "            page = comp.appendCustomPage('Meta')\n"
                 "        for par_name in ('Version', 'Help', 'Creator'):\n"
                 "            if not hasattr(comp.par, par_name):\n"
                 "                page.appendStr(par_name, label=par_name)\n"

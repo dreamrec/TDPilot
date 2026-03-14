@@ -26,4 +26,6 @@ tdpilot doctor
 tdpilot init --client claude-desktop
 ```
 
+**TouchDesigner side:** Drop `tdpilot_v1_3.tox` into `/local` (persists across project opens).
+
 For full docs, setup guides, and the .tox component: **[github.com/dreamrec/TDPilot](https://github.com/dreamrec/TDPilot)**

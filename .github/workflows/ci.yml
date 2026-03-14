@@ -43,10 +43,10 @@ jobs:
           cat > /tmp/bench.json <<'JSON'
           {
             "benchmarks": {
-              "td_get_nodes": {"latency_ms": {"p95": 250.0}},
-              "td_get_params": {"latency_ms": {"p95": 200.0}},
-              "td_set_params": {"latency_ms": {"p95": 150.0}},
-              "td_capture_and_analyze_capture_only": {"latency_ms": {"p95": 600.0}}
+              "td_get_nodes": {"latency_ms": {"p95": 250.0}, "error_rate_pct": 0.0},
+              "td_get_params": {"latency_ms": {"p95": 200.0}, "error_rate_pct": 0.0},
+              "td_set_params": {"latency_ms": {"p95": 150.0}, "error_rate_pct": 0.0},
+              "td_capture_and_analyze_capture_only": {"latency_ms": {"p95": 600.0}, "error_rate_pct": 0.0}
             }
           }
           JSON

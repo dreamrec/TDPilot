@@ -45,19 +45,28 @@ Core ports (defaults):
 uv run tdpilot init --client claude-desktop
 ```
 
-2. Run environment diagnostics before sessions:
+2. Load the TDPilot component in TouchDesigner (once per session):
+
+```python
+# In TD Textport — installs into /local by default (persists across project opens)
+exec(open("/path/to/TDPilot/setup_mcp_in_td.py").read(), globals(), globals())
+```
+
+Or drag-and-drop `td_component/tdpilot_v1_3.tox` into `/local` manually.
+
+3. Run environment diagnostics before sessions:
 
 ```bash
 uv run tdpilot doctor --skip-td-check
 ```
 
-3. If TouchDesigner is running and component is loaded, run full health:
+4. If TouchDesigner is running and component is loaded, run full health:
 
 ```bash
 uv run tdpilot doctor --strict
 ```
 
-4. Keep repo-local execution in production scripts:
+5. Keep repo-local execution in production scripts:
 
 ```bash
 uv run --directory /ABS/PATH/TDPilot tdpilot run

@@ -212,7 +212,7 @@ All tools in this section execute Python inside TouchDesigner. Most require `ful
 | `td_logger_status` | Inspect Python logging config: log level, handlers, registered loggers. Requires `full` exec mode. | _(none)_ | JSON with `root_level`, `handler_count`, `handlers`, `loggers`. |
 | `td_tdresources_inspect` | Inspect TDResources: fonts, icons, defaults. | `category` (str, opt): `fonts`, `icons`, `defaults`, or omit for all. | JSON with `categories` dict and `total_children`. |
 | `td_component_standardize` | Audit or fix COMP standardization: required custom params (Version, Help, Creator), extension, naming. Fix mode wraps in undo block. | `path` (str, **required**): COMP path. `fix` (bool, opt, default `false`): Auto-fix issues. | JSON with `issues`, `fixed`, `has_extension`, `op_type`. |
-| `td_color_pipeline` | Inspect color management pipeline: color space, gamma, display settings. | _(none)_ | JSON with `monitor_gamma`, `default_color_space`, `linear_color_working_space`, `hdr_display`. |
+| `td_color_pipeline` | Inspect color management pipeline: color space, gamma, display settings. | _(none)_ | JSON with `defaultParameterColorSpace`, `workingColorSpace`, `editorWindowPixelFormat`, `sdrReferenceWhiteNits`, `hdrReferenceWhiteNits`, `monitorGamma` (legacy fallback). |
 
 ---
 

@@ -3,21 +3,28 @@
 This folder contains the TouchDesigner-side component and helper scripts.
 
 Files:
-- `tdpilot_v1_3.tox`: import this into your TouchDesigner project.
+- `tdpilot_v1_3.tox`: drag into `/local` (persists across project opens) or import into your project.
 - `mcp_webserver_callbacks.py`: HTTP callback handler code loaded into the component.
 - `ws_callbacks.py`: websocket callback code for event streaming.
 - `event_emitter.py`: TD event emitter helper.
-- `build_export_mcp_tox.py`: builds a reusable `tdpilot_v1_3.tox` in a temporary container and optionally installs it into a target project COMP.
+- `build_export_mcp_tox.py`: builds a reusable `tdpilot_v1_3.tox` and installs it into `/local` by default.
 
-Quick rebuild in Textport:
+Quick setup in Textport (auto-installs into `/local`):
 
 ```python
-exec(open("/ABS/PATH/TDPilot/td_component/build_export_mcp_tox.py").read(), globals(), globals())
+exec(open("/ABS/PATH/TDPilot/setup_mcp_in_td.py").read(), globals(), globals())
 ```
 
-Optional live install target:
+To install into a specific project instead:
 
 ```python
 import os
 os.environ["TD_MCP_PARENT_PATH"] = "/project1"
+```
+
+To export the .tox only (no live install):
+
+```python
+import os
+os.environ["TD_MCP_PARENT_PATH"] = ""
 ```

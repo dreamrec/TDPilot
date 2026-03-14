@@ -250,7 +250,19 @@ uv sync
 uv run tdpilot
 ```
 
-TouchDesigner side component: `td_component/tdpilot_v1_3.tox`
+### TouchDesigner Side
+
+Run the setup script once inside the TD Textport:
+
+```python
+exec(open("/path/to/TDPilot/setup_mcp_in_td.py").read(), globals(), globals())
+```
+
+This installs the MCP component into `/local/mcp_server` by default, which means it **persists across project opens** within the same TD session. You only need to run this once — every project you open afterward will already have TDPilot available.
+
+To install into a specific project instead: `os.environ["TD_MCP_PARENT_PATH"] = "/project1"` before running.
+
+Alternatively, drag-and-drop `td_component/tdpilot_v1_3.tox` into `/local` manually.
 
 One-command setup helpers: macOS `./install.sh`, Windows `./install.ps1`
 

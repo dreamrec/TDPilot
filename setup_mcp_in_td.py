@@ -10,16 +10,23 @@ What this does:
   2) Runs td_component/build_export_mcp_tox.py.
   3) Builds a reusable mcp_server component in a temporary container.
   4) Exports td_component/tdpilot_v1_3.tox.
-  5) Optionally installs /<target>/mcp_server if TD_MCP_PARENT_PATH is set.
+  5) Installs /local/mcp_server by default (persists across project opens).
+
+By default the component is installed into /local so every project you
+open in this TD session has TDPilot available automatically.
 
 If auto-detect fails, set:
 
     import os
     os.environ["TD_MCP_REPO_ROOT"] = "/ABS/PATH/TDPilot"
 
-If the target project root is not auto-detected, optionally also set:
+To install into a specific project instead of /local:
 
     os.environ["TD_MCP_PARENT_PATH"] = "/project1"
+
+To export the .tox only (no live install):
+
+    os.environ["TD_MCP_PARENT_PATH"] = ""
 """
 
 import os
@@ -121,10 +128,14 @@ def run_setup():
     os.environ["TD_MCP_REPO_ROOT"] = repo_root
     print("[TDPilot] Repo root:", repo_root)
     print("[TDPilot] Running:", build_script)
-    if os.environ.get("TD_MCP_PARENT_PATH"):
-        print("[TDPilot] Install target:", os.environ["TD_MCP_PARENT_PATH"])
+    parent_path = os.environ.get("TD_MCP_PARENT_PATH")
+    if parent_path is not None:
+        if parent_path.strip():
+            print("[TDPilot] Install target:", parent_path.strip())
+        else:
+            print("[TDPilot] Install target: none (export only)")
     else:
-        print("[TDPilot] Install target: none (export only)")
+        print("[TDPilot] Install target: /local (default, persists across projects)")
 
     with open(build_script, "r", encoding="utf-8") as handle:
         source = handle.read()
