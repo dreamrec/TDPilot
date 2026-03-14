@@ -25,4 +25,5 @@ class ServiceContainer:
     preference_store: Optional[object] = None
     telemetry: Optional[TelemetryCollector] = None
     audit: Optional[AuditLogger] = None
+    card_index: Optional[object] = None
     td_build: str = ""

@@ -14,6 +14,7 @@ import sys
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from mcp.server.fastmcp import Context, FastMCP
@@ -22,6 +23,7 @@ from td_mcp import normalize_transport as _normalize_transport
 from td_mcp.audit import AuditLogger
 from td_mcp.capabilities import detect_capabilities
 from td_mcp.errors import format_tool_error
+from td_mcp.knowledge.freshness import Provenance
 from td_mcp.events import EventManager
 from td_mcp.events.uri import (
     chop_uri,
@@ -252,6 +254,17 @@ async def server_lifespan(app: FastMCP):
     except Exception as exc:
         logger.warning("Could not start event websocket listener on %s: %s", TD_WS_PORT, exc)
 
+    # Knowledge corpus
+    card_index = None
+    try:
+        from td_mcp.knowledge.card_index import CardIndex
+        cards_dir = Path(__file__).parent / "knowledge" / "cards"
+        if cards_dir.is_dir():
+            card_index = CardIndex(cards_dir)
+            logger.info("Knowledge corpus loaded (%d cards)", card_index.count())
+    except Exception as exc:
+        logger.debug("Could not load knowledge corpus: %s", exc)
+
     services = ServiceContainer(
         td_client=td_client,
         macro_engine=macro_engine,
@@ -265,6 +278,7 @@ async def server_lifespan(app: FastMCP):
         preference_store=preference_store,
         telemetry=telemetry,
         audit=audit,
+        card_index=card_index,
         td_build=td_build,
     )
 
@@ -3418,6 +3432,180 @@ async def td_memory_list(params: MemoryListInput, ctx: Context) -> dict:
         limit=params.limit,
     )
     return {"status": "ok", "count": len(results), "techniques": results}
+
+
+# ─────────────────────────────────────────────────────────────
+# Knowledge tools (64-71)
+# ─────────────────────────────────────────────────────────────
+
+
+def _get_card_index(ctx: Context):
+    svc = _get_services(ctx)
+    idx = getattr(svc, "card_index", None)
+    if idx is None:
+        raise RuntimeError("Knowledge corpus not loaded")
+    return idx
+
+
+@mcp.tool(name="td_search_official_docs")
+async def td_search_official_docs(
+    ctx: Context,
+    query: str,
+    card_types: Optional[List[str]] = None,
+    family: Optional[str] = None,
+    limit: int = 10,
+) -> Dict[str, Any]:
+    """Search the knowledge corpus for operators, palette components, releases, or snippets."""
+    idx = _get_card_index(ctx)
+    results = idx.search(query, card_types=card_types, family=family, limit=limit)
+    svc = _get_services(ctx)
+    provenance = Provenance(source="local_card", td_build=svc.td_build)
+    return {"results": results, "count": len(results), "provenance": provenance.to_dict()}
+
+
+@mcp.tool(name="td_get_operator_doc")
+async def td_get_operator_doc(
+    ctx: Context,
+    op_type: Optional[str] = None,
+    node_path: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Get full documentation card for an operator type or a specific node."""
+    idx = _get_card_index(ctx)
+    resolved_type = op_type
+    if resolved_type is None and node_path:
+        # Resolve op_type from live node
+        try:
+            info = await _get_client(ctx).request("get_node_detail", {"path": node_path})
+            resolved_type = info.get("type", "")
+        except Exception:
+            return {"error": f"Could not resolve node at {node_path}"}
+    if not resolved_type:
+        return {"error": "Provide op_type or node_path"}
+    card = idx.get_operator(resolved_type)
+    svc = _get_services(ctx)
+    provenance = Provenance(source="local_card", td_build=svc.td_build)
+    if card is None:
+        return {"error": f"No card found for {resolved_type}", "provenance": provenance.to_dict()}
+    return {"card": card, "provenance": provenance.to_dict()}
+
+
+@mcp.tool(name="td_get_param_help")
+async def td_get_param_help(
+    ctx: Context,
+    node_path: str,
+    param_name: str,
+) -> Dict[str, Any]:
+    """Get help for a specific parameter: live metadata + knowledge card entry + current value."""
+    client = _get_client(ctx)
+    # Get live param info
+    try:
+        params = await client.request("get_params", {"path": node_path, "names": [param_name]})
+    except Exception as exc:
+        return {"error": f"Could not read param: {exc}"}
+    live_param = params.get(param_name, params.get("params", {}).get(param_name))
+    # Try to get operator card for enrichment
+    idx = _get_card_index(ctx)
+    card_param = None
+    try:
+        info = await client.request("get_node_detail", {"path": node_path})
+        op_type = info.get("type", "")
+        card = idx.get_operator(op_type)
+        if card:
+            for kp in card.get("key_params", []):
+                if kp.get("name") == param_name:
+                    card_param = kp
+                    break
+    except Exception:
+        pass
+    svc = _get_services(ctx)
+    provenance = Provenance(source="local_card", td_build=svc.td_build)
+    return {"live": live_param, "card_param": card_param, "provenance": provenance.to_dict()}
+
+
+@mcp.tool(name="td_lookup_snippets")
+async def td_lookup_snippets(
+    ctx: Context,
+    query: str,
+    family: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Search for OP Snippets by keyword and optional family."""
+    idx = _get_card_index(ctx)
+    results = idx.search(query, card_types=["snippet"], family=family)
+    svc = _get_services(ctx)
+    provenance = Provenance(source="local_card", td_build=svc.td_build)
+    return {"results": results, "count": len(results), "provenance": provenance.to_dict()}
+
+
+@mcp.tool(name="td_lookup_palette_component")
+async def td_lookup_palette_component(
+    ctx: Context,
+    component_name: Optional[str] = None,
+    query: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Look up a palette component by name or search by query."""
+    idx = _get_card_index(ctx)
+    svc = _get_services(ctx)
+    provenance = Provenance(source="local_card", td_build=svc.td_build)
+    if component_name:
+        card = idx.get_palette(component_name)
+        if card:
+            return {"card": card, "provenance": provenance.to_dict()}
+        return {"error": f"No palette card for {component_name}", "provenance": provenance.to_dict()}
+    if query:
+        results = idx.search(query, card_types=["palette"])
+        return {"results": results, "count": len(results), "provenance": provenance.to_dict()}
+    return {"error": "Provide component_name or query"}
+
+
+@mcp.tool(name="td_get_release_delta")
+async def td_get_release_delta(
+    ctx: Context,
+    build: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Get release notes for a specific build (default: current)."""
+    idx = _get_card_index(ctx)
+    svc = _get_services(ctx)
+    target_build = build or svc.td_build
+    if not target_build:
+        return {"error": "No build specified and current build unknown"}
+    card = idx.get_release(target_build)
+    provenance = Provenance(source="local_card", td_build=svc.td_build)
+    if card is None:
+        return {"error": f"No release card for build {target_build}", "provenance": provenance.to_dict()}
+    return {"card": card, "provenance": provenance.to_dict()}
+
+
+@mcp.tool(name="td_get_build_compatibility")
+async def td_get_build_compatibility(
+    ctx: Context,
+    op_type: str,
+    build: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Check if an operator type is compatible with a specific build."""
+    idx = _get_card_index(ctx)
+    svc = _get_services(ctx)
+    target_build = build or svc.td_build
+    if not target_build:
+        return {"error": "No build specified and current build unknown"}
+    result = idx.check_compatibility(op_type, target_build)
+    provenance = Provenance(source="local_card", td_build=svc.td_build)
+    return {**result, "provenance": provenance.to_dict()}
+
+
+@mcp.tool(name="td_describe_surface")
+async def td_describe_surface(ctx: Context) -> Dict[str, Any]:
+    """Describe the MCP server surface: tool count, resource count, capabilities, version."""
+    from td_mcp import __version__
+    svc = _get_services(ctx)
+    caps = detect_capabilities(ctx, td_build=svc.td_build)
+    tool_count = len(mcp._tools) if hasattr(mcp, "_tools") else 0
+    resource_count = len(mcp._resources) if hasattr(mcp, "_resources") else 0
+    return {
+        "version": __version__,
+        "tool_count": tool_count,
+        "resource_count": resource_count,
+        "capabilities": caps.to_dict(),
+    }
 
 
 # ─────────────────────────────────────────────────────────────
