@@ -62,6 +62,8 @@ class TechniqueStore:
             "updated_at": now,
             "favorite": False,
             "rating": 0,
+            "state": "candidate",
+            "validation_result": None,
             "technique": technique,
         }
         store = self._store_for(scope)
@@ -145,7 +147,7 @@ class TechniqueStore:
         entry = store.get(technique_id)
         if not entry:
             return False
-        allowed = {"name", "description", "tags", "notes"}
+        allowed = {"name", "description", "tags", "notes", "state", "validation_result"}
         for key, value in updates.items():
             if key in allowed:
                 entry[key] = value
@@ -243,6 +245,7 @@ class TechniqueStore:
             "updated_at": entry.get("updated_at", ""),
             "node_count": tech.get("node_count", 0),
             "complexity": tech.get("complexity", "unknown"),
+            "state": entry.get("state", "candidate"),
         }
 
     def _file_for(self, scope: str) -> Path:
