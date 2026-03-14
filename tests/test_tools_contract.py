@@ -66,8 +66,13 @@ def test_tool_registry_contains_core_and_v2_surfaces():
         "td_get_release_delta",
         "td_get_build_compatibility",
         "td_describe_surface",
+        # v1.3.1 planning & validation tools
+        "td_plan_patch",
+        "td_preflight_patch",
+        "td_validate_recipe",
+        "td_audit_project",
     }
 
     missing = expected - names
     assert not missing, f"Missing expected tools: {sorted(missing)}"
-    assert len(names) >= 71
+    assert len(names) >= 75
