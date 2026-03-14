@@ -234,9 +234,15 @@ async def server_lifespan(app: FastMCP):
 
     logger.info("TouchDesigner MCP server starting (TD %s:%s)", TD_HOST, TD_PORT)
 
+    td_build = ""
     try:
         await td_client.health_check()
         logger.info("TouchDesigner connection healthy")
+        try:
+            info = await td_client.request("get_info")
+            td_build = str(info.get("build", "")) if isinstance(info, dict) else ""
+        except Exception as exc:
+            logger.debug("Could not fetch td_build at startup: %s", exc)
     except TouchDesignerConnectionError as exc:
         logger.warning("TouchDesigner not reachable at startup: %s", exc)
 
@@ -259,6 +265,7 @@ async def server_lifespan(app: FastMCP):
         preference_store=preference_store,
         telemetry=telemetry,
         audit=audit,
+        td_build=td_build,
     )
 
     try:
@@ -2015,7 +2022,8 @@ async def td_get_macro_params(params: GetMacroParamsInput, ctx: Context) -> str:
 async def td_get_capabilities(ctx: Context) -> str:
     finish = _start_tool(ctx, "td_get_capabilities")
     try:
-        capabilities = detect_capabilities(ctx)
+        services = _get_services(ctx)
+        capabilities = detect_capabilities(ctx, td_build=services.td_build)
         payload = {
             "schema_version": 1,
             "client_capabilities": capabilities.to_dict(),

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.metadata
 import os
 from dataclasses import asdict, dataclass
 
@@ -18,8 +19,13 @@ class CapabilitySet:
     supports_sampling: bool = False
     supports_sampling_tool_calls: bool = False
     supports_streamable_http: bool = False
+    supports_tasks: bool = False
+    supports_elicitation: bool = False
+    transport_type: str = "stdio"
+    mcp_sdk_version: str = ""
+    td_build: str = ""
 
-    def to_dict(self) -> dict[str, bool]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -38,18 +44,32 @@ def _as_mapping(value: Any) -> Mapping[str, Any]:
     return {}
 
 
-def detect_capabilities(ctx: Optional[Any] = None) -> CapabilitySet:
+def detect_capabilities(
+    ctx: Optional[Any] = None,
+    *,
+    td_build: str = "",
+) -> CapabilitySet:
     """Infer client capability support from context and environment.
 
     The exact shape of context capability payloads differs between clients.
     This function intentionally uses permissive probing with safe defaults.
     """
 
-    supports_streamable_http = normalize_transport(
-        os.environ.get("TD_MCP_TRANSPORT", "stdio")
-    ) == "streamable-http"
+    transport_raw = normalize_transport(os.environ.get("TD_MCP_TRANSPORT", "stdio"))
+    supports_streamable_http = transport_raw == "streamable-http"
+
+    try:
+        mcp_sdk_version = importlib.metadata.version("mcp")
+    except Exception:
+        mcp_sdk_version = ""
+
     if ctx is None:
-        return CapabilitySet(supports_streamable_http=supports_streamable_http)
+        return CapabilitySet(
+            supports_streamable_http=supports_streamable_http,
+            transport_type=transport_raw,
+            mcp_sdk_version=mcp_sdk_version,
+            td_build=td_build,
+        )
 
     request_ctx = getattr(ctx, "request_context", None)
     caps_source = None
@@ -68,5 +88,10 @@ def detect_capabilities(ctx: Optional[Any] = None) -> CapabilitySet:
         supports_sampling=bool(sampling),
         supports_sampling_tool_calls=bool(sampling.get("toolCalls") or sampling.get("tool_calls")),
         supports_streamable_http=supports_streamable_http,
+        supports_tasks=bool(caps.get("tasks")),
+        supports_elicitation=bool(caps.get("elicitation")),
+        transport_type=transport_raw,
+        mcp_sdk_version=mcp_sdk_version,
+        td_build=td_build,
     )
 
