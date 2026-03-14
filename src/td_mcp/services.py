@@ -21,6 +21,7 @@ class ServiceContainer:
     safety_manager: Optional[object] = None
     snapshot_manager: Optional[object] = None
     job_manager: Optional[object] = None
+    task_adapter: Optional[object] = None
     technique_store: Optional[object] = None
     preference_store: Optional[object] = None
     telemetry: Optional[TelemetryCollector] = None

@@ -15,6 +15,8 @@ class JobManager:
         self._mcp = mcp_server
         self._jobs: Dict[str, Dict[str, Any]] = {}
         self._tasks: Dict[str, asyncio.Task] = {}
+        self.on_progress_hook: Optional[Callable] = None
+        self.on_complete_hook: Optional[Callable] = None
 
     def create_job(self, description: str = "") -> Dict[str, Any]:
         job_id = str(uuid.uuid4())
@@ -42,6 +44,10 @@ class JobManager:
             return
         job.update(fields)
         job["updated_at"] = datetime.now(timezone.utc).isoformat()
+        if "progress" in fields and self.on_progress_hook is not None:
+            self.on_progress_hook(job_id, fields["progress"])
+        if fields.get("status") == "completed" and self.on_complete_hook is not None:
+            self.on_complete_hook(job_id)
 
     def start_async(
         self,
