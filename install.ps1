@@ -170,7 +170,9 @@ if ($config -is [PSCustomObject]) {
 }
 
 $json = $output | ConvertTo-Json -Depth 10
-Set-Content -Path $ConfigPath -Value $json -Encoding UTF8
+# Write UTF-8 *without* BOM — Electron's JSON parser rejects BOM-prefixed files.
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($ConfigPath, $json, $utf8NoBom)
 
 Write-Host "  Config updated: $ConfigPath" -ForegroundColor Green
 

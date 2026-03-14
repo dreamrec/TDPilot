@@ -316,8 +316,9 @@ tdpilot doctor --json
 
 ## Environment Variables
 
-- `TD_MCP_HOST` (default `127.0.0.1`)
+- `TD_MCP_HOST` (default `127.0.0.1` — supports hostnames like `desktop-3lurf0p.tail88651a.ts.net`)
 - `TD_MCP_PORT` (default `9981`)
+- `TD_MCP_SCHEME` (default `http` — set to `https` for Tailscale HTTPS or TLS-enabled setups)
 - `TD_MCP_WS_PORT` (default `9982`)
 - `TD_MCP_TRANSPORT` (`stdio` or `streamable_http`)
 - `TD_MCP_HTTP_PORT` (default `8765`)

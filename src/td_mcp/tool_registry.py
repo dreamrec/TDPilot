@@ -147,6 +147,7 @@ def _normalize_exec_mode(value: str) -> str:
 
 TD_HOST = os.environ.get("TD_MCP_HOST", "127.0.0.1")
 TD_PORT = _read_int_env("TD_MCP_PORT", 9981)
+TD_SCHEME = os.environ.get("TD_MCP_SCHEME", "http")
 TD_WS_PORT = _read_int_env("TD_MCP_WS_PORT", 9982)
 TD_HTTP_HOST = os.environ.get("TD_MCP_HTTP_HOST", "127.0.0.1")
 TD_HTTP_PORT = _read_int_env("TD_MCP_HTTP_PORT", 8765)
@@ -233,6 +234,7 @@ async def server_lifespan(app: FastMCP):
         host=TD_HOST,
         port=TD_PORT,
         shared_secret=TD_SHARED_SECRET,
+        scheme=TD_SCHEME,
     )
     telemetry = TelemetryCollector()
     audit = AuditLogger(TD_AUDIT_LOG)
@@ -272,6 +274,20 @@ async def server_lifespan(app: FastMCP):
         try:
             info = await td_client.request("info")
             td_build = str(info.get("build", "")) if isinstance(info, dict) else ""
+            # --- Version negotiation ---
+            # Check that the TD component version matches the MCP server version.
+            if isinstance(info, dict):
+                component_version = info.get("mcp_component_version") or info.get("api_version", "")
+                if component_version:
+                    from td_mcp import __version__ as server_version
+                    if component_version != server_version:
+                        logger.warning(
+                            "VERSION MISMATCH: MCP server is v%s but TD component reports v%s. "
+                            "Re-export the .tox from the latest TDPilot source to avoid stale tool behavior.",
+                            server_version, component_version,
+                        )
+                    else:
+                        logger.info("Version match confirmed: server and TD component both v%s", server_version)
         except Exception as exc:
             logger.debug("Could not fetch td_build at startup: %s", exc)
     except TouchDesignerConnectionError as exc:
@@ -2085,9 +2101,29 @@ async def td_get_capabilities(ctx: Context) -> str:
     try:
         services = _get_services(ctx)
         capabilities = detect_capabilities(ctx, td_build=services.td_build)
+        from td_mcp import __version__ as server_version
+        # Check component version if TD is connected
+        version_status = {"server_version": server_version}
+        try:
+            info = await _get_client(ctx).request("info")
+            if isinstance(info, dict):
+                comp_ver = info.get("mcp_component_version") or info.get("api_version", "")
+                version_status["component_version"] = comp_ver
+                if comp_ver and comp_ver != server_version:
+                    version_status["mismatch"] = True
+                    version_status["warning"] = (
+                        f"TD component is v{comp_ver} but server is v{server_version}. "
+                        f"Re-export the .tox to fix."
+                    )
+                elif comp_ver:
+                    version_status["mismatch"] = False
+        except Exception:
+            version_status["component_version"] = "unknown (TD not reachable)"
+
         payload = {
             "schema_version": 1,
             "client_capabilities": capabilities.to_dict(),
+            "version": version_status,
             "runtime": {
                 "transport": TD_TRANSPORT,
                 "exec_mode": _current_exec_mode(),

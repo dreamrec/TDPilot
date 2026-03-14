@@ -9,7 +9,6 @@ and error normalization.
 import asyncio
 import httpx
 import json
-import threading
 import time
 import logging
 from typing import Any, Dict, Optional
@@ -47,8 +46,14 @@ class TDClient:
         timeout: float = 15.0,
         max_retries: int = 2,
         shared_secret: str | None = None,
+        scheme: str = "http",
     ):
-        self.base_url = f"http://{host}:{port}"
+        # If host already includes a scheme (e.g. "https://myhost"), extract it.
+        if "://" in host:
+            scheme, host = host.split("://", 1)
+        # Strip trailing slashes from host (e.g. from copy-pasted URLs).
+        host = host.rstrip("/")
+        self.base_url = f"{scheme}://{host}:{port}"
         self.timeout = timeout
         self.max_retries = max_retries
         self.shared_secret = (shared_secret or "").strip()
@@ -191,17 +196,3 @@ class TDClient:
             return response.json()
         else:
             return {"raw": response.text}
-
-
-# Module-level singleton for convenience
-_default_client: Optional[TDClient] = None
-_client_lock = threading.Lock()
-
-
-def get_client(host: str = "127.0.0.1", port: int = 9981) -> TDClient:
-    """Get or create the default TDClient singleton."""
-    global _default_client
-    with _client_lock:
-        if _default_client is None:
-            _default_client = TDClient(host=host, port=port)
-        return _default_client
