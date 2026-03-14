@@ -976,6 +976,24 @@ class MemoryPromoteInput(BaseModel):
     technique_id: str = Field(..., description="Project technique ID to promote.")
 
 
+class MemoryExportInput(BaseModel):
+    """Input for td_memory_export — export technique library as JSON."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    scope: str = Field(default="project", description="'project' or 'global'.")
+
+
+class MemoryImportInput(BaseModel):
+    """Input for td_memory_import — import techniques from exported JSON."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    data: Dict[str, Any] = Field(..., description="Exported library data (from td_memory_export).")
+    scope: str = Field(default="project", description="'project' or 'global'.")
+    overwrite: bool = Field(default=False, description="Overwrite existing techniques with same ID.")
+
+
 class MemoryPreferencesInput(BaseModel):
     """Input for td_memory_preferences — get/set/list/delete preferences."""
 

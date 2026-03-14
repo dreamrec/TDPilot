@@ -385,16 +385,18 @@ If this were my backlog, I would do:
 - ~~add behavioral tests for replay validation~~ Done — 7 tests in `test_replay_validation.py`
 - ~~make `td_audit_project` truly recursive~~ Done — BFS traversal with depth limit and cycle detection
 
-### Phase 3
+### Phase 3 (COMPLETE)
 
-- define and document the core workflow
-- improve memory compatibility metadata
-- improve curation workflow
+- ~~define and document the core workflow~~ Done — "Start Here" table in README
+- ~~tag case normalization~~ Done — `.lower()` on add and update
+- ~~replay tracking~~ Done — `replay_count`, `last_replayed_at` fields, auto-increment on replay
+- ~~reuse-aware search ranking~~ Done — `replay_count` factored into search sort key
+- ~~export/import memory tools~~ Done — `td_memory_export`, `td_memory_import` tools + `export_library`/`import_library` store methods
+- ~~memory compatibility metadata~~ Already implemented — `td_build`, `required_op_types`, `external_assets`
 
-### Phase 4
+### Phase 4 (DROPPED — not actionable)
 
-- revisit advanced surfaces like planning and optimization
-- simplify product story around memory and workflow
+Original items ("revisit advanced surfaces", "simplify product story") were editorial, not engineering tasks. The README already has tiered tool presentation.
 
 ## Implementation Plan
 

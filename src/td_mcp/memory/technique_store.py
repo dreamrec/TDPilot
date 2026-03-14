@@ -68,7 +68,7 @@ class TechniqueStore:
             "id": technique_id,
             "name": name or f"technique_{technique_id[:8]}",
             "description": description,
-            "tags": sorted(set(tags or [])),
+            "tags": sorted(set(t.lower() for t in (tags or []))),
             "notes": notes,
             "created_at": now,
             "updated_at": now,
@@ -76,6 +76,8 @@ class TechniqueStore:
             "rating": 0,
             "state": "candidate",
             "validation_result": None,
+            "replay_count": 0,
+            "last_replayed_at": None,
             "compatibility": compatibility or {},
             "technique": technique,
         }
@@ -121,11 +123,12 @@ class TechniqueStore:
                         continue
                 results.append(self._summary(entry, store_scope))
 
-        # Sort: favorites first, then by rating desc, then newest
+        # Sort: favorites first, then by rating desc, then most replayed, then newest
         results.sort(
             key=lambda r: (
                 not r.get("favorite", False),
                 -(r.get("rating", 0)),
+                -(r.get("replay_count", 0)),
                 r.get("created_at", ""),
             )
         )
@@ -154,6 +157,18 @@ class TechniqueStore:
         results.sort(key=lambda r: r.get("created_at", ""), reverse=True)
         return results[:limit]
 
+    def record_replay(self, technique_id: str, scope: str = "project") -> bool:
+        """Increment replay_count and set last_replayed_at. Returns True on success."""
+        store = self._store_for(scope)
+        entry = store.get(technique_id)
+        if not entry:
+            return False
+        entry["replay_count"] = entry.get("replay_count", 0) + 1
+        entry["last_replayed_at"] = datetime.now(timezone.utc).isoformat()
+        entry["updated_at"] = datetime.now(timezone.utc).isoformat()
+        self._save_scope(scope)
+        return True
+
     def update(self, technique_id: str, updates: Dict[str, Any], scope: str = "project") -> bool:
         """Update mutable fields on a technique. Returns True on success."""
         store = self._store_for(scope)
@@ -164,6 +179,8 @@ class TechniqueStore:
         for key, value in updates.items():
             if key == "state":
                 continue  # State changes must go through update_state()
+            elif key == "tags":
+                entry[key] = sorted(set(t.lower() for t in value)) if isinstance(value, list) else value
             elif key in allowed:
                 entry[key] = value
         entry["updated_at"] = datetime.now(timezone.utc).isoformat()
@@ -268,6 +285,55 @@ class TechniqueStore:
         self._save_scope(scope)
         return True
 
+    def export_library(self, scope: str = "project") -> Dict[str, Any]:
+        """Export techniques as a portable JSON-serializable dict."""
+        import copy
+
+        store = self._store_for(scope)
+        return {
+            "version": 1,
+            "scope": scope,
+            "count": len(store),
+            "techniques": copy.deepcopy(dict(store)),
+        }
+
+    def import_library(
+        self,
+        data: Dict[str, Any],
+        scope: str = "project",
+        *,
+        overwrite: bool = False,
+    ) -> Dict[str, Any]:
+        """Import techniques from an exported library dict.
+
+        Returns summary with imported/skipped/overwritten counts.
+        """
+        techniques = data.get("techniques", {})
+        if not isinstance(techniques, dict):
+            return {"imported": 0, "skipped": 0, "error": "Invalid format: 'techniques' must be a dict"}
+
+        store = self._store_for(scope)
+        imported = 0
+        skipped = 0
+        overwritten = 0
+
+        for tid, entry in techniques.items():
+            if not isinstance(entry, dict) or "technique" not in entry:
+                skipped += 1
+                continue
+            if tid in store and not overwrite:
+                skipped += 1
+                continue
+            if tid in store:
+                overwritten += 1
+            store[tid] = entry
+            imported += 1
+
+        if imported > 0:
+            self._save_scope(scope)
+
+        return {"imported": imported, "skipped": skipped, "overwritten": overwritten}
+
     def stats(self) -> Dict[str, Any]:
         return {
             "global_count": len(self._global),
@@ -313,6 +379,8 @@ class TechniqueStore:
             "updated_at": entry.get("updated_at", ""),
             "node_count": tech.get("node_count", 0),
             "complexity": tech.get("complexity", "unknown"),
+            "replay_count": entry.get("replay_count", 0),
+            "last_replayed_at": entry.get("last_replayed_at"),
             "state": entry.get("state", "candidate"),
             "compatibility": entry.get("compatibility", {}),
             "validation_result": entry.get("validation_result"),

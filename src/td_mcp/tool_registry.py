@@ -59,7 +59,9 @@ from td_mcp.models import (
     GetNodesInput,
     GetParamsInput,
     POPInspectInput,
+    MemoryExportInput,
     MemoryFavoriteInput,
+    MemoryImportInput,
     MemoryLearnInput,
     MemoryListInput,
     MemoryPreferencesInput,
@@ -3429,6 +3431,10 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
     }
     if validation_result is not None:
         response["validation_result"] = validation_result
+
+    # Track replay usage
+    store.record_replay(params.technique_id, scope=params.scope)
+
     return response
 
 
@@ -3452,6 +3458,21 @@ async def td_memory_promote(params: MemoryPromoteInput, ctx: Context) -> dict:
     if not new_id:
         return {"status": "error", "message": f"Technique {params.technique_id} not found in project scope."}
     return {"status": "ok", "global_technique_id": new_id, "promoted_from": params.technique_id}
+
+
+@mcp.tool()
+async def td_memory_export(params: MemoryExportInput, ctx: Context) -> dict:
+    """Export the technique library as a portable JSON object for sharing or backup."""
+    store = _get_technique_store(ctx)
+    return {"status": "ok", "library": store.export_library(scope=params.scope)}
+
+
+@mcp.tool()
+async def td_memory_import(params: MemoryImportInput, ctx: Context) -> dict:
+    """Import techniques from an exported library (from td_memory_export)."""
+    store = _get_technique_store(ctx)
+    result = store.import_library(params.data, scope=params.scope, overwrite=params.overwrite)
+    return {"status": "ok", **result}
 
 
 @mcp.tool()
