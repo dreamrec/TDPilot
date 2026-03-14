@@ -61,7 +61,7 @@ def test_with_undo_block_calls_lifecycle():
     assert td_client.request.call_count == 2
     calls = td_client.request.call_args_list
     assert calls[0] == call(
-        "project/lifecycle", {"action": "start_undo_block", "label": "my_label"}
+        "project/lifecycle", {"action": "start_undo_block", "name": "my_label"}
     )
     assert calls[1] == call("project/lifecycle", {"action": "end_undo_block"})
 
@@ -81,6 +81,6 @@ def test_with_undo_block_calls_end_on_error():
     assert td_client.request.call_count == 2
     calls = td_client.request.call_args_list
     assert calls[0] == call(
-        "project/lifecycle", {"action": "start_undo_block", "label": "err_label"}
+        "project/lifecycle", {"action": "start_undo_block", "name": "err_label"}
     )
     assert calls[1] == call("project/lifecycle", {"action": "end_undo_block"})

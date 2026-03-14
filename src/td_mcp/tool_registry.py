@@ -98,6 +98,8 @@ from td_mcp.models import (
     PreflightPatchInput,
     ValidateRecipeInput,
     AuditProjectInput,
+    CaptureFrameInput,
+    AnalyzeFrameInput,
 )
 from td_mcp.safety import SafetyManager
 from td_mcp.services import ServiceContainer
@@ -204,7 +206,7 @@ _STATE_VECTOR_CACHE: Dict[str, Dict[str, Any]] = {}
 async def _with_undo_block(td_client, label: str, async_fn, *args):
     """Wrap an async operation in a TD undo block (start_undo_block / end_undo_block)."""
     await td_client.request("project/lifecycle",
-        {"action": "start_undo_block", "label": label})
+        {"action": "start_undo_block", "name": label})
     try:
         result = await async_fn(*args)
         return result
