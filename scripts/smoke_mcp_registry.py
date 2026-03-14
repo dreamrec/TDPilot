@@ -80,7 +80,7 @@ async def run_smoke(min_tools: int) -> dict[str, Any]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Smoke-check TDPilot MCP registry")
-    parser.add_argument("--min-tools", type=int, default=63)
+    parser.add_argument("--min-tools", type=int, default=86)
     return parser.parse_args()
 
 

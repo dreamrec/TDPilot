@@ -193,7 +193,7 @@ uv sync
 uv run tdpilot
 ```
 
-TouchDesigner side component: `td_component/tdpilot_v1_2.tox`
+TouchDesigner side component: `td_component/tdpilot_v1_3.tox`
 
 One-command setup helpers: macOS `./install.sh`, Windows `./install.ps1`
 
@@ -230,7 +230,7 @@ tdpilot doctor --json
 - `TD_MCP_HTTP_PORT` (default `8765`)
 - `TD_MCP_CAPTURE_QUALITY` (default `0.3`)
 - `TD_MCP_STREAM_MAX_FPS` (default `15.0`)
-- `TD_MCP_EXEC_MODE` (`off`, `restricted`, `full`)
+- `TD_MCP_EXEC_MODE` (`off`, `restricted`, `standard`, `full`)
 - `TDPILOT_PROJECT_NAME` (set to enable per-project technique memory)
 - `TDPILOT_MEMORY_DIR` (override default `~/.tdpilot/memory/` path)
 

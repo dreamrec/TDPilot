@@ -9,7 +9,7 @@ What this does:
   1) Finds the repo root.
   2) Runs td_component/build_export_mcp_tox.py.
   3) Builds a reusable mcp_server component in a temporary container.
-  4) Exports td_component/tdpilot_v1_2.tox.
+  4) Exports td_component/tdpilot_v1_3.tox.
   5) Optionally installs /<target>/mcp_server if TD_MCP_PARENT_PATH is set.
 
 If auto-detect fails, set:

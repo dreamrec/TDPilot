@@ -188,10 +188,10 @@ Write-Host "  uv path:         $uvFullPath" -ForegroundColor White
 Write-Host ""
 Write-Host "  NEXT STEPS:" -ForegroundColor Yellow
 Write-Host "  1. Restart your MCP desktop client" -ForegroundColor White
-Write-Host "  2. Open TouchDesigner, drag td_component/tdpilot_v1_2.tox" -ForegroundColor White
+Write-Host "  2. Open TouchDesigner, drag td_component/tdpilot_v1_3.tox" -ForegroundColor White
 Write-Host "     into your project" -ForegroundColor White
 Write-Host "  3. Ask your AI client: 'What's in my TouchDesigner project?'" -ForegroundColor White
 Write-Host ""
 Write-Host "  .tox file is at:" -ForegroundColor DarkGray
-Write-Host "  $RepoPath\td_component\tdpilot_v1_2.tox" -ForegroundColor DarkGray
+Write-Host "  $RepoPath\td_component\tdpilot_v1_3.tox" -ForegroundColor DarkGray
 Write-Host ""

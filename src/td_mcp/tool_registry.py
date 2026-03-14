@@ -3385,7 +3385,7 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
     validation_result = None
     try:
         error_result = await client.request("node/errors", {"path": parent, "recurse": True, "max_depth": 10})
-        errors = error_result.get("errors", []) if isinstance(error_result, dict) else []
+        errors = error_result.get("issues", []) if isinstance(error_result, dict) else []
         validation_status = "pass" if not errors else "fail"
         validation_result = {
             "status": validation_status,
@@ -3992,7 +3992,7 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> Dict[str,
             if isinstance(err_data, list):
                 node_errors = err_data
             elif isinstance(err_data, dict):
-                node_errors = err_data.get("errors", [])
+                node_errors = err_data.get("issues", [])
         except Exception:
             pass
 
