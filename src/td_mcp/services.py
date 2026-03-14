@@ -9,6 +9,10 @@ from td_mcp.audit import AuditLogger
 from td_mcp.events import EventManager
 from td_mcp.jobs import JobManager, TaskAdapter
 from td_mcp.knowledge.card_index import CardIndex
+try:
+    from td_mcp.knowledge.docsbrain import DocsBrain
+except ImportError:
+    DocsBrain = None  # type: ignore[assignment,misc]
 from td_mcp.macros import MacroEngine
 from td_mcp.memory import SnapshotManager, TechniqueStore
 from td_mcp.memory.preference_store import PreferenceStore
