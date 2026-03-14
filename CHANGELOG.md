@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.3.1 - 2026-03-14
+
+### Added
+- MCP Tasks adapter: dual-mode bridge that routes job progress to MCP Tasks (native) or polling depending on client capabilities.
+- JobManager callback hooks (`on_progress_hook`, `on_complete_hook`) for external progress tracking.
+- Expanded snapshot diff: connection changes (`added_connections`, `removed_connections`) and expression changes (`added_expressions`, `removed_expressions`, `modified_expressions`).
+- `_with_undo_block` helper wrapping multi-step mutations in TD undo blocks for single-step reversal.
+- 4 new planning and validation tools (71 to 75):
+  - `td_plan_patch` — generate structured patch plans from intents and recipes.
+  - `td_preflight_patch` — validate plans before execution (path existence, name conflicts, op type checks).
+  - `td_validate_recipe` — validate technique recipes against knowledge cards and build compatibility.
+  - `td_audit_project` — audit project subtrees for structure, palette usage, errors, and build warnings.
+- Recipe state machine: techniques now track `state` (candidate, validated_local, validated_portable, deprecated, reference_only) and `validation_result`.
+- Auto-validation on replay: `td_memory_replay` checks for errors after replay and auto-promotes candidate recipes to `validated_local` on clean replay.
+
+### Changed
+- `td_restore_snapshot` docstring clarified: restores parameter values only; structural rollback uses TD native undo.
+- `ServiceContainer` gains `task_adapter` field for lifespan-managed TaskAdapter.
+
 ## 1.3.0 - 2026-03-14
 
 ### Added
