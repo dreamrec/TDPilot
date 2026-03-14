@@ -103,6 +103,9 @@ from td_mcp.models import (
     TDResourcesInspectInput,
     ComponentStandardizeInput,
     ColorPipelineInput,
+    RecommendOfficialInput,
+    FindOfficialExampleInput,
+    ExplainBetterWayInput,
 )
 from td_mcp.safety import SafetyManager
 from td_mcp.services import ServiceContainer
@@ -4345,6 +4348,172 @@ async def td_color_pipeline(params: ColorPipelineInput, ctx: Context) -> Dict[st
         return data
     except Exception as exc:
         _record_tool_error(ctx, "td_color_pipeline")
+        return {"error": str(exc)}
+    finally:
+        finish()
+
+
+# ─────────────────────────────────────────────────────────────
+# Official Recommendation Tools (84-86)
+# ─────────────────────────────────────────────────────────────
+
+
+@mcp.tool(name="td_recommend_official_component")
+async def td_recommend_official_component(params: RecommendOfficialInput, ctx: Context) -> Dict[str, Any]:
+    """Recommend official palette or built-in operator components for a given goal."""
+    finish = _start_tool(ctx, "td_recommend_official_component")
+    try:
+        idx = _get_card_index(ctx)
+        svc = _get_services(ctx)
+        provenance = Provenance(source="local_card", td_build=svc.td_build)
+
+        # Search palette components
+        palette_results = idx.search(params.goal, card_types=["palette"], limit=5)
+        # Search operators for built-in alternatives
+        operator_results = idx.search(params.goal, card_types=["operators"], limit=5)
+
+        recommendations = []
+        for card in palette_results:
+            recommendations.append({
+                "type": "palette",
+                "name": card.get("component_name", ""),
+                "display_name": card.get("display_name", ""),
+                "summary": card.get("summary", ""),
+                "when_to_use": card.get("when_to_use", ""),
+            })
+        for card in operator_results:
+            recommendations.append({
+                "type": "operator",
+                "name": card.get("op_type", ""),
+                "display_name": card.get("display_name", ""),
+                "summary": card.get("summary", ""),
+                "family": card.get("family", ""),
+            })
+
+        _audit_log(ctx, "td_recommend_official_component", {"goal": params.goal})
+        return {
+            "goal": params.goal,
+            "recommendations": recommendations,
+            "count": len(recommendations),
+            "provenance": provenance.to_dict(),
+        }
+    except Exception as exc:
+        _record_tool_error(ctx, "td_recommend_official_component")
+        return {"error": str(exc)}
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_find_official_example")
+async def td_find_official_example(params: FindOfficialExampleInput, ctx: Context) -> Dict[str, Any]:
+    """Search for official examples and snippets matching a query."""
+    finish = _start_tool(ctx, "td_find_official_example")
+    try:
+        idx = _get_card_index(ctx)
+        svc = _get_services(ctx)
+        provenance = Provenance(source="local_card", td_build=svc.td_build)
+
+        # Search snippets
+        snippet_results = idx.search(
+            params.query,
+            card_types=["snippets"],
+            family=params.family,
+            limit=5,
+        )
+        # Search palette for example components
+        palette_results = idx.search(
+            params.query,
+            card_types=["palette"],
+            family=params.family,
+            limit=5,
+        )
+
+        examples = []
+        for card in snippet_results:
+            examples.append({
+                "type": "snippet",
+                "id": card.get("snippet_id", ""),
+                "display_name": card.get("display_name", ""),
+                "summary": card.get("summary", ""),
+                "family": card.get("family", ""),
+            })
+        for card in palette_results:
+            examples.append({
+                "type": "palette_example",
+                "name": card.get("component_name", ""),
+                "display_name": card.get("display_name", ""),
+                "summary": card.get("summary", ""),
+            })
+
+        _audit_log(ctx, "td_find_official_example", {"query": params.query, "family": params.family})
+        return {
+            "query": params.query,
+            "family": params.family,
+            "examples": examples,
+            "count": len(examples),
+            "provenance": provenance.to_dict(),
+        }
+    except Exception as exc:
+        _record_tool_error(ctx, "td_find_official_example")
+        return {"error": str(exc)}
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_explain_better_way")
+async def td_explain_better_way(params: ExplainBetterWayInput, ctx: Context) -> Dict[str, Any]:
+    """Suggest better official alternatives for a given intent, with gotcha warnings."""
+    finish = _start_tool(ctx, "td_explain_better_way")
+    try:
+        idx = _get_card_index(ctx)
+        svc = _get_services(ctx)
+        provenance = Provenance(source="local_card", td_build=svc.td_build)
+
+        # Search for official alternatives across all card types
+        alternatives = idx.search(params.intent, limit=5)
+
+        # Extract gotchas from operator cards if current_plan mentions specific ops
+        gotchas = []
+        if params.current_plan:
+            plan_lower = params.current_plan.lower()
+            for card in idx.search(params.current_plan, card_types=["operators"], limit=10):
+                card_gotchas = card.get("common_gotchas", [])
+                if card_gotchas:
+                    op_name = card.get("op_type", card.get("display_name", ""))
+                    for g in card_gotchas:
+                        gotchas.append({"operator": op_name, "gotcha": g})
+
+        # Build recommendation
+        official_alternative = None
+        if alternatives:
+            top = alternatives[0]
+            official_alternative = {
+                "name": top.get("op_type") or top.get("component_name") or top.get("snippet_id", ""),
+                "display_name": top.get("display_name", ""),
+                "summary": top.get("summary", ""),
+                "family": top.get("family", ""),
+            }
+
+        recommendation = ""
+        if official_alternative:
+            recommendation = "Consider using '{}': {}".format(
+                official_alternative["display_name"] or official_alternative["name"],
+                official_alternative["summary"],
+            )
+        if gotchas:
+            recommendation += " Watch out for {} known gotcha(s).".format(len(gotchas))
+
+        _audit_log(ctx, "td_explain_better_way", {"intent": params.intent})
+        return {
+            "intent": params.intent,
+            "current_plan": params.current_plan,
+            "recommendation": recommendation,
+            "official_alternative": official_alternative,
+            "gotchas": gotchas,
+            "provenance": provenance.to_dict(),
+        }
+    except Exception as exc:
+        _record_tool_error(ctx, "td_explain_better_way")
         return {"error": str(exc)}
     finally:
         finish()

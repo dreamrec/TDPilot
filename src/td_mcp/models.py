@@ -1077,3 +1077,26 @@ class ComponentStandardizeInput(BaseModel):
 class ColorPipelineInput(BaseModel):
     """Input for color pipeline inspection."""
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+
+# ── Official Recommendation Tools (tools 84-86) ──────────────
+
+class RecommendOfficialInput(BaseModel):
+    """Input for recommending official palette/operator components."""
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    goal: str = Field(..., description="What you want to achieve", min_length=1)
+
+class FindOfficialExampleInput(BaseModel):
+    """Input for finding official examples and snippets."""
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    query: str = Field(..., description="Search query for official examples", min_length=1)
+    family: Optional[str] = Field(default=None, description="Filter by operator family: TOP, CHOP, SOP, etc.")
+
+class ExplainBetterWayInput(BaseModel):
+    """Input for suggesting better official alternatives."""
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    intent: str = Field(..., description="What you intend to do", min_length=1)
+    current_plan: Optional[str] = Field(default=None, description="Current approach to evaluate")
