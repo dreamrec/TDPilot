@@ -39,6 +39,14 @@ class TechniqueStore:
     # Public API
     # ------------------------------------------------------------------
 
+    # Valid state transitions
+    _VALID_STATES = frozenset({
+        "candidate",
+        "validated_local",
+        "validated_portable",
+        "deprecated",
+    })
+
     def add(
         self,
         technique: Dict[str, Any],
@@ -48,6 +56,7 @@ class TechniqueStore:
         description: str = "",
         tags: Optional[List[str]] = None,
         notes: str = "",
+        compatibility: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Add a technique and return its id."""
         technique_id = str(uuid.uuid4())
@@ -64,6 +73,7 @@ class TechniqueStore:
             "rating": 0,
             "state": "candidate",
             "validation_result": None,
+            "compatibility": compatibility or {},
             "technique": technique,
         }
         store = self._store_for(scope)
@@ -151,6 +161,56 @@ class TechniqueStore:
         for key, value in updates.items():
             if key in allowed:
                 entry[key] = value
+        entry["updated_at"] = datetime.now(timezone.utc).isoformat()
+        self._save_scope(scope)
+        return True
+
+    def update_validation(
+        self,
+        technique_id: str,
+        validation: Dict[str, Any],
+        scope: str = "project",
+    ) -> bool:
+        """Update validation_result and auto-promote/demote state.
+
+        If validation status is 'pass' and current state is 'candidate',
+        auto-promotes to 'validated_local'.
+        If validation status is 'fail', reverts 'validated_local'/'validated_portable'
+        back to 'candidate'.
+        Returns True on success, False if technique not found.
+        """
+        store = self._store_for(scope)
+        entry = store.get(technique_id)
+        if not entry:
+            return False
+        entry["validation_result"] = validation
+        status = validation.get("status", "")
+        current_state = entry.get("state", "candidate")
+        if status == "pass" and current_state == "candidate":
+            entry["state"] = "validated_local"
+        elif status == "fail" and current_state in ("validated_local", "validated_portable"):
+            entry["state"] = "candidate"
+        entry["updated_at"] = datetime.now(timezone.utc).isoformat()
+        self._save_scope(scope)
+        return True
+
+    def update_state(
+        self,
+        technique_id: str,
+        new_state: str,
+        scope: str = "project",
+    ) -> bool:
+        """Update the state of a technique with validation.
+
+        Returns True on success, False if technique not found or state is invalid.
+        """
+        if new_state not in self._VALID_STATES:
+            return False
+        store = self._store_for(scope)
+        entry = store.get(technique_id)
+        if not entry:
+            return False
+        entry["state"] = new_state
         entry["updated_at"] = datetime.now(timezone.utc).isoformat()
         self._save_scope(scope)
         return True
@@ -246,6 +306,8 @@ class TechniqueStore:
             "node_count": tech.get("node_count", 0),
             "complexity": tech.get("complexity", "unknown"),
             "state": entry.get("state", "candidate"),
+            "compatibility": entry.get("compatibility", {}),
+            "validation_result": entry.get("validation_result"),
         }
 
     def _file_for(self, scope: str) -> Path:
