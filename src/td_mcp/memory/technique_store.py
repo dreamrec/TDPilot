@@ -157,9 +157,13 @@ class TechniqueStore:
         entry = store.get(technique_id)
         if not entry:
             return False
-        allowed = {"name", "description", "tags", "notes", "state", "validation_result"}
+        allowed = {"name", "description", "tags", "notes", "validation_result"}
         for key, value in updates.items():
-            if key in allowed:
+            if key == "state":
+                # State changes must go through update_state() for validation
+                if value in self._VALID_STATES:
+                    entry[key] = value
+            elif key in allowed:
                 entry[key] = value
         entry["updated_at"] = datetime.now(timezone.utc).isoformat()
         self._save_scope(scope)

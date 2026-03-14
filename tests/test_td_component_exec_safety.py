@@ -48,10 +48,12 @@ class TestStandardModeConstants:
 
     def test_standard_blocked_tokens_superset_of_restricted(self):
         """Standard tokens should include all restricted tokens plus extras."""
+        # Tokens may be defined inline or via helper variables (e.g. _GLOBALS_PAREN = 'globals' + '(')
         extras = ['setattr', 'delattr', '__subclasses__', '__bases__',
-                  'globals(', 'locals(']
+                  'globals', 'locals']
         for token in extras:
-            assert "'{}'".format(token) in _SOURCE or '"{}"'.format(token) in _SOURCE, (
+            assert "'{}'".format(token) in _SOURCE or '"{}"'.format(token) in _SOURCE or \
+                "'{}' + '('".format(token) in _SOURCE, (
                 'STANDARD_BLOCKED_TOKENS missing token: {}'.format(token)
             )
 

@@ -268,7 +268,7 @@ async def server_lifespan(app: FastMCP):
         await td_client.health_check()
         logger.info("TouchDesigner connection healthy")
         try:
-            info = await td_client.request("get_info")
+            info = await td_client.request("info")
             td_build = str(info.get("build", "")) if isinstance(info, dict) else ""
         except Exception as exc:
             logger.debug("Could not fetch td_build at startup: %s", exc)
@@ -3384,7 +3384,7 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
     # Auto-validate after replay
     validation_result = None
     try:
-        error_result = await client.request("get_errors", {"path": parent, "recursive": True})
+        error_result = await client.request("node/errors", {"path": parent, "recurse": True, "max_depth": 10})
         errors = error_result.get("errors", []) if isinstance(error_result, dict) else []
         validation_status = "pass" if not errors else "fail"
         validation_result = {
@@ -3558,7 +3558,7 @@ async def td_get_param_help(
     client = _get_client(ctx)
     # Get live param info
     try:
-        params = await client.request("get_params", {"path": node_path, "names": [param_name]})
+        params = await client.request("node/params", {"path": node_path, "names": [param_name]})
     except Exception as exc:
         return {"error": f"Could not read param: {exc}"}
     live_param = params.get(param_name, params.get("params", {}).get(param_name))
@@ -3566,7 +3566,7 @@ async def td_get_param_help(
     idx = _get_card_index(ctx)
     card_param = None
     try:
-        info = await client.request("get_node_detail", {"path": node_path})
+        info = await client.request("node/detail", {"path": node_path})
         op_type = info.get("type", "")
         card = idx.get_operator(op_type)
         if card:
@@ -3613,6 +3613,7 @@ async def td_lookup_palette_component(
         return {"error": f"No palette card for {component_name}", "provenance": provenance.to_dict()}
     if query:
         results = idx.search(query, card_types=["palette"])
+        provenance = Provenance(source="local_card", td_build=svc.td_build)
         return {"results": results, "count": len(results), "provenance": provenance.to_dict()}
     return {"error": "Provide component_name or query"}
 
@@ -4100,6 +4101,13 @@ async def td_analyze_frame(params: AnalyzeFrameInput, ctx: Context) -> str:
         finish()
 
 
+def _check_exec_not_off() -> Optional[Dict[str, Any]]:
+    """Return an error dict if exec_mode is 'off', else None."""
+    if _current_exec_mode() == "off":
+        return {"error": "Python execution is disabled (TD_MCP_EXEC_MODE=off)"}
+    return None
+
+
 # ─────────────────────────────────────────────────────────────
 # TD 2025 Native System Tools (tools 78-83)
 # ─────────────────────────────────────────────────────────────
@@ -4112,6 +4120,9 @@ async def td_python_env_status(ctx: Context) -> Dict[str, Any]:
     """
     finish = _start_tool(ctx, "td_python_env_status")
     try:
+        off_err = _check_exec_not_off()
+        if off_err:
+            return off_err
         client = _get_client(ctx)
         code = (
             "import sys, json\n"
@@ -4150,6 +4161,9 @@ async def td_threading_status(ctx: Context) -> Dict[str, Any]:
     """
     finish = _start_tool(ctx, "td_threading_status")
     try:
+        off_err = _check_exec_not_off()
+        if off_err:
+            return off_err
         client = _get_client(ctx)
         code = (
             "import threading, json\n"
@@ -4187,6 +4201,9 @@ async def td_logger_status(ctx: Context) -> Dict[str, Any]:
     """
     finish = _start_tool(ctx, "td_logger_status")
     try:
+        off_err = _check_exec_not_off()
+        if off_err:
+            return off_err
         client = _get_client(ctx)
         code = (
             "import logging, json\n"
@@ -4219,8 +4236,12 @@ async def td_tdresources_inspect(params: TDResourcesInspectInput, ctx: Context) 
     """Inspect TDResources available in the TouchDesigner installation: fonts, icons, defaults."""
     finish = _start_tool(ctx, "td_tdresources_inspect")
     try:
+        off_err = _check_exec_not_off()
+        if off_err:
+            return off_err
         client = _get_client(ctx)
         category_filter = params.category or ""
+        safe_filter = json.dumps(category_filter)
         code = (
             "import json\n"
             "result = {'categories': {}, 'total_children': 0}\n"
@@ -4229,9 +4250,9 @@ async def td_tdresources_inspect(params: TDResourcesInspectInput, ctx: Context) 
             "    if res:\n"
             "        children = res.children\n"
             "        result['total_children'] = len(children)\n"
+            "        filt = json.loads(" + repr(safe_filter) + ")\n"
             "        for child in children:\n"
             "            cat = child.type\n"
-            "            filt = '{}'\n"
             "            if filt and filt.lower() not in child.name.lower() and filt.lower() not in cat.lower():\n"
             "                continue\n"
             "            if cat not in result['categories']:\n"
@@ -4242,7 +4263,7 @@ async def td_tdresources_inspect(params: TDResourcesInspectInput, ctx: Context) 
             "except Exception as e:\n"
             "    result['error'] = str(e)\n"
             "__result__ = json.dumps(result)"
-        ).format(category_filter)
+        )
         resp = await client.request("exec", {"code": code, "exec_mode": "standard"})
         raw = resp.get("result", "{}") if isinstance(resp, dict) else "{}"
         try:
@@ -4265,15 +4286,20 @@ async def td_component_standardize(params: ComponentStandardizeInput, ctx: Conte
     """Audit or fix COMP standardization: required custom parameters (Version, Help, Creator), extension, naming."""
     finish = _start_tool(ctx, "td_component_standardize")
     try:
+        off_err = _check_exec_not_off()
+        if off_err:
+            return off_err
         client = _get_client(ctx)
         path = params.path
         fix = params.fix
 
+        safe_path = json.dumps(path)
         audit_code = (
             "import json\n"
-            "result = {{'path': '{}', 'issues': [], 'fixed': []}}\n"
+            "_path = json.loads(" + repr(safe_path) + ")\n"
+            "result = {'path': _path, 'issues': [], 'fixed': []}\n"
             "try:\n"
-            "    comp = op('{}')\n"
+            "    comp = op(_path)\n"
             "    if comp is None:\n"
             "        result['error'] = 'Node not found'\n"
             "    else:\n"
@@ -4284,7 +4310,7 @@ async def td_component_standardize(params: ComponentStandardizeInput, ctx: Conte
             "            result['issues'].append('Name does not start with uppercase: ' + comp.name)\n"
             "        result['has_extension'] = bool(comp.extensions)\n"
             "        result['op_type'] = comp.type\n"
-        ).format(path, path)
+        )
 
         if fix:
             fix_code = (
@@ -4330,6 +4356,9 @@ async def td_color_pipeline(params: ColorPipelineInput, ctx: Context) -> Dict[st
     """Inspect the color management pipeline in TouchDesigner: color space, gamma, display settings."""
     finish = _start_tool(ctx, "td_color_pipeline")
     try:
+        off_err = _check_exec_not_off()
+        if off_err:
+            return off_err
         client = _get_client(ctx)
         code = (
             "import json\n"

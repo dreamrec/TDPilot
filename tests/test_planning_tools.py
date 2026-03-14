@@ -19,6 +19,6 @@ def test_planning_tools_registered():
     assert not missing, "Missing planning tools: {}".format(sorted(missing))
 
 
-def test_total_tool_count_at_least_75():
+def test_total_tool_count_at_least_86():
     tools = asyncio.run(server.mcp.list_tools())
-    assert len(tools) >= 75, "Expected >= 75 tools, got {}".format(len(tools))
+    assert len(tools) >= 86, "Expected >= 86 tools, got {}".format(len(tools))

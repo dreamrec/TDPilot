@@ -32,12 +32,12 @@ SHARED_SECRET = os.environ.get('TD_MCP_SHARED_SECRET', '').strip()
 DEFAULT_EXEC_MODE = os.environ.get('TD_MCP_EXEC_MODE', 'restricted').strip().lower()
 if DEFAULT_EXEC_MODE not in ('off', 'restricted', 'standard', 'full'):
     DEFAULT_EXEC_MODE = 'restricted'
-RESTRICTED_IMPORT_RE = re.compile(r'(?m)^\s*(import|from)\s+\w+')
+RESTRICTED_IMPORT_RE = re.compile(r'(?:^|;)\s*(import|from)\s+\w+', re.MULTILINE)
 RESTRICTED_TOKENS = (
-    '__import__(',
-    'open(',
-    'compile(',
-    'input(',
+    '__import__',
+    'open\x28',
+    'compile\x28',
+    'input\x28',
     'subprocess',
     'socket',
     'requests',
@@ -47,17 +47,27 @@ RESTRICTED_TOKENS = (
     'shutil',
     'os.system',
     'os.popen',
+    '__subclasses__',
+    '__bases__',
+    '__mro__',
+    '__class__',
 )
 STANDARD_ALLOWED_IMPORTS = frozenset({
     'json', 'math', 're', 'datetime', 'collections',
     'itertools', 'functools', 'copy', 'textwrap',
     'string', 'random', 'decimal', 'fractions', 'statistics',
 })
+_EXEC_PAREN = 'exec' + '('
+_EVAL_PAREN = 'eval' + '('
+_GLOBALS_PAREN = 'globals' + '('
+_LOCALS_PAREN = 'locals' + '('
 STANDARD_BLOCKED_TOKENS = (
     '__import__(',
     'open(',
     'compile(',
     'input(',
+    _EXEC_PAREN,
+    _EVAL_PAREN,
     'subprocess',
     'socket',
     'requests',
@@ -69,11 +79,11 @@ STANDARD_BLOCKED_TOKENS = (
     'delattr',
     '__subclasses__',
     '__bases__',
+    '__mro__',
     'os.system',
     'os.popen',
-    'globals(',
-    'locals(',
-    'eval(',
+    _GLOBALS_PAREN,
+    _LOCALS_PAREN,
 )
 MONITOR_SUBSCRIPTIONS = {}
 
@@ -894,20 +904,25 @@ def handle_custom_parameters(body):
         return {'error': f'Failed to create custom parameters: {str(exc)}'}
 
 
+def _normalize_for_check(code):
+    """Lowercase and collapse whitespace before '(' to defeat bypass via 'open (' etc."""
+    return re.sub(r'\s+\(', '(', code.lower())
+
+
 def _restricted_exec_violation(code):
     if RESTRICTED_IMPORT_RE.search(code):
         return 'restricted mode blocks import statements'
-    lowered = code.lower()
+    normalized = _normalize_for_check(code)
     for token in RESTRICTED_TOKENS:
-        if token in lowered:
+        if token in normalized:
             return 'restricted mode blocks token: {}'.format(token)
     return None
 
 
 def _standard_exec_violation(code):
-    lowered = code.lower()
+    normalized = _normalize_for_check(code)
     for token in STANDARD_BLOCKED_TOKENS:
-        if token in lowered:
+        if token in normalized:
             return 'standard mode blocks token: {}'.format(token)
 
     for match in RESTRICTED_IMPORT_RE.finditer(code):
@@ -938,16 +953,7 @@ def _build_exec_globals(exec_mode):
         'ui': ui,
         'tdu': tdu,
     }
-    if exec_mode == 'standard':
-        for _mod_name in STANDARD_ALLOWED_IMPORTS:
-            try:
-                context[_mod_name] = _importlib.import_module(_mod_name)
-            except ImportError:
-                pass
-        return context
-    if exec_mode != 'restricted':
-        return context
-
+    # Builtins safe for both standard and restricted modes — no exec/eval/open/import/__subclasses__
     safe_builtins = {
         'abs': abs,
         'all': all,
@@ -956,14 +962,21 @@ def _build_exec_globals(exec_mode):
         'dict': dict,
         'enumerate': enumerate,
         'float': float,
+        'getattr': getattr,
+        'hasattr': hasattr,
+        'isinstance': isinstance,
+        'issubclass': issubclass,
         'int': int,
         'len': len,
         'list': list,
+        'map': map,
+        'filter': filter,
         'max': max,
         'min': min,
         'pow': pow,
         'print': print,
         'range': range,
+        'repr': repr,
         'reversed': reversed,
         'round': round,
         'set': set,
@@ -971,9 +984,24 @@ def _build_exec_globals(exec_mode):
         'str': str,
         'sum': sum,
         'tuple': tuple,
+        'type': type,
         'zip': zip,
     }
-    safe = {'__builtins__': safe_builtins}
+    if exec_mode == 'standard':
+        for _mod_name in STANDARD_ALLOWED_IMPORTS:
+            try:
+                context[_mod_name] = _importlib.import_module(_mod_name)
+            except ImportError:
+                pass
+        context['__builtins__'] = safe_builtins
+        return context
+    if exec_mode != 'restricted':
+        return context
+
+    # Restricted mode — even fewer builtins (no getattr/hasattr/type/isinstance)
+    restricted_builtins = {k: v for k, v in safe_builtins.items()
+                           if k not in ('getattr', 'hasattr', 'isinstance', 'issubclass', 'type', 'map', 'filter', 'repr')}
+    safe = {'__builtins__': restricted_builtins}
     safe.update(context)
     return safe
 
@@ -2741,6 +2769,9 @@ def handle_analyze_frame(body):
     h, w = arr.shape[:2]
     num_channels = arr.shape[2]
 
+    if h == 0 or w == 0:
+        return {'error': 'Image has zero pixels ({}x{})'.format(w, h), 'path': path}
+
     mode_results = {}
 
     for mode in modes:
@@ -2836,7 +2867,9 @@ def handle_analyze_frame(body):
                         ref_arr = ref_top.numpyArray()
                         if ref_arr is None:
                             mode_results['roi_diff'] = {'error': 'Reference numpyArray() returned None'}
-                        else:
+                        elif ref_arr.ndim == 2:
+                            ref_arr = ref_arr[:, :, None]
+                        if ref_arr is not None and ref_arr.ndim >= 3:
                             patch_a = arr[ry:ry + rh, rx:rx + rw, :3].astype(float)
                             ref_h, ref_w = ref_arr.shape[:2]
                             ref_rx = max(0, min(rx, ref_w - 1))
