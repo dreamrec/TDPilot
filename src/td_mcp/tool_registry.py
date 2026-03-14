@@ -3381,7 +3381,35 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
         wired += 1
 
     created_paths = {key: value for key, value in created_nodes.items() if key != "/"}
-    return {
+
+    # Auto-validate after replay
+    validation_result = None
+    try:
+        error_result = await client.request("get_errors", {"path": parent, "recursive": True})
+        errors = error_result.get("errors", []) if isinstance(error_result, dict) else []
+        validation_status = "pass" if not errors else "fail"
+        validation_result = {
+            "status": validation_status,
+            "validated_at": datetime.now(timezone.utc).isoformat(),
+            "td_build": _get_services(ctx).td_build,
+            "errors": [str(e) for e in errors[:10]],
+            "warnings": [],
+        }
+        # Auto-promote candidate to validated_local on clean replay
+        entry_state = entry.get("state", "candidate")
+        if validation_status == "pass" and entry_state == "candidate":
+            store.update(params.technique_id, {
+                "state": "validated_local",
+                "validation_result": validation_result,
+            }, scope=params.scope)
+        else:
+            store.update(params.technique_id, {
+                "validation_result": validation_result,
+            }, scope=params.scope)
+    except Exception:
+        pass  # Non-fatal: replay succeeded even if validation check fails
+
+    response = {
         "status": "ok",
         "nodes_created": created_count,
         "connections_wired": wired,
@@ -3389,6 +3417,9 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
         "skipped_nodes": skipped_nodes,
         "skipped_connections": skipped_connections,
     }
+    if validation_result is not None:
+        response["validation_result"] = validation_result
+    return response
 
 
 @mcp.tool()
