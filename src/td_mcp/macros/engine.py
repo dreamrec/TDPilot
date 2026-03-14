@@ -218,7 +218,7 @@ class MacroEngine:
                     extra_exprs.append(
                         replace(
                             ExpressionSpec(node=target.node, param=target.param, expr=""),
-                            expr=target.template.format(value=value),
+                            expr=target.template.replace("{value}", str(value)),
                         )
                     )
                 else:

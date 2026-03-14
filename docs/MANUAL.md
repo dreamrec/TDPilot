@@ -1,4 +1,4 @@
-# TDPilot 1.1 Production Manual
+# TDPilot v1.3.2 Production Manual
 
 This manual is for people who need real output in TouchDesigner, not theory. It explains what TDPilot does well, what it does not do, and how to run it with repeatable production discipline.
 
@@ -63,7 +63,7 @@ uv run tdpilot doctor --strict
 uv run --directory /ABS/PATH/TDPilot tdpilot run
 ```
 
-## 3.1 New In 1.1
+## 3.1 Features Added Since v1.1
 
 - POPx: use `td_pop_inspect` for POP-native counts, attribute metadata, and sampled values.
 - Project lifecycle: use `td_project_lifecycle` for save/load/undo/redo instead of ad hoc Python snippets.

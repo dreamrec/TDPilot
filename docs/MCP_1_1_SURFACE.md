@@ -184,7 +184,7 @@ Real sessions also exposed several quality-of-life gaps that do not block work, 
 - Imported tox workflows would benefit from warning filtering that separates scene-breaking errors from harmless sync or inactive-branch warnings
 - ~~Visual verification still needs a lighter-weight mode for low-token thumbnails or fast passive checks~~ **Resolved in v1.3.2:** Vision diagnostics tools provide lightweight frame analysis without streaming overhead.
 - Snapshot persistence is available, but the safest production behavior would be stronger default persistence around risky edits
-- Event-style subscriptions are still absent, so many monitoring tasks rely on polling rather than change-driven updates
+- ~~Event-style subscriptions are still absent, so many monitoring tasks rely on polling rather than change-driven updates~~ **Resolved in v1.3.2:** `td_subscribe`, `td_unsubscribe`, and `td_get_events` provide change-driven event subscriptions.
 
 ## 8. Direction
 
@@ -205,7 +205,7 @@ The near-term quality-of-life priorities are equally clear:
 - standardize recursive inspection arguments and output shape
 - classify warnings by operational severity
 - ~~make visual verification cheaper and easier to invoke during iteration~~ (v1.3.2: vision diagnostics)
-- reduce reliance on polling with subscription-style state change hooks
+- ~~reduce reliance on polling with subscription-style state change hooks~~ (v1.3.2: `td_subscribe`, `td_unsubscribe`, `td_get_events`)
 - bias the runtime toward safer default persistence during destructive edits
 
 That is how the MCP moves from "capable" to "production-native".

@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class SnapshotManager:
@@ -221,7 +224,8 @@ class SnapshotManager:
         try:
             tmp_path.write_text(json.dumps(payload, ensure_ascii=True), encoding="utf-8")
             tmp_path.replace(file_path)
-        except Exception:
+        except Exception as exc:
+            logger.error("Failed to write %s: %s", file_path, exc)
             try:
                 if tmp_path.exists():
                     tmp_path.unlink()

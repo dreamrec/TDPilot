@@ -3536,7 +3536,7 @@ async def td_get_operator_doc(
     if resolved_type is None and node_path:
         # Resolve op_type from live node
         try:
-            info = await _get_client(ctx).request("get_node_detail", {"path": node_path})
+            info = await _get_client(ctx).request("node/detail", {"path": node_path})
             resolved_type = info.get("type", "")
         except Exception:
             return {"error": f"Could not resolve node at {node_path}"}
@@ -3564,7 +3564,7 @@ async def td_get_param_help(
         params = await client.request("node/params", {"path": node_path, "names": [param_name]})
     except Exception as exc:
         return {"error": f"Could not read param: {exc}"}
-    live_param = params.get(param_name, params.get("params", {}).get(param_name))
+    live_param = params.get("parameters", {}).get(param_name, params.get("params", {}).get(param_name))
     # Try to get operator card for enrichment
     idx = _get_card_index(ctx)
     card_param = None
@@ -3711,7 +3711,11 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> Dict[str, Any]:
                 if recipe_info is None:
                     recipe_info = store.get(params.recipe_id, scope="global")
                 if recipe_info:
-                    nodes = recipe_info.get("nodes", [])
+                    tech = recipe_info.get("technique", {})
+                    recipe_data = tech.get("recipe", {}) if isinstance(tech, dict) else {}
+                    nodes = recipe_data.get("nodes", {})
+                    if isinstance(nodes, dict):
+                        nodes = list(nodes.values())
                     for node in nodes:
                         op_type = node.get("type", "")
                         card_ok = True
@@ -3854,6 +3858,9 @@ async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> Dict[
                     recipe = store.get(recipe_id, scope="global")
             except Exception as exc:
                 return {"error": "Could not load recipe '{}': {}".format(recipe_id, exc)}
+
+        if recipe is not None and "technique" in recipe:
+            recipe = recipe.get("technique", {}).get("recipe", recipe)
 
         if recipe is None:
             return {"error": "No recipe provided (supply recipe_id or inline recipe dict)."}

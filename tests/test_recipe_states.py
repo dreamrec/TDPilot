@@ -27,10 +27,20 @@ def test_update_state():
     with tempfile.TemporaryDirectory() as d:
         store = TechniqueStore(base_dir=d)
         tid = store.add({"recipe": {}}, scope="global", name="test")
-        ok = store.update(tid, {"state": "validated_local"}, scope="global")
+        ok = store.update_state(tid, "validated_local", scope="global")
         assert ok
         entry = store.get(tid, scope="global")
         assert entry["state"] == "validated_local"
+
+
+def test_update_ignores_state():
+    """update() must not allow direct state changes; callers must use update_state()."""
+    with tempfile.TemporaryDirectory() as d:
+        store = TechniqueStore(base_dir=d)
+        tid = store.add({"recipe": {}}, scope="global", name="test")
+        store.update(tid, {"state": "validated_local"}, scope="global")
+        entry = store.get(tid, scope="global")
+        assert entry["state"] == "candidate"  # unchanged
 
 
 def test_validation_result_field():

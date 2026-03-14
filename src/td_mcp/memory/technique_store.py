@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import json
+import logging
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 DEFAULT_BASE_DIR = "~/.tdpilot/memory"
@@ -160,9 +163,7 @@ class TechniqueStore:
         allowed = {"name", "description", "tags", "notes", "validation_result"}
         for key, value in updates.items():
             if key == "state":
-                # State changes must go through update_state() for validation
-                if value in self._VALID_STATES:
-                    entry[key] = value
+                continue  # State changes must go through update_state()
             elif key in allowed:
                 entry[key] = value
         entry["updated_at"] = datetime.now(timezone.utc).isoformat()
@@ -362,7 +363,8 @@ class TechniqueStore:
         try:
             tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
             tmp.replace(path)
-        except Exception:
+        except Exception as exc:
+            logger.error("Failed to write %s: %s", path, exc)
             try:
                 if tmp.exists():
                     tmp.unlink()

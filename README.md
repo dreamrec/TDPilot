@@ -144,6 +144,63 @@ Memory storage lives at `~/.tdpilot/memory/` with per-project and global scopes:
       preferences.json
 ```
 
+### 9. Macros & Planning (7)
+| Tool | Purpose |
+|------|---------|
+| `td_create_macro` | Create a reusable macro from a template |
+| `td_list_macros` | List available macros |
+| `td_get_macro_params` | Get macro parameter schema |
+| `td_plan_patch` | Plan a multi-step network patch |
+| `td_preflight_patch` | Pre-validate a patch plan |
+| `td_validate_recipe` | Validate a technique recipe |
+| `td_audit_project` | Audit project subtree |
+
+### 10. Vision & Streaming (7)
+| Tool | Purpose |
+|------|---------|
+| `td_capture_frame` | Capture a single frame from a TOP |
+| `td_analyze_frame` | Analyze frame content (colors, regions) |
+| `td_monitor_visual` | Start continuous visual monitoring |
+| `td_stop_monitor_visual` | Stop visual monitoring |
+| `td_stream_top` | Stream TOP output via WebSocket |
+| `td_stop_stream_top` | Stop TOP streaming |
+| `td_optimize_visual` | Get optimization suggestions for visuals |
+
+### 11. Knowledge Corpus (7)
+| Tool | Purpose |
+|------|---------|
+| `td_search_official_docs` | Search official TD documentation |
+| `td_get_operator_doc` | Get detailed operator documentation |
+| `td_get_param_help` | Get parameter-level help |
+| `td_lookup_snippets` | Find code snippets by topic |
+| `td_lookup_palette_component` | Look up Palette component info |
+| `td_get_release_delta` | Get changes between TD builds |
+| `td_get_build_compatibility` | Check operator build compatibility |
+
+### 12. Server Introspection (3)
+| Tool | Purpose |
+|------|---------|
+| `td_get_capabilities` | Report server capabilities |
+| `td_get_server_metrics` | Get server performance metrics |
+| `td_describe_surface` | Describe the full tool surface |
+
+### 13. Recommendations (3)
+| Tool | Purpose |
+|------|---------|
+| `td_recommend_official_component` | Suggest official components |
+| `td_find_official_example` | Find relevant official examples |
+| `td_explain_better_way` | Suggest better approaches |
+
+### 14. TD 2025 Native (6)
+| Tool | Purpose |
+|------|---------|
+| `td_python_env_status` | Inspect Python environment in TD |
+| `td_threading_status` | Check threading configuration |
+| `td_logger_status` | Inspect TD logger state |
+| `td_tdresources_inspect` | Inspect TDResources categories |
+| `td_component_standardize` | Audit/fix COMP standards |
+| `td_color_pipeline` | Inspect color management pipeline |
+
 ## How To Use It (Practical Workflow)
 
 1. Connect MCP client to TDPilot.

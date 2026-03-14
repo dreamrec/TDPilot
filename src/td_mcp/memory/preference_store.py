@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
+
+logger = logging.getLogger(__name__)
 
 
 DEFAULT_BASE_DIR = "~/.tdpilot/memory"
@@ -99,7 +102,8 @@ class PreferenceStore:
         try:
             tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
             tmp.replace(path)
-        except Exception:
+        except Exception as exc:
+            logger.error("Failed to write %s: %s", path, exc)
             try:
                 if tmp.exists():
                     tmp.unlink()
