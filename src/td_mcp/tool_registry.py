@@ -124,7 +124,7 @@ def _read_int_env(name: str, default: int) -> int:
 
 def _normalize_exec_mode(value: str) -> str:
     mode = (value or "restricted").strip().lower()
-    if mode not in {"off", "restricted", "full"}:
+    if mode not in {"off", "restricted", "standard", "full"}:
         return "restricted"
     return mode
 
@@ -161,6 +161,35 @@ RESTRICTED_TOKENS = (
     "shutil",
     "os.system",
     "os.popen",
+)
+
+STANDARD_ALLOWED_IMPORTS: frozenset = frozenset({
+    "json", "math", "re", "datetime", "collections",
+    "itertools", "functools", "copy", "textwrap",
+    "string", "random", "decimal", "fractions", "statistics",
+})
+
+STANDARD_BLOCKED_TOKENS: tuple = (
+    "__import__(",
+    "open(",
+    "compile(",
+    "input(",
+    "subprocess",
+    "socket",
+    "requests",
+    "httpx",
+    "urllib",
+    "pathlib",
+    "shutil",
+    "setattr",
+    "delattr",
+    "__subclasses__",
+    "__bases__",
+    "os.system",
+    "os.popen",
+    "globals(",
+    "locals(",
+    "eval(",
 )
 
 _STATE_VECTOR_CACHE: Dict[str, Dict[str, Any]] = {}
@@ -530,6 +559,28 @@ def _restricted_exec_violation(code: str) -> Optional[str]:
     return None
 
 
+def _standard_exec_violation(code: str) -> Optional[str]:
+    lowered = code.lower()
+    for token in STANDARD_BLOCKED_TOKENS:
+        if token in lowered:
+            return f"standard mode blocks token: {token}"
+
+    for match in RESTRICTED_IMPORT_RE.finditer(code):
+        line = match.group(0).strip()
+        # Extract module name: "import foo" -> "foo", "from foo import bar" -> "foo"
+        parts = line.split()
+        if parts[0] == "from":
+            mod_name = parts[1]
+        else:
+            mod_name = parts[1]
+        # Take only the top-level package (e.g. "collections.abc" -> "collections")
+        top_level = mod_name.split(".")[0]
+        if top_level not in STANDARD_ALLOWED_IMPORTS:
+            return f"standard mode blocks import of: {top_level}"
+
+    return None
+
+
 def _enforce_exec_mode(code: str) -> None:
     mode = _current_exec_mode()
 
@@ -538,6 +589,11 @@ def _enforce_exec_mode(code: str) -> None:
 
     if mode == "restricted":
         violation = _restricted_exec_violation(code)
+        if violation:
+            raise PermissionError(violation)
+
+    if mode == "standard":
+        violation = _standard_exec_violation(code)
         if violation:
             raise PermissionError(violation)
 
