@@ -32,3 +32,6 @@ uv.lock
 # Generated QA artifacts
 reports/
 zivfETsb
+
+# Local MCP configuration
+.mcp.json
