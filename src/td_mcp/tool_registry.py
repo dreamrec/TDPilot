@@ -100,6 +100,9 @@ from td_mcp.models import (
     AuditProjectInput,
     CaptureFrameInput,
     AnalyzeFrameInput,
+    TDResourcesInspectInput,
+    ComponentStandardizeInput,
+    ColorPipelineInput,
 )
 from td_mcp.safety import SafetyManager
 from td_mcp.services import ServiceContainer
@@ -1646,7 +1649,7 @@ async def td_resource_top_frame(encoded_path: str) -> str:
 
 
 @mcp.resource("td://job/{job_id}", name="td_job_state")
-async def td_resource_job(job_id: str) -> Dict[str, Any]:
+async def td_resource_job(job_id: str) -> str:
     # NOTE: Context injection removed for mcp>=1.3 compatibility.
     # Job state cannot be retrieved via resource; use job tracking tools.
     return {
@@ -3073,6 +3076,7 @@ async def td_memory_learn(params: MemoryLearnInput, ctx: Context) -> dict:
 
     Returns the technique dict — pass it to td_memory_save to persist.
     """
+    svc = _get_services(ctx)
     client = _get_client(ctx)
     technique = await analyze_network(
         client,
@@ -3081,6 +3085,7 @@ async def td_memory_learn(params: MemoryLearnInput, ctx: Context) -> dict:
         name=params.name,
         description=params.description,
         tags=params.tags,
+        td_build=svc.td_build,
     )
     return {"status": "ok", "technique": technique}
 
@@ -3093,6 +3098,15 @@ async def td_memory_save(params: MemorySaveInput, ctx: Context) -> dict:
     or construct a technique dict manually.
     """
     store = _get_technique_store(ctx)
+    # Build compatibility dict from technique metadata if present
+    tech = params.technique
+    td_build = tech.get("td_build", "") if isinstance(tech, dict) else ""
+    required_op_types = tech.get("required_op_types", []) if isinstance(tech, dict) else []
+    compatibility: dict = {}
+    if td_build:
+        compatibility["min_build"] = td_build
+    if required_op_types:
+        compatibility["required_ops"] = required_op_types
     technique_id = store.add(
         technique=params.technique,
         scope=params.scope,
@@ -3100,6 +3114,7 @@ async def td_memory_save(params: MemorySaveInput, ctx: Context) -> dict:
         description=params.description,
         tags=params.tags,
         notes=params.notes,
+        compatibility=compatibility or None,
     )
     return {"status": "ok", "technique_id": technique_id, "scope": params.scope}
 
@@ -3143,6 +3158,28 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
             "families": technique.get("families"),
             "op_types": technique.get("op_types"),
         }
+
+    # Pre-replay prerequisite check: verify required op types are available
+    if not params.force:
+        required_ops: List[str] = (
+            technique.get("required_op_types")
+            or entry.get("compatibility", {}).get("required_ops")
+            or []
+        )
+        if required_ops:
+            try:
+                op_info = await _get_client(ctx).request("op_types", {})
+                available_ops = set(op_info.get("op_types", []) if isinstance(op_info, dict) else [])
+                if available_ops:
+                    missing_ops = [op for op in required_ops if op not in available_ops]
+                    if missing_ops:
+                        return {
+                            "status": "blocked",
+                            "reason": "Missing operator types",
+                            "missing_ops": missing_ops,
+                        }
+            except Exception:
+                pass  # If we can't check, allow replay (non-fatal)
 
     client = _get_client(ctx)
     parent = params.parent_path.rstrip("/") or "/"

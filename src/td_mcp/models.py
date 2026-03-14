@@ -1055,3 +1055,25 @@ class AnalyzeFrameInput(BaseModel):
     )
     roi: Optional[List[int]] = Field(default=None, description="Region of interest [x, y, w, h] for roi_diff mode")
     reference_path: Optional[str] = Field(default=None, description="Reference TOP path for roi_diff mode")
+
+
+# ─────────────────────────────────────────────────────────────
+# TD 2025 Native System Tools
+# ─────────────────────────────────────────────────────────────
+
+class TDResourcesInspectInput(BaseModel):
+    """Input for inspecting TDResources."""
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    category: Optional[str] = Field(default=None, description="Category: fonts, icons, defaults, or None for all")
+
+class ComponentStandardizeInput(BaseModel):
+    """Input for auditing/fixing COMP standardization."""
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    path: str = Field(..., description="Path to COMP to audit", min_length=1)
+    fix: bool = Field(default=False, description="If True, auto-fix issues (wrapped in undo block)")
+
+class ColorPipelineInput(BaseModel):
+    """Input for color pipeline inspection."""
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
