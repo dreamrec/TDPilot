@@ -36,3 +36,6 @@ zivfETsb
 
 # Local MCP configuration
 .mcp.json
+
+# Git worktrees
+.worktrees/
