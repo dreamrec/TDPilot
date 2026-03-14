@@ -302,13 +302,28 @@ async def server_lifespan(app: FastMCP):
     # Knowledge corpus
     card_index = None
     try:
-        from td_mcp.knowledge.card_index import CardIndex
-        cards_dir = Path(__file__).parent / "knowledge" / "cards"
-        if cards_dir.is_dir():
-            card_index = CardIndex(cards_dir)
-            logger.info("Knowledge corpus loaded (%d cards)", card_index.count())
+        from td_mcp.knowledge.docsbrain import DocsBrain
+        brain_dir = Path(__file__).resolve().parent.parent.parent / "data" / "normalized" / "derivative"
+        db_path = brain_dir / "docsbrain.db"
+        if db_path.exists():
+            card_index = DocsBrain(
+                db_path=db_path,
+                changelog_path=brain_dir / "operator_changelog.json",
+                manifest_path=brain_dir / "build_manifest.json",
+            )
+            logger.info("DocsBrain loaded (%d chunks)", card_index.count())
     except Exception as exc:
-        logger.debug("Could not load knowledge corpus: %s", exc)
+        logger.debug("DocsBrain not available: %s", exc)
+
+    if card_index is None:
+        try:
+            from td_mcp.knowledge.card_index import CardIndex
+            cards_dir = Path(__file__).parent / "knowledge" / "cards"
+            if cards_dir.is_dir():
+                card_index = CardIndex(cards_dir)
+                logger.info("Knowledge corpus loaded (%d cards)", card_index.count())
+        except Exception as exc:
+            logger.warning("CardIndex failed: %s", exc)
 
     services = ServiceContainer(
         td_client=td_client,
