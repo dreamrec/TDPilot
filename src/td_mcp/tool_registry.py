@@ -18,6 +18,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from mcp.server.fastmcp import Context, FastMCP
 
+from td_mcp import normalize_transport as _normalize_transport
 from td_mcp.audit import AuditLogger
 from td_mcp.capabilities import detect_capabilities
 from td_mcp.errors import format_tool_error
@@ -133,7 +134,7 @@ TD_PORT = _read_int_env("TD_MCP_PORT", 9981)
 TD_WS_PORT = _read_int_env("TD_MCP_WS_PORT", 9982)
 TD_HTTP_HOST = os.environ.get("TD_MCP_HTTP_HOST", "127.0.0.1")
 TD_HTTP_PORT = _read_int_env("TD_MCP_HTTP_PORT", 8765)
-TD_TRANSPORT = os.environ.get("TD_MCP_TRANSPORT", "stdio").strip().lower()
+TD_TRANSPORT = _normalize_transport(os.environ.get("TD_MCP_TRANSPORT", "stdio"))
 TD_EVENT_BUFFER = _read_int_env("TD_MCP_EVENT_BUFFER", 1000)
 TD_CAPTURE_QUALITY = _read_float_env("TD_MCP_CAPTURE_QUALITY", 0.3)
 TD_STREAM_MAX_FPS = _read_float_env("TD_MCP_STREAM_MAX_FPS", 15.0)

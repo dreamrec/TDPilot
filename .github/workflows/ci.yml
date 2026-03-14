@@ -52,9 +52,26 @@ jobs:
           JSON
           uv run python scripts/check_release_gates.py --bench-report /tmp/bench.json --require-complete
 
+      - name: Validate bundle integrity
+        run: |
+          uv run python -c "
+          import json, sys
+          from td_mcp import __version__, TOX_FILENAME
+          manifest = json.load(open('mcp/manifest.json'))
+          errors = []
+          if manifest['version'] != __version__:
+              errors.append(f'manifest version {manifest[\"version\"]} != {__version__}')
+          expected_tox = f'td_component/{TOX_FILENAME}'
+          if manifest['artifacts']['td_component_tox'] != expected_tox:
+              errors.append(f'manifest tox {manifest[\"artifacts\"][\"td_component_tox\"]} != {expected_tox}')
+          if errors:
+              print('\n'.join(errors)); sys.exit(1)
+          print('Bundle integrity OK')
+          "
+
       - name: Ensure no legacy repo/path drift
         run: |
-          if rg -n "TDPilot-v1\.0|TDPilot-claude-refactor" README.md pyproject.toml src npm install.sh install.ps1 mcp scripts td_component; then
+          if rg -n "TDPilot-v1\.0|TDPilot-claude-refactor|mcp_server_codex" README.md pyproject.toml src npm install.sh install.ps1 mcp scripts td_component setup_mcp_in_td.py plugin_README.md; then
             echo "Legacy references found."
             exit 1
           fi

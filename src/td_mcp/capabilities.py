@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import os
 from dataclasses import asdict, dataclass
+
+from td_mcp import normalize_transport
 from typing import Any, Mapping, Optional
 
 
@@ -43,7 +45,9 @@ def detect_capabilities(ctx: Optional[Any] = None) -> CapabilitySet:
     This function intentionally uses permissive probing with safe defaults.
     """
 
-    supports_streamable_http = os.environ.get("TD_MCP_TRANSPORT", "stdio") == "streamable_http"
+    supports_streamable_http = normalize_transport(
+        os.environ.get("TD_MCP_TRANSPORT", "stdio")
+    ) == "streamable-http"
     if ctx is None:
         return CapabilitySet(supports_streamable_http=supports_streamable_http)
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.0 - 2026-03-14
+
+### Changed
+- Renamed TD component artifact from `mcp_server_codex.tox` to `tdpilot_v1_2.tox` (format: `tdpilot_v{MAJOR}_{MINOR}.tox`).
+- Doctor command reads .tox filename from canonical `TOX_FILENAME` constant instead of hardcoding.
+- Transport naming normalized via `normalize_transport()` — consistent across doctor, capabilities, and runtime startup.
+- MCP dependency pinned to `>=1.0,<2.0` to prevent SDK v2 pre-alpha breakage.
+- Added CI bundle integrity check validating version and artifact path agreement.
+
+### Removed
+- Deleted `mcp_server_codex.tox` (replaced by `tdpilot_v1_2.tox`).
+
 ## 1.1.0 - 2026-03-07
 
 ### Added

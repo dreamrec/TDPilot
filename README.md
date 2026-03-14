@@ -7,7 +7,7 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v1.1.0
+# TDPilot Runtime v1.2.0
 
 **TDPilot Runtime** is an MCP server for TouchDesigner.
 It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networks with real tool calls — and now remember what works.
@@ -177,7 +177,7 @@ uv sync
 uv run tdpilot
 ```
 
-TouchDesigner side component: `td_component/mcp_server.tox`
+TouchDesigner side component: `td_component/tdpilot_v1_2.tox`
 
 One-command setup helpers: macOS `./install.sh`, Windows `./install.ps1`
 

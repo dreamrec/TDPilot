@@ -9,7 +9,7 @@ What this does:
   1) Finds the repo root.
   2) Runs td_component/build_export_mcp_tox.py.
   3) Builds a reusable mcp_server component in a temporary container.
-  4) Exports td_component/mcp_server.tox.
+  4) Exports td_component/tdpilot_v1_2.tox.
   5) Optionally installs /<target>/mcp_server if TD_MCP_PARENT_PATH is set.
 
 If auto-detect fails, set:
@@ -19,7 +19,7 @@ If auto-detect fails, set:
 
 If the target project root is not auto-detected, optionally also set:
 
-    os.environ["TD_MCP_PARENT_PATH"] = "/Diaoram"
+    os.environ["TD_MCP_PARENT_PATH"] = "/project1"
 """
 
 import os
@@ -68,7 +68,18 @@ def _iter_repo_candidates():
             os.path.join(home, "Documents", "TDPilot"),
         )
     )
-    for base in (home, os.path.join(home, "Desktop"), os.path.join(home, "Documents")):
+    for base in (
+        home,
+        os.path.join(home, "Desktop"),
+        os.path.join(home, "Documents"),
+        os.path.join(home, "Projects"),
+        os.path.join(home, "Dev"),
+        os.path.join(home, "dev"),
+        os.path.join(home, "Code"),
+        os.path.join(home, "code"),
+        os.path.join(home, "repos"),
+        os.path.join(home, "src"),
+    ):
         if not os.path.isdir(base):
             continue
         for pattern in ("*TDPilot*", "*tdpilot*"):
@@ -101,7 +112,7 @@ def run_setup():
         print("[TDPilot] Set TD_MCP_REPO_ROOT then run again:")
         print('  import os')
         print('  os.environ["TD_MCP_REPO_ROOT"] = "/ABS/PATH/TDPilot"')
-        print('  os.environ["TD_MCP_PARENT_PATH"] = "/Diaoram"  # optional')
+        print('  os.environ["TD_MCP_PARENT_PATH"] = "/project1"  # optional')
         print(
             '  exec(open("/ABS/PATH/TDPilot/setup_mcp_in_td.py").read(), globals(), globals())'
         )

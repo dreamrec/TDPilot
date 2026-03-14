@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from td_mcp import __version__
+from td_mcp import __version__, TOX_FILENAME, normalize_transport
 from td_mcp.td_client import TDClient, TouchDesignerConnectionError
 from td_mcp.tool_registry import (
     TD_EXEC_MODE,
@@ -89,7 +89,7 @@ def _collect_doctor_report(*, timeout: float, skip_td_check: bool, strict: bool)
     checks: List[Dict[str, Any]] = []
     now = datetime.now(timezone.utc).isoformat()
     repo_root = _find_repo_root()
-    tox_path = (repo_root / "td_component" / "mcp_server.tox") if repo_root else None
+    tox_path = (repo_root / "td_component" / TOX_FILENAME) if repo_root else None
 
     checks.append(
         {
@@ -120,11 +120,11 @@ def _collect_doctor_report(*, timeout: float, skip_td_check: bool, strict: bool)
         {
             "name": "tox_component",
             "status": "pass" if tox_path and tox_path.is_file() else "fail",
-            "detail": str(tox_path) if tox_path and tox_path.is_file() else "td_component/mcp_server.tox not found",
+            "detail": str(tox_path) if tox_path and tox_path.is_file() else f"td_component/{TOX_FILENAME} not found",
         }
     )
 
-    transport = (TD_TRANSPORT or "stdio").strip().lower().replace("_", "-")
+    transport = normalize_transport(TD_TRANSPORT or "stdio")
     valid_transport = transport in {"stdio", "streamable-http", "sse"}
     checks.append(
         {
