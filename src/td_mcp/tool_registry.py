@@ -1552,176 +1552,110 @@ def _classify_temporal_character(samples: List[Dict[str, Any]]) -> Dict[str, Any
 
 
 @mcp.resource("td://timeline/state", name="td_timeline_state")
-async def td_resource_timeline(ctx: Context) -> Dict[str, Any]:
-    manager = _get_event_manager(ctx)
-    cached = manager.get_state("td://timeline/state")
-    if cached is not None:
-        cached["mode"] = "authoritative"
-        return cached
-
-    timeline = await _get_client(ctx).request("timeline")
+async def td_resource_timeline() -> str:
+    # NOTE: Context injection not supported for parameter-less resources in mcp>=1.3.
+    # Clients should use the td_get_timescale_state tool for live timeline data.
     return {
         "resource_schema_version": 1,
         "resource_uri": "td://timeline/state",
-        "mode": "authoritative",
-        "source": "pull",
-        "state": timeline,
+        "mode": "static",
+        "note": "Use td_get_timescale_state tool for live timeline data.",
     }
 
 
 @mcp.resource("td://chop/path/{encoded_path}/channel/{channel}", name="td_chop_channel")
-async def td_resource_chop_channel(encoded_path: str, channel: str, ctx: Context) -> Dict[str, Any]:
+async def td_resource_chop_channel(encoded_path: str, channel: str) -> str:
+    # NOTE: Context injection removed for mcp>=1.3 compatibility.
+    # Use td_chop_data tool for live CHOP data.
     path = decode_td_path(encoded_path)
     uri = chop_uri(path, channel)
-    cached = _get_event_manager(ctx).get_state(uri)
-    if cached is not None:
-        cached["mode"] = "cache"
-        return cached
-    # Read-through fallback: one-shot TD API call
-    try:
-        data = await _get_client(ctx).request("chop_data", {"path": path, "channels": [channel]})
-        return {
-            "resource_schema_version": 1,
-            "resource_uri": uri,
-            "mode": "cache",
-            "source": "fallback",
-            "path": path,
-            "channel": channel,
-            "data": data,
-        }
-    except Exception:
-        return {
-            "resource_schema_version": 1,
-            "resource_uri": uri,
-            "mode": "cache",
-            "path": path,
-            "channel": channel,
-            "available": False,
-        }
-
-
-@mcp.resource("td://par/path/{encoded_path}/name/{name}", name="td_parameter")
-async def td_resource_parameter(encoded_path: str, name: str, ctx: Context) -> Dict[str, Any]:
-    path = decode_td_path(encoded_path)
-    uri = par_uri(path, name)
-    cached = _get_event_manager(ctx).get_state(uri)
-    if cached is not None:
-        cached["mode"] = "cache"
-        return cached
-    # Read-through fallback: one-shot TD API call
-    try:
-        data = await _get_client(ctx).request("get_params", {"path": path, "names": [name]})
-        return {
-            "resource_schema_version": 1,
-            "resource_uri": uri,
-            "mode": "cache",
-            "source": "fallback",
-            "path": path,
-            "name": name,
-            "data": data,
-        }
-    except Exception:
-        return {
-            "resource_schema_version": 1,
-            "resource_uri": uri,
-            "mode": "cache",
-            "path": path,
-            "name": name,
-            "available": False,
-        }
-
-
-@mcp.resource("td://cook/path/{encoded_path}", name="td_cook_state")
-async def td_resource_cook(encoded_path: str, ctx: Context) -> Dict[str, Any]:
-    path = decode_td_path(encoded_path)
-    uri = cook_uri(path)
-    cached = _get_event_manager(ctx).get_state(uri)
-    if cached is not None:
-        cached["mode"] = "cache"
-        return cached
-    # Read-through fallback: one-shot TD API call
-    try:
-        data = await _get_client(ctx).request("cooking_info", {"path": path})
-        return {
-            "resource_schema_version": 1,
-            "resource_uri": uri,
-            "mode": "cache",
-            "source": "fallback",
-            "path": path,
-            "data": data,
-        }
-    except Exception:
-        return {
-            "resource_schema_version": 1,
-            "resource_uri": uri,
-            "mode": "cache",
-            "path": path,
-            "available": False,
-        }
-
-
-@mcp.resource("td://error/path/{encoded_path}", name="td_error_state")
-async def td_resource_error(encoded_path: str, ctx: Context) -> Dict[str, Any]:
-    path = decode_td_path(encoded_path)
-    uri = error_uri(path)
-    cached = _get_event_manager(ctx).get_state(uri)
-    if cached is not None:
-        cached["mode"] = "cache"
-        return cached
-    # Read-through fallback: one-shot TD API call
-    try:
-        data = await _get_client(ctx).request("get_errors", {"path": path})
-        return {
-            "resource_schema_version": 1,
-            "resource_uri": uri,
-            "mode": "cache",
-            "source": "fallback",
-            "path": path,
-            "data": data,
-        }
-    except Exception:
-        return {
-            "resource_schema_version": 1,
-            "resource_uri": uri,
-            "mode": "cache",
-            "path": path,
-            "available": False,
-        }
-
-
-@mcp.resource("td://top/path/{encoded_path}/frame", name="td_top_frame")
-async def td_resource_top_frame(encoded_path: str, ctx: Context) -> Dict[str, Any]:
-    path = decode_td_path(encoded_path)
-    uri = top_frame_uri(path)
-    cached = _get_event_manager(ctx).get_state(uri)
-    if cached is not None:
-        cached["mode"] = "cache"
-        return cached
     return {
         "resource_schema_version": 1,
         "resource_uri": uri,
-        "mode": "cache",
+        "mode": "static",
+        "path": path,
+        "channel": channel,
+        "available": False,
+        "note": "Use td_chop_data tool for live CHOP channel data.",
+    }
+
+
+@mcp.resource("td://par/path/{encoded_path}/name/{name}", name="td_parameter")
+async def td_resource_parameter(encoded_path: str, name: str) -> str:
+    # NOTE: Context injection removed for mcp>=1.3 compatibility.
+    # Use td_get_params tool for live parameter data.
+    path = decode_td_path(encoded_path)
+    uri = par_uri(path, name)
+    return {
+        "resource_schema_version": 1,
+        "resource_uri": uri,
+        "mode": "static",
+        "path": path,
+        "name": name,
+        "available": False,
+        "note": "Use td_get_params tool for live parameter data.",
+    }
+
+
+@mcp.resource("td://cook/path/{encoded_path}", name="td_cook_state")
+async def td_resource_cook(encoded_path: str) -> str:
+    # NOTE: Context injection removed for mcp>=1.3 compatibility.
+    # Use td_cooking_info tool for live cook data.
+    path = decode_td_path(encoded_path)
+    uri = cook_uri(path)
+    return {
+        "resource_schema_version": 1,
+        "resource_uri": uri,
+        "mode": "static",
         "path": path,
         "available": False,
+        "note": "Use td_cooking_info tool for live cook state data.",
+    }
+
+
+@mcp.resource("td://error/path/{encoded_path}", name="td_error_state")
+async def td_resource_error(encoded_path: str) -> str:
+    # NOTE: Context injection removed for mcp>=1.3 compatibility.
+    # Use td_get_errors tool for live error data.
+    path = decode_td_path(encoded_path)
+    uri = error_uri(path)
+    return {
+        "resource_schema_version": 1,
+        "resource_uri": uri,
+        "mode": "static",
+        "path": path,
+        "available": False,
+        "note": "Use td_get_errors tool for live error data.",
+    }
+
+
+@mcp.resource("td://top/path/{encoded_path}/frame", name="td_top_frame")
+async def td_resource_top_frame(encoded_path: str) -> str:
+    # NOTE: Context injection removed for mcp>=1.3 compatibility.
+    # Use td_screenshot or td_stream_top tool for live TOP frame data.
+    path = decode_td_path(encoded_path)
+    uri = top_frame_uri(path)
+    return {
+        "resource_schema_version": 1,
+        "resource_uri": uri,
+        "mode": "static",
+        "path": path,
+        "available": False,
+        "note": "Use td_screenshot or td_stream_top tool for live TOP frame data.",
     }
 
 
 @mcp.resource("td://job/{job_id}", name="td_job_state")
-async def td_resource_job(job_id: str, ctx: Context) -> Dict[str, Any]:
-    job = _get_job_manager(ctx).get_job(job_id)
-    if job is None:
-        return {
-            "resource_schema_version": 1,
-            "resource_uri": f"td://job/{job_id}",
-            "mode": "authoritative",
-            "job_id": job_id,
-            "available": False,
-        }
+async def td_resource_job(job_id: str) -> Dict[str, Any]:
+    # NOTE: Context injection removed for mcp>=1.3 compatibility.
+    # Job state cannot be retrieved via resource; use job tracking tools.
     return {
         "resource_schema_version": 1,
-        "resource_uri": f"td://job/{job_id}",
-        "mode": "authoritative",
-        "job": job,
+        "resource_uri": "td://job/{}".format(job_id),
+        "mode": "static",
+        "job_id": job_id,
+        "available": False,
+        "note": "Use job tracking tools for live job state.",
     }
 
 
@@ -4016,6 +3950,88 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> Dict[str,
     except Exception as exc:
         _record_tool_error(ctx, "td_audit_project")
         return {"error": str(exc)}
+    finally:
+        finish()
+
+
+# ─────────────────────────────────────────────────────────────
+# Vision Diagnostics (tools 76-77)
+# ─────────────────────────────────────────────────────────────
+
+@mcp.tool(name="td_capture_frame")
+async def td_capture_frame(params: CaptureFrameInput, ctx: Context) -> str:
+    """Capture a single frame from a TOP node and return metadata.
+
+    Returns resolution, format, and byte size. If confirm=True, also includes
+    the base64-encoded JPEG image data. Ask the user before setting confirm=True
+    because image payloads consume significant model context tokens.
+    """
+    finish = _start_tool(ctx, "td_capture_frame")
+    try:
+        client = _get_client(ctx)
+        data = await client.request(
+            "screenshot",
+            {"path": params.path, "quality": params.quality},
+        )
+        if isinstance(data, dict) and data.get("success"):
+            result: Dict[str, Any] = {
+                "success": True,
+                "path": data.get("path", params.path),
+                "resolution": [
+                    data.get("width", 0),
+                    data.get("height", 0),
+                ],
+                "format": data.get("format", "jpeg"),
+                "size_bytes": data.get("size_bytes", 0),
+                "quality": params.quality,
+            }
+            if params.confirm:
+                result["data_base64"] = data.get("data_base64", "")
+            else:
+                result["data_omitted"] = True
+                result["note"] = (
+                    "Set confirm=True to include base64 image data. "
+                    "Each JPEG frame adds significant token cost."
+                )
+            return _as_json_output(result)
+        return _as_json_output(data)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_capture_frame")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_analyze_frame")
+async def td_analyze_frame(params: AnalyzeFrameInput, ctx: Context) -> str:
+    """Analyze pixel data of a TOP node without transferring full image data.
+
+    Runs server-side numpy analysis inside TouchDesigner and returns statistical
+    results per requested mode. Supported modes:
+    - histogram: per-channel (RGB) pixel value histograms
+    - luminance: mean, min, max, std, p5, p95 of perceived luminance
+    - alpha_coverage: alpha channel statistics (requires RGBA TOP)
+    - color_dominant: most frequent quantized color in the frame
+    - roi_diff: pixel-level diff between a region and a reference TOP
+
+    For roi_diff, also pass roi=[x, y, w, h] and reference_path.
+    """
+    finish = _start_tool(ctx, "td_analyze_frame")
+    try:
+        client = _get_client(ctx)
+        body: Dict[str, Any] = {
+            "path": params.path,
+            "modes": params.modes,
+        }
+        if params.roi is not None:
+            body["roi"] = params.roi
+        if params.reference_path is not None:
+            body["reference_path"] = params.reference_path
+        data = await client.request("analyze_frame", body)
+        return _as_json_output(data)
+    except Exception as exc:
+        _record_tool_error(ctx, "td_analyze_frame")
+        return format_tool_error(exc)
     finally:
         finish()
 

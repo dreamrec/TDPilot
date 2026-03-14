@@ -954,6 +954,7 @@ class MemoryReplayInput(BaseModel):
     parent_path: str = Field(description="Parent COMP path where the technique will be rebuilt.")
     name_prefix: str = Field(default="", description="Optional prefix for created node names.")
     scope: str = Field(default="project", description="'project' or 'global'.")
+    force: bool = Field(default=False, description="Skip build compatibility checks and replay anyway.")
 
 
 class MemoryFavoriteInput(BaseModel):
@@ -1028,3 +1029,29 @@ class AuditProjectInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
     root_path: str = Field(default="/project1", description="Root path to audit")
+
+
+# ─────────────────────────────────────────────────────────────
+# Vision Diagnostics (tools 76-77)
+# ─────────────────────────────────────────────────────────────
+
+class CaptureFrameInput(BaseModel):
+    """Input for capturing a single frame from a TOP node."""
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    path: str = Field(..., description="Path to a TOP node to capture")
+    quality: float = Field(default=0.8, ge=0.0, le=1.0, description="JPEG quality 0.0-1.0")
+    confirm: bool = Field(default=False, description="If True, include base64 image in response")
+
+
+class AnalyzeFrameInput(BaseModel):
+    """Input for analyzing pixel data of a TOP node."""
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    path: str = Field(..., description="Path to a TOP node to analyze")
+    modes: List[str] = Field(
+        default=["histogram", "luminance"],
+        description="Analysis modes: histogram, luminance, alpha_coverage, color_dominant, roi_diff",
+    )
+    roi: Optional[List[int]] = Field(default=None, description="Region of interest [x, y, w, h] for roi_diff mode")
+    reference_path: Optional[str] = Field(default=None, description="Reference TOP path for roi_diff mode")

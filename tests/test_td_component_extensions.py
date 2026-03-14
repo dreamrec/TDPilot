@@ -214,3 +214,156 @@ def test_handle_pop_inspect_returns_summary_and_samples():
     assert payload["attributes"]["point"][0]["name"] == "P"
     assert "P" in payload["samples"]["points"]
     assert payload["samples"]["points"]["P"]["values"][0] == [1.0, 2.0, 3.0]
+
+
+# ─────────────────────────────────────────────────────────────
+# handle_analyze_frame structural and functional tests
+# ─────────────────────────────────────────────────────────────
+
+import inspect
+import numpy as _np
+import sys as _sys
+
+
+class _FakeTOP:
+    isTOP = True
+    isCHOP = False
+    isSOP = False
+    isDAT = False
+    isCOMP = False
+    isMAT = False
+
+    def __init__(self, w=16, h=16, channels=3, fill=0.5):
+        self.path = "/project1/null1"
+        self.type = "nullTOP"
+        self.width = w
+        self.height = h
+        self._channels = channels
+        self._fill = fill
+
+    def numpyArray(self):
+        return _np.full((self.height, self.width, self._channels), self._fill, dtype=_np.float32)
+
+
+class _FakeNotTOP:
+    isTOP = False
+    isCHOP = True
+    type = "waveCHOP"
+    path = "/project1/wave1"
+
+
+def test_handle_analyze_frame_function_exists():
+    """handle_analyze_frame must exist and accept a body dict."""
+    module = _load_callbacks_module()
+    assert hasattr(module, "handle_analyze_frame"), "handle_analyze_frame not found in callbacks module"
+    sig = inspect.signature(module.handle_analyze_frame)
+    params = list(sig.parameters.keys())
+    assert "body" in params, "handle_analyze_frame must accept 'body' parameter"
+
+
+def test_handle_analyze_frame_registered_in_route_table():
+    """'/api/analyze_frame' must appear in the route table source."""
+    source = MODULE_PATH.read_text()
+    assert "'/api/analyze_frame'" in source or '"/api/analyze_frame"' in source, (
+        "'/api/analyze_frame' not found in route table"
+    )
+    assert "handle_analyze_frame" in source
+
+
+def test_handle_analyze_frame_missing_path():
+    module = _load_callbacks_module()
+    result = module.handle_analyze_frame({})
+    assert "error" in result
+    assert "path" in result["error"].lower()
+
+
+def test_handle_analyze_frame_node_not_found():
+    module = _load_callbacks_module()
+    module.op = lambda path: None
+    result = module.handle_analyze_frame({"path": "/does/not/exist"})
+    assert "error" in result
+    assert "not found" in result["error"].lower()
+
+
+def test_handle_analyze_frame_non_top_node():
+    module = _load_callbacks_module()
+    fake = _FakeNotTOP()
+    module.op = lambda path: fake if path == fake.path else None
+    result = module.handle_analyze_frame({"path": fake.path})
+    assert "error" in result
+    assert "TOP" in result["error"]
+
+
+def test_handle_analyze_frame_luminance_mode():
+    module = _load_callbacks_module()
+    # Inject numpy so the guard finds it
+    module.sys = _sys
+    top = _FakeTOP(w=8, h=8, channels=3, fill=0.5)
+    module.op = lambda path: top if path == top.path else None
+    result = module.handle_analyze_frame({"path": top.path, "modes": ["luminance"]})
+    assert "error" not in result, "Got error: {}".format(result.get("error"))
+    assert result["resolution"] == [8, 8]
+    assert "luminance" in result["modes"]
+    lum = result["modes"]["luminance"]
+    assert "mean" in lum
+    # Fill=0.5 across all channels: luminance ≈ 0.5
+    assert abs(lum["mean"] - 0.5) < 0.01
+
+
+def test_handle_analyze_frame_histogram_mode():
+    module = _load_callbacks_module()
+    module.sys = _sys
+    top = _FakeTOP(w=4, h=4, channels=3, fill=0.75)
+    module.op = lambda path: top if path == top.path else None
+    result = module.handle_analyze_frame({"path": top.path, "modes": ["histogram"]})
+    assert "error" not in result, "Got error: {}".format(result.get("error"))
+    hist = result["modes"]["histogram"]
+    assert hist["bins"] == 16
+    assert "r" in hist["channels"]
+    assert "g" in hist["channels"]
+    assert "b" in hist["channels"]
+
+
+def test_handle_analyze_frame_alpha_coverage_with_rgba():
+    module = _load_callbacks_module()
+    module.sys = _sys
+    top = _FakeTOP(w=4, h=4, channels=4, fill=1.0)
+    module.op = lambda path: top if path == top.path else None
+    result = module.handle_analyze_frame({"path": top.path, "modes": ["alpha_coverage"]})
+    assert "error" not in result
+    ac = result["modes"]["alpha_coverage"]
+    assert "mean_alpha" in ac
+    assert abs(ac["mean_alpha"] - 1.0) < 0.01
+    assert abs(ac["opaque_fraction"] - 1.0) < 0.01
+
+
+def test_handle_analyze_frame_alpha_coverage_no_alpha_channel():
+    module = _load_callbacks_module()
+    module.sys = _sys
+    top = _FakeTOP(w=4, h=4, channels=3, fill=0.5)
+    module.op = lambda path: top if path == top.path else None
+    result = module.handle_analyze_frame({"path": top.path, "modes": ["alpha_coverage"]})
+    assert "error" not in result
+    ac = result["modes"]["alpha_coverage"]
+    assert "error" in ac
+
+
+def test_handle_analyze_frame_roi_diff_missing_params():
+    module = _load_callbacks_module()
+    module.sys = _sys
+    top = _FakeTOP(w=8, h=8, channels=3, fill=0.5)
+    module.op = lambda path: top if path == top.path else None
+    result = module.handle_analyze_frame({"path": top.path, "modes": ["roi_diff"]})
+    assert "error" not in result
+    rd = result["modes"]["roi_diff"]
+    assert "error" in rd
+
+
+def test_handle_analyze_frame_unknown_mode_returns_error_in_modes():
+    module = _load_callbacks_module()
+    module.sys = _sys
+    top = _FakeTOP(w=4, h=4, channels=3, fill=0.5)
+    module.op = lambda path: top if path == top.path else None
+    result = module.handle_analyze_frame({"path": top.path, "modes": ["totally_unknown_mode"]})
+    assert "error" not in result
+    assert "error" in result["modes"]["totally_unknown_mode"]
