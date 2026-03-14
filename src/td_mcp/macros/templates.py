@@ -27,7 +27,7 @@ def build_default_templates() -> dict[str, MacroTemplate]:
         ],
         connections=[
             ConnectionSpec("feedback", "decay"),
-            ConnectionSpec("decay", "merge", source_index=0, target_index=1),
+            ConnectionSpec("decay", "merge", source_index=0, target_index=0),
             ConnectionSpec("merge", "out"),
             ConnectionSpec("out", "feedback"),
         ],

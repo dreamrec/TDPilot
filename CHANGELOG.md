@@ -3,6 +3,7 @@
 ## 1.3.2 - 2026-03-14
 
 ### Added
+- Auto-load on TD startup: `npx tdpilot install` sets up TDPilot to load automatically every time TouchDesigner launches. Run `npx tdpilot uninstall` to remove.
 - 2 vision diagnostic tools (75 to 77):
   - `td_capture_frame` — capture TOP output as base64 image for MCP-side analysis.
   - `td_analyze_frame` — run TD-side pixel analysis (histogram, luminance, alpha_coverage, color_dominant, roi_diff).

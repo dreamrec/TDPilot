@@ -97,6 +97,19 @@ if (!hasCommand("uv")) {
 
 ensureRepo();
 
+// ── Subcommands ──────────────────────────────────────────────
+const subcommand = process.argv[2];
+
+if (subcommand === "install" || subcommand === "uninstall") {
+  const { install, uninstall } = require("./install");
+  if (subcommand === "install") {
+    install();
+  } else {
+    uninstall();
+  }
+  process.exit(0);
+}
+
 // Pass through env vars
 const env = {
   ...process.env,
