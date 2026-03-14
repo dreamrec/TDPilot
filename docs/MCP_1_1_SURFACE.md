@@ -170,14 +170,14 @@ For non-trivial changes:
 TDPilot 1.1 is stronger, but a few gaps remain:
 
 - No atomic multi-tool transaction layer
-- No dedicated low-cost TOP histogram / alpha / ROI inspector yet
+- No dedicated low-cost TOP histogram / alpha / ROI inspector yet (planned for v1.3.2)
 - Full Python mode is still configuration-driven through `TD_MCP_EXEC_MODE`
 - Custom parameter editing is now first-class, but not every parameter-type nuance in TouchDesigner is wrapped yet
 
 Real sessions also exposed several quality-of-life gaps that do not block work, but do slow it down:
 
-- No direct `list_tools` or `describe_tools` endpoint to verify the live MCP surface from inside a session
-- No "expanded Python" middle ground that allows safe helpers like `json`, basic builtins, and small probes without enabling fully unrestricted execution
+- ~~No direct `list_tools` or `describe_tools` endpoint to verify the live MCP surface from inside a session~~ **Resolved in v1.3.0:** `td_describe_surface` returns live tool count, resource count, capabilities, and version.
+- ~~No "expanded Python" middle ground that allows safe helpers like `json`, basic builtins, and small probes without enabling fully unrestricted execution~~ **Resolved in v1.3.0:** `standard` exec mode allows 14 curated safe imports with read-only introspection.
 - Wiring still benefits from first-class tools for `connect input N` and `disconnect input N`, instead of falling back to Python connector workarounds
 - Custom parameter creation is covered, but page-level operations such as create, remove, replace, and reorder should also be first-class
 - Recursive inspection is not yet uniform across node, connection, and error queries, which makes deeper scene audits less predictable
@@ -199,8 +199,8 @@ It is a more explicit visual intent layer:
 
 The near-term quality-of-life priorities are equally clear:
 
-- make the live tool surface self-describing
-- add a safer middle tier between restricted and unrestricted Python
+- ~~make the live tool surface self-describing~~ (v1.3.0: `td_describe_surface`)
+- ~~add a safer middle tier between restricted and unrestricted Python~~ (v1.3.0: `standard` exec mode)
 - expose common wiring and parameter-page edits as first-class tools
 - standardize recursive inspection arguments and output shape
 - classify warnings by operational severity

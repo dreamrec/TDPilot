@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.3.0 - 2026-03-14
+
+### Added
+- `standard` exec safety mode: curated import whitelist (14 safe modules) with read-only introspection for data-transform workflows.
+- Expanded CapabilitySet from 5 to 10 fields: `supports_tasks`, `supports_elicitation`, `transport_type`, `mcp_sdk_version`, `td_build`.
+- Knowledge corpus: structured JSON card system for operators (30), palette components (6), releases, and snippet families.
+- 8 new knowledge tools (63 to 71): `td_search_official_docs`, `td_get_operator_doc`, `td_get_param_help`, `td_lookup_snippets`, `td_lookup_palette_component`, `td_get_release_delta`, `td_get_build_compatibility`, `td_describe_surface`.
+- Read-through fallbacks for cached resources (CHOP, parameter, cook, error) — one-shot TD API call on cache miss.
+- Resource `mode` field (`authoritative` or `cache`) on all resource responses.
+- Optional web fetcher for live docs enrichment (`TD_MCP_WEB_FETCH=true`).
+
+### Changed
+- EventManager subscription keys now use `(path, event_type)` tuples for correct multi-event handling.
+- `to_dict()` return type on CapabilitySet changed from `dict[str, bool]` to `dict[str, Any]`.
+- TD-side API version bumped to 1.3.0 with matching `standard` exec mode support.
+
 ## 1.2.0 - 2026-03-14
 
 ### Changed

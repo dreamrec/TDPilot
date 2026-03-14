@@ -7,7 +7,7 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v1.2.0
+# TDPilot Runtime v1.3.0
 
 **TDPilot Runtime** is an MCP server for TouchDesigner.
 It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networks with real tool calls — and now remember what works.
@@ -26,7 +26,15 @@ It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networ
 - A structured toolset for scene edits, diagnostics, event monitoring, and recovery.
 - A workflow-oriented MCP built for iterative patch development, not one-shot guessing.
 - A technique memory system that learns from your projects and builds a reusable library.
-- 63-tool runtime surface with job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, and custom parameter authoring.
+- 71-tool runtime surface with knowledge corpus, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, and custom parameter authoring.
+
+## What's New In 1.3
+
+- **Knowledge corpus** — Structured JSON cards for 30 operators, 6 palette components, release notes. Query with `td_search_official_docs`, `td_get_operator_doc`, `td_get_param_help`, and more.
+- **`standard` exec safety** — New middle-tier mode between `restricted` and `full`. Allows 14 safe data-transform imports (json, math, re, datetime, etc.) while blocking system access.
+- **Expanded capabilities** — CapabilitySet now reports MCP Tasks support, transport type, SDK version, and TD build number.
+- **Resource read-through** — Cached resources now attempt a live TD API call on cache miss instead of returning empty.
+- **`td_describe_surface`** — Single tool to inspect the full MCP surface: tool count, resource count, capabilities, version.
 
 ## What's New In 1.1
 
