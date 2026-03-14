@@ -186,10 +186,11 @@ class CardIndex:
 
     @staticmethod
     def _parse_build(build_str: str) -> int:
-        """Extract a numeric build number from strings like '2025.30000+' or '2025.32460'."""
+        """Extract a numeric build number from strings like '2025.30000+' or '2025.32460.0'."""
         cleaned = build_str.replace("+", "").strip()
         # Try to parse the part after the dot as the build number
         if "." in cleaned:
-            parts = cleaned.split(".", 1)
+            parts = cleaned.split(".")
+            # Take only major.minor, ignore patch (e.g. "2025.32460.0")
             return int(parts[0]) * 100000 + int(parts[1])
         return int(cleaned)

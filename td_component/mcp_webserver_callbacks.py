@@ -1276,8 +1276,12 @@ def handle_exec_python(body):
     if not code:
         return {'error': 'Missing required field: code'}
 
+    _MODE_RANK = {'off': 0, 'restricted': 1, 'standard': 2, 'full': 3}
     exec_mode = str(body.get('exec_mode', DEFAULT_EXEC_MODE)).strip().lower()
-    if exec_mode not in ('off', 'restricted', 'standard', 'full'):
+    if exec_mode not in _MODE_RANK:
+        exec_mode = DEFAULT_EXEC_MODE
+    # Cap requested mode at server-configured default — clients cannot escalate
+    if _MODE_RANK.get(exec_mode, 0) > _MODE_RANK.get(DEFAULT_EXEC_MODE, 0):
         exec_mode = DEFAULT_EXEC_MODE
 
     if exec_mode == 'off':
@@ -1812,13 +1816,23 @@ def handle_python_help(body):
     if not target:
         return {'error': 'Missing required field: target (e.g. "td", "td.OP", "tdu")'}
 
+    # Security: only allow dotted identifiers — no arbitrary expressions
+    import re as _re_mod
+    if not _re_mod.match(r'^[A-Za-z_][A-Za-z0-9_.]*$', target):
+        return {'error': 'Invalid target: must be a dotted identifier like "td.OP" or "tdu"'}
+
     import io
     old_stdout = sys.stdout
     captured = io.StringIO()
     sys.stdout = captured
 
     try:
-        help(eval(target))
+        # Resolve via getattr chain instead of eval for safety
+        parts = target.split('.')
+        obj = eval(parts[0])  # only the root identifier
+        for attr in parts[1:]:
+            obj = getattr(obj, attr)
+        help(obj)
     except Exception as e:
         sys.stdout = old_stdout
         return {'error': f'Help failed for "{target}": {str(e)}'}
@@ -2720,8 +2734,12 @@ def handle_analyze_frame(body):
     if arr is None:
         return {'error': 'numpyArray() returned None for: {}'.format(path)}
 
+    # Ensure 3D array — grayscale TOPs may return 2D (H, W) without channel axis
+    if arr.ndim == 2:
+        arr = arr[:, :, None]
+
     h, w = arr.shape[:2]
-    num_channels = arr.shape[2] if arr.ndim == 3 else 1
+    num_channels = arr.shape[2]
 
     mode_results = {}
 
@@ -2775,12 +2793,12 @@ def handle_analyze_frame(body):
                     rgb_flat = arr[:, :, :3].reshape(-1, 3)
                     # quantize to 4-bit per channel (16 levels) then find mode
                     quantized = (rgb_flat * 15).astype(np.uint8)
-                    rows_as_tuples = [tuple(row) for row in quantized.tolist()]
-                    counts = {}
-                    for t in rows_as_tuples:
-                        counts[t] = counts.get(t, 0) + 1
-                    dominant_q = max(counts, key=lambda k: counts[k])
-                    dominant = [round(c / 15.0, 3) for c in dominant_q]
+                    # Use np.unique instead of pure-Python loop (orders of magnitude faster)
+                    unique_colors, color_counts = np.unique(quantized, axis=0, return_counts=True)
+                    best_idx = int(np.argmax(color_counts))
+                    dominant_q = unique_colors[best_idx]
+                    dominant = [round(float(c) / 15.0, 3) for c in dominant_q]
+                    best_count = int(color_counts[best_idx])
                     mode_results['color_dominant'] = {
                         'rgb': dominant,
                         'hex': '#{:02x}{:02x}{:02x}'.format(
@@ -2788,8 +2806,8 @@ def handle_analyze_frame(body):
                             int(dominant[1] * 255),
                             int(dominant[2] * 255),
                         ),
-                        'pixel_count': counts[dominant_q],
-                        'fraction': round(counts[dominant_q] / float(h * w), 4) if h * w > 0 else 0.0,
+                        'pixel_count': best_count,
+                        'fraction': round(best_count / float(h * w), 4) if h * w > 0 else 0.0,
                     }
                 else:
                     mode_results['color_dominant'] = {'error': 'Need at least 3 channels for color_dominant'}
@@ -2826,10 +2844,12 @@ def handle_analyze_frame(body):
                             ref_rw = max(1, min(rw, ref_w - ref_rx))
                             ref_rh = max(1, min(rh, ref_h - ref_ry))
                             patch_b = ref_arr[ref_ry:ref_ry + ref_rh, ref_rx:ref_rx + ref_rw, :3].astype(float)
-                            # Resize patch_b to match patch_a if needed
+                            # Crop both patches to their common overlap size
                             if patch_a.shape != patch_b.shape:
-                                patch_b = patch_b[:patch_a.shape[0], :patch_a.shape[1], :]
-                                patch_a = patch_a[:patch_b.shape[0], :patch_b.shape[1], :]
+                                min_h = min(patch_a.shape[0], patch_b.shape[0])
+                                min_w = min(patch_a.shape[1], patch_b.shape[1])
+                                patch_a = patch_a[:min_h, :min_w, :]
+                                patch_b = patch_b[:min_h, :min_w, :]
                             diff = patch_a - patch_b
                             mode_results['roi_diff'] = {
                                 'roi': [rx, ry, rw, rh],

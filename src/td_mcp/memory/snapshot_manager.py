@@ -103,6 +103,18 @@ class SnapshotManager:
                 if param_name not in params_b:
                     continue
                 param_b = params_b[param_name]
+                # Handle plain scalar params (not dicts)
+                if not isinstance(param_a, dict) or not isinstance(param_b, dict):
+                    if param_a != param_b:
+                        changed_params.append(
+                            {
+                                "path": path,
+                                "param": param_name,
+                                "value_a": param_a if not isinstance(param_a, dict) else param_a.get("value"),
+                                "value_b": param_b if not isinstance(param_b, dict) else param_b.get("value"),
+                            }
+                        )
+                    continue
                 value_a = param_a.get("value")
                 value_b = param_b.get("value")
                 if value_a != value_b:

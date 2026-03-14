@@ -914,7 +914,7 @@ class MemoryLearnInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
-    path: str = Field(description="Root path of the network subtree to analyze.")
+    path: str = Field(..., description="Root path of the network subtree to analyze.")
     name: str = Field(default="", description="Human-readable name for this technique.")
     description: str = Field(default="", description="What this technique does.")
     tags: list[str] = Field(default_factory=list, description="Tags for categorization.")
@@ -926,7 +926,7 @@ class MemorySaveInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
-    technique: dict = Field(description="Technique dict (from td_memory_learn output).")
+    technique: dict = Field(..., description="Technique dict (from td_memory_learn output).")
     scope: str = Field(default="project", description="'project' or 'global'.")
     name: str = Field(default="", description="Override technique name.")
     description: str = Field(default="", description="Override description.")
@@ -950,8 +950,8 @@ class MemoryReplayInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
-    technique_id: str = Field(description="ID of the saved technique to replay.")
-    parent_path: str = Field(description="Parent COMP path where the technique will be rebuilt.")
+    technique_id: str = Field(..., description="ID of the saved technique to replay.")
+    parent_path: str = Field(..., description="Parent COMP path where the technique will be rebuilt.")
     name_prefix: str = Field(default="", description="Optional prefix for created node names.")
     scope: str = Field(default="project", description="'project' or 'global'.")
     force: bool = Field(default=False, description="Skip build compatibility checks and replay anyway.")
@@ -962,7 +962,7 @@ class MemoryFavoriteInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
-    technique_id: str = Field(description="ID of the technique.")
+    technique_id: str = Field(..., description="ID of the technique.")
     favorite: bool = Field(default=True, description="Set favorite status.")
     rating: int = Field(default=-1, ge=-1, le=5, description="Rating 0-5, or -1 to skip.")
     scope: str = Field(default="project", description="'project' or 'global'.")
@@ -973,7 +973,7 @@ class MemoryPromoteInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
-    technique_id: str = Field(description="Project technique ID to promote.")
+    technique_id: str = Field(..., description="Project technique ID to promote.")
 
 
 class MemoryPreferencesInput(BaseModel):
@@ -981,8 +981,16 @@ class MemoryPreferencesInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
-    action: str = Field(description="One of: 'get', 'set', 'list', 'delete'.")
+    action: str = Field(..., description="One of: 'get', 'set', 'list', 'delete'.")
     key: str = Field(default="", description="Preference key (required for get/set/delete).")
+
+    @field_validator("action")
+    @classmethod
+    def validate_action(cls, v: str) -> str:
+        allowed = ("get", "set", "list", "delete")
+        if v not in allowed:
+            raise ValueError("action must be one of {} — got '{}'".format(allowed, v))
+        return v
     value: Any = Field(default=None, description="Value to set (required for 'set').")
     scope: str = Field(default="project", description="'project' or 'global'.")
 

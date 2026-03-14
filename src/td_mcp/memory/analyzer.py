@@ -9,6 +9,8 @@ from typing import Any, Dict, List, Optional
 SMALL_MAX = 10
 MEDIUM_MAX = 20
 
+_PAGE_SIZE = 200
+
 # File extensions that indicate external assets referenced in param values
 _ASSET_EXTENSIONS = (
     ".toe", ".tox", ".txt", ".csv", ".json", ".xml",
@@ -144,12 +146,12 @@ async def _collect_subtree(
         # Walk children if COMP and within depth
         if detail.get("isCOMP") and depth < max_depth:
             child_offset = 0
-            while len(visited) + len(queue) < max_nodes:
+            while len(visited) < max_nodes:
                 children = await client.request(
                     "nodes",
                     {
                         "path": node_path,
-                        "limit": 200,
+                        "limit": _PAGE_SIZE,
                         "offset": child_offset,
                         "include_params": False,
                     },
@@ -161,9 +163,9 @@ async def _collect_subtree(
                     child_path = child.get("path", "")
                     if child_path and child_path not in visited:
                         queue.append((child_path, depth + 1))
-                if len(child_list) < 200:
+                if len(child_list) < _PAGE_SIZE:
                     break
-                child_offset += 200
+                child_offset += _PAGE_SIZE
 
     return nodes, connections
 
@@ -241,6 +243,7 @@ def _build_full_recipe(
         if layout_entry:
             layout[rel_path] = layout_entry
 
+    # Only include connections where both endpoints are within the subtree
     recipe_connections = [
         {
             "from": _rel(c["from"]),
@@ -249,6 +252,7 @@ def _build_full_recipe(
             "to_index": c.get("to_index", 0),
         }
         for c in connections
+        if c["from"] in nodes and c["to"] in nodes
     ]
 
     return {
@@ -298,5 +302,13 @@ def _extract_key_params(
                     if expr:
                         entry["expression"] = expr
                     key_params.append(entry)
+            else:
+                # Plain scalar param — include if interesting
+                if pname_lower in interesting_names:
+                    key_params.append({
+                        "path": rel_path,
+                        "param": pname,
+                        "value": pval,
+                    })
 
     return key_params[:200]  # Cap at 200 key params

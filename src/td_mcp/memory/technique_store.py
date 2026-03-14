@@ -188,8 +188,11 @@ class TechniqueStore:
         current_state = entry.get("state", "candidate")
         if status == "pass" and current_state == "candidate":
             entry["state"] = "validated_local"
-        elif status == "fail" and current_state in ("validated_local", "validated_portable"):
-            entry["state"] = "candidate"
+        elif status == "fail":
+            if current_state == "validated_portable":
+                entry["state"] = "validated_local"
+            elif current_state == "validated_local":
+                entry["state"] = "candidate"
         entry["updated_at"] = datetime.now(timezone.utc).isoformat()
         self._save_scope(scope)
         return True

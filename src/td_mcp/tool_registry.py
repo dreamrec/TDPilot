@@ -217,8 +217,11 @@ async def _with_undo_block(td_client, label: str, async_fn, *args):
         result = await async_fn(*args)
         return result
     finally:
-        await td_client.request("project/lifecycle",
-            {"action": "end_undo_block"})
+        try:
+            await td_client.request("project/lifecycle",
+                {"action": "end_undo_block"})
+        except Exception:
+            pass
 
 
 @asynccontextmanager
@@ -379,9 +382,13 @@ def _get_services(ctx: Context) -> ServiceContainer:
         top_streamer=state.get("top_streamer"),
         safety_manager=state.get("safety_manager"),
         snapshot_manager=state.get("snapshot_manager"),
-                job_manager=state.get("job_manager"),
+        job_manager=state.get("job_manager"),
         telemetry=state.get("telemetry"),
         audit=state.get("audit"),
+        technique_store=state.get("technique_store"),
+        preference_store=state.get("preference_store"),
+        card_index=state.get("card_index"),
+        td_build=str(state.get("td_build", "")),
     )
 
 
@@ -3534,9 +3541,10 @@ async def td_get_operator_doc(
         return {"error": "Provide op_type or node_path"}
     card = idx.get_operator(resolved_type)
     svc = _get_services(ctx)
-    provenance = Provenance(source="local_card", td_build=svc.td_build)
     if card is None:
+        provenance = Provenance(source="local_card", td_build=svc.td_build)
         return {"error": f"No card found for {resolved_type}", "provenance": provenance.to_dict()}
+    provenance = Provenance(source="local_card", td_build=svc.td_build, last_verified=card.get("last_verified", ""))
     return {"card": card, "provenance": provenance.to_dict()}
 
 
@@ -3581,7 +3589,7 @@ async def td_lookup_snippets(
 ) -> Dict[str, Any]:
     """Search for OP Snippets by keyword and optional family."""
     idx = _get_card_index(ctx)
-    results = idx.search(query, card_types=["snippet"], family=family)
+    results = idx.search(query, card_types=["snippets"], family=family)
     svc = _get_services(ctx)
     provenance = Provenance(source="local_card", td_build=svc.td_build)
     return {"results": results, "count": len(results), "provenance": provenance.to_dict()}
@@ -3596,11 +3604,12 @@ async def td_lookup_palette_component(
     """Look up a palette component by name or search by query."""
     idx = _get_card_index(ctx)
     svc = _get_services(ctx)
-    provenance = Provenance(source="local_card", td_build=svc.td_build)
     if component_name:
         card = idx.get_palette(component_name)
         if card:
+            provenance = Provenance(source="local_card", td_build=svc.td_build, last_verified=card.get("last_verified", ""))
             return {"card": card, "provenance": provenance.to_dict()}
+        provenance = Provenance(source="local_card", td_build=svc.td_build)
         return {"error": f"No palette card for {component_name}", "provenance": provenance.to_dict()}
     if query:
         results = idx.search(query, card_types=["palette"])
@@ -3620,9 +3629,10 @@ async def td_get_release_delta(
     if not target_build:
         return {"error": "No build specified and current build unknown"}
     card = idx.get_release(target_build)
-    provenance = Provenance(source="local_card", td_build=svc.td_build)
     if card is None:
+        provenance = Provenance(source="local_card", td_build=svc.td_build)
         return {"error": f"No release card for build {target_build}", "provenance": provenance.to_dict()}
+    provenance = Provenance(source="local_card", td_build=svc.td_build, last_verified=card.get("last_verified", ""))
     return {"card": card, "provenance": provenance.to_dict()}
 
 
@@ -3680,7 +3690,7 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> Dict[str, Any]:
         # Inspect current state of the target path
         current_nodes = []
         try:
-            node_data = await client.request("get_nodes", {"path": params.target_path, "limit": 200})
+            node_data = await client.request("nodes", {"path": params.target_path, "limit": 200})
             current_nodes = node_data if isinstance(node_data, list) else node_data.get("nodes", [])
         except Exception as exc:
             current_nodes = []
@@ -3725,10 +3735,8 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> Dict[str, Any]:
                 "Validate with td_preflight_patch before execution."
             ),
         }
-        if recipe_info and not isinstance(recipe_info, dict) or (
-            isinstance(recipe_info, dict) and "error" not in recipe_info and recipe_info
-        ):
-            plan["recipe_name"] = (recipe_info or {}).get("name", "")
+        if isinstance(recipe_info, dict) and "error" not in recipe_info:
+            plan["recipe_name"] = recipe_info.get("name", "")
 
         _audit_log(ctx, "td_plan_patch", {"intent": params.intent, "target_path": params.target_path})
         return {"success": True, "plan": plan}
@@ -3764,7 +3772,7 @@ async def td_preflight_patch(params: PreflightPatchInput, ctx: Context) -> Dict[
         # Check target path exists
         path_exists = False
         try:
-            node_data = await client.request("get_nodes", {"path": target_path, "limit": 1})
+            node_data = await client.request("nodes", {"path": target_path, "limit": 200})
             path_exists = True
             # Refresh existing names from live state
             live_nodes = node_data if isinstance(node_data, list) else node_data.get("nodes", [])
@@ -3930,7 +3938,7 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> Dict[str,
         # Fetch all nodes at root
         all_nodes = []
         try:
-            node_data = await client.request("get_nodes", {"path": params.root_path, "limit": 500})
+            node_data = await client.request("nodes", {"path": params.root_path, "limit": 500})
             all_nodes = node_data if isinstance(node_data, list) else node_data.get("nodes", [])
         except Exception as exc:
             return {"error": "Could not fetch nodes at '{}': {}".format(params.root_path, exc)}
@@ -3979,7 +3987,7 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> Dict[str,
         # Fetch errors for root
         node_errors = []
         try:
-            err_data = await client.request("get_errors", {"path": params.root_path, "recurse": True})
+            err_data = await client.request("node/errors", {"path": params.root_path, "recurse": True, "max_depth": 10})
             if isinstance(err_data, list):
                 node_errors = err_data
             elif isinstance(err_data, dict):
@@ -4096,12 +4104,12 @@ async def td_analyze_frame(params: AnalyzeFrameInput, ctx: Context) -> str:
 # TD 2025 Native System Tools (tools 78-83)
 # ─────────────────────────────────────────────────────────────
 
-import json as _json_mod
-
-
 @mcp.tool(name="td_python_env_status")
 async def td_python_env_status(ctx: Context) -> Dict[str, Any]:
-    """Inspect the Python environment inside TouchDesigner: version, installed packages, env manager status."""
+    """Inspect the Python environment inside TouchDesigner: version, installed packages, env manager status.
+
+    Requires 'full' exec mode — uses sys and pkg_resources which are not in the standard allowlist.
+    """
     finish = _start_tool(ctx, "td_python_env_status")
     try:
         client = _get_client(ctx)
@@ -4119,10 +4127,10 @@ async def td_python_env_status(ctx: Context) -> Dict[str, Any]:
             "    result['installed_packages'] = []\n"
             "__result__ = json.dumps(result)"
         )
-        resp = await client.request("exec", {"code": code, "exec_mode": "standard"})
+        resp = await client.request("exec", {"code": code, "exec_mode": "full"})
         raw = resp.get("result", "{}") if isinstance(resp, dict) else "{}"
         try:
-            data = _json_mod.loads(raw) if isinstance(raw, str) else raw
+            data = json.loads(raw) if isinstance(raw, str) else raw
         except Exception:
             data = {"raw": raw}
         _audit_log(ctx, "td_python_env_status", {})
@@ -4136,7 +4144,10 @@ async def td_python_env_status(ctx: Context) -> Dict[str, Any]:
 
 @mcp.tool(name="td_threading_status")
 async def td_threading_status(ctx: Context) -> Dict[str, Any]:
-    """Inspect the threading status inside TouchDesigner: active threads, cook thread settings."""
+    """Inspect the threading status inside TouchDesigner: active threads, cook rate.
+
+    Requires 'full' exec mode — uses threading module which is not in the standard allowlist.
+    """
     finish = _start_tool(ctx, "td_threading_status")
     try:
         client = _get_client(ctx)
@@ -4148,15 +4159,15 @@ async def td_threading_status(ctx: Context) -> Dict[str, Any]:
             "    'thread_names': [t.name for t in threading.enumerate()],\n"
             "}\n"
             "try:\n"
-            "    result['cook_thread_count'] = project.cookRate\n"
+            "    result['cook_rate'] = project.cookRate\n"
             "except Exception:\n"
             "    pass\n"
             "__result__ = json.dumps(result)"
         )
-        resp = await client.request("exec", {"code": code, "exec_mode": "standard"})
+        resp = await client.request("exec", {"code": code, "exec_mode": "full"})
         raw = resp.get("result", "{}") if isinstance(resp, dict) else "{}"
         try:
-            data = _json_mod.loads(raw) if isinstance(raw, str) else raw
+            data = json.loads(raw) if isinstance(raw, str) else raw
         except Exception:
             data = {"raw": raw}
         _audit_log(ctx, "td_threading_status", {})
@@ -4170,7 +4181,10 @@ async def td_threading_status(ctx: Context) -> Dict[str, Any]:
 
 @mcp.tool(name="td_logger_status")
 async def td_logger_status(ctx: Context) -> Dict[str, Any]:
-    """Inspect the logger component inside TouchDesigner: log level, handlers, recent entries."""
+    """Inspect the Python logging configuration inside TouchDesigner: log level, handlers, registered loggers.
+
+    Note: This inspects Python's logging module, not TD's native logging. Requires 'full' exec mode.
+    """
     finish = _start_tool(ctx, "td_logger_status")
     try:
         client = _get_client(ctx)
@@ -4185,10 +4199,10 @@ async def td_logger_status(ctx: Context) -> Dict[str, Any]:
             "}\n"
             "__result__ = json.dumps(result)"
         )
-        resp = await client.request("exec", {"code": code, "exec_mode": "standard"})
+        resp = await client.request("exec", {"code": code, "exec_mode": "full"})
         raw = resp.get("result", "{}") if isinstance(resp, dict) else "{}"
         try:
-            data = _json_mod.loads(raw) if isinstance(raw, str) else raw
+            data = json.loads(raw) if isinstance(raw, str) else raw
         except Exception:
             data = {"raw": raw}
         _audit_log(ctx, "td_logger_status", {})
@@ -4232,7 +4246,7 @@ async def td_tdresources_inspect(params: TDResourcesInspectInput, ctx: Context) 
         resp = await client.request("exec", {"code": code, "exec_mode": "standard"})
         raw = resp.get("result", "{}") if isinstance(resp, dict) else "{}"
         try:
-            data = _json_mod.loads(raw) if isinstance(raw, str) else raw
+            data = json.loads(raw) if isinstance(raw, str) else raw
         except Exception:
             data = {"raw": raw}
         if isinstance(data, dict):
@@ -4293,7 +4307,7 @@ async def td_component_standardize(params: ComponentStandardizeInput, ctx: Conte
             resp = await client.request("exec", {"code": audit_code, "exec_mode": "standard"})
             raw = resp.get("result", "{}") if isinstance(resp, dict) else "{}"
             try:
-                return _json_mod.loads(raw) if isinstance(raw, str) else raw
+                return json.loads(raw) if isinstance(raw, str) else raw
             except Exception:
                 return {"raw": raw}
 
@@ -4341,7 +4355,7 @@ async def td_color_pipeline(params: ColorPipelineInput, ctx: Context) -> Dict[st
         resp = await client.request("exec", {"code": code, "exec_mode": "standard"})
         raw = resp.get("result", "{}") if isinstance(resp, dict) else "{}"
         try:
-            data = _json_mod.loads(raw) if isinstance(raw, str) else raw
+            data = json.loads(raw) if isinstance(raw, str) else raw
         except Exception:
             data = {"raw": raw}
         _audit_log(ctx, "td_color_pipeline", {})
@@ -4392,6 +4406,7 @@ async def td_recommend_official_component(params: RecommendOfficialInput, ctx: C
 
         _audit_log(ctx, "td_recommend_official_component", {"goal": params.goal})
         return {
+            "success": True,
             "goal": params.goal,
             "recommendations": recommendations,
             "count": len(recommendations),
@@ -4447,6 +4462,7 @@ async def td_find_official_example(params: FindOfficialExampleInput, ctx: Contex
 
         _audit_log(ctx, "td_find_official_example", {"query": params.query, "family": params.family})
         return {
+            "success": True,
             "query": params.query,
             "family": params.family,
             "examples": examples,
@@ -4475,7 +4491,6 @@ async def td_explain_better_way(params: ExplainBetterWayInput, ctx: Context) -> 
         # Extract gotchas from operator cards if current_plan mentions specific ops
         gotchas = []
         if params.current_plan:
-            plan_lower = params.current_plan.lower()
             for card in idx.search(params.current_plan, card_types=["operators"], limit=10):
                 card_gotchas = card.get("common_gotchas", [])
                 if card_gotchas:
@@ -4505,6 +4520,7 @@ async def td_explain_better_way(params: ExplainBetterWayInput, ctx: Context) -> 
 
         _audit_log(ctx, "td_explain_better_way", {"intent": params.intent})
         return {
+            "success": True,
             "intent": params.intent,
             "current_plan": params.current_plan,
             "recommendation": recommendation,

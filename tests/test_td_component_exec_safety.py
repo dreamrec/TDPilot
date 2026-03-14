@@ -98,8 +98,10 @@ class TestHandleExecPythonStandard:
     def test_handle_exec_python_accepts_standard(self):
         # The exec_mode validation inside handle_exec_python should include standard
         func_source = _SOURCE[_SOURCE.index('def handle_exec_python'):]
-        pattern = r"if\s+exec_mode\s+not\s+in\s+\(.*'standard'.*\)"
-        assert re.search(pattern, func_source), (
+        # Accepts either inline tuple or dict-based validation (_MODE_RANK includes 'standard')
+        pattern_tuple = r"if\s+exec_mode\s+not\s+in\s+\(.*'standard'.*\)"
+        pattern_dict = r"_MODE_RANK\s*=\s*\{.*'standard'.*\}"
+        assert re.search(pattern_tuple, func_source) or re.search(pattern_dict, func_source), (
             "handle_exec_python must accept 'standard' as a valid exec_mode"
         )
 
