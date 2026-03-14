@@ -23,6 +23,10 @@
 - Technique compatibility fields: `compatibility` dict and `validation_result` tracking in TechniqueStore.
 - Pre-replay prerequisite check: `td_memory_replay` blocks replay when required operator types are missing.
 
+### Fixed
+- Feedback macro templates (`feedback_loop`, `feedback_displacement`) now close the loop via feedbackTOP's `top` parameter instead of a physical wire, matching TD's official palette pattern and eliminating cook-dependency-loop warnings.
+- Added `NodeRefParam` model and engine support for cross-node parameter references in macro templates.
+
 ### Changed
 - `analyze_network` accepts `td_build` parameter; `td_memory_learn` and `td_memory_save` pass TD build info to analyzer.
 - TD-side API version bumped from 1.3.0 to 1.3.2.

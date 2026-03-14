@@ -6,6 +6,7 @@ from td_mcp.macros.models import (
     ConnectionSpec,
     ExpressionSpec,
     MacroTemplate,
+    NodeRefParam,
     NodeSpec,
     ParamSpec,
     ParamTarget,
@@ -29,7 +30,9 @@ def build_default_templates() -> dict[str, MacroTemplate]:
             ConnectionSpec("feedback", "decay"),
             ConnectionSpec("decay", "merge", source_index=0, target_index=0),
             ConnectionSpec("merge", "out"),
-            ConnectionSpec("out", "feedback"),
+        ],
+        node_references=[
+            NodeRefParam(node="feedback", param="top", target_node="out"),
         ],
         param_schema={
             "feedback_opacity": ParamSpec(
@@ -150,7 +153,9 @@ def build_default_templates() -> dict[str, MacroTemplate]:
             ConnectionSpec("source", "merge", source_index=0, target_index=0),
             ConnectionSpec("displace", "merge", source_index=0, target_index=1),
             ConnectionSpec("merge", "out"),
-            ConnectionSpec("out", "feedback"),
+        ],
+        node_references=[
+            NodeRefParam(node="feedback", param="top", target_node="out"),
         ],
         expressions=[
             ExpressionSpec(node="source", param="tz", expr="absTime.seconds * 0.3"),

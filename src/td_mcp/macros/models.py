@@ -66,6 +66,19 @@ class ParamTarget:
     template: Optional[str] = None  # for expr mode, supports "{value}" interpolation
 
 
+@dataclass(frozen=True)
+class NodeRefParam:
+    """Set a parameter on one node to reference another node's resolved name.
+
+    Used by feedbackTOP's ``top`` parameter to close loops without physical
+    wires (which cause cook-dependency warnings in TouchDesigner).
+    """
+
+    node: str
+    param: str
+    target_node: str
+
+
 @dataclass
 class MacroTemplate:
     """Complete macro template definition."""
@@ -75,6 +88,7 @@ class MacroTemplate:
     nodes: List[NodeSpec]
     connections: List[ConnectionSpec]
     expressions: List[ExpressionSpec] = field(default_factory=list)
+    node_references: List[NodeRefParam] = field(default_factory=list)
     param_schema: Dict[str, ParamSpec] = field(default_factory=dict)
     param_targets: Dict[str, List[ParamTarget]] = field(default_factory=dict)
     entry_node: Optional[str] = None

@@ -148,6 +148,23 @@ class MacroEngine:
                     f"connect failed {connection.source}->{connection.target}: {exc}"
                 )
 
+        for ref in template.node_references:
+            node_path = logical_to_path.get(ref.node)
+            target_path = logical_to_path.get(ref.target_node)
+            if not node_path or not target_path:
+                warnings.append(
+                    f"Skipped node ref {ref.node}.{ref.param}->{ref.target_node}: missing node."
+                )
+                continue
+            target_name = target_path.rsplit("/", 1)[-1]
+            try:
+                await self._td_client.request(
+                    "node/params/set",
+                    {"path": node_path, "params": {ref.param: target_name}},
+                )
+            except Exception as exc:  # pragma: no cover - dependent on TD runtime
+                warnings.append(f"node ref failed {ref.node}.{ref.param}: {exc}")
+
         all_expressions = [*template.expressions, *extra_expressions]
         for expr in all_expressions:
             path = logical_to_path.get(expr.node)

@@ -10,6 +10,7 @@ from td_mcp.macros.models import (
     ConnectionSpec,
     ExpressionSpec,
     MacroTemplate,
+    NodeRefParam,
     NodeSpec,
     ParamSpec,
     ParamTarget,
@@ -94,6 +95,11 @@ def _parse_template(data: Dict[str, Any]) -> MacroTemplate:
             raise ValueError(f"param_targets.{key} must be a list")
         param_targets[key] = [_parse_param_target(item) for item in target_list]
 
+    raw_node_refs = data.get("node_references", [])
+    if not isinstance(raw_node_refs, list):
+        raise ValueError("'node_references' must be a list when provided")
+    node_references = [_parse_node_ref(item) for item in raw_node_refs]
+
     entry_node = data.get("entry_node")
     if entry_node is not None and not isinstance(entry_node, str):
         raise ValueError("'entry_node' must be a string when provided")
@@ -108,6 +114,7 @@ def _parse_template(data: Dict[str, Any]) -> MacroTemplate:
         nodes=nodes,
         connections=connections,
         expressions=expressions,
+        node_references=node_references,
         param_schema=param_schema,
         param_targets=param_targets,
         entry_node=entry_node,
@@ -192,6 +199,17 @@ def _parse_param_target(data: Any) -> ParamTarget:
         param=_as_str(data.get("param"), field="param"),
         mode=mode,
         template=template,
+    )
+
+
+def _parse_node_ref(data: Any) -> NodeRefParam:
+    if not isinstance(data, dict):
+        raise ValueError("node_references item must be an object")
+
+    return NodeRefParam(
+        node=_as_str(data.get("node"), field="node"),
+        param=_as_str(data.get("param"), field="param"),
+        target_node=_as_str(data.get("target_node"), field="target_node"),
     )
 
 
