@@ -1,8 +1,8 @@
 """TouchDesigner MCP Server — AI-powered control of TouchDesigner via MCP."""
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
-TOX_FILENAME = "tdpilot_v1_2.tox"
+TOX_FILENAME = "tdpilot_v1_3.tox"
 
 
 def normalize_transport(raw: str) -> str:

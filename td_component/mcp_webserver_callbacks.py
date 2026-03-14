@@ -26,7 +26,7 @@ import re
 # Configuration
 # ─────────────────────────────────────────────────────────────
 
-API_VERSION = "1.2.0"
+API_VERSION = "1.3.0"
 SCREENSHOT_TEMP_PATH = os.path.join(os.environ.get('TEMP', os.environ.get('TMP', '/tmp')), 'td_mcp_screenshot.jpg')
 SHARED_SECRET = os.environ.get('TD_MCP_SHARED_SECRET', '').strip()
 DEFAULT_EXEC_MODE = os.environ.get('TD_MCP_EXEC_MODE', 'restricted').strip().lower()
