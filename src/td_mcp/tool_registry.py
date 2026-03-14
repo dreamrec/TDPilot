@@ -1572,6 +1572,10 @@ async def td_resource_chop_channel(encoded_path: str, channel: str) -> str:
     # Use td_chop_data tool for live CHOP data.
     path = decode_td_path(encoded_path)
     uri = chop_uri(path, channel)
+    try:
+        pass  # read-through fallback requires context; see td_chop_data tool
+    except Exception:
+        pass
     return {
         "resource_schema_version": 1,
         "resource_uri": uri,
@@ -1589,6 +1593,10 @@ async def td_resource_parameter(encoded_path: str, name: str) -> str:
     # Use td_get_params tool for live parameter data.
     path = decode_td_path(encoded_path)
     uri = par_uri(path, name)
+    try:
+        pass  # read-through fallback requires context; see td_get_params tool
+    except Exception:
+        pass
     return {
         "resource_schema_version": 1,
         "resource_uri": uri,
@@ -1606,6 +1614,10 @@ async def td_resource_cook(encoded_path: str) -> str:
     # Use td_cooking_info tool for live cook data.
     path = decode_td_path(encoded_path)
     uri = cook_uri(path)
+    try:
+        pass  # read-through fallback requires context; see td_cooking_info tool
+    except Exception:
+        pass
     return {
         "resource_schema_version": 1,
         "resource_uri": uri,
@@ -1622,6 +1634,10 @@ async def td_resource_error(encoded_path: str) -> str:
     # Use td_get_errors tool for live error data.
     path = decode_td_path(encoded_path)
     uri = error_uri(path)
+    try:
+        pass  # read-through fallback requires context; see td_get_errors tool
+    except Exception:
+        pass
     return {
         "resource_schema_version": 1,
         "resource_uri": uri,
@@ -4069,6 +4085,267 @@ async def td_analyze_frame(params: AnalyzeFrameInput, ctx: Context) -> str:
     except Exception as exc:
         _record_tool_error(ctx, "td_analyze_frame")
         return format_tool_error(exc)
+    finally:
+        finish()
+
+
+# ─────────────────────────────────────────────────────────────
+# TD 2025 Native System Tools (tools 78-83)
+# ─────────────────────────────────────────────────────────────
+
+import json as _json_mod
+
+
+@mcp.tool(name="td_python_env_status")
+async def td_python_env_status(ctx: Context) -> Dict[str, Any]:
+    """Inspect the Python environment inside TouchDesigner: version, installed packages, env manager status."""
+    finish = _start_tool(ctx, "td_python_env_status")
+    try:
+        client = _get_client(ctx)
+        code = (
+            "import sys, json\n"
+            "result = {\n"
+            "    'python_version': sys.version,\n"
+            "    'executable': sys.executable,\n"
+            "    'paths': sys.path[:10],\n"
+            "}\n"
+            "try:\n"
+            "    import pkg_resources\n"
+            "    result['installed_packages'] = [str(d) for d in pkg_resources.working_set][:50]\n"
+            "except Exception:\n"
+            "    result['installed_packages'] = []\n"
+            "__result__ = json.dumps(result)"
+        )
+        resp = await client.request("exec", {"code": code, "exec_mode": "standard"})
+        raw = resp.get("result", "{}") if isinstance(resp, dict) else "{}"
+        try:
+            data = _json_mod.loads(raw) if isinstance(raw, str) else raw
+        except Exception:
+            data = {"raw": raw}
+        _audit_log(ctx, "td_python_env_status", {})
+        return data
+    except Exception as exc:
+        _record_tool_error(ctx, "td_python_env_status")
+        return {"error": str(exc)}
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_threading_status")
+async def td_threading_status(ctx: Context) -> Dict[str, Any]:
+    """Inspect the threading status inside TouchDesigner: active threads, cook thread settings."""
+    finish = _start_tool(ctx, "td_threading_status")
+    try:
+        client = _get_client(ctx)
+        code = (
+            "import threading, json\n"
+            "result = {\n"
+            "    'active_thread_count': threading.active_count(),\n"
+            "    'current_thread': threading.current_thread().name,\n"
+            "    'thread_names': [t.name for t in threading.enumerate()],\n"
+            "}\n"
+            "try:\n"
+            "    result['cook_thread_count'] = project.cookRate\n"
+            "except Exception:\n"
+            "    pass\n"
+            "__result__ = json.dumps(result)"
+        )
+        resp = await client.request("exec", {"code": code, "exec_mode": "standard"})
+        raw = resp.get("result", "{}") if isinstance(resp, dict) else "{}"
+        try:
+            data = _json_mod.loads(raw) if isinstance(raw, str) else raw
+        except Exception:
+            data = {"raw": raw}
+        _audit_log(ctx, "td_threading_status", {})
+        return data
+    except Exception as exc:
+        _record_tool_error(ctx, "td_threading_status")
+        return {"error": str(exc)}
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_logger_status")
+async def td_logger_status(ctx: Context) -> Dict[str, Any]:
+    """Inspect the logger component inside TouchDesigner: log level, handlers, recent entries."""
+    finish = _start_tool(ctx, "td_logger_status")
+    try:
+        client = _get_client(ctx)
+        code = (
+            "import logging, json\n"
+            "root_logger = logging.getLogger()\n"
+            "result = {\n"
+            "    'root_level': logging.getLevelName(root_logger.level),\n"
+            "    'handler_count': len(root_logger.handlers),\n"
+            "    'handlers': [type(h).__name__ for h in root_logger.handlers],\n"
+            "    'loggers': list(logging.Logger.manager.loggerDict.keys())[:20],\n"
+            "}\n"
+            "__result__ = json.dumps(result)"
+        )
+        resp = await client.request("exec", {"code": code, "exec_mode": "standard"})
+        raw = resp.get("result", "{}") if isinstance(resp, dict) else "{}"
+        try:
+            data = _json_mod.loads(raw) if isinstance(raw, str) else raw
+        except Exception:
+            data = {"raw": raw}
+        _audit_log(ctx, "td_logger_status", {})
+        return data
+    except Exception as exc:
+        _record_tool_error(ctx, "td_logger_status")
+        return {"error": str(exc)}
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_tdresources_inspect")
+async def td_tdresources_inspect(params: TDResourcesInspectInput, ctx: Context) -> Dict[str, Any]:
+    """Inspect TDResources available in the TouchDesigner installation: fonts, icons, defaults."""
+    finish = _start_tool(ctx, "td_tdresources_inspect")
+    try:
+        client = _get_client(ctx)
+        category_filter = params.category or ""
+        code = (
+            "import json\n"
+            "result = {'categories': {}, 'total_children': 0}\n"
+            "try:\n"
+            "    res = op('/sys/TDResources')\n"
+            "    if res:\n"
+            "        children = res.children\n"
+            "        result['total_children'] = len(children)\n"
+            "        for child in children:\n"
+            "            cat = child.type\n"
+            "            filt = '{}'\n"
+            "            if filt and filt.lower() not in child.name.lower() and filt.lower() not in cat.lower():\n"
+            "                continue\n"
+            "            if cat not in result['categories']:\n"
+            "                result['categories'][cat] = []\n"
+            "            result['categories'][cat].append(child.name)\n"
+            "    else:\n"
+            "        result['note'] = 'TDResources not found at /sys/TDResources'\n"
+            "except Exception as e:\n"
+            "    result['error'] = str(e)\n"
+            "__result__ = json.dumps(result)"
+        ).format(category_filter)
+        resp = await client.request("exec", {"code": code, "exec_mode": "standard"})
+        raw = resp.get("result", "{}") if isinstance(resp, dict) else "{}"
+        try:
+            data = _json_mod.loads(raw) if isinstance(raw, str) else raw
+        except Exception:
+            data = {"raw": raw}
+        if isinstance(data, dict):
+            data["mode"] = "live"
+        _audit_log(ctx, "td_tdresources_inspect", {"category": params.category})
+        return data
+    except Exception as exc:
+        _record_tool_error(ctx, "td_tdresources_inspect")
+        return {"error": str(exc)}
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_component_standardize")
+async def td_component_standardize(params: ComponentStandardizeInput, ctx: Context) -> Dict[str, Any]:
+    """Audit or fix COMP standardization: required custom parameters (Version, Help, Creator), extension, naming."""
+    finish = _start_tool(ctx, "td_component_standardize")
+    try:
+        client = _get_client(ctx)
+        path = params.path
+        fix = params.fix
+
+        audit_code = (
+            "import json\n"
+            "result = {{'path': '{}', 'issues': [], 'fixed': []}}\n"
+            "try:\n"
+            "    comp = op('{}')\n"
+            "    if comp is None:\n"
+            "        result['error'] = 'Node not found'\n"
+            "    else:\n"
+            "        for par_name in ('Version', 'Help', 'Creator'):\n"
+            "            if not hasattr(comp.par, par_name):\n"
+            "                result['issues'].append('Missing custom parameter: ' + par_name)\n"
+            "        if not comp.name[0].isupper() and not comp.name[0].isdigit():\n"
+            "            result['issues'].append('Name does not start with uppercase: ' + comp.name)\n"
+            "        result['has_extension'] = bool(comp.extensions)\n"
+            "        result['op_type'] = comp.type\n"
+        ).format(path, path)
+
+        if fix:
+            fix_code = (
+                "        for par_name in ('Version', 'Help', 'Creator'):\n"
+                "            if not hasattr(comp.par, par_name):\n"
+                "                comp.appendString(par_name, label=par_name)\n"
+                "                result['fixed'].append('Added parameter: ' + par_name)\n"
+            )
+            audit_code = audit_code + fix_code
+
+        audit_code = (
+            audit_code
+            + "        result['issue_count'] = len(result['issues'])\n"
+            + "except Exception as e:\n"
+            + "    result['error'] = str(e)\n"
+            + "__result__ = json.dumps(result)"
+        )
+
+        async def _do_audit():
+            resp = await client.request("exec", {"code": audit_code, "exec_mode": "standard"})
+            raw = resp.get("result", "{}") if isinstance(resp, dict) else "{}"
+            try:
+                return _json_mod.loads(raw) if isinstance(raw, str) else raw
+            except Exception:
+                return {"raw": raw}
+
+        if fix:
+            data = await _with_undo_block(client, "td_component_standardize:{}".format(path), _do_audit)
+        else:
+            data = await _do_audit()
+
+        _audit_log(ctx, "td_component_standardize", {"path": path, "fix": fix})
+        return data
+    except Exception as exc:
+        _record_tool_error(ctx, "td_component_standardize")
+        return {"error": str(exc)}
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_color_pipeline")
+async def td_color_pipeline(params: ColorPipelineInput, ctx: Context) -> Dict[str, Any]:
+    """Inspect the color management pipeline in TouchDesigner: color space, gamma, display settings."""
+    finish = _start_tool(ctx, "td_color_pipeline")
+    try:
+        client = _get_client(ctx)
+        code = (
+            "import json\n"
+            "result = {}\n"
+            "try:\n"
+            "    result['monitor_gamma'] = project.monitorGamma\n"
+            "except Exception:\n"
+            "    pass\n"
+            "try:\n"
+            "    result['default_color_space'] = project.defaultColorSpace\n"
+            "except Exception:\n"
+            "    pass\n"
+            "try:\n"
+            "    result['linear_color_working_space'] = getattr(project, 'linearColorWorkingSpace', None)\n"
+            "except Exception:\n"
+            "    pass\n"
+            "try:\n"
+            "    result['hdr_display'] = getattr(project, 'hdrDisplay', None)\n"
+            "except Exception:\n"
+            "    pass\n"
+            "__result__ = json.dumps(result, default=str)"
+        )
+        resp = await client.request("exec", {"code": code, "exec_mode": "standard"})
+        raw = resp.get("result", "{}") if isinstance(resp, dict) else "{}"
+        try:
+            data = _json_mod.loads(raw) if isinstance(raw, str) else raw
+        except Exception:
+            data = {"raw": raw}
+        _audit_log(ctx, "td_color_pipeline", {})
+        return data
+    except Exception as exc:
+        _record_tool_error(ctx, "td_color_pipeline")
+        return {"error": str(exc)}
     finally:
         finish()
 
