@@ -995,3 +995,36 @@ class MemoryListInput(BaseModel):
     tags: list[str] = Field(default_factory=list, description="Filter by tags.")
     favorites_only: bool = Field(default=False, description="Only return favorites.")
     limit: int = Field(default=50, ge=1, le=200, description="Max results.")
+
+
+# ─────────────────────────────────────────────────────────────
+# Planning & Validation
+# ─────────────────────────────────────────────────────────────
+
+class PlanPatchInput(BaseModel):
+    """Input for generating a structured patch plan."""
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    intent: str = Field(..., description="What you want to achieve", min_length=1)
+    target_path: str = Field(default="/project1", description="Target path to plan changes for")
+    recipe_id: Optional[str] = Field(default=None, description="Optional recipe ID to base plan on")
+
+class PreflightPatchInput(BaseModel):
+    """Input for validating a plan before execution."""
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    plan: Dict[str, Any] = Field(..., description="Plan dict from td_plan_patch to validate")
+
+class ValidateRecipeInput(BaseModel):
+    """Input for validating a technique recipe."""
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    recipe_id: Optional[str] = Field(default=None, description="Recipe ID to validate")
+    recipe: Optional[Dict[str, Any]] = Field(default=None, description="Inline recipe dict to validate")
+    scope: str = Field(default="project", description="'project' or 'global'")
+
+class AuditProjectInput(BaseModel):
+    """Input for auditing a project subtree."""
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    root_path: str = Field(default="/project1", description="Root path to audit")
