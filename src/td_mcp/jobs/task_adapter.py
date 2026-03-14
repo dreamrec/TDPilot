@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any, Callable, Dict, Optional
 
 from td_mcp.capabilities import CapabilitySet
@@ -66,6 +67,9 @@ class TaskAdapter:
 
     def on_complete(self, job_id: str, result: Any = None) -> None:
         """Mark a job as completed and optionally fire the notify callback."""
-        self._manager.update_job(job_id, status="completed", progress=1.0, result=result)
+        self._manager.update_job(
+            job_id, status="completed", progress=1.0, result=result,
+            completed_at=datetime.now(timezone.utc).isoformat(),
+        )
         if self._notify is not None:
             self._notify(job_id, 1.0, "completed")
