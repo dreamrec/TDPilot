@@ -30,7 +30,7 @@ API_VERSION = "1.2.0"
 SCREENSHOT_TEMP_PATH = os.path.join(os.environ.get('TEMP', os.environ.get('TMP', '/tmp')), 'td_mcp_screenshot.jpg')
 SHARED_SECRET = os.environ.get('TD_MCP_SHARED_SECRET', '').strip()
 DEFAULT_EXEC_MODE = os.environ.get('TD_MCP_EXEC_MODE', 'restricted').strip().lower()
-if DEFAULT_EXEC_MODE not in ('off', 'restricted', 'full'):
+if DEFAULT_EXEC_MODE not in ('off', 'restricted', 'standard', 'full'):
     DEFAULT_EXEC_MODE = 'restricted'
 RESTRICTED_IMPORT_RE = re.compile(r'(?m)^\s*(import|from)\s+\w+')
 RESTRICTED_TOKENS = (
@@ -47,6 +47,33 @@ RESTRICTED_TOKENS = (
     'shutil',
     'os.system',
     'os.popen',
+)
+STANDARD_ALLOWED_IMPORTS = frozenset({
+    'json', 'math', 're', 'datetime', 'collections',
+    'itertools', 'functools', 'copy', 'textwrap',
+    'string', 'random', 'decimal', 'fractions', 'statistics',
+})
+STANDARD_BLOCKED_TOKENS = (
+    '__import__(',
+    'open(',
+    'compile(',
+    'input(',
+    'subprocess',
+    'socket',
+    'requests',
+    'httpx',
+    'urllib',
+    'pathlib',
+    'shutil',
+    'setattr',
+    'delattr',
+    '__subclasses__',
+    '__bases__',
+    'os.system',
+    'os.popen',
+    'globals(',
+    'locals(',
+    'eval(',
 )
 MONITOR_SUBSCRIPTIONS = {}
 
@@ -872,11 +899,32 @@ def _restricted_exec_violation(code):
     lowered = code.lower()
     for token in RESTRICTED_TOKENS:
         if token in lowered:
-            return f"restricted mode blocks token: {token}"
+            return 'restricted mode blocks token: {}'.format(token)
+    return None
+
+
+def _standard_exec_violation(code):
+    lowered = code.lower()
+    for token in STANDARD_BLOCKED_TOKENS:
+        if token in lowered:
+            return 'standard mode blocks token: {}'.format(token)
+
+    for match in RESTRICTED_IMPORT_RE.finditer(code):
+        line = match.group(0).strip()
+        parts = line.split()
+        if parts[0] == 'from':
+            mod_name = parts[1]
+        else:
+            mod_name = parts[1]
+        top_level = mod_name.split('.')[0]
+        if top_level not in STANDARD_ALLOWED_IMPORTS:
+            return 'standard mode blocks import of: {}'.format(top_level)
+
     return None
 
 
 def _build_exec_globals(exec_mode):
+    import importlib as _importlib
     context = {
         'op': op,
         'ops': ops,
@@ -889,6 +937,13 @@ def _build_exec_globals(exec_mode):
         'ui': ui,
         'tdu': tdu,
     }
+    if exec_mode == 'standard':
+        for _mod_name in STANDARD_ALLOWED_IMPORTS:
+            try:
+                context[_mod_name] = _importlib.import_module(_mod_name)
+            except ImportError:
+                pass
+        return context
     if exec_mode != 'restricted':
         return context
 
@@ -1221,7 +1276,7 @@ def handle_exec_python(body):
         return {'error': 'Missing required field: code'}
 
     exec_mode = str(body.get('exec_mode', DEFAULT_EXEC_MODE)).strip().lower()
-    if exec_mode not in ('off', 'restricted', 'full'):
+    if exec_mode not in ('off', 'restricted', 'standard', 'full'):
         exec_mode = DEFAULT_EXEC_MODE
 
     if exec_mode == 'off':
@@ -1233,6 +1288,15 @@ def handle_exec_python(body):
 
     if exec_mode == 'restricted':
         violation = _restricted_exec_violation(code)
+        if violation:
+            return {
+                'error': violation,
+                'type': 'PermissionError',
+                'exec_mode': exec_mode,
+            }
+
+    if exec_mode == 'standard':
+        violation = _standard_exec_violation(code)
         if violation:
             return {
                 'error': violation,
