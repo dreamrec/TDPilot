@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.3.2 - 2026-03-14
+
+### Added
+- 2 vision diagnostic tools (75 to 77):
+  - `td_capture_frame` — capture TOP output as base64 image for MCP-side analysis.
+  - `td_analyze_frame` — run TD-side pixel analysis (histogram, luminance, alpha_coverage, color_dominant, roi_diff).
+- 6 TD 2025 native system tools (77 to 83):
+  - `td_python_env_status` — Python environment and extension module status.
+  - `td_threading_status` — thread pool and DAG cooking information.
+  - `td_logger_status` — logger configuration and recent entries.
+  - `td_tdresources_inspect` — TDResources paths by category.
+  - `td_component_standardize` — audit/fix COMP against TD standards (undo-wrapped).
+  - `td_color_pipeline` — color space and bit-depth pipeline audit.
+- 3 official recommendation tools (83 to 86):
+  - `td_recommend_official_component` — search palette + operator cards for a given goal.
+  - `td_find_official_example` — search snippets + palette for official examples.
+  - `td_explain_better_way` — suggest better alternatives with gotcha warnings.
+- TD-side `/api/analyze_frame` endpoint with 5 analysis modes (histogram, luminance, alpha_coverage, color_dominant, roi_diff).
+- Enhanced recipe capture: `analyze_network` now returns `td_build`, `required_op_types`, `external_assets`, and `layout`.
+- Technique compatibility fields: `compatibility` dict and `validation_result` tracking in TechniqueStore.
+- Pre-replay prerequisite check: `td_memory_replay` blocks replay when required operator types are missing.
+
+### Changed
+- `analyze_network` accepts `td_build` parameter; `td_memory_learn` and `td_memory_save` pass TD build info to analyzer.
+- TD-side API version bumped from 1.3.0 to 1.3.2.
+- Runtime surface increased from 75 to 86 tools.
+
 ## 1.3.1 - 2026-03-14
 
 ### Added

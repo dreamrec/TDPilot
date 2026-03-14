@@ -7,7 +7,7 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v1.3.0
+# TDPilot Runtime v1.3.2
 
 **TDPilot Runtime** is an MCP server for TouchDesigner.
 It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networks with real tool calls — and now remember what works.
@@ -26,9 +26,17 @@ It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networ
 - A structured toolset for scene edits, diagnostics, event monitoring, and recovery.
 - A workflow-oriented MCP built for iterative patch development, not one-shot guessing.
 - A technique memory system that learns from your projects and builds a reusable library.
-- 71-tool runtime surface with knowledge corpus, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, and custom parameter authoring.
+- 86-tool runtime surface with knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, and custom parameter authoring.
 
-## What's New In 1.3
+## What's New In 1.3.2
+
+- **Vision diagnostics** — `td_capture_frame` and `td_analyze_frame` for MCP-side and TD-side pixel analysis (histogram, luminance, alpha, dominant color, ROI diff).
+- **TD 2025 native tools** — 6 tools for Python env, threading, logger, TDResources, COMP standardization, and color pipeline inspection.
+- **Official recommendations** — `td_recommend_official_component`, `td_find_official_example`, `td_explain_better_way` search the knowledge corpus for safer official approaches.
+- **Enhanced recipe capture** — Recipes now include `td_build`, `required_op_types`, `external_assets`, and `layout` for portability validation.
+- **Pre-replay checks** — `td_memory_replay` blocks replay when required operator types are missing from the target TD install.
+
+## What's New In 1.3.0
 
 - **Knowledge corpus** — Structured JSON cards for 30 operators, 6 palette components, release notes. Query with `td_search_official_docs`, `td_get_operator_doc`, `td_get_param_help`, and more.
 - **`standard` exec safety** — New middle-tier mode between `restricted` and `full`. Allows 14 safe data-transform imports (json, math, re, datetime, etc.) while blocking system access.
@@ -59,7 +67,7 @@ Use this loop for every non-trivial task:
 
 6. **Control token cost** — Prefer metadata checks over continuous image payloads. Ask the user before enabling high-token frame streaming.
 
-## Tool Map (63 Tools)
+## Tool Map (86 Tools)
 
 ### 1) Scene + Timeline + Project Lifecycle
 Use for global context, playback control, save/load, and undo operations.

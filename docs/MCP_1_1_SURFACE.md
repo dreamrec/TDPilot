@@ -170,7 +170,7 @@ For non-trivial changes:
 TDPilot 1.1 is stronger, but a few gaps remain:
 
 - No atomic multi-tool transaction layer
-- No dedicated low-cost TOP histogram / alpha / ROI inspector yet (planned for v1.3.2)
+- ~~No dedicated low-cost TOP histogram / alpha / ROI inspector yet~~ **Resolved in v1.3.2:** `td_capture_frame` and `td_analyze_frame` provide MCP-side and TD-side pixel analysis (histogram, luminance, alpha_coverage, color_dominant, roi_diff).
 - Full Python mode is still configuration-driven through `TD_MCP_EXEC_MODE`
 - Custom parameter editing is now first-class, but not every parameter-type nuance in TouchDesigner is wrapped yet
 
@@ -182,7 +182,7 @@ Real sessions also exposed several quality-of-life gaps that do not block work, 
 - Custom parameter creation is covered, but page-level operations such as create, remove, replace, and reorder should also be first-class
 - Recursive inspection is not yet uniform across node, connection, and error queries, which makes deeper scene audits less predictable
 - Imported tox workflows would benefit from warning filtering that separates scene-breaking errors from harmless sync or inactive-branch warnings
-- Visual verification still needs a lighter-weight mode for low-token thumbnails or fast passive checks
+- ~~Visual verification still needs a lighter-weight mode for low-token thumbnails or fast passive checks~~ **Resolved in v1.3.2:** Vision diagnostics tools provide lightweight frame analysis without streaming overhead.
 - Snapshot persistence is available, but the safest production behavior would be stronger default persistence around risky edits
 - Event-style subscriptions are still absent, so many monitoring tasks rely on polling rather than change-driven updates
 
@@ -195,7 +195,7 @@ It is a more explicit visual intent layer:
 - project-scoped art direction memory
 - panoramic composition rules
 - safer batched edit transactions
-- low-cost visual diagnostics
+- ~~low-cost visual diagnostics~~ (v1.3.2: `td_capture_frame`, `td_analyze_frame`)
 
 The near-term quality-of-life priorities are equally clear:
 
@@ -204,7 +204,7 @@ The near-term quality-of-life priorities are equally clear:
 - expose common wiring and parameter-page edits as first-class tools
 - standardize recursive inspection arguments and output shape
 - classify warnings by operational severity
-- make visual verification cheaper and easier to invoke during iteration
+- ~~make visual verification cheaper and easier to invoke during iteration~~ (v1.3.2: vision diagnostics)
 - reduce reliance on polling with subscription-style state change hooks
 - bias the runtime toward safer default persistence during destructive edits
 
