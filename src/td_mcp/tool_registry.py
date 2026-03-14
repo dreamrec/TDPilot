@@ -197,6 +197,18 @@ STANDARD_BLOCKED_TOKENS: tuple = (
 _STATE_VECTOR_CACHE: Dict[str, Dict[str, Any]] = {}
 
 
+async def _with_undo_block(td_client, label: str, async_fn, *args):
+    """Wrap an async operation in a TD undo block (start_undo_block / end_undo_block)."""
+    await td_client.request("project/lifecycle",
+        {"action": "start_undo_block", "label": label})
+    try:
+        result = await async_fn(*args)
+        return result
+    finally:
+        await td_client.request("project/lifecycle",
+            {"action": "end_undo_block"})
+
+
 @asynccontextmanager
 async def server_lifespan(app: FastMCP):
     """Initialize and clean up runtime services for the MCP server."""
@@ -2968,6 +2980,18 @@ async def td_diff_snapshots(params: DiffSnapshotsInput, ctx: Context) -> str:
 
 @mcp.tool(name="td_restore_snapshot")
 async def td_restore_snapshot(params: RestoreSnapshotInput, ctx: Context) -> str:
+    """Restore parameter values from a previously saved snapshot.
+
+    This tool replays the parameter values captured in the snapshot back onto
+    the live TouchDesigner network.  It restores *parameter values only* — it
+    does not add, remove, or rewire nodes.  For structural rollback (topology
+    changes such as added/deleted nodes or connection changes) use
+    TouchDesigner's native Ctrl+Z undo stack instead.
+
+    Use ``dry_run=True`` to preview what would be changed without applying
+    anything.  Supply ``partial`` with a list of node paths to limit the
+    restore to a subset of the snapshot.
+    """
     finish = _start_tool(ctx, "td_restore_snapshot")
     try:
         manager = _get_snapshot_manager(ctx)
