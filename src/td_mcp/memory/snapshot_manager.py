@@ -88,7 +88,11 @@ class SnapshotManager:
         nodes_a = snapshot_a.get("nodes", {})
         nodes_b = snapshot_b.get("nodes", {})
 
-        changed_params = []
+        changed_params: List[Dict[str, Any]] = []
+        added_expressions: List[Dict[str, Any]] = []
+        removed_expressions: List[Dict[str, Any]] = []
+        modified_expressions: List[Dict[str, Any]] = []
+
         for path, node_a in nodes_a.items():
             node_b = nodes_b.get(path)
             if not node_b:
@@ -110,18 +114,63 @@ class SnapshotManager:
                             "value_b": value_b,
                         }
                     )
+                # Expression diff
+                expr_a = param_a.get("expression")
+                expr_b = param_b.get("expression")
+                if expr_a != expr_b:
+                    if expr_a is None and expr_b is not None:
+                        added_expressions.append(
+                            {"path": path, "param": param_name, "expression": expr_b}
+                        )
+                    elif expr_a is not None and expr_b is None:
+                        removed_expressions.append(
+                            {"path": path, "param": param_name, "expression": expr_a}
+                        )
+                    else:
+                        modified_expressions.append(
+                            {
+                                "path": path,
+                                "param": param_name,
+                                "expression_a": expr_a,
+                                "expression_b": expr_b,
+                            }
+                        )
 
         added_nodes = sorted(set(nodes_b.keys()) - set(nodes_a.keys()))
         removed_nodes = sorted(set(nodes_a.keys()) - set(nodes_b.keys()))
+
+        # Connection diff — normalize each connection as a comparable tuple
+        def _conn_tuple(c: Any) -> tuple:
+            return (
+                c.get("from", ""),
+                c.get("to", ""),
+                c.get("from_index", 0),
+                c.get("to_index", 0),
+            )
+
+        conns_a = {_conn_tuple(c) for c in snapshot_a.get("connections", [])}
+        conns_b = {_conn_tuple(c) for c in snapshot_b.get("connections", [])}
+        added_connections = sorted(conns_b - conns_a)
+        removed_connections = sorted(conns_a - conns_b)
+
+        total_expr = len(added_expressions) + len(removed_expressions) + len(modified_expressions)
 
         return {
             "changed_params": changed_params,
             "added_nodes": added_nodes,
             "removed_nodes": removed_nodes,
+            "added_connections": added_connections,
+            "removed_connections": removed_connections,
+            "added_expressions": added_expressions,
+            "removed_expressions": removed_expressions,
+            "modified_expressions": modified_expressions,
             "summary": (
                 f"{len(changed_params)} params changed, "
                 f"{len(added_nodes)} nodes added, "
-                f"{len(removed_nodes)} nodes removed."
+                f"{len(removed_nodes)} nodes removed, "
+                f"{len(added_connections)} connections added, "
+                f"{len(removed_connections)} connections removed, "
+                f"{total_expr} expression changes."
             ),
         }
 
