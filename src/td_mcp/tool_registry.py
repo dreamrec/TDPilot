@@ -3040,6 +3040,8 @@ async def td_get_state_vector(params: StateVectorInput, ctx: Context) -> str:
                 return _as_json_output(payload)
 
         state_vector = await _build_state_vector(params.path, ctx)
+        if len(_STATE_VECTOR_CACHE) >= 100:
+            _STATE_VECTOR_CACHE.clear()
         _STATE_VECTOR_CACHE[cache_key] = {
             "cached_at": now,
             "data": state_vector,

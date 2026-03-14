@@ -121,7 +121,8 @@ config['mcpServers']['touchdesigner'] = {
     'args': ['run', '--directory', repo_path, 'tdpilot'],
     'env': {
         'TD_MCP_HOST': '127.0.0.1',
-        'TD_MCP_PORT': '9981'
+        'TD_MCP_PORT': '9981',
+        'TD_MCP_WS_PORT': '9982'
     }
 }
 

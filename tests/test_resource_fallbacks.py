@@ -44,16 +44,19 @@ def _find_decorated_functions(tree: ast.Module, decorator_substring: str) -> dic
             continue
         for dec in node.decorator_list:
             if isinstance(dec, ast.Call):
-                # Check decorator function attribute or name
-                dec_src = ast.dump(dec)
-                if decorator_substring in dec_src:
-                    # Extract name= keyword if present
-                    for kw in dec.keywords:
-                        if kw.arg == "name" and isinstance(kw.value, ast.Constant):
-                            results[kw.value.value] = node.name
-                            break
-                    else:
-                        results[node.name] = node.name
+                func = dec.func
+                if isinstance(func, ast.Attribute) and func.attr == decorator_substring:
+                    pass
+                elif isinstance(func, ast.Name) and func.id == decorator_substring:
+                    pass
+                else:
+                    continue
+                for kw in dec.keywords:
+                    if kw.arg == "name" and isinstance(kw.value, ast.Constant):
+                        results[kw.value.value] = node.name
+                        break
+                else:
+                    results[node.name] = node.name
     return results
 
 

@@ -152,9 +152,11 @@ async def determine_config(args: argparse.Namespace) -> RenderConfig:
 def _chunk_ranges(start_frame: int, end_frame: int, size: int):
     f = start_frame
     while f <= end_frame:
-        end = min(f + size - 1, end_frame)
-        yield f, end
-        f = end + 1
+        chunk_end = min(f + size - 1, end_frame)
+        if chunk_end < f:
+            break
+        yield f, chunk_end
+        f = chunk_end + 1
 
 
 async def export_frames(cfg: RenderConfig) -> None:

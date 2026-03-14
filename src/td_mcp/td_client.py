@@ -9,6 +9,7 @@ and error normalization.
 import asyncio
 import httpx
 import json
+import threading
 import time
 import logging
 from typing import Any, Dict, Optional
@@ -194,11 +195,13 @@ class TDClient:
 
 # Module-level singleton for convenience
 _default_client: Optional[TDClient] = None
+_client_lock = threading.Lock()
 
 
 def get_client(host: str = "127.0.0.1", port: int = 9981) -> TDClient:
     """Get or create the default TDClient singleton."""
     global _default_client
-    if _default_client is None:
-        _default_client = TDClient(host=host, port=port)
-    return _default_client
+    with _client_lock:
+        if _default_client is None:
+            _default_client = TDClient(host=host, port=port)
+        return _default_client

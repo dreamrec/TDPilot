@@ -193,7 +193,8 @@ class SnapshotManager:
             self._delete_snapshot_file(oldest)
 
     def _load_from_disk(self) -> None:
-        assert self._storage_dir is not None
+        if self._storage_dir is None:
+            raise RuntimeError("_load_from_disk called without a storage directory")
         loaded: List[Dict[str, Any]] = []
         for path in sorted(self._storage_dir.glob("*.json")):
             item = self._load_snapshot_file(path)
@@ -208,7 +209,8 @@ class SnapshotManager:
         self._trim()
 
     def _snapshot_file(self, snapshot_id: str) -> Path:
-        assert self._storage_dir is not None
+        if self._storage_dir is None:
+            raise RuntimeError("_snapshot_file called without a storage directory")
         return self._storage_dir / f"{snapshot_id}.json"
 
     def _persist_snapshot(self, payload: Dict[str, Any]) -> None:

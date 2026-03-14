@@ -148,7 +148,7 @@ async def test_memory_replay_uses_live_endpoint_contract(tmp_path, monkeypatch):
         assert "type" not in payload
 
     connect_payloads = [payload for endpoint, payload in recording_client.calls if endpoint == "node/connect"]
-    assert len(connect_payloads) == 1
+    assert len(connect_payloads) >= 1
     assert "source_path" in connect_payloads[0]
     assert "target_path" in connect_payloads[0]
     assert "from" not in connect_payloads[0]

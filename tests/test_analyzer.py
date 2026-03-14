@@ -85,7 +85,7 @@ async def test_small_network_relative_paths(small_network):
     recipe = result["recipe"]
     # All paths in recipe should be relative
     for path in recipe["nodes"]:
-        assert not path.startswith("/project1/feedback/") or path == "/"
+        assert not path.startswith("/project1/feedback")
 
 
 @pytest.mark.asyncio

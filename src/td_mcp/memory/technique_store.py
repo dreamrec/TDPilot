@@ -320,7 +320,8 @@ class TechniqueStore:
     def _file_for(self, scope: str) -> Path:
         if scope == "global":
             return self._global_dir / "techniques.json"
-        assert self._project_dir is not None
+        if self._project_dir is None:
+            raise ValueError("No project directory configured for project-scoped techniques")
         return self._project_dir / "techniques.json"
 
     def _load(self) -> None:

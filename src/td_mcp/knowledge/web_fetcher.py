@@ -16,6 +16,7 @@ from typing import Optional
 # Rate-limit state (module-level)
 _last_request_time: float = 0.0
 _RATE_LIMIT_SECONDS: float = 1.0
+_rate_limit_lock: asyncio.Lock = asyncio.Lock()
 
 _CACHE_DIR = Path.home() / ".tdpilot" / "cache" / "cards"
 
@@ -28,11 +29,12 @@ def is_enabled() -> bool:
 async def _rate_limit() -> None:
     """Enforce a minimum 1-second gap between requests."""
     global _last_request_time
-    now = time.monotonic()
-    wait = _RATE_LIMIT_SECONDS - (now - _last_request_time)
-    if wait > 0:
-        await asyncio.sleep(wait)
-    _last_request_time = time.monotonic()
+    async with _rate_limit_lock:
+        now = time.monotonic()
+        wait = _RATE_LIMIT_SECONDS - (now - _last_request_time)
+        if wait > 0:
+            await asyncio.sleep(wait)
+        _last_request_time = time.monotonic()
 
 
 def _cache_path(kind: str, key: str) -> Path:
