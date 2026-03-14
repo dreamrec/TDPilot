@@ -1,0 +1,77 @@
+# Community Brain Template
+# Copy this file and customize for your source
+# Rename to: <source_name>.yaml (e.g., paketa.yaml)
+
+name: my_source                          # lowercase, no spaces
+display_name: "My Tutorial Source"       # human-readable name
+trust_tier: community                    # official | community | personal | experimental
+version: "1.0"
+source_url: "https://example.com"        # where the content comes from
+description: "Short description of what this brain covers"
+
+# Path to scraped HTML/text files
+scrape_path: "/path/to/scraped/files/"
+
+# Content extraction — adjust these CSS selectors for your source
+content_selector: "body"                 # CSS selector for main content
+  # Common alternatives:
+  # ".post-content"       — WordPress blogs
+  # ".article-body"       — Medium-style sites
+  # "#main-content"       — general sites
+  # "body"                — plain HTML or transcripts
+
+strip_selectors:                         # Elements to remove before extracting text
+  - "nav"
+  - "footer"
+  - ".sidebar"
+  - ".comments"
+  - ".ads"
+  - "script"
+  - "style"
+
+# Page classification (simple for most community sources)
+page_rules:
+  - pattern: "*"
+    doc_type: tutorial
+  # Add more specific rules if your source has distinct content types:
+  # - pattern: "recipe-*"
+  #   doc_type: recipe
+  # - pattern: "tip-*"
+  #   doc_type: tip
+
+# Files to skip
+skip_patterns:
+  - "*.css"
+  - "*.js"
+  - "*.png"
+  - "*.jpg"
+  - "*.gif"
+
+# URL reconstruction
+url_template: "https://example.com/{page_name}"
+
+# Special parsers — usually disabled for community sources
+special_parsers:
+  release_notes: false
+  operator_changelog: false
+
+# ---
+# Tips for specific source types:
+#
+# YouTube transcripts:
+#   - One .html or .txt file per video
+#   - Name files descriptively: "audio-reactive-particles.html"
+#   - content_selector: "body" (transcripts are usually plain text)
+#
+# Blog posts:
+#   - Scrape with wget, httrack, or similar
+#   - content_selector: ".post-content" or ".entry-content"
+#
+# Forum threads:
+#   - Be selective — only scrape solved/high-quality threads
+#   - content_selector: ".post-body" or ".message-content"
+#
+# Workshop/personal notes:
+#   - Convert Markdown to HTML, or use .txt files
+#   - trust_tier: personal
+#   - content_selector: "body"

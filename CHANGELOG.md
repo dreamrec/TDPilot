@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.3.3 - 2026-03-15
+
+### Added
+- **Docs Brain** — full-corpus search engine over docs.derivative.ca replacing hand-curated JSON knowledge cards.
+  - SQLite FTS5 index: 2,478 pages → 25,887 chunks, 674 operators, 10 tracked builds, 245 operators with changelog entries.
+  - BM25 ranking with boosted weights (section_title 10×, operator_name 8×, parameter_names 5×, python_symbols 3×, content 1×).
+  - Intent-based query routing: auto-detects operator names, build numbers, palette/glossary keywords before FTS5 search.
+  - Release notes intelligence: per-operator changelog and build manifest across 10 builds.
+  - Drop-in replacement for CardIndex with automatic fallback when brain DB is absent.
+- `scripts/build_docs_brain.py` — four-stage offline pipeline: normalize HTML → chunk by headings → index in FTS5 → build release artifacts.
+- `docs/BRAINS.md` — step-by-step rebuild guide for regenerating the brain after a new docs scrape.
+
+### Changed
+- POPx skill updated for copyright compliance: references must be built locally from licensed copy (see `references/BUILD.md`).
+- Knowledge tool stack (`td_search_official_docs`, `td_get_operator_doc`, etc.) now queries Docs Brain when available, falls back to CardIndex.
+
 ## 1.3.2 - 2026-03-14
 
 ### Added

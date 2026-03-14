@@ -1,0 +1,81 @@
+# Derivative Official Docs Brain
+# Source: docs.derivative.ca (scraped offline)
+# Trust: official — this is the ground truth for TouchDesigner facts
+
+name: derivative
+display_name: "Derivative Official Docs"
+trust_tier: official
+version: "1.0"
+source_url: "https://docs.derivative.ca"
+description: "Official TouchDesigner documentation — operators, Python API, palette, glossary, release notes"
+
+# Path to scraped HTML files
+# Set TDPILOT_DOCS_SCRAPE_PATH env var, or replace with absolute path
+scrape_path: "${TDPILOT_DOCS_SCRAPE_PATH}"
+
+# Content extraction
+content_selector: "#mw-content-text"
+strip_selectors:
+  - "#toc"
+  - ".mw-editsection"
+  - ".noprint"
+  - "#siteSub"
+  - "#contentSub"
+  - "#jump-to-nav"
+  - ".mw-jump-link"
+  - "script"
+  - "style"
+
+# Lingo terms: strip the wrapper span but keep inner text
+unwrap_selectors:
+  - ".mw-lingo-term"
+
+# Page classification (matched against filename, first match wins)
+page_rules:
+  - pattern: "File:*"
+    action: skip
+  - pattern: "*_TOP|*_CHOP|*_SOP|*_DAT|*_COMP|*_MAT|*_POP"
+    doc_type: operator
+  - pattern: "*_Class|*Class"
+    doc_type: python_api
+  - pattern: "Release_Notes/*"
+    doc_type: release_notes
+  - pattern: "Palette:*"
+    doc_type: palette
+  - pattern: "OP_Snippets*"
+    doc_type: snippet
+  - pattern: "*Glossary*"
+    doc_type: glossary
+  - pattern: "*"
+    doc_type: general
+
+# File patterns to skip entirely
+skip_patterns:
+  - "File:*"
+  - "*.css"
+  - "*.js"
+  - "*.png"
+  - "*.jpg"
+  - "*.gif"
+  - "*.ico"
+  - "*.svg"
+  - "load.php*"
+  - "index.php*"
+
+# URL reconstruction for source links
+url_template: "https://docs.derivative.ca/{page_name}"
+
+# Operator family detection (from filename suffix)
+operator_families:
+  - TOP
+  - CHOP
+  - SOP
+  - DAT
+  - COMP
+  - MAT
+  - POP
+
+# Special parsers (derivative-specific)
+special_parsers:
+  release_notes: true
+  operator_changelog: true
