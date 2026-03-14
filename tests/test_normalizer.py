@@ -114,3 +114,59 @@ class TestSlugify:
 
     def test_special_chars(self):
         assert slugify("Build 2025.32460 Mar 10, 2026") == "build_2025_32460_mar_10_2026"
+
+
+from pathlib import Path
+
+from td_mcp.knowledge.docsbrain.normalizer import normalize_file
+
+
+FIXTURES = Path(__file__).parent / "fixtures" / "sample_pages"
+
+
+class TestNormalizeFile:
+    def test_operator_page(self):
+        result = normalize_file(FIXTURES / "Composite_TOP.html", "Composite_TOP.html")
+        assert result is not None
+        assert result["page_id"] == "composite_top"
+        assert result["title"] == "Composite TOP"
+        assert result["doc_type"] == "operator"
+        assert result["operator_family"] == "TOP"
+        assert "Summary" in result["headings"]
+        assert "Parameters" in result["headings"]
+        assert "text_hash" in result
+
+    def test_boilerplate_stripped(self):
+        result = normalize_file(FIXTURES / "Composite_TOP.html", "Composite_TOP.html")
+        assert result is not None
+        # Edit links, navigation, footer should be gone
+        assert "[edit]" not in result["text"]
+        assert "Jump to navigation" not in result["text"]
+        assert "Footer here" not in result["text"]
+        # But actual content should be present
+        assert "Composite TOP" in result["text"]
+        assert "Operand" in result["text"]
+
+    def test_lingo_terms_unwrapped(self):
+        result = normalize_file(FIXTURES / "Composite_TOP.html", "Composite_TOP.html")
+        assert result is not None
+        # Lingo span text should be kept, wrapper removed
+        assert "Composite TOP" in result["text"]
+
+    def test_skips_non_html(self):
+        result = normalize_file(FIXTURES / "Composite_TOP.html", "style.css")
+        assert result is None
+
+    def test_skips_file_pages(self):
+        result = normalize_file(FIXTURES / "Composite_TOP.html", "File:some_image.jpg.html")
+        assert result is None
+
+    def test_release_notes_page(self):
+        result = normalize_file(
+            FIXTURES / "Release_Notes" / "2025.30000.html",
+            "Release_Notes/2025.30000.html",
+        )
+        assert result is not None
+        assert result["doc_type"] == "release_notes"
+        assert result["page_id"] == "release_notes__2025_30000"
+        assert "Build 2025.32460" in result["text"] or "New Features" in result["headings"]
