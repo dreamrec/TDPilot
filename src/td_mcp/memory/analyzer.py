@@ -9,6 +9,16 @@ from typing import Any, Dict, List, Optional
 SMALL_MAX = 10
 MEDIUM_MAX = 20
 
+# File extensions that indicate external assets referenced in param values
+_ASSET_EXTENSIONS = (
+    ".toe", ".tox", ".txt", ".csv", ".json", ".xml",
+    ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".tga", ".exr", ".hdr",
+    ".mp4", ".mov", ".avi", ".mkv", ".webm",
+    ".wav", ".mp3", ".aiff", ".ogg", ".flac",
+    ".obj", ".fbx", ".glb", ".gltf", ".abc",
+    ".glsl", ".vert", ".frag",
+)
+
 
 async def analyze_network(
     client: "TDClient",  # noqa: F821
@@ -19,6 +29,7 @@ async def analyze_network(
     name: str = "",
     description: str = "",
     tags: Optional[List[str]] = None,
+    td_build: str = "",
 ) -> Dict[str, Any]:
     """Analyze a TD network subtree and return a technique recipe dict.
 
@@ -66,11 +77,13 @@ async def analyze_network(
         "complexity": complexity,
         "families": families,
         "op_types": op_types,
+        "required_op_types": sorted(op_types.keys()),
         "recipe": recipe,
         "key_params": key_params,
         "name": name,
         "description": description,
         "tags": sorted(set(tags or [])),
+        "td_build": td_build,
     }
 
 
@@ -107,6 +120,10 @@ async def _collect_subtree(
             "type": detail.get("type"),
             "family": detail.get("family"),
             "params": detail.get("parameters", {}),
+            "nodeX": detail.get("nodeX"),
+            "nodeY": detail.get("nodeY"),
+            "color": detail.get("color"),
+            "comment": detail.get("comment"),
         }
 
         # Collect connections from input list
@@ -167,20 +184,36 @@ def _build_full_recipe(
         return p
 
     recipe_nodes: Dict[str, Dict[str, Any]] = {}
+    external_assets: List[str] = []
+    layout: Dict[str, Dict[str, Any]] = {}
+
     for abs_path, node in nodes.items():
         rel_path = _rel(abs_path)
-        # Extract expressions from params
+        # Extract expressions from params and scan for external assets
         params_clean: Dict[str, Any] = {}
         expressions: Dict[str, str] = {}
         raw_params = node.get("params", {})
         for pname, pval in raw_params.items():
             if isinstance(pval, dict):
-                params_clean[pname] = pval.get("value")
+                value = pval.get("value")
+                params_clean[pname] = value
                 expr = pval.get("expression") or pval.get("expr")
                 if expr:
                     expressions[pname] = expr
+                # Scan value for file paths
+                if isinstance(value, str) and any(
+                    value.lower().endswith(ext) for ext in _ASSET_EXTENSIONS
+                ):
+                    if value not in external_assets:
+                        external_assets.append(value)
             else:
                 params_clean[pname] = pval
+                # Scan plain string values for file paths
+                if isinstance(pval, str) and any(
+                    pval.lower().endswith(ext) for ext in _ASSET_EXTENSIONS
+                ):
+                    if pval not in external_assets:
+                        external_assets.append(pval)
 
         recipe_nodes[rel_path] = {
             "name": node.get("name"),
@@ -190,6 +223,23 @@ def _build_full_recipe(
         }
         if expressions:
             recipe_nodes[rel_path]["expressions"] = expressions
+
+        # Build layout entry
+        layout_entry: Dict[str, Any] = {}
+        node_x = node.get("nodeX")
+        node_y = node.get("nodeY")
+        if node_x is not None:
+            layout_entry["x"] = node_x
+        if node_y is not None:
+            layout_entry["y"] = node_y
+        color = node.get("color")
+        if color is not None:
+            layout_entry["color"] = color
+        comment = node.get("comment")
+        if comment is not None:
+            layout_entry["comment"] = comment
+        if layout_entry:
+            layout[rel_path] = layout_entry
 
     recipe_connections = [
         {
@@ -204,6 +254,8 @@ def _build_full_recipe(
     return {
         "nodes": recipe_nodes,
         "connections": recipe_connections,
+        "external_assets": external_assets,
+        "layout": layout,
     }
 
 
