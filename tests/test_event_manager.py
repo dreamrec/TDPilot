@@ -34,10 +34,10 @@ def test_subscription_registry_roundtrip():
     mcp = FakeMCPServer()
     manager = EventManager(mcp_server=mcp, port=19982, max_history=10)
 
-    manager.register_subscription("/project1/audio1", {"event_types": ["chop_change"]})
-    assert manager.get_subscription("/project1/audio1") == {"event_types": ["chop_change"]}
-    assert manager.unregister_subscription("/project1/audio1") is True
-    assert manager.unregister_subscription("/project1/audio1") is False
+    manager.register_subscription("/project1/audio1", "chop_change", {"event_types": ["chop_change"]})
+    assert manager.get_subscription("/project1/audio1", "chop_change") == {"event_types": ["chop_change"]}
+    assert manager.unregister_subscription("/project1/audio1", "chop_change") is True
+    assert manager.unregister_subscription("/project1/audio1", "chop_change") is False
 
 
 @pytest.mark.asyncio

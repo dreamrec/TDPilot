@@ -1018,7 +1018,7 @@ async def _build_state_vector(path: str, ctx: Context) -> Dict[str, Any]:
         "events": {
             "recent_count": len(recent_events),
             "subscriptions": len(subscriptions),
-            "subscription_paths": sorted(subscriptions.keys()),
+            "subscription_paths": sorted(f"{p}:{et}" for p, et in subscriptions.keys()),
         },
         "monitoring": {
             "visual_monitors": len(active_monitors),
@@ -1524,12 +1524,14 @@ async def td_resource_timeline(ctx: Context) -> Dict[str, Any]:
     manager = _get_event_manager(ctx)
     cached = manager.get_state("td://timeline/state")
     if cached is not None:
+        cached["mode"] = "authoritative"
         return cached
 
     timeline = await _get_client(ctx).request("timeline")
     return {
         "resource_schema_version": 1,
         "resource_uri": "td://timeline/state",
+        "mode": "authoritative",
         "source": "pull",
         "state": timeline,
     }
@@ -1541,14 +1543,29 @@ async def td_resource_chop_channel(encoded_path: str, channel: str, ctx: Context
     uri = chop_uri(path, channel)
     cached = _get_event_manager(ctx).get_state(uri)
     if cached is not None:
+        cached["mode"] = "cache"
         return cached
-    return {
-        "resource_schema_version": 1,
-        "resource_uri": uri,
-        "path": path,
-        "channel": channel,
-        "available": False,
-    }
+    # Read-through fallback: one-shot TD API call
+    try:
+        data = await _get_client(ctx).request("chop_data", {"path": path, "channels": [channel]})
+        return {
+            "resource_schema_version": 1,
+            "resource_uri": uri,
+            "mode": "cache",
+            "source": "fallback",
+            "path": path,
+            "channel": channel,
+            "data": data,
+        }
+    except Exception:
+        return {
+            "resource_schema_version": 1,
+            "resource_uri": uri,
+            "mode": "cache",
+            "path": path,
+            "channel": channel,
+            "available": False,
+        }
 
 
 @mcp.resource("td://par/path/{encoded_path}/name/{name}", name="td_parameter")
@@ -1557,14 +1574,29 @@ async def td_resource_parameter(encoded_path: str, name: str, ctx: Context) -> D
     uri = par_uri(path, name)
     cached = _get_event_manager(ctx).get_state(uri)
     if cached is not None:
+        cached["mode"] = "cache"
         return cached
-    return {
-        "resource_schema_version": 1,
-        "resource_uri": uri,
-        "path": path,
-        "name": name,
-        "available": False,
-    }
+    # Read-through fallback: one-shot TD API call
+    try:
+        data = await _get_client(ctx).request("get_params", {"path": path, "names": [name]})
+        return {
+            "resource_schema_version": 1,
+            "resource_uri": uri,
+            "mode": "cache",
+            "source": "fallback",
+            "path": path,
+            "name": name,
+            "data": data,
+        }
+    except Exception:
+        return {
+            "resource_schema_version": 1,
+            "resource_uri": uri,
+            "mode": "cache",
+            "path": path,
+            "name": name,
+            "available": False,
+        }
 
 
 @mcp.resource("td://cook/path/{encoded_path}", name="td_cook_state")
@@ -1573,13 +1605,27 @@ async def td_resource_cook(encoded_path: str, ctx: Context) -> Dict[str, Any]:
     uri = cook_uri(path)
     cached = _get_event_manager(ctx).get_state(uri)
     if cached is not None:
+        cached["mode"] = "cache"
         return cached
-    return {
-        "resource_schema_version": 1,
-        "resource_uri": uri,
-        "path": path,
-        "available": False,
-    }
+    # Read-through fallback: one-shot TD API call
+    try:
+        data = await _get_client(ctx).request("cooking_info", {"path": path})
+        return {
+            "resource_schema_version": 1,
+            "resource_uri": uri,
+            "mode": "cache",
+            "source": "fallback",
+            "path": path,
+            "data": data,
+        }
+    except Exception:
+        return {
+            "resource_schema_version": 1,
+            "resource_uri": uri,
+            "mode": "cache",
+            "path": path,
+            "available": False,
+        }
 
 
 @mcp.resource("td://error/path/{encoded_path}", name="td_error_state")
@@ -1588,13 +1634,27 @@ async def td_resource_error(encoded_path: str, ctx: Context) -> Dict[str, Any]:
     uri = error_uri(path)
     cached = _get_event_manager(ctx).get_state(uri)
     if cached is not None:
+        cached["mode"] = "cache"
         return cached
-    return {
-        "resource_schema_version": 1,
-        "resource_uri": uri,
-        "path": path,
-        "available": False,
-    }
+    # Read-through fallback: one-shot TD API call
+    try:
+        data = await _get_client(ctx).request("get_errors", {"path": path})
+        return {
+            "resource_schema_version": 1,
+            "resource_uri": uri,
+            "mode": "cache",
+            "source": "fallback",
+            "path": path,
+            "data": data,
+        }
+    except Exception:
+        return {
+            "resource_schema_version": 1,
+            "resource_uri": uri,
+            "mode": "cache",
+            "path": path,
+            "available": False,
+        }
 
 
 @mcp.resource("td://top/path/{encoded_path}/frame", name="td_top_frame")
@@ -1603,10 +1663,12 @@ async def td_resource_top_frame(encoded_path: str, ctx: Context) -> Dict[str, An
     uri = top_frame_uri(path)
     cached = _get_event_manager(ctx).get_state(uri)
     if cached is not None:
+        cached["mode"] = "cache"
         return cached
     return {
         "resource_schema_version": 1,
         "resource_uri": uri,
+        "mode": "cache",
         "path": path,
         "available": False,
     }
@@ -1619,12 +1681,14 @@ async def td_resource_job(job_id: str, ctx: Context) -> Dict[str, Any]:
         return {
             "resource_schema_version": 1,
             "resource_uri": f"td://job/{job_id}",
+            "mode": "authoritative",
             "job_id": job_id,
             "available": False,
         }
     return {
         "resource_schema_version": 1,
         "resource_uri": f"td://job/{job_id}",
+        "mode": "authoritative",
         "job": job,
     }
 
@@ -2093,7 +2157,8 @@ async def td_subscribe(params: SubscribeInput, ctx: Context) -> str:
         provisioning = await _get_client(ctx).request("monitor/subscribe", body)
 
         event_manager = _get_event_manager(ctx)
-        event_manager.register_subscription(params.path, body)
+        for et in params.event_types:
+            event_manager.register_subscription(params.path, et, body)
 
         payload = {
             "success": True,
@@ -2129,10 +2194,10 @@ async def td_unsubscribe(params: UnsubscribeInput, ctx: Context) -> str:
         )
 
         event_manager = _get_event_manager(ctx)
-        removed = event_manager.unregister_subscription(params.path)
+        removed = event_manager.unregister_all_for_path(params.path)
 
         payload = {
-            "success": bool(removed),
+            "success": removed > 0,
             "path": params.path,
             "provisioning": provisioning,
             "active_subscriptions": len(event_manager.list_subscriptions()),

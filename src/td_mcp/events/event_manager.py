@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from collections import deque
 from datetime import datetime, timezone
-from typing import Any, Deque, Dict, List, Optional
+from typing import Any, Deque, Dict, List, Optional, Tuple
 
 import websockets
 
@@ -20,7 +20,7 @@ class EventManager:
         self._port = port
         self._state: Dict[str, Any] = {}
         self._history: Deque[Dict[str, Any]] = deque(maxlen=max_history)
-        self._subscriptions: Dict[str, Dict[str, Any]] = {}
+        self._subscriptions: Dict[Tuple[str, str], Dict[str, Any]] = {}
         self._server = None
 
     async def start(self) -> None:
@@ -93,16 +93,23 @@ class EventManager:
             except Exception:
                 pass
 
-    def register_subscription(self, path: str, config: Dict[str, Any]) -> None:
-        self._subscriptions[path] = config
+    def register_subscription(self, path: str, event_type: str, config: Dict[str, Any]) -> None:
+        self._subscriptions[(path, event_type)] = config
 
-    def unregister_subscription(self, path: str) -> bool:
-        return self._subscriptions.pop(path, None) is not None
+    def unregister_subscription(self, path: str, event_type: str) -> bool:
+        return self._subscriptions.pop((path, event_type), None) is not None
 
-    def get_subscription(self, path: str) -> Optional[Dict[str, Any]]:
-        return self._subscriptions.get(path)
+    def unregister_all_for_path(self, path: str) -> int:
+        """Remove all subscriptions for a given path, return count removed."""
+        keys = [k for k in self._subscriptions if k[0] == path]
+        for k in keys:
+            del self._subscriptions[k]
+        return len(keys)
 
-    def list_subscriptions(self) -> Dict[str, Dict[str, Any]]:
+    def get_subscription(self, path: str, event_type: str) -> Optional[Dict[str, Any]]:
+        return self._subscriptions.get((path, event_type))
+
+    def list_subscriptions(self) -> Dict[Tuple[str, str], Dict[str, Any]]:
         return dict(self._subscriptions)
 
     def get_state(self, resource_uri: str) -> Optional[Dict[str, Any]]:
