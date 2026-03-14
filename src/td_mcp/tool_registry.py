@@ -94,6 +94,10 @@ from td_mcp.models import (
     VisualMonitorInput,
     ListSnapshotsInput,
     ExecPythonInput,
+    PlanPatchInput,
+    PreflightPatchInput,
+    ValidateRecipeInput,
+    AuditProjectInput,
 )
 from td_mcp.safety import SafetyManager
 from td_mcp.services import ServiceContainer
@@ -3630,6 +3634,357 @@ async def td_describe_surface(ctx: Context) -> Dict[str, Any]:
         "resource_count": resource_count,
         "capabilities": caps.to_dict(),
     }
+
+
+# ─────────────────────────────────────────────────────────────
+# Planning & Validation Tools (72-75)
+# ─────────────────────────────────────────────────────────────
+
+@mcp.tool(name="td_plan_patch")
+async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> Dict[str, Any]:
+    """Generate a structured patch plan for an intent without mutating the project.
+
+    Inspects the current state of the target path, validates op types against the
+    knowledge corpus, and optionally loads a recipe to generate ordered steps. Returns
+    a plan dict that can be validated with td_preflight_patch before execution.
+    """
+    finish = _start_tool(ctx, "td_plan_patch")
+    try:
+        client = _get_client(ctx)
+        svc = _get_services(ctx)
+        idx = getattr(svc, "card_index", None)
+
+        # Inspect current state of the target path
+        current_nodes = []
+        try:
+            node_data = await client.request("get_nodes", {"path": params.target_path, "limit": 200})
+            current_nodes = node_data if isinstance(node_data, list) else node_data.get("nodes", [])
+        except Exception as exc:
+            current_nodes = []
+
+        existing_names = {n.get("name", "") for n in current_nodes if isinstance(n, dict)}
+
+        # If a recipe_id is provided, load it and generate steps from its nodes
+        recipe_steps = []
+        recipe_info = None
+        if params.recipe_id:
+            try:
+                store = _get_technique_store(ctx)
+                recipe_info = store.get(params.recipe_id, scope="project")
+                if recipe_info is None:
+                    recipe_info = store.get(params.recipe_id, scope="global")
+                if recipe_info:
+                    nodes = recipe_info.get("nodes", [])
+                    for node in nodes:
+                        op_type = node.get("type", "")
+                        card_ok = True
+                        if idx is not None:
+                            card_ok = idx.get_operator(op_type) is not None
+                        recipe_steps.append({
+                            "op": "create_node",
+                            "op_type": op_type,
+                            "name": node.get("name", ""),
+                            "parent_path": params.target_path,
+                            "known_to_knowledge_corpus": card_ok,
+                        })
+            except Exception as exc:
+                recipe_info = {"error": str(exc)}
+
+        plan = {
+            "intent": params.intent,
+            "target_path": params.target_path,
+            "recipe_id": params.recipe_id,
+            "current_node_count": len(current_nodes),
+            "existing_names": sorted(existing_names),
+            "steps": recipe_steps,
+            "note": (
+                "This plan does NOT mutate the project. "
+                "Validate with td_preflight_patch before execution."
+            ),
+        }
+        if recipe_info and not isinstance(recipe_info, dict) or (
+            isinstance(recipe_info, dict) and "error" not in recipe_info and recipe_info
+        ):
+            plan["recipe_name"] = (recipe_info or {}).get("name", "")
+
+        _audit_log(ctx, "td_plan_patch", {"intent": params.intent, "target_path": params.target_path})
+        return {"success": True, "plan": plan}
+    except Exception as exc:
+        _record_tool_error(ctx, "td_plan_patch")
+        return {"error": str(exc)}
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_preflight_patch")
+async def td_preflight_patch(params: PreflightPatchInput, ctx: Context) -> Dict[str, Any]:
+    """Validate a plan from td_plan_patch before execution.
+
+    Checks that the target path exists, all op types in steps have knowledge cards,
+    and that there are no name conflicts with existing nodes. Returns a validation
+    report with any warnings or errors found.
+    """
+    finish = _start_tool(ctx, "td_preflight_patch")
+    try:
+        client = _get_client(ctx)
+        svc = _get_services(ctx)
+        idx = getattr(svc, "card_index", None)
+
+        plan = params.plan
+        target_path = plan.get("target_path", "/project1")
+        steps = plan.get("steps", [])
+        existing_names = set(plan.get("existing_names", []))
+
+        warnings = []
+        errors = []
+
+        # Check target path exists
+        path_exists = False
+        try:
+            node_data = await client.request("get_nodes", {"path": target_path, "limit": 1})
+            path_exists = True
+            # Refresh existing names from live state
+            live_nodes = node_data if isinstance(node_data, list) else node_data.get("nodes", [])
+            for n in live_nodes:
+                if isinstance(n, dict):
+                    existing_names.add(n.get("name", ""))
+        except Exception:
+            errors.append("Target path '{}' does not exist or is unreachable.".format(target_path))
+
+        # Validate each step
+        for i, step in enumerate(steps):
+            op_type = step.get("op_type", "")
+            name = step.get("name", "")
+
+            # Check knowledge card
+            if op_type and idx is not None:
+                card = idx.get_operator(op_type)
+                if card is None:
+                    warnings.append(
+                        "Step {}: op_type '{}' has no knowledge card — verify it is a valid TD operator.".format(
+                            i, op_type
+                        )
+                    )
+
+            # Check name conflicts
+            if name and name in existing_names:
+                warnings.append(
+                    "Step {}: name '{}' already exists at '{}' — will need rename.".format(
+                        i, name, target_path
+                    )
+                )
+
+        valid = len(errors) == 0
+        _audit_log(ctx, "td_preflight_patch", {
+            "target_path": target_path,
+            "steps": len(steps),
+            "valid": valid,
+        })
+        return {
+            "success": True,
+            "valid": valid,
+            "path_exists": path_exists,
+            "errors": errors,
+            "warnings": warnings,
+            "step_count": len(steps),
+        }
+    except Exception as exc:
+        _record_tool_error(ctx, "td_preflight_patch")
+        return {"error": str(exc)}
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_validate_recipe")
+async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> Dict[str, Any]:
+    """Validate a technique recipe from the library or an inline dict.
+
+    Checks that required op types exist in the knowledge corpus, verifies the recipe
+    has the expected structure, and reports build compatibility for current TD version.
+    """
+    finish = _start_tool(ctx, "td_validate_recipe")
+    try:
+        svc = _get_services(ctx)
+        idx = getattr(svc, "card_index", None)
+
+        recipe = params.recipe
+        recipe_id = params.recipe_id
+
+        # Load recipe from store if recipe_id provided and no inline recipe
+        if recipe is None and recipe_id:
+            try:
+                store = _get_technique_store(ctx)
+                recipe = store.get(recipe_id, scope=params.scope)
+                if recipe is None and params.scope != "global":
+                    recipe = store.get(recipe_id, scope="global")
+            except Exception as exc:
+                return {"error": "Could not load recipe '{}': {}".format(recipe_id, exc)}
+
+        if recipe is None:
+            return {"error": "No recipe provided (supply recipe_id or inline recipe dict)."}
+
+        errors = []
+        warnings = []
+
+        # Check required structure fields
+        for field in ("name", "nodes"):
+            if field not in recipe:
+                warnings.append("Recipe missing field: '{}'".format(field))
+
+        # Validate each node op_type against knowledge corpus
+        nodes = recipe.get("nodes", [])
+        unknown_types = []
+        compat_issues = []
+
+        for node in nodes:
+            if not isinstance(node, dict):
+                continue
+            op_type = node.get("type", "")
+            if not op_type:
+                continue
+            if idx is not None:
+                card = idx.get_operator(op_type)
+                if card is None:
+                    unknown_types.append(op_type)
+                else:
+                    # Check build compatibility
+                    if svc.td_build:
+                        try:
+                            compat = idx.check_compatibility(op_type, svc.td_build)
+                            if not compat.get("compatible", True):
+                                compat_issues.append({
+                                    "op_type": op_type,
+                                    "reason": compat.get("reason", "unknown"),
+                                })
+                        except Exception:
+                            pass
+
+        if unknown_types:
+            warnings.append(
+                "Op types not found in knowledge corpus: {}".format(unknown_types)
+            )
+        if compat_issues:
+            warnings.append(
+                "Build compatibility issues: {}".format(compat_issues)
+            )
+
+        valid = len(errors) == 0
+        _audit_log(ctx, "td_validate_recipe", {
+            "recipe_id": recipe_id,
+            "scope": params.scope,
+            "valid": valid,
+        })
+        return {
+            "success": True,
+            "valid": valid,
+            "recipe_name": recipe.get("name", ""),
+            "node_count": len(nodes),
+            "unknown_op_types": unknown_types,
+            "compat_issues": compat_issues,
+            "errors": errors,
+            "warnings": warnings,
+        }
+    except Exception as exc:
+        _record_tool_error(ctx, "td_validate_recipe")
+        return {"error": str(exc)}
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_audit_project")
+async def td_audit_project(params: AuditProjectInput, ctx: Context) -> Dict[str, Any]:
+    """Audit a project subtree: count nodes by family and op type, detect palette
+    components, find errors, and check build compatibility.
+
+    Returns a comprehensive audit report without mutating the project.
+    """
+    finish = _start_tool(ctx, "td_audit_project")
+    try:
+        client = _get_client(ctx)
+        svc = _get_services(ctx)
+        idx = getattr(svc, "card_index", None)
+
+        # Fetch all nodes at root
+        all_nodes = []
+        try:
+            node_data = await client.request("get_nodes", {"path": params.root_path, "limit": 500})
+            all_nodes = node_data if isinstance(node_data, list) else node_data.get("nodes", [])
+        except Exception as exc:
+            return {"error": "Could not fetch nodes at '{}': {}".format(params.root_path, exc)}
+
+        # Count by family and op type
+        family_counts: Dict[str, int] = {}
+        op_type_counts: Dict[str, int] = {}
+        palette_components = []
+        unknown_op_types = []
+        compat_issues = []
+
+        for node in all_nodes:
+            if not isinstance(node, dict):
+                continue
+            family = node.get("family", "")
+            op_type = node.get("type", "")
+
+            if family:
+                family_counts[family] = family_counts.get(family, 0) + 1
+            if op_type:
+                op_type_counts[op_type] = op_type_counts.get(op_type, 0) + 1
+
+            # Detect palette components (heuristic: name starts with known palette patterns)
+            name = node.get("name", "")
+            if idx is not None and op_type:
+                palette_card = idx.get_palette(op_type)
+                if palette_card:
+                    palette_components.append({"name": name, "op_type": op_type})
+
+                # Check knowledge corpus
+                card = idx.get_operator(op_type)
+                if card is None and op_type not in unknown_op_types:
+                    unknown_op_types.append(op_type)
+                elif card is not None and svc.td_build:
+                    try:
+                        compat = idx.check_compatibility(op_type, svc.td_build)
+                        if not compat.get("compatible", True):
+                            compat_issues.append({
+                                "node": name,
+                                "op_type": op_type,
+                                "reason": compat.get("reason", "unknown"),
+                            })
+                    except Exception:
+                        pass
+
+        # Fetch errors for root
+        node_errors = []
+        try:
+            err_data = await client.request("get_errors", {"path": params.root_path, "recurse": True})
+            if isinstance(err_data, list):
+                node_errors = err_data
+            elif isinstance(err_data, dict):
+                node_errors = err_data.get("errors", [])
+        except Exception:
+            pass
+
+        _audit_log(ctx, "td_audit_project", {
+            "root_path": params.root_path,
+            "node_count": len(all_nodes),
+        })
+        return {
+            "success": True,
+            "root_path": params.root_path,
+            "total_nodes": len(all_nodes),
+            "by_family": family_counts,
+            "by_op_type": op_type_counts,
+            "palette_components": palette_components,
+            "unknown_op_types": unknown_op_types,
+            "compat_issues": compat_issues,
+            "node_errors": node_errors,
+            "error_count": len(node_errors),
+        }
+    except Exception as exc:
+        _record_tool_error(ctx, "td_audit_project")
+        return {"error": str(exc)}
+    finally:
+        finish()
 
 
 # ─────────────────────────────────────────────────────────────
