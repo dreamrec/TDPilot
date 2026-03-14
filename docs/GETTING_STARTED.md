@@ -153,7 +153,7 @@ This is how you keep the patch understandable.
 
 ## The Small Set Of Tools That Matter Most
 
-You do not need to learn all 86 tools to get real value.
+You do not need to learn all 88 tools to get real value.
 
 If you are new, focus on these:
 
@@ -451,6 +451,5 @@ If you do that, TDPilot stops being a gimmick and starts becoming genuinely usef
 
 If this guide helped and you want the deeper version:
 
-- read [MASTER_AUDIT.md](./MASTER_AUDIT.md) for the honest product review
-- read [MEMORY_BRAIN_MANUAL.md](./MEMORY_BRAIN_MANUAL.md) for the full memory-building workflow
-- read [HONEST_OPINION.md](./HONEST_OPINION.md) for the blunt take on what matters most
+- read [MEMORY_GUIDE.md](./MEMORY_GUIDE.md) for the full memory-building workflow
+- read [MANUAL.md](./MANUAL.md) for the production manual

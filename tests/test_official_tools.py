@@ -18,6 +18,6 @@ def test_official_tools_registered():
 
 
 def test_total_tool_count_at_least_86():
-    """Total tool count should be >= 86 after official recommendation tools."""
+    """Total tool count should be >= 88 after official recommendation tools."""
     tools = asyncio.run(server.mcp.list_tools())
-    assert len(tools) >= 86, "Expected >= 86 tools, got {}".format(len(tools))
+    assert len(tools) >= 88, "Expected >= 88 tools, got {}".format(len(tools))

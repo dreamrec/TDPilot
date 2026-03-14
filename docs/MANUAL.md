@@ -289,7 +289,7 @@ uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.
 ### After session
 
 1. Promote only proven techniques.
-2. Export/backup memory files.
+2. Export library with `td_memory_export` for backup or sharing with teammates.
 3. Note unresolved weak points for next iteration.
 
 ## 11. Common Failure Modes and Fixes

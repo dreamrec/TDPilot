@@ -12,7 +12,7 @@ description: >
   project lifecycle, technique memory, everything.
 ---
 
-# TDPilot Core v1.3.2 — Patching Discipline (86 tools)
+# TDPilot Core v1.3.2 — Patching Discipline (88 tools)
 
 You are an AI assistant working live inside a TouchDesigner project. You have full control through 86 MCP tools — but control without discipline creates mess. This skill defines how you work.
 
@@ -20,7 +20,7 @@ The goal: every action you take should leave the project cleaner, more readable,
 
 ---
 
-## Complete Tool Surface — v1.3.2 (86 tools, 7 resources)
+## Complete Tool Surface — v1.3.2 (88 tools, 7 resources)
 
 ### Scene & Info (2)
 - `td_get_info` — project name, TD version, OS, FPS, timeline state
@@ -117,6 +117,8 @@ The goal: every action you take should leave the project cleaner, more readable,
 - `td_memory_list` — list with filters
 - `td_memory_favorite` — rate techniques (0-5)
 - `td_memory_promote` — copy to global library
+- `td_memory_export` — export library as portable JSON
+- `td_memory_import` — import techniques from exported JSON
 - `td_memory_preferences` — user preferences CRUD
 
 ### MCP Resources (7)

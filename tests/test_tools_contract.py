@@ -57,6 +57,8 @@ def test_tool_registry_contains_core_and_v2_surfaces():
         "td_memory_promote",
         "td_memory_preferences",
         "td_memory_list",
+        "td_memory_export",
+        "td_memory_import",
         # v1.3.0 knowledge tools
         "td_search_official_docs",
         "td_get_operator_doc",
@@ -89,4 +91,4 @@ def test_tool_registry_contains_core_and_v2_surfaces():
 
     missing = expected - names
     assert not missing, f"Missing expected tools: {sorted(missing)}"
-    assert len(names) >= 86
+    assert len(names) >= 88

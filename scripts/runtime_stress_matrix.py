@@ -140,7 +140,7 @@ class RuntimeMatrix:
         tools = await self.session.list_tools()
         names = {t.name for t in tools.tools}
         if len(names) < 86:
-            raise MatrixFailure(f"Expected at least 86 tools, got {len(names)}")
+            raise MatrixFailure(f"Expected at least 88 tools, got {len(names)}")
 
     async def _build_runtime_fixture(self) -> None:
         suffix = datetime.now().strftime("%H%M%S")

@@ -16,8 +16,13 @@ It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networ
 
 ## Documentation
 
+- Getting started: `docs/GETTING_STARTED.md`
+- User guide: `docs/USER_GUIDE.md`
+- Memory guide: `docs/MEMORY_GUIDE.md`
 - Production manual: `docs/MANUAL.md`
-- New surface guide: `docs/MCP_1_1_SURFACE.md`
+- API reference: `docs/API_REFERENCE.md`
+- Troubleshooting: `docs/TROUBLESHOOTING.md`
+- MCP 1.1 surface: `docs/MCP_1_1_SURFACE.md`
 - Release notes: `CHANGELOG.md`
 
 ## What This Is
@@ -26,11 +31,11 @@ It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networ
 - A structured toolset for scene edits, diagnostics, event monitoring, and recovery.
 - A workflow-oriented MCP built for iterative patch development, not one-shot guessing.
 - A technique memory system that learns from your projects and builds a reusable library.
-- 86-tool runtime surface with knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, and custom parameter authoring.
+- 88-tool runtime surface with knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, and custom parameter authoring.
 
 ## Start Here: Core Workflow
 
-You don't need all 86 tools. Start with these and expand as needed:
+You don't need all 88 tools. Start with these and expand as needed:
 
 | Step | Tools | What You're Doing |
 |------|-------|-------------------|
@@ -84,7 +89,7 @@ Use this loop for every non-trivial task:
 
 6. **Control token cost** — Prefer metadata checks over continuous image payloads. Ask the user before enabling high-token frame streaming.
 
-## Tool Map (86 Tools)
+## Tool Map (88 Tools)
 
 ### 1) Scene + Timeline + Project Lifecycle
 Use for global context, playback control, save/load, and undo operations.
@@ -147,6 +152,8 @@ Use for learning, saving, and replaying reusable network patterns.
 - `td_memory_list` — List all saved techniques with optional filtering.
 - `td_memory_favorite` — Mark techniques as favorites and rate them (0-5).
 - `td_memory_promote` — Copy a project-level technique to the global library for use across all projects.
+- `td_memory_export` — Export the technique library as a portable JSON object for sharing or backup.
+- `td_memory_import` — Import techniques from an exported library (from `td_memory_export`).
 - `td_memory_preferences` — Get/set user preferences (color palettes, default resolutions, naming conventions, etc.)
 
 Memory storage lives at `~/.tdpilot/memory/` with per-project and global scopes:
