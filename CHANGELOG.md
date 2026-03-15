@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.3.4 - 2026-03-15
+
+### Added
+- **Brain installer system** — modular one-click installer with dynamic manifest and interactive brain picker.
+  - `brains_manifest.json` — single source of truth for all available brains (Google Drive file IDs, sizes, tools, skills).
+  - `active.json` runtime gating — only selected brains load at startup; missing brains = silent skip, zero errors.
+  - `_get_active_brains()` / `brain_is_active()` — backward-compatible brain loading (no active.json = load everything).
+- POPx brain MCP tools (88→90 tools):
+  - `td_search_popx_docs` — search POPx operator documentation (GPU particles, falloffs, simulations).
+  - `td_get_popx_operator` — get full documentation for a specific POPx operator.
+- Brain management CLI: `npx tdpilot brains [list|add|remove]`.
+- Generic brain builder: `scripts/build_brain.py` — config-driven pipeline for building brains from any documentation site.
+- Brain building tutorial: `docs/BUILDING_BRAINS.md` — complete guide to creating custom brains.
+- `scripts/download_brains.py` now supports `--manifest` and `--brains-file` flags for installer integration.
+
 ## 1.3.3 - 2026-03-15
 
 ### Added

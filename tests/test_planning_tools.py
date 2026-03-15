@@ -21,4 +21,4 @@ def test_planning_tools_registered():
 
 def test_total_tool_count_at_least_86():
     tools = asyncio.run(server.mcp.list_tools())
-    assert len(tools) >= 88, "Expected >= 88 tools, got {}".format(len(tools))
+    assert len(tools) >= 90, "Expected >= 90 tools, got {}".format(len(tools))

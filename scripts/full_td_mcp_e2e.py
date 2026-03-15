@@ -227,7 +227,7 @@ class E2ESuite:
         tool_names = {tool.name for tool in tools.tools}
 
         if len(tool_names) < 86:
-            raise TestFailure(f"Expected at least 88 tools, got {len(tool_names)}")
+            raise TestFailure(f"Expected at least 90 tools, got {len(tool_names)}")
 
         required_tools = {
             "td_geometry_data",
