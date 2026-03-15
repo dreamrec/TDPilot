@@ -738,8 +738,9 @@ def build_fts_index(chunks: list[dict[str, Any]], db_path: Path, brain_id: str) 
                 (
                     count + 1,
                     chunk.get("section_title", ""),
-                    chunk.get("operator_name", "") or "",
-                    " ".join(chunk.get("mentioned_operators", [])),
+                    " ".join(filter(None, [chunk.get("operator_name", ""),
+                                           *chunk.get("mentioned_operators", [])])),
+                    " ".join(chunk.get("parameter_names", [])),
                     " ".join(chunk.get("python_symbols", [])),
                     chunk["content"],
                 ),
