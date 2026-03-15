@@ -100,6 +100,12 @@ ensureRepo();
 // ── Subcommands ──────────────────────────────────────────────
 const subcommand = process.argv[2];
 
+if (subcommand === "brains") {
+  const { main: brainsMain } = require("./brains");
+  brainsMain(process.argv.slice(3));
+  process.exit(0);
+}
+
 if (subcommand === "install" || subcommand === "uninstall") {
   const { install, uninstall } = require("./install");
   if (subcommand === "install") {
