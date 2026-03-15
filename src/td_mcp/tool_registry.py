@@ -227,6 +227,38 @@ async def _with_undo_block(td_client, label: str, async_fn, *args):
             pass
 
 
+def _get_active_brains(search_paths: list[Path] | None = None) -> set[str] | None:
+    """Return set of active brain IDs, or None if no active.json (load all).
+
+    Checks paths in order:
+    1. ~/.tdpilot/data/brains/active.json (installer path)
+    2. <project-root>/data/brains/active.json (dev path)
+
+    Returns None if no active.json found — caller should load all available brains.
+    """
+    if search_paths is None:
+        search_paths = [
+            Path.home() / ".tdpilot" / "data" / "brains" / "active.json",
+            Path(__file__).resolve().parent.parent.parent / "data" / "brains" / "active.json",
+        ]
+    for candidate in search_paths:
+        if candidate.exists():
+            try:
+                data = json.loads(candidate.read_text("utf-8"))
+                return set(data.get("installed_brains", []))
+            except (json.JSONDecodeError, OSError):
+                logger.warning("Corrupt active.json at %s, ignoring", candidate)
+                return None
+    return None
+
+
+def brain_is_active(active_set: set[str] | None, brain_id: str) -> bool:
+    """Check if a brain should be loaded. None means all brains are active."""
+    if active_set is None:
+        return True
+    return brain_id in active_set
+
+
 @asynccontextmanager
 async def server_lifespan(app: FastMCP):
     """Initialize and clean up runtime services for the MCP server."""
@@ -299,21 +331,23 @@ async def server_lifespan(app: FastMCP):
     except Exception as exc:
         logger.warning("Could not start event websocket listener on %s: %s", TD_WS_PORT, exc)
 
-    # Knowledge corpus
+    # Knowledge corpus — gated by active.json
+    active_brains = _get_active_brains()
     card_index = None
-    try:
-        from td_mcp.knowledge.docsbrain import DocsBrain
-        brain_dir = Path(__file__).resolve().parent.parent.parent / "data" / "normalized" / "derivative"
-        db_path = brain_dir / "docsbrain.db"
-        if db_path.exists():
-            card_index = DocsBrain(
-                db_path=db_path,
-                changelog_path=brain_dir / "operator_changelog.json",
-                manifest_path=brain_dir / "build_manifest.json",
-            )
-            logger.info("DocsBrain loaded (%d chunks)", card_index.count())
-    except Exception as exc:
-        logger.debug("DocsBrain not available: %s", exc)
+    if brain_is_active(active_brains, "derivative"):
+        try:
+            from td_mcp.knowledge.docsbrain import DocsBrain
+            brain_dir = Path(__file__).resolve().parent.parent.parent / "data" / "normalized" / "derivative"
+            db_path = brain_dir / "docsbrain.db"
+            if db_path.exists():
+                card_index = DocsBrain(
+                    db_path=db_path,
+                    changelog_path=brain_dir / "operator_changelog.json",
+                    manifest_path=brain_dir / "build_manifest.json",
+                )
+                logger.info("DocsBrain loaded (%d chunks)", card_index.count())
+        except Exception as exc:
+            logger.debug("DocsBrain not available: %s", exc)
 
     if card_index is None:
         try:
@@ -324,6 +358,23 @@ async def server_lifespan(app: FastMCP):
                 logger.info("Knowledge corpus loaded (%d cards)", card_index.count())
         except Exception as exc:
             logger.warning("CardIndex failed: %s", exc)
+
+    # POPx brain — loaded only if active
+    popx_brain = None
+    if brain_is_active(active_brains, "popx"):
+        try:
+            from td_mcp.knowledge.docsbrain import DocsBrain as _PopxBrain
+            popx_dir = Path(__file__).resolve().parent.parent.parent / "data" / "normalized" / "popx"
+            popx_db = popx_dir / "popxbrain.db"
+            if popx_db.exists():
+                popx_brain = _PopxBrain(
+                    db_path=popx_db,
+                    changelog_path=popx_dir / "operator_changelog.json",
+                    manifest_path=popx_dir / "build_manifest.json",
+                )
+                logger.info("POPx brain loaded (%d chunks)", popx_brain.count())
+        except Exception as exc:
+            logger.debug("POPx brain not available: %s", exc)
 
     services = ServiceContainer(
         td_client=td_client,
@@ -339,6 +390,7 @@ async def server_lifespan(app: FastMCP):
         telemetry=telemetry,
         audit=audit,
         card_index=card_index,
+        popx_brain=popx_brain,
         td_build=td_build,
     )
 
@@ -3735,6 +3787,49 @@ async def td_get_build_compatibility(
     result = idx.check_compatibility(op_type, target_build)
     provenance = Provenance(source="local_card", td_build=svc.td_build)
     return {**result, "provenance": provenance.to_dict()}
+
+
+# ── POPx Brain Tools ─────────────────────────────────────────────────
+
+
+def _get_popx_brain(ctx: Context):
+    svc = _get_services(ctx)
+    brain = getattr(svc, "popx_brain", None)
+    if brain is None:
+        raise RuntimeError("POPx brain not loaded")
+    return brain
+
+
+@mcp.tool(name="td_search_popx_docs")
+async def td_search_popx_docs(
+    ctx: Context,
+    query: str,
+    limit: int = 10,
+) -> Dict[str, Any]:
+    """Search POPx operator documentation — GPU particles, falloffs, simulations."""
+    brain = _get_popx_brain(ctx)
+    results = brain.search(query, limit=limit)
+    svc = _get_services(ctx)
+    provenance = Provenance(source="popx_brain", td_build=svc.td_build)
+    return {"results": results, "count": len(results), "provenance": provenance.to_dict()}
+
+
+@mcp.tool(name="td_get_popx_operator")
+async def td_get_popx_operator(
+    ctx: Context,
+    operator_name: str,
+) -> Dict[str, Any]:
+    """Get full documentation for a POPx operator (e.g. 'Particle SIM', 'Shape Falloff')."""
+    brain = _get_popx_brain(ctx)
+    results = brain.search(operator_name, limit=5)
+    op_results = [r for r in results if r.get("operator_name", "").lower() == operator_name.lower()]
+    if not op_results:
+        op_results = results
+    svc = _get_services(ctx)
+    provenance = Provenance(source="popx_brain", td_build=svc.td_build)
+    if op_results:
+        return {"operator": op_results[0], "related": op_results[1:], "provenance": provenance.to_dict()}
+    return {"error": f"No POPx operator found for '{operator_name}'", "provenance": provenance.to_dict()}
 
 
 @mcp.tool(name="td_describe_surface")

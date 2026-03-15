@@ -40,4 +40,5 @@ class ServiceContainer:
     telemetry: Optional[TelemetryCollector] = None
     audit: Optional[AuditLogger] = None
     card_index: Optional[CardIndex] = None
+    popx_brain: Optional[DocsBrain] = None
     td_build: str = ""
