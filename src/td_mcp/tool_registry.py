@@ -3794,10 +3794,7 @@ async def td_get_build_compatibility(
 
 def _get_popx_brain(ctx: Context):
     svc = _get_services(ctx)
-    brain = getattr(svc, "popx_brain", None)
-    if brain is None:
-        raise RuntimeError("POPx brain not loaded")
-    return brain
+    return getattr(svc, "popx_brain", None)
 
 
 @mcp.tool(name="td_search_popx_docs")
@@ -3808,6 +3805,8 @@ async def td_search_popx_docs(
 ) -> Dict[str, Any]:
     """Search POPx operator documentation — GPU particles, falloffs, simulations."""
     brain = _get_popx_brain(ctx)
+    if brain is None:
+        return {"error": "POPx brain not installed. Run 'npx tdpilot brains add popx' to enable.", "results": [], "count": 0}
     results = brain.search(query, limit=limit)
     svc = _get_services(ctx)
     provenance = Provenance(source="popx_brain", td_build=svc.td_build)
@@ -3821,6 +3820,8 @@ async def td_get_popx_operator(
 ) -> Dict[str, Any]:
     """Get full documentation for a POPx operator (e.g. 'Particle SIM', 'Shape Falloff')."""
     brain = _get_popx_brain(ctx)
+    if brain is None:
+        return {"error": "POPx brain not installed. Run 'npx tdpilot brains add popx' to enable."}
     results = brain.search(operator_name, limit=5)
     op_results = [r for r in results if r.get("operator_name", "").lower() == operator_name.lower()]
     if not op_results:

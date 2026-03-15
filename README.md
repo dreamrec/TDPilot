@@ -7,7 +7,7 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v1.3.2
+# TDPilot Runtime v1.3.4
 
 **TDPilot Runtime** is an MCP server for TouchDesigner.
 It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networks with real tool calls — and now remember what works.
@@ -50,7 +50,7 @@ You don't need all 90 tools. Start with these and expand as needed:
 
 Everything else (vision, streaming, optimization, planning, TD2025 inspection) builds on top of this core.
 
-## What's New In 1.3.2
+## What's New In 1.3.4
 
 - **Vision diagnostics** — `td_capture_frame` and `td_analyze_frame` for MCP-side and TD-side pixel analysis (histogram, luminance, alpha, dominant color, ROI diff).
 - **TD 2025 native tools** — 6 tools for Python env, threading, logger, TDResources, COMP standardization, and color pipeline inspection.
