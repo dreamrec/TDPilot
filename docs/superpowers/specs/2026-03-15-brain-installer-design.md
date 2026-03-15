@@ -273,9 +273,12 @@ PICKER
 
 # ── Step 4: Download & configure ────────────────
 download_and_configure() {
-    # Download selected brains using the existing download script
+    # Download selected brains using the download script
+    # NOTE: --brains-file and --manifest flags must be added to download_brains.py
+    # first (see Section 6 file changes). The script currently only has --brain.
     python3 "$INSTALL_DIR/scripts/download_brains.py" \
-        --brains-file /tmp/selected_brains.json
+        --brains-file /tmp/selected_brains.json \
+        --manifest /tmp/brains_manifest.json
 
     # Write active.json
     # Note: uses double-quoted heredoc so $INSTALL_DIR expands to the bash variable
