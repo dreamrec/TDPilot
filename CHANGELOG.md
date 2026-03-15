@@ -7,7 +7,7 @@
   - `brains_manifest.json` — single source of truth for all available brains (Google Drive file IDs, sizes, tools, skills).
   - `active.json` runtime gating — only selected brains load at startup; missing brains = silent skip, zero errors.
   - `_get_active_brains()` / `brain_is_active()` — backward-compatible brain loading (no active.json = load everything).
-- POPx brain MCP tools (88→90 tools):
+- POPx brain MCP tools (88→90→92 tools):
   - `td_search_popx_docs` — search POPx operator documentation (GPU particles, falloffs, simulations).
   - `td_get_popx_operator` — get full documentation for a specific POPx operator.
 - Brain management CLI: `npx tdpilot brains [list|add|remove]`.

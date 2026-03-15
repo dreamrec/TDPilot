@@ -41,4 +41,5 @@ class ServiceContainer:
     audit: Optional[AuditLogger] = None
     card_index: Optional[CardIndex] = None
     popx_brain: Optional[DocsBrain] = None
+    paketa12_brain: Optional[DocsBrain] = None
     td_build: str = ""

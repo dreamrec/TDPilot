@@ -376,6 +376,23 @@ async def server_lifespan(app: FastMCP):
         except Exception as exc:
             logger.debug("POPx brain not available: %s", exc)
 
+    # paketa12 tutorial brain — loaded only if active
+    paketa12_brain = None
+    if brain_is_active(active_brains, "paketa12"):
+        try:
+            from td_mcp.knowledge.docsbrain import DocsBrain as _Paketa12Brain
+            p12_dir = Path(__file__).resolve().parent.parent.parent / "data" / "normalized" / "paketa12"
+            p12_db = p12_dir / "paketa12brain.db"
+            if p12_db.exists():
+                paketa12_brain = _Paketa12Brain(
+                    db_path=p12_db,
+                    changelog_path=p12_dir / "operator_changelog.json",
+                    manifest_path=p12_dir / "build_manifest.json",
+                )
+                logger.info("paketa12 brain loaded (%d chunks)", paketa12_brain.count())
+        except Exception as exc:
+            logger.debug("paketa12 brain not available: %s", exc)
+
     services = ServiceContainer(
         td_client=td_client,
         macro_engine=macro_engine,
@@ -391,6 +408,7 @@ async def server_lifespan(app: FastMCP):
         audit=audit,
         card_index=card_index,
         popx_brain=popx_brain,
+        paketa12_brain=paketa12_brain,
         td_build=td_build,
     )
 
@@ -3831,6 +3849,55 @@ async def td_get_popx_operator(
     if op_results:
         return {"operator": op_results[0], "related": op_results[1:], "provenance": provenance.to_dict()}
     return {"error": f"No POPx operator found for '{operator_name}'", "provenance": provenance.to_dict()}
+
+
+# ── paketa12 Tutorial Brain Tools ────────────────────────────────────
+
+
+def _get_paketa12_brain(ctx: Context):
+    svc = _get_services(ctx)
+    return getattr(svc, "paketa12_brain", None)
+
+
+@mcp.tool(name="td_search_paketa12")
+async def td_search_paketa12(
+    ctx: Context,
+    query: str,
+    limit: int = 10,
+) -> Dict[str, Any]:
+    """Search paketa12 tutorial knowledge — GPU-texture-as-compute, UV math, simulations, GLSL techniques, feedback loops, algorithmic art in TouchDesigner."""
+    brain = _get_paketa12_brain(ctx)
+    if brain is None:
+        return {"error": "paketa12 brain not installed. Run 'npx tdpilot brains add paketa12' to enable.", "results": [], "count": 0}
+    results = brain.search(query, limit=limit)
+    svc = _get_services(ctx)
+    provenance = Provenance(source="paketa12_brain", td_build=svc.td_build)
+    return {"results": results, "count": len(results), "provenance": provenance.to_dict()}
+
+
+@mcp.tool(name="td_get_paketa12_tutorial")
+async def td_get_paketa12_tutorial(
+    ctx: Context,
+    topic: str,
+) -> Dict[str, Any]:
+    """Get tutorial chunks for a paketa12 topic (e.g. 'Physarum simulation', 'Verlet integration', 'UV shredder', 'circle packing')."""
+    brain = _get_paketa12_brain(ctx)
+    if brain is None:
+        return {"error": "paketa12 brain not installed. Run 'npx tdpilot brains add paketa12' to enable."}
+    results = brain.search(topic, limit=10)
+    # Group by tutorial (page_id)
+    tutorials: Dict[str, list] = {}
+    for r in results:
+        pid = r.get("page_id", "unknown")
+        tutorials.setdefault(pid, []).append(r)
+    svc = _get_services(ctx)
+    provenance = Provenance(source="paketa12_brain", td_build=svc.td_build)
+    return {
+        "topic": topic,
+        "tutorials_found": len(tutorials),
+        "chunks": results,
+        "provenance": provenance.to_dict(),
+    }
 
 
 @mcp.tool(name="td_describe_surface")

@@ -31,11 +31,11 @@ It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networ
 - A structured toolset for scene edits, diagnostics, event monitoring, and recovery.
 - A workflow-oriented MCP built for iterative patch development, not one-shot guessing.
 - A technique memory system that learns from your projects and builds a reusable library.
-- 90-tool runtime surface with knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, and custom parameter authoring.
+- 92-tool runtime surface with knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, and custom parameter authoring.
 
 ## Start Here: Core Workflow
 
-You don't need all 90 tools. Start with these and expand as needed:
+You don't need all 92 tools. Start with these and expand as needed:
 
 | Step | Tools | What You're Doing |
 |------|-------|-------------------|

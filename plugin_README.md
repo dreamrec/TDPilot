@@ -1,6 +1,6 @@
 # TDPilot — TouchDesigner AI Assistant Plugin
 
-TDPilot v1.3.2 provides 90 MCP tools for live control of TouchDesigner projects from Claude. This plugin makes TDPilot's skills and MCP server configuration permanently available across all Cowork sessions.
+TDPilot v1.3.2 provides 92 MCP tools for live control of TouchDesigner projects from Claude. This plugin makes TDPilot's skills and MCP server configuration permanently available across all Cowork sessions.
 
 ## Components
 
@@ -8,7 +8,7 @@ TDPilot v1.3.2 provides 90 MCP tools for live control of TouchDesigner projects 
 - **touchdesigner** — Connects to TDPilot MCP server via `npx tdpilot` (stdio transport)
 
 ### Skills
-- **tdpilot-core** — Core patching discipline: 90-tool reference, node layout, color coding, expressions, error verification, visual checks, technique memory, v1.1 features (custom parameters, project lifecycle, POP inspection)
+- **tdpilot-core** — Core patching discipline: 92-tool reference, node layout, color coding, expressions, error verification, visual checks, technique memory, v1.1 features (custom parameters, project lifecycle, POP inspection)
 - **tdpilot-production** — Production-safe workflow: staged edits, undo blocks, snapshots, completion gates, failure protocol
 - **popx-touchdesigner** — POPX workflow skill for 59 GPU-accelerated operators. References must be built locally from your own licensed POPx copy (see `references/BUILD.md`)
 

@@ -91,4 +91,4 @@ def test_tool_registry_contains_core_and_v2_surfaces():
 
     missing = expected - names
     assert not missing, f"Missing expected tools: {sorted(missing)}"
-    assert len(names) >= 90
+    assert len(names) >= 92
