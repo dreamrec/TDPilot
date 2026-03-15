@@ -45,8 +45,10 @@
 
 | brain_id | display_name | size | chunks | skills | key tools |
 |----------|-------------|------|--------|--------|-----------|
-| `derivative` | TouchDesigner Docs | 164 MB | 25,887 | tdpilot-core | td_search_docs, td_get_operator_doc, td_get_release_delta, td_get_build_compatibility |
-| `popx` | POPx Operators | 1.3 MB | 480 | popx-touchdesigner | td_search_popx, td_get_popx_operator |
+| `derivative` | TouchDesigner Docs | 164 MB | 25,887 | tdpilot-core | td_search_official_docs, td_get_operator_doc, td_get_release_delta, td_get_build_compatibility |
+| `popx` | POPx Operators | 1.3 MB | 480 | popx-touchdesigner | td_search_popx_docs, td_get_popx_operator (**NEW — must be implemented**) |
+
+> **Note:** The `derivative` brain tools already exist in `tool_registry.py`. The `popx` brain tools do **not** exist yet — they must be implemented as part of this work. See Section 5.9 for the registration pattern.
 
 ### 1.3 Where it lives
 
@@ -79,11 +81,13 @@
 
 **Location:** `~/.tdpilot/data/brains/active.json` (also `data/brains/active.json` relative to project root if running from source).
 
+> **Path consistency note:** The installer sets `INSTALL_DIR=$HOME/.tdpilot`, which is the same path that `npm/run.js` clones to and that `_get_active_brains()` checks first. All three must agree. If `INSTALL_DIR` is ever changed, the server's lookup path and `run.js`'s `INSTALL_DIR` constant must be updated to match.
+
 ### 2.2 How TDPilot uses it at startup
 
 #### MCP tool registration
 
-The server reads `active.json`. For each brain NOT listed, its associated tools are never registered via `@mcp.tool()`. A user with only `popx` installed never sees `td_search_docs` — the tool simply doesn't exist in their session.
+The server reads `active.json`. For each brain NOT listed, its associated tools are never registered via `@mcp.tool()`. A user with only `popx` installed never sees `td_search_official_docs` — the tool simply doesn't exist in their session.
 
 **Implementation approach in `server.py`:**
 
@@ -104,12 +108,14 @@ def _get_active_brains() -> set[str] | None:
 active = _get_active_brains()
 
 if active is None or "derivative" in active:
+    # These tools already exist in tool_registry.py — wrap them in this guard
     @mcp.tool()
-    def td_search_docs(...): ...
+    def td_search_official_docs(...): ...
 
 if active is None or "popx" in active:
+    # These tools are NEW — must be implemented (see Section 5.9)
     @mcp.tool()
-    def td_search_popx(...): ...
+    def td_search_popx_docs(...): ...
 ```
 
 #### DocsBrain loader
@@ -272,8 +278,9 @@ download_and_configure() {
         --brains-file /tmp/selected_brains.json
 
     # Write active.json
-    python3 - <<'CONFIGURE'
-import json
+    # Note: uses double-quoted heredoc so $INSTALL_DIR expands to the bash variable
+    INSTALL_DIR="$INSTALL_DIR" python3 - <<CONFIGURE
+import json, os
 from datetime import datetime, timezone
 
 selected = json.load(open("/tmp/selected_brains.json"))
@@ -283,8 +290,9 @@ active = {
     "manifest_version": 1
 }
 
-active_path = "$INSTALL_DIR/data/brains/active.json"
-import os; os.makedirs(os.path.dirname(active_path), exist_ok=True)
+install_dir = os.environ["INSTALL_DIR"]
+active_path = os.path.join(install_dir, "data", "brains", "active.json")
+os.makedirs(os.path.dirname(active_path), exist_ok=True)
 with open(active_path, "w") as f:
     json.dump(active, f, indent=2)
 print(f"  ✓ active.json written ({len(selected)} brains)")
@@ -340,7 +348,11 @@ npx tdpilot brains --add popx   # download and activate a brain
 npx tdpilot brains --remove popx  # deactivate (optionally delete .db)
 ```
 
-**Implementation:** A new `brains.js` module in `npm/` that reads `active.json`, fetches the manifest from Drive when needed, and updates both.
+**Implementation:** A new `brains.js` module in `npm/` that:
+- Reads `active.json` for current state
+- For `--list` and `--add`: fetches a fresh manifest from a **hardcoded Drive manifest URL** (the manifest's own Drive file ID is baked into `brains.js`, same as in `install.sh`). This ensures `--add` always sees the latest available brains even if the local manifest is stale.
+- Falls back to the locally cached `~/.tdpilot/data/brains/manifest.json` if offline
+- Updates both `active.json` and the local manifest cache after changes
 
 ---
 
@@ -525,7 +537,21 @@ db.close()
 
 ### 5.7 Step 6 — Register for runtime
 
-Add to `data/brains/active.json`:
+Add to `active.json`. The server checks two locations in order:
+1. `~/.tdpilot/data/brains/active.json` (installer path — checked first)
+2. `<project-root>/data/brains/active.json` (dev/source path — fallback)
+
+If running from the installed `~/.tdpilot` location (the normal case), write to:
+```bash
+~/.tdpilot/data/brains/active.json
+```
+
+If running from a cloned source repo during development:
+```bash
+data/brains/active.json   # relative to project root
+```
+
+Contents:
 ```json
 {"installed_brains": ["derivative", "popx", "paketas"]}
 ```
@@ -555,7 +581,7 @@ if active is None or "paketas" in active:
         return brain_paketas.search(query, limit)
 ```
 
-### 5.9 FTS5 database schema (reference)
+### 5.10 FTS5 database schema (reference)
 
 Every brain uses the same schema:
 
@@ -596,7 +622,7 @@ CREATE VIRTUAL TABLE chunks_fts USING fts5(
 | `src/td_mcp/server.py` | Modify | Read `active.json`, conditionally register brain tools |
 | `src/td_mcp/knowledge/docsbrain/` | Modify | Add `active.json` gate before brain loading |
 | `data/brains/active.json` | Create (gitignored) | Runtime list of installed brains |
-| `scripts/download_brains.py` | Modify | Support `--brains-file` flag for installer |
+| `scripts/download_brains.py` | Modify | Add `--brains-file` flag + `--manifest` flag. Currently uses a hardcoded `BRAINS` dict — must be refactored to accept dynamic brain definitions from the manifest JSON when `--brains-file` is used. The hardcoded dict stays as the default fallback for standalone usage. |
 | `npm/run.js` | Modify | Add `brains` subcommand |
 | `npm/brains.js` | Create | Brain management CLI (list, add, remove) |
 | `.gitignore` | Modify | Add `data/brains/active.json` |
