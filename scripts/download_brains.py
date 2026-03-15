@@ -9,6 +9,9 @@ Usage:
     python scripts/download_brains.py --brain derivative  # just derivative
     python scripts/download_brains.py --brain popx        # just POPx
     python scripts/download_brains.py --list              # show available brains
+
+Manifest mode (used by installers):
+    python scripts/download_brains.py --manifest brains_manifest.json --brains-file selected.json
 """
 
 from __future__ import annotations
@@ -75,6 +78,19 @@ BRAINS = {
         ],
     },
 }
+
+
+def _load_brains_from_manifest(manifest_path: Path) -> dict:
+    """Load brain definitions from a manifest JSON file."""
+    manifest = json.loads(manifest_path.read_text("utf-8"))
+    brains = {}
+    for brain_id, brain_data in manifest.get("brains", {}).items():
+        brains[brain_id] = {
+            "description": f"{brain_data['display_name']} — {brain_data['description']}",
+            "output_dir": f"data/normalized/{brain_id}",
+            "files": brain_data["files"],
+        }
+    return brains
 
 
 def _gdrive_download_url(file_id: str) -> str:
@@ -161,13 +177,14 @@ def _download_file(file_id: str, dest: Path, size_mb: float) -> bool:
         return False
 
 
-def download_brain(brain_name: str, project_root: Path) -> bool:
+def download_brain(brain_name: str, project_root: Path, brains_registry: dict | None = None) -> bool:
     """Download all files for a brain."""
-    if brain_name not in BRAINS:
-        logger.error("Unknown brain: %s (available: %s)", brain_name, ", ".join(BRAINS))
+    registry = brains_registry or BRAINS
+    if brain_name not in registry:
+        logger.error("Unknown brain: %s (available: %s)", brain_name, ", ".join(registry))
         return False
 
-    brain = BRAINS[brain_name]
+    brain = registry[brain_name]
     output_dir = project_root / brain["output_dir"]
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -198,7 +215,7 @@ def main() -> None:
         description="Download TDPilot brain databases from Google Drive"
     )
     parser.add_argument(
-        "--brain", choices=list(BRAINS.keys()),
+        "--brain",
         help="Download a specific brain (default: all)",
     )
     parser.add_argument(
@@ -209,12 +226,26 @@ def main() -> None:
         "--force", action="store_true",
         help="Re-download even if files exist",
     )
+    parser.add_argument(
+        "--manifest", type=Path,
+        help="Path to brains_manifest.json (overrides built-in BRAINS dict)",
+    )
+    parser.add_argument(
+        "--brains-file", type=Path,
+        help="JSON file listing brain IDs to download (array of strings)",
+    )
     args = parser.parse_args()
+
+    # Resolve brain registry: manifest file overrides built-in BRAINS dict
+    brains_registry = BRAINS
+    if args.manifest and args.manifest.exists():
+        brains_registry = _load_brains_from_manifest(args.manifest)
+        logger.info("Loaded %d brains from manifest: %s", len(brains_registry), args.manifest)
 
     if args.list:
         print("Available brains:")
         print(f"  Shared folder: {DRIVE_FOLDER_URL}\n")
-        for name, brain in BRAINS.items():
+        for name, brain in brains_registry.items():
             total_mb = sum(f["size_mb"] for f in brain["files"])
             print(f"  {name}: {brain['description']} (~{total_mb:.0f}MB)")
             for f in brain["files"]:
@@ -225,8 +256,11 @@ def main() -> None:
 
     if args.force:
         # Remove existing files
-        for name in (BRAINS if args.brain is None else {args.brain: BRAINS[args.brain]}):
-            brain = BRAINS[name]
+        names = brains_registry if args.brain is None else {args.brain: brains_registry.get(args.brain, {})}
+        for name in names:
+            if name not in brains_registry:
+                continue
+            brain = brains_registry[name]
             output_dir = project_root / brain["output_dir"]
             for f in brain["files"]:
                 path = output_dir / f["name"]
@@ -236,11 +270,22 @@ def main() -> None:
 
     t0 = time.time()
 
-    brains_to_download = [args.brain] if args.brain else list(BRAINS.keys())
+    # Determine which brains to download
+    if args.brains_file and args.brains_file.exists():
+        selected = json.loads(args.brains_file.read_text("utf-8"))
+        brains_to_download = [b for b in selected if b in brains_registry]
+        skipped = [b for b in selected if b not in brains_registry]
+        if skipped:
+            logger.warning("Skipping unknown brains: %s", ", ".join(skipped))
+    elif args.brain:
+        brains_to_download = [args.brain]
+    else:
+        brains_to_download = list(brains_registry.keys())
+
     all_ok = True
 
     for brain_name in brains_to_download:
-        ok = download_brain(brain_name, project_root)
+        ok = download_brain(brain_name, project_root, brains_registry)
         if not ok:
             all_ok = False
 
