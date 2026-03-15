@@ -28,6 +28,31 @@ When multiple brains return results for the same query, results are interleaved 
 - **Special features:** Release notes intelligence with per-operator changelog, build-aware search
 - **Build command:** `python scripts/build_docs_brain.py --source ~/path/to/docs.derivative.ca_offline/docs.derivative.ca/`
 
+### popx (licensed)
+- **Source:** Scraped popsextension.com + TDPilot-popx-refs catalog
+- **Content:** 58 pages + 54 examples + curated markdown → 480 chunks, 59 operators
+- **Trust tier:** licensed (POPx is a paid plugin — content is copyrighted)
+- **Special features:** Structured parameter extraction from HTML, example node topology from catalog
+- **Build command:** `python scripts/build_popx_brain.py --source ~/path/to/popsextension.com/ --refs ~/path/to/TDPilot-popx-refs/`
+
+### Downloading pre-built brains
+
+Both brains are hosted on Google Drive for easy installation:
+
+```bash
+# Download all brains (~165MB)
+python scripts/download_brains.py
+
+# Download just one
+python scripts/download_brains.py --brain derivative
+python scripts/download_brains.py --brain popx
+
+# List available brains
+python scripts/download_brains.py --list
+```
+
+Shared folder: https://drive.google.com/drive/folders/1lc1S6NBQgpAzA2G2KsHkR0gV7_SdzseO
+
 ### Adding your own brains
 See [Building a Brain](#building-a-brain) below.
 

@@ -1,0 +1,53 @@
+# POPx Brain
+# Source: popsextension.com (scraped offline) + TDPilot-popx-refs catalog
+# Trust: licensed — POPx is a paid plugin, content is copyrighted
+
+name: popx
+display_name: "POPx Operator Reference"
+trust_tier: licensed
+version: "1.0"
+source_url: "https://www.popsextension.com"
+description: "POPx GPU-accelerated operators — 59 operators, 54 examples, parameters, guides, release notes"
+
+# Paths to source data
+scrape_path: "${TDPILOT_POPX_SCRAPE_PATH}"
+refs_path: "${TDPILOT_POPX_REFS_PATH}"
+
+# Content extraction (POPx uses modern HTML, not MediaWiki)
+content_selector: "main.main-content"
+strip_selectors:
+  - "script"
+  - "style"
+  - "#navbar-container"
+  - "#sidebar-container"
+  - "#mobile-menu-container"
+
+# Page classification (matched against URL path, first match wins)
+page_rules:
+  - pattern: "docs/operators/falloffs/*"
+    doc_type: operator_falloff
+  - pattern: "docs/operators/generators/*"
+    doc_type: operator_generator
+  - pattern: "docs/operators/modifiers/*"
+    doc_type: operator_modifier
+  - pattern: "docs/operators/simulations/*"
+    doc_type: operator_simulation
+  - pattern: "docs/operators/tools/*"
+    doc_type: operator_tool
+  - pattern: "docs/guides/*"
+    doc_type: guide
+  - pattern: "docs/release-notes/*"
+    doc_type: release_notes
+  - pattern: "docs/contact/*"
+    action: skip
+
+# URL reconstruction
+url_template: "https://www.popsextension.com/{page_path}"
+
+# Operator categories (from URL path)
+operator_categories:
+  - falloffs
+  - generators
+  - modifiers
+  - simulations
+  - tools
