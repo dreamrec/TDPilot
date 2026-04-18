@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 
 class AuditLogger:
@@ -19,7 +19,7 @@ class AuditLogger:
     def enabled(self) -> bool:
         return self._file_path is not None
 
-    def log(self, event: str, details: Dict[str, Any]) -> None:
+    def log(self, event: str, details: dict[str, Any]) -> None:
         if not self._file_path:
             return
 

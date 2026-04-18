@@ -16,7 +16,9 @@ def test_restricted_exec_violation_allows_basic_td_code():
 
 
 def test_enforce_exec_mode_off(monkeypatch):
-    monkeypatch.setattr(server, "TD_EXEC_MODE", "off")
+    # Exec mode is now sourced from the TD_MCP_EXEC_MODE env var at call time
+    # (was: monkey-patched on td_mcp.server.TD_EXEC_MODE via a sys.modules hack).
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "off")
     with pytest.raises(PermissionError):
         server._enforce_exec_mode("__result__ = 1")
 

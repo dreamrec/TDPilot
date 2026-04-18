@@ -8,6 +8,33 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: python -m pip install --upgrade uv
+
+      - name: Install dependencies (with dev extras)
+        run: uv sync --extra dev --frozen
+
+      - name: Ruff check
+        run: uv run ruff check src tests scripts td_component
+
+      - name: Ruff format check
+        run: uv run ruff format --check src tests scripts td_component
+        continue-on-error: true
+
+      - name: Version drift check
+        run: uv run python scripts/check_versions.py
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -27,10 +54,17 @@ jobs:
         run: python -m pip install --upgrade uv
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --extra dev --frozen
 
-      - name: Run tests
-        run: uv run pytest tests/ -q
+      - name: Run tests with coverage
+        run: uv run pytest tests/ -q --cov=src/td_mcp --cov-report=term --cov-report=xml
+
+      - name: Upload coverage report
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
 
       - name: Run registry smoke check
         run: uv run python scripts/smoke_mcp_registry.py
@@ -75,3 +109,23 @@ jobs:
             echo "Legacy references found."
             exit 1
           fi
+
+  install-parse:
+    name: Install script parse-check (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bash install script syntax-check (macOS)
+        if: runner.os == 'macOS'
+        run: bash -n install.sh
+      - name: PowerShell install script parse-check (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $script = Get-Content install.ps1 -Raw
+          $null = [ScriptBlock]::Create($script)
+          Write-Host "install.ps1 parses cleanly"

@@ -17,8 +17,9 @@ import re
 import sqlite3
 import sys
 import time
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Iterator, Optional
+from typing import Any
 
 from bs4 import BeautifulSoup, Tag
 
@@ -39,7 +40,7 @@ _CATEGORY_MAP = {
 _POPX_VERSION_RE = re.compile(r"v(\d+\.\d+\.\d+)")
 
 
-def classify_popx_page(rel_path: str) -> Optional[str]:
+def classify_popx_page(rel_path: str) -> str | None:
     """Classify a POPx page by its path relative to site root."""
     parts = rel_path.replace("\\", "/").split("/")
     # docs/operators/{category}/{name}/index.html
@@ -73,7 +74,7 @@ def derive_popx_url(rel_path: str) -> str:
     return f"https://www.popsextension.com/{clean}"
 
 
-def extract_popx_operator_category(rel_path: str) -> Optional[str]:
+def extract_popx_operator_category(rel_path: str) -> str | None:
     """Extract operator category (falloffs, generators, etc.)."""
     parts = rel_path.replace("\\", "/").split("/")
     if "operators" in parts:
@@ -83,7 +84,7 @@ def extract_popx_operator_category(rel_path: str) -> Optional[str]:
     return None
 
 
-def extract_popx_operator_name(rel_path: str) -> Optional[str]:
+def extract_popx_operator_name(rel_path: str) -> str | None:
     """Extract operator name from path like docs/operators/modifiers/pivot/."""
     parts = rel_path.replace("\\", "/").split("/")
     if "operators" in parts:
@@ -109,7 +110,7 @@ _STRIP_SELECTORS = ["script", "style", "#navbar-container",
                     "#sidebar-container", "#mobile-menu-container"]
 
 
-def normalize_popx_file(filepath: Path, rel_path: str) -> Optional[dict[str, Any]]:
+def normalize_popx_file(filepath: Path, rel_path: str) -> dict[str, Any] | None:
     """Normalize one POPx HTML page."""
     doc_type = classify_popx_page(rel_path)
     if doc_type is None:

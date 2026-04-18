@@ -4,22 +4,21 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
 
 
 @dataclass
 class Bound:
-    min_val: Optional[float] = None
-    max_val: Optional[float] = None
-    max_rate: Optional[float] = None
+    min_val: float | None = None
+    max_val: float | None = None
+    max_rate: float | None = None
 
 
 class SafetyManager:
     """Stores per-parameter bounds and enforces them on writes."""
 
     def __init__(self):
-        self._bounds: Dict[str, Bound] = {}
-        self._last_values: Dict[str, Tuple[float, float]] = {}
+        self._bounds: dict[str, Bound] = {}
+        self._last_values: dict[str, tuple[float, float]] = {}
         self._mode = "clamp"
 
     def set_mode(self, mode: str) -> None:
@@ -34,9 +33,9 @@ class SafetyManager:
         self,
         key: str,
         *,
-        min_val: Optional[float],
-        max_val: Optional[float],
-        max_rate: Optional[float],
+        min_val: float | None,
+        max_val: float | None,
+        max_rate: float | None,
     ) -> None:
         self._bounds[key] = Bound(min_val=min_val, max_val=max_val, max_rate=max_rate)
 
@@ -48,20 +47,20 @@ class SafetyManager:
         self._bounds.clear()
         return count
 
-    def list_bounds(self) -> Dict[str, Dict[str, Optional[float]]]:
+    def list_bounds(self) -> dict[str, dict[str, float | None]]:
         return {
             key: {"min_val": b.min_val, "max_val": b.max_val, "max_rate": b.max_rate}
             for key, b in self._bounds.items()
         }
 
-    def stats(self) -> Dict[str, object]:
+    def stats(self) -> dict[str, object]:
         return {
             "mode": self._mode,
             "bounds_count": len(self._bounds),
             "tracked_values": len(self._last_values),
         }
 
-    def apply(self, key: str, value: float) -> Tuple[float, Optional[str]]:
+    def apply(self, key: str, value: float) -> tuple[float, str | None]:
         bound = self._bounds.get(key)
         if not bound:
             return value, None

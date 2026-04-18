@@ -10,7 +10,6 @@ from typing import Any
 
 import td_mcp.server as server
 
-
 REQUIRED_TOOLS = {
     "td_get_info",
     "td_get_nodes",

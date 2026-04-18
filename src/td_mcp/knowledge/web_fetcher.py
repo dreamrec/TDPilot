@@ -11,7 +11,6 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import Optional
 
 # Rate-limit state (module-level)
 _last_request_time: float = 0.0
@@ -44,7 +43,7 @@ def _cache_path(kind: str, key: str) -> Path:
     return directory / f"{safe_key}.json"
 
 
-def _read_cache(kind: str, key: str) -> Optional[dict]:
+def _read_cache(kind: str, key: str) -> dict | None:
     path = _cache_path(kind, key)
     if path.exists():
         try:
@@ -62,7 +61,7 @@ def _write_cache(kind: str, key: str, data: dict) -> None:
         pass
 
 
-async def fetch_operator_page(op_type: str) -> Optional[dict]:
+async def fetch_operator_page(op_type: str) -> dict | None:
     """Fetch operator documentation from docs.derivative.ca.
 
     Returns a minimal dict with the page content, or None on any failure.
@@ -108,7 +107,7 @@ async def fetch_operator_page(op_type: str) -> Optional[dict]:
         return None
 
 
-async def fetch_release_notes(build: str) -> Optional[dict]:
+async def fetch_release_notes(build: str) -> dict | None:
     """Fetch release notes for a given build from derivative.ca.
 
     Returns a minimal dict, or None on any failure.

@@ -1,0 +1,1273 @@
+{
+  "td_analyze_frame": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_audit_project": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_capture_and_analyze": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_capture_frame": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_chop_data": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_clear_param_bounds": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_color_pipeline": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_component_standardize": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_connect_nodes": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_cooking_info": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_copy_node": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_create_macro": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_create_node": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_custom_parameters": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_delete_node": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_describe_dynamics": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_describe_surface": {
+    "description_present": true,
+    "properties": {},
+    "required": []
+  },
+  "td_detect_instability": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_diff_snapshots": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_disconnect": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_emergency_stabilize": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_exec_python": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_explain_better_way": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_find_official_example": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_geometry_data": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_get_build_compatibility": {
+    "description_present": true,
+    "properties": {
+      "build": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "op_type": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "string"
+      }
+    },
+    "required": [
+      "op_type"
+    ]
+  },
+  "td_get_capabilities": {
+    "description_present": false,
+    "properties": {},
+    "required": []
+  },
+  "td_get_connections": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_get_content": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_get_errors": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_get_events": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_get_info": {
+    "description_present": false,
+    "properties": {},
+    "required": []
+  },
+  "td_get_macro_params": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_get_node_detail": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_get_nodes": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_get_operator_doc": {
+    "description_present": true,
+    "properties": {
+      "node_path": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "op_type": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": []
+  },
+  "td_get_paketa12_tutorial": {
+    "description_present": true,
+    "properties": {
+      "topic": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "string"
+      }
+    },
+    "required": [
+      "topic"
+    ]
+  },
+  "td_get_param_help": {
+    "description_present": true,
+    "properties": {
+      "node_path": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "string"
+      },
+      "param_name": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "string"
+      }
+    },
+    "required": [
+      "node_path",
+      "param_name"
+    ]
+  },
+  "td_get_params": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_get_popx_operator": {
+    "description_present": true,
+    "properties": {
+      "operator_name": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "string"
+      }
+    },
+    "required": [
+      "operator_name"
+    ]
+  },
+  "td_get_release_delta": {
+    "description_present": true,
+    "properties": {
+      "build": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": []
+  },
+  "td_get_server_metrics": {
+    "description_present": false,
+    "properties": {},
+    "required": []
+  },
+  "td_get_state_vector": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_get_timescale_state": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_list_families": {
+    "description_present": false,
+    "properties": {},
+    "required": []
+  },
+  "td_list_macros": {
+    "description_present": false,
+    "properties": {},
+    "required": []
+  },
+  "td_list_snapshots": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_logger_status": {
+    "description_present": true,
+    "properties": {},
+    "required": []
+  },
+  "td_lookup_palette_component": {
+    "description_present": true,
+    "properties": {
+      "component_name": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "query": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": []
+  },
+  "td_lookup_snippets": {
+    "description_present": true,
+    "properties": {
+      "family": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "query": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "string"
+      }
+    },
+    "required": [
+      "query"
+    ]
+  },
+  "td_memory_export": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_memory_favorite": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_memory_import": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_memory_learn": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_memory_list": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_memory_preferences": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_memory_promote": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_memory_recall": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_memory_replay": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_memory_save": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_monitor_visual": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_optimize_visual": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_plan_patch": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_pop_inspect": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_preflight_patch": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_project_lifecycle": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_pulse_param": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_python_classes": {
+    "description_present": false,
+    "properties": {},
+    "required": []
+  },
+  "td_python_env_status": {
+    "description_present": true,
+    "properties": {},
+    "required": []
+  },
+  "td_python_help": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_recommend_official_component": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_rename_node": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_restore_snapshot": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_screenshot": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_search_nodes": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_search_official_docs": {
+    "description_present": true,
+    "properties": {
+      "card_types": {
+        "any_of_types": [
+          "array",
+          "null"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "family": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "limit": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "integer"
+      },
+      "query": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "string"
+      }
+    },
+    "required": [
+      "query"
+    ]
+  },
+  "td_search_paketa12": {
+    "description_present": true,
+    "properties": {
+      "limit": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "integer"
+      },
+      "query": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "string"
+      }
+    },
+    "required": [
+      "query"
+    ]
+  },
+  "td_search_popx_docs": {
+    "description_present": true,
+    "properties": {
+      "limit": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "integer"
+      },
+      "query": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "string"
+      }
+    },
+    "required": [
+      "query"
+    ]
+  },
+  "td_set_content": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_set_param_bounds": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_set_params": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_snapshot_scene": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_stop_monitor_visual": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_stop_stream_top": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_stream_top": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_subscribe": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_tdresources_inspect": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_threading_status": {
+    "description_present": true,
+    "properties": {},
+    "required": []
+  },
+  "td_timeline": {
+    "description_present": false,
+    "properties": {},
+    "required": []
+  },
+  "td_timeline_set": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_unsubscribe": {
+    "description_present": false,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  },
+  "td_validate_recipe": {
+    "description_present": true,
+    "properties": {
+      "params": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "params"
+    ]
+  }
+}

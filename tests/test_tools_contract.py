@@ -1,6 +1,7 @@
 import asyncio
 
 import td_mcp.server as server
+from _constants import EXPECTED_MIN_TOOL_COUNT
 
 
 def test_tool_registry_contains_core_and_v2_surfaces():
@@ -91,4 +92,4 @@ def test_tool_registry_contains_core_and_v2_surfaces():
 
     missing = expected - names
     assert not missing, f"Missing expected tools: {sorted(missing)}"
-    assert len(names) >= 92
+    assert len(names) >= EXPECTED_MIN_TOOL_COUNT

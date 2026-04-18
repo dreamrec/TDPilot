@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import re
-from typing import Optional
-
 
 # Operator family suffixes
 _OP_FAMILIES = ("TOP", "CHOP", "SOP", "DAT", "COMP", "MAT", "POP")
@@ -31,7 +29,7 @@ _PAGE_RULES: list[tuple[str, str]] = [
 _SKIP_EXTENSIONS = {".css", ".js", ".png", ".jpg", ".gif", ".ico", ".svg"}
 
 
-def classify_page(filename: str) -> Optional[str]:
+def classify_page(filename: str) -> str | None:
     """Classify a page by its filename (without .html).
 
     Returns doc_type string, or None if the page should be skipped.
@@ -76,7 +74,7 @@ def derive_url(filename: str) -> str:
     return f"https://docs.derivative.ca/{page_name}"
 
 
-def extract_operator_family(filename: str) -> Optional[str]:
+def extract_operator_family(filename: str) -> str | None:
     """Extract operator family (TOP, CHOP, etc.) from filename."""
     for family in _OP_FAMILIES:
         if filename.endswith(f"_{family}.html") or filename.endswith(f"_{family}"):
@@ -84,7 +82,7 @@ def extract_operator_family(filename: str) -> Optional[str]:
     return None
 
 
-def extract_operator_name(title: str) -> Optional[str]:
+def extract_operator_name(title: str) -> str | None:
     """Extract operator display name from page title.
 
     Example: 'Composite TOP' → 'Composite TOP'

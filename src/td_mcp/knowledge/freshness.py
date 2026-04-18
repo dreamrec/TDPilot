@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
-from typing import Optional
 
 
 @dataclass
@@ -18,7 +17,7 @@ class Provenance:
     """
 
     source: str = "local_card"
-    fetched_at: Optional[str] = None
+    fetched_at: str | None = None
     last_verified: str = ""
     td_build: str = ""
     confidence: str = ""

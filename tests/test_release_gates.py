@@ -3,7 +3,6 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
-
 _SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "check_release_gates.py"
 _SPEC = importlib.util.spec_from_file_location("check_release_gates", _SCRIPT_PATH)
 assert _SPEC and _SPEC.loader

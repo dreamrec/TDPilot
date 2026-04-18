@@ -7,14 +7,14 @@ import argparse
 import json
 import math
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 
-def load_json(path: str) -> Dict[str, Any]:
+def load_json(path: str) -> dict[str, Any]:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
-def check_threshold(label: str, value: float, op: str, limit: float) -> Dict[str, Any]:
+def check_threshold(label: str, value: float, op: str, limit: float) -> dict[str, Any]:
     if math.isnan(value):
         return {"label": label, "status": "missing", "value": value, "target": f"{op} {limit}"}
 
@@ -33,8 +33,8 @@ def check_threshold(label: str, value: float, op: str, limit: float) -> Dict[str
     }
 
 
-def evaluate(bench: Dict[str, Any] | None, soak: Dict[str, Any] | None) -> Dict[str, Any]:
-    checks: List[Dict[str, Any]] = []
+def evaluate(bench: dict[str, Any] | None, soak: dict[str, Any] | None) -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
 
     if bench is None and soak is None:
         checks.append(

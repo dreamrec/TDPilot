@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from td_mcp.macros.models import (
     ConnectionSpec,
@@ -21,7 +21,7 @@ def default_template_dir() -> Path:
     return Path("~/.tdpilot/templates").expanduser()
 
 
-def load_user_templates(directory: str | Path | None = None) -> Tuple[Dict[str, MacroTemplate], List[str]]:
+def load_user_templates(directory: str | Path | None = None) -> tuple[dict[str, MacroTemplate], list[str]]:
     """Load user-defined macro templates from JSON files.
 
     Expected JSON forms:
@@ -32,8 +32,8 @@ def load_user_templates(directory: str | Path | None = None) -> Tuple[Dict[str, 
     if not template_dir.exists() or not template_dir.is_dir():
         return {}, []
 
-    templates: Dict[str, MacroTemplate] = {}
-    warnings: List[str] = []
+    templates: dict[str, MacroTemplate] = {}
+    warnings: list[str] = []
 
     for file_path in sorted(template_dir.glob("*.json")):
         try:
@@ -42,7 +42,7 @@ def load_user_templates(directory: str | Path | None = None) -> Tuple[Dict[str, 
             warnings.append(f"{file_path.name}: failed to parse JSON ({exc})")
             continue
 
-        entries: List[Dict[str, Any]]
+        entries: list[dict[str, Any]]
         if isinstance(raw, dict) and isinstance(raw.get("templates"), list):
             entries = [entry for entry in raw["templates"] if isinstance(entry, dict)]
         elif isinstance(raw, dict):
@@ -62,7 +62,7 @@ def load_user_templates(directory: str | Path | None = None) -> Tuple[Dict[str, 
     return templates, warnings
 
 
-def _parse_template(data: Dict[str, Any]) -> MacroTemplate:
+def _parse_template(data: dict[str, Any]) -> MacroTemplate:
     name = _as_str(data.get("name"), field="name")
     description = _as_str(data.get("description", ""), field="description")
 
@@ -89,7 +89,7 @@ def _parse_template(data: Dict[str, Any]) -> MacroTemplate:
     raw_targets = data.get("param_targets", {})
     if not isinstance(raw_targets, dict):
         raise ValueError("'param_targets' must be an object when provided")
-    param_targets: Dict[str, List[ParamTarget]] = {}
+    param_targets: dict[str, list[ParamTarget]] = {}
     for key, target_list in raw_targets.items():
         if not isinstance(target_list, list):
             raise ValueError(f"param_targets.{key} must be a list")

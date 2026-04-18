@@ -17,12 +17,18 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import sys
 import time
+from pathlib import Path
+
+# Make src/td_mcp importable when script is invoked directly.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from td_mcp.release_gates import EXPECTED_MIN_TOOL_COUNT  # noqa: E402
 import traceback
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import anyio
 from mcp.client.session import ClientSession
@@ -51,7 +57,7 @@ class E2ESuite:
         self.repo_dir = repo_dir
         self.strict_events = strict_events
         self.steps: list[StepResult] = []
-        self.ctx: Dict[str, Any] = {
+        self.ctx: dict[str, Any] = {
             "created_paths": [],
             "timeline_before": None,
             "exec_mode": None,
@@ -61,7 +67,7 @@ class E2ESuite:
     async def _call_tool(
         self,
         name: str,
-        params: Optional[dict[str, Any]] = None,
+        params: dict[str, Any] | None = None,
         *,
         expect_error: bool = False,
     ) -> dict[str, Any]:
@@ -226,8 +232,10 @@ class E2ESuite:
         tools = await self.session.list_tools()
         tool_names = {tool.name for tool in tools.tools}
 
-        if len(tool_names) < 86:
-            raise TestFailure(f"Expected at least 92 tools, got {len(tool_names)}")
+        if len(tool_names) < EXPECTED_MIN_TOOL_COUNT:
+            raise TestFailure(
+                f"Expected at least {EXPECTED_MIN_TOOL_COUNT} tools, got {len(tool_names)}"
+            )
 
         required_tools = {
             "td_geometry_data",

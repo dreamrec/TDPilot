@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -12,11 +12,11 @@ class ParamSpec:
 
     type: str
     default: Any
-    min_value: Optional[float] = None
-    max_value: Optional[float] = None
+    min_value: float | None = None
+    max_value: float | None = None
     description: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "type": self.type,
             "default": self.default,
@@ -34,7 +34,7 @@ class NodeSpec:
     name: str
     dx: int = 0
     dy: int = 0
-    params: Dict[str, Any] = field(default_factory=dict)
+    params: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -63,7 +63,7 @@ class ParamTarget:
     node: str
     param: str
     mode: str = "value"  # value | expr
-    template: Optional[str] = None  # for expr mode, supports "{value}" interpolation
+    template: str | None = None  # for expr mode, supports "{value}" interpolation
 
 
 @dataclass(frozen=True)
@@ -85,16 +85,16 @@ class MacroTemplate:
 
     name: str
     description: str
-    nodes: List[NodeSpec]
-    connections: List[ConnectionSpec]
-    expressions: List[ExpressionSpec] = field(default_factory=list)
-    node_references: List[NodeRefParam] = field(default_factory=list)
-    param_schema: Dict[str, ParamSpec] = field(default_factory=dict)
-    param_targets: Dict[str, List[ParamTarget]] = field(default_factory=dict)
-    entry_node: Optional[str] = None
-    exit_node: Optional[str] = None
+    nodes: list[NodeSpec]
+    connections: list[ConnectionSpec]
+    expressions: list[ExpressionSpec] = field(default_factory=list)
+    node_references: list[NodeRefParam] = field(default_factory=list)
+    param_schema: dict[str, ParamSpec] = field(default_factory=dict)
+    param_targets: dict[str, list[ParamTarget]] = field(default_factory=dict)
+    entry_node: str | None = None
+    exit_node: str | None = None
 
-    def summary(self) -> Dict[str, Any]:
+    def summary(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "description": self.description,

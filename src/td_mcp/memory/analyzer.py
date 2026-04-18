@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
-
+from typing import Any
 
 # Complexity thresholds
 SMALL_MAX = 10
@@ -23,16 +22,16 @@ _ASSET_EXTENSIONS = (
 
 
 async def analyze_network(
-    client: "TDClient",  # noqa: F821
+    client: TDClient,  # noqa: F821
     path: str,
     *,
     max_depth: int = 3,
     max_nodes: int = 200,
     name: str = "",
     description: str = "",
-    tags: Optional[List[str]] = None,
+    tags: list[str] | None = None,
     td_build: str = "",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Analyze a TD network subtree and return a technique recipe dict.
 
     Auto-detects complexity:
@@ -59,8 +58,8 @@ async def analyze_network(
         recipe = None
 
     # Build structure summary (always included)
-    families: Dict[str, int] = {}
-    op_types: Dict[str, int] = {}
+    families: dict[str, int] = {}
+    op_types: dict[str, int] = {}
     for node in nodes.values():
         fam = node.get("family", "unknown")
         families[fam] = families.get(fam, 0) + 1
@@ -68,7 +67,7 @@ async def analyze_network(
         op_types[op_type] = op_types.get(op_type, 0) + 1
 
     # Key params for large networks
-    key_params: Optional[List[Dict[str, Any]]] = None
+    key_params: list[dict[str, Any]] | None = None
     if complexity == "large":
         key_params = _extract_key_params(nodes, path)
 
@@ -90,7 +89,7 @@ async def analyze_network(
 
 
 async def _collect_subtree(
-    client: "TDClient",
+    client: TDClient,
     root_path: str,
     *,
     max_depth: int = 3,
@@ -100,8 +99,8 @@ async def _collect_subtree(
 
     Returns (nodes_dict, connections_list).
     """
-    nodes: Dict[str, Dict[str, Any]] = {}
-    connections: List[Dict[str, Any]] = []
+    nodes: dict[str, dict[str, Any]] = {}
+    connections: list[dict[str, Any]] = []
     visited: set[str] = set()
 
     queue: list[tuple] = [(root_path, 0)]
@@ -171,10 +170,10 @@ async def _collect_subtree(
 
 
 def _build_full_recipe(
-    nodes: Dict[str, Dict[str, Any]],
-    connections: List[Dict[str, Any]],
+    nodes: dict[str, dict[str, Any]],
+    connections: list[dict[str, Any]],
     root_path: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Build a portable recipe dict with relative paths."""
     prefix = root_path.rstrip("/")
 
@@ -185,15 +184,15 @@ def _build_full_recipe(
             return "/"
         return p
 
-    recipe_nodes: Dict[str, Dict[str, Any]] = {}
-    external_assets: List[str] = []
-    layout: Dict[str, Dict[str, Any]] = {}
+    recipe_nodes: dict[str, dict[str, Any]] = {}
+    external_assets: list[str] = []
+    layout: dict[str, dict[str, Any]] = {}
 
     for abs_path, node in nodes.items():
         rel_path = _rel(abs_path)
         # Extract expressions from params and scan for external assets
-        params_clean: Dict[str, Any] = {}
-        expressions: Dict[str, str] = {}
+        params_clean: dict[str, Any] = {}
+        expressions: dict[str, str] = {}
         raw_params = node.get("params", {})
         for pname, pval in raw_params.items():
             if isinstance(pval, dict):
@@ -227,7 +226,7 @@ def _build_full_recipe(
             recipe_nodes[rel_path]["expressions"] = expressions
 
         # Build layout entry
-        layout_entry: Dict[str, Any] = {}
+        layout_entry: dict[str, Any] = {}
         node_x = node.get("nodeX")
         node_y = node.get("nodeY")
         if node_x is not None:
@@ -264,12 +263,12 @@ def _build_full_recipe(
 
 
 def _extract_key_params(
-    nodes: Dict[str, Dict[str, Any]],
+    nodes: dict[str, dict[str, Any]],
     root_path: str,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """For large networks, extract only params with non-default/interesting values."""
     prefix = root_path.rstrip("/")
-    key_params: List[Dict[str, Any]] = []
+    key_params: list[dict[str, Any]] = []
 
     # Param names that are usually interesting
     interesting_names = {
@@ -294,7 +293,7 @@ def _extract_key_params(
                 expr = pval.get("expression") or pval.get("expr")
                 # Include if has expression or is an interesting param
                 if expr or pname_lower in interesting_names:
-                    entry: Dict[str, Any] = {
+                    entry: dict[str, Any] = {
                         "path": rel_path,
                         "param": pname,
                         "value": value,

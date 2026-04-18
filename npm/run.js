@@ -50,12 +50,17 @@ function installUv() {
 function ensureRepo() {
   const marker = join(INSTALL_DIR, "pyproject.toml");
   if (existsSync(marker)) {
-    // Pull latest
-    try {
-      run("git pull", { cwd: INSTALL_DIR });
-      console.log("[TDPilot] Updated to latest version.");
-    } catch {
-      // Offline or no git — fine, use what we have
+    // Auto-update is OPT-IN — prior behavior silently ran `git pull` on every
+    // invocation, which surprised users with local edits. Set TDPILOT_AUTO_UPDATE=1
+    // to restore the old behavior, or use `npx tdpilot update` (see brains.js)
+    // for an explicit refresh.
+    if (process.env.TDPILOT_AUTO_UPDATE === "1") {
+      try {
+        run("git pull", { cwd: INSTALL_DIR });
+        console.log("[TDPilot] Updated to latest version (TDPILOT_AUTO_UPDATE=1).");
+      } catch {
+        // Offline or no git — fine, use what we have
+      }
     }
     return;
   }

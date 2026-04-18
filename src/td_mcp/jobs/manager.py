@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import uuid
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
-from typing import Any, Awaitable, Callable, Dict, Optional
+from typing import Any
 
 
 class JobManager:
@@ -13,12 +14,12 @@ class JobManager:
 
     def __init__(self, mcp_server=None):
         self._mcp = mcp_server
-        self._jobs: Dict[str, Dict[str, Any]] = {}
-        self._tasks: Dict[str, asyncio.Task] = {}
-        self.on_progress_hook: Optional[Callable] = None
-        self.on_complete_hook: Optional[Callable] = None
+        self._jobs: dict[str, dict[str, Any]] = {}
+        self._tasks: dict[str, asyncio.Task] = {}
+        self.on_progress_hook: Callable | None = None
+        self.on_complete_hook: Callable | None = None
 
-    def create_job(self, description: str = "") -> Dict[str, Any]:
+    def create_job(self, description: str = "") -> dict[str, Any]:
         job_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc).isoformat()
         payload = {
@@ -35,7 +36,7 @@ class JobManager:
         self._jobs[job_id] = payload
         return payload
 
-    def get_job(self, job_id: str) -> Optional[Dict[str, Any]]:
+    def get_job(self, job_id: str) -> dict[str, Any] | None:
         return self._jobs.get(job_id)
 
     def update_job(self, job_id: str, **fields: Any) -> None:
@@ -53,7 +54,7 @@ class JobManager:
         self,
         description: str,
         runner: Callable[[str], Awaitable[Any]],
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         job = self.create_job(description=description)
         job_id = job["job_id"]
         self.update_job(job_id, status="running")
@@ -93,8 +94,8 @@ class JobManager:
         task.cancel()
         return True
 
-    def stats(self) -> Dict[str, Any]:
-        status_counts: Dict[str, int] = {}
+    def stats(self) -> dict[str, Any]:
+        status_counts: dict[str, int] = {}
         for job in self._jobs.values():
             status = str(job.get("status", "unknown"))
             status_counts[status] = status_counts.get(status, 0) + 1

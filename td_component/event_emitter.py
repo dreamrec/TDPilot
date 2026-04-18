@@ -66,7 +66,7 @@ def emit(event_type, data, rate_limit=DEFAULT_RATE_LIMIT, dedupe_key=None):
         path = data.get("path", "") if isinstance(data, dict) else ""
         channel = data.get("channel", "") if isinstance(data, dict) else ""
         name = data.get("name", "") if isinstance(data, dict) else ""
-        key = "{}:{}:{}:{}".format(event_type, path, channel, name)
+        key = f"{event_type}:{path}:{channel}:{name}"
 
     last = _LAST_EMIT.get(key, 0.0)
     if rate_limit and (now - last) < float(rate_limit):

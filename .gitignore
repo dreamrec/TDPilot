@@ -22,20 +22,29 @@ env/
 .DS_Store
 Thumbs.db
 
-# UV
-uv.lock
+# UV — uv.lock IS tracked for reproducible installs
 
 # TouchDesigner temp
 *.toe
 *.toe.lock
 /tmp/
 
+# Scratch TD projects inside td_component (build artifacts)
+td_component/NewProject*.toe
+
 # Generated QA artifacts
 reports/
 zivfETsb
 
-# Local MCP configuration
+# Local MCP configuration — template is .mcp.json.template, user-rendered file is ignored
 .mcp.json
+
+# Secret env file written by installer (contains TD_MCP_SHARED_SECRET)
+.tdpilot.env
+
+# Dev tooling scratch
+.playwright-mcp/
+.claude/
 
 # Git worktrees
 .worktrees/

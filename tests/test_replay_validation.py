@@ -6,16 +6,13 @@ the old card_index corpus check.
 
 from __future__ import annotations
 
-import json
 from types import SimpleNamespace
-from typing import Any, Dict, List, Optional
 
 import pytest
 
 import td_mcp.tool_registry as registry
 from td_mcp.memory import TechniqueStore
 from td_mcp.services import ServiceContainer
-
 
 # ── Helpers ──────────────────────────────────────────────────
 
@@ -25,12 +22,12 @@ class _ReplayClient:
 
     def __init__(
         self,
-        families: Dict[str, List[str]] | None = None,
+        families: dict[str, list[str]] | None = None,
         families_error: bool = False,
     ):
         self._families = families or {}
         self._families_error = families_error
-        self.calls: List[tuple] = []
+        self.calls: list[tuple] = []
 
     async def request(self, endpoint: str, body: dict | None = None):
         body = body or {}

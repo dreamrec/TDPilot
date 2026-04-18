@@ -1,6 +1,5 @@
 """Tests for expanded SnapshotManager.diff() covering connections and expressions."""
 
-import pytest
 from td_mcp.memory import SnapshotManager
 
 

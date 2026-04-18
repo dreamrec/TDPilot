@@ -1,7 +1,7 @@
 """Tests for enhanced recipe capture in analyzer."""
+import asyncio
 from unittest.mock import AsyncMock
 
-import asyncio
 from td_mcp.memory.analyzer import analyze_network
 
 

@@ -7,7 +7,7 @@ import logging
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class TechniqueStore:
         self._base = Path(base_dir or DEFAULT_BASE_DIR).expanduser()
         self._project_name = project_name
         self._global_dir = self._base / "global"
-        self._project_dir: Optional[Path] = None
+        self._project_dir: Path | None = None
         if project_name:
             safe_name = "".join(c if c.isalnum() or c in "-_." else "_" for c in project_name)
             self._project_dir = self._base / "projects" / safe_name
@@ -33,8 +33,8 @@ class TechniqueStore:
             self._project_dir.mkdir(parents=True, exist_ok=True)
 
         # In-memory caches keyed by technique id
-        self._global: Dict[str, Dict[str, Any]] = {}
-        self._project: Dict[str, Dict[str, Any]] = {}
+        self._global: dict[str, dict[str, Any]] = {}
+        self._project: dict[str, dict[str, Any]] = {}
 
         self._load()
 
@@ -52,19 +52,19 @@ class TechniqueStore:
 
     def add(
         self,
-        technique: Dict[str, Any],
+        technique: dict[str, Any],
         scope: str = "project",
         *,
         name: str = "",
         description: str = "",
-        tags: Optional[List[str]] = None,
+        tags: list[str] | None = None,
         notes: str = "",
-        compatibility: Optional[Dict[str, Any]] = None,
+        compatibility: dict[str, Any] | None = None,
     ) -> str:
         """Add a technique and return its id."""
         technique_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc).isoformat()
-        entry: Dict[str, Any] = {
+        entry: dict[str, Any] = {
             "id": technique_id,
             "name": name or f"technique_{technique_id[:8]}",
             "description": description,
@@ -86,7 +86,7 @@ class TechniqueStore:
         self._save_scope(scope)
         return technique_id
 
-    def get(self, technique_id: str, scope: str = "project") -> Optional[Dict[str, Any]]:
+    def get(self, technique_id: str, scope: str = "project") -> dict[str, Any] | None:
         """Return a single technique by id, or None."""
         store = self._store_for(scope)
         return store.get(technique_id)
@@ -94,12 +94,12 @@ class TechniqueStore:
     def search(
         self,
         query: str = "",
-        tags: Optional[List[str]] = None,
+        tags: list[str] | None = None,
         scope: str = "all",
         limit: int = 20,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search techniques by text query and/or tags. Returns summaries (no full recipe)."""
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         stores = self._stores_for_scope(scope)
         query_lower = query.lower()
         tag_set = set(tags or [])
@@ -137,12 +137,12 @@ class TechniqueStore:
     def list_techniques(
         self,
         scope: str = "all",
-        tags: Optional[List[str]] = None,
+        tags: list[str] | None = None,
         favorites_only: bool = False,
         limit: int = 50,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """List technique summaries with optional filtering."""
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         stores = self._stores_for_scope(scope)
         tag_set = set(tags or [])
 
@@ -169,7 +169,7 @@ class TechniqueStore:
         self._save_scope(scope)
         return True
 
-    def update(self, technique_id: str, updates: Dict[str, Any], scope: str = "project") -> bool:
+    def update(self, technique_id: str, updates: dict[str, Any], scope: str = "project") -> bool:
         """Update mutable fields on a technique. Returns True on success."""
         store = self._store_for(scope)
         entry = store.get(technique_id)
@@ -190,7 +190,7 @@ class TechniqueStore:
     def update_validation(
         self,
         technique_id: str,
-        validation: Dict[str, Any],
+        validation: dict[str, Any],
         scope: str = "project",
     ) -> bool:
         """Update validation_result and auto-promote/demote state.
@@ -249,7 +249,7 @@ class TechniqueStore:
         self._save_scope(scope)
         return True
 
-    def promote(self, technique_id: str) -> Optional[str]:
+    def promote(self, technique_id: str) -> str | None:
         """Copy a project technique to the global library. Returns new global id, or None."""
         entry = self._project.get(technique_id)
         if not entry:
@@ -285,7 +285,7 @@ class TechniqueStore:
         self._save_scope(scope)
         return True
 
-    def export_library(self, scope: str = "project") -> Dict[str, Any]:
+    def export_library(self, scope: str = "project") -> dict[str, Any]:
         """Export techniques as a portable JSON-serializable dict."""
         import copy
 
@@ -299,11 +299,11 @@ class TechniqueStore:
 
     def import_library(
         self,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         scope: str = "project",
         *,
         overwrite: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Import techniques from an exported library dict.
 
         Returns summary with imported/skipped/overwritten counts.
@@ -334,7 +334,7 @@ class TechniqueStore:
 
         return {"imported": imported, "skipped": skipped, "overwritten": overwritten}
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         return {
             "global_count": len(self._global),
             "project_count": len(self._project),
@@ -346,12 +346,12 @@ class TechniqueStore:
     # Internals
     # ------------------------------------------------------------------
 
-    def _store_for(self, scope: str) -> Dict[str, Dict[str, Any]]:
+    def _store_for(self, scope: str) -> dict[str, dict[str, Any]]:
         if scope == "global":
             return self._global
         return self._project
 
-    def _stores_for_scope(self, scope: str) -> List[tuple]:
+    def _stores_for_scope(self, scope: str) -> list[tuple]:
         """Return list of (scope_label, store_dict) tuples to iterate."""
         if scope == "global":
             return [("global", self._global)]
@@ -364,7 +364,7 @@ class TechniqueStore:
         stores.append(("global", self._global))
         return stores
 
-    def _summary(self, entry: Dict[str, Any], scope: str) -> Dict[str, Any]:
+    def _summary(self, entry: dict[str, Any], scope: str) -> dict[str, Any]:
         """Return a summary dict (no full technique/recipe payload)."""
         tech = entry.get("technique", {})
         return {
@@ -398,7 +398,7 @@ class TechniqueStore:
         if self._project_dir:
             self._project = self._load_file(self._project_dir / "techniques.json")
 
-    def _load_file(self, path: Path) -> Dict[str, Dict[str, Any]]:
+    def _load_file(self, path: Path) -> dict[str, dict[str, Any]]:
         if not path.exists():
             return {}
         try:
@@ -408,7 +408,7 @@ class TechniqueStore:
         if not isinstance(data, dict):
             return {}
         # Validate entries
-        result: Dict[str, Dict[str, Any]] = {}
+        result: dict[str, dict[str, Any]] = {}
         for tid, entry in data.items():
             if isinstance(entry, dict) and "technique" in entry:
                 result[tid] = entry
@@ -425,7 +425,7 @@ class TechniqueStore:
                 )
             self._write_file(self._project_dir / "techniques.json", self._project)
 
-    def _write_file(self, path: Path, data: Dict[str, Dict[str, Any]]) -> None:
+    def _write_file(self, path: Path, data: dict[str, dict[str, Any]]) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".json.tmp")
         try:

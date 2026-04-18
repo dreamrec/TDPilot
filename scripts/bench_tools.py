@@ -13,14 +13,15 @@ import json
 import math
 import statistics
 import time
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Awaitable, Callable, Dict, List
+from typing import Any
 
 from td_mcp.td_client import TDClient
 
 
-def percentile(values: List[float], p: float) -> float:
+def percentile(values: list[float], p: float) -> float:
     if not values:
         return math.nan
     ordered = sorted(values)
@@ -42,8 +43,8 @@ async def run_benchmark(
     iterations: int,
     warmup: int,
     call: Callable[[int], Awaitable[Any]],
-) -> Dict[str, Any]:
-    timings: List[float] = []
+) -> dict[str, Any]:
+    timings: list[float] = []
     measured_errors = 0
     total_errors = 0
 
@@ -83,7 +84,7 @@ async def run_benchmark(
     }
 
 
-async def main_async(args: argparse.Namespace) -> Dict[str, Any]:
+async def main_async(args: argparse.Namespace) -> dict[str, Any]:
     client = TDClient(host=args.host, port=args.port, timeout=args.timeout, max_retries=args.max_retries)
     await client.health_check()
 

@@ -8,22 +8,21 @@ import json
 import logging
 import math
 import os
-import re
 import statistics
 import sys
 import time
+from collections.abc import Callable
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 from mcp.server.fastmcp import Context, FastMCP
 
-from td_mcp import normalize_transport as _normalize_transport
+from td_mcp import exec_safety, normalize_transport as _normalize_transport
 from td_mcp.audit import AuditLogger
 from td_mcp.capabilities import detect_capabilities
 from td_mcp.errors import format_tool_error
-from td_mcp.knowledge.freshness import Provenance
 from td_mcp.events import EventManager
 from td_mcp.events.uri import (
     chop_uri,
@@ -34,14 +33,20 @@ from td_mcp.events.uri import (
     top_frame_uri,
 )
 from td_mcp.jobs import JobManager
+from td_mcp.knowledge.freshness import Provenance
 from td_mcp.macros import MacroEngine
-from td_mcp.memory import SnapshotManager, TechniqueStore, PreferenceStore
+from td_mcp.memory import PreferenceStore, SnapshotManager, TechniqueStore
 from td_mcp.memory.analyzer import analyze_network
 from td_mcp.models import (
     AdjustableParamInput,
-    CHOPDataInput,
+    AnalyzeFrameInput,
+    AuditProjectInput,
     CaptureAndAnalyzeInput,
+    CaptureFrameInput,
+    CHOPDataInput,
     ClearBoundsInput,
+    ColorPipelineInput,
+    ComponentStandardizeInput,
     ConnectNodesInput,
     CookingInfoInput,
     CopyNodeInput,
@@ -52,13 +57,17 @@ from td_mcp.models import (
     DetectInstabilityInput,
     DiffSnapshotsInput,
     DisconnectInput,
+    ExecPythonInput,
+    ExplainBetterWayInput,
+    FindOfficialExampleInput,
+    GeometryDataInput,
     GetContentInput,
     GetErrorsInput,
     GetEventsInput,
     GetMacroParamsInput,
     GetNodesInput,
     GetParamsInput,
-    POPInspectInput,
+    ListSnapshotsInput,
     MemoryExportInput,
     MemoryFavoriteInput,
     MemoryImportInput,
@@ -71,43 +80,34 @@ from td_mcp.models import (
     MemorySaveInput,
     NodePathInput,
     OptimizeVisualInput,
+    PlanPatchInput,
+    POPInspectInput,
+    PreflightPatchInput,
+    ProjectLifecycleInput,
     PulseParamInput,
     PythonHelpInput,
+    RecommendOfficialInput,
     RenameNodeInput,
-    RestoreSnapshotInput,
     ResponseFormat,
+    RestoreSnapshotInput,
+    ScreenshotInput,
     SearchNodesInput,
     SetBoundsInput,
     SetContentInput,
     SetParamsInput,
-    ProjectLifecycleInput,
     SnapshotInput,
-    ScreenshotInput,
-    GeometryDataInput,
     StateVectorInput,
     StopMonitorInput,
     StopStreamTopInput,
     StreamTopInput,
     SubscribeInput,
-    TemporalAnalysisInput,
-    TimescaleStateInput,
-    TimelineSetInput,
-    UnsubscribeInput,
-    VisualMonitorInput,
-    ListSnapshotsInput,
-    ExecPythonInput,
-    PlanPatchInput,
-    PreflightPatchInput,
-    ValidateRecipeInput,
-    AuditProjectInput,
-    CaptureFrameInput,
-    AnalyzeFrameInput,
     TDResourcesInspectInput,
-    ComponentStandardizeInput,
-    ColorPipelineInput,
-    RecommendOfficialInput,
-    FindOfficialExampleInput,
-    ExplainBetterWayInput,
+    TemporalAnalysisInput,
+    TimelineSetInput,
+    TimescaleStateInput,
+    UnsubscribeInput,
+    ValidateRecipeInput,
+    VisualMonitorInput,
 )
 from td_mcp.safety import SafetyManager
 from td_mcp.services import ServiceContainer
@@ -139,10 +139,8 @@ def _read_int_env(name: str, default: int) -> int:
 
 
 def _normalize_exec_mode(value: str) -> str:
-    mode = (value or "restricted").strip().lower()
-    if mode not in {"off", "restricted", "standard", "full"}:
-        return "restricted"
-    return mode
+    """Deprecated: use td_mcp.exec_safety.normalize_mode."""
+    return exec_safety.normalize_mode(value)
 
 
 TD_HOST = os.environ.get("TD_MCP_HOST", "127.0.0.1")
@@ -161,55 +159,16 @@ TD_SNAPSHOT_DIR = (os.environ.get("TD_MCP_SNAPSHOT_DIR") or "").strip() or None
 TD_TEMPLATE_DIR = (os.environ.get("TD_MCP_TEMPLATE_DIR") or "").strip() or None
 TD_AUDIT_LOG = (os.environ.get("TD_MCP_AUDIT_LOG") or "").strip() or None
 TD_SHARED_SECRET = (os.environ.get("TD_MCP_SHARED_SECRET") or "").strip() or None
-TD_EXEC_MODE = _normalize_exec_mode(os.environ.get("TD_MCP_EXEC_MODE", "restricted"))
+TD_EXEC_MODE = exec_safety.normalize_mode(os.environ.get("TD_MCP_EXEC_MODE", "restricted"))
 
-RESTRICTED_IMPORT_RE = re.compile(r"(?m)^\s*(import|from)\s+\w+")
-RESTRICTED_TOKENS = (
-    "__import__(",
-    "open(",
-    "compile(",
-    "input(",
-    "subprocess",
-    "socket",
-    "requests",
-    "httpx",
-    "urllib",
-    "pathlib",
-    "shutil",
-    "os.system",
-    "os.popen",
-)
+# Re-export policy constants for backward compatibility with external callers.
+# Prefer importing from td_mcp.exec_safety directly in new code.
+RESTRICTED_IMPORT_RE = exec_safety.RESTRICTED_IMPORT_RE
+RESTRICTED_TOKENS = exec_safety.RESTRICTED_TOKENS
+STANDARD_ALLOWED_IMPORTS = exec_safety.STANDARD_ALLOWED_IMPORTS
+STANDARD_BLOCKED_TOKENS = exec_safety.STANDARD_BLOCKED_TOKENS
 
-STANDARD_ALLOWED_IMPORTS: frozenset = frozenset({
-    "json", "math", "re", "datetime", "collections",
-    "itertools", "functools", "copy", "textwrap",
-    "string", "random", "decimal", "fractions", "statistics",
-})
-
-STANDARD_BLOCKED_TOKENS: tuple = (
-    "__import__(",
-    "open(",
-    "compile(",
-    "input(",
-    "subprocess",
-    "socket",
-    "requests",
-    "httpx",
-    "urllib",
-    "pathlib",
-    "shutil",
-    "setattr",
-    "delattr",
-    "__subclasses__",
-    "__bases__",
-    "os.system",
-    "os.popen",
-    "globals(",
-    "locals(",
-    "eval(",
-)
-
-_STATE_VECTOR_CACHE: Dict[str, Dict[str, Any]] = {}
+_STATE_VECTOR_CACHE: dict[str, dict[str, Any]] = {}
 
 
 async def _with_undo_block(td_client, label: str, async_fn, *args):
@@ -460,7 +419,7 @@ mcp = FastMCP(
 )
 
 
-def _get_lifespan_state(ctx: Context) -> Dict[str, Any]:
+def _get_lifespan_state(ctx: Context) -> dict[str, Any]:
     # MCP Python currently exposes request-scoped startup payload as
     # `lifespan_context` (older code used `lifespan_state`).
     state = getattr(ctx.request_context, "lifespan_context", None)
@@ -544,14 +503,14 @@ def _get_snapshot_manager(ctx: Context) -> SnapshotManager:
     return services.snapshot_manager
 
 
-def _get_technique_store(ctx: Context) -> "TechniqueStore":
+def _get_technique_store(ctx: Context) -> TechniqueStore:
     services = _get_services(ctx)
     if not isinstance(services.technique_store, TechniqueStore):
         raise RuntimeError("Technique store unavailable in lifespan state")
     return services.technique_store
 
 
-def _get_preference_store(ctx: Context) -> "PreferenceStore":
+def _get_preference_store(ctx: Context) -> PreferenceStore:
     services = _get_services(ctx)
     if not isinstance(services.preference_store, PreferenceStore):
         raise RuntimeError("Preference store unavailable in lifespan state")
@@ -565,12 +524,12 @@ def _get_job_manager(ctx: Context) -> JobManager:
     return services.job_manager
 
 
-def _get_telemetry(ctx: Context) -> Optional[TelemetryCollector]:
+def _get_telemetry(ctx: Context) -> TelemetryCollector | None:
     services = _get_services(ctx)
     return services.telemetry if isinstance(services.telemetry, TelemetryCollector) else None
 
 
-def _get_audit(ctx: Context) -> Optional[AuditLogger]:
+def _get_audit(ctx: Context) -> AuditLogger | None:
     services = _get_services(ctx)
     return services.audit if isinstance(services.audit, AuditLogger) else None
 
@@ -593,7 +552,33 @@ def _record_tool_error(ctx: Context, tool_name: str) -> None:
     telemetry.increment(f"tools.{tool_name}.errors")
 
 
-def _audit_log(ctx: Context, event: str, details: Dict[str, Any]) -> None:
+def _invoke_with_lifecycle(tool_name, ctx, func, *args, **kwargs):
+    """Runtime helper for tools that want one-line lifecycle wrapping.
+
+    Replaces the repetitive 8-line pattern inside a tool body:
+
+        async def td_foo(params, ctx):
+            return await _invoke_with_lifecycle(
+                "td_foo", ctx, _td_foo_body, params, ctx
+            )
+
+        async def _td_foo_body(params, ctx):
+            data = await _get_client(ctx).request("foo", params.model_dump())
+            return _as_json_output(data)
+
+    Note: a cleaner ``@tool_lifecycle(name)`` decorator that wraps the whole
+    body does NOT work with FastMCP — it reads ``inspect.get_type_hints(func)``
+    to build the pydantic model, and ``from __future__ import annotations``
+    turns the hints into strings that don't resolve through ``functools.wraps``.
+    Refactoring to eliminate the boilerplate needs either dropping
+    ``from __future__`` in this file or switching to a schema-aware wrapper
+    (e.g., ``makefun``). Tracked as tech debt.
+    """
+    # Declared for future adoption; currently unused in favor of the inline pattern.
+    raise NotImplementedError("use the inline lifecycle pattern — see docstring")
+
+
+def _audit_log(ctx: Context, event: str, details: dict[str, Any]) -> None:
     audit = _get_audit(ctx)
     if audit is None:
         return
@@ -606,7 +591,7 @@ def _as_json_output(value: Any) -> str:
     return json.dumps(value, indent=2, default=str)
 
 
-def _vision_token_notice(include_image: bool) -> Dict[str, Any]:
+def _vision_token_notice(include_image: bool) -> dict[str, Any]:
     if include_image:
         return {
             "mode": "full_image_payloads",
@@ -676,10 +661,10 @@ async def _forward(
     ctx: Context,
     tool_name: str,
     endpoint: str,
-    body: Optional[Dict[str, Any]] = None,
+    body: dict[str, Any] | None = None,
     *,
-    audit_event: Optional[str] = None,
-    audit_details: Optional[Dict[str, Any]] = None,
+    audit_event: str | None = None,
+    audit_details: dict[str, Any] | None = None,
 ) -> str:
     finish = _start_tool(ctx, tool_name)
     try:
@@ -695,62 +680,25 @@ async def _forward(
 
 
 def _current_exec_mode() -> str:
-    # Keep tests patching td_mcp.server.TD_EXEC_MODE compatible.
-    server_mod = sys.modules.get("td_mcp.server")
-    if server_mod is not None and hasattr(server_mod, "TD_EXEC_MODE"):
-        return _normalize_exec_mode(str(getattr(server_mod, "TD_EXEC_MODE")))
-    return _normalize_exec_mode(TD_EXEC_MODE)
+    """Return the current exec mode, reading env at call time.
+
+    Previously this did a ``sys.modules.get("td_mcp.server")`` lookup so tests
+    could monkey-patch ``td_mcp.server.TD_EXEC_MODE``. That hack is gone —
+    tests now patch ``TD_MCP_EXEC_MODE`` via env (see tests/test_exec_safety.py).
+    """
+    return exec_safety.read_mode_from_env(default=TD_EXEC_MODE)
 
 
-def _restricted_exec_violation(code: str) -> Optional[str]:
-    if RESTRICTED_IMPORT_RE.search(code):
-        return "restricted mode blocks import statements"
-
-    lowered = code.lower()
-    for token in RESTRICTED_TOKENS:
-        if token in lowered:
-            return f"restricted mode blocks token: {token}"
-
-    return None
+def _restricted_exec_violation(code: str) -> str | None:
+    return exec_safety.restricted_violation(code)
 
 
-def _standard_exec_violation(code: str) -> Optional[str]:
-    lowered = code.lower()
-    for token in STANDARD_BLOCKED_TOKENS:
-        if token in lowered:
-            return f"standard mode blocks token: {token}"
-
-    for match in RESTRICTED_IMPORT_RE.finditer(code):
-        line = match.group(0).strip()
-        # Extract module name: "import foo" -> "foo", "from foo import bar" -> "foo"
-        parts = line.split()
-        if parts[0] == "from":
-            mod_name = parts[1]
-        else:
-            mod_name = parts[1]
-        # Take only the top-level package (e.g. "collections.abc" -> "collections")
-        top_level = mod_name.split(".")[0]
-        if top_level not in STANDARD_ALLOWED_IMPORTS:
-            return f"standard mode blocks import of: {top_level}"
-
-    return None
+def _standard_exec_violation(code: str) -> str | None:
+    return exec_safety.standard_violation(code)
 
 
 def _enforce_exec_mode(code: str) -> None:
-    mode = _current_exec_mode()
-
-    if mode == "off":
-        raise PermissionError("Python execution is disabled by TD_MCP_EXEC_MODE=off")
-
-    if mode == "restricted":
-        violation = _restricted_exec_violation(code)
-        if violation:
-            raise PermissionError(violation)
-
-    if mode == "standard":
-        violation = _standard_exec_violation(code)
-        if violation:
-            raise PermissionError(violation)
+    exec_safety.enforce(code, mode=_current_exec_mode())
 
 
 def _is_number(value: Any) -> bool:
@@ -758,15 +706,15 @@ def _is_number(value: Any) -> bool:
 
 
 def _apply_safety_to_set_params(
-    safety_manager: Optional[SafetyManager],
+    safety_manager: SafetyManager | None,
     path: str,
-    params: Dict[str, Any],
-) -> tuple[Dict[str, Any], list[str]]:
+    params: dict[str, Any],
+) -> tuple[dict[str, Any], list[str]]:
     """Clamp/reject numeric param writes according to configured bounds."""
     if safety_manager is None:
         return dict(params), []
 
-    adjusted: Dict[str, Any] = {}
+    adjusted: dict[str, Any] = {}
     warnings: list[str] = []
 
     for param_name, param_value in params.items():
@@ -807,7 +755,7 @@ def _format_nodes_markdown(nodes: list[dict[str, Any]], title: str = "Nodes") ->
     return "\n".join(lines)
 
 
-def _format_params_markdown(parameters: Dict[str, Any], path: str) -> str:
+def _format_params_markdown(parameters: dict[str, Any], path: str) -> str:
     if not parameters:
         return f"No parameters found for `{path}`."
 
@@ -843,10 +791,10 @@ async def _collect_scene_state(
     root_path: str,
     *,
     max_nodes: int = 1000,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     queue = [root_path]
     visited: set[str] = set()
-    nodes: Dict[str, Dict[str, Any]] = {}
+    nodes: dict[str, dict[str, Any]] = {}
     connection_set: set[tuple[str, str, int, int]] = set()
 
     while queue and len(visited) < max_nodes:
@@ -930,7 +878,7 @@ async def _capture_snapshot_payload(
     *,
     path: str,
     include_visual: bool,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     client = _get_client(ctx)
     return await _capture_snapshot_payload_for_client(
         client,
@@ -944,7 +892,7 @@ async def _capture_snapshot_payload_for_client(
     *,
     path: str,
     include_visual: bool,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     scene = await _collect_scene_state(client, path)
 
     if include_visual:
@@ -968,12 +916,12 @@ async def _capture_snapshot_payload_for_client(
     return scene
 
 
-def _extract_restore_values(node_snapshot: Dict[str, Any]) -> Dict[str, Any]:
+def _extract_restore_values(node_snapshot: dict[str, Any]) -> dict[str, Any]:
     params = node_snapshot.get("params", node_snapshot.get("parameters", {}))
     if not isinstance(params, dict):
         return {}
 
-    result: Dict[str, Any] = {}
+    result: dict[str, Any] = {}
     for name, info in params.items():
         if not isinstance(name, str):
             continue
@@ -1009,8 +957,8 @@ def _build_subscription_resource_uris(config: SubscribeInput) -> list[str]:
 async def _safe_request(
     client: TDClient,
     endpoint: str,
-    body: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    body: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     try:
         data = await client.request(endpoint, body)
         if isinstance(data, dict):
@@ -1020,7 +968,7 @@ async def _safe_request(
         return {"error": str(exc)}
 
 
-def _event_rate_per_sec(events: list[Dict[str, Any]]) -> float:
+def _event_rate_per_sec(events: list[dict[str, Any]]) -> float:
     timestamps: list[float] = []
     for event in events:
         if not isinstance(event, dict):
@@ -1036,11 +984,11 @@ def _event_rate_per_sec(events: list[Dict[str, Any]]) -> float:
 
 
 def _compute_timescale_from_timeline(
-    timeline: Dict[str, Any],
+    timeline: dict[str, Any],
     *,
     bpm: float,
     beats_per_bar: int,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     seconds = float(timeline.get("seconds", 0.0) or 0.0)
     fps = float(timeline.get("fps", 60.0) or 60.0)
     frame = int(timeline.get("frame", 0) or 0)
@@ -1108,7 +1056,7 @@ def _compute_timescale_from_timeline(
     }
 
 
-async def _build_state_vector(path: str, ctx: Context) -> Dict[str, Any]:
+async def _build_state_vector(path: str, ctx: Context) -> dict[str, Any]:
     client = _get_client(ctx)
     manager = _get_event_manager(ctx)
     monitor = _get_visual_monitor(ctx)
@@ -1178,7 +1126,7 @@ async def _build_state_vector(path: str, ctx: Context) -> Dict[str, Any]:
     }
 
 
-def _contains_any(text: str, needles: Tuple[str, ...]) -> bool:
+def _contains_any(text: str, needles: tuple[str, ...]) -> bool:
     return any(token in text for token in needles)
 
 
@@ -1212,7 +1160,7 @@ def _sign(value: float) -> int:
     return 0
 
 
-def _optimizer_direction_for_param(param_name: str, goal_profile: Dict[str, float]) -> int:
+def _optimizer_direction_for_param(param_name: str, goal_profile: dict[str, float]) -> int:
     roles = _param_roles(param_name)
     direction = 0
 
@@ -1249,13 +1197,13 @@ def _normalize_unit(value: float, min_val: float, max_val: float) -> float:
 
 
 def _optimizer_score(
-    current_values: Dict[Tuple[str, str], float],
-    adjustable_params: List[AdjustableParamInput],
-    directions: Dict[Tuple[str, str], int],
+    current_values: dict[tuple[str, str], float],
+    adjustable_params: list[AdjustableParamInput],
+    directions: dict[tuple[str, str], int],
     *,
     unstable: bool,
 ) -> float:
-    scores: List[float] = []
+    scores: list[float] = []
     for adjustable in adjustable_params:
         key = (adjustable.path, adjustable.param)
         value = current_values.get(key)
@@ -1284,13 +1232,13 @@ def _optimizer_score(
 
 async def _read_adjustable_values(
     client: TDClient,
-    adjustable_params: List[AdjustableParamInput],
-) -> Dict[Tuple[str, str], float]:
-    by_path: Dict[str, set[str]] = {}
+    adjustable_params: list[AdjustableParamInput],
+) -> dict[tuple[str, str], float]:
+    by_path: dict[str, set[str]] = {}
     for adjustable in adjustable_params:
         by_path.setdefault(adjustable.path, set()).add(adjustable.param)
 
-    values: Dict[Tuple[str, str], float] = {}
+    values: dict[tuple[str, str], float] = {}
     for path, param_names in by_path.items():
         payload = await _safe_request(client, "node/params", {"path": path, "names": sorted(param_names)})
         parameters = payload.get("parameters", {}) if isinstance(payload, dict) else {}
@@ -1316,15 +1264,15 @@ async def _read_adjustable_values(
 
 
 def _build_optimizer_plan(
-    adjustable_params: List[AdjustableParamInput],
-    current_values: Dict[Tuple[str, str], float],
-    goal_profile: Dict[str, float],
+    adjustable_params: list[AdjustableParamInput],
+    current_values: dict[tuple[str, str], float],
+    goal_profile: dict[str, float],
     *,
     safety_profile: str,
-) -> tuple[List[Dict[str, Any]], Dict[Tuple[str, str], int]]:
+) -> tuple[list[dict[str, Any]], dict[tuple[str, str], int]]:
     step_multiplier = _optimizer_step_multiplier(safety_profile)
-    plan: List[Dict[str, Any]] = []
-    directions: Dict[Tuple[str, str], int] = {}
+    plan: list[dict[str, Any]] = []
+    directions: dict[tuple[str, str], int] = {}
 
     for adjustable in adjustable_params:
         key = (adjustable.path, adjustable.param)
@@ -1361,15 +1309,15 @@ def _build_optimizer_plan(
 async def _apply_optimizer_plan(
     client: TDClient,
     safety_manager: SafetyManager,
-    plan: List[Dict[str, Any]],
-) -> Dict[str, Any]:
-    by_path: Dict[str, Dict[str, Any]] = {}
+    plan: list[dict[str, Any]],
+) -> dict[str, Any]:
+    by_path: dict[str, dict[str, Any]] = {}
     for item in plan:
         by_path.setdefault(item["path"], {})[item["param"]] = item["proposed"]
 
-    applied: List[Dict[str, Any]] = []
-    failed: List[Dict[str, Any]] = []
-    safety_warnings: List[str] = []
+    applied: list[dict[str, Any]] = []
+    failed: list[dict[str, Any]] = []
+    safety_warnings: list[str] = []
 
     for path, params in by_path.items():
         try:
@@ -1389,7 +1337,7 @@ async def _apply_optimizer_plan(
     }
 
 
-async def _compute_instability_snapshot(client: TDClient, path: str) -> Dict[str, Any]:
+async def _compute_instability_snapshot(client: TDClient, path: str) -> dict[str, Any]:
     cooking = await _safe_request(
         client,
         "cooking",
@@ -1423,15 +1371,15 @@ async def _compute_instability_snapshot(client: TDClient, path: str) -> Dict[str
 async def _restore_snapshot_nodes(
     client: TDClient,
     safety: SafetyManager,
-    snapshot_nodes: Dict[str, Any],
+    snapshot_nodes: dict[str, Any],
     *,
-    partial_filters: Optional[List[str]] = None,
+    partial_filters: list[str] | None = None,
     dry_run: bool = False,
-) -> Dict[str, Any]:
-    restored: List[Dict[str, Any]] = []
-    skipped: List[Dict[str, Any]] = []
-    failures: List[Dict[str, Any]] = []
-    warnings: List[str] = []
+) -> dict[str, Any]:
+    restored: list[dict[str, Any]] = []
+    skipped: list[dict[str, Any]] = []
+    failures: list[dict[str, Any]] = []
+    warnings: list[str] = []
 
     filters = partial_filters or []
     for node_path, node_snapshot in snapshot_nodes.items():
@@ -1477,8 +1425,8 @@ async def _run_optimizer_iterations(
     safety: SafetyManager,
     jobs: JobManager,
     job_id: str,
-    adjustable_params: List[AdjustableParamInput],
-    goal_profile: Dict[str, float],
+    adjustable_params: list[AdjustableParamInput],
+    goal_profile: dict[str, float],
     max_iterations: int,
     convergence_threshold: float,
     safety_profile: str,
@@ -1486,8 +1434,8 @@ async def _run_optimizer_iterations(
     progress_start: float = 0.0,
     progress_end: float = 1.0,
     phase_label: str = "optimize",
-) -> Dict[str, Any]:
-    iteration_logs: List[Dict[str, Any]] = []
+) -> dict[str, Any]:
+    iteration_logs: list[dict[str, Any]] = []
     converged = False
     emergency_stop = False
     stop_reason = "max_iterations"
@@ -1584,7 +1532,7 @@ async def _run_optimizer_iterations(
     }
 
 
-def _linear_slope(values: List[float]) -> float:
+def _linear_slope(values: list[float]) -> float:
     if len(values) < 2:
         return 0.0
     n = float(len(values))
@@ -1602,7 +1550,7 @@ def _linear_slope(values: List[float]) -> float:
     return numerator / denominator
 
 
-def _classify_temporal_character(samples: List[Dict[str, Any]]) -> Dict[str, Any]:
+def _classify_temporal_character(samples: list[dict[str, Any]]) -> dict[str, Any]:
     if not samples:
         return {
             "overall_character": "static",
@@ -1783,7 +1731,7 @@ async def td_resource_job(job_id: str) -> str:
     # Job state cannot be retrieved via resource; use job tracking tools.
     return {
         "resource_schema_version": 1,
-        "resource_uri": "td://job/{}".format(job_id),
+        "resource_uri": f"td://job/{job_id}",
         "mode": "static",
         "job_id": job_id,
         "available": False,
@@ -2555,14 +2503,14 @@ async def td_optimize_visual(params: OptimizeVisualInput, ctx: Context) -> str:
         capabilities = detect_capabilities(ctx)
 
         # Build goal profile from explicit weights or sensible defaults.
-        default_weights: Dict[str, float] = {
+        default_weights: dict[str, float] = {
             "brightness": 0.0,
             "contrast": 0.0,
             "stability": 0.4,
             "complexity": 0.3,
             "motion_rhythm": 0.0,
         }
-        goal_profile: Dict[str, float] = dict(default_weights)
+        goal_profile: dict[str, float] = dict(default_weights)
         if params.objective_weights:
             for key, value in params.objective_weights.items():
                 if key in goal_profile:
@@ -2571,8 +2519,8 @@ async def td_optimize_visual(params: OptimizeVisualInput, ctx: Context) -> str:
                     except Exception:
                         continue
 
-        baseline_snapshot_id: Optional[str] = None
-        snapshot_warning: Optional[str] = None
+        baseline_snapshot_id: str | None = None
+        snapshot_warning: str | None = None
         if params.snapshot_before:
             try:
                 snapshot_payload = await _capture_snapshot_payload(
@@ -2588,7 +2536,7 @@ async def td_optimize_visual(params: OptimizeVisualInput, ctx: Context) -> str:
             except Exception as exc:
                 snapshot_warning = str(exc)
 
-        async def runner(job_id: str) -> Dict[str, Any]:
+        async def runner(job_id: str) -> dict[str, Any]:
             optimize_result = await _run_optimizer_iterations(
                 client=client,
                 safety=safety,
@@ -2679,8 +2627,8 @@ async def td_describe_dynamics(params: TemporalAnalysisInput, ctx: Context) -> s
         sample_interval = max(1.0 / params.sample_rate, 0.01)
         target_samples = max(1, int(round(params.observation_window * params.sample_rate)))
 
-        async def runner(job_id: str) -> Dict[str, Any]:
-            samples: List[Dict[str, Any]] = []
+        async def runner(job_id: str) -> dict[str, Any]:
+            samples: list[dict[str, Any]] = []
             started = time.perf_counter()
 
             for index in range(target_samples):
@@ -3316,7 +3264,7 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
 
     # Pre-replay prerequisite check: verify required op types exist in the target TD install
     if not params.force:
-        required_ops: List[str] = (
+        required_ops: list[str] = (
             technique.get("required_op_types")
             or entry.get("compatibility", {}).get("required_ops")
             or []
@@ -3349,8 +3297,8 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
     if not isinstance(recipe_nodes, dict) or not recipe_nodes:
         return {"status": "error", "message": "Technique recipe has no nodes to replay."}
 
-    created_nodes: Dict[str, str] = {"/": parent}
-    skipped_nodes: List[Dict[str, str]] = []
+    created_nodes: dict[str, str] = {"/": parent}
+    skipped_nodes: list[dict[str, str]] = []
 
     # Build shallow-to-deep so nested paths can resolve their parent container.
     create_order = sorted(
@@ -3385,7 +3333,7 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
             "POP": "POP",
         }
 
-        op_type_candidates: List[str] = []
+        op_type_candidates: list[str] = []
         upper_type = raw_type.upper()
         if any(upper_type.endswith(suffix) for suffix in suffix_by_family.values()):
             op_type_candidates.append(raw_type)
@@ -3412,8 +3360,8 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
         base_name = str(node_info.get("name", "")).strip() or parts[-1] or raw_type
         node_name = f"{prefix}_{base_name}" if prefix else base_name
 
-        result: Optional[Dict[str, Any]] = None
-        create_error: Optional[str] = None
+        result: dict[str, Any] | None = None
+        create_error: str | None = None
         for candidate_type in op_type_candidates:
             try:
                 create_result = await client.request(
@@ -3482,7 +3430,7 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
                 )
 
     wired = 0
-    skipped_connections: List[Dict[str, str]] = []
+    skipped_connections: list[dict[str, str]] = []
     for conn in recipe.get("connections", []):
         if not isinstance(conn, dict):
             continue
@@ -3662,10 +3610,10 @@ def _get_card_index(ctx: Context):
 async def td_search_official_docs(
     ctx: Context,
     query: str,
-    card_types: Optional[List[str]] = None,
-    family: Optional[str] = None,
+    card_types: list[str] | None = None,
+    family: str | None = None,
     limit: int = 10,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Search the knowledge corpus for operators, palette components, releases, or snippets."""
     idx = _get_card_index(ctx)
     results = idx.search(query, card_types=card_types, family=family, limit=limit)
@@ -3677,9 +3625,9 @@ async def td_search_official_docs(
 @mcp.tool(name="td_get_operator_doc")
 async def td_get_operator_doc(
     ctx: Context,
-    op_type: Optional[str] = None,
-    node_path: Optional[str] = None,
-) -> Dict[str, Any]:
+    op_type: str | None = None,
+    node_path: str | None = None,
+) -> dict[str, Any]:
     """Get full documentation card for an operator type or a specific node."""
     idx = _get_card_index(ctx)
     resolved_type = op_type
@@ -3706,7 +3654,7 @@ async def td_get_param_help(
     ctx: Context,
     node_path: str,
     param_name: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get help for a specific parameter: live metadata + knowledge card entry + current value."""
     client = _get_client(ctx)
     # Get live param info
@@ -3738,8 +3686,8 @@ async def td_get_param_help(
 async def td_lookup_snippets(
     ctx: Context,
     query: str,
-    family: Optional[str] = None,
-) -> Dict[str, Any]:
+    family: str | None = None,
+) -> dict[str, Any]:
     """Search for OP Snippets by keyword and optional family."""
     idx = _get_card_index(ctx)
     results = idx.search(query, card_types=["snippets"], family=family)
@@ -3751,9 +3699,9 @@ async def td_lookup_snippets(
 @mcp.tool(name="td_lookup_palette_component")
 async def td_lookup_palette_component(
     ctx: Context,
-    component_name: Optional[str] = None,
-    query: Optional[str] = None,
-) -> Dict[str, Any]:
+    component_name: str | None = None,
+    query: str | None = None,
+) -> dict[str, Any]:
     """Look up a palette component by name or search by query."""
     idx = _get_card_index(ctx)
     svc = _get_services(ctx)
@@ -3774,8 +3722,8 @@ async def td_lookup_palette_component(
 @mcp.tool(name="td_get_release_delta")
 async def td_get_release_delta(
     ctx: Context,
-    build: Optional[str] = None,
-) -> Dict[str, Any]:
+    build: str | None = None,
+) -> dict[str, Any]:
     """Get release notes for a specific build (default: current)."""
     idx = _get_card_index(ctx)
     svc = _get_services(ctx)
@@ -3794,8 +3742,8 @@ async def td_get_release_delta(
 async def td_get_build_compatibility(
     ctx: Context,
     op_type: str,
-    build: Optional[str] = None,
-) -> Dict[str, Any]:
+    build: str | None = None,
+) -> dict[str, Any]:
     """Check if an operator type is compatible with a specific build."""
     idx = _get_card_index(ctx)
     svc = _get_services(ctx)
@@ -3820,7 +3768,7 @@ async def td_search_popx_docs(
     ctx: Context,
     query: str,
     limit: int = 10,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Search POPx operator documentation — GPU particles, falloffs, simulations."""
     brain = _get_popx_brain(ctx)
     if brain is None:
@@ -3835,7 +3783,7 @@ async def td_search_popx_docs(
 async def td_get_popx_operator(
     ctx: Context,
     operator_name: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get full documentation for a POPx operator (e.g. 'Particle SIM', 'Shape Falloff')."""
     brain = _get_popx_brain(ctx)
     if brain is None:
@@ -3864,7 +3812,7 @@ async def td_search_paketa12(
     ctx: Context,
     query: str,
     limit: int = 10,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Search paketa12 tutorial knowledge — GPU-texture-as-compute, UV math, simulations, GLSL techniques, feedback loops, algorithmic art in TouchDesigner."""
     brain = _get_paketa12_brain(ctx)
     if brain is None:
@@ -3879,14 +3827,14 @@ async def td_search_paketa12(
 async def td_get_paketa12_tutorial(
     ctx: Context,
     topic: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get tutorial chunks for a paketa12 topic (e.g. 'Physarum simulation', 'Verlet integration', 'UV shredder', 'circle packing')."""
     brain = _get_paketa12_brain(ctx)
     if brain is None:
         return {"error": "paketa12 brain not installed. Run 'npx tdpilot brains add paketa12' to enable."}
     results = brain.search(topic, limit=10)
     # Group by tutorial (page_id)
-    tutorials: Dict[str, list] = {}
+    tutorials: dict[str, list] = {}
     for r in results:
         pid = r.get("page_id", "unknown")
         tutorials.setdefault(pid, []).append(r)
@@ -3901,7 +3849,7 @@ async def td_get_paketa12_tutorial(
 
 
 @mcp.tool(name="td_describe_surface")
-async def td_describe_surface(ctx: Context) -> Dict[str, Any]:
+async def td_describe_surface(ctx: Context) -> dict[str, Any]:
     """Describe the MCP server surface: tool count, resource count, capabilities, version."""
     from td_mcp import __version__
     svc = _get_services(ctx)
@@ -3921,7 +3869,7 @@ async def td_describe_surface(ctx: Context) -> Dict[str, Any]:
 # ─────────────────────────────────────────────────────────────
 
 @mcp.tool(name="td_plan_patch")
-async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> Dict[str, Any]:
+async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> dict[str, Any]:
     """Generate a structured patch plan for an intent without mutating the project.
 
     Inspects the current state of the target path, validates op types against the
@@ -3939,7 +3887,7 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> Dict[str, Any]:
         try:
             node_data = await client.request("nodes", {"path": params.target_path, "limit": 200})
             current_nodes = node_data if isinstance(node_data, list) else node_data.get("nodes", [])
-        except Exception as exc:
+        except Exception:
             current_nodes = []
 
         existing_names = {n.get("name", "") for n in current_nodes if isinstance(n, dict)}
@@ -3999,7 +3947,7 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool(name="td_preflight_patch")
-async def td_preflight_patch(params: PreflightPatchInput, ctx: Context) -> Dict[str, Any]:
+async def td_preflight_patch(params: PreflightPatchInput, ctx: Context) -> dict[str, Any]:
     """Validate a plan from td_plan_patch before execution.
 
     Checks that the target path exists, all op types in steps have knowledge cards,
@@ -4031,7 +3979,7 @@ async def td_preflight_patch(params: PreflightPatchInput, ctx: Context) -> Dict[
                 if isinstance(n, dict):
                     existing_names.add(n.get("name", ""))
         except Exception:
-            errors.append("Target path '{}' does not exist or is unreachable.".format(target_path))
+            errors.append(f"Target path '{target_path}' does not exist or is unreachable.")
 
         # Validate each step
         for i, step in enumerate(steps):
@@ -4043,17 +3991,13 @@ async def td_preflight_patch(params: PreflightPatchInput, ctx: Context) -> Dict[
                 card = idx.get_operator(op_type)
                 if card is None:
                     warnings.append(
-                        "Step {}: op_type '{}' has no knowledge card — verify it is a valid TD operator.".format(
-                            i, op_type
-                        )
+                        f"Step {i}: op_type '{op_type}' has no knowledge card — verify it is a valid TD operator."
                     )
 
             # Check name conflicts
             if name and name in existing_names:
                 warnings.append(
-                    "Step {}: name '{}' already exists at '{}' — will need rename.".format(
-                        i, name, target_path
-                    )
+                    f"Step {i}: name '{name}' already exists at '{target_path}' — will need rename."
                 )
 
         valid = len(errors) == 0
@@ -4078,7 +4022,7 @@ async def td_preflight_patch(params: PreflightPatchInput, ctx: Context) -> Dict[
 
 
 @mcp.tool(name="td_validate_recipe")
-async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> Dict[str, Any]:
+async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> dict[str, Any]:
     """Validate a technique recipe from the library or an inline dict.
 
     Checks that required op types exist in the knowledge corpus, verifies the recipe
@@ -4100,7 +4044,7 @@ async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> Dict[
                 if recipe is None and params.scope != "global":
                     recipe = store.get(recipe_id, scope="global")
             except Exception as exc:
-                return {"error": "Could not load recipe '{}': {}".format(recipe_id, exc)}
+                return {"error": f"Could not load recipe '{recipe_id}': {exc}"}
 
         if recipe is not None and "technique" in recipe:
             recipe = recipe.get("technique", {}).get("recipe", recipe)
@@ -4114,7 +4058,7 @@ async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> Dict[
         # Check required structure fields
         for field in ("name", "nodes"):
             if field not in recipe:
-                warnings.append("Recipe missing field: '{}'".format(field))
+                warnings.append(f"Recipe missing field: '{field}'")
 
         # Validate each node op_type against knowledge corpus
         nodes = recipe.get("nodes", {})
@@ -4152,11 +4096,11 @@ async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> Dict[
 
         if unknown_types:
             warnings.append(
-                "Op types not found in knowledge corpus: {}".format(unknown_types)
+                f"Op types not found in knowledge corpus: {unknown_types}"
             )
         if compat_issues:
             warnings.append(
-                "Build compatibility issues: {}".format(compat_issues)
+                f"Build compatibility issues: {compat_issues}"
             )
 
         valid = len(errors) == 0
@@ -4183,7 +4127,7 @@ async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> Dict[
 
 
 @mcp.tool(name="td_audit_project")
-async def td_audit_project(params: AuditProjectInput, ctx: Context) -> Dict[str, Any]:
+async def td_audit_project(params: AuditProjectInput, ctx: Context) -> dict[str, Any]:
     """Audit a project subtree: count nodes by family and op type, detect palette
     components, find errors, and check build compatibility.
 
@@ -4196,10 +4140,10 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> Dict[str,
         idx = getattr(svc, "card_index", None)
 
         # Recursively fetch all nodes in the subtree (breadth-first)
-        all_nodes: List[Dict[str, Any]] = []
+        all_nodes: list[dict[str, Any]] = []
         max_depth = 10
         try:
-            queue: List[tuple] = [(params.root_path, 0)]
+            queue: list[tuple] = [(params.root_path, 0)]
             visited: set = set()
             while queue:
                 container_path, depth = queue.pop(0)
@@ -4218,11 +4162,11 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> Dict[str,
                         if child_path and child_path not in visited:
                             queue.append((child_path, depth + 1))
         except Exception as exc:
-            return {"error": "Could not fetch nodes at '{}': {}".format(params.root_path, exc)}
+            return {"error": f"Could not fetch nodes at '{params.root_path}': {exc}"}
 
         # Count by family and op type
-        family_counts: Dict[str, int] = {}
-        op_type_counts: Dict[str, int] = {}
+        family_counts: dict[str, int] = {}
+        op_type_counts: dict[str, int] = {}
         palette_components = []
         unknown_op_types = []
         compat_issues = []
@@ -4315,7 +4259,7 @@ async def td_capture_frame(params: CaptureFrameInput, ctx: Context) -> str:
             {"path": params.path, "quality": params.quality},
         )
         if isinstance(data, dict) and data.get("success"):
-            result: Dict[str, Any] = {
+            result: dict[str, Any] = {
                 "success": True,
                 "path": data.get("path", params.path),
                 "resolution": [
@@ -4360,7 +4304,7 @@ async def td_analyze_frame(params: AnalyzeFrameInput, ctx: Context) -> str:
     finish = _start_tool(ctx, "td_analyze_frame")
     try:
         client = _get_client(ctx)
-        body: Dict[str, Any] = {
+        body: dict[str, Any] = {
             "path": params.path,
             "modes": params.modes,
         }
@@ -4377,7 +4321,7 @@ async def td_analyze_frame(params: AnalyzeFrameInput, ctx: Context) -> str:
         finish()
 
 
-def _check_exec_not_off() -> Optional[Dict[str, Any]]:
+def _check_exec_not_off() -> dict[str, Any] | None:
     """Return an error dict if exec_mode is 'off', else None."""
     if _current_exec_mode() == "off":
         return {"error": "Python execution is disabled (TD_MCP_EXEC_MODE=off)"}
@@ -4389,7 +4333,7 @@ def _check_exec_not_off() -> Optional[Dict[str, Any]]:
 # ─────────────────────────────────────────────────────────────
 
 @mcp.tool(name="td_python_env_status")
-async def td_python_env_status(ctx: Context) -> Dict[str, Any]:
+async def td_python_env_status(ctx: Context) -> dict[str, Any]:
     """Inspect the Python environment inside TouchDesigner: version, installed packages, env manager status.
 
     Requires 'full' exec mode — uses sys and pkg_resources which are not in the standard allowlist.
@@ -4430,7 +4374,7 @@ async def td_python_env_status(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool(name="td_threading_status")
-async def td_threading_status(ctx: Context) -> Dict[str, Any]:
+async def td_threading_status(ctx: Context) -> dict[str, Any]:
     """Inspect the threading status inside TouchDesigner: active threads, cook rate.
 
     Requires 'full' exec mode — uses threading module which is not in the standard allowlist.
@@ -4470,7 +4414,7 @@ async def td_threading_status(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool(name="td_logger_status")
-async def td_logger_status(ctx: Context) -> Dict[str, Any]:
+async def td_logger_status(ctx: Context) -> dict[str, Any]:
     """Inspect the Python logging configuration inside TouchDesigner: log level, handlers, registered loggers.
 
     Note: This inspects Python's logging module, not TD's native logging. Requires 'full' exec mode.
@@ -4508,7 +4452,7 @@ async def td_logger_status(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool(name="td_tdresources_inspect")
-async def td_tdresources_inspect(params: TDResourcesInspectInput, ctx: Context) -> Dict[str, Any]:
+async def td_tdresources_inspect(params: TDResourcesInspectInput, ctx: Context) -> dict[str, Any]:
     """Inspect TDResources available in the TouchDesigner installation: fonts, icons, defaults."""
     finish = _start_tool(ctx, "td_tdresources_inspect")
     try:
@@ -4558,7 +4502,7 @@ async def td_tdresources_inspect(params: TDResourcesInspectInput, ctx: Context) 
 
 
 @mcp.tool(name="td_component_standardize")
-async def td_component_standardize(params: ComponentStandardizeInput, ctx: Context) -> Dict[str, Any]:
+async def td_component_standardize(params: ComponentStandardizeInput, ctx: Context) -> dict[str, Any]:
     """Audit or fix COMP standardization: required custom parameters (Version, Help, Creator), extension, naming."""
     finish = _start_tool(ctx, "td_component_standardize")
     try:
@@ -4621,7 +4565,7 @@ async def td_component_standardize(params: ComponentStandardizeInput, ctx: Conte
                 return {"raw": raw}
 
         if fix:
-            data = await _with_undo_block(client, "td_component_standardize:{}".format(path), _do_audit)
+            data = await _with_undo_block(client, f"td_component_standardize:{path}", _do_audit)
         else:
             data = await _do_audit()
 
@@ -4635,7 +4579,7 @@ async def td_component_standardize(params: ComponentStandardizeInput, ctx: Conte
 
 
 @mcp.tool(name="td_color_pipeline")
-async def td_color_pipeline(params: ColorPipelineInput, ctx: Context) -> Dict[str, Any]:
+async def td_color_pipeline(params: ColorPipelineInput, ctx: Context) -> dict[str, Any]:
     """Inspect the color management pipeline in TouchDesigner: color space, gamma, display settings."""
     finish = _start_tool(ctx, "td_color_pipeline")
     try:
@@ -4676,7 +4620,7 @@ async def td_color_pipeline(params: ColorPipelineInput, ctx: Context) -> Dict[st
 
 
 @mcp.tool(name="td_recommend_official_component")
-async def td_recommend_official_component(params: RecommendOfficialInput, ctx: Context) -> Dict[str, Any]:
+async def td_recommend_official_component(params: RecommendOfficialInput, ctx: Context) -> dict[str, Any]:
     """Recommend official palette or built-in operator components for a given goal."""
     finish = _start_tool(ctx, "td_recommend_official_component")
     try:
@@ -4723,7 +4667,7 @@ async def td_recommend_official_component(params: RecommendOfficialInput, ctx: C
 
 
 @mcp.tool(name="td_find_official_example")
-async def td_find_official_example(params: FindOfficialExampleInput, ctx: Context) -> Dict[str, Any]:
+async def td_find_official_example(params: FindOfficialExampleInput, ctx: Context) -> dict[str, Any]:
     """Search for official examples and snippets matching a query."""
     finish = _start_tool(ctx, "td_find_official_example")
     try:
@@ -4780,7 +4724,7 @@ async def td_find_official_example(params: FindOfficialExampleInput, ctx: Contex
 
 
 @mcp.tool(name="td_explain_better_way")
-async def td_explain_better_way(params: ExplainBetterWayInput, ctx: Context) -> Dict[str, Any]:
+async def td_explain_better_way(params: ExplainBetterWayInput, ctx: Context) -> dict[str, Any]:
     """Suggest better official alternatives for a given intent, with gotcha warnings."""
     finish = _start_tool(ctx, "td_explain_better_way")
     try:
@@ -4819,7 +4763,7 @@ async def td_explain_better_way(params: ExplainBetterWayInput, ctx: Context) -> 
                 official_alternative["summary"],
             )
         if gotchas:
-            recommendation += " Watch out for {} known gotcha(s).".format(len(gotchas))
+            recommendation += f" Watch out for {len(gotchas)} known gotcha(s)."
 
         _audit_log(ctx, "td_explain_better_way", {"intent": params.intent})
         return {

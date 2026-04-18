@@ -1,6 +1,8 @@
 """Tests for official recommendation tools 84-86."""
 import asyncio
+
 import td_mcp.server as server
+from _constants import EXPECTED_MIN_TOOL_COUNT
 
 OFFICIAL_TOOLS = {
     "td_recommend_official_component",
@@ -14,10 +16,12 @@ def test_official_tools_registered():
     tools = asyncio.run(server.mcp.list_tools())
     names = {tool.name for tool in tools}
     missing = OFFICIAL_TOOLS - names
-    assert not missing, "Missing official tools: {}".format(sorted(missing))
+    assert not missing, f"Missing official tools: {sorted(missing)}"
 
 
-def test_total_tool_count_at_least_86():
-    """Total tool count should be >= 92 after official recommendation tools."""
+def test_total_tool_count_meets_baseline():
+    """Total tool count meets the shared baseline (see tests/_constants.py)."""
     tools = asyncio.run(server.mcp.list_tools())
-    assert len(tools) >= 92, "Expected >= 92 tools, got {}".format(len(tools))
+    assert len(tools) >= EXPECTED_MIN_TOOL_COUNT, (
+        f"Expected >= {EXPECTED_MIN_TOOL_COUNT} tools, got {len(tools)}"
+    )

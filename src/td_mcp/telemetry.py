@@ -6,15 +6,14 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from threading import Lock
-from typing import DefaultDict, Dict
 
 
 @dataclass
 class TelemetryCollector:
     """Tracks counters and latency snapshots for server diagnostics."""
 
-    counters: DefaultDict[str, int] = field(default_factory=lambda: defaultdict(int))
-    latency_ms: DefaultDict[str, list[float]] = field(default_factory=lambda: defaultdict(list))
+    counters: defaultdict[str, int] = field(default_factory=lambda: defaultdict(int))
+    latency_ms: defaultdict[str, list[float]] = field(default_factory=lambda: defaultdict(list))
     _lock: Lock = field(default_factory=Lock)
 
     def increment(self, key: str, amount: int = 1) -> None:
@@ -38,7 +37,7 @@ class TelemetryCollector:
 
         return finish
 
-    def snapshot(self) -> Dict[str, object]:
+    def snapshot(self) -> dict[str, object]:
         with self._lock:
             avg_latency = {
                 name: (sum(values) / len(values)) if values else 0.0

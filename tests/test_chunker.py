@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
-import pytest
-
-from td_mcp.knowledge.docsbrain.normalizer import normalize_file
 from td_mcp.knowledge.docsbrain.chunker import chunk_page
-
+from td_mcp.knowledge.docsbrain.normalizer import normalize_file
 
 FIXTURES = Path(__file__).parent / "fixtures" / "sample_pages"
 

@@ -1,7 +1,5 @@
 """Tests for TechniqueStore — CRUD, search, promote, favorite."""
 
-import json
-import tempfile
 
 import pytest
 

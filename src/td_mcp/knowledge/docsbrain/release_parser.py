@@ -49,7 +49,7 @@ def build_release_artifacts(
     builds: dict[str, dict[str, Any]] = {}
     changelog: dict[str, list[dict[str, Any]]] = defaultdict(list)
 
-    with open(chunks_path, "r", encoding="utf-8") as f:
+    with open(chunks_path, encoding="utf-8") as f:
         for line in f:
             chunk = json.loads(line)
             if chunk["doc_type"] != "release_notes":

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any
 
 from td_mcp.events.uri import top_frame_uri
 
@@ -17,19 +17,19 @@ class TopStreamer:
         self._td_client = td_client
         self._event_manager = event_manager
         self._max_fps = max(0.5, float(max_fps))
-        self._tasks: Dict[str, asyncio.Task] = {}
-        self._configs: Dict[str, Dict[str, Any]] = {}
-        self._last_hash: Dict[str, str] = {}
-        self._stats: Dict[str, int] = {
+        self._tasks: dict[str, asyncio.Task] = {}
+        self._configs: dict[str, dict[str, Any]] = {}
+        self._last_hash: dict[str, str] = {}
+        self._stats: dict[str, int] = {
             "emitted": 0,
             "dropped_unchanged": 0,
             "errors": 0,
         }
 
-    def active_streams(self) -> Dict[str, Dict[str, Any]]:
+    def active_streams(self) -> dict[str, dict[str, Any]]:
         return dict(self._configs)
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         return {
             "max_fps": self._max_fps,
             "active_count": len(self._configs),
@@ -46,7 +46,7 @@ class TopStreamer:
         quality: float = 0.25,
         include_image: bool = False,
         emit_unchanged: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         await self.stop_stream(path)
         normalized_fps = max(0.5, min(float(fps), self._max_fps))
         config = {
@@ -143,7 +143,7 @@ class TopStreamer:
 
             await asyncio.sleep(interval)
 
-    def _frame_hash(self, screenshot: Dict[str, Any]) -> str | None:
+    def _frame_hash(self, screenshot: dict[str, Any]) -> str | None:
         data = screenshot.get("data_base64")
         if not isinstance(data, str):
             return None
@@ -151,11 +151,11 @@ class TopStreamer:
 
     def _prepare_image_payload(
         self,
-        screenshot: Dict[str, Any],
+        screenshot: dict[str, Any],
         *,
         include_image: bool,
         frame_hash: str | None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         if include_image:
             return screenshot
 

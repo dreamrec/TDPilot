@@ -1,6 +1,5 @@
 """Tests for exec-safety modes, focusing on the new ``standard`` tier."""
 
-import importlib
 import re
 import sys
 import types
@@ -15,8 +14,6 @@ import pytest
 
 def _load_exec_helpers():
     """Return a namespace dict with the exec-safety helpers."""
-    import ast
-    import textwrap
     src_path = (
         __import__("pathlib").Path(__file__).resolve().parent.parent
         / "src" / "td_mcp" / "tool_registry.py"

@@ -8,15 +8,13 @@ from __future__ import annotations
 
 import json
 from types import SimpleNamespace
-from typing import Any, Dict, Optional
 
 import pytest
 
 import td_mcp.server as server_mod
 import td_mcp.tool_registry as registry
-from td_mcp.models import ComponentStandardizeInput, ColorPipelineInput
+from td_mcp.models import ColorPipelineInput, ComponentStandardizeInput
 from td_mcp.services import ServiceContainer
-
 
 # ── Helpers ──────────────────────────────────────────────────
 
@@ -26,7 +24,7 @@ class _ExecClient:
 
     def __init__(self, exec_result: dict):
         self._exec_result = exec_result
-        self.last_code: Optional[str] = None
+        self.last_code: str | None = None
         self.calls: list = []
 
     async def request(self, endpoint: str, body: dict | None = None):
@@ -61,7 +59,7 @@ def _make_ctx(*, client=None):
 @pytest.mark.asyncio
 async def test_standardize_audit_clean_comp(monkeypatch):
     """Audit mode on a clean COMP returns zero issues."""
-    monkeypatch.setattr(server_mod, "TD_EXEC_MODE", "standard")
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "standard")
     client = _ExecClient({
         "path": "/project1/MyComp",
         "issues": [],
@@ -88,7 +86,7 @@ async def test_standardize_audit_clean_comp(monkeypatch):
 @pytest.mark.asyncio
 async def test_standardize_audit_missing_params(monkeypatch):
     """Audit mode detects missing custom parameters."""
-    monkeypatch.setattr(server_mod, "TD_EXEC_MODE", "standard")
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "standard")
     client = _ExecClient({
         "path": "/project1/mycomp",
         "issues": [
@@ -116,7 +114,7 @@ async def test_standardize_audit_missing_params(monkeypatch):
 @pytest.mark.asyncio
 async def test_standardize_fix_uses_undo_block(monkeypatch):
     """Fix mode wraps the exec call in an undo block."""
-    monkeypatch.setattr(server_mod, "TD_EXEC_MODE", "standard")
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "standard")
     client = _ExecClient({
         "path": "/project1/mycomp",
         "issues": [],
@@ -143,7 +141,7 @@ async def test_standardize_fix_uses_undo_block(monkeypatch):
 @pytest.mark.asyncio
 async def test_standardize_exec_off_returns_error(monkeypatch):
     """When exec mode is off, returns an error without calling TD."""
-    monkeypatch.setattr(server_mod, "TD_EXEC_MODE", "off")
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "off")
     client = _ExecClient({})
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
     ctx = _make_ctx(client=client)
@@ -161,7 +159,7 @@ async def test_standardize_exec_off_returns_error(monkeypatch):
 @pytest.mark.asyncio
 async def test_standardize_generated_code_contains_path(monkeypatch):
     """The generated Python code references the correct node path."""
-    monkeypatch.setattr(server_mod, "TD_EXEC_MODE", "standard")
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "standard")
     client = _ExecClient({"path": "/project1/comp1", "issues": [], "fixed": [], "issue_count": 0})
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
     ctx = _make_ctx(client=client)
@@ -177,7 +175,7 @@ async def test_standardize_generated_code_contains_path(monkeypatch):
 @pytest.mark.asyncio
 async def test_standardize_fix_code_has_append_custom_page(monkeypatch):
     """Fix mode generates code that uses appendCustomPage without [0] indexing."""
-    monkeypatch.setattr(server_mod, "TD_EXEC_MODE", "standard")
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "standard")
     client = _ExecClient({"path": "/comp", "issues": [], "fixed": [], "issue_count": 0})
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
     ctx = _make_ctx(client=client)
@@ -198,7 +196,7 @@ async def test_standardize_fix_code_has_append_custom_page(monkeypatch):
 @pytest.mark.asyncio
 async def test_color_pipeline_returns_expected_keys(monkeypatch):
     """Color pipeline returns all expected color management keys."""
-    monkeypatch.setattr(server_mod, "TD_EXEC_MODE", "standard")
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "standard")
     expected = {
         "defaultParameterColorSpace": "sRGB",
         "workingColorSpace": "linear",
@@ -220,7 +218,7 @@ async def test_color_pipeline_returns_expected_keys(monkeypatch):
 @pytest.mark.asyncio
 async def test_color_pipeline_exec_off_returns_error(monkeypatch):
     """When exec mode is off, returns an error."""
-    monkeypatch.setattr(server_mod, "TD_EXEC_MODE", "off")
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "off")
     client = _ExecClient({})
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
     ctx = _make_ctx(client=client)
@@ -233,7 +231,7 @@ async def test_color_pipeline_exec_off_returns_error(monkeypatch):
 @pytest.mark.asyncio
 async def test_color_pipeline_uses_exec_endpoint(monkeypatch):
     """Color pipeline sends code via the exec endpoint."""
-    monkeypatch.setattr(server_mod, "TD_EXEC_MODE", "standard")
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "standard")
     client = _ExecClient({"monitorGamma": 2.2})
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
     ctx = _make_ctx(client=client)
@@ -248,7 +246,7 @@ async def test_color_pipeline_uses_exec_endpoint(monkeypatch):
 @pytest.mark.asyncio
 async def test_color_pipeline_handles_malformed_response(monkeypatch):
     """Color pipeline gracefully handles non-JSON exec response."""
-    monkeypatch.setattr(server_mod, "TD_EXEC_MODE", "standard")
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "standard")
 
     class _BadClient:
         calls = []

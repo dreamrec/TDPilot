@@ -11,7 +11,6 @@ import pytest
 from td_mcp.knowledge.card_index import CardIndex
 from td_mcp.knowledge.freshness import Provenance
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

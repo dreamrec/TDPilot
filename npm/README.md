@@ -1,4 +1,4 @@
-# TDPilot v1.3.2
+# TDPilot v1.3.4
 
 AI copilot for TouchDesigner — 92 tools for full live control via MCP, with technique memory, POPx inspection, project lifecycle control, and custom parameter authoring.
 

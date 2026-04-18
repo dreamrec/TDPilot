@@ -3,7 +3,6 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
-
 MODULE_PATH = Path(__file__).resolve().parents[1] / "td_component" / "mcp_webserver_callbacks.py"
 
 
@@ -221,8 +220,9 @@ def test_handle_pop_inspect_returns_summary_and_samples():
 # ─────────────────────────────────────────────────────────────
 
 import inspect
-import numpy as _np
 import sys as _sys
+
+import numpy as _np
 
 
 class _FakeTOP:

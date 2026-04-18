@@ -8,7 +8,7 @@ import logging
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -18,16 +18,16 @@ class SnapshotManager:
 
     def __init__(self, max_snapshots: int = 50, storage_dir: str | None = None):
         self._max_snapshots = max_snapshots
-        self._snapshots: Dict[str, Dict[str, Any]] = {}
-        self._order: List[str] = []
-        self._storage_dir: Optional[Path] = None
+        self._snapshots: dict[str, dict[str, Any]] = {}
+        self._order: list[str] = []
+        self._storage_dir: Path | None = None
 
         if storage_dir:
             self._storage_dir = Path(storage_dir).expanduser()
             self._storage_dir.mkdir(parents=True, exist_ok=True)
             self._load_from_disk()
 
-    def add_snapshot(self, snapshot: Dict[str, Any], name: Optional[str] = None) -> Dict[str, Any]:
+    def add_snapshot(self, snapshot: dict[str, Any], name: str | None = None) -> dict[str, Any]:
         snapshot_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc).isoformat()
         payload = {
@@ -43,7 +43,7 @@ class SnapshotManager:
         self._trim()
         return payload
 
-    def list_snapshots(self, limit: int = 20) -> List[Dict[str, Any]]:
+    def list_snapshots(self, limit: int = 20) -> list[dict[str, Any]]:
         ids = list(reversed(self._order))[:limit]
         result = []
         for snapshot_id in ids:
@@ -60,7 +60,7 @@ class SnapshotManager:
             )
         return result
 
-    def get_snapshot(self, snapshot_id: str) -> Optional[Dict[str, Any]]:
+    def get_snapshot(self, snapshot_id: str) -> dict[str, Any] | None:
         item = self._snapshots.get(snapshot_id)
         if item:
             return item
@@ -75,7 +75,7 @@ class SnapshotManager:
             self._trim()
         return loaded
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         return {
             "count": len(self._order),
             "max_snapshots": self._max_snapshots,
@@ -85,16 +85,16 @@ class SnapshotManager:
 
     def diff(
         self,
-        snapshot_a: Dict[str, Any],
-        snapshot_b: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        snapshot_a: dict[str, Any],
+        snapshot_b: dict[str, Any],
+    ) -> dict[str, Any]:
         nodes_a = snapshot_a.get("nodes", {})
         nodes_b = snapshot_b.get("nodes", {})
 
-        changed_params: List[Dict[str, Any]] = []
-        added_expressions: List[Dict[str, Any]] = []
-        removed_expressions: List[Dict[str, Any]] = []
-        modified_expressions: List[Dict[str, Any]] = []
+        changed_params: list[dict[str, Any]] = []
+        added_expressions: list[dict[str, Any]] = []
+        removed_expressions: list[dict[str, Any]] = []
+        modified_expressions: list[dict[str, Any]] = []
 
         for path, node_a in nodes_a.items():
             node_b = nodes_b.get(path)
@@ -198,7 +198,7 @@ class SnapshotManager:
     def _load_from_disk(self) -> None:
         if self._storage_dir is None:
             raise RuntimeError("_load_from_disk called without a storage directory")
-        loaded: List[Dict[str, Any]] = []
+        loaded: list[dict[str, Any]] = []
         for path in sorted(self._storage_dir.glob("*.json")):
             item = self._load_snapshot_file(path)
             if item:
@@ -216,7 +216,7 @@ class SnapshotManager:
             raise RuntimeError("_snapshot_file called without a storage directory")
         return self._storage_dir / f"{snapshot_id}.json"
 
-    def _persist_snapshot(self, payload: Dict[str, Any]) -> None:
+    def _persist_snapshot(self, payload: dict[str, Any]) -> None:
         if not self._storage_dir:
             return
         file_path = self._snapshot_file(payload["snapshot_id"])
@@ -232,7 +232,7 @@ class SnapshotManager:
             except Exception:
                 pass
 
-    def _load_snapshot_file(self, file_path: Path) -> Optional[Dict[str, Any]]:
+    def _load_snapshot_file(self, file_path: Path) -> dict[str, Any] | None:
         if not file_path.exists():
             return None
         try:

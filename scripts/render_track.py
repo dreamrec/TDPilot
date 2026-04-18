@@ -11,7 +11,6 @@ import argparse
 import asyncio
 import json
 import math
-import os
 import shutil
 import subprocess
 import sys

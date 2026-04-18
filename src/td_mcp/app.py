@@ -33,7 +33,7 @@ Operating protocol:
 def _apply_server_instructions() -> None:
     """Attach server-wide operation guidance when the MCP runtime supports it."""
     try:
-        setattr(mcp, "instructions", SERVER_INSTRUCTIONS)
+        mcp.instructions = SERVER_INSTRUCTIONS
     except Exception:
         # Older MCP runtimes may not expose writable instructions.
         return

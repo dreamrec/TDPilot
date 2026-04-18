@@ -2,8 +2,8 @@ import json
 
 import pytest
 
-from td_mcp.models import CaptureAndAnalyzeInput
 from td_mcp import tool_registry
+from td_mcp.models import CaptureAndAnalyzeInput
 
 
 class _DummyRequestContext:

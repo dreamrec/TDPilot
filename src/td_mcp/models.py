@@ -2,11 +2,20 @@
 Pydantic Input Models for TouchDesigner MCP Tools
 ==================================================
 All input validation, constraints, and descriptions for every tool.
+
+TODO(tech-debt): This file is 1,100+ lines / 70+ Input classes and wants to be
+a package (``models/nodes.py``, ``models/params.py``, ``models/memory.py``,
+``models/vision.py``, ...). Deferred because ``tool_registry.py`` imports all
+of them explicitly and every tool's registration would need to move in one
+atomic change. See audit report #8. When splitting, keep ``models/__init__.py``
+re-exporting the current flat namespace so external callers don't break.
 """
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-from typing import Optional, List, Dict, Any
 from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
 
 class ResponseFormat(str, Enum):
     """Output format for tool responses."""
@@ -42,11 +51,11 @@ class GetNodesInput(BaseModel):
         default="/",
         description="Absolute path to a COMP node whose children to list (e.g. '/', '/project1', '/project1/myComp')"
     )
-    family: Optional[str] = Field(
+    family: str | None = Field(
         default=None,
         description="Filter by operator family: TOP, CHOP, SOP, DAT, COMP, MAT, or PANEL"
     )
-    type: Optional[str] = Field(
+    type: str | None = Field(
         default=None,
         description="Filter by specific operator type (e.g. 'noiseTOP', 'waveCHOP', 'textDAT')"
     )
@@ -74,8 +83,8 @@ class GetParamsInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
     path: str = Field(..., description="Absolute node path", min_length=1)
-    page: Optional[str] = Field(default=None, description="Filter by parameter page name")
-    names: Optional[List[str]] = Field(default=None, description="Filter to specific parameter names")
+    page: str | None = Field(default=None, description="Filter by parameter page name")
+    names: list[str] | None = Field(default=None, description="Filter to specific parameter names")
     response_format: ResponseFormat = Field(default=ResponseFormat.JSON, description="Output format")
 
 class SetParamsInput(BaseModel):
@@ -83,7 +92,7 @@ class SetParamsInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
     path: str = Field(..., description="Absolute node path", min_length=1)
-    params: Dict[str, Any] = Field(
+    params: dict[str, Any] = Field(
         ...,
         description=(
             "Dictionary of parameter names to values. Supports five modes:\n"
@@ -122,15 +131,15 @@ class CreateNodeInput(BaseModel):
         ),
         min_length=1,
     )
-    name: Optional[str] = Field(
+    name: str | None = Field(
         default=None,
         description="Custom name for the new node. If None, TD assigns a default name."
     )
-    nodeX: Optional[int] = Field(
+    nodeX: int | None = Field(
         default=None,
         description="Horizontal position in the network editor (pixels). Use multiples of 200 for clean spacing between nodes."
     )
-    nodeY: Optional[int] = Field(
+    nodeY: int | None = Field(
         default=None,
         description="Vertical position in the network editor (pixels). Use multiples of 200 for clean spacing between rows."
     )
@@ -158,11 +167,11 @@ class CopyNodeInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
     source_path: str = Field(..., description="Path of the node to copy", min_length=1)
-    dest_parent: Optional[str] = Field(
+    dest_parent: str | None = Field(
         default=None,
         description="Path of the destination parent COMP. If None, copies into same parent."
     )
-    new_name: Optional[str] = Field(default=None, description="Name for the copy")
+    new_name: str | None = Field(default=None, description="Name for the copy")
 
 class RenameNodeInput(BaseModel):
     """Input for renaming a node."""
@@ -223,11 +232,11 @@ class SetContentInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
     path: str = Field(..., description="Path to a DAT node", min_length=1)
-    text: Optional[str] = Field(
+    text: str | None = Field(
         default=None,
         description="Text content to write (for Text DATs, Script DATs, etc.)"
     )
-    table: Optional[List[List[str]]] = Field(
+    table: list[list[str]] | None = Field(
         default=None,
         description="Table content as 2D array of strings (for Table DATs)"
     )
@@ -281,11 +290,11 @@ class CHOPDataInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
     path: str = Field(..., description="Path to a CHOP node", min_length=1)
-    channels: Optional[List[str]] = Field(
+    channels: list[str] | None = Field(
         default=None,
         description="List of channel names to read. If None, reads all channels."
     )
-    range: Optional[List[int]] = Field(
+    range: list[int] | None = Field(
         default=None,
         description="Sample range [start, end] to read. If None, reads all samples.",
         min_length=2, max_length=2,
@@ -307,15 +316,15 @@ class POPInspectInput(BaseModel):
     path: str = Field(..., description="Path to a POP node", min_length=1)
     include_bounds: bool = Field(default=True, description="Include POP bounds and dimension metadata")
     include_attributes: bool = Field(default=True, description="Include point/prim/vert attribute metadata")
-    point_attributes: Optional[List[str]] = Field(
+    point_attributes: list[str] | None = Field(
         default=None,
         description="Specific point attributes to sample. If omitted, the tool samples common attributes such as P, PartVel, PartAge, Noise, and PartForce when present.",
     )
-    prim_attributes: Optional[List[str]] = Field(
+    prim_attributes: list[str] | None = Field(
         default=None,
         description="Specific primitive attributes to sample. If omitted, no primitive attribute samples are returned unless requested.",
     )
-    vert_attributes: Optional[List[str]] = Field(
+    vert_attributes: list[str] | None = Field(
         default=None,
         description="Specific vertex attributes to sample. If omitted, no vertex attribute samples are returned unless requested.",
     )
@@ -393,19 +402,19 @@ class CustomParameterSpec(BaseModel):
         min_length=1,
     )
     name: str = Field(..., description="Parameter name", min_length=1, max_length=64)
-    label: Optional[str] = Field(default=None, description="Displayed parameter label")
+    label: str | None = Field(default=None, description="Displayed parameter label")
     size: int = Field(default=1, ge=1, le=4, description="Tuple size for float/int params when supported")
-    order: Optional[int] = Field(default=None, description="Explicit display order on the page")
+    order: int | None = Field(default=None, description="Explicit display order on the page")
     replace: bool = Field(default=True, description="Replace existing parameter definition if it exists")
-    menu_names: Optional[List[str]] = Field(default=None, description="Internal menu values for menu params")
-    menu_labels: Optional[List[str]] = Field(default=None, description="Displayed menu labels for menu params")
-    default: Optional[Any] = Field(default=None, description="Default value (scalar or list for grouped params)")
-    min: Optional[float] = Field(default=None, description="Minimum numeric value where supported")
-    max: Optional[float] = Field(default=None, description="Maximum numeric value where supported")
-    norm_min: Optional[float] = Field(default=None, description="Normalized minimum UI range where supported")
-    norm_max: Optional[float] = Field(default=None, description="Normalized maximum UI range where supported")
-    clamp_min: Optional[bool] = Field(default=None, description="Clamp to the minimum value")
-    clamp_max: Optional[bool] = Field(default=None, description="Clamp to the maximum value")
+    menu_names: list[str] | None = Field(default=None, description="Internal menu values for menu params")
+    menu_labels: list[str] | None = Field(default=None, description="Displayed menu labels for menu params")
+    default: Any | None = Field(default=None, description="Default value (scalar or list for grouped params)")
+    min: float | None = Field(default=None, description="Minimum numeric value where supported")
+    max: float | None = Field(default=None, description="Maximum numeric value where supported")
+    norm_min: float | None = Field(default=None, description="Normalized minimum UI range where supported")
+    norm_max: float | None = Field(default=None, description="Normalized maximum UI range where supported")
+    clamp_min: bool | None = Field(default=None, description="Clamp to the minimum value")
+    clamp_max: bool | None = Field(default=None, description="Clamp to the maximum value")
 
     @field_validator('kind')
     @classmethod
@@ -440,7 +449,7 @@ class CustomParametersInput(BaseModel):
 
     path: str = Field(..., description="Path to a COMP with custom parameters", min_length=1)
     page: str = Field(..., description="Custom page name", min_length=1, max_length=64)
-    params: List[CustomParameterSpec] = Field(
+    params: list[CustomParameterSpec] = Field(
         ...,
         min_length=1,
         description="One or more parameter specifications to create on the page",
@@ -457,12 +466,12 @@ class ProjectLifecycleInput(BaseModel):
         ),
         min_length=1,
     )
-    path: Optional[str] = Field(
+    path: str | None = Field(
         default=None,
         description="Project path for save/load. For save with no path, TouchDesigner will perform its default incremental save behavior.",
     )
     save_external_toxs: bool = Field(default=False, description="Also save external tox contents on save")
-    name: Optional[str] = Field(default=None, description="Undo block name when action=start_undo_block")
+    name: str | None = Field(default=None, description="Undo block name when action=start_undo_block")
     enable: bool = Field(default=True, description="Whether a started undo block should record undo state")
 
     @field_validator('action')
@@ -491,12 +500,12 @@ class TimelineSetInput(BaseModel):
     """Input for controlling timeline playback."""
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
-    action: Optional[str] = Field(
+    action: str | None = Field(
         default=None,
         description="Timeline action: 'play', 'pause', or 'frame' (set specific frame)"
     )
-    frame: Optional[int] = Field(default=None, ge=0, description="Frame number to jump to (when action='frame')")
-    fps: Optional[float] = Field(default=None, gt=0, le=240, description="Set cook rate / FPS")
+    frame: int | None = Field(default=None, ge=0, description="Frame number to jump to (when action='frame')")
+    fps: float | None = Field(default=None, gt=0, le=240, description="Set cook rate / FPS")
 
 # ─────────────────────────────────────────────────────────────
 # Pulse Parameter
@@ -535,7 +544,7 @@ class CreateMacroInput(BaseModel):
         description="Parent COMP path where the macro will be instantiated.",
     )
     macro_type: MacroType = Field(..., description="Macro template to create.")
-    name: Optional[str] = Field(
+    name: str | None = Field(
         default=None,
         description="Optional name prefix for all nodes created by this macro.",
     )
@@ -547,7 +556,7 @@ class CreateMacroInput(BaseModel):
         default=0,
         description="Macro origin Y position in the network editor.",
     )
-    params: Optional[Dict[str, Any]] = Field(
+    params: dict[str, Any] | None = Field(
         default=None,
         description="Override template parameter defaults with custom values.",
     )
@@ -569,19 +578,19 @@ class SubscribeInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
     path: str = Field(..., description="TD node path to monitor, e.g. '/project1/audio1'.")
-    event_types: List[str] = Field(
+    event_types: list[str] = Field(
         default=["chop_change", "par_change"],
         description="Event types: chop_change, par_change, cook_complete, node_error, timeline.",
     )
-    channels: Optional[List[str]] = Field(
+    channels: list[str] | None = Field(
         default=None,
         description="Specific CHOP channels to monitor. None means all channels.",
     )
-    params: Optional[List[str]] = Field(
+    params: list[str] | None = Field(
         default=None,
         description="Specific parameters to monitor. None means all tracked params.",
     )
-    threshold: Optional[float] = Field(
+    threshold: float | None = Field(
         default=None,
         description="Only emit events when delta exceeds this threshold.",
     )
@@ -594,7 +603,7 @@ class SubscribeInput(BaseModel):
 
     @field_validator("event_types")
     @classmethod
-    def validate_event_types(cls, values: List[str]) -> List[str]:
+    def validate_event_types(cls, values: list[str]) -> list[str]:
         allowed = {"chop_change", "par_change", "cook_complete", "node_error", "timeline"}
         invalid = [value for value in values if value not in allowed]
         if invalid:
@@ -611,7 +620,7 @@ class GetEventsInput(BaseModel):
     """Input for reading recent event history."""
 
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
-    event_type: Optional[str] = Field(
+    event_type: str | None = Field(
         default=None,
         description="Optional event type filter.",
     )
@@ -641,8 +650,8 @@ class CaptureAndAnalyzeInput(BaseModel):
         ),
     )
     analyze: bool = Field(default=False, description="Request AI analysis if sampling is supported.")
-    analysis_prompt: Optional[str] = Field(default=None, description="Custom analysis prompt.")
-    compare_with: Optional[str] = Field(default=None, description="Optional resource URI to compare against.")
+    analysis_prompt: str | None = Field(default=None, description="Custom analysis prompt.")
+    compare_with: str | None = Field(default=None, description="Optional resource URI to compare against.")
 
 class VisualMonitorInput(BaseModel):
     """Input for periodic visual monitoring."""
@@ -667,7 +676,7 @@ class VisualMonitorInput(BaseModel):
         ),
     )
     auto_analyze: bool = Field(default=False, description="Auto analyze each capture if sampling available.")
-    analysis_prompt: Optional[str] = Field(default=None, description="Optional analysis prompt.")
+    analysis_prompt: str | None = Field(default=None, description="Optional analysis prompt.")
 
 class StopMonitorInput(BaseModel):
     """Input for stopping visual monitor."""
@@ -747,16 +756,16 @@ class OptimizeVisualInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
     goal: str = Field(..., min_length=3, description="Natural-language optimization goal.")
-    profile: Optional[str] = Field(
+    profile: str | None = Field(
         default=None,
         description="Optional optimizer profile: balanced | complexity | motion_rhythm | stability_guard",
     )
-    objective_weights: Optional[Dict[str, float]] = Field(
+    objective_weights: dict[str, float] | None = Field(
         default=None,
         description="Optional explicit objective weights, e.g. {'motion_rhythm': 0.8, 'stability': 0.4}.",
     )
     output_top: str = Field(..., description="TOP path used as output reference.")
-    adjustable_params: List[AdjustableParamInput] = Field(..., min_length=1, max_length=200)
+    adjustable_params: list[AdjustableParamInput] = Field(..., min_length=1, max_length=200)
     max_iterations: int = Field(default=10, ge=1, le=50)
     convergence_threshold: float = Field(default=0.8, ge=0.0, le=1.0)
     safety_profile: str = Field(
@@ -775,7 +784,7 @@ class OptimizeVisualInput(BaseModel):
 
     @field_validator("profile")
     @classmethod
-    def validate_profile(cls, value: Optional[str]) -> Optional[str]:
+    def validate_profile(cls, value: str | None) -> str | None:
         if value is None:
             return value
         if value not in {"balanced", "complexity", "motion_rhythm", "stability_guard"}:
@@ -793,15 +802,15 @@ class ParamBound(BaseModel):
 
     path: str = Field(..., description="Node path.")
     param: str = Field(..., description="Parameter name.")
-    min_val: Optional[float] = Field(default=None)
-    max_val: Optional[float] = Field(default=None)
-    max_rate: Optional[float] = Field(default=None, ge=0.0, description="Max value change per second.")
+    min_val: float | None = Field(default=None)
+    max_val: float | None = Field(default=None)
+    max_rate: float | None = Field(default=None, ge=0.0, description="Max value change per second.")
 
 class SetBoundsInput(BaseModel):
     """Input for setting bounds."""
 
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
-    bounds: List[ParamBound] = Field(..., min_length=1, max_length=500)
+    bounds: list[ParamBound] = Field(..., min_length=1, max_length=500)
     enforce_mode: str = Field(default="clamp", description="clamp | reject | warn")
 
     @field_validator("enforce_mode")
@@ -815,7 +824,7 @@ class ClearBoundsInput(BaseModel):
     """Input for clearing bounds."""
 
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
-    paths: Optional[List[str]] = Field(default=None, description="Clear bounds for specific node paths.")
+    paths: list[str] | None = Field(default=None, description="Clear bounds for specific node paths.")
 
 class DetectInstabilityInput(BaseModel):
     """Input for instability check."""
@@ -827,7 +836,7 @@ class SnapshotInput(BaseModel):
     """Input for scene snapshot."""
 
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
-    name: Optional[str] = Field(default=None, description="Optional snapshot label.")
+    name: str | None = Field(default=None, description="Optional snapshot label.")
     path: str = Field(default="/project1", description="Root path to snapshot.")
     include_visual: bool = Field(default=False, description="Include screenshot payload.")
 
@@ -842,7 +851,7 @@ class RestoreSnapshotInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
     snapshot_id: str = Field(..., min_length=1)
-    partial: Optional[List[str]] = Field(default=None, description="Optional subset of node paths.")
+    partial: list[str] | None = Field(default=None, description="Optional subset of node paths.")
     dry_run: bool = Field(default=False, description="Return diff only without applying.")
 
 class DiffSnapshotsInput(BaseModel):
@@ -850,7 +859,7 @@ class DiffSnapshotsInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
     snapshot_a: str = Field(..., min_length=1)
-    snapshot_b: Optional[str] = Field(default=None, description="If omitted, diff snapshot_a vs live state.")
+    snapshot_b: str | None = Field(default=None, description="If omitted, diff snapshot_a vs live state.")
 
 # ─────────────────────────────────────────────────────────────
 # State/Timescale Semantics
@@ -867,7 +876,7 @@ class TimescaleStateInput(BaseModel):
     """Input for beat/phrase derived timeline state."""
 
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
-    bpm_hint: Optional[float] = Field(
+    bpm_hint: float | None = Field(
         default=None,
         gt=0.0,
         le=400.0,
@@ -989,7 +998,7 @@ class MemoryImportInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
-    data: Dict[str, Any] = Field(..., description="Exported library data (from td_memory_export).")
+    data: dict[str, Any] = Field(..., description="Exported library data (from td_memory_export).")
     scope: str = Field(default="project", description="'project' or 'global'.")
     overwrite: bool = Field(default=False, description="Overwrite existing techniques with same ID.")
 
@@ -1007,7 +1016,7 @@ class MemoryPreferencesInput(BaseModel):
     def validate_action(cls, v: str) -> str:
         allowed = ("get", "set", "list", "delete")
         if v not in allowed:
-            raise ValueError("action must be one of {} — got '{}'".format(allowed, v))
+            raise ValueError(f"action must be one of {allowed} — got '{v}'")
         return v
     value: Any = Field(default=None, description="Value to set (required for 'set').")
     scope: str = Field(default="project", description="'project' or 'global'.")
@@ -1034,20 +1043,20 @@ class PlanPatchInput(BaseModel):
 
     intent: str = Field(..., description="What you want to achieve", min_length=1)
     target_path: str = Field(default="/project1", description="Target path to plan changes for")
-    recipe_id: Optional[str] = Field(default=None, description="Optional recipe ID to base plan on")
+    recipe_id: str | None = Field(default=None, description="Optional recipe ID to base plan on")
 
 class PreflightPatchInput(BaseModel):
     """Input for validating a plan before execution."""
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
-    plan: Dict[str, Any] = Field(..., description="Plan dict from td_plan_patch to validate")
+    plan: dict[str, Any] = Field(..., description="Plan dict from td_plan_patch to validate")
 
 class ValidateRecipeInput(BaseModel):
     """Input for validating a technique recipe."""
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
-    recipe_id: Optional[str] = Field(default=None, description="Recipe ID to validate")
-    recipe: Optional[Dict[str, Any]] = Field(default=None, description="Inline recipe dict to validate")
+    recipe_id: str | None = Field(default=None, description="Recipe ID to validate")
+    recipe: dict[str, Any] | None = Field(default=None, description="Inline recipe dict to validate")
     scope: str = Field(default="project", description="'project' or 'global'")
 
 class AuditProjectInput(BaseModel):
@@ -1075,12 +1084,12 @@ class AnalyzeFrameInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
     path: str = Field(..., description="Path to a TOP node to analyze")
-    modes: List[str] = Field(
+    modes: list[str] = Field(
         default=["histogram", "luminance"],
         description="Analysis modes: histogram, luminance, alpha_coverage, color_dominant, roi_diff",
     )
-    roi: Optional[List[int]] = Field(default=None, description="Region of interest [x, y, w, h] for roi_diff mode")
-    reference_path: Optional[str] = Field(default=None, description="Reference TOP path for roi_diff mode")
+    roi: list[int] | None = Field(default=None, description="Region of interest [x, y, w, h] for roi_diff mode")
+    reference_path: str | None = Field(default=None, description="Reference TOP path for roi_diff mode")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -1091,7 +1100,7 @@ class TDResourcesInspectInput(BaseModel):
     """Input for inspecting TDResources."""
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
-    category: Optional[str] = Field(default=None, description="Category: fonts, icons, defaults, or None for all")
+    category: str | None = Field(default=None, description="Category: fonts, icons, defaults, or None for all")
 
 class ComponentStandardizeInput(BaseModel):
     """Input for auditing/fixing COMP standardization."""
@@ -1118,11 +1127,11 @@ class FindOfficialExampleInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
     query: str = Field(..., description="Search query for official examples", min_length=1)
-    family: Optional[str] = Field(default=None, description="Filter by operator family: TOP, CHOP, SOP, etc.")
+    family: str | None = Field(default=None, description="Filter by operator family: TOP, CHOP, SOP, etc.")
 
 class ExplainBetterWayInput(BaseModel):
     """Input for suggesting better official alternatives."""
     model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
     intent: str = Field(..., description="What you intend to do", min_length=1)
-    current_plan: Optional[str] = Field(default=None, description="Current approach to evaluate")
+    current_plan: str | None = Field(default=None, description="Current approach to evaluate")

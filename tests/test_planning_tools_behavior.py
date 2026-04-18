@@ -5,17 +5,15 @@ These tests exercise actual logic paths, not just registration.
 
 from __future__ import annotations
 
-import asyncio
 from types import SimpleNamespace
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pytest
 
 import td_mcp.tool_registry as registry
-from td_mcp.memory import TechniqueStore, PreferenceStore
-from td_mcp.models import ValidateRecipeInput, AuditProjectInput
+from td_mcp.memory import TechniqueStore
+from td_mcp.models import AuditProjectInput, ValidateRecipeInput
 from td_mcp.services import ServiceContainer
-
 
 # ── Helpers ──────────────────────────────────────────────────
 
@@ -23,7 +21,7 @@ from td_mcp.services import ServiceContainer
 class _FakeCardIndex:
     """Minimal card index that knows about a fixed set of operators."""
 
-    def __init__(self, known_ops: Optional[Dict[str, dict]] = None):
+    def __init__(self, known_ops: dict[str, dict] | None = None):
         self._ops = known_ops or {}
 
     def get_operator(self, op_type: str):
@@ -42,7 +40,7 @@ class _FakeCardIndex:
 class _AuditClient:
     """Client that returns canned node lists per container path."""
 
-    def __init__(self, tree: Dict[str, List[Dict[str, Any]]]):
+    def __init__(self, tree: dict[str, list[dict[str, Any]]]):
         self._tree = tree
 
     async def request(self, endpoint: str, body: dict | None = None):
@@ -58,9 +56,9 @@ class _AuditClient:
 def _make_ctx(
     *,
     client=None,
-    store: Optional[TechniqueStore] = None,
+    store: TechniqueStore | None = None,
     card_index=None,
-    td_build: Optional[str] = None,
+    td_build: str | None = None,
 ):
     services = ServiceContainer(
         td_client=client or object(),

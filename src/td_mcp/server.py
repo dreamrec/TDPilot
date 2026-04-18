@@ -13,9 +13,9 @@ import socket
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from td_mcp import __version__, TOX_FILENAME, normalize_transport
+from td_mcp import TOX_FILENAME, __version__, normalize_transport
 from td_mcp.td_client import TDClient, TouchDesignerConnectionError
 from td_mcp.tool_registry import (
     TD_EXEC_MODE,
@@ -28,13 +28,13 @@ from td_mcp.tool_registry import (
     _apply_safety_to_set_params,
     _enforce_exec_mode,
     _restricted_exec_violation,
-    main as _run_server,
     mcp,
+    main as _run_server,
 )
 
 
-def _candidate_repo_roots() -> List[Path]:
-    candidates: List[Path] = []
+def _candidate_repo_roots() -> list[Path]:
+    candidates: list[Path] = []
 
     env_root = (os.environ.get("TD_MCP_REPO_ROOT") or "").strip()
     if env_root:
@@ -49,7 +49,7 @@ def _candidate_repo_roots() -> List[Path]:
     candidates.append(Path.home() / "TDPilot")
 
     seen: set[Path] = set()
-    ordered: List[Path] = []
+    ordered: list[Path] = []
     for raw in candidates:
         root = raw.resolve()
         if root in seen:
@@ -59,7 +59,7 @@ def _candidate_repo_roots() -> List[Path]:
     return ordered
 
 
-def _find_repo_root() -> Optional[Path]:
+def _find_repo_root() -> Path | None:
     for root in _candidate_repo_roots():
         if (root / "pyproject.toml").is_file() and (root / "td_component").is_dir():
             return root
@@ -85,8 +85,8 @@ async def _check_td_health(host: str, port: int, timeout: float) -> tuple[bool, 
         await client.close()
 
 
-def _collect_doctor_report(*, timeout: float, skip_td_check: bool, strict: bool) -> Dict[str, Any]:
-    checks: List[Dict[str, Any]] = []
+def _collect_doctor_report(*, timeout: float, skip_td_check: bool, strict: bool) -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
     now = datetime.now(timezone.utc).isoformat()
     repo_root = _find_repo_root()
     tox_path = (repo_root / "td_component" / TOX_FILENAME) if repo_root else None
@@ -186,7 +186,7 @@ def _collect_doctor_report(*, timeout: float, skip_td_check: bool, strict: bool)
     }
 
 
-def _print_doctor_report(report: Dict[str, Any]) -> None:
+def _print_doctor_report(report: dict[str, Any]) -> None:
     print("TDPilot Doctor")
     print(f"version: {report.get('version')}")
     for item in report.get("checks", []):
@@ -200,9 +200,9 @@ def _print_doctor_report(report: Dict[str, Any]) -> None:
 
 def _runtime_health_from_payloads(
     *,
-    cooking: Dict[str, Any],
-    errors: Dict[str, Any],
-) -> Dict[str, Any]:
+    cooking: dict[str, Any],
+    errors: dict[str, Any],
+) -> dict[str, Any]:
     fps = float(cooking.get("fps", 0.0) or 0.0) if isinstance(cooking, dict) else 0.0
     issues = errors.get("issues", []) if isinstance(errors, dict) else []
     heavy_nodes = [
@@ -237,7 +237,7 @@ def _default_client_output_path(client: str) -> Path:
     return Path.cwd() / "mcp.config.json"
 
 
-def _build_profile_config(client: str, server_name: str) -> Dict[str, Any]:
+def _build_profile_config(client: str, server_name: str) -> dict[str, Any]:
     profile = {
         "mcpServers": {
             server_name: {
@@ -260,7 +260,7 @@ def _build_profile_config(client: str, server_name: str) -> Dict[str, Any]:
     return profile
 
 
-def _load_json_file(path: Path) -> Dict[str, Any]:
+def _load_json_file(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     raw = path.read_text(encoding="utf-8").strip()
@@ -270,7 +270,7 @@ def _load_json_file(path: Path) -> Dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
-def _merge_profile(existing: Dict[str, Any], profile: Dict[str, Any]) -> Dict[str, Any]:
+def _merge_profile(existing: dict[str, Any], profile: dict[str, Any]) -> dict[str, Any]:
     merged = dict(existing)
     existing_servers = merged.get("mcpServers")
     if not isinstance(existing_servers, dict):
@@ -338,7 +338,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[List[str]] = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = _build_parser()
     args = parser.parse_args(argv)
     command = args.command or "run"

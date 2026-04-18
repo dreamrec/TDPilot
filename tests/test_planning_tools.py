@@ -1,8 +1,9 @@
 """Tests for planning and validation tools 72-75."""
 
 import asyncio
-import td_mcp.server as server
 
+import td_mcp.server as server
+from _constants import EXPECTED_MIN_TOOL_COUNT
 
 PLANNING_TOOLS = {
     "td_plan_patch",
@@ -16,9 +17,11 @@ def test_planning_tools_registered():
     tools = asyncio.run(server.mcp.list_tools())
     names = {tool.name for tool in tools}
     missing = PLANNING_TOOLS - names
-    assert not missing, "Missing planning tools: {}".format(sorted(missing))
+    assert not missing, f"Missing planning tools: {sorted(missing)}"
 
 
-def test_total_tool_count_at_least_86():
+def test_total_tool_count_meets_baseline():
     tools = asyncio.run(server.mcp.list_tools())
-    assert len(tools) >= 92, "Expected >= 92 tools, got {}".format(len(tools))
+    assert len(tools) >= EXPECTED_MIN_TOOL_COUNT, (
+        f"Expected >= {EXPECTED_MIN_TOOL_COUNT} tools, got {len(tools)}"
+    )

@@ -1,11 +1,8 @@
 """Tests for POPx brain — DocsBrain can read POPx FTS5 databases."""
 
-import json
 import sqlite3
 import tempfile
 from pathlib import Path
-
-import pytest
 
 
 def _create_test_popx_db(tmp_dir: Path) -> Path:

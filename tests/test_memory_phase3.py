@@ -4,10 +4,7 @@ reuse-aware ranking, and export/import.
 
 from __future__ import annotations
 
-import pytest
-
 from td_mcp.memory import TechniqueStore
-
 
 # ── Tag normalization ────────────────────────────────────────
 

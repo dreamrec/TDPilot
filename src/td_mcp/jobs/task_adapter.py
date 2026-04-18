@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, Optional
+from typing import Any
 
 from td_mcp.capabilities import CapabilitySet
 from td_mcp.jobs.manager import JobManager
@@ -24,7 +25,7 @@ class TaskAdapter:
         self,
         job_manager: JobManager,
         capabilities: CapabilitySet,
-        notify_fn: Optional[Callable[[str, float, str], None]] = None,
+        notify_fn: Callable[[str, float, str], None] | None = None,
     ) -> None:
         self._manager = job_manager
         self._capabilities = capabilities
@@ -39,7 +40,7 @@ class TaskAdapter:
         """Return True when the connected MCP client supports Tasks."""
         return self._capabilities.supports_tasks
 
-    def wrap_job(self, job_id: str) -> Optional[Dict[str, Any]]:
+    def wrap_job(self, job_id: str) -> dict[str, Any] | None:
         """Return job snapshot, optionally enriched with mcp_task metadata.
 
         Returns ``None`` when the job_id is not tracked by the manager.

@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import importlib.metadata
 import os
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
+from typing import Any
 
 from td_mcp import normalize_transport
-from typing import Any, Mapping, Optional
 
 
 @dataclass(frozen=True)
@@ -45,7 +46,7 @@ def _as_mapping(value: Any) -> Mapping[str, Any]:
 
 
 def detect_capabilities(
-    ctx: Optional[Any] = None,
+    ctx: Any | None = None,
     *,
     td_build: str = "",
 ) -> CapabilitySet:

@@ -7,7 +7,6 @@ consistent with how other component extension tests work in this project.
 """
 from __future__ import annotations
 
-import ast
 from pathlib import Path
 
 REGISTRY_PATH = Path(__file__).resolve().parents[1] / "src" / "td_mcp" / "tool_registry.py"
@@ -30,10 +29,10 @@ def test_vision_tools_registered():
     source = _registry_source()
     missing = []
     for tool_name in VISION_TOOLS:
-        marker = 'name="{}"'.format(tool_name)
+        marker = f'name="{tool_name}"'
         if marker not in source:
             missing.append(tool_name)
-    assert not missing, "Missing vision tool registrations: {}".format(sorted(missing))
+    assert not missing, f"Missing vision tool registrations: {sorted(missing)}"
 
 
 def test_vision_models_defined():
@@ -41,9 +40,9 @@ def test_vision_models_defined():
     source = _models_source()
     missing = []
     for model_name in VISION_MODELS:
-        if "class {}(".format(model_name) not in source:
+        if f"class {model_name}(" not in source:
             missing.append(model_name)
-    assert not missing, "Missing vision models: {}".format(sorted(missing))
+    assert not missing, f"Missing vision models: {sorted(missing)}"
 
 
 def test_vision_models_imported_in_registry():
@@ -53,7 +52,7 @@ def test_vision_models_imported_in_registry():
     for model_name in VISION_MODELS:
         if model_name not in source:
             missing.append(model_name)
-    assert not missing, "Vision models not found in tool_registry: {}".format(sorted(missing))
+    assert not missing, f"Vision models not found in tool_registry: {sorted(missing)}"
 
 
 def test_capture_frame_handler_calls_screenshot_endpoint():
@@ -83,7 +82,7 @@ def test_capture_frame_input_has_required_fields():
         end = len(source)
     class_body = source[start:end]
     for field in ("path", "quality", "confirm"):
-        assert field in class_body, "CaptureFrameInput missing field: {}".format(field)
+        assert field in class_body, f"CaptureFrameInput missing field: {field}"
 
 
 def test_analyze_frame_input_has_required_fields():
@@ -96,4 +95,4 @@ def test_analyze_frame_input_has_required_fields():
         end = len(source)
     class_body = source[start:end]
     for field in ("path", "modes", "roi", "reference_path"):
-        assert field in class_body, "AnalyzeFrameInput missing field: {}".format(field)
+        assert field in class_body, f"AnalyzeFrameInput missing field: {field}"

@@ -1,5 +1,6 @@
 """Tests for technique store upgrades — compatibility and validation."""
 import tempfile
+
 from td_mcp.memory.technique_store import TechniqueStore
 
 

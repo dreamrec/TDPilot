@@ -2,7 +2,7 @@
 
 import pytest
 
-from td_mcp.memory.analyzer import analyze_network, SMALL_MAX, MEDIUM_MAX
+from td_mcp.memory.analyzer import analyze_network
 
 
 class MockClient:

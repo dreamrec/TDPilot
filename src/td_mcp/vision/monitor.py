@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any
 
 from td_mcp.events.uri import top_frame_uri
 
@@ -15,10 +15,10 @@ class VisualMonitor:
     def __init__(self, td_client, event_manager):
         self._td_client = td_client
         self._event_manager = event_manager
-        self._tasks: Dict[str, asyncio.Task] = {}
-        self._configs: Dict[str, Dict[str, Any]] = {}
+        self._tasks: dict[str, asyncio.Task] = {}
+        self._configs: dict[str, dict[str, Any]] = {}
 
-    def active_monitors(self) -> Dict[str, Dict[str, Any]]:
+    def active_monitors(self) -> dict[str, dict[str, Any]]:
         return dict(self._configs)
 
     async def start_monitor(
@@ -28,7 +28,7 @@ class VisualMonitor:
         interval: float = 2.0,
         quality: float = 0.3,
         include_image: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         await self.stop_monitor(path)
         config = {
             "path": path,
@@ -89,7 +89,7 @@ class VisualMonitor:
                 )
             await asyncio.sleep(max(0.1, interval))
 
-    def _prepare_image_payload(self, screenshot: Dict[str, Any], *, include_image: bool) -> Dict[str, Any]:
+    def _prepare_image_payload(self, screenshot: dict[str, Any], *, include_image: bool) -> dict[str, Any]:
         if include_image:
             return screenshot
 

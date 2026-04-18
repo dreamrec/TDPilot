@@ -17,13 +17,12 @@ Manifest mode (used by installers):
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import logging
 import sys
 import time
-import urllib.request
 import urllib.error
+import urllib.request
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")

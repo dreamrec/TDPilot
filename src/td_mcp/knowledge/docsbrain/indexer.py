@@ -80,7 +80,7 @@ def build_index(chunks_path: Path, db_path: Path) -> int:
         )
 
         count = 0
-        with open(chunks_path, "r", encoding="utf-8") as f:
+        with open(chunks_path, encoding="utf-8") as f:
             for line in f:
                 chunk = json.loads(line)
                 _insert_chunk(conn, chunk)

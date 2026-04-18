@@ -11,12 +11,12 @@ import statistics
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import websockets
 
 
-def percentile(values: List[float], p: float) -> float:
+def percentile(values: list[float], p: float) -> float:
     if not values:
         return math.nan
     ordered = sorted(values)
@@ -40,7 +40,7 @@ async def connect_with_timing(ws_url: str, timeout: float) -> tuple[Any, float]:
     return ws, elapsed
 
 
-async def run_soak(args: argparse.Namespace) -> Dict[str, Any]:
+async def run_soak(args: argparse.Namespace) -> dict[str, Any]:
     interval = 60.0 / float(args.events_per_min)
     started = time.perf_counter()
     deadline = started + float(args.duration_sec)
@@ -48,8 +48,8 @@ async def run_soak(args: argparse.Namespace) -> Dict[str, Any]:
     sent_ok = 0
     send_errors = 0
     attempted = 0
-    reconnect_ms: List[float] = []
-    event_latency_ms: List[float] = []
+    reconnect_ms: list[float] = []
+    event_latency_ms: list[float] = []
 
     ws, reconnect_cost = await connect_with_timing(args.ws_url, args.connect_timeout)
     reconnect_ms.append(reconnect_cost)

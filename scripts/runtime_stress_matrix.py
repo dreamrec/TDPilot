@@ -5,16 +5,21 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 import traceback
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import anyio
 from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
+
+# Make src/td_mcp importable when script is invoked directly.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from td_mcp.release_gates import EXPECTED_MIN_TOOL_COUNT  # noqa: E402
 
 
 @dataclass
@@ -33,12 +38,12 @@ class RuntimeMatrix:
     def __init__(self, session: ClientSession) -> None:
         self.session = session
         self.steps: list[Step] = []
-        self.ctx: Dict[str, Any] = {}
+        self.ctx: dict[str, Any] = {}
 
     async def _call_tool(
         self,
         name: str,
-        params: Optional[dict[str, Any]] = None,
+        params: dict[str, Any] | None = None,
         *,
         expect_error: bool = False,
     ) -> dict[str, Any]:
@@ -139,8 +144,10 @@ class RuntimeMatrix:
     async def _registry_runtime_surface(self) -> None:
         tools = await self.session.list_tools()
         names = {t.name for t in tools.tools}
-        if len(names) < 86:
-            raise MatrixFailure(f"Expected at least 92 tools, got {len(names)}")
+        if len(names) < EXPECTED_MIN_TOOL_COUNT:
+            raise MatrixFailure(
+                f"Expected at least {EXPECTED_MIN_TOOL_COUNT} tools, got {len(names)}"
+            )
 
     async def _build_runtime_fixture(self) -> None:
         suffix = datetime.now().strftime("%H%M%S")

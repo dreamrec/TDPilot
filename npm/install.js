@@ -46,6 +46,19 @@ function writePrefs(prefsPath, prefs) {
   if (!existsSync(prefsDir)) {
     mkdirSync(prefsDir, { recursive: true });
   }
+  // Backup the existing pref.txt before we overwrite it. TD preference format
+  // has shifted between versions, so losing the original is painful for users.
+  if (existsSync(prefsPath)) {
+    try {
+      const ts = new Date().toISOString().replace(/[:.]/g, "-");
+      const backupPath = prefsPath + ".tdpilot-backup-" + ts;
+      const original = readFileSync(prefsPath, "utf-8");
+      writeFileSync(backupPath, original, "utf-8");
+      console.log("[TDPilot] Backed up existing pref.txt to", backupPath);
+    } catch (err) {
+      console.warn("[TDPilot] Could not back up pref.txt:", err.message);
+    }
+  }
   const lines = Object.entries(prefs).map(([k, v]) => k + "\t" + v);
   writeFileSync(prefsPath, lines.join("\n") + "\n", "utf-8");
 }

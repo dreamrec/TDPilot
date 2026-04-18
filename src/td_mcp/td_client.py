@@ -7,11 +7,11 @@ and error normalization.
 """
 
 import asyncio
-import httpx
-import json
-import time
 import logging
-from typing import Any, Dict, Optional
+import time
+from typing import Any
+
+import httpx
 
 logger = logging.getLogger("td_mcp.client")
 
@@ -23,7 +23,7 @@ class TouchDesignerConnectionError(Exception):
 
 class TouchDesignerAPIError(Exception):
     """Raised when the TD API returns an error response."""
-    def __init__(self, message: str, status_code: int = 0, details: Optional[Dict] = None):
+    def __init__(self, message: str, status_code: int = 0, details: dict | None = None):
         self.status_code = status_code
         self.details = details or {}
         super().__init__(message)
@@ -57,7 +57,7 @@ class TDClient:
         self.timeout = timeout
         self.max_retries = max_retries
         self.shared_secret = (shared_secret or "").strip()
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
         self._last_health_check: float = 0
         self._health_cache_ttl: float = 5.0
         self._is_connected: bool = False
@@ -86,14 +86,21 @@ class TDClient:
             self._client = None
         self._is_connected = False
 
-    async def health_check(self) -> Dict[str, Any]:
-        """
-        Check if TouchDesigner is reachable and the MCP WebServer is running.
-        Results are cached for _health_cache_ttl seconds.
+    async def health_check(self) -> dict[str, Any]:
+        """Check if TouchDesigner is reachable and the MCP WebServer is running.
+
+        Results are cached for ``_health_cache_ttl`` seconds *from a successful
+        probe*. Any failure elsewhere in ``request()`` (same transport that real
+        tools use) resets the connected flag, so the next health check probes
+        fresh rather than returning a stale "ok".
         """
         now = time.time()
-        if now - self._last_health_check < self._health_cache_ttl and self._is_connected:
-            return {"status": "ok", "cached": True}
+        if self._is_connected and now - self._last_health_check < self._health_cache_ttl:
+            return {
+                "status": "ok",
+                "cached": True,
+                "cached_age_s": round(now - self._last_health_check, 3),
+            }
 
         try:
             # Route through request() to ensure endpoint normalization to /api/health.
@@ -103,13 +110,14 @@ class TDClient:
             return result
         except Exception as e:
             self._is_connected = False
+            self._last_health_check = 0.0
             raise TouchDesignerConnectionError(
                 f"Cannot reach TouchDesigner at {self.base_url}. "
                 f"Ensure TD is running and the MCP WebServer component is active on the correct port. "
-                f"Error: {str(e)}"
+                f"Error: {e!s}"
             ) from e
 
-    async def request(self, endpoint: str, body: Optional[Dict] = None) -> Dict[str, Any]:
+    async def request(self, endpoint: str, body: dict | None = None) -> dict[str, Any]:
         """
         Send a request to the TouchDesigner WebServer DAT.
 
@@ -160,6 +168,9 @@ class TDClient:
                 ) from e
 
             except httpx.TimeoutException as e:
+                # Treat timeouts as a connection blip: clear cached health so the
+                # next probe refreshes instead of returning a stale "ok".
+                self._is_connected = False
                 last_error = e
                 if attempt < self.max_retries:
                     backoff = min(2 ** attempt, 8)
@@ -174,6 +185,10 @@ class TDClient:
                 ) from e
 
             except httpx.HTTPStatusError as e:
+                # 5xx means TD is up but the request failed. Don't mark disconnected,
+                # but do invalidate the health cache so it re-probes.
+                if 500 <= e.response.status_code < 600:
+                    self._is_connected = False
                 raise TouchDesignerAPIError(
                     f"TouchDesigner returned HTTP {e.response.status_code}: {e.response.text[:500]}",
                     status_code=e.response.status_code,
@@ -181,7 +196,7 @@ class TDClient:
 
         raise TouchDesignerConnectionError(f"All retry attempts failed: {last_error}")
 
-    async def _raw_request(self, endpoint: str, body: Optional[Dict] = None) -> Dict[str, Any]:
+    async def _raw_request(self, endpoint: str, body: dict | None = None) -> dict[str, Any]:
         """Execute a single HTTP request."""
         client = await self._get_client()
 

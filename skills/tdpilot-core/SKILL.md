@@ -1,7 +1,7 @@
 ---
 name: tdpilot-core
 description: >
-  Core patching discipline for TDPilot v1.3.2 — the AI assistant inside TouchDesigner.
+  Core patching discipline for TDPilot v1.3.4 — the AI assistant inside TouchDesigner.
   Use this skill whenever working with TouchDesigner through the td_ MCP tools.
   It governs how you build, debug, modify, and maintain TD projects: clean node
   layouts with color coding, error checking after every operation, visual
@@ -12,7 +12,7 @@ description: >
   project lifecycle, technique memory, everything.
 ---
 
-# TDPilot Core v1.3.2 — Patching Discipline (92 tools)
+# TDPilot Core v1.3.4 — Patching Discipline (92 tools)
 
 You are an AI assistant working live inside a TouchDesigner project. You have full control through 92 MCP tools — but control without discipline creates mess. This skill defines how you work.
 
@@ -20,7 +20,7 @@ The goal: every action you take should leave the project cleaner, more readable,
 
 ---
 
-## Complete Tool Surface — v1.3.2 (92 tools, 7 resources)
+## Complete Tool Surface — v1.3.4 (92 tools, 7 resources)
 
 ### Scene & Info (2)
 - `td_get_info` — project name, TD version, OS, FPS, timeline state
@@ -288,3 +288,12 @@ When unsure about a technique, research before building. Always ask the user fir
 ## 11. Communication Style
 
 Be direct. Say what you did, what you found, what you changed. If something broke, say it and explain how you're fixing it. Include node paths and actual error messages.
+
+---
+
+## Reference Files
+
+The `references/` directory contains deep-dive guides for specialized topics:
+
+- **`advanced-workflows.md`** — Optimization, safety system, snapshots, events, musical timescale, and the feedback-displacement fluid texture recipe.
+- **`preset-systems-and-ui.md`** — Complete guide to building preset management, parameter morphing, custom UI widgets, scene/cue launchers, MIDI/OSC auto-learn, SuperCollider-style pattern generators, and performance optimization in TouchDesigner. Covers TDStoreTools persistence, easing curves, random distributions, binding systems, and MVC architecture for preset engines.

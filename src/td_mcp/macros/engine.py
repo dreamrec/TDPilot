@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from td_mcp.macros.loader import load_user_templates
 from td_mcp.macros.models import ExpressionSpec, MacroTemplate, NodeSpec
@@ -13,13 +13,13 @@ from td_mcp.macros.templates import build_default_templates
 class MacroEngine:
     """Builds reusable multi-node patterns using existing TD endpoints."""
 
-    def __init__(self, td_client, user_template_dir: Optional[str] = None):
+    def __init__(self, td_client, user_template_dir: str | None = None):
         self._td_client = td_client
-        self._templates: Dict[str, MacroTemplate] = build_default_templates()
-        self._template_sources: Dict[str, str] = {
+        self._templates: dict[str, MacroTemplate] = build_default_templates()
+        self._template_sources: dict[str, str] = {
             name: "built_in" for name in self._templates.keys()
         }
-        self._load_warnings: List[str] = []
+        self._load_warnings: list[str] = []
 
         user_templates, warnings = load_user_templates(user_template_dir)
         self._load_warnings.extend(warnings)
@@ -28,7 +28,7 @@ class MacroEngine:
             for name in user_templates.keys():
                 self._template_sources[name] = "user"
 
-    def list_macros(self) -> Dict[str, Any]:
+    def list_macros(self) -> dict[str, Any]:
         macros = []
         for name, template in self._templates.items():
             summary = template.summary()
@@ -41,7 +41,7 @@ class MacroEngine:
             "load_warnings": list(self._load_warnings),
         }
 
-    def get_macro_params(self, macro_type: str) -> Dict[str, Any]:
+    def get_macro_params(self, macro_type: str) -> dict[str, Any]:
         template = self._templates.get(macro_type)
         if not template:
             raise ValueError(f"Unknown macro_type: {macro_type}")
@@ -61,8 +61,8 @@ class MacroEngine:
         name_prefix: str | None = None,
         node_x: int = 0,
         node_y: int = 0,
-        overrides: Dict[str, Any] | None = None,
-    ) -> Dict[str, Any]:
+        overrides: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         template = self._templates.get(macro_type)
         if not template:
             raise ValueError(f"Unknown macro_type: {macro_type}")
@@ -81,9 +81,9 @@ class MacroEngine:
         self._validate_param_ranges(template, resolved_values)
 
         nodes, extra_expressions = self._apply_param_targets(template, resolved_values)
-        created_nodes: List[Dict[str, Any]] = []
-        logical_to_path: Dict[str, str] = {}
-        warnings: List[str] = []
+        created_nodes: list[dict[str, Any]] = []
+        logical_to_path: dict[str, str] = {}
+        warnings: list[str] = []
 
         for node in nodes:
             final_name = f"{name_prefix}_{node.name}" if name_prefix else node.name
@@ -194,7 +194,7 @@ class MacroEngine:
     def _validate_param_ranges(
         self,
         template: MacroTemplate,
-        values: Dict[str, Any],
+        values: dict[str, Any],
     ) -> None:
         for key, value in values.items():
             spec = template.param_schema[key]
@@ -206,8 +206,8 @@ class MacroEngine:
     def _apply_param_targets(
         self,
         template: MacroTemplate,
-        values: Dict[str, Any],
-    ) -> tuple[List[NodeSpec], List[ExpressionSpec]]:
+        values: dict[str, Any],
+    ) -> tuple[list[NodeSpec], list[ExpressionSpec]]:
         nodes = [
             NodeSpec(
                 node_type=node.node_type,
@@ -219,7 +219,7 @@ class MacroEngine:
             for node in template.nodes
         ]
         node_lookup = {node.name: node for node in nodes}
-        extra_exprs: List[ExpressionSpec] = []
+        extra_exprs: list[ExpressionSpec] = []
 
         for key, targets in template.param_targets.items():
             if key not in values:

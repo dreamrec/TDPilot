@@ -4,8 +4,6 @@ import json
 import tempfile
 from pathlib import Path
 
-import pytest
-
 
 def _write_active(tmp: Path, brains: list[str]) -> Path:
     """Write an active.json file and return its path."""

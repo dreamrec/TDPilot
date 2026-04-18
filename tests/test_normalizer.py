@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from td_mcp.knowledge.docsbrain.metadata import (
     classify_page,
     derive_page_id,
@@ -119,7 +117,6 @@ class TestSlugify:
 from pathlib import Path
 
 from td_mcp.knowledge.docsbrain.normalizer import normalize_file
-
 
 FIXTURES = Path(__file__).parent / "fixtures" / "sample_pages"
 

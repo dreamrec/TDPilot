@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from collections import deque
 from datetime import datetime, timezone
-from typing import Any, Deque, Dict, List, Optional, Tuple
+from typing import Any
 
 import websockets
 
@@ -18,9 +18,9 @@ class EventManager:
     def __init__(self, mcp_server, port: int = 9982, max_history: int = 1000):
         self._mcp = mcp_server
         self._port = port
-        self._state: Dict[str, Any] = {}
-        self._history: Deque[Dict[str, Any]] = deque(maxlen=max_history)
-        self._subscriptions: Dict[Tuple[str, str], Dict[str, Any]] = {}
+        self._state: dict[str, Any] = {}
+        self._history: deque[dict[str, Any]] = deque(maxlen=max_history)
+        self._subscriptions: dict[tuple[str, str], dict[str, Any]] = {}
         self._server = None
 
     async def start(self) -> None:
@@ -48,7 +48,7 @@ class EventManager:
             return
         await self.process_event(event)
 
-    async def process_event(self, event: Dict[str, Any]) -> None:
+    async def process_event(self, event: dict[str, Any]) -> None:
         event_type = event.get("type", "")
         data = event.get("data", {})
         resource_uri = self._event_to_resource_uri(event_type, data)
@@ -74,7 +74,7 @@ class EventManager:
         }
         self._history.append(history_entry)
 
-    async def set_state(self, resource_uri: str, payload: Dict[str, Any], notify: bool = True) -> None:
+    async def set_state(self, resource_uri: str, payload: dict[str, Any], notify: bool = True) -> None:
         """Set resource state directly and optionally notify subscribers."""
         self._state[resource_uri] = payload
         self._history.append(
@@ -93,7 +93,7 @@ class EventManager:
             except Exception:
                 pass
 
-    def register_subscription(self, path: str, event_type: str, config: Dict[str, Any]) -> None:
+    def register_subscription(self, path: str, event_type: str, config: dict[str, Any]) -> None:
         self._subscriptions[(path, event_type)] = config
 
     def unregister_subscription(self, path: str, event_type: str) -> bool:
@@ -106,22 +106,22 @@ class EventManager:
             del self._subscriptions[k]
         return len(keys)
 
-    def get_subscription(self, path: str, event_type: str) -> Optional[Dict[str, Any]]:
+    def get_subscription(self, path: str, event_type: str) -> dict[str, Any] | None:
         return self._subscriptions.get((path, event_type))
 
-    def list_subscriptions(self) -> Dict[Tuple[str, str], Dict[str, Any]]:
+    def list_subscriptions(self) -> dict[tuple[str, str], dict[str, Any]]:
         return dict(self._subscriptions)
 
-    def get_state(self, resource_uri: str) -> Optional[Dict[str, Any]]:
+    def get_state(self, resource_uri: str) -> dict[str, Any] | None:
         return self._state.get(resource_uri)
 
-    def get_recent_events(self, event_type: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_recent_events(self, event_type: str | None = None, limit: int = 50) -> list[dict[str, Any]]:
         events = list(self._history)
         if event_type:
             events = [event for event in events if event.get("type") == event_type]
         return events[-limit:]
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         return {
             "port": self._port,
             "state_count": len(self._state),
@@ -130,7 +130,7 @@ class EventManager:
             "listening": self._server is not None,
         }
 
-    def _event_to_resource_uri(self, event_type: str, data: Dict[str, Any]) -> Optional[str]:
+    def _event_to_resource_uri(self, event_type: str, data: dict[str, Any]) -> str | None:
         path = data.get("path", "")
         if event_type == "chop_change":
             channel = data.get("channel", "")

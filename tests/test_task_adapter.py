@@ -8,7 +8,6 @@ from td_mcp.capabilities import CapabilitySet
 from td_mcp.jobs.manager import JobManager
 from td_mcp.jobs.task_adapter import TaskAdapter
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

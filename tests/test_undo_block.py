@@ -1,13 +1,13 @@
 """Tests for the _with_undo_block async helper in tool_registry."""
 
 import asyncio
+import pathlib
 import re
 import sys
 import types
-import pathlib
+from unittest.mock import AsyncMock, call
 
 import pytest
-from unittest.mock import AsyncMock, call
 
 
 def _load_undo_helper():

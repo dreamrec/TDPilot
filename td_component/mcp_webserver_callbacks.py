@@ -14,21 +14,34 @@ Setup:
 Compatible with TouchDesigner 2025.30000+
 """
 
-import json
-import traceback
-import sys
-import os
 import base64
-import time
+import json
+import os
 import re
+import sys
+import time
+import traceback
 
 # ─────────────────────────────────────────────────────────────
 # Configuration
 # ─────────────────────────────────────────────────────────────
 
-API_VERSION = "1.3.2"
+API_VERSION = "1.3.4"
 SCREENSHOT_TEMP_PATH = os.path.join(os.environ.get('TEMP', os.environ.get('TMP', '/tmp')), 'td_mcp_screenshot.jpg')
 SHARED_SECRET = os.environ.get('TD_MCP_SHARED_SECRET', '').strip()
+
+# Auth policy:
+#   - If SHARED_SECRET is set: always required.
+#   - If TD_MCP_REQUIRE_AUTH=1 (default in production): refuse to serve when secret is empty.
+#   - If TD_MCP_REQUIRE_AUTH=0: legacy permissive mode (warn but allow). Use only for local dev.
+REQUIRE_AUTH = os.environ.get('TD_MCP_REQUIRE_AUTH', '1').strip() not in ('0', 'false', 'no', '')
+
+# CORS policy:
+#   - Default: no CORS header (browsers are rejected by same-origin). MCP stdio/http clients don't need CORS.
+#   - TD_MCP_CORS_ORIGIN can be set to an exact origin (e.g. http://localhost:3000) for tooling.
+#   - Wildcard '*' is NEVER used — it combined with auth-by-default to allow any webpage to drive TD.
+CORS_ORIGIN = os.environ.get('TD_MCP_CORS_ORIGIN', '').strip()
+
 DEFAULT_EXEC_MODE = os.environ.get('TD_MCP_EXEC_MODE', 'restricted').strip().lower()
 if DEFAULT_EXEC_MODE not in ('off', 'restricted', 'standard', 'full'):
     DEFAULT_EXEC_MODE = 'restricted'
@@ -111,16 +124,29 @@ def onHTTPRequest(webServerDAT, request, response):
         except (json.JSONDecodeError, UnicodeDecodeError):
             body = {}
 
-    # CORS headers for local development
-    response['Access-Control-Allow-Origin'] = '*'
-    response['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    # CORS: apply only when a specific trusted origin is configured.
+    # Never emit '*' — combined with weak auth, that lets any webpage drive TD.
+    if CORS_ORIGIN:
+        response['Access-Control-Allow-Origin'] = CORS_ORIGIN
+        response['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-TD-MCP-Secret'
+        response['Vary'] = 'Origin'
 
     # Handle OPTIONS preflight
     if method == 'OPTIONS':
         response['statusCode'] = 204
         response['statusReason'] = 'No Content'
         response['data'] = ''
+        return response
+
+    # Reject cross-site requests from browsers — MCP clients don't set Sec-Fetch-Site,
+    # so this only blocks malicious webpage fetches. Same-origin/none is allowed.
+    headers = _extract_headers(request)
+    fetch_site = headers.get('sec-fetch-site', '')
+    if fetch_site and fetch_site not in ('same-origin', 'none'):
+        response['statusCode'] = 403
+        response['statusReason'] = 'Forbidden'
+        _send_json(response, {'error': f'cross-site fetch blocked (Sec-Fetch-Site={fetch_site})'})
         return response
 
     auth_error = _check_auth_error(request)
@@ -220,6 +246,12 @@ def _extract_headers(request):
 
 def _check_auth_error(request):
     if not SHARED_SECRET:
+        if REQUIRE_AUTH:
+            return (
+                'TD_MCP_SHARED_SECRET is not configured. Set it in the TD env or run '
+                'scripts/render_mcp_config.py to generate one. To opt out for local dev, '
+                'set TD_MCP_REQUIRE_AUTH=0 (not recommended).'
+            )
         return None
 
     headers = _extract_headers(request)
@@ -229,9 +261,23 @@ def _check_auth_error(request):
         if auth.lower().startswith('bearer '):
             token = auth.split(' ', 1)[1].strip()
 
-    if token == SHARED_SECRET:
+    if _constant_time_equals(token, SHARED_SECRET):
         return None
     return 'Unauthorized: missing or invalid TD_MCP_SHARED_SECRET.'
+
+
+def _constant_time_equals(a, b):
+    """Compare two strings without early-exit timing leaks."""
+    if not isinstance(a, str) or not isinstance(b, str):
+        return False
+    if len(a) != len(b):
+        # Still do a dummy compare to avoid length-timing signal
+        _ = sum(ord(x) for x in a) ^ sum(ord(y) for y in b)
+        return False
+    result = 0
+    for x, y in zip(a, b):
+        result |= ord(x) ^ ord(y)
+    return result == 0
 
 
 def _send_json(response, data):
@@ -915,7 +961,22 @@ def _restricted_exec_violation(code):
     normalized = _normalize_for_check(code)
     for token in RESTRICTED_TOKENS:
         if token in normalized:
-            return 'restricted mode blocks token: {}'.format(token)
+            return f'restricted mode blocks token: {token}'
+    # TD-side sandbox escape: `op(...).create(textDAT)` then write `.text` lets
+    # a caller stash arbitrary Python in a DAT and then execute it via
+    # `mod.<dat>.func()`. Block the pieces of that pattern in restricted mode.
+    # Users who genuinely need DAT authoring should run in standard or full.
+    dat_escape_tokens = (
+        'create(textdat',
+        'create(textDAT'.lower(),
+        '.text=',
+        '.text =',
+        '.par.file=',
+        '.par.file =',
+    )
+    for token in dat_escape_tokens:
+        if token in normalized:
+            return f'restricted mode blocks DAT-exec pattern: {token}'
     return None
 
 
@@ -923,7 +984,7 @@ def _standard_exec_violation(code):
     normalized = _normalize_for_check(code)
     for token in STANDARD_BLOCKED_TOKENS:
         if token in normalized:
-            return 'standard mode blocks token: {}'.format(token)
+            return f'standard mode blocks token: {token}'
 
     for match in RESTRICTED_IMPORT_RE.finditer(code):
         line = match.group(0).strip()
@@ -934,7 +995,7 @@ def _standard_exec_violation(code):
             mod_name = parts[1]
         top_level = mod_name.split('.')[0]
         if top_level not in STANDARD_ALLOWED_IMPORTS:
-            return 'standard mode blocks import of: {}'.format(top_level)
+            return f'standard mode blocks import of: {top_level}'
 
     return None
 
@@ -1341,9 +1402,9 @@ def handle_exec_python(body):
     timeout_sec = max(1, min(timeout_ms / 1000, 30))  # clamp 1–30s
 
     # Capture stdout
+    import ctypes
     import io
     import threading
-    import ctypes
     old_stdout = sys.stdout
     old_stderr = sys.stderr
     captured_out = io.StringIO()
@@ -2176,12 +2237,12 @@ def _render_chop_callback(path, channels, threshold, rate_limit):
     channels_json = repr(channels or [])
     threshold_json = repr(threshold)
     rate_limit_val = float(rate_limit or 0.0)
-    return """import json
+    return f"""import json
 import time
 
-_CHANNELS = {channels}
-_THRESHOLD = {threshold}
-_RATE_LIMIT = {rate_limit}
+_CHANNELS = {channels_json}
+_THRESHOLD = {threshold_json}
+_RATE_LIMIT = {rate_limit_val}
 _LAST_EMIT = {{}}
 
 
@@ -2237,25 +2298,20 @@ def onValueChange(channel, sampleIndex, val, prev):
         "{path}:" + channel.name,
     )
     return
-""".format(
-        path=path,
-        channels=channels_json,
-        threshold=threshold_json,
-        rate_limit=rate_limit_val,
-    )
+"""
 
 
 def _render_chop_poll_callback(path, channels, threshold, rate_limit):
     channels_json = repr(channels or [])
     threshold_json = repr(threshold)
     rate_limit_val = float(rate_limit or 0.0)
-    return """import json
+    return f"""import json
 import time
 
-_PATH = {path}
-_CHANNELS = {channels}
-_THRESHOLD = {threshold}
-_RATE_LIMIT = {rate_limit}
+_PATH = {json.dumps(path)}
+_CHANNELS = {channels_json}
+_THRESHOLD = {threshold_json}
+_RATE_LIMIT = {rate_limit_val}
 _LAST_EMIT = {{}}
 _LAST_VALUES = {{}}
 
@@ -2329,24 +2385,19 @@ def onFrameStart(frame):
             _PATH + ":" + name,
         )
     return
-""".format(
-        path=json.dumps(path),
-        channels=channels_json,
-        threshold=threshold_json,
-        rate_limit=rate_limit_val,
-    )
+"""
 
 
 def _render_par_callback(path, params, threshold, rate_limit):
     params_json = repr(params or [])
     threshold_json = repr(threshold)
     rate_limit_val = float(rate_limit or 0.0)
-    return """import json
+    return f"""import json
 import time
 
-_PARAMS = {params}
-_THRESHOLD = {threshold}
-_RATE_LIMIT = {rate_limit}
+_PARAMS = {params_json}
+_THRESHOLD = {threshold_json}
+_RATE_LIMIT = {rate_limit_val}
 _LAST_EMIT = {{}}
 
 
@@ -2418,23 +2469,18 @@ def onPulse(par):
         "{path}:" + par.name + ":pulse",
     )
     return
-""".format(
-        path=path,
-        params=params_json,
-        threshold=threshold_json,
-        rate_limit=rate_limit_val,
-    )
+"""
 
 
 def _render_runtime_callback(path, event_types, rate_limit):
     event_types_json = repr(event_types or [])
     rate_limit_val = float(rate_limit or 0.0)
-    return """import json
+    return f"""import json
 import time
 
-_PATH = {path}
-_EVENT_TYPES = set({event_types})
-_RATE_LIMIT = {rate_limit}
+_PATH = {json.dumps(path)}
+_EVENT_TYPES = set({event_types_json})
+_RATE_LIMIT = {rate_limit_val}
 _LAST_EMIT = {{}}
 _STATE = {{
     "cook_frame": None,
@@ -2561,11 +2607,7 @@ def onFrameStart(frame):
                 "timeline:state",
             )
     return
-""".format(
-        path=json.dumps(path),
-        event_types=event_types_json,
-        rate_limit=rate_limit_val,
-    )
+"""
 
 
 def _provision_monitor_nodes(node, config):
@@ -2742,9 +2784,9 @@ def handle_analyze_frame(body):
 
     top = op(path)
     if top is None:
-        return {'error': 'Node not found: {}'.format(path)}
+        return {'error': f'Node not found: {path}'}
     if not top.isTOP:
-        return {'error': 'Node is not a TOP: {} (type: {})'.format(path, top.type)}
+        return {'error': f'Node is not a TOP: {path} (type: {top.type})'}
 
     try:
         np = sys.modules.get('numpy')
@@ -2752,15 +2794,15 @@ def handle_analyze_frame(body):
             import importlib
             np = importlib.import_module('numpy')
     except Exception as exc:
-        return {'error': 'numpy not available: {}'.format(str(exc))}
+        return {'error': f'numpy not available: {str(exc)}'}
 
     try:
         arr = top.numpyArray()
     except Exception as exc:
-        return {'error': 'Could not get pixel data: {}'.format(str(exc))}
+        return {'error': f'Could not get pixel data: {str(exc)}'}
 
     if arr is None:
-        return {'error': 'numpyArray() returned None for: {}'.format(path)}
+        return {'error': f'numpyArray() returned None for: {path}'}
 
     # Ensure 3D array — grayscale TOPs may return 2D (H, W) without channel axis
     if arr.ndim == 2:
@@ -2770,7 +2812,7 @@ def handle_analyze_frame(body):
     num_channels = arr.shape[2]
 
     if h == 0 or w == 0:
-        return {'error': 'Image has zero pixels ({}x{})'.format(w, h), 'path': path}
+        return {'error': f'Image has zero pixels ({w}x{h})', 'path': path}
 
     mode_results = {}
 
@@ -2817,7 +2859,7 @@ def handle_analyze_frame(body):
                         'fully_transparent_fraction': float(np.mean(alpha < 0.01)),
                     }
                 else:
-                    mode_results['alpha_coverage'] = {'error': 'No alpha channel (channels={})'.format(num_channels)}
+                    mode_results['alpha_coverage'] = {'error': f'No alpha channel (channels={num_channels})'}
 
             elif mode == 'color_dominant':
                 if num_channels >= 3:
@@ -2832,11 +2874,7 @@ def handle_analyze_frame(body):
                     best_count = int(color_counts[best_idx])
                     mode_results['color_dominant'] = {
                         'rgb': dominant,
-                        'hex': '#{:02x}{:02x}{:02x}'.format(
-                            int(dominant[0] * 255),
-                            int(dominant[1] * 255),
-                            int(dominant[2] * 255),
-                        ),
+                        'hex': f'#{int(dominant[0] * 255):02x}{int(dominant[1] * 255):02x}{int(dominant[2] * 255):02x}',
                         'pixel_count': best_count,
                         'fraction': round(best_count / float(h * w), 4) if h * w > 0 else 0.0,
                     }
@@ -2860,9 +2898,9 @@ def handle_analyze_frame(body):
 
                     ref_top = op(reference_path)
                     if ref_top is None:
-                        mode_results['roi_diff'] = {'error': 'Reference node not found: {}'.format(reference_path)}
+                        mode_results['roi_diff'] = {'error': f'Reference node not found: {reference_path}'}
                     elif not ref_top.isTOP:
-                        mode_results['roi_diff'] = {'error': 'Reference is not a TOP: {}'.format(reference_path)}
+                        mode_results['roi_diff'] = {'error': f'Reference is not a TOP: {reference_path}'}
                     else:
                         ref_arr = ref_top.numpyArray()
                         if ref_arr is None:
@@ -2893,10 +2931,10 @@ def handle_analyze_frame(body):
                             }
 
             else:
-                mode_results[mode] = {'error': 'Unknown mode: {}'.format(mode)}
+                mode_results[mode] = {'error': f'Unknown mode: {mode}'}
 
         except Exception as exc:
-            mode_results[mode] = {'error': 'Mode {} failed: {}'.format(mode, str(exc))}
+            mode_results[mode] = {'error': f'Mode {mode} failed: {str(exc)}'}
 
     return {
         'path': path,

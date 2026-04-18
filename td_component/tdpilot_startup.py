@@ -11,11 +11,11 @@ Reads ~/.tdpilot_path to find the TDPilot repo root, then either:
 Never crashes TD startup — all errors are caught and printed to Textport.
 """
 
-import os
 import glob
-
+import os
 
 _CONFIG_FILE = os.path.join(os.path.expanduser("~"), ".tdpilot_path")
+_ENV_FILE_NAME = ".tdpilot.env"
 _TOX_RELATIVE = os.path.join("td_component", "tdpilot_v1_3.tox")
 _BUILD_SCRIPT_RELATIVE = os.path.join("td_component", "build_export_mcp_tox.py")
 _COMP_NAME = "mcp_server"
@@ -37,9 +37,33 @@ def _read_config():
     """Read repo root path from ~/.tdpilot_path. Returns None if missing."""
     if not os.path.isfile(_CONFIG_FILE):
         return None
-    with open(_CONFIG_FILE, "r", encoding="utf-8") as f:
+    with open(_CONFIG_FILE, encoding="utf-8") as f:
         path = f.read().strip()
     return path if path else None
+
+
+def _load_env_file(repo_root):
+    """Load KEY=VALUE pairs from <repo_root>/.tdpilot.env into os.environ.
+
+    Written by the installer; carries the shared secret and auth policy into
+    the TD process without hardcoding it in the .toe file.
+    """
+    env_path = os.path.join(repo_root, _ENV_FILE_NAME)
+    if not os.path.isfile(env_path):
+        return
+    try:
+        with open(env_path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = value
+    except OSError as exc:
+        print(f"[TDPilot] Could not read {env_path}: {exc}")
 
 
 def _validate_repo(repo_root):
@@ -83,10 +107,10 @@ def _load_tox_fast(tox_path):
         # loadTox on a COMP in TD 2025+ loads as a child and returns the new COMP
         loaded = local.loadTox(tox_path)
         if loaded is not None:
-            print("[TDPilot] v1.3 loaded from {}".format(tox_path))
+            print(f"[TDPilot] v1.3 loaded from {tox_path}")
             return True
     except Exception as e:
-        print("[TDPilot] loadTox failed ({}), falling back to rebuild".format(e))
+        print(f"[TDPilot] loadTox failed ({e}), falling back to rebuild")
 
     return False
 
@@ -95,7 +119,7 @@ def _rebuild_from_source(repo_root):
     """Run build_export_mcp_tox.py to rebuild and install into /local."""
     build_script = os.path.join(repo_root, _BUILD_SCRIPT_RELATIVE)
     if not os.path.isfile(build_script):
-        print("[TDPilot] ERROR: Build script not found: {}".format(build_script))
+        print(f"[TDPilot] ERROR: Build script not found: {build_script}")
         return False
 
     # Set env so the build script skips heuristic repo detection
@@ -104,7 +128,7 @@ def _rebuild_from_source(repo_root):
     os.environ.pop("TD_MCP_PARENT_PATH", None)
 
     print("[TDPilot] Rebuilding from source...")
-    with open(build_script, "r", encoding="utf-8") as f:
+    with open(build_script, encoding="utf-8") as f:
         source = f.read()
 
     # Same exec pattern as setup_mcp_in_td.py — runs the build script
@@ -130,14 +154,17 @@ def _startup():
         return
 
     if not os.path.isdir(repo_root):
-        print("[TDPilot] WARNING: Repo not found at {}".format(repo_root))
+        print(f"[TDPilot] WARNING: Repo not found at {repo_root}")
         print("[TDPilot] Re-run: npx tdpilot install")
         return
 
     if not _validate_repo(repo_root):
-        print("[TDPilot] WARNING: Invalid repo at {}".format(repo_root))
+        print(f"[TDPilot] WARNING: Invalid repo at {repo_root}")
         print("[TDPilot] Re-run: npx tdpilot install")
         return
+
+    # Load installer-written secret/policy env before the .tox runs its callbacks.
+    _load_env_file(repo_root)
 
     tox_path = os.path.join(repo_root, _TOX_RELATIVE)
     tox_exists = os.path.isfile(tox_path)
@@ -156,5 +183,5 @@ def _startup():
 try:
     _startup()
 except Exception as e:
-    print("[TDPilot] Startup error: {}".format(e))
+    print(f"[TDPilot] Startup error: {e}")
     print("[TDPilot] TDPilot did not load. Try: npx tdpilot install")

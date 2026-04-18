@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class PreferenceStore:
         self._base = Path(base_dir or DEFAULT_BASE_DIR).expanduser()
         self._project_name = project_name
         self._global_dir = self._base / "global"
-        self._project_dir: Optional[Path] = None
+        self._project_dir: Path | None = None
         if project_name:
             safe_name = "".join(c if c.isalnum() or c in "-_." else "_" for c in project_name)
             self._project_dir = self._base / "projects" / safe_name
@@ -29,8 +29,8 @@ class PreferenceStore:
         if self._project_dir:
             self._project_dir.mkdir(parents=True, exist_ok=True)
 
-        self._global: Dict[str, Any] = {}
-        self._project: Dict[str, Any] = {}
+        self._global: dict[str, Any] = {}
+        self._project: dict[str, Any] = {}
         self._load()
 
     def set(self, key: str, value: Any, scope: str = "project") -> None:
@@ -42,7 +42,7 @@ class PreferenceStore:
         store = self._store_for(scope)
         return store.get(key, default)
 
-    def list_all(self, scope: str = "project") -> Dict[str, Any]:
+    def list_all(self, scope: str = "project") -> dict[str, Any]:
         return dict(self._store_for(scope))
 
     def delete(self, key: str, scope: str = "project") -> bool:
@@ -53,7 +53,7 @@ class PreferenceStore:
         self._save_scope(scope)
         return True
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         return {
             "global_count": len(self._global),
             "project_count": len(self._project),
@@ -64,7 +64,7 @@ class PreferenceStore:
     # Internals
     # ------------------------------------------------------------------
 
-    def _store_for(self, scope: str) -> Dict[str, Any]:
+    def _store_for(self, scope: str) -> dict[str, Any]:
         if scope == "global":
             return self._global
         return self._project
@@ -74,7 +74,7 @@ class PreferenceStore:
         if self._project_dir:
             self._project = self._load_file(self._project_dir / "preferences.json")
 
-    def _load_file(self, path: Path) -> Dict[str, Any]:
+    def _load_file(self, path: Path) -> dict[str, Any]:
         if not path.exists():
             return {}
         try:
@@ -96,7 +96,7 @@ class PreferenceStore:
                 )
             self._write_file(self._project_dir / "preferences.json", self._project)
 
-    def _write_file(self, path: Path, data: Dict[str, Any]) -> None:
+    def _write_file(self, path: Path, data: dict[str, Any]) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".json.tmp")
         try:

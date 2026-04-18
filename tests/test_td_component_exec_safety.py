@@ -7,9 +7,6 @@ expected constants, functions, and control-flow structures are present.
 
 import pathlib
 import re
-import textwrap
-
-import pytest
 
 # ---------------------------------------------------------------------------
 # Locate the source file
@@ -39,8 +36,8 @@ class TestStandardModeConstants:
             'string', 'random', 'decimal', 'fractions', 'statistics',
         }
         for mod in expected:
-            assert "'{}'".format(mod) in _SOURCE or '"{}"'.format(mod) in _SOURCE, (
-                'STANDARD_ALLOWED_IMPORTS missing module: {}'.format(mod)
+            assert f"'{mod}'" in _SOURCE or f'"{mod}"' in _SOURCE, (
+                f'STANDARD_ALLOWED_IMPORTS missing module: {mod}'
             )
 
     def test_standard_blocked_tokens_defined(self):
@@ -52,9 +49,9 @@ class TestStandardModeConstants:
         extras = ['setattr', 'delattr', '__subclasses__', '__bases__',
                   'globals', 'locals']
         for token in extras:
-            assert "'{}'".format(token) in _SOURCE or '"{}"'.format(token) in _SOURCE or \
-                "'{}' + '('".format(token) in _SOURCE, (
-                'STANDARD_BLOCKED_TOKENS missing token: {}'.format(token)
+            assert f"'{token}'" in _SOURCE or f'"{token}"' in _SOURCE or \
+                f"'{token}' + '('" in _SOURCE, (
+                f'STANDARD_BLOCKED_TOKENS missing token: {token}'
             )
 
 
@@ -132,16 +129,19 @@ class TestBuildExecGlobalsStandard:
         )
 
 
-class TestNoFStrings:
-    """Verify the callbacks file avoids f-strings for TD Python compatibility."""
+class TestStandardViolationStructure:
+    """Verify _standard_exec_violation has the expected branches.
 
-    def test_standard_violation_uses_format(self):
-        # Find the _standard_exec_violation function body
+    Note: the previous variant of this test forbade f-strings. That constraint
+    was from TD < 2022 (no f-string support). The callbacks file is now declared
+    "Compatible with TouchDesigner 2025.30000+" which runs Python 3.11, so
+    f-strings are fine. We now just check the control-flow shape.
+    """
+
+    def test_standard_violation_checks_tokens_and_imports(self):
         start = _SOURCE.index('def _standard_exec_violation')
-        # Find the next def
         next_def = _SOURCE.index('\ndef ', start + 1)
         func_body = _SOURCE[start:next_def]
-        # Should not contain f-strings
-        assert "f'" not in func_body and 'f"' not in func_body, (
-            '_standard_exec_violation should use .format() not f-strings'
-        )
+        assert 'STANDARD_BLOCKED_TOKENS' in func_body
+        assert 'STANDARD_ALLOWED_IMPORTS' in func_body
+        assert 'RESTRICTED_IMPORT_RE' in func_body

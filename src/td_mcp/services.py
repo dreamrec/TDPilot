@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 from td_mcp.audit import AuditLogger
 from td_mcp.events import EventManager
 from td_mcp.jobs import JobManager, TaskAdapter
 from td_mcp.knowledge.card_index import CardIndex
+
 try:
     from td_mcp.knowledge.docsbrain import DocsBrain
 except ImportError:
@@ -27,19 +27,19 @@ class ServiceContainer:
     """Holds runtime services initialized in FastMCP lifespan."""
 
     td_client: TDClient
-    macro_engine: Optional[MacroEngine] = None
-    event_manager: Optional[EventManager] = None
-    visual_monitor: Optional[VisualMonitor] = None
-    top_streamer: Optional[TopStreamer] = None
-    safety_manager: Optional[SafetyManager] = None
-    snapshot_manager: Optional[SnapshotManager] = None
-    job_manager: Optional[JobManager] = None
-    task_adapter: Optional[TaskAdapter] = None
-    technique_store: Optional[TechniqueStore] = None
-    preference_store: Optional[PreferenceStore] = None
-    telemetry: Optional[TelemetryCollector] = None
-    audit: Optional[AuditLogger] = None
-    card_index: Optional[CardIndex] = None
-    popx_brain: Optional[DocsBrain] = None
-    paketa12_brain: Optional[DocsBrain] = None
+    macro_engine: MacroEngine | None = None
+    event_manager: EventManager | None = None
+    visual_monitor: VisualMonitor | None = None
+    top_streamer: TopStreamer | None = None
+    safety_manager: SafetyManager | None = None
+    snapshot_manager: SnapshotManager | None = None
+    job_manager: JobManager | None = None
+    task_adapter: TaskAdapter | None = None
+    technique_store: TechniqueStore | None = None
+    preference_store: PreferenceStore | None = None
+    telemetry: TelemetryCollector | None = None
+    audit: AuditLogger | None = None
+    card_index: CardIndex | None = None
+    popx_brain: DocsBrain | None = None
+    paketa12_brain: DocsBrain | None = None
     td_build: str = ""

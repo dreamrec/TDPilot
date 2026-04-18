@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
-
+from typing import Any
 
 # Map card subdirectory names to the key field used for exact lookup.
 _KEY_FIELDS = {
@@ -28,10 +27,10 @@ class CardIndex:
             snippets/    *.json  keyed by snippet_id
     """
 
-    def __init__(self, cards_dir: Union[str, Path]) -> None:
+    def __init__(self, cards_dir: str | Path) -> None:
         self._cards_dir = Path(cards_dir)
         # Each bucket maps key_value -> card dict
-        self._buckets: Dict[str, Dict[str, dict]] = {
+        self._buckets: dict[str, dict[str, dict]] = {
             "operators": {},
             "palette": {},
             "release": {},
@@ -72,16 +71,16 @@ class CardIndex:
     def search(
         self,
         query: str,
-        card_types: Optional[List[str]] = None,
-        family: Optional[str] = None,
+        card_types: list[str] | None = None,
+        family: str | None = None,
         limit: int = 10,
-    ) -> List[dict]:
+    ) -> list[dict]:
         """Simple text search with field-specific boosting.
 
         Boost order: key field (op_type / component_name) > display_name > summary.
         """
         query_lower = query.lower()
-        results: List[tuple[float, dict]] = []
+        results: list[tuple[float, dict]] = []
 
         buckets_to_search = (
             {ct: self._buckets[ct] for ct in card_types if ct in self._buckets}
@@ -127,15 +126,15 @@ class CardIndex:
     # Exact lookups
     # ------------------------------------------------------------------
 
-    def get_operator(self, op_type: str) -> Optional[dict]:
+    def get_operator(self, op_type: str) -> dict | None:
         """Exact lookup by op_type. Returns None if not found."""
         return self._buckets["operators"].get(op_type)
 
-    def get_palette(self, component_name: str) -> Optional[dict]:
+    def get_palette(self, component_name: str) -> dict | None:
         """Exact lookup by component_name. Returns None if not found."""
         return self._buckets["palette"].get(component_name)
 
-    def get_release(self, build: str) -> Optional[dict]:
+    def get_release(self, build: str) -> dict | None:
         """Exact lookup by build string. Returns None if not found."""
         return self._buckets["release"].get(build)
 
@@ -145,7 +144,7 @@ class CardIndex:
 
     def check_compatibility(
         self, op_type: str, current_build: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Compare an operator card's build_relevance against a build string.
 
         Returns ``{"status": "compatible"|"caution"|"incompatible", "reason": "..."}``.

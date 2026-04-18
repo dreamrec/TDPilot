@@ -16,14 +16,21 @@ Write-Host ""
 
 Write-Host "[1/4] Checking for uv..." -ForegroundColor Yellow
 
+$UvPinnedVersion = if ($env:TDPILOT_UV_VERSION) { $env:TDPILOT_UV_VERSION } else { "0.6.10" }
+
 $uvCmd = Get-Command uv -ErrorAction SilentlyContinue
 if ($uvCmd) {
     $uvVersion = & uv --version 2>&1
     Write-Host "  Found uv: $uvVersion" -ForegroundColor Green
 } else {
-    Write-Host "  uv not found. Installing..." -ForegroundColor Yellow
+    Write-Host "  uv not found. Installing pinned version $UvPinnedVersion..." -ForegroundColor Yellow
     try {
-        powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+        if ($UvPinnedVersion -eq "latest") {
+            $uvInstallUrl = "https://astral.sh/uv/install.ps1"
+        } else {
+            $uvInstallUrl = "https://astral.sh/uv/$UvPinnedVersion/install.ps1"
+        }
+        powershell -ExecutionPolicy ByPass -c "irm $uvInstallUrl | iex"
         # Refresh PATH
         $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
         $uvCmd = Get-Command uv -ErrorAction SilentlyContinue
@@ -101,6 +108,22 @@ $ConfigPath = "$ConfigDir\claude_desktop_config.json"
 # Find uv full path for the config
 $uvFullPath = (Get-Command uv).Source
 
+# Read existing secret (if any) so re-running the installer is idempotent.
+$existingSecret = ""
+if (Test-Path $ConfigPath) {
+    try {
+        $existingConfig = Get-Content $ConfigPath -Raw | ConvertFrom-Json
+        if ($existingConfig.mcpServers.touchdesigner.env.TD_MCP_SHARED_SECRET) {
+            $existingSecret = $existingConfig.mcpServers.touchdesigner.env.TD_MCP_SHARED_SECRET
+        }
+    } catch { }
+}
+if ([string]::IsNullOrWhiteSpace($existingSecret)) {
+    $bytes = New-Object byte[] 32
+    [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+    $existingSecret = ([BitConverter]::ToString($bytes) -replace '-', '').ToLower()
+}
+
 # Build the touchdesigner server entry
 $tdServer = @{
     command = $uvFullPath
@@ -109,6 +132,9 @@ $tdServer = @{
         TD_MCP_HOST = "127.0.0.1"
         TD_MCP_PORT = "9981"
         TD_MCP_WS_PORT = "9982"
+        TD_MCP_EXEC_MODE = "restricted"
+        TD_MCP_REQUIRE_AUTH = "1"
+        TD_MCP_SHARED_SECRET = $existingSecret
     }
 }
 
@@ -174,7 +200,17 @@ $json = $output | ConvertTo-Json -Depth 10
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($ConfigPath, $json, $utf8NoBom)
 
+# Write .tdpilot.env beside the repo so the TD-side startup script picks up the secret.
+$envFile = Join-Path $RepoPath ".tdpilot.env"
+$envText = @"
+TD_MCP_SHARED_SECRET=$existingSecret
+TD_MCP_REQUIRE_AUTH=1
+TD_MCP_EXEC_MODE=restricted
+"@
+[System.IO.File]::WriteAllText($envFile, $envText, $utf8NoBom)
+
 Write-Host "  Config updated: $ConfigPath" -ForegroundColor Green
+Write-Host "  Secret written to: $envFile (TD reads at startup)" -ForegroundColor Green
 
 # ---------- Step 4: Summary ----------
 

@@ -20,12 +20,21 @@ echo ""
 
 echo "[1/4] Checking for uv..."
 
+UV_PINNED_VERSION="${TDPILOT_UV_VERSION:-0.6.10}"
+
 if command -v uv &>/dev/null; then
     UV_PATH=$(which uv)
     echo "  Found uv: $(uv --version) at $UV_PATH"
 else
-    echo "  uv not found. Installing..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh 2>&1
+    echo "  uv not found. Installing pinned version ${UV_PINNED_VERSION}..."
+    # Pin the uv installer URL to a specific version. If you want the latest
+    # uv, override by exporting TDPILOT_UV_VERSION=latest before running.
+    if [ "$UV_PINNED_VERSION" = "latest" ]; then
+        UV_INSTALL_URL="https://astral.sh/uv/install.sh"
+    else
+        UV_INSTALL_URL="https://astral.sh/uv/${UV_PINNED_VERSION}/install.sh"
+    fi
+    curl -LsSf "$UV_INSTALL_URL" | sh 2>&1
 
     # Reload PATH
     export PATH="$HOME/.local/bin:$PATH"
@@ -91,9 +100,9 @@ if [ -f "$CONFIG_PATH" ]; then
     echo "  Backed up config to: $BACKUP_PATH"
 fi
 
-# Use Python to safely merge JSON (always available on macOS)
+# Use Python to safely merge JSON (always available on macOS) and generate a secret.
 python3 -c "
-import json, os, sys
+import json, os, secrets, sys
 
 config_path = '$CONFIG_PATH'
 repo_path = '$REPO_PATH'
@@ -115,21 +124,38 @@ else:
 if 'mcpServers' not in config:
     config['mcpServers'] = {}
 
-# Add touchdesigner entry
+# Preserve an existing secret if we already installed once.
+existing = config['mcpServers'].get('touchdesigner', {})
+existing_secret = existing.get('env', {}).get('TD_MCP_SHARED_SECRET', '')
+shared_secret = existing_secret or secrets.token_hex(32)
+
 config['mcpServers']['touchdesigner'] = {
     'command': uv_path,
     'args': ['run', '--directory', repo_path, 'tdpilot'],
     'env': {
         'TD_MCP_HOST': '127.0.0.1',
         'TD_MCP_PORT': '9981',
-        'TD_MCP_WS_PORT': '9982'
+        'TD_MCP_WS_PORT': '9982',
+        'TD_MCP_EXEC_MODE': 'restricted',
+        'TD_MCP_REQUIRE_AUTH': '1',
+        'TD_MCP_SHARED_SECRET': shared_secret,
     }
 }
 
 with open(config_path, 'w') as f:
     json.dump(config, f, indent=2)
+os.chmod(config_path, 0o600)
 
 print('  Config updated: ' + config_path)
+
+# Also write the secret into a TD-readable env file so the .tox picks it up.
+env_path = os.path.join(repo_path, '.tdpilot.env')
+with open(env_path, 'w') as f:
+    f.write('TD_MCP_SHARED_SECRET=' + shared_secret + '\n')
+    f.write('TD_MCP_REQUIRE_AUTH=1\n')
+    f.write('TD_MCP_EXEC_MODE=restricted\n')
+os.chmod(env_path, 0o600)
+print('  Secret written to: ' + env_path + ' (TD reads this at startup)')
 "
 
 # ---------- Step 4: Summary ----------

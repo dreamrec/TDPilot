@@ -19,9 +19,9 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from td_mcp.knowledge.docsbrain.normalizer import normalize_directory, write_pages_jsonl
 from td_mcp.knowledge.docsbrain.chunker import chunk_page, write_chunks_jsonl
 from td_mcp.knowledge.docsbrain.indexer import build_index
+from td_mcp.knowledge.docsbrain.normalizer import normalize_directory, write_pages_jsonl
 from td_mcp.knowledge.docsbrain.release_parser import build_release_artifacts
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -75,7 +75,7 @@ def main() -> None:
     # Stage 2: Chunk
     logger.info("Stage 2: Chunking pages")
     all_chunks: list[dict] = []
-    with open(pages_path, "r", encoding="utf-8") as f:
+    with open(pages_path, encoding="utf-8") as f:
         for line in f:
             page = json.loads(line)
             # Reconstruct the HTML path from page URL

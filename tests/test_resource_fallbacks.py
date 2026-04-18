@@ -2,10 +2,8 @@
 and EventManager tuple-key subscriptions."""
 
 import ast
-import pytest
 
 from td_mcp.events.event_manager import EventManager
-
 
 # ---------------------------------------------------------------------------
 # Helper: FakeMCPServer
@@ -45,9 +43,7 @@ def _find_decorated_functions(tree: ast.Module, decorator_substring: str) -> dic
         for dec in node.decorator_list:
             if isinstance(dec, ast.Call):
                 func = dec.func
-                if isinstance(func, ast.Attribute) and func.attr == decorator_substring:
-                    pass
-                elif isinstance(func, ast.Name) and func.id == decorator_substring:
+                if isinstance(func, ast.Attribute) and func.attr == decorator_substring or isinstance(func, ast.Name) and func.id == decorator_substring:
                     pass
                 else:
                     continue
