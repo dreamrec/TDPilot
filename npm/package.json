@@ -13,7 +13,7 @@
   "bin": {
     "tdpilot": "./run.js"
   },
-  "files": ["run.js", "install.js", "brains.js", "README.md"],
+  "files": ["run.js", "install.js", "plugin.js", "brains.js", "README.md"],
   "engines": {
     "node": ">=16"
   }

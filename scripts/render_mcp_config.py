@@ -16,7 +16,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / ".mcp.json.template"
-OUTPUT = ROOT / ".mcp.json"
+# NOTE: .mcp.json at repo root is the Claude Code plugin template and is committed.
+# User-rendered config goes to a .local file so the plugin template is never clobbered.
+OUTPUT = ROOT / ".mcp.json.local"
 
 
 def main() -> int:

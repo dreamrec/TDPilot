@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 /**
  * TDPilot — npm wrapper
- * Installs uv (if needed) and runs the Python MCP server.
- * Usage: npx tdpilot
+ *
+ * Usage:
+ *   npx tdpilot                 run the MCP server (default)
+ *   npx tdpilot install         install TD auto-load (.toe + pref.txt)
+ *   npx tdpilot uninstall       undo install
+ *   npx tdpilot plugin-install  install as a Claude Code plugin via marketplace
+ *   npx tdpilot plugin-uninstall remove the Claude Code plugin
+ *   npx tdpilot brains          manage downloaded brain DBs
  */
 
 const { execSync, spawn } = require("child_process");
@@ -90,6 +96,17 @@ function ensureRepo() {
   }
 }
 
+// ── Subcommands that don't need uv/repo ──────────────────────
+// (plugin-install runs Claude Code — no Python needed)
+const subcommand = process.argv[2];
+
+if (subcommand === "plugin-install" || subcommand === "plugin-uninstall") {
+  const { install, uninstall } = require("./plugin");
+  if (subcommand === "plugin-install") install();
+  else uninstall();
+  process.exit(0);
+}
+
 // ── Main ──────────────────────────────────────────────────────
 
 if (!hasCommand("uv")) {
@@ -101,9 +118,6 @@ if (!hasCommand("uv")) {
 }
 
 ensureRepo();
-
-// ── Subcommands ──────────────────────────────────────────────
-const subcommand = process.argv[2];
 
 if (subcommand === "brains") {
   const { main: brainsMain } = require("./brains");

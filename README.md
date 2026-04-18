@@ -14,13 +14,38 @@ It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networ
 
 `#tdpilot` `#touchdesigner` `#mcp` `#livepatch` `#audioreactive` `#realtime`
 
+## Install (Claude Code plugin — recommended)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/dreamrec/TDPilot/main/scripts/install_claude_plugin.sh | bash
+```
+
+Or if you prefer npx:
+
+```bash
+npx tdpilot plugin-install
+```
+
+Or manually in a Claude Code session:
+
+```
+/plugin marketplace add dreamrec/TDPilot
+/plugin install tdpilot@dreamrec-TDPilot
+```
+
+After the plugin is installed, load `td_component/tdpilot_v1_3.tox` from the
+plugin cache into TouchDesigner's `/local` container.
+Full guide: [`docs/INSTALL_CLAUDE_PLUGIN.md`](docs/INSTALL_CLAUDE_PLUGIN.md).
+
 ## Documentation
 
+- Install (Claude Code plugin): `docs/INSTALL_CLAUDE_PLUGIN.md`
 - Getting started: `docs/GETTING_STARTED.md`
 - User guide: `docs/USER_GUIDE.md`
 - Memory guide: `docs/MEMORY_GUIDE.md`
 - Production manual: `docs/MANUAL.md`
 - API reference: `docs/API_REFERENCE.md`
+- Security model: `docs/SECURITY.md`
 - Troubleshooting: `docs/TROUBLESHOOTING.md`
 - MCP 1.1 surface: `docs/MCP_1_1_SURFACE.md`
 - Release notes: `CHANGELOG.md`

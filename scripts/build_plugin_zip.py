@@ -1,31 +1,29 @@
 #!/usr/bin/env python3
-"""Rebuild ``tdpilot.plugin`` ZIP with current sources.
+"""Rebuild ``tdpilot.plugin`` ZIP from committed plugin sources.
 
-Previously the plugin ZIP was assembled by hand (see commit history for
-"chore: rebuild tdpilot.plugin ..."). This script makes it deterministic.
+Since audit hardening, the plugin layout is committed at the repo root:
+  - .claude-plugin/plugin.json        (plugin manifest)
+  - .mcp.json                         (plugin MCP config template)
+  - commands/                         (slash commands)
+  - skills/                           (skills, already at root)
+  - td_component/tdpilot_v1_3.tox     (binary TD component — must be built in TD)
+  - plugin_README.md                  (goes into ZIP as README.md)
+
+This script just zips those files. If any are missing it fails loudly rather
+than synthesizing fallbacks — the committed files are the source of truth.
+
+The legacy ZIP artifact is still produced so that users who don't install via
+the Claude Code marketplace can drag-drop `tdpilot.plugin` into their plugin
+folder.
 
 Usage:
     uv run python scripts/build_plugin_zip.py
     uv run python scripts/build_plugin_zip.py --output /tmp/tdpilot.plugin
-
-Inputs (read from the repo):
-  - td_component/tdpilot_v1_3.tox       (must be rebuilt in TD first)
-  - plugin_README.md                    -> README.md inside ZIP
-  - skills/tdpilot-core/SKILL.md        + references/advanced-workflows.md
-  - skills/tdpilot-production/SKILL.md
-  - skills/popx-touchdesigner/SKILL.md  + references/.gitignore + references/BUILD.md
-  - skills/popx-touchdesigner/scripts/build_popx_refs.py + search_popx_refs.py
-
-Generated (synthesized):
-  - .claude-plugin/plugin.json   -- version + tool count derived from the single source of truth
-  - .mcp.json                    -- template with placeholders for user-rendered secret
-  - commands/td-check.md, commands/td-snapshot.md  -- stable, hard-coded below
 """
 
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 import zipfile
 from pathlib import Path
@@ -37,163 +35,79 @@ from td_mcp import __version__  # noqa: E402
 from td_mcp.release_gates import EXPECTED_MIN_TOOL_COUNT  # noqa: E402
 
 
-# ---------------------------------------------------------------------------
-# Synthesized files (live in the ZIP only, not in the repo tree)
-# ---------------------------------------------------------------------------
+# Every entry is (source_relative_to_ROOT, arcname_in_zip, required).
+# `required=True` means the build fails if the file is missing.
+PLUGIN_FILES: list[tuple[str, str, bool]] = [
+    # Binary TD component.
+    ("td_component/tdpilot_v1_3.tox", "td_component/tdpilot_v1_3.tox", True),
+    # Plugin README (distinct from the repo's README.md).
+    ("plugin_README.md", "README.md", True),
+    # Plugin manifests.
+    (".claude-plugin/plugin.json", ".claude-plugin/plugin.json", True),
+    (".mcp.json", ".mcp.json", True),
+    # Slash commands.
+    ("commands/td-check.md", "commands/td-check.md", True),
+    ("commands/td-snapshot.md", "commands/td-snapshot.md", True),
+    # Skills.
+    ("skills/tdpilot-core/SKILL.md", "skills/tdpilot-core/SKILL.md", True),
+    (
+        "skills/tdpilot-core/references/advanced-workflows.md",
+        "skills/tdpilot-core/references/advanced-workflows.md",
+        True,
+    ),
+    (
+        "skills/tdpilot-core/references/preset-systems-and-ui.md",
+        "skills/tdpilot-core/references/preset-systems-and-ui.md",
+        False,
+    ),
+    ("skills/tdpilot-production/SKILL.md", "skills/tdpilot-production/SKILL.md", True),
+    ("skills/popx-touchdesigner/SKILL.md", "skills/popx-touchdesigner/SKILL.md", True),
+    (
+        "skills/popx-touchdesigner/references/.gitignore",
+        "skills/popx-touchdesigner/references/.gitignore",
+        False,
+    ),
+    (
+        "skills/popx-touchdesigner/references/BUILD.md",
+        "skills/popx-touchdesigner/references/BUILD.md",
+        False,
+    ),
+    (
+        "skills/popx-touchdesigner/scripts/build_popx_refs.py",
+        "skills/popx-touchdesigner/scripts/build_popx_refs.py",
+        False,
+    ),
+    (
+        "skills/popx-touchdesigner/scripts/search_popx_refs.py",
+        "skills/popx-touchdesigner/scripts/search_popx_refs.py",
+        False,
+    ),
+]
 
 
-def _plugin_json() -> str:
-    data = {
-        "name": "tdpilot",
-        "version": __version__,
-        "description": (
-            f"TDPilot -- AI assistant for TouchDesigner. Provides {EXPECTED_MIN_TOOL_COUNT} "
-            "MCP tools for live node graph control, parameter management, diagnostics, "
-            "safety, streaming, technique memory, and more."
-        ),
-        "author": {"name": "Silviu Visan"},
-        "keywords": [
-            "touchdesigner",
-            "td",
-            "mcp",
-            "creative-coding",
-            "visual-programming",
-            "popx",
-            "popsextension",
-            "particles",
-            "simulations",
-        ],
-        "mcpServers": "./.mcp.json",
-    }
-    return json.dumps(data, indent=2) + "\n"
-
-
-def _mcp_json_for_plugin() -> str:
-    # Note: plugin-bundled .mcp.json is a *template*. Users who install this
-    # plugin resolve ${CLAUDE_PLUGIN_ROOT} at activation time; the secret is
-    # generated by the OS installer (install.sh / install.ps1), not here.
-    data = {
-        "mcpServers": {
-            "touchdesigner": {
-                "command": "npx",
-                "args": ["-y", "tdpilot"],
-                "env": {
-                    "TD_MCP_HOST": "127.0.0.1",
-                    "TD_MCP_PORT": "9981",
-                    "TD_MCP_WS_PORT": "9982",
-                    "TD_MCP_EXEC_MODE": "restricted",
-                    "TD_MCP_REQUIRE_AUTH": "1",
-                },
-            }
-        }
-    }
-    return json.dumps(data, indent=2) + "\n"
-
-
-_COMMAND_CHECK = """---
-description: Run a comprehensive health check on the current TD project
----
-
-Use the td_ tools to run a full health check on the current TouchDesigner
-project:
-
-1. Call td_get_info to confirm the session is alive and grab project + TD build.
-2. Call td_get_errors on the project root to surface any cooking or connection errors.
-3. Call td_get_capabilities to confirm feature availability (vision, memory, safety).
-4. Call td_describe_surface to report live tool count and server version.
-
-Summarize findings concisely. Flag errors/warnings first, then capability deltas
-or version drift.
-"""
-
-_COMMAND_SNAPSHOT = """---
-description: Create a safety snapshot of the current scene before destructive changes
----
-
-Use td_snapshot_scene to create a named snapshot of the current TouchDesigner
-state. This captures node structure, parameters, and content so the scene can be
-restored with td_restore_snapshot if a subsequent edit goes wrong.
-
-Recommended workflow:
-1. Name the snapshot something descriptive (e.g. "pre-refactor", "before-param-bounds").
-2. Confirm via td_list_snapshots that it was written.
-3. Proceed with the edit.
-4. If the edit is bad, call td_restore_snapshot with that name.
-
-This is cheaper than saving the .toe file and does not block the TD UI.
-"""
-
-
-# ---------------------------------------------------------------------------
-# Build
-# ---------------------------------------------------------------------------
-
-
-def _copy_from_disk(zf, src, arcname):
-    if not src.exists():
-        raise SystemExit(f"Missing required source: {src}")
-    zf.write(src, arcname)
-
-
-def build(output):
-    tox_src = ROOT / "td_component" / "tdpilot_v1_3.tox"
-    if not tox_src.exists():
-        raise SystemExit(
-            "td_component/tdpilot_v1_3.tox not found. Rebuild it first in TouchDesigner "
-            "by running setup_mcp_in_td.py from the TD Textport."
-        )
-
+def build(output: Path) -> None:
+    missing_required = []
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-        # Binary .tox -- the TD-runtime component.
-        _copy_from_disk(zf, tox_src, "td_component/tdpilot_v1_3.tox")
+        for src_rel, arc, required in PLUGIN_FILES:
+            src = ROOT / src_rel
+            if not src.exists():
+                if required:
+                    missing_required.append(src_rel)
+                continue
+            zf.write(src, arc)
 
-        # Plugin README -- use the repo's plugin_README.md.
-        _copy_from_disk(zf, ROOT / "plugin_README.md", "README.md")
-
-        # Synthesized manifests.
-        zf.writestr(".claude-plugin/plugin.json", _plugin_json())
-        zf.writestr(".mcp.json", _mcp_json_for_plugin())
-
-        # Commands -- hard-coded so they cannot drift with docs rewrites.
-        zf.writestr("commands/td-check.md", _COMMAND_CHECK)
-        zf.writestr("commands/td-snapshot.md", _COMMAND_SNAPSHOT)
-
-        # Skills.
-        _copy_from_disk(
-            zf,
-            ROOT / "skills" / "tdpilot-core" / "SKILL.md",
-            "skills/tdpilot-core/SKILL.md",
-        )
-        _copy_from_disk(
-            zf,
-            ROOT / "skills" / "tdpilot-core" / "references" / "advanced-workflows.md",
-            "skills/tdpilot-core/references/advanced-workflows.md",
-        )
-        _copy_from_disk(
-            zf,
-            ROOT / "skills" / "tdpilot-production" / "SKILL.md",
-            "skills/tdpilot-production/SKILL.md",
-        )
-        _copy_from_disk(
-            zf,
-            ROOT / "skills" / "popx-touchdesigner" / "SKILL.md",
-            "skills/popx-touchdesigner/SKILL.md",
-        )
-
-        popx_refs = ROOT / "skills" / "popx-touchdesigner" / "references"
-        for name in (".gitignore", "BUILD.md"):
-            src = popx_refs / name
-            if src.exists():
-                zf.write(src, f"skills/popx-touchdesigner/references/{name}")
-
-        popx_scripts = ROOT / "skills" / "popx-touchdesigner" / "scripts"
-        for name in ("build_popx_refs.py", "search_popx_refs.py"):
-            src = popx_scripts / name
-            if src.exists():
-                zf.write(src, f"skills/popx-touchdesigner/scripts/{name}")
+    if missing_required:
+        output.unlink(missing_ok=True)
+        msg = "Missing required plugin files:\n  " + "\n  ".join(missing_required)
+        if "td_component/tdpilot_v1_3.tox" in missing_required:
+            msg += (
+                "\n\nThe .tox must be rebuilt inside TouchDesigner. From the Textport:\n"
+                '  exec(open("setup_mcp_in_td.py").read(), globals(), globals())'
+            )
+        raise SystemExit(msg)
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--output",
@@ -206,8 +120,8 @@ def main():
     build(args.output)
     size = args.output.stat().st_size
     print(f"Wrote {args.output}")
-    print(f"  size: {size:,} bytes")
-    print(f"  version: {__version__}")
+    print(f"  size:       {size:,} bytes")
+    print(f"  version:    {__version__}")
     print(f"  tool count: {EXPECTED_MIN_TOOL_COUNT}")
     return 0
 

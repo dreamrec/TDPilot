@@ -64,6 +64,13 @@ def main() -> int:
 
     errors += [
         check_json_version(ROOT / "npm" / "package.json", expected, "npm/package.json"),
+        check_json_version(ROOT / ".claude-plugin" / "plugin.json", expected, ".claude-plugin/plugin.json"),
+        check_line(
+            ROOT / ".claude-plugin" / "marketplace.json",
+            r'"version"\s*:\s*"([^"]+)"',
+            expected,
+            ".claude-plugin/marketplace.json tdpilot plugin",
+        ),
         check_line(
             ROOT / "td_component" / "mcp_webserver_callbacks.py",
             r'API_VERSION\s*=\s*"([^"]+)"',
@@ -117,7 +124,7 @@ def main() -> int:
             print(f"  - {err}")
         return 1
 
-    print(f"All {10} versioned files are in sync at v{expected}.")
+    print(f"All versioned files are in sync at v{expected}.")
     return 0
 
 

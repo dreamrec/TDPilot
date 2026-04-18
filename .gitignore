@@ -36,8 +36,11 @@ td_component/NewProject*.toe
 reports/
 zivfETsb
 
-# Local MCP configuration — template is .mcp.json.template, user-rendered file is ignored
-.mcp.json
+# .mcp.json at repo root IS the Claude Code plugin template (committed).
+# User-rendered local variants and backups are NOT tracked.
+.mcp.json.local
+.mcp.json.local-backup
+.mcp.json.backup*
 
 # Secret env file written by installer (contains TD_MCP_SHARED_SECRET)
 .tdpilot.env
