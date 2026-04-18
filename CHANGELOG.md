@@ -40,9 +40,9 @@
 - `plugin_README.md` perms fixed (0400 → 0644).
 - Deferred: `models.py` split (1,100+ lines → package) — marked as tech debt in the module docstring; requires updating every tool import at once so best handled in a dedicated PR.
 
-### Stale derived artifacts (need rebuild in a TD session)
-- `td_component/tdpilot_v1_3.tox` — TD callbacks + startup source changed.
-- `tdpilot.plugin` — ZIP contains the old skills/SKILL.md and old .tox.
+### Derived artifacts rebuilt
+- `td_component/tdpilot_v1_3.tox` — rebuilt inside TD 2025.32460 with the new callbacks (auth-by-default, CORS tightening, DAT-exec blocks).
+- `tdpilot.plugin` — rebuilt via new `scripts/build_plugin_zip.py`. The plugin's embedded `.claude-plugin/plugin.json` now reads version + tool count from the single source of truth rather than being hand-maintained. Its bundled `.mcp.json` template ships with `TD_MCP_REQUIRE_AUTH=1` and `TD_MCP_EXEC_MODE=restricted` as defaults.
 
 ## 1.3.4 - 2026-03-15
 
