@@ -11,7 +11,6 @@ from types import SimpleNamespace
 
 import pytest
 
-import td_mcp.server as server_mod
 import td_mcp.tool_registry as registry
 from td_mcp.models import ColorPipelineInput, ComponentStandardizeInput
 from td_mcp.services import ServiceContainer

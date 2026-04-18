@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from td_mcp.td_client import TDClient
 
 # Complexity thresholds
 SMALL_MAX = 10
@@ -22,7 +25,7 @@ _ASSET_EXTENSIONS = (
 
 
 async def analyze_network(
-    client: TDClient,  # noqa: F821
+    client: TDClient,
     path: str,
     *,
     max_depth: int = 3,

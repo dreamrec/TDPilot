@@ -1,8 +1,9 @@
 """Tests for official recommendation tools 84-86."""
 import asyncio
 
-import td_mcp.server as server
 from _constants import EXPECTED_MIN_TOOL_COUNT
+
+import td_mcp.server as server
 
 OFFICIAL_TOOLS = {
     "td_recommend_official_component",

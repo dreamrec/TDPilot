@@ -19,11 +19,6 @@ import json
 import random
 import sys
 import time
-from pathlib import Path
-
-# Make src/td_mcp importable when script is invoked directly.
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from td_mcp.release_gates import EXPECTED_MIN_TOOL_COUNT  # noqa: E402
 import traceback
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -33,6 +28,11 @@ from typing import Any
 import anyio
 from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
+
+# Make src/td_mcp importable when script is invoked directly.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
+from td_mcp.release_gates import EXPECTED_MIN_TOOL_COUNT  # noqa: E402
 
 
 @dataclass

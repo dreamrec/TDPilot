@@ -1,7 +1,8 @@
 import asyncio
 
-import td_mcp.server as server
 from _constants import EXPECTED_MIN_TOOL_COUNT
+
+import td_mcp.server as server
 
 
 def test_tool_registry_contains_core_and_v2_surfaces():

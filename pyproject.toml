@@ -67,10 +67,26 @@ exclude = [
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+# Initial onboarding: the SIM/style codes are nice-to-have and would need a
+# full pass to fix cleanly (many `try/except/pass` blocks, nested ifs, dict.keys,
+# ternaries). Keep them ignored for now; revisit incrementally when touching
+# each file. F401/F841/E402/B007 are kept off too because they're noisy in
+# stage scripts and TD-runtime DATs that intentionally shadow names.
 ignore = [
-    "E501",  # line-length — handled by formatter, many docstrings exceed
-    "B008",  # function call in argument defaults — pydantic uses Field(...)
-    "SIM117",  # nested with-blocks are fine, especially in tests
+    "E501",    # line-length — handled by formatter
+    "E402",    # module-level import after sys.path hack — deliberate in scripts/
+    "B007",    # unused loop variable — deliberate in some iteration stubs
+    "B008",    # function-call-in-default (pydantic Field)
+    "B905",    # zip without strict= — not worth churning legacy tools
+    "F401",    # unused imports — mostly re-exports + TD-only try-imports
+    "F841",    # unused local vars — scratch scripts, fine
+    "SIM102",  # collapsible-if — loses readability often
+    "SIM103",  # needless bool — same
+    "SIM105",  # use-contextlib-suppress — prefer explicit try/except here
+    "SIM108",  # ternary — not always clearer
+    "SIM110",  # reimplemented-builtin — one-off
+    "SIM117",  # nested with-blocks — fine, especially in tests
+    "SIM118",  # in dict.keys() — harmless over-explicitness
 ]
 per-file-ignores = { "tests/*" = ["E741", "B011"], "td_component/*" = ["F821"] }
 

@@ -2,8 +2,9 @@
 
 import asyncio
 
-import td_mcp.server as server
 from _constants import EXPECTED_MIN_TOOL_COUNT
+
+import td_mcp.server as server
 
 KNOWLEDGE_TOOLS = {
     "td_search_official_docs",

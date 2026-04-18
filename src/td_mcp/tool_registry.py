@@ -9,7 +9,6 @@ import logging
 import math
 import os
 import statistics
-import sys
 import time
 from collections.abc import Callable
 from contextlib import asynccontextmanager
@@ -19,7 +18,8 @@ from typing import Any
 
 from mcp.server.fastmcp import Context, FastMCP
 
-from td_mcp import exec_safety, normalize_transport as _normalize_transport
+from td_mcp import exec_safety
+from td_mcp import normalize_transport as _normalize_transport
 from td_mcp.audit import AuditLogger
 from td_mcp.capabilities import detect_capabilities
 from td_mcp.errors import format_tool_error

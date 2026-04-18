@@ -34,7 +34,6 @@ sys.path.insert(0, str(ROOT / "src"))
 from td_mcp import __version__  # noqa: E402
 from td_mcp.release_gates import EXPECTED_MIN_TOOL_COUNT  # noqa: E402
 
-
 # Every entry is (source_relative_to_ROOT, arcname_in_zip, required).
 # `required=True` means the build fails if the file is missing.
 PLUGIN_FILES: list[tuple[str, str, bool]] = [

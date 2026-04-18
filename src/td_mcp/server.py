@@ -29,6 +29,8 @@ from td_mcp.tool_registry import (
     _enforce_exec_mode,
     _restricted_exec_violation,
     mcp,
+)
+from td_mcp.tool_registry import (
     main as _run_server,
 )
 
