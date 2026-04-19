@@ -7,7 +7,7 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v1.4.0
+# TDPilot Runtime v1.4.2
 
 [![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
@@ -22,28 +22,34 @@ It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networ
 
 `#tdpilot` `#touchdesigner` `#mcp` `#livepatch` `#audioreactive` `#realtime`
 
-## Install (Claude Code plugin — recommended)
+## Install — Claude Code plugin (recommended)
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/dreamrec/TDPilot/main/scripts/install_claude_plugin.sh | bash
-```
-
-Or if you prefer npx:
-
-```bash
-npx tdpilot plugin-install
-```
-
-Or manually in a Claude Code session:
+**Easiest:** paste these two slash commands into any Claude Code session.
 
 ```
 /plugin marketplace add dreamrec/TDPilot
 /plugin install tdpilot@dreamrec-TDPilot
 ```
 
-After the plugin is installed, load `td_component/tdpilot_v1_3.tox` from the
-plugin cache into TouchDesigner's `/local` container.
-Full guide: [`docs/INSTALL_CLAUDE_PLUGIN.md`](docs/INSTALL_CLAUDE_PLUGIN.md).
+That installs all **92 MCP tools**, 3 skills (`tdpilot-core`, `tdpilot-production`, `popx-touchdesigner`), 2 slash commands (`/td-check`, `/td-snapshot`), and the TD-side `.tox` component — one command, no Python setup required.
+
+**Shell one-liner alternative:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/dreamrec/TDPilot/main/scripts/install_claude_plugin.sh | bash
+```
+
+**Or via npx:**
+
+```bash
+npx tdpilot plugin-install
+```
+
+### TouchDesigner side (once, after install)
+
+Drag `~/.claude/plugins/cache/dreamrec-TDPilot/tdpilot/<version>/td_component/tdpilot_v1_3.tox` into your TD `/local` container. Or paste the auto-setup Python block from [`docs/INSTALL_CLAUDE_PLUGIN.md`](docs/INSTALL_CLAUDE_PLUGIN.md) into the Textport (auto-detects the latest installed version).
+
+Using Claude Desktop instead of Claude Code? See [`docs/INSTALL_CLAUDE_PLUGIN.md`](docs/INSTALL_CLAUDE_PLUGIN.md) — the two flows shouldn't be mixed on one machine.
 
 ## Documentation
 
@@ -82,6 +88,27 @@ You don't need all 92 tools. Start with these and expand as needed:
 **The loop:** Inspect -> Build -> Verify -> Snapshot -> Repeat.
 
 Everything else (vision, streaming, optimization, planning, TD2025 inspection) builds on top of this core.
+
+## What's New In 1.4.2
+
+Follow-up bugfix release from the v1.4.1 ultra-debug sweep (N1–N7):
+
+- **Component/server version sync** — `API_VERSION` bumped in `td_component/mcp_webserver_callbacks.py`; `td_get_capabilities` no longer emits `mismatch: true` after a fresh `.tox` rebuild.
+- **`td_build` auto-detect fallback** — new `_ensure_td_build` helper lazily fetches the build from live TD when MCP server outlived a TD restart. Fixes `td_get_release_delta` and `td_get_build_compatibility` without explicit `build=`.
+- **`unstable` agreement** — `td_detect_instability` and `td_get_state_vector.health` now use a shared heuristic and always return matching values.
+- **`td_geometry_data` prim verts** — `getattr(prim, 'numVertices', 0)` → `len(prim)`. Box SOP quads correctly report 4 verts each.
+- **`td_memory_preferences` project scope** — derives project name from TD's `info.project_name` when `TDPILOT_PROJECT_NAME` env var is unset.
+- **`td_validate_recipe` stock allowlist** — honors the v1.4.1 `_STOCK_OP_TYPES` fix so recipes using `base`, `constant`, `feedback`, `null`, etc. don't flag as unknown.
+
+## What's New In 1.4.1
+
+Ultra-debug sweep — B1–B9 + restricted-mode + CI guardrails:
+
+- **`td_describe_surface` real counts** — was returning `tool_count: 0, resource_count: 0` due to bad FastMCP attribute access. Now uses `_tool_manager.list_tools()` + `_resource_manager.list_resources()`.
+- **`td_copy_node` offset** — copies are placed +150 px off the original so they don't stack exactly.
+- **`td_get_content` table empty-check** — uses `node.isTable` instead of `numRows > 0`, so empty Table DATs return `[]` instead of erroring.
+- **`td_project_lifecycle end_undo_block`** — idempotent; TD's cascading auto-close no longer errors.
+- **Personal path leak check** — `scripts/check_no_personal_paths.sh` prevents committing `/Users/<name>/` or `C:\Users\<name>\` paths via CI + optional pre-commit hook.
 
 ## What's New In 1.4.0
 
@@ -122,7 +149,7 @@ Use this loop for every non-trivial task:
 
 6. **Control token cost** — Prefer metadata checks over continuous image payloads. Ask the user before enabling high-token frame streaming.
 
-## Tool Map (88 Tools)
+## Tool Map (92 Tools)
 
 ### 1) Scene + Timeline + Project Lifecycle
 Use for global context, playback control, save/load, and undo operations.
