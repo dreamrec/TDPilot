@@ -1,5 +1,108 @@
 # Changelog
 
+## 1.4.1 - 2026-04-19
+
+Bugfix release targeting findings from the full tool-surface test run.
+All fixes are backward compatible. The TD-side changes (B1, B8, B9) land
+in `td_component/mcp_webserver_callbacks.py` and require a `.tox` rebuild
+inside TouchDesigner — run the build command in TD's Textport after
+pulling this release. All other fixes take effect on MCP server restart.
+
+### Bug fixes (server-side — no .tox rebuild needed)
+
+- **`td_describe_surface` now reports real counts.** Previously returned
+  `tool_count: 0, resource_count: 0` because it read
+  `mcp._tools` / `mcp._resources`, which aren't part of the FastMCP API.
+  Now uses `_tool_manager.list_tools()` and
+  `_resource_manager.list_resources()` + `.list_templates()` (plus
+  `_prompt_manager.list_prompts()` for completeness).
+
+- **`td_detect_instability` no longer flags FPS-healthy scenes as
+  unstable.** The old trigger was `len(heavy_nodes) >= 5` where "heavy"
+  meant `cookTime >= 0.01 ms` — so any 9-node scene was permanently
+  unstable. New logic is FPS-relative: unstable only if FPS missed target
+  by >20%, any critical (not warning) error exists, or a single node cooks
+  longer than the full frame budget. Response now includes a `reasons`
+  list and a richer `signals` dict (`target_fps`, `frame_budget_ms`,
+  `heavy_threshold_ms`, `top_cook_ms`, `critical_issues_count`). Schema
+  bumped to `schema_version: 2`.
+
+- **`td_audit_project` no longer flags stock TD op types as unknown.**
+  Added a static allowlist of canonical op-type names sourced from
+  `td_list_families` (box, null, text, constant, level, math, wave, circle,
+  and ~100 others). Before: every audit flagged 8+ common ops. After: only
+  true third-party / undocumented types surface in `unknown_op_types`.
+
+- **`td_plan_patch` no longer returns empty `steps` for recipe-less
+  intents.** Added keyword-based macro matching (feedback, post-process,
+  audio-reactive, particle, feedback-displacement). When matched, the plan
+  now includes a `create_macro` step + `macro_suggestion` field.
+  When unmatched, a `next_actions` list points callers to
+  `td_memory_recall` / `td_list_macros` instead of silently returning `[]`.
+
+- **`td_explain_better_way` + `td_recommend_official_component` no longer
+  emit empty-string recommendations.** Added an `_is_informative_card()`
+  filter that skips cards where every identifying field is empty.
+  Responses now include a `hint` field when no usable matches are found,
+  directing callers to complementary tools instead of returning
+  `"Consider using '': "`.
+
+- **Exec-mode-gated tools now return structured `EXEC_MODE_INSUFFICIENT`
+  errors.** The 6 tools that need imports (`td_python_env_status`,
+  `td_threading_status`, `td_logger_status`, `td_color_pipeline`,
+  `td_component_standardize`, `td_tdresources_inspect`) previously
+  bubbled a bare `"restricted mode blocks import statements"` string up
+  through `{"error": "..."}` with no indication that the fix is an env
+  var. They now short-circuit at call-time with a structured payload
+  documenting `current_mode`, `required_mode`, and `remediation`.
+
+### Bug fixes (TD-side — require .tox rebuild)
+
+- **`td_get_content` on textDATs now returns `format: "text"`**, not
+  `format: "table"`. Previous heuristic checked `node.numRows > 0` which
+  is always true for textDATs (the full text counts as 1 row). Fix uses
+  `node.isTable` as the authoritative discriminator.
+
+- **`td_copy_node` offsets the copy by +150px X** from the source (or
+  honors an explicit `nodeX` / `nodeY` in the body if the caller
+  supplies them). Previous behavior placed the copy at the exact same
+  coordinates as the source, causing overlap in the network editor.
+
+- **`td_project_lifecycle(action="end_undo_block")` is now idempotent.**
+  TD auto-closes the active undo block on certain cascading mutations
+  (e.g. deleting the COMP that scoped the block). Calling `endBlock()`
+  on an already-closed block previously raised "Cannot end non existent
+  undo operation". The handler now catches that specific error and
+  returns a soft warning instead of a hard failure.
+
+### Known issues still to triage
+
+- **Parameter-passing convention is inconsistent across tools.** About 11
+  tools (`td_search_official_docs`, `td_get_operator_doc`, `td_get_param_help`,
+  `td_lookup_snippets`, `td_lookup_palette_component`, `td_get_release_delta`,
+  `td_get_build_compatibility`, `td_search_popx_docs`, `td_get_popx_operator`,
+  `td_search_paketa12`, `td_get_paketa12_tutorial`) take arguments at the
+  top level of the tool call, while ~70 others wrap them under `params:{}`.
+  Normalizing will be a breaking schema change tracked for v2.0.
+
+### Verification
+
+Run the deep test in `docs/DEEP_TEST.md` against this build to verify:
+- `td_describe_surface` should now show non-zero `tool_count` and
+  `resource_count`.
+- `td_detect_instability` on a healthy 60 FPS scene with ≤9 nodes should
+  return `unstable: false` with `reasons: []`.
+- `td_audit_project` on `/project1` should return `unknown_op_types: []`
+  (or a much shorter list) instead of flagging `box`, `null`, etc.
+- `td_plan_patch(intent="add a feedback loop")` with no recipe_id should
+  return a non-empty `steps` list suggesting the `feedback_loop` macro.
+- `td_python_env_status` under `TD_MCP_EXEC_MODE=restricted` should
+  return a structured `EXEC_MODE_INSUFFICIENT` error, not an opaque
+  `"restricted mode blocks import statements"` string.
+- After a `.tox` rebuild: `td_get_content` on a textDAT returns
+  `format: "text"`; `td_copy_node` produces a non-overlapping copy;
+  calling `end_undo_block` after a cascading delete no longer errors.
+
 ## 1.4.0 - 2026-04-19
 
 Major release: Claude Code plugin marketplace distribution, env-dynamic TD

@@ -828,9 +828,13 @@ def handle_get_content(body):
     if not node.isDAT:
         return {'error': f'Node is not a DAT: {path} (type: {node.type})'}
 
+    # Prefer the DAT's own isTable flag over heuristic numRows check.
+    # textDAT.numRows is 1 (the full text counted as one row) which previously
+    # caused textDAT to be returned as a 1x1 table — unintuitive for callers
+    # expecting plain text back from a text DAT.
+    is_table = bool(getattr(node, 'isTable', False))
     try:
-        # Try table format first
-        if hasattr(node, 'numRows') and node.numRows > 0:
+        if is_table:
             rows = []
             for r in range(node.numRows):
                 row = []
@@ -844,18 +848,17 @@ def handle_get_content(body):
                 'numCols': node.numCols,
                 'data': rows,
             }
-        else:
-            return {
-                'path': path,
-                'format': 'text',
-                'text': node.text,
-            }
+        return {
+            'path': path,
+            'format': 'text',
+            'text': node.text if hasattr(node, 'text') else '',
+        }
     except Exception as e:
         return {
             'path': path,
             'format': 'text',
             'text': node.text if hasattr(node, 'text') else '',
-            'warning': f'Table parse failed, fell back to text: {str(e)}',
+            'warning': f'Content read failed, fell back to text: {str(e)}',
         }
 
 
@@ -915,6 +918,8 @@ def handle_copy_node(body):
     source_path = body.get('source_path')
     dest_parent = body.get('dest_parent', None)
     new_name = body.get('new_name', None)
+    node_x = body.get('nodeX', None)
+    node_y = body.get('nodeY', None)
 
     if not source_path:
         return {'error': 'Missing required field: source_path'}
@@ -929,6 +934,21 @@ def handle_copy_node(body):
 
     try:
         new_node = parent.copy(source, name=new_name)
+        # TD's parent.copy() places the new node at the source's position which
+        # causes overlap. If the caller supplied explicit coordinates, honor
+        # them; otherwise offset by +150 X to keep the copy visible.
+        try:
+            if node_x is not None:
+                new_node.nodeX = int(node_x)
+            else:
+                new_node.nodeX = int(getattr(source, 'nodeX', 0)) + 150
+            if node_y is not None:
+                new_node.nodeY = int(node_y)
+            else:
+                new_node.nodeY = int(getattr(source, 'nodeY', 0))
+        except Exception:
+            # Node position is cosmetic; don't fail the copy if it can't be set.
+            pass
         return {'success': True, 'node': _serialize_op(new_node)}
     except Exception as e:
         return {'error': f'Failed to copy node: {str(e)}'}
@@ -2053,6 +2073,7 @@ def handle_project_lifecycle(body):
         if undo_obj is None:
             return {'error': 'ui.undo is unavailable in this TouchDesigner build/context'}
 
+        soft_warning = None
         if action == 'undo':
             undo_obj.undo()
         elif action == 'redo':
@@ -2060,13 +2081,32 @@ def handle_project_lifecycle(body):
         elif action == 'start_undo_block':
             undo_obj.startBlock(body.get('name') or 'TDPilot Edit', enable=bool(body.get('enable', True)))
         elif action == 'end_undo_block':
-            undo_obj.endBlock()
+            # TD auto-closes the active block on certain cascading mutations
+            # (e.g. deleting the parent COMP that contained the block scope).
+            # Calling endBlock() on an already-closed block raises "Cannot
+            # end non existent undo operation". Treat that as a no-op with a
+            # soft warning instead of a hard failure — the block is already
+            # closed, which is the caller's desired end state.
+            try:
+                undo_obj.endBlock()
+            except Exception as block_exc:
+                msg = str(block_exc).lower()
+                if 'non existent' in msg or 'nonexistent' in msg or 'no undo' in msg:
+                    soft_warning = (
+                        'Undo block was already closed (TouchDesigner auto-closes '
+                        'blocks on certain cascading mutations like cross-scope deletes). '
+                        'Treating end_undo_block as idempotent.'
+                    )
+                else:
+                    raise
         elif action == 'clear_undo':
             undo_obj.clear()
         else:
             return {'error': f'Unknown project lifecycle action: {action}'}
 
         payload = {'success': True, 'action': action}
+        if soft_warning is not None:
+            payload['warning'] = soft_warning
         payload.update(_project_lifecycle_status())
         return payload
     except Exception as exc:

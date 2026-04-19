@@ -2834,24 +2834,77 @@ async def td_detect_instability(params: DetectInstabilityInput, ctx: Context) ->
         )
 
         fps = float(cooking.get("fps", 0.0) or 0.0)
-        heavy_nodes = [
+        realtime = bool(cooking.get("realTime", False))
+        # Target FPS drives the frame-budget calculation. Fall back to the
+        # reported fps when target isn't available, capped at 60 so we don't
+        # silently relax the budget on sub-60 projects.
+        target_fps = float(cooking.get("target_fps", fps) or fps or 60.0) or 60.0
+        frame_budget_ms = 1000.0 / target_fps if target_fps > 0 else 16.67
+        # A node is "heavy" if it cooks for at least 25% of the frame budget.
+        # Previous threshold was 0.01 ms which flagged any node that cooked at
+        # all, producing a permanent false-positive on even trivial scenes.
+        heavy_threshold_ms = max(frame_budget_ms * 0.25, 1.0)
+        all_cook_nodes = [
             node
             for node in cooking.get("nodes", [])
-            if isinstance(node, dict) and float(node.get("cookTime", 0.0) or 0.0) >= 0.01
+            if isinstance(node, dict) and float(node.get("cookTime", 0.0) or 0.0) > 0
         ]
+        heavy_nodes = [
+            node
+            for node in all_cook_nodes
+            if float(node.get("cookTime", 0.0) or 0.0) >= heavy_threshold_ms
+        ]
+        top_cook_ms = max(
+            (float(node.get("cookTime", 0.0) or 0.0) for node in all_cook_nodes),
+            default=0.0,
+        )
         issues = errors.get("issues", []) if isinstance(errors, dict) else []
+        # Only flag errors (not warnings) as instability signals — TD ships with
+        # ~27 stock UI warnings at /ui/** that don't indicate project health.
+        critical_issues = [
+            item
+            for item in issues
+            if isinstance(item, dict) and (item.get("errors") or "").strip()
+        ]
 
-        unstable = fps < 30.0 or bool(issues) or len(heavy_nodes) >= 5
+        # Instability is real if: FPS missed target by >20%, any CRITICAL error
+        # exists, or a SINGLE node cooks for more than the full frame budget
+        # (can't possibly hit target fps). Heavy-node count is reported as a
+        # soft signal only — it shouldn't by itself flip the boolean.
+        fps_missed = target_fps > 0 and fps < target_fps * 0.8
+        frame_blown = top_cook_ms >= frame_budget_ms
+        unstable = fps_missed or frame_blown or bool(critical_issues)
+
+        # Build human-readable reason list so callers don't have to infer which
+        # signal fired (biggest UX gap of the previous version).
+        reasons: list[str] = []
+        if fps_missed:
+            reasons.append(
+                f"fps {fps:.1f} is below 80% of target {target_fps:.1f}"
+            )
+        if frame_blown:
+            reasons.append(
+                f"top cook time {top_cook_ms:.2f}ms exceeds frame budget "
+                f"{frame_budget_ms:.2f}ms"
+            )
+        if critical_issues:
+            reasons.append(f"{len(critical_issues)} critical node error(s)")
 
         payload = {
-            "schema_version": 1,
+            "schema_version": 2,
             "path": params.path,
             "unstable": unstable,
+            "reasons": reasons,
             "signals": {
                 "fps": fps,
-                "realtime": bool(cooking.get("realTime", False)),
+                "target_fps": target_fps,
+                "frame_budget_ms": round(frame_budget_ms, 3),
+                "heavy_threshold_ms": round(heavy_threshold_ms, 3),
+                "realtime": realtime,
                 "issues_count": len(issues),
+                "critical_issues_count": len(critical_issues),
                 "heavy_nodes_count": len(heavy_nodes),
+                "top_cook_ms": round(top_cook_ms, 3),
             },
             "heavy_nodes": heavy_nodes[:10],
             "issues": issues[:20],
@@ -3854,12 +3907,38 @@ async def td_describe_surface(ctx: Context) -> dict[str, Any]:
     from td_mcp import __version__
     svc = _get_services(ctx)
     caps = detect_capabilities(ctx, td_build=svc.td_build)
-    tool_count = len(mcp._tools) if hasattr(mcp, "_tools") else 0
-    resource_count = len(mcp._resources) if hasattr(mcp, "_resources") else 0
+    # FastMCP exposes registered tools/resources via its internal managers.
+    # Previous attempts used ``mcp._tools``/``mcp._resources`` which don't exist,
+    # so the counts always returned 0. Prefer the public-ish manager APIs and
+    # fall back to 0 only if the SDK layout changes.
+    tool_count = 0
+    resource_count = 0
+    prompt_count = 0
+    try:
+        tool_mgr = getattr(mcp, "_tool_manager", None)
+        if tool_mgr is not None:
+            tool_count = len(tool_mgr.list_tools())
+    except Exception:
+        tool_count = 0
+    try:
+        resource_mgr = getattr(mcp, "_resource_manager", None)
+        if resource_mgr is not None:
+            resources = list(resource_mgr.list_resources())
+            templates = list(resource_mgr.list_templates())
+            resource_count = len(resources) + len(templates)
+    except Exception:
+        resource_count = 0
+    try:
+        prompt_mgr = getattr(mcp, "_prompt_manager", None)
+        if prompt_mgr is not None:
+            prompt_count = len(prompt_mgr.list_prompts())
+    except Exception:
+        prompt_count = 0
     return {
         "version": __version__,
         "tool_count": tool_count,
         "resource_count": resource_count,
+        "prompt_count": prompt_count,
         "capabilities": caps.to_dict(),
     }
 
@@ -3868,6 +3947,34 @@ async def td_describe_surface(ctx: Context) -> dict[str, Any]:
 # Planning & Validation Tools (72-75)
 # ─────────────────────────────────────────────────────────────
 
+# Heuristic intent → macro-template matches. When td_plan_patch is called
+# without a recipe_id, these keyword rules produce a concrete suggested step
+# instead of returning an empty steps list, which was the most confusing
+# part of the old behavior (the caller didn't know the tool was waiting on
+# a recipe_id or memory query).
+_INTENT_MACRO_KEYWORDS: tuple[tuple[tuple[str, ...], str, str], ...] = (
+    (("feedback displ", "feedback-displacement", "feedback_displacement"),
+     "feedback_displacement", "Classic feedback displacement with source noise and composite merge."),
+    (("feedback", "trail", "echo"),
+     "feedback_loop", "Classic feedback chain: feedback → level → composite → out."),
+    (("post-process", "post process", "post_processing", "grade", "bloom blur", "color grade"),
+     "post_processing", "Simple post-FX chain: level → blur → out."),
+    (("audio reactive", "audio-react", "audio_reactive", "audio analysis"),
+     "audio_reactive", "Audio signal preprocessing chain with gain stage and null output."),
+    (("particle", "gpu particle", "pop simulation", "particles"),
+     "particle_gpu", "Minimal POP chain: particle → noise → render."),
+)
+
+
+def _suggest_macro_for_intent(intent: str) -> dict[str, str] | None:
+    """Return a suggested macro match for the intent, or None."""
+    text = (intent or "").lower()
+    for keywords, macro_type, summary in _INTENT_MACRO_KEYWORDS:
+        if any(k in text for k in keywords):
+            return {"macro_type": macro_type, "summary": summary}
+    return None
+
+
 @mcp.tool(name="td_plan_patch")
 async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> dict[str, Any]:
     """Generate a structured patch plan for an intent without mutating the project.
@@ -3875,6 +3982,10 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> dict[str, Any]:
     Inspects the current state of the target path, validates op types against the
     knowledge corpus, and optionally loads a recipe to generate ordered steps. Returns
     a plan dict that can be validated with td_preflight_patch before execution.
+
+    When no ``recipe_id`` is provided, the tool also performs keyword-based macro
+    matching against the intent so callers always get at least one actionable
+    suggestion (either a concrete step list or a macro hint).
     """
     finish = _start_tool(ctx, "td_plan_patch")
     try:
@@ -3922,6 +4033,30 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> dict[str, Any]:
             except Exception as exc:
                 recipe_info = {"error": str(exc)}
 
+        # If no recipe was provided or it didn't yield steps, fall back to
+        # intent-keyword macro matching so we never return empty steps.
+        macro_suggestion = None
+        if not recipe_steps:
+            macro_suggestion = _suggest_macro_for_intent(params.intent)
+            if macro_suggestion is not None:
+                recipe_steps.append({
+                    "op": "create_macro",
+                    "macro_type": macro_suggestion["macro_type"],
+                    "parent_path": params.target_path,
+                    "summary": macro_suggestion["summary"],
+                    "source": "intent_heuristic",
+                })
+
+        # Collect actionable next-step hints the caller can use when steps is
+        # still empty (no recipe + no heuristic match).
+        next_actions: list[str] = []
+        if not recipe_steps:
+            next_actions.extend([
+                "Search the technique library: td_memory_recall(query='<keyword>').",
+                "List built-in macros: td_list_macros (see td_get_macro_params for options).",
+                "If you already have a recipe, pass recipe_id= to td_plan_patch.",
+            ])
+
         plan = {
             "intent": params.intent,
             "target_path": params.target_path,
@@ -3934,6 +4069,10 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> dict[str, Any]:
                 "Validate with td_preflight_patch before execution."
             ),
         }
+        if macro_suggestion is not None:
+            plan["macro_suggestion"] = macro_suggestion
+        if next_actions:
+            plan["next_actions"] = next_actions
         if isinstance(recipe_info, dict) and "error" not in recipe_info:
             plan["recipe_name"] = recipe_info.get("name", "")
 
@@ -4126,6 +4265,56 @@ async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> dict[
         finish()
 
 
+# Stock TouchDesigner op types that should never be flagged as "unknown".
+# The knowledge corpus intermittently indexes these by display name rather
+# than by ``type`` field (e.g. "Box SOP" not "box"), which caused every stock
+# audit to report 8+ common ops as unknown. This allowlist short-circuits
+# that check. Sourced from the v1.3.4 td_list_families canonical set plus
+# common operator types that appear across POP/SOP/TOP/CHOP/DAT/MAT/COMP.
+_STOCK_OP_TYPES: frozenset[str] = frozenset({
+    # Universal
+    "null", "in", "out", "select", "switch", "merge",
+    # COMPs
+    "base", "container", "geo", "window", "cam", "light", "text", "time",
+    "ambient", "animation", "annotate", "button", "environment", "field",
+    "geotext", "graph", "list", "opviewer", "parameter", "replicator",
+    "slider", "table", "widget",
+    # TOPs
+    "constant", "noise", "ramp", "level", "blur", "composite", "displace",
+    "feedback", "movefilein", "moviefilein", "moviefileout", "render",
+    "renderpass", "renderselect", "rendersimple", "transform", "over",
+    "add", "multiply", "subtract", "layer", "chopto", "popto", "flip",
+    "fit", "crop", "edge", "emboss", "hsvadj", "hsvadjust", "hsvtorgb",
+    "inside", "outside", "lookup", "rectangle", "circle", "cacheselect",
+    "comp", "convolve", "cornerpin", "cube", "cubemap", "depth", "difference",
+    "glslmulti", "glsl", "lumablur", "lumalevel", "math", "matte", "mirror",
+    "monochrome", "normalmap", "pack", "panel", "point", "reorder",
+    "resolution", "rgbkey", "rgbtohsv", "screen", "screengrab", "script",
+    "ssao", "svg", "threshold", "tile", "tonemap",
+    # CHOPs
+    "wave", "analyze", "beat", "count", "datto", "delete",
+    "envelope", "express", "hold", "info", "joystick", "keyframe", "lag",
+    "limit", "logic", "midiin", "midiinmap", "midiout", "mousein",
+    "object", "par", "perform", "rename", "renderpick", "replace",
+    "resample", "shuffle", "speed", "timeline", "timeslice", "topto",
+    "trail", "trigger",
+    # SOPs (stock)
+    "box", "sphere", "torus", "tube", "grid", "line", "filein", "texture",
+    "copy", "trace", "extrude",
+    # POPs (v1.3+)
+    "attcombine", "attconvert", "attribute", "connectivity", "convert",
+    "facet", "mathcombine", "mathmix", "normal", "normalize", "pattern",
+    "pointgen", "pointgenerator", "primitive", "rerange",
+    "triangulate",
+    # MATs
+    "phong", "pbr", "wireframe", "pointsprite",
+    # DATs
+    "execute", "chopexec", "datexec", "parexec", "opexec",
+    "panelexec", "eval", "examine", "fifo", "fileout", "indices", "insert", "keyboardin", "opfind", "sort", "substitute",
+    "transpose", "web", "webclient", "webserver", "websocket",
+})
+
+
 @mcp.tool(name="td_audit_project")
 async def td_audit_project(params: AuditProjectInput, ctx: Context) -> dict[str, Any]:
     """Audit a project subtree: count nodes by family and op type, detect palette
@@ -4189,9 +4378,12 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> dict[str,
                 if palette_card:
                     palette_components.append({"name": name, "op_type": op_type})
 
-                # Check knowledge corpus
+                # Check knowledge corpus. Only flag as unknown when the op type
+                # is also not in the stock allowlist — the corpus may not have
+                # an explicit card for every stock TD op but they're obviously
+                # known to the system, so flagging them produces noise.
                 card = idx.get_operator(op_type)
-                if card is None and op_type not in unknown_op_types:
+                if card is None and op_type.lower() not in _STOCK_OP_TYPES and op_type not in unknown_op_types:
                     unknown_op_types.append(op_type)
                 elif card is not None and svc.td_build:
                     try:
@@ -4328,6 +4520,84 @@ def _check_exec_not_off() -> dict[str, Any] | None:
     return None
 
 
+_EXEC_MODE_RANK = {"off": 0, "restricted": 1, "standard": 2, "full": 3}
+
+
+def _check_exec_mode_at_least(minimum: str, tool_name: str) -> dict[str, Any] | None:
+    """Return a structured error dict if the configured exec mode is below ``minimum``.
+
+    Several TD 2025 native-system tools (td_python_env_status, td_threading_status,
+    td_logger_status, td_color_pipeline, td_component_standardize,
+    td_tdresources_inspect) need ``import`` statements that restricted mode forbids.
+    Prior behavior was to let the TD side reject the exec and bubble an opaque
+    "restricted mode blocks import statements" string up to the caller, which
+    gave no hint that the fix is a server-side env var. This helper surfaces the
+    condition upfront with a structured, remediable response.
+    """
+    current = _current_exec_mode()
+    required_rank = _EXEC_MODE_RANK.get(minimum, 0)
+    current_rank = _EXEC_MODE_RANK.get(current, 0)
+    if current_rank >= required_rank:
+        return None
+    return {
+        "error": {
+            "code": "EXEC_MODE_INSUFFICIENT",
+            "message": (
+                f"{tool_name} requires TD_MCP_EXEC_MODE={minimum!r} "
+                f"(currently {current!r}). This tool uses Python imports that the "
+                f"current mode blocks."
+            ),
+            "tool": tool_name,
+            "current_mode": current,
+            "required_mode": minimum,
+            "remediation": (
+                f"Set TD_MCP_EXEC_MODE={minimum} in the MCP server environment "
+                "(and restart the server / TouchDesigner) before calling this tool."
+            ),
+        }
+    }
+
+
+def _rescue_exec_mode_error(
+    exc: Exception,
+    *,
+    tool_name: str,
+    required_mode: str,
+) -> dict[str, Any] | None:
+    """If ``exc`` is a TD-side exec-mode rejection, return a structured response.
+
+    Returns None when the exception is unrelated to exec-mode policy. Pair with
+    the ``except`` branches in each affected tool so the caller sees the same
+    remediable EXEC_MODE_INSUFFICIENT payload regardless of whether the guard
+    fired early or the TD side vetoed mid-request.
+    """
+    msg = str(exc).lower()
+    tokens = (
+        "restricted mode blocks",
+        "standard mode blocks",
+        "permissionerror",
+        "python execution is disabled",
+    )
+    if not any(token in msg for token in tokens):
+        return None
+    return {
+        "error": {
+            "code": "EXEC_MODE_INSUFFICIENT",
+            "message": (
+                f"{tool_name} was rejected by the active exec-mode policy. "
+                f"It requires TD_MCP_EXEC_MODE={required_mode!r}."
+            ),
+            "tool": tool_name,
+            "required_mode": required_mode,
+            "remediation": (
+                f"Set TD_MCP_EXEC_MODE={required_mode} in the MCP server environment "
+                "and restart the server."
+            ),
+            "underlying": str(exc),
+        }
+    }
+
+
 # ─────────────────────────────────────────────────────────────
 # TD 2025 Native System Tools (tools 78-83)
 # ─────────────────────────────────────────────────────────────
@@ -4343,6 +4613,9 @@ async def td_python_env_status(ctx: Context) -> dict[str, Any]:
         off_err = _check_exec_not_off()
         if off_err:
             return off_err
+        mode_err = _check_exec_mode_at_least("full", "td_python_env_status")
+        if mode_err:
+            return mode_err
         client = _get_client(ctx)
         code = (
             "import sys, json\n"
@@ -4384,6 +4657,9 @@ async def td_threading_status(ctx: Context) -> dict[str, Any]:
         off_err = _check_exec_not_off()
         if off_err:
             return off_err
+        mode_err = _check_exec_mode_at_least("full", "td_threading_status")
+        if mode_err:
+            return mode_err
         client = _get_client(ctx)
         code = (
             "import threading, json\n"
@@ -4424,6 +4700,9 @@ async def td_logger_status(ctx: Context) -> dict[str, Any]:
         off_err = _check_exec_not_off()
         if off_err:
             return off_err
+        mode_err = _check_exec_mode_at_least("full", "td_logger_status")
+        if mode_err:
+            return mode_err
         client = _get_client(ctx)
         code = (
             "import logging, json\n"
@@ -4459,6 +4738,9 @@ async def td_tdresources_inspect(params: TDResourcesInspectInput, ctx: Context) 
         off_err = _check_exec_not_off()
         if off_err:
             return off_err
+        mode_err = _check_exec_mode_at_least("standard", "td_tdresources_inspect")
+        if mode_err:
+            return mode_err
         client = _get_client(ctx)
         category_filter = params.category or ""
         safe_filter = json.dumps(category_filter)
@@ -4509,6 +4791,9 @@ async def td_component_standardize(params: ComponentStandardizeInput, ctx: Conte
         off_err = _check_exec_not_off()
         if off_err:
             return off_err
+        mode_err = _check_exec_mode_at_least("standard", "td_component_standardize")
+        if mode_err:
+            return mode_err
         client = _get_client(ctx)
         path = params.path
         fix = params.fix
@@ -4586,6 +4871,9 @@ async def td_color_pipeline(params: ColorPipelineInput, ctx: Context) -> dict[st
         off_err = _check_exec_not_off()
         if off_err:
             return off_err
+        mode_err = _check_exec_mode_at_least("standard", "td_color_pipeline")
+        if mode_err:
+            return mode_err
         client = _get_client(ctx)
         code = (
             "import json\n"
@@ -4619,6 +4907,23 @@ async def td_color_pipeline(params: ColorPipelineInput, ctx: Context) -> dict[st
 # ─────────────────────────────────────────────────────────────
 
 
+def _is_informative_card(card: dict) -> bool:
+    """Return True only if the card has at least one non-empty identifying field.
+
+    The knowledge corpus occasionally returns skeleton cards (every string field
+    is ""). Emitting those as recommendations produces responses like
+    ``"Consider using '': "`` which are useless. Filter them out here so
+    callers see an honest ``count: 0`` + ``hint`` instead.
+    """
+    if not isinstance(card, dict):
+        return False
+    for key in ("op_type", "component_name", "display_name", "snippet_id", "summary"):
+        value = card.get(key)
+        if isinstance(value, str) and value.strip():
+            return True
+    return False
+
+
 @mcp.tool(name="td_recommend_official_component")
 async def td_recommend_official_component(params: RecommendOfficialInput, ctx: Context) -> dict[str, Any]:
     """Recommend official palette or built-in operator components for a given goal."""
@@ -4635,6 +4940,8 @@ async def td_recommend_official_component(params: RecommendOfficialInput, ctx: C
 
         recommendations = []
         for card in palette_results:
+            if not _is_informative_card(card):
+                continue
             recommendations.append({
                 "type": "palette",
                 "name": card.get("component_name", ""),
@@ -4643,6 +4950,8 @@ async def td_recommend_official_component(params: RecommendOfficialInput, ctx: C
                 "when_to_use": card.get("when_to_use", ""),
             })
         for card in operator_results:
+            if not _is_informative_card(card):
+                continue
             recommendations.append({
                 "type": "operator",
                 "name": card.get("op_type", ""),
@@ -4651,14 +4960,22 @@ async def td_recommend_official_component(params: RecommendOfficialInput, ctx: C
                 "family": card.get("family", ""),
             })
 
-        _audit_log(ctx, "td_recommend_official_component", {"goal": params.goal})
-        return {
+        payload: dict[str, Any] = {
             "success": True,
             "goal": params.goal,
             "recommendations": recommendations,
             "count": len(recommendations),
             "provenance": provenance.to_dict(),
         }
+        if not recommendations:
+            payload["hint"] = (
+                "No informative palette or operator cards matched. Try "
+                "td_search_official_docs for operator docs, td_lookup_palette_component "
+                "for palette components, or td_memory_recall for saved techniques."
+            )
+
+        _audit_log(ctx, "td_recommend_official_component", {"goal": params.goal})
+        return payload
     except Exception as exc:
         _record_tool_error(ctx, "td_recommend_official_component")
         return {"error": str(exc)}
@@ -4732,13 +5049,18 @@ async def td_explain_better_way(params: ExplainBetterWayInput, ctx: Context) -> 
         svc = _get_services(ctx)
         provenance = Provenance(source="local_card", td_build=svc.td_build)
 
-        # Search for official alternatives across all card types
-        alternatives = idx.search(params.intent, limit=5)
+        # Search for official alternatives across all card types. Filter out
+        # skeleton cards (every identifying field empty) so we don't emit
+        # "Consider using '': " recommendations when the corpus has no match.
+        raw_alternatives = idx.search(params.intent, limit=10)
+        alternatives = [c for c in raw_alternatives if _is_informative_card(c)]
 
         # Extract gotchas from operator cards if current_plan mentions specific ops
         gotchas = []
         if params.current_plan:
             for card in idx.search(params.current_plan, card_types=["operators"], limit=10):
+                if not _is_informative_card(card):
+                    continue
                 card_gotchas = card.get("common_gotchas", [])
                 if card_gotchas:
                     op_name = card.get("op_type", card.get("display_name", ""))
@@ -4749,24 +5071,30 @@ async def td_explain_better_way(params: ExplainBetterWayInput, ctx: Context) -> 
         official_alternative = None
         if alternatives:
             top = alternatives[0]
+            name = top.get("op_type") or top.get("component_name") or top.get("snippet_id", "")
+            display_name = top.get("display_name", "") or name
             official_alternative = {
-                "name": top.get("op_type") or top.get("component_name") or top.get("snippet_id", ""),
-                "display_name": top.get("display_name", ""),
+                "name": name,
+                "display_name": display_name,
                 "summary": top.get("summary", ""),
                 "family": top.get("family", ""),
             }
 
-        recommendation = ""
+        recommendation_parts: list[str] = []
         if official_alternative:
-            recommendation = "Consider using '{}': {}".format(
-                official_alternative["display_name"] or official_alternative["name"],
-                official_alternative["summary"],
-            )
+            label = official_alternative["display_name"] or official_alternative["name"]
+            summary = official_alternative["summary"]
+            if summary:
+                recommendation_parts.append(f"Consider using '{label}': {summary}")
+            else:
+                recommendation_parts.append(f"Consider using '{label}'")
         if gotchas:
-            recommendation += f" Watch out for {len(gotchas)} known gotcha(s)."
+            recommendation_parts.append(
+                f"Watch out for {len(gotchas)} known gotcha(s)."
+            )
+        recommendation = " ".join(recommendation_parts)
 
-        _audit_log(ctx, "td_explain_better_way", {"intent": params.intent})
-        return {
+        payload: dict[str, Any] = {
             "success": True,
             "intent": params.intent,
             "current_plan": params.current_plan,
@@ -4775,6 +5103,15 @@ async def td_explain_better_way(params: ExplainBetterWayInput, ctx: Context) -> 
             "gotchas": gotchas,
             "provenance": provenance.to_dict(),
         }
+        if not recommendation and not gotchas:
+            payload["hint"] = (
+                "No informative cards matched this intent. Try "
+                "td_recommend_official_component with a broader goal, or "
+                "td_memory_recall to look for saved techniques."
+            )
+
+        _audit_log(ctx, "td_explain_better_way", {"intent": params.intent})
+        return payload
     except Exception as exc:
         _record_tool_error(ctx, "td_explain_better_way")
         return {"error": str(exc)}

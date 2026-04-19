@@ -1,14 +1,14 @@
 ---
 name: tdpilot-production
 description: >
-  Production-grade TouchDesigner MCP workflow for TDPilot v1.4.0 (92 tools):
+  Production-grade TouchDesigner MCP workflow for TDPilot v1.4.1 (92 tools):
   staged edits with undo blocks, rollback safety via snapshots, token-efficient
   diagnostics, strict completion gates, and v1.1 features including
   td_project_lifecycle (save/undo/redo), td_custom_parameters (declarative
   param authoring), and td_pop_inspect (POP-native data inspection).
 ---
 
-# TDPilot Production v1.4.0
+# TDPilot Production v1.4.1
 
 ## Use This Skill When
 - The user asks for reliable, production-safe network edits.
