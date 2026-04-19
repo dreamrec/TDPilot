@@ -244,17 +244,12 @@ async def server_lifespan(app: FastMCP):
     )
     job_manager = JobManager(mcp_server=app)
 
-    # Technique memory
-    project_name = os.environ.get("TDPILOT_PROJECT_NAME", "")
+    # Technique memory — project_name resolution runs AFTER the TD info fetch
+    # below so we can fall back to TD's actual project name when the env var is
+    # unset (N6 audit: users shouldn't need to set TDPILOT_PROJECT_NAME
+    # manually when TD is already telling us what the project is).
     memory_base = os.environ.get("TDPILOT_MEMORY_DIR", "")
-    technique_store = TechniqueStore(
-        base_dir=memory_base or None,
-        project_name=project_name or None,
-    )
-    preference_store = PreferenceStore(
-        base_dir=memory_base or None,
-        project_name=project_name or None,
-    )
+    project_name = os.environ.get("TDPILOT_PROJECT_NAME", "")
 
     logger.info("TouchDesigner MCP server starting (TD %s:%s)", TD_HOST, TD_PORT)
 
@@ -265,6 +260,19 @@ async def server_lifespan(app: FastMCP):
         try:
             info = await td_client.request("info")
             td_build = str(info.get("build", "")) if isinstance(info, dict) else ""
+            # Derive project_name from live TD if env var is unset.
+            if not project_name and isinstance(info, dict):
+                raw_name = str(info.get("project_name", "") or "").strip()
+                if raw_name:
+                    # Strip the .toe suffix if present so the derived folder is
+                    # clean. "NewProject.1.toe" → "NewProject.1".
+                    if raw_name.lower().endswith(".toe"):
+                        raw_name = raw_name[:-4]
+                    project_name = raw_name
+                    logger.info(
+                        "Resolved project_name from TD: %r (TDPILOT_PROJECT_NAME unset)",
+                        project_name,
+                    )
             # --- Version negotiation ---
             # Check that the TD component version matches the MCP server version.
             if isinstance(info, dict):
@@ -283,6 +291,16 @@ async def server_lifespan(app: FastMCP):
             logger.debug("Could not fetch td_build at startup: %s", exc)
     except TouchDesignerConnectionError as exc:
         logger.warning("TouchDesigner not reachable at startup: %s", exc)
+
+    # Stores init AFTER project_name fallback resolution (N6 audit).
+    technique_store = TechniqueStore(
+        base_dir=memory_base or None,
+        project_name=project_name or None,
+    )
+    preference_store = PreferenceStore(
+        base_dir=memory_base or None,
+        project_name=project_name or None,
+    )
 
     try:
         await event_manager.start()
@@ -459,6 +477,34 @@ def _get_client(ctx: Context) -> TDClient:
     if not isinstance(services.td_client, TDClient):
         raise RuntimeError("TD client unavailable in lifespan state")
     return services.td_client
+
+
+async def _ensure_td_build(ctx: Context) -> str:
+    """Return the current TD build string, lazily fetching it if unset.
+
+    N2 audit: ``ServiceContainer.td_build`` is populated once at ``server_lifespan``
+    startup. If the MCP server starts before TouchDesigner is reachable (common
+    during plugin install / first launch), the initial fetch fails and the field
+    stays empty for the entire session — which breaks knowledge-tool provenance
+    and ``td_get_build_compatibility`` auto-detect. This helper refetches from
+    the live TD client when the cached value is empty and caches the result
+    back into the service container.
+    """
+    services = _get_services(ctx)
+    cached = (services.td_build or "").strip()
+    if cached:
+        return cached
+    client = services.td_client
+    if not isinstance(client, TDClient):
+        return ""
+    try:
+        info = await client.request("info")
+    except Exception:
+        return ""
+    build = str(info.get("build", "")) if isinstance(info, dict) else ""
+    if build:
+        services.td_build = build
+    return build
 
 
 def _get_event_manager(ctx: Context) -> EventManager:
@@ -1056,6 +1102,92 @@ def _compute_timescale_from_timeline(
     }
 
 
+def _build_health_section(
+    fps: float,
+    cooking_nodes: list,
+    issues: list,
+    recent_events: list,
+) -> dict:
+    """Build the health dict used by td_get_state_vector.
+
+    Shares the v1.4.1 unstable heuristic with td_detect_instability so both
+    endpoints always agree on whether the scene is healthy (N3 audit).
+    """
+    unstable, reasons, metrics = _compute_unstable_signal(fps, cooking_nodes, issues)
+    return {
+        "fps": fps,
+        "issues_count": len(issues),
+        "event_rate_per_sec": _event_rate_per_sec(recent_events),
+        "unstable": unstable,
+        "reasons": reasons,
+        "target_fps": metrics["target_fps"],
+        "frame_budget_ms": metrics["frame_budget_ms"],
+        "top_cook_ms": metrics["top_cook_ms"],
+        "critical_issues_count": int(metrics["critical_issues_count"]),
+    }
+
+
+def _compute_unstable_signal(
+    fps: float,
+    cooking_nodes: list,
+    issues: list,
+    target_fps: float | None = None,
+) -> tuple[bool, list[str], dict[str, float]]:
+    """Shared unstable-ness heuristic used by both td_detect_instability and
+    td_get_state_vector.
+
+    Returns ``(unstable, reasons, metrics)``. The computation mirrors the v1.4.1
+    detect_instability logic exactly so both tools always agree (N3 audit).
+
+    Unstable iff any of:
+      - FPS missed target by >20%
+      - any CRITICAL error (errors field non-empty; warnings ignored)
+      - a single node's cook time exceeds the full frame budget
+    """
+    effective_target = float(target_fps or fps or 60.0) or 60.0
+    frame_budget_ms = 1000.0 / effective_target if effective_target > 0 else 16.67
+
+    all_cook = [
+        node
+        for node in cooking_nodes
+        if isinstance(node, dict) and float(node.get("cookTime", 0.0) or 0.0) > 0
+    ]
+    top_cook_ms = max(
+        (float(node.get("cookTime", 0.0) or 0.0) for node in all_cook),
+        default=0.0,
+    )
+    critical = [
+        item
+        for item in issues
+        if isinstance(item, dict) and (item.get("errors") or "").strip()
+    ]
+
+    fps_missed = effective_target > 0 and fps < effective_target * 0.8
+    frame_blown = top_cook_ms >= frame_budget_ms
+    unstable = fps_missed or frame_blown or bool(critical)
+
+    reasons: list[str] = []
+    if fps_missed:
+        reasons.append(
+            f"fps {fps:.1f} is below 80% of target {effective_target:.1f}"
+        )
+    if frame_blown:
+        reasons.append(
+            f"top cook time {top_cook_ms:.2f}ms exceeds frame budget "
+            f"{frame_budget_ms:.2f}ms"
+        )
+    if critical:
+        reasons.append(f"{len(critical)} critical node error(s)")
+
+    metrics = {
+        "target_fps": effective_target,
+        "frame_budget_ms": round(frame_budget_ms, 3),
+        "top_cook_ms": round(top_cook_ms, 3),
+        "critical_issues_count": float(len(critical)),
+    }
+    return unstable, reasons, metrics
+
+
 async def _build_state_vector(path: str, ctx: Context) -> dict[str, Any]:
     client = _get_client(ctx)
     manager = _get_event_manager(ctx)
@@ -1101,12 +1233,7 @@ async def _build_state_vector(path: str, ctx: Context) -> dict[str, Any]:
             "fps": timeline.get("fps"),
             "playing": timeline.get("playing"),
         },
-        "health": {
-            "fps": fps,
-            "issues_count": len(issues),
-            "event_rate_per_sec": _event_rate_per_sec(recent_events),
-            "unstable": fps < 30.0 or len(issues) > 0,
-        },
+        "health": _build_health_section(fps, top_nodes, issues, recent_events),
         "performance": {
             "top_nodes": top_nodes[:10],
             "realtime": cooking.get("realTime") if isinstance(cooking, dict) else None,
@@ -2835,60 +2962,30 @@ async def td_detect_instability(params: DetectInstabilityInput, ctx: Context) ->
 
         fps = float(cooking.get("fps", 0.0) or 0.0)
         realtime = bool(cooking.get("realTime", False))
-        # Target FPS drives the frame-budget calculation. Fall back to the
-        # reported fps when target isn't available, capped at 60 so we don't
-        # silently relax the budget on sub-60 projects.
         target_fps = float(cooking.get("target_fps", fps) or fps or 60.0) or 60.0
-        frame_budget_ms = 1000.0 / target_fps if target_fps > 0 else 16.67
-        # A node is "heavy" if it cooks for at least 25% of the frame budget.
-        # Previous threshold was 0.01 ms which flagged any node that cooked at
-        # all, producing a permanent false-positive on even trivial scenes.
-        heavy_threshold_ms = max(frame_budget_ms * 0.25, 1.0)
-        all_cook_nodes = [
-            node
-            for node in cooking.get("nodes", [])
-            if isinstance(node, dict) and float(node.get("cookTime", 0.0) or 0.0) > 0
-        ]
-        heavy_nodes = [
-            node
-            for node in all_cook_nodes
-            if float(node.get("cookTime", 0.0) or 0.0) >= heavy_threshold_ms
-        ]
-        top_cook_ms = max(
-            (float(node.get("cookTime", 0.0) or 0.0) for node in all_cook_nodes),
-            default=0.0,
-        )
+        all_cook_nodes = cooking.get("nodes", [])
         issues = errors.get("issues", []) if isinstance(errors, dict) else []
-        # Only flag errors (not warnings) as instability signals — TD ships with
-        # ~27 stock UI warnings at /ui/** that don't indicate project health.
+
+        # Delegate to the shared helper so state_vector's health section and
+        # detect_instability never disagree again (N3 audit). Heavy-node
+        # reporting stays here because it's only relevant to this tool.
+        unstable, reasons, metrics = _compute_unstable_signal(
+            fps, all_cook_nodes, issues, target_fps=target_fps
+        )
+        frame_budget_ms = metrics["frame_budget_ms"]
+        top_cook_ms = metrics["top_cook_ms"]
         critical_issues = [
             item
             for item in issues
             if isinstance(item, dict) and (item.get("errors") or "").strip()
         ]
-
-        # Instability is real if: FPS missed target by >20%, any CRITICAL error
-        # exists, or a SINGLE node cooks for more than the full frame budget
-        # (can't possibly hit target fps). Heavy-node count is reported as a
-        # soft signal only — it shouldn't by itself flip the boolean.
-        fps_missed = target_fps > 0 and fps < target_fps * 0.8
-        frame_blown = top_cook_ms >= frame_budget_ms
-        unstable = fps_missed or frame_blown or bool(critical_issues)
-
-        # Build human-readable reason list so callers don't have to infer which
-        # signal fired (biggest UX gap of the previous version).
-        reasons: list[str] = []
-        if fps_missed:
-            reasons.append(
-                f"fps {fps:.1f} is below 80% of target {target_fps:.1f}"
-            )
-        if frame_blown:
-            reasons.append(
-                f"top cook time {top_cook_ms:.2f}ms exceeds frame budget "
-                f"{frame_budget_ms:.2f}ms"
-            )
-        if critical_issues:
-            reasons.append(f"{len(critical_issues)} critical node error(s)")
+        heavy_threshold_ms = max(frame_budget_ms * 0.25, 1.0)
+        heavy_nodes = [
+            node
+            for node in all_cook_nodes
+            if isinstance(node, dict)
+            and float(node.get("cookTime", 0.0) or 0.0) >= heavy_threshold_ms
+        ]
 
         payload = {
             "schema_version": 2,
@@ -3780,7 +3877,7 @@ async def td_get_release_delta(
     """Get release notes for a specific build (default: current)."""
     idx = _get_card_index(ctx)
     svc = _get_services(ctx)
-    target_build = build or svc.td_build
+    target_build = build or svc.td_build or (await _ensure_td_build(ctx))
     if not target_build:
         return {"error": "No build specified and current build unknown"}
     card = idx.get_release(target_build)
@@ -3800,7 +3897,7 @@ async def td_get_build_compatibility(
     """Check if an operator type is compatible with a specific build."""
     idx = _get_card_index(ctx)
     svc = _get_services(ctx)
-    target_build = build or svc.td_build
+    target_build = build or svc.td_build or (await _ensure_td_build(ctx))
     if not target_build:
         return {"error": "No build specified and current build unknown"}
     result = idx.check_compatibility(op_type, target_build)
@@ -3906,7 +4003,10 @@ async def td_describe_surface(ctx: Context) -> dict[str, Any]:
     """Describe the MCP server surface: tool count, resource count, capabilities, version."""
     from td_mcp import __version__
     svc = _get_services(ctx)
-    caps = detect_capabilities(ctx, td_build=svc.td_build)
+    # Lazily populate td_build so capabilities.td_build isn't empty when the
+    # MCP server started before TD was reachable (N2 audit).
+    td_build = svc.td_build or (await _ensure_td_build(ctx))
+    caps = detect_capabilities(ctx, td_build=td_build)
     # FastMCP exposes registered tools/resources via its internal managers.
     # Previous attempts used ``mcp._tools``/``mcp._resources`` which don't exist,
     # so the counts always returned 0. Prefer the public-ish manager APIs and
@@ -4219,7 +4319,13 @@ async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> dict[
             if idx is not None:
                 card = idx.get_operator(op_type)
                 if card is None:
-                    unknown_types.append(op_type)
+                    # Apply the same stock-op allowlist td_audit_project uses
+                    # so common TD types (base, constant, feedback, null, etc.)
+                    # don't surface as "unknown" just because the corpus didn't
+                    # index them by type name. N7 audit: the allowlist fix
+                    # previously only landed in td_audit_project; extended here.
+                    if op_type.lower() not in _STOCK_OP_TYPES:
+                        unknown_types.append(op_type)
                 else:
                     # Check build compatibility
                     if svc.td_build:

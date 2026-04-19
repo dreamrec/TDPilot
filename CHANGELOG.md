@@ -1,5 +1,67 @@
 # Changelog
 
+## 1.4.2 - 2026-04-19
+
+Follow-up bugfix release from the v1.4.1 ultra-debug sweep. All fixes address
+issues that surfaced while verifying v1.4.1 live against TouchDesigner. Backward
+compatible; all v1.4.1 fixes still in place.
+
+### Bug fixes
+
+- **N1 — Component/server version mismatch**: bumped `API_VERSION` constant in
+  `td_component/mcp_webserver_callbacks.py` from `"1.3.4"` to `"1.4.2"`. The
+  TD-side component now reports a version that matches the Python package, so
+  `td_get_capabilities` no longer emits `mismatch: true` after a fresh `.tox`
+  rebuild.
+
+- **N2 — `td_build` auto-detect fails when server starts before TD**: added
+  `_ensure_td_build(ctx)` helper that lazily populates `svc.td_build` from the
+  live TD client when the startup-time fetch produced an empty string. Wired
+  into `td_describe_surface`, `td_get_release_delta`, and
+  `td_get_build_compatibility`. Users no longer have to pass `build=` explicitly
+  when the MCP server outlived a TD restart.
+
+- **N3 — `unstable` inconsistency between endpoints**: extracted
+  `_compute_unstable_signal()` helper applying the v1.4.1 FPS-relative heuristic
+  and wired both `td_detect_instability` and `td_get_state_vector.health` to it.
+  The two endpoints now always agree. `state_vector.health` also gains
+  `reasons`, `target_fps`, `frame_budget_ms`, `top_cook_ms`, and
+  `critical_issues_count` fields to match the detect-instability output shape.
+
+- **N4 — `td_geometry_data` reports `numVertices: 0` on every prim**: the old
+  handler used `getattr(prim, 'numVertices', 0)` which never resolved because
+  TD's `Prim` objects don't expose that attribute. Replaced with `len(prim)`
+  which is the documented TD API. A boxSOP's 6 quad faces now correctly report
+  4 verts each (24 total) instead of 0.
+
+- **N6 — `td_memory_preferences` requires `TDPILOT_PROJECT_NAME` env var for
+  project scope**: added a fallback that derives the project name from TD's
+  `info.project_name` on server startup when the env var is unset. Strips the
+  `.toe` suffix so `NewProject.1.toe` → `NewProject.1`. Users no longer have to
+  set the env var manually for the common case where TD is reachable at MCP
+  startup; global-scope calls still work for offline init.
+
+- **N7 — `td_validate_recipe` doesn't honor the v1.4.1 stock allowlist**: the
+  `_STOCK_OP_TYPES` fix from v1.4.1 only landed in `td_audit_project`. Extended
+  to `td_validate_recipe` so inline recipes using common TD types (`base`,
+  `constant`, `feedback`, `null`, etc.) no longer surface in
+  `unknown_op_types`.
+
+### Verification (against live TD)
+
+- `td_get_capabilities` → `server_version: "1.4.2"`, `component_version: "1.4.2"`,
+  `mismatch: false` after `.tox` rebuild
+- `td_get_build_compatibility(op_type="feedbackTOP")` (no `build=`) →
+  `"compatible"` instead of `"No build specified"`
+- `td_get_state_vector.health.unstable` matches `td_detect_instability.unstable`
+  for every tested project
+- `td_geometry_data` on boxSOP with `include_prims: true` →
+  `numVertices: 4` per prim
+- `td_memory_preferences(action="set", scope="project")` with unset env var →
+  saves to `~/.tdpilot/memory/projects/<derived_name>/preferences.json` instead
+  of erroring
+- `td_validate_recipe` on recipe with stock types → `unknown_op_types: []`
+
 ## 1.4.1 - 2026-04-19
 
 Bugfix release targeting findings from the full tool-surface test run.

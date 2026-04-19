@@ -26,7 +26,7 @@ import traceback
 # Configuration
 # ─────────────────────────────────────────────────────────────
 
-API_VERSION = "1.3.4"
+API_VERSION = "1.4.2"
 SCREENSHOT_TEMP_PATH = os.path.join(os.environ.get('TEMP', os.environ.get('TMP', '/tmp')), 'td_mcp_screenshot.jpg')
 
 # Auth + policy env is read at CALL TIME, not import time — otherwise TD's
@@ -1740,9 +1740,16 @@ def handle_geometry_data(body):
             for i, prim in enumerate(prims_iter):
                 if i >= limit:
                     break
+                # TD's Prim objects expose vertex count via len(prim), not a
+                # numVertices attribute. The old getattr lookup always returned
+                # the default 0 because TD never added that name. See N4 audit.
+                try:
+                    vert_count = int(len(prim))
+                except Exception:
+                    vert_count = int(getattr(prim, 'numVertices', 0) or 0)
                 prims.append({
                     'index': int(getattr(prim, 'index', i)),
-                    'numVertices': int(getattr(prim, 'numVertices', 0) or 0),
+                    'numVertices': vert_count,
                 })
         result['prims'] = prims
         result['prims_truncated'] = num_prims > limit
