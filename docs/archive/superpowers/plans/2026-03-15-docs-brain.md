@@ -194,7 +194,7 @@ normalized/
 
 - [ ] **Step 5: Reinstall package with new dependency**
 
-Run: `cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && pip install -e ".[dev]"`
+Run: `cd <REPO_ROOT> && pip install -e ".[dev]"`
 Expected: Successful install, beautifulsoup4 confirmed available
 
 - [ ] **Step 6: Commit**
@@ -336,7 +336,7 @@ class TestSlugify:
 
 - [ ] **Step 2: Run tests to verify they pass**
 
-Run: `cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && python -m pytest tests/test_normalizer.py -v`
+Run: `cd <REPO_ROOT> && python -m pytest tests/test_normalizer.py -v`
 Expected: All tests PASS
 
 - [ ] **Step 3: Commit**
@@ -685,7 +685,7 @@ class TestNormalizeFile:
 
 - [ ] **Step 5: Run tests**
 
-Run: `cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && python -m pytest tests/test_normalizer.py -v`
+Run: `cd <REPO_ROOT> && python -m pytest tests/test_normalizer.py -v`
 Expected: All tests PASS
 
 - [ ] **Step 6: Commit**
@@ -811,7 +811,7 @@ class TestReleaseNoteChunks:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && python -m pytest tests/test_chunker.py -v`
+Run: `cd <REPO_ROOT> && python -m pytest tests/test_chunker.py -v`
 Expected: FAIL with ImportError (chunker not yet implemented)
 
 - [ ] **Step 3: Write the chunker**
@@ -1103,7 +1103,7 @@ def write_chunks_jsonl(chunks: list[dict[str, Any]], output_path: Path) -> int:
 
 - [ ] **Step 4: Run tests**
 
-Run: `cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && python -m pytest tests/test_chunker.py -v`
+Run: `cd <REPO_ROOT> && python -m pytest tests/test_chunker.py -v`
 Expected: All tests PASS
 
 - [ ] **Step 5: Commit**
@@ -1395,7 +1395,7 @@ class TestBuildReleaseArtifacts:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && python -m pytest tests/test_release_parser.py -v`
+Run: `cd <REPO_ROOT> && python -m pytest tests/test_release_parser.py -v`
 Expected: FAIL with ImportError
 
 - [ ] **Step 3: Write the release parser**
@@ -1518,7 +1518,7 @@ def build_release_artifacts(
 
 - [ ] **Step 4: Run tests**
 
-Run: `cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && python -m pytest tests/test_release_parser.py -v`
+Run: `cd <REPO_ROOT> && python -m pytest tests/test_release_parser.py -v`
 Expected: All tests PASS
 
 - [ ] **Step 5: Commit**
@@ -1771,7 +1771,7 @@ class TestDocsBrainCompatibility:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && python -m pytest tests/test_docsbrain_search.py -v`
+Run: `cd <REPO_ROOT> && python -m pytest tests/test_docsbrain_search.py -v`
 Expected: FAIL with ImportError (DocsBrain not yet implemented)
 
 - [ ] **Step 3: Write DocsBrain class**
@@ -2092,7 +2092,7 @@ class DocsBrain:
 
 - [ ] **Step 4: Run tests**
 
-Run: `cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && python -m pytest tests/test_docsbrain_search.py -v`
+Run: `cd <REPO_ROOT> && python -m pytest tests/test_docsbrain_search.py -v`
 Expected: All tests PASS
 
 - [ ] **Step 5: Commit**
@@ -2232,7 +2232,7 @@ if __name__ == "__main__":
 
 - [ ] **Step 2: Make executable**
 
-Run: `chmod +x /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main/scripts/build_docs_brain.py`
+Run: `chmod +x <REPO_ROOT>/scripts/build_docs_brain.py`
 
 - [ ] **Step 3: Commit**
 
@@ -2321,7 +2321,7 @@ In `src/td_mcp/tool_registry.py`, find the block that loads `CardIndex` (around 
 
 - [ ] **Step 4: Run existing tests to make sure nothing broke**
 
-Run: `cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && python -m pytest tests/test_knowledge_index.py tests/test_knowledge_tools.py -v`
+Run: `cd <REPO_ROOT> && python -m pytest tests/test_knowledge_index.py tests/test_knowledge_tools.py -v`
 Expected: All existing tests PASS (DocsBrain DB doesn't exist yet, so CardIndex fallback is used)
 
 - [ ] **Step 5: Commit**
@@ -2339,9 +2339,9 @@ git commit -m "feat(docsbrain): wire DocsBrain into ServiceContainer with CardIn
 
 Run:
 ```bash
-cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && \
+cd <REPO_ROOT> && \
 python scripts/build_docs_brain.py \
-  --source "/Users/visansilviugeorge/Desktop/doc derivative/docs.derivative.ca_offline/docs.derivative.ca/"
+  --source "<DERIVATIVE_DOCS>/"
 ```
 
 Expected output (approximate):
@@ -2369,7 +2369,7 @@ Expected: `pages.jsonl`, `chunks.jsonl`, `docsbrain.db`, `build_manifest.json`, 
 
 Run:
 ```bash
-cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && \
+cd <REPO_ROOT> && \
 python3 -c "
 from td_mcp.knowledge.docsbrain import DocsBrain
 from pathlib import Path
@@ -2394,7 +2394,7 @@ Expected: Chunk count in thousands, latest build found, Feedback TOP search retu
 
 - [ ] **Step 4: Run all tests**
 
-Run: `cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && python -m pytest tests/test_normalizer.py tests/test_chunker.py tests/test_release_parser.py tests/test_docsbrain_search.py tests/test_knowledge_index.py tests/test_knowledge_tools.py -v`
+Run: `cd <REPO_ROOT> && python -m pytest tests/test_normalizer.py tests/test_chunker.py tests/test_release_parser.py tests/test_docsbrain_search.py tests/test_knowledge_index.py tests/test_knowledge_tools.py -v`
 Expected: All tests PASS
 
 - [ ] **Step 5: Commit**
@@ -2410,7 +2410,7 @@ git commit -m "feat(docsbrain): verify full pipeline on real corpus"
 
 - [ ] **Step 1: Run all project tests**
 
-Run: `cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && python -m pytest tests/ -v --tb=short`
+Run: `cd <REPO_ROOT> && python -m pytest tests/ -v --tb=short`
 Expected: All tests PASS. No regressions.
 
 - [ ] **Step 2: Final commit with any fixes**

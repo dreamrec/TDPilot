@@ -97,7 +97,7 @@ def test_brain_is_active_helper():
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && python -m pytest tests/test_active_brains.py -v`
+Run: `cd <REPO_ROOT> && python -m pytest tests/test_active_brains.py -v`
 Expected: FAIL — `_get_active_brains` and `brain_is_active` don't exist yet
 
 - [ ] **Step 3: Implement `_get_active_brains` and `brain_is_active` in tool_registry.py**
@@ -139,7 +139,7 @@ def brain_is_active(active_set: set[str] | None, brain_id: str) -> bool:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && python -m pytest tests/test_active_brains.py -v`
+Run: `cd <REPO_ROOT> && python -m pytest tests/test_active_brains.py -v`
 Expected: 5 passed
 
 - [ ] **Step 5: Wire `_get_active_brains` into `server_lifespan`**
@@ -183,7 +183,7 @@ data/normalized/
 
 - [ ] **Step 7: Run full test suite**
 
-Run: `cd /Users/visansilviugeorge/Desktop/TDPilot/TDPilot-main && python -m pytest tests/ -x -q`
+Run: `cd <REPO_ROOT> && python -m pytest tests/ -x -q`
 Expected: All pass (no regressions — `active_brains` returns None without file, so everything loads as before)
 
 - [ ] **Step 8: Commit**
