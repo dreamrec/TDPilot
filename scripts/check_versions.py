@@ -71,12 +71,11 @@ def main() -> int:
             expected,
             ".claude-plugin/marketplace.json tdpilot plugin",
         ),
-        check_line(
-            ROOT / "td_component" / "mcp_webserver_callbacks.py",
-            r'API_VERSION\s*=\s*"([^"]+)"',
-            expected,
-            "td_component API_VERSION",
-        ),
+        # NOTE: td_component/mcp_webserver_callbacks.py API_VERSION intentionally does
+        # NOT track __version__. It represents the TD-side HTTP protocol version and
+        # only bumps when an endpoint / response shape changes. Decoupling lets the
+        # Python/npm package bump (e.g. 1.3.4 → 1.4.0) without forcing a .tox rebuild
+        # when the TD protocol is unchanged.
         check_line(
             ROOT / "plugin_README.md",
             r"TDPilot v([0-9]+\.[0-9]+\.[0-9]+)",

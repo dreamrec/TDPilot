@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased — second-audit fixes (post-1.3.4)
+## 1.4.0 - 2026-04-19
+
+Major release: Claude Code plugin marketplace distribution, env-dynamic TD
+auth (A-1 — the root cause of a nasty debugging drama), `.tox`-freshness CI
+guard, AST-based exec policy, schema snapshot tests, and the full audit
+hardening sweep.
 
 ### Root cause of the auth-debugging drama — fixed (A-1)
 - `td_component/mcp_webserver_callbacks.py` now reads `TD_MCP_SHARED_SECRET`,
@@ -59,7 +64,7 @@ After pulling, rebuild once in TD via `setup_mcp_in_td.py` in the Textport,
 then commit `td_component/tdpilot_v1_3.tox` and `.tox-source-hash.json`.
 CI's new freshness guard will turn green automatically after the rebuild.
 
-## Unreleased — Claude Code plugin installer (post-1.3.4)
+### Claude Code plugin distribution (originally filed as a pre-release)
 
 ### Added — Claude Code plugin distribution
 - `.claude-plugin/marketplace.json` + `.claude-plugin/plugin.json` at repo root — makes `dreamrec/TDPilot` a Claude Code marketplace serving the `tdpilot` plugin (same pattern as sibling `dreamrec/ComfyPilot`).
@@ -75,7 +80,7 @@ CI's new freshness guard will turn green automatically after the rebuild.
 - `scripts/render_mcp_config.py` — writes to `.mcp.json.local` so the plugin template at `.mcp.json` is never clobbered.
 - `scripts/check_versions.py` — now also verifies `.claude-plugin/plugin.json` and the plugin entry inside `.claude-plugin/marketplace.json` stay in sync with `__version__`.
 
-## Unreleased — audit hardening (post-1.3.4)
+### First-audit security hardening (originally filed as a pre-release)
 
 ### Security
 - **Auth is now required by default.** TD-side refuses requests when `TD_MCP_SHARED_SECRET` is empty unless `TD_MCP_REQUIRE_AUTH=0` is explicitly set. Installers (`install.sh`, `install.ps1`) now generate a 32-byte secret at install time and write it to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) / `%APPDATA%/Claude/...` (Windows) *and* to a chmod-0600 `.tdpilot.env` that the TD startup script reads.
