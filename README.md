@@ -9,10 +9,10 @@
 
 # TDPilot Runtime v1.3.4
 
-[![CI](https://img.shields.io/github/actions/workflow/status/dreamrec/TDPilot/ci.yml?branch=main&label=CI)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
+[![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
 [![downloads](https://img.shields.io/npm/dm/tdpilot?label=downloads)](https://www.npmjs.com/package/tdpilot)
-[![license](https://img.shields.io/github/license/dreamrec/TDPilot)](./LICENSE)
+[![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![python](https://img.shields.io/badge/python-3.10%2B-blue)](./pyproject.toml)
 [![MCP tools](https://img.shields.io/badge/MCP%20tools-92-blueviolet)](./docs/API_REFERENCE.md)
 [![TouchDesigner](https://img.shields.io/badge/TouchDesigner-2025.30000%2B-ff6200)](https://derivative.ca)
