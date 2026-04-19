@@ -10,7 +10,8 @@ from __future__ import annotations
 from pathlib import Path
 
 REGISTRY_PATH = Path(__file__).resolve().parents[1] / "src" / "td_mcp" / "tool_registry.py"
-MODELS_PATH = Path(__file__).resolve().parents[1] / "src" / "td_mcp" / "models.py"
+# models.py was split into a package — the original content now lives in models/_legacy.py.
+MODELS_PATH = Path(__file__).resolve().parents[1] / "src" / "td_mcp" / "models" / "_legacy.py"
 
 VISION_TOOLS = {"td_capture_frame", "td_analyze_frame"}
 VISION_MODELS = {"CaptureFrameInput", "AnalyzeFrameInput"}

@@ -11,6 +11,23 @@ the TD-side `.tox` component all in one install.
 - **TouchDesigner** 2025.30000+ (earlier TD builds may work but are untested)
 - **`uv`** for running the Python MCP server — auto-installed by our scripts if absent
 
+## Pick ONE installer path — don't mix
+
+TDPilot has two separate install flows that should NOT be combined in a
+single machine/user install:
+
+| Flow | When to use | What it writes |
+|---|---|---|
+| **Claude Code plugin** (this doc) | You use Claude Code (CLI) or Claude Preview | `~/.claude/plugins/cache/dreamrec-TDPilot/` |
+| **Claude Desktop** (`./install.sh`) | You use the Claude Desktop GUI | `~/Library/Application Support/Claude/claude_desktop_config.json` + generates `TD_MCP_SHARED_SECRET` |
+
+If you run both: two env configurations point at the same TD on port 9981,
+each with a different `TD_MCP_SHARED_SECRET`. TD only accepts one. Whichever
+flow was used most recently "wins" and the other appears broken. **Pick one
+and stick with it.**
+
+To switch: uninstall the other first. See the "Uninstalling" section below.
+
 ## Three ways to install
 
 ### Option A — One-liner (recommended)

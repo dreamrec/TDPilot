@@ -15,9 +15,11 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-TEMPLATE = ROOT / ".mcp.json.template"
-# NOTE: .mcp.json at repo root is the Claude Code plugin template and is committed.
-# User-rendered config goes to a .local file so the plugin template is never clobbered.
+# NOTE: three .mcp.json-shaped files live at repo root, each for a different consumer:
+#   - .mcp.json                         — Claude Code plugin template (tracked, ${CLAUDE_PLUGIN_ROOT})
+#   - .mcp.json.claude-desktop-template — Claude Desktop template     (tracked, ${TDPILOT_ROOT})
+#   - .mcp.json.local                   — rendered user config         (gitignored)
+TEMPLATE = ROOT / ".mcp.json.claude-desktop-template"
 OUTPUT = ROOT / ".mcp.json.local"
 
 

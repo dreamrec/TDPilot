@@ -55,10 +55,11 @@ def test_ast_catches_string_concat_bypass():
     assert any("eval" in v for v in violations)
 
 
-def test_ast_survives_syntax_errors():
+def test_ast_skips_syntax_errors():
+    # Per B-2: SyntaxError from unparseable input should NOT be reported as a
+    # security violation. We return [] and let TD surface the real SyntaxError.
     violations = exec_safety.ast_violations("this is not valid python :::")
-    assert violations
-    assert "syntax error" in violations[0]
+    assert violations == []
 
 
 def test_enforce_off_raises_even_for_empty_code(monkeypatch):

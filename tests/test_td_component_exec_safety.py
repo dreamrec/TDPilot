@@ -81,13 +81,20 @@ class TestStandardModeFunctions:
 
 
 class TestDefaultExecModeValidation:
-    """Verify the DEFAULT_EXEC_MODE validation includes 'standard'."""
+    """Verify the exec-mode validation includes 'standard'.
+
+    After audit A-1 the validation lives inside _current_exec_mode(), which is
+    called per-request instead of captured at import time.
+    """
 
     def test_standard_in_valid_modes(self):
-        # The validation line should include 'standard'
-        pattern = r"if\s+DEFAULT_EXEC_MODE\s+not\s+in\s+\(.*'standard'.*\)"
-        assert re.search(pattern, _SOURCE), (
-            "DEFAULT_EXEC_MODE validation must include 'standard'"
+        # Match either the legacy module-level form or the new function-internal form.
+        patterns = [
+            r"if\s+DEFAULT_EXEC_MODE\s+not\s+in\s+\(.*'standard'.*\)",
+            r"if\s+mode\s+not\s+in\s+\(.*'standard'.*\)",
+        ]
+        assert any(re.search(p, _SOURCE) for p in patterns), (
+            "exec-mode validation must include 'standard'"
         )
 
 

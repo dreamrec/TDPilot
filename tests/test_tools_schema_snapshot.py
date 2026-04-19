@@ -18,6 +18,8 @@ import os
 from pathlib import Path
 from typing import Any
 
+from _constants import EXPECTED_MIN_TOOL_COUNT
+
 import td_mcp.server as server
 
 SNAPSHOT_PATH = Path(__file__).parent / "fixtures" / "tool_schemas.json"
@@ -98,3 +100,20 @@ def test_tool_schemas_match_snapshot():
             "  TDPILOT_UPDATE_SCHEMA=1 uv run pytest tests/test_tools_schema_snapshot.py -q"
         )
         raise AssertionError("Tool schema drift:\n" + "\n".join(details))
+
+
+def test_snapshot_matches_tool_count_constant():
+    """Per audit E-3: the snapshot size must not drift from the release-gate constant.
+
+    Otherwise you could bump one without the other — e.g. add a tool, update
+    the snapshot, but forget to bump EXPECTED_MIN_TOOL_COUNT.
+    """
+    snapshot = _load_snapshot()
+    if not snapshot:
+        # First run wrote the baseline; re-run the test afterward.
+        return
+    assert len(snapshot) >= EXPECTED_MIN_TOOL_COUNT, (
+        f"Snapshot has {len(snapshot)} tools but EXPECTED_MIN_TOOL_COUNT = "
+        f"{EXPECTED_MIN_TOOL_COUNT}. Bump the constant in "
+        f"src/td_mcp/release_gates.py or regenerate the snapshot."
+    )

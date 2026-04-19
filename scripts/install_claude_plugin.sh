@@ -31,13 +31,48 @@ fi
 
 log "Found Claude Code: $(claude --version 2>&1 | head -1)"
 
+# ---------- Step 1b: ensure uv is on PATH (MCP server uses it) ----------
+
+if ! command -v uv >/dev/null 2>&1; then
+    log "uv not found — installing (astral.sh pinned 0.6.10)..."
+    UV_PINNED_VERSION="${TDPILOT_UV_VERSION:-0.6.10}"
+    if [ "$UV_PINNED_VERSION" = "latest" ]; then
+        UV_INSTALL_URL="https://astral.sh/uv/install.sh"
+    else
+        UV_INSTALL_URL="https://astral.sh/uv/${UV_PINNED_VERSION}/install.sh"
+    fi
+    curl -LsSf "$UV_INSTALL_URL" | sh
+
+    # uv installs to ~/.local/bin on macOS/Linux
+    export PATH="$HOME/.local/bin:$PATH"
+
+    if ! command -v uv >/dev/null 2>&1; then
+        warn "uv installed but not on PATH yet. Open a new terminal and re-run."
+        warn "(Plugin installation will continue; MCP server may fail to start on first use.)"
+    else
+        log "uv ready: $(uv --version 2>&1)"
+    fi
+else
+    log "Found uv: $(uv --version 2>&1)"
+fi
+
 # ---------- Step 2: add marketplace ----------
 
 log "Adding marketplace: $MARKETPLACE"
-if claude plugin marketplace add "$MARKETPLACE" 2>&1 | grep -qi "already exists\|already added"; then
-    log "Marketplace already registered, continuing."
-else
+# Capture output + exit code separately instead of grepping for specific strings,
+# which are not stable across Claude Code versions.
+_marketplace_output="$(claude plugin marketplace add "$MARKETPLACE" 2>&1)"
+_marketplace_status=$?
+if [ "$_marketplace_status" -eq 0 ]; then
     log "Marketplace added."
+else
+    # "already added" is fine; any other non-zero is a real error.
+    if printf "%s" "$_marketplace_output" | grep -qi "already"; then
+        log "Marketplace already registered, continuing."
+    else
+        printf "%s\n" "$_marketplace_output"
+        die "plugin marketplace add failed (exit $_marketplace_status)."
+    fi
 fi
 
 # ---------- Step 3: install the plugin ----------

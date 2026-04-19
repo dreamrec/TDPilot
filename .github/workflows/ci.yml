@@ -35,6 +35,9 @@ jobs:
       - name: Version drift check
         run: uv run python scripts/check_versions.py
 
+      - name: .tox freshness check
+        run: uv run python scripts/check_tox_freshness.py
+
   test:
     runs-on: ubuntu-latest
     strategy:

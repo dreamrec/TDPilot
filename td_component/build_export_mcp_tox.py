@@ -17,8 +17,52 @@ project opens within the same TD session.  Override with:
 
 import os
 import glob
+import hashlib
+import json
 from datetime import datetime, timezone
 from urllib.parse import urlparse
+
+
+# Files whose content is baked into the .tox and therefore determines its
+# "fresh enough" status. Kept in sync with scripts/check_tox_freshness.py.
+_TOX_SOURCE_FILES = (
+    "td_component/mcp_webserver_callbacks.py",
+    "td_component/event_emitter.py",
+    "td_component/ws_callbacks.py",
+    "td_component/tdpilot_startup.py",
+)
+
+
+def _compute_tox_source_hash(repo_root):
+    """Return sha256 of the concatenated .py source that gets baked into the .tox.
+
+    This is the single source of truth for .tox freshness. Matches the
+    freshness check in scripts/check_tox_freshness.py.
+    """
+    h = hashlib.sha256()
+    for rel in _TOX_SOURCE_FILES:
+        path = os.path.join(repo_root, rel)
+        if not os.path.isfile(path):
+            continue
+        h.update(rel.encode("utf-8"))
+        h.update(b"\x00")
+        with open(path, "rb") as f:
+            h.update(f.read())
+        h.update(b"\x00")
+    return h.hexdigest()
+
+
+def _write_tox_source_hash(repo_root):
+    """Record the .tox-source hash so CI can detect drift after edits."""
+    manifest = {
+        "tox_source_hash": _compute_tox_source_hash(repo_root),
+        "built_at": datetime.now(timezone.utc).isoformat(),
+        "source_files": list(_TOX_SOURCE_FILES),
+    }
+    out_path = os.path.join(repo_root, "td_component", ".tox-source-hash.json")
+    with open(out_path, "w") as f:
+        json.dump(manifest, f, indent=2)
+    print("[TDPilot] Wrote {}".format(out_path))
 
 
 # Configuration
@@ -323,6 +367,7 @@ def build_and_export():
             info_text,
         )
         export_comp.save(export_path)
+        _write_tox_source_hash(repo_root)
     finally:
         try:
             temp_parent.destroy()

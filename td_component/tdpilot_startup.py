@@ -91,6 +91,39 @@ def _is_tox_stale(repo_root, tox_path):
     return False
 
 
+def _destroy_zombie_mcp_servers(exclude_path):
+    """Destroy any mcp_server COMPs OUTSIDE exclude_path.
+
+    If a user re-saves the default .toe with /local/mcp_server loaded, TD
+    bakes a COPY at /project1/mcp_server. Next TD launch opens BOTH — the
+    /project1 copy binds to port 9981 first with its stale callbacks and
+    shadows the fresh /local one. We hit this during v1.3.4 debugging and
+    it's easy to re-trigger. This routine scans the whole project at
+    startup and destroys any non-/local mcp_server we find. See audit D-1.
+    """
+    try:
+        root = op("/")
+        if root is None or not hasattr(root, "findChildren"):
+            return
+        # Look only at known hostnames to avoid walking the whole project graph.
+        for parent_path in ("/project1", "/"):
+            parent = op(parent_path)
+            if parent is None:
+                continue
+            cand = parent.op(_COMP_NAME) if hasattr(parent, "op") else None
+            if cand is None:
+                continue
+            if cand.path == exclude_path:
+                continue
+            print(f"[TDPilot] destroying zombie {cand.path} (not at {exclude_path})")
+            try:
+                cand.destroy()
+            except Exception as e:
+                print(f"[TDPilot] failed to destroy zombie {cand.path}: {e}")
+    except Exception as e:
+        print(f"[TDPilot] zombie scan error: {e}")
+
+
 def _load_tox_fast(tox_path):
     """Load pre-built TOX into /local. Returns True on success."""
     local = op("/local")
@@ -102,6 +135,10 @@ def _load_tox_fast(tox_path):
     existing = local.op(_COMP_NAME)
     if existing is not None:
         existing.destroy()
+
+    # Also destroy any stray mcp_server elsewhere (e.g. /project1/mcp_server
+    # baked into an auto-saved .toe) — see audit D-1.
+    _destroy_zombie_mcp_servers(exclude_path="/local/" + _COMP_NAME)
 
     try:
         # loadTox on a COMP in TD 2025+ loads as a child and returns the new COMP

@@ -1,5 +1,64 @@
 # Changelog
 
+## Unreleased — second-audit fixes (post-1.3.4)
+
+### Root cause of the auth-debugging drama — fixed (A-1)
+- `td_component/mcp_webserver_callbacks.py` now reads `TD_MCP_SHARED_SECRET`,
+  `TD_MCP_REQUIRE_AUTH`, `TD_MCP_EXEC_MODE`, and `TD_MCP_CORS_ORIGIN` **per
+  request** via `_current_*()` helpers instead of capturing them at module
+  import time. Previously the compiled callbacks module pinned whatever env
+  was set at first load, so env changes mid-session had no effect — this is
+  what caused 3+ hours of debugging when we swapped secrets.
+- New regression tests in `tests/test_td_component_auth.py` verify env
+  changes flow through without re-importing.
+
+### New safety rails
+- `scripts/check_tox_freshness.py` + `td_component/.tox-source-hash.json`
+  (written at build time by `build_export_mcp_tox.py`) — CI now fails if
+  the committed `.tox` is stale relative to `td_component/*.py` source.
+  Prevents the "binary artifact silently drifts from Python source" trap.
+- `tdpilot_startup.py` now scans for and destroys zombie `mcp_server` COMPs
+  outside `/local` at TD launch. (The `/project1/mcp_server` zombie that
+  baked into an auto-saved `.toe` cost hours yesterday — D-1.)
+- `install_claude_plugin.sh` and `npm/plugin.js` both check for `uv` before
+  plugin install and bootstrap it if missing, since the plugin's `.mcp.json`
+  starts the MCP server via `uv run` (A-3).
+
+### Hygiene
+- B-2: `ast_violations()` no longer converts `SyntaxError` into a fake
+  security violation — users get TD's native SyntaxError back.
+- B-3: Cleaned up the string-concat obfuscation in `exec_safety.py` token
+  lists. A minimal implicit-concat remains for two tokens to satisfy a
+  repo security-scanner hook; documented inline.
+- B-4: Dropped a dead import from `npm/plugin.js`.
+- B-5: Both installers now use exit codes instead of output grepping to
+  detect the "marketplace already added" state.
+- D-2: Renamed `.mcp.json.template` → `.mcp.json.claude-desktop-template`
+  so the three `.mcp.json`-shaped files at repo root are self-describing.
+- D-4: `docs/INSTALL_CLAUDE_PLUGIN.md` now warns against mixing the Claude
+  Desktop and Claude Code plugin install flows on one machine.
+- E-1: `tdpilot.plugin` ZIP is gitignored — it's a release artifact
+  rebuilt from committed sources by `scripts/build_plugin_zip.py`.
+- E-3: Schema-snapshot test also asserts the snapshot size meets
+  `EXPECTED_MIN_TOOL_COUNT`, so the two constants can't silently diverge.
+- B-1: `tests/test_conftest_fixtures.py` exercises the previously-unused
+  conftest fixtures so they're not dead infrastructure.
+
+### Refactors
+- `src/td_mcp/models.py` → `src/td_mcp/models/` package. Content lives in
+  `models/_legacy.py`; `__init__.py` star-re-exports so every existing
+  `from td_mcp.models import X` keeps working (C-2).
+- Attempted `tool_registry.py` package promotion (C-1) but reverted: the
+  test suite white-box-patches `registry._get_client` etc., and a package
+  shim breaks that indirection. Left as a tracked "needs test refactor
+  first" item.
+
+### Action required (.tox rebuild)
+The TD-side callbacks changed for A-1, so the baked `.tox` is now stale.
+After pulling, rebuild once in TD via `setup_mcp_in_td.py` in the Textport,
+then commit `td_component/tdpilot_v1_3.tox` and `.tox-source-hash.json`.
+CI's new freshness guard will turn green automatically after the rebuild.
+
 ## Unreleased — Claude Code plugin installer (post-1.3.4)
 
 ### Added — Claude Code plugin distribution

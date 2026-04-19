@@ -42,6 +42,11 @@ zivfETsb
 .mcp.json.local-backup
 .mcp.json.backup*
 
+# tdpilot.plugin is a release artifact rebuilt by scripts/build_plugin_zip.py
+# from committed sources. Not tracked in git — users get the committed source
+# tree via Claude Code marketplace install. Release CI publishes the ZIP.
+tdpilot.plugin
+
 # Secret env file written by installer (contains TD_MCP_SHARED_SECRET)
 .tdpilot.env
 

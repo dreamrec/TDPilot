@@ -28,23 +28,56 @@ import traceback
 
 API_VERSION = "1.3.4"
 SCREENSHOT_TEMP_PATH = os.path.join(os.environ.get('TEMP', os.environ.get('TMP', '/tmp')), 'td_mcp_screenshot.jpg')
-SHARED_SECRET = os.environ.get('TD_MCP_SHARED_SECRET', '').strip()
 
-# Auth policy:
-#   - If SHARED_SECRET is set: always required.
-#   - If TD_MCP_REQUIRE_AUTH=1 (default in production): refuse to serve when secret is empty.
-#   - If TD_MCP_REQUIRE_AUTH=0: legacy permissive mode (warn but allow). Use only for local dev.
-REQUIRE_AUTH = os.environ.get('TD_MCP_REQUIRE_AUTH', '1').strip() not in ('0', 'false', 'no', '')
+# Auth + policy env is read at CALL TIME, not import time — otherwise TD's
+# compiled-callback module cache pins stale values for the whole session, and
+# env changes (e.g. swapping the shared secret) silently take no effect. See
+# audit A-1. Module-level aliases remain below for backward compatibility with
+# external callers and tests that inspect them.
 
-# CORS policy:
-#   - Default: no CORS header (browsers are rejected by same-origin). MCP stdio/http clients don't need CORS.
-#   - TD_MCP_CORS_ORIGIN can be set to an exact origin (e.g. http://localhost:3000) for tooling.
-#   - Wildcard '*' is NEVER used — it combined with auth-by-default to allow any webpage to drive TD.
-CORS_ORIGIN = os.environ.get('TD_MCP_CORS_ORIGIN', '').strip()
+def _current_shared_secret():
+    """Read TD_MCP_SHARED_SECRET fresh from the environment."""
+    return os.environ.get('TD_MCP_SHARED_SECRET', '').strip()
 
-DEFAULT_EXEC_MODE = os.environ.get('TD_MCP_EXEC_MODE', 'restricted').strip().lower()
-if DEFAULT_EXEC_MODE not in ('off', 'restricted', 'standard', 'full'):
-    DEFAULT_EXEC_MODE = 'restricted'
+
+def _current_require_auth():
+    """Read TD_MCP_REQUIRE_AUTH fresh from the environment.
+
+    Auth policy:
+      - If SHARED_SECRET is set: always required.
+      - If TD_MCP_REQUIRE_AUTH=1 (default in production): refuse when secret is empty.
+      - If TD_MCP_REQUIRE_AUTH=0: legacy permissive mode. Use only for local dev.
+    """
+    return os.environ.get('TD_MCP_REQUIRE_AUTH', '1').strip() not in ('0', 'false', 'no', '')
+
+
+def _current_cors_origin():
+    """Read TD_MCP_CORS_ORIGIN fresh from the environment.
+
+    CORS policy:
+      - Default: no CORS header (browsers are rejected by same-origin). MCP
+        stdio/http clients don't need CORS.
+      - TD_MCP_CORS_ORIGIN can be set to an exact origin (e.g. http://localhost:3000).
+      - Wildcard '*' is NEVER used.
+    """
+    return os.environ.get('TD_MCP_CORS_ORIGIN', '').strip()
+
+
+def _current_exec_mode():
+    """Read TD_MCP_EXEC_MODE fresh from the environment."""
+    mode = os.environ.get('TD_MCP_EXEC_MODE', 'restricted').strip().lower()
+    if mode not in ('off', 'restricted', 'standard', 'full'):
+        return 'restricted'
+    return mode
+
+
+# Module-level aliases (evaluated at import time) — kept so existing tests
+# that do `module.SHARED_SECRET` still work. The live value used by auth
+# checks comes from _current_shared_secret() etc., NOT these aliases.
+SHARED_SECRET = _current_shared_secret()
+REQUIRE_AUTH = _current_require_auth()
+CORS_ORIGIN = _current_cors_origin()
+DEFAULT_EXEC_MODE = _current_exec_mode()
 RESTRICTED_IMPORT_RE = re.compile(r'(?:^|;)\s*(import|from)\s+\w+', re.MULTILINE)
 RESTRICTED_TOKENS = (
     '__import__',
@@ -126,8 +159,9 @@ def onHTTPRequest(webServerDAT, request, response):
 
     # CORS: apply only when a specific trusted origin is configured.
     # Never emit '*' — combined with weak auth, that lets any webpage drive TD.
-    if CORS_ORIGIN:
-        response['Access-Control-Allow-Origin'] = CORS_ORIGIN
+    cors_origin = _current_cors_origin()
+    if cors_origin:
+        response['Access-Control-Allow-Origin'] = cors_origin
         response['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
         response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-TD-MCP-Secret'
         response['Vary'] = 'Origin'
@@ -245,8 +279,14 @@ def _extract_headers(request):
 
 
 def _check_auth_error(request):
-    if not SHARED_SECRET:
-        if REQUIRE_AUTH:
+    # Read env per-request so updating TD_MCP_SHARED_SECRET or
+    # TD_MCP_REQUIRE_AUTH takes effect without bouncing the callbacks module.
+    # Module-level SHARED_SECRET/REQUIRE_AUTH stay as back-compat aliases only.
+    secret = _current_shared_secret()
+    require = _current_require_auth()
+
+    if not secret:
+        if require:
             return (
                 'TD_MCP_SHARED_SECRET is not configured. Set it in the TD env or run '
                 'scripts/render_mcp_config.py to generate one. To opt out for local dev, '
@@ -261,7 +301,7 @@ def _check_auth_error(request):
         if auth.lower().startswith('bearer '):
             token = auth.split(' ', 1)[1].strip()
 
-    if _constant_time_equals(token, SHARED_SECRET):
+    if _constant_time_equals(token, secret):
         return None
     return 'Unauthorized: missing or invalid TD_MCP_SHARED_SECRET.'
 
@@ -1366,12 +1406,13 @@ def handle_exec_python(body):
         return {'error': 'Missing required field: code'}
 
     _MODE_RANK = {'off': 0, 'restricted': 1, 'standard': 2, 'full': 3}
-    exec_mode = str(body.get('exec_mode', DEFAULT_EXEC_MODE)).strip().lower()
+    default_mode = _current_exec_mode()  # read env per-request; see A-1
+    exec_mode = str(body.get('exec_mode', default_mode)).strip().lower()
     if exec_mode not in _MODE_RANK:
-        exec_mode = DEFAULT_EXEC_MODE
+        exec_mode = default_mode
     # Cap requested mode at server-configured default — clients cannot escalate
-    if _MODE_RANK.get(exec_mode, 0) > _MODE_RANK.get(DEFAULT_EXEC_MODE, 0):
-        exec_mode = DEFAULT_EXEC_MODE
+    if _MODE_RANK.get(exec_mode, 0) > _MODE_RANK.get(default_mode, 0):
+        exec_mode = default_mode
 
     if exec_mode == 'off':
         return {

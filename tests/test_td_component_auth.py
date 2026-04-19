@@ -74,3 +74,39 @@ def test_check_auth_wrong_secret_rejected(monkeypatch):
 
     assert err is not None
     assert "Unauthorized" in err
+
+
+# --- Regression tests for audit A-1 ------------------------------------
+# Before A-1, SHARED_SECRET/REQUIRE_AUTH were captured at module import time
+# and subsequent env changes had no effect. This caused a 3-hour debugging
+# session where reloading the .tox couldn't pick up env changes.
+# These tests ensure env is re-read per-request.
+
+
+def test_auth_picks_up_env_change_after_import(monkeypatch):
+    module = _load_callbacks_module("initial-secret")
+
+    # Sanity: initial-secret works
+    err = module._check_auth_error({"headers": {"X-TD-MCP-Secret": "initial-secret"}})
+    assert err is None
+
+    # Change secret in env, without re-importing the module
+    monkeypatch.setenv("TD_MCP_SHARED_SECRET", "rotated-secret")
+
+    # Old secret must now fail
+    err_old = module._check_auth_error({"headers": {"X-TD-MCP-Secret": "initial-secret"}})
+    assert err_old is not None
+
+    # New secret must succeed — proves env is re-read each call
+    err_new = module._check_auth_error({"headers": {"X-TD-MCP-Secret": "rotated-secret"}})
+    assert err_new is None
+
+
+def test_auth_picks_up_require_auth_toggle_after_import(monkeypatch):
+    # Start with auth required + no secret → refusal
+    module = _load_callbacks_module("", require_auth="1")
+    assert module._check_auth_error({}) is not None
+
+    # Flip REQUIRE_AUTH to 0 at runtime; should now allow
+    monkeypatch.setenv("TD_MCP_REQUIRE_AUTH", "0")
+    assert module._check_auth_error({}) is None
