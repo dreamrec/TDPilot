@@ -1,0 +1,36 @@
+# Optional local pre-commit hooks. Contributors opt in with:
+#   pip install pre-commit && pre-commit install
+# Runs the same checks CI enforces in .github/workflows/ci.yml but gives
+# fast local feedback before you push. CI remains the authoritative gate.
+repos:
+  - repo: local
+    hooks:
+      - id: no-personal-paths
+        name: Block hardcoded personal filesystem paths
+        entry: bash scripts/check_no_personal_paths.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+        description: |
+          Fails the commit if any tracked file contains /Users/<name>/,
+          C:\Users\<name>\, or /home/<name>/ absolute paths. Replace with
+          <REPO_ROOT>, <USER_HOME>, $HOME, or ~/ instead.
+
+      - id: tox-freshness
+        name: Verify .tox hash matches td_component source
+        entry: python scripts/check_tox_freshness.py
+        language: system
+        pass_filenames: false
+        files: ^td_component/.*\.py$
+        stages: [pre-commit]
+        description: |
+          Catches the common "I edited td_component/*.py but didn't rebuild
+          the .tox" mistake before it reaches CI.
+
+      - id: ruff-check
+        name: Ruff lint
+        entry: ruff check src tests scripts td_component
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]

@@ -38,6 +38,12 @@ jobs:
       - name: .tox freshness check
         run: uv run python scripts/check_tox_freshness.py
 
+      # Static script invocation — no GitHub event data consumed, so no
+      # injection risk from user-controlled inputs. The script greps tracked
+      # files for /Users/<name>/ and C:\Users\<name>\ patterns.
+      - name: Personal path leak check
+        run: bash scripts/check_no_personal_paths.sh
+
   test:
     runs-on: ubuntu-latest
     strategy:

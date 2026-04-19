@@ -104,7 +104,7 @@ description: "Official TouchDesigner documentation from Derivative"
 # Where to find the scraped HTML files
 scrape_path: "${TDPILOT_DOCS_SCRAPE_PATH}"
 # Or an absolute path:
-# scrape_path: "/Users/you/Desktop/docs.derivative.ca_offline/docs.derivative.ca/"
+# scrape_path: "~/Desktop/docs.derivative.ca_offline/docs.derivative.ca/"
 
 # Content extraction
 content_selector: "#mw-content-text"    # CSS selector for main content
@@ -189,7 +189,7 @@ version: "1.0"
 source_url: "https://www.youtube.com/@paketa12"
 description: "TouchDesigner tutorials by Paketa — creative coding, generative art, audio-reactive visuals"
 
-scrape_path: "/Users/you/Desktop/paketa_tutorials/"
+scrape_path: "~/Desktop/paketa_tutorials/"
 
 # For YouTube transcript scrapes or blog posts, the selectors will differ
 content_selector: "body"           # or ".post-content", ".article-body", etc.
