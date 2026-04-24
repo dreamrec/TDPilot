@@ -1799,104 +1799,6 @@ def _classify_temporal_character(samples: list[dict[str, Any]]) -> dict[str, Any
 # Resources
 
 
-@mcp.tool(name="td_get_info")
-async def td_get_info(ctx: Context) -> str:
-    return await _forward(ctx, "td_get_info", "info")
-
-
-@mcp.tool(name="td_list_families")
-async def td_list_families(ctx: Context) -> str:
-    return await _forward(ctx, "td_list_families", "families")
-
-
-@mcp.tool(name="td_get_capabilities")
-async def td_get_capabilities(ctx: Context) -> str:
-    finish = _start_tool(ctx, "td_get_capabilities")
-    try:
-        services = _get_services(ctx)
-        capabilities = detect_capabilities(ctx, td_build=services.td_build)
-        from td_mcp import __version__ as server_version
-
-        # Check component version if TD is connected
-        version_status = {"server_version": server_version}
-        try:
-            info = await _get_client(ctx).request("info")
-            if isinstance(info, dict):
-                comp_ver = info.get("mcp_component_version") or info.get("api_version", "")
-                version_status["component_version"] = comp_ver
-                if comp_ver and comp_ver != server_version:
-                    version_status["mismatch"] = True
-                    version_status["warning"] = (
-                        f"TD component is v{comp_ver} but server is v{server_version}. "
-                        f"Re-export the .tox to fix."
-                    )
-                elif comp_ver:
-                    version_status["mismatch"] = False
-        except Exception:
-            version_status["component_version"] = "unknown (TD not reachable)"
-
-        payload = {
-            "schema_version": 1,
-            "client_capabilities": capabilities.to_dict(),
-            "version": version_status,
-            "runtime": {
-                "transport": TD_TRANSPORT,
-                "exec_mode": _current_exec_mode(),
-                "shared_secret_enabled": bool(TD_SHARED_SECRET),
-                "event_ws_port": TD_WS_PORT,
-                "snapshot_persistence": bool(TD_SNAPSHOT_DIR),
-                "stream_max_fps": TD_STREAM_MAX_FPS,
-            },
-        }
-        return _as_json_output(payload)
-    except Exception as exc:
-        _record_tool_error(ctx, "td_get_capabilities")
-        return format_tool_error(exc)
-    finally:
-        finish()
-
-
-@mcp.tool(name="td_get_server_metrics")
-async def td_get_server_metrics(ctx: Context) -> str:
-    finish = _start_tool(ctx, "td_get_server_metrics")
-    try:
-        telemetry = _get_telemetry(ctx)
-        event_manager = _get_event_manager(ctx)
-        visual_monitor = _get_visual_monitor(ctx)
-        top_streamer = _get_top_streamer(ctx)
-        safety_manager = _get_safety_manager(ctx)
-        snapshot_manager = _get_snapshot_manager(ctx)
-        job_manager = _get_job_manager(ctx)
-
-        payload = {
-            "schema_version": 1,
-            "runtime": {
-                "transport": TD_TRANSPORT,
-                "exec_mode": _current_exec_mode(),
-                "host": TD_HOST,
-                "port": TD_PORT,
-                "event_ws_port": TD_WS_PORT,
-                "stream_max_fps": TD_STREAM_MAX_FPS,
-            },
-            "telemetry": telemetry.snapshot() if telemetry else {},
-            "events": event_manager.stats(),
-            "visual_monitor": {
-                "active": visual_monitor.active_monitors(),
-            },
-            "top_stream": top_streamer.stats(),
-            "safety": safety_manager.stats(),
-            "snapshots": snapshot_manager.stats(),
-            "jobs": job_manager.stats(),
-            "audit_enabled": bool(_get_audit(ctx) and _get_audit(ctx).enabled()),
-        }
-        return _as_json_output(payload)
-    except Exception as exc:
-        _record_tool_error(ctx, "td_get_server_metrics")
-        return format_tool_error(exc)
-    finally:
-        finish()
-
-
 def _check_exec_not_off() -> dict[str, Any] | None:
     """Return an error dict if exec_mode is 'off', else None."""
     if _current_exec_mode() == "off":
@@ -2037,6 +1939,12 @@ from td_mcp.registry.tools_graph import (  # noqa: E402
     td_get_params,
     td_rename_node,
     td_set_params,
+)
+from td_mcp.registry.tools_info import (  # noqa: E402
+    td_get_capabilities,
+    td_get_info,
+    td_get_server_metrics,
+    td_list_families,
 )
 from td_mcp.registry.tools_knowledge import (  # noqa: E402
     td_describe_surface,
