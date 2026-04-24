@@ -111,6 +111,55 @@ def test_doctor_passes_auth_check_when_auth_disabled(monkeypatch, capsys):
     assert "FAIL" not in auth_line
 
 
+# ---------------------------------------------------------------------------
+# Doctor tool-count drift — regression for v1.4.4 reliability release.
+# Compares @mcp.tool() decorator count in tool_registry.py against the
+# manifest.surface.tool_count value; emits warn on drift, pass on match.
+# ---------------------------------------------------------------------------
+
+
+def test_doctor_tool_count_drift_check_present():
+    """doctor must include a `tool_count_drift` check in its report."""
+    report = server._collect_doctor_report(timeout=0.2, skip_td_check=True, strict=False)
+    names = [item["name"] for item in report["checks"]]
+    assert "tool_count_drift" in names
+
+
+def test_doctor_tool_count_drift_passes_on_sync():
+    """When manifest and registry agree, the drift check emits pass."""
+    report = server._collect_doctor_report(timeout=0.2, skip_td_check=True, strict=False)
+    drift = next(item for item in report["checks"] if item["name"] == "tool_count_drift")
+    # Current repo: manifest and registry match at 92 tools.
+    assert drift["status"] == "pass", f"detail: {drift['detail']}"
+    # Detail should include both counts so developers can see what's compared.
+    assert "registry=" in drift["detail"] or "source=" in drift["detail"]
+    assert "manifest=" in drift["detail"]
+
+
+def test_doctor_tool_count_drift_warns_on_mismatch(monkeypatch, tmp_path):
+    """When manifest disagrees with registry, the drift check emits warn."""
+    # Stage a manifest with a bogus tool_count and point the doctor's lookup
+    # at it. The loader reads mcp/manifest.json relative to repo root, so we
+    # temporarily rewrite the file, then the test fixture restores it.
+    import json
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parent.parent
+    manifest_path = repo / "mcp" / "manifest.json"
+    original = manifest_path.read_text()
+    try:
+        data = json.loads(original)
+        data["surface"]["tool_count"] = 9999  # intentionally wrong
+        manifest_path.write_text(json.dumps(data, indent=2) + "\n")
+
+        report = server._collect_doctor_report(timeout=0.2, skip_td_check=True, strict=False)
+        drift = next(item for item in report["checks"] if item["name"] == "tool_count_drift")
+        assert drift["status"] == "warn"
+        assert "9999" in drift["detail"] or "mismatch" in drift["detail"].lower()
+    finally:
+        manifest_path.write_text(original)
+
+
 def test_runtime_health_from_payloads():
     health = server._runtime_health_from_payloads(
         cooking={

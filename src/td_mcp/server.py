@@ -99,6 +99,39 @@ def verify_auth_config() -> None:
     )
 
 
+def _tool_count_drift_check(repo_root: Path | None) -> tuple[str, str]:
+    """Compare `@mcp.tool(` count in tool_registry.py against manifest's
+    `surface.tool_count`. Returns (status, detail).
+
+    Skip (not fail) when either file is missing — the check is a developer
+    convenience, not a hard release gate (CI runs check_versions.py for that).
+    """
+    if repo_root is None:
+        return "skip", "repo root not found"
+    registry_path = repo_root / "src" / "td_mcp" / "tool_registry.py"
+    manifest_path = repo_root / "mcp" / "manifest.json"
+    if not registry_path.is_file() or not manifest_path.is_file():
+        return "skip", "tool_registry.py or mcp/manifest.json missing"
+
+    try:
+        source = registry_path.read_text(encoding="utf-8")
+        import json as _json
+        import re as _re
+
+        manifest = _json.loads(manifest_path.read_text(encoding="utf-8"))
+        source_count = len(_re.findall(r"@mcp\.tool\(", source))
+        manifest_count = int(manifest.get("surface", {}).get("tool_count", -1))
+    except Exception as exc:  # pragma: no cover - defensive
+        return "skip", f"could not read counts: {exc}"
+
+    if manifest_count == source_count:
+        return "pass", f"registry=manifest={manifest_count}"
+    return "warn", (
+        f"mismatch: registry={source_count} vs manifest={manifest_count}; "
+        "update mcp/manifest.json surface.tool_count"
+    )
+
+
 def _check_tcp_port(host: str, port: int, timeout: float) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.settimeout(timeout)
@@ -217,6 +250,12 @@ def _collect_doctor_report(*, timeout: float, skip_td_check: bool, strict: bool)
         auth_status = "pass"
         auth_detail = "auth disabled (TD_MCP_REQUIRE_AUTH!=1)"
     checks.append({"name": "auth_config", "status": auth_status, "detail": auth_detail})
+
+    # Tool-count drift — catch cases where a tool was added/removed without
+    # bumping mcp/manifest.json's surface.tool_count. Warn (not fail) since the
+    # server still runs correctly; the manifest is the external-facing number.
+    drift_status, drift_detail = _tool_count_drift_check(repo_root)
+    checks.append({"name": "tool_count_drift", "status": drift_status, "detail": drift_detail})
 
     fail_count = sum(1 for item in checks if item["status"] == "fail")
     warn_count = sum(1 for item in checks if item["status"] == "warn")
