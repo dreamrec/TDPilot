@@ -14,9 +14,10 @@ from collections.abc import Callable
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context, FastMCP
+from pydantic import Field
 
 from td_mcp import exec_safety
 from td_mcp import normalize_transport as _normalize_transport
@@ -2019,12 +2020,32 @@ async def td_create_node(params: CreateNodeInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_delete_node")
-async def td_delete_node(params: DeleteNodeInput, ctx: Context) -> str:
+async def td_delete_node(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(
+            description="Absolute path of the node to delete (e.g. '/project1/noise1')",
+            min_length=1,
+        ),
+    ],
+) -> str:
+    """Delete a node by its absolute path.
+
+    v1.4.6 Bug A PoC: explicit-args signature instead of the old
+    ``params: DeleteNodeInput`` wrapper. FastMCP wraps ``params: Model``
+    signatures under a ``params: {"$ref": ...}`` property that MCP clients
+    collapse to an opaque ``{}``. Explicit args produce a flat schema the
+    client can render directly — callers see ``path`` as a required
+    string with description and min_length instead of having to guess.
+    The ``Annotated[str, Field(...)]`` pattern carries the same validation
+    the old Pydantic model had.
+    """
     return await _forward(
         ctx,
         "td_delete_node",
         "node/delete",
-        params.model_dump(),
+        {"path": path},
         audit_event="td_delete_node",
     )
 

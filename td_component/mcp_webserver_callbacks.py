@@ -26,7 +26,7 @@ import traceback
 # Configuration
 # ─────────────────────────────────────────────────────────────
 
-API_VERSION = "1.4.2"
+API_VERSION = "1.4.6"
 SCREENSHOT_TEMP_PATH = os.path.join(os.environ.get('TEMP', os.environ.get('TMP', '/tmp')), 'td_mcp_screenshot.jpg')
 
 # Auth + policy env is read at CALL TIME, not import time — otherwise TD's
@@ -575,6 +575,65 @@ def handle_set_params(body):
     if node is None:
         return {'error': f'Node not found: {path}'}
 
+    # v1.4.6 - Bug J silent-null guard for reference-style parameters.
+    # TD accepts a plain string assignment to DAT/OP/CHOP/SOP/TOP/COMP/MAT/POP/
+    # POPX reference params without raising, but then resolves the value to
+    # None internally and emits a node-level warning. Pre-v1.4.6 this handler
+    # reported success=True with new_value=null, hiding the failure from the
+    # MCP caller. The _silent_null_set check below catches that pattern and
+    # flips the per-param result to success=False with the TD warning text.
+    REFERENCE_PAR_STYLES = {
+        'DAT', 'OP', 'CHOP', 'SOP', 'TOP', 'COMP', 'MAT', 'POP', 'POPX',
+    }
+
+    def _is_silent_null(par, requested_value, resolved_value):
+        """Return True iff the set succeeded syntactically but TD resolved to
+        None because the param needs an OP reference (or expression), not a
+        plain string. Numeric zeros, empty strings on Str params, and False
+        on Toggles all resolve to non-None, so this specifically targets
+        None + reference-style + non-empty str."""
+        if resolved_value is not None:
+            return False
+        if not isinstance(requested_value, str):
+            return False
+        if not requested_value.strip():
+            return False
+        try:
+            style = getattr(par, 'style', '')
+        except Exception:
+            style = ''
+        return style in REFERENCE_PAR_STYLES
+
+    def _build_silent_null_result(par_name, par, requested_value, node_for_warnings):
+        """Shape the success=False payload when _is_silent_null trips."""
+        try:
+            warn_text = (node_for_warnings.warnings() or '').strip()
+        except Exception:
+            warn_text = ''
+        try:
+            style = getattr(par, 'style', '')
+        except Exception:
+            style = ''
+        err = (
+            'Parameter {0!r} is a reference-style param (style={1}) and '
+            "needs an actual OP reference, not a plain string. The value "
+            "{2!r} did not resolve - TD assigned null."
+        ).format(par_name, style or 'unknown', requested_value)
+        # Only cite the TD warning if it looks related to this set.
+        if warn_text and (
+            'Invalid path' in warn_text
+            or 'not found' in warn_text.lower()
+            or par_name in warn_text
+        ):
+            err += ' TD warning: ' + warn_text
+        return {
+            'success': False,
+            'mode': 'constant',
+            'error': err,
+            'style': style,
+            'new_value': None,
+        }
+
     results = {}
     for name, value in params.items():
         try:
@@ -605,15 +664,27 @@ def handle_set_params(body):
                 p.expr = ''
                 if 'val' in value:
                     p.val = value['val']
+                    resolved = p.eval()
+                    if _is_silent_null(p, value['val'], resolved):
+                        results[name] = _build_silent_null_result(name, p, value['val'], node)
+                        continue
                 results[name] = {'success': True, 'mode': 'constant', 'new_value': p.eval()}
             # Explicit val mode: {"param": {"val": 42}}
             elif isinstance(value, dict) and 'val' in value:
                 p.val = value['val']
-                results[name] = {'success': True, 'mode': 'constant', 'new_value': p.eval()}
+                resolved = p.eval()
+                if _is_silent_null(p, value['val'], resolved):
+                    results[name] = _build_silent_null_result(name, p, value['val'], node)
+                    continue
+                results[name] = {'success': True, 'mode': 'constant', 'new_value': resolved}
             # Plain value (backwards compatible)
             else:
                 p.val = value
-                results[name] = {'success': True, 'mode': 'constant', 'new_value': p.eval()}
+                resolved = p.eval()
+                if _is_silent_null(p, value, resolved):
+                    results[name] = _build_silent_null_result(name, p, value, node)
+                    continue
+                results[name] = {'success': True, 'mode': 'constant', 'new_value': resolved}
         except Exception as e:
             results[name] = {'success': False, 'error': str(e)}
 

@@ -196,17 +196,17 @@
     ]
   },
   "td_delete_node": {
-    "description_present": false,
+    "description_present": true,
     "properties": {
-      "params": {
+      "path": {
         "any_of_types": [],
         "default_present": false,
         "enum": null,
-        "type": null
+        "type": "string"
       }
     },
     "required": [
-      "params"
+      "path"
     ]
   },
   "td_describe_dynamics": {
