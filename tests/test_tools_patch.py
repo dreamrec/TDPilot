@@ -48,3 +48,13 @@ def test_td_patch_validate_registered():
     assert "capture_frames" in props
     # Flat schema — Bug A discipline
     assert list(props.keys()) != ["params"]
+
+
+def test_td_patch_variations_registered():
+    t = _find_tool("td_patch_variations")
+    props = t.inputSchema.get("properties", {})
+    assert "plan" in props
+    assert "n" in props
+    assert "strategies" in props
+    # Flat schema
+    assert list(props.keys()) != ["params"]

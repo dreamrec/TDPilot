@@ -187,3 +187,52 @@ async def td_patch_validate(
         return format_tool_error(exc)
     finally:
         finish()
+
+
+@mcp.tool(name="td_patch_variations")
+async def td_patch_variations(
+    ctx: Context,
+    plan: Annotated[
+        dict[str, Any],
+        Field(description="Base PatchPlan dict to derive variants from"),
+    ],
+    n: Annotated[
+        int,
+        Field(default=3, ge=1, le=6, description="Number of variants"),
+    ] = 3,
+    strategies: Annotated[
+        list[str] | None,
+        Field(default=None, description="None defaults to ['param_jitter']"),
+    ] = None,
+    seed: Annotated[
+        int | None,
+        Field(default=None, description="RNG seed; None = random"),
+    ] = None,
+) -> dict[str, Any]:
+    """Generate N PatchVariants from a base plan using the given strategies."""
+    finish = _tr._start_tool(ctx, "td_patch_variations")
+    try:
+        try:
+            parsed = PatchPlan.model_validate(plan)
+        except ValidationError as exc:
+            return {"success": False, "error": f"invalid plan: {exc}"}
+        strategies_eff = strategies or ["param_jitter"]
+        try:
+            variants, skipped = patch.generate_variants(parsed, n, strategies_eff, seed)
+        except ValueError as exc:
+            return {"success": False, "error": str(exc)}
+        _tr._audit_log(
+            ctx,
+            "td_patch_variations",
+            {"plan_id": parsed.id, "count": len(variants), "strategies": strategies_eff},
+        )
+        return {
+            "success": True,
+            "variants": [v.model_dump(mode="json") for v in variants],
+            "skipped_strategies": skipped,
+        }
+    except Exception as exc:  # noqa: BLE001
+        _tr._record_tool_error(ctx, "td_patch_variations")
+        return format_tool_error(exc)
+    finally:
+        finish()
