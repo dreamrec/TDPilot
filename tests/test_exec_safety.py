@@ -6,6 +6,7 @@ import types
 from unittest.mock import patch
 
 import pytest
+from pydantic import ValidationError
 
 # ---------------------------------------------------------------------------
 # Helper: load only the exec-safety helpers from tool_registry without
@@ -207,17 +208,17 @@ class TestExecPythonInputSchema:
     def test_timeout_ms_rejects_below_minimum(self):
         from td_mcp.models._legacy import ExecPythonInput
 
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             ExecPythonInput(code="pass", timeout_ms=50)
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             ExecPythonInput(code="pass", timeout_ms=99)
 
     def test_timeout_ms_rejects_above_maximum(self):
         from td_mcp.models._legacy import ExecPythonInput
 
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             ExecPythonInput(code="pass", timeout_ms=60001)
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             ExecPythonInput(code="pass", timeout_ms=120000)
 
 

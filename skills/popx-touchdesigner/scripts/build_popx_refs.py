@@ -15,7 +15,6 @@ from typing import Any
 
 from bs4 import BeautifulSoup, Tag
 
-
 DEFAULT_EXPORT_PATH = (
     Path(__file__).resolve().parent.parent / "references" / "raw-example-export.pyrepr"
 )

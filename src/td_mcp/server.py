@@ -415,7 +415,7 @@ def main(argv: list[str] | None = None) -> None:
         verify_auth_config()
     except RuntimeError as exc:
         print(str(exc), file=sys.stderr)
-        raise SystemExit(2)
+        raise SystemExit(2) from exc
 
     _run_server()
 

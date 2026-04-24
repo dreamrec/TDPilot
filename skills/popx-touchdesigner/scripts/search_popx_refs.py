@@ -9,7 +9,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-
 CATALOG_PATH = Path(__file__).resolve().parent.parent / "references" / "catalog.json"
 
 

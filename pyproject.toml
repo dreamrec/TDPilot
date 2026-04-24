@@ -63,6 +63,7 @@ exclude = [
     "dist",
     "data/normalized",
     "td_component/build_export_mcp_tox.py",  # contains TD-API-only references
+    "setup_mcp_in_td.py",  # TD-runtime DAT script: references `me`, `project` globals
 ]
 
 [tool.ruff.lint]
