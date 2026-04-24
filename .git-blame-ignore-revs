@@ -1,0 +1,7 @@
+# Mechanical-only commits — ignored by "git blame" when using:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# or by tools that auto-honor this file (GitHub, IDE blame views).
+# See: https://docs.github.com/en/repositories/working-with-files/using-files/viewing-a-file#ignore-commits-in-the-blame-view
+
+# v1.4.4 — ruff format pass: 68 files reformatted, zero logic changes.
+e9ca15ec28e7b93d88055c02860185a63ad1524d

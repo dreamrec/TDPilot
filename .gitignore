@@ -36,6 +36,12 @@ td_component/NewProject*.toe
 reports/
 zivfETsb
 
+# Coverage artifacts (coverage.xml is uploaded by CI; .coverage is local)
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
 # .mcp.json at repo root IS the Claude Code plugin template (committed).
 # User-rendered local variants and backups are NOT tracked.
 .mcp.json.local

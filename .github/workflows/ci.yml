@@ -29,8 +29,12 @@ jobs:
         run: uv run ruff check src tests scripts td_component
 
       - name: Ruff format check
+        # v1.4.4: flipped from continue-on-error to enforcing after the
+        # mechanical `ruff format` pass landed (commit e9ca15e). If this
+        # step fails, run `uv run ruff format .` locally, commit, and
+        # add the commit hash to .git-blame-ignore-revs if it's purely
+        # mechanical.
         run: uv run ruff format --check src tests scripts td_component
-        continue-on-error: true
 
       - name: Version drift check
         run: uv run python scripts/check_versions.py
