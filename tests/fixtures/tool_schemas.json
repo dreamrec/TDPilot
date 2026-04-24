@@ -1519,6 +1519,160 @@
       "output_top"
     ]
   },
+  "td_patch_apply": {
+    "description_present": true,
+    "properties": {
+      "auto_validate": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "label": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "plan": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "object"
+      }
+    },
+    "required": [
+      "plan"
+    ]
+  },
+  "td_patch_plan": {
+    "description_present": true,
+    "properties": {
+      "intent": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "operations": {
+        "any_of_types": [
+          "array",
+          "null"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "recipe_id": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "target_root": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "string"
+      },
+      "undo_label": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "target_root"
+    ]
+  },
+  "td_patch_preview": {
+    "description_present": true,
+    "properties": {
+      "plan": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "object"
+      }
+    },
+    "required": [
+      "plan"
+    ]
+  },
+  "td_patch_validate": {
+    "description_present": true,
+    "properties": {
+      "capture_frames": {
+        "any_of_types": [
+          "array",
+          "null"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "target_root": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "string"
+      }
+    },
+    "required": [
+      "target_root"
+    ]
+  },
+  "td_patch_variations": {
+    "description_present": true,
+    "properties": {
+      "n": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "integer"
+      },
+      "plan": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "object"
+      },
+      "seed": {
+        "any_of_types": [
+          "integer",
+          "null"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "strategies": {
+        "any_of_types": [
+          "array",
+          "null"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "plan"
+    ]
+  },
   "td_plan_patch": {
     "description_present": true,
     "properties": {
