@@ -494,3 +494,395 @@ def test_is_informative_card_accepts_normalized_docsbrain_operator_result(tmp_pa
         "Post-fix rows must expose op_type/display_name/summary so the "
         "filter sees them as informative."
     )
+
+
+# ---------------------------------------------------------------------------
+# Bug S (S.E) — td_memory_learn wire-graph walk for non-COMP roots.
+#
+# Current behavior (pre-v1.4.7): `_collect_subtree` only descends when the
+# node has `isCOMP=True`. Learning from a TOP/CHOP/SOP returns just that
+# single node, no connections. Users who built a wire-chain of ops would
+# have to pre-wrap in a baseCOMP to save it.
+#
+# S.E auto-detect: if the ROOT is non-COMP, walk the bidirectional wire
+# graph (follow `inputs` upstream AND `outputs` downstream) bounded by
+# max_depth. COMP roots keep their existing children-walk semantic.
+# ---------------------------------------------------------------------------
+
+
+class _WireMockClient:
+    """Mock TD client that serves node/detail with inputs AND outputs, and
+    node children via the 'nodes' endpoint. Mirrors the v1.4.6+ TD-side
+    shape that `_collect_subtree` consumes."""
+
+    def __init__(self, nodes: dict):
+        self._nodes = nodes
+
+    async def request(self, endpoint: str, params: dict | None = None):
+        params = params or {}
+        if endpoint == "node/detail":
+            path = params.get("path", "")
+            return self._nodes.get(path, {"error": "not found"})
+        if endpoint == "nodes":
+            parent = params.get("path", "")
+            children = [
+                {"path": p}
+                for p in self._nodes
+                if p.startswith(parent + "/") and "/" not in p[len(parent) + 1 :]
+            ]
+            offset = params.get("offset", 0)
+            limit = params.get("limit", 200)
+            return {"nodes": children[offset : offset + limit]}
+        return {}
+
+
+def _wire_node(
+    path: str,
+    op_type: str,
+    *,
+    family: str = "TOP",
+    is_comp: bool = False,
+    inputs: list | None = None,
+    outputs: list | None = None,
+):
+    return {
+        "path": path,
+        "name": path.rsplit("/", 1)[-1],
+        "type": op_type,
+        "family": family,
+        "parameters": {},
+        "inputs": inputs or [],
+        "outputs": outputs or [],
+        "isCOMP": is_comp,
+    }
+
+
+def _linear_chain_client() -> _WireMockClient:
+    """Four-node linear wire chain under /project1 with NO wrapper COMP:
+    noise1 -> xf1 -> lvl1 -> null1. Every node is a plain TOP, so the
+    root of a learn call is always non-COMP."""
+    return _WireMockClient(
+        {
+            "/project1/noise1": _wire_node(
+                "/project1/noise1",
+                "noiseTOP",
+                outputs=[{"to": "/project1/xf1", "from_index": 0, "to_index": 0}],
+            ),
+            "/project1/xf1": _wire_node(
+                "/project1/xf1",
+                "transformTOP",
+                inputs=[{"from": "/project1/noise1", "from_index": 0, "to_index": 0}],
+                outputs=[{"to": "/project1/lvl1", "from_index": 0, "to_index": 0}],
+            ),
+            "/project1/lvl1": _wire_node(
+                "/project1/lvl1",
+                "levelTOP",
+                inputs=[{"from": "/project1/xf1", "from_index": 0, "to_index": 0}],
+                outputs=[{"to": "/project1/null1", "from_index": 0, "to_index": 0}],
+            ),
+            "/project1/null1": _wire_node(
+                "/project1/null1",
+                "nullTOP",
+                inputs=[{"from": "/project1/lvl1", "from_index": 0, "to_index": 0}],
+            ),
+        }
+    )
+
+
+@pytest.mark.asyncio
+async def test_memory_learn_from_non_comp_head_walks_downstream():
+    """S.E: learning from the HEAD of a wire chain (noise1) should capture
+    the whole chain by following output connections. Pre-v1.4.7 this
+    returned only noise1 (node_count=1, connection_count=0)."""
+    from td_mcp.memory.analyzer import analyze_network
+
+    client = _linear_chain_client()
+    result = await analyze_network(client, "/project1/noise1")
+    assert result["node_count"] == 4, (
+        f"expected full chain (noise->xf->lvl->null); got {result['node_count']} nodes. "
+        f"recipe keys={list((result.get('recipe') or {}).get('nodes', {}).keys())}"
+    )
+    assert result["connection_count"] == 3
+    recipe_types = {n["type"] for n in result["recipe"]["nodes"].values()}
+    assert recipe_types == {"noiseTOP", "transformTOP", "levelTOP", "nullTOP"}
+
+
+@pytest.mark.asyncio
+async def test_memory_learn_from_non_comp_tail_walks_upstream():
+    """S.E: learning from the TAIL of a wire chain (null1, terminal) must
+    also capture the chain — by walking upstream through `inputs`.
+    This supports the common workflow of 'save this technique, starting
+    from the output/null node I care about'."""
+    from td_mcp.memory.analyzer import analyze_network
+
+    client = _linear_chain_client()
+    result = await analyze_network(client, "/project1/null1")
+    assert result["node_count"] == 4, (
+        f"expected full chain walking upstream from null1; got {result['node_count']}"
+    )
+    assert result["connection_count"] == 3
+
+
+@pytest.mark.asyncio
+async def test_memory_learn_non_comp_respects_max_nodes_cap():
+    """Safety: a tight `max_nodes` cap must bound the wire-walk. Protects
+    against runaway capture in dense networks where a root node touches
+    many unrelated peers via wires."""
+    from td_mcp.memory.analyzer import analyze_network
+
+    client = _linear_chain_client()
+    result = await analyze_network(client, "/project1/xf1", max_nodes=2)
+    assert result["node_count"] <= 2, (
+        f"max_nodes=2 must cap wire-walk to <=2 nodes; got {result['node_count']}"
+    )
+
+
+@pytest.mark.asyncio
+async def test_memory_learn_from_comp_root_still_walks_children():
+    """S.E regression guard: COMP roots preserve the existing tree walk.
+    Non-COMP children of the root are captured via the children tree,
+    NOT via wire-graph walk — otherwise a COMP with dense internal
+    wiring would also trigger bidirectional wire exploration that could
+    leak out of the COMP boundary."""
+    from td_mcp.memory.analyzer import analyze_network
+
+    client = _WireMockClient(
+        {
+            "/project1/wrapper": _wire_node(
+                "/project1/wrapper",
+                "baseCOMP",
+                family="COMP",
+                is_comp=True,
+            ),
+            "/project1/wrapper/noise1": _wire_node(
+                "/project1/wrapper/noise1",
+                "noiseTOP",
+                outputs=[{"to": "/project1/wrapper/out1", "from_index": 0, "to_index": 0}],
+            ),
+            "/project1/wrapper/out1": _wire_node(
+                "/project1/wrapper/out1",
+                "nullTOP",
+                inputs=[{"from": "/project1/wrapper/noise1", "from_index": 0, "to_index": 0}],
+            ),
+            # Sibling OUTSIDE the wrapper — must NOT be captured even though
+            # wrapper's children have wire connections internally.
+            "/project1/unrelated": _wire_node("/project1/unrelated", "waveCHOP", family="CHOP"),
+        }
+    )
+    result = await analyze_network(client, "/project1/wrapper")
+    # 3 nodes: wrapper + noise1 + out1. NOT the sibling /project1/unrelated.
+    assert result["node_count"] == 3
+    assert "/project1/unrelated" not in str(result.get("recipe", {}))
+
+
+# ---------------------------------------------------------------------------
+# Bug V (V.C) — td_memory_replay opt-in root COMP recreation.
+#
+# Current behavior (pre-v1.4.7): `td_memory_replay` aliases the recipe's
+# "/" entry to `parent_path` and only creates the children under it. The
+# source's wrapper COMP — with its custom params, extensions, display
+# settings, comment — is LOST. Replaying a COMP-wrapped technique
+# produces a flat collection of children under `parent_path`.
+#
+# V.C opt-in: add `recreate_root` boolean to MemoryReplayInput. Default
+# False preserves existing behavior (no regression for callers that
+# expect flat replay). When True and the recipe's "/" entry has
+# family=COMP, the replay creates that COMP under `parent_path` first
+# and uses its new path as the effective parent for children — giving
+# callers a faithful clone of COMP-wrapped techniques.
+# ---------------------------------------------------------------------------
+
+
+class _ReplayRecordingClient:
+    """Minimal client that records every request and returns plausible
+    node/create responses. Tests inspect `self.calls` to verify what
+    replay actually did."""
+
+    def __init__(self, families: dict | None = None):
+        self._families = families or {"TOP": ["noise", "null"], "COMP": ["base"]}
+        self.calls: list[tuple] = []
+
+    async def request(self, endpoint: str, body: dict | None = None):
+        body = body or {}
+        self.calls.append((endpoint, body))
+        if endpoint == "families":
+            return self._families
+        if endpoint == "node/create":
+            parent = body.get("parent_path", "/").rstrip("/")
+            name = body.get("name", "new_node")
+            return {"node": {"path": f"{parent}/{name}"}}
+        if endpoint == "node/params/set":
+            return {"ok": True}
+        if endpoint == "node/connect":
+            return {"ok": True}
+        return {}
+
+
+def _wrapped_technique_recipe() -> dict:
+    """Recipe with a root baseCOMP ('/') plus two TOP children wired
+    together inside. Exercises the V.C path where the caller wants to
+    reproduce the wrapper AND its contents."""
+    return {
+        "complexity": "small",
+        "required_op_types": ["base", "noise", "null"],
+        "recipe": {
+            "name": "wrapped-technique",
+            "nodes": {
+                "/": {
+                    "name": "wrapper",
+                    "type": "base",
+                    "family": "COMP",
+                    "params": {},
+                },
+                "/src": {
+                    "name": "src",
+                    "type": "noise",
+                    "family": "TOP",
+                    "params": {"amp": 0.42},
+                },
+                "/out": {
+                    "name": "out",
+                    "type": "null",
+                    "family": "TOP",
+                    "params": {},
+                },
+            },
+            "connections": [
+                {"from": "/src", "to": "/out", "from_index": 0, "to_index": 0},
+            ],
+        },
+    }
+
+
+def _make_replay_ctx(client, store):
+    from td_mcp.services import ServiceContainer
+
+    services = ServiceContainer(
+        td_client=client,
+        technique_store=store,
+        preference_store=None,
+    )
+    lifespan_state = {"services": services}
+    return SimpleNamespace(
+        request_context=SimpleNamespace(
+            lifespan_context=lifespan_state,
+            lifespan_state=lifespan_state,
+        )
+    )
+
+
+@pytest.mark.asyncio
+async def test_memory_replay_default_skips_root_comp_as_before(tmp_path, monkeypatch):
+    """V.C regression guard: default (`recreate_root` unset / False)
+    preserves the pre-v1.4.7 behavior where the root's COMP entry is
+    aliased to `parent_path`. Only the 2 children get created under
+    `parent_path`, nothing new appears where the wrapper used to be."""
+    import td_mcp.tool_registry as registry
+    from td_mcp.memory import TechniqueStore
+    from td_mcp.models._legacy import MemoryReplayInput
+
+    store = TechniqueStore(base_dir=str(tmp_path), project_name="v147_V")
+    tid = store.add(_wrapped_technique_recipe(), scope="project", name="wrapped-technique")
+
+    client = _ReplayRecordingClient()
+    ctx = _make_replay_ctx(client, store)
+    # _get_client enforces isinstance(TDClient); our recording mock doesn't
+    # inherit. Same monkey-patch pattern as test_param_help_docsbrain.
+    monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
+
+    result = await registry.td_memory_replay(
+        MemoryReplayInput(technique_id=tid, parent_path="/project1", scope="project"),
+        ctx,
+    )
+    assert result.get("nodes_created") == 2, (
+        f"default replay must create only the 2 children (not the root); got {result}"
+    )
+    # The "/" entry must NOT appear as a created node in the result map.
+    created_paths = result.get("created_paths", {})
+    assert "/" not in created_paths
+
+
+@pytest.mark.asyncio
+async def test_memory_replay_recreate_root_true_builds_root_comp(tmp_path, monkeypatch):
+    """V.C: when `recreate_root=True` and the recipe's `/` entry has
+    family='COMP', the replay must create that COMP under `parent_path`
+    first and build children INSIDE it. The result should report
+    nodes_created=3 (root + 2 children) and children must resolve to
+    paths under the newly-created root, not directly under parent_path."""
+    import td_mcp.tool_registry as registry
+    from td_mcp.memory import TechniqueStore
+    from td_mcp.models._legacy import MemoryReplayInput
+
+    store = TechniqueStore(base_dir=str(tmp_path), project_name="v147_V")
+    tid = store.add(_wrapped_technique_recipe(), scope="project", name="wrapped-technique")
+
+    client = _ReplayRecordingClient()
+    ctx = _make_replay_ctx(client, store)
+    monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
+
+    result = await registry.td_memory_replay(
+        MemoryReplayInput(
+            technique_id=tid,
+            parent_path="/project1",
+            name_prefix="rp_",
+            scope="project",
+            recreate_root=True,
+        ),
+        ctx,
+    )
+    assert result.get("nodes_created") == 3, (
+        f"recreate_root=True must build 3 nodes (root COMP + 2 children); got {result}"
+    )
+    created_paths = result.get("created_paths", {})
+    assert "/" in created_paths, "root COMP path must appear in created_paths when recreate_root=True"
+    root_actual = created_paths["/"]
+    src_actual = created_paths.get("/src", "")
+    out_actual = created_paths.get("/out", "")
+    # Children must be INSIDE the recreated root COMP, not siblings of it.
+    assert src_actual.startswith(root_actual + "/"), (
+        f"child /src must live under recreated root. root={root_actual} src={src_actual}"
+    )
+    assert out_actual.startswith(root_actual + "/")
+
+
+@pytest.mark.asyncio
+async def test_memory_replay_recreate_root_true_no_root_comp_is_safe(tmp_path, monkeypatch):
+    """Edge: recipe has NO `/` entry (or root is non-COMP). The flag
+    should gracefully no-op — fall back to the existing flat-replay
+    behavior — rather than raising or creating a garbage extra node."""
+    import td_mcp.tool_registry as registry
+    from td_mcp.memory import TechniqueStore
+    from td_mcp.models._legacy import MemoryReplayInput
+
+    store = TechniqueStore(base_dir=str(tmp_path), project_name="v147_V")
+    # Recipe with no "/" root entry — just two TOPs at /src and /out.
+    flat_recipe = {
+        "complexity": "small",
+        "required_op_types": ["noise", "null"],
+        "recipe": {
+            "name": "flat",
+            "nodes": {
+                "/src": {"name": "src", "type": "noise", "family": "TOP", "params": {}},
+                "/out": {"name": "out", "type": "null", "family": "TOP", "params": {}},
+            },
+            "connections": [{"from": "/src", "to": "/out", "from_index": 0, "to_index": 0}],
+        },
+    }
+    tid = store.add(flat_recipe, scope="project", name="flat")
+
+    client = _ReplayRecordingClient()
+    ctx = _make_replay_ctx(client, store)
+    monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
+
+    result = await registry.td_memory_replay(
+        MemoryReplayInput(
+            technique_id=tid,
+            parent_path="/project1",
+            scope="project",
+            recreate_root=True,  # but no "/" COMP in the recipe
+        ),
+        ctx,
+    )
+    # Safe no-op: 2 children created as usual, no error.
+    assert result.get("nodes_created") == 2
+    assert "error" not in result

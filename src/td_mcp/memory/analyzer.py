@@ -128,12 +128,30 @@ async def _collect_subtree(
     """Walk a TD network subtree and collect nodes + connections.
 
     Returns (nodes_dict, connections_list).
+
+    v1.4.7 Bug S (S.E) auto-detect walk mode from the ROOT node's type:
+
+    - COMP root -> classic tree walk: descend through `isCOMP` children
+      via the `nodes` endpoint. Captures the full hierarchy under the
+      wrapper, bounded by `max_depth` and `max_nodes`.
+    - Non-COMP root (TOP/CHOP/SOP/etc.) -> bidirectional wire-graph walk:
+      follow `inputs` upstream AND `outputs` downstream via the wire
+      connections TD exposes on `node/detail`. Bounded by `max_depth`
+      hops and `max_nodes` total. Lets users save a connected chain of
+      ops as a technique without pre-wrapping in a COMP.
+
+    The mode is decided once on the FIRST node (the root) and fixed for
+    the whole walk. That keeps COMP tree walks from accidentally leaking
+    out via wire connections, and keeps wire walks from fanning out
+    through deeply-nested COMPs they happen to touch.
     """
     nodes: dict[str, dict[str, Any]] = {}
     connections: list[dict[str, Any]] = []
     visited: set[str] = set()
 
     queue: list[tuple] = [(root_path, 0)]
+    # None until the root is processed; then True (tree mode) or False (wire mode).
+    root_is_comp: bool | None = None
 
     while queue and len(visited) < max_nodes:
         current, depth = queue.pop(0)
@@ -157,7 +175,11 @@ async def _collect_subtree(
             "comment": detail.get("comment"),
         }
 
-        # Collect connections from input list
+        # Lock walk mode on the first successfully-fetched node (the root).
+        if root_is_comp is None:
+            root_is_comp = bool(detail.get("isCOMP"))
+
+        # Collect connections from input list (used by both walk modes).
         for conn in detail.get("inputs", []):
             if not isinstance(conn, dict):
                 continue
@@ -172,29 +194,49 @@ async def _collect_subtree(
                     }
                 )
 
-        # Walk children if COMP and within depth
-        if detail.get("isCOMP") and depth < max_depth:
-            child_offset = 0
-            while len(visited) < max_nodes:
-                children = await client.request(
-                    "nodes",
-                    {
-                        "path": node_path,
-                        "limit": _PAGE_SIZE,
-                        "offset": child_offset,
-                        "include_params": False,
-                    },
-                )
-                child_list = children.get("nodes", [])
-                if not child_list:
-                    break
-                for child in child_list:
-                    child_path = child.get("path", "")
-                    if child_path and child_path not in visited:
-                        queue.append((child_path, depth + 1))
-                if len(child_list) < _PAGE_SIZE:
-                    break
-                child_offset += _PAGE_SIZE
+        if root_is_comp:
+            # Tree mode: walk children through nested COMPs.
+            if detail.get("isCOMP") and depth < max_depth:
+                child_offset = 0
+                while len(visited) < max_nodes:
+                    children = await client.request(
+                        "nodes",
+                        {
+                            "path": node_path,
+                            "limit": _PAGE_SIZE,
+                            "offset": child_offset,
+                            "include_params": False,
+                        },
+                    )
+                    child_list = children.get("nodes", [])
+                    if not child_list:
+                        break
+                    for child in child_list:
+                        child_path = child.get("path", "")
+                        if child_path and child_path not in visited:
+                            queue.append((child_path, depth + 1))
+                    if len(child_list) < _PAGE_SIZE:
+                        break
+                    child_offset += _PAGE_SIZE
+        else:
+            # Wire mode: queue upstream (`inputs`) and downstream
+            # (`outputs`) neighbors. `max_depth` counts wire hops from
+            # the root; same cap semantics as tree mode.
+            if depth < max_depth:
+                for conn in detail.get("inputs", []):
+                    if not isinstance(conn, dict):
+                        continue
+                    src = conn.get("from")
+                    if isinstance(src, str) and src and src not in visited:
+                        queue.append((src, depth + 1))
+                for conn in detail.get("outputs", []):
+                    if not isinstance(conn, dict):
+                        continue
+                    # Outputs may use `to`, `path`, or `target` depending on
+                    # the TD-side response shape — defensively accept all.
+                    dst = conn.get("to") or conn.get("path") or conn.get("target")
+                    if isinstance(dst, str) and dst and dst not in visited:
+                        queue.append((dst, depth + 1))
 
     return nodes, connections
 

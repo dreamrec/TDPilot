@@ -1072,6 +1072,16 @@ class MemoryReplayInput(BaseModel):
     name_prefix: str = Field(default="", description="Optional prefix for created node names.")
     scope: str = Field(default="project", description="'project' or 'global'.")
     force: bool = Field(default=False, description="Skip build compatibility checks and replay anyway.")
+    recreate_root: bool = Field(
+        default=False,
+        description=(
+            "v1.4.7 Bug V opt-in. If True and the recipe's '/' entry has family='COMP', "
+            "the replay creates that wrapper COMP under parent_path first and builds all "
+            "children inside it. Default False preserves the existing flat-replay "
+            "behavior where '/' is aliased to parent_path (children land as siblings). "
+            "Set to True when you want a faithful clone of a COMP-wrapped technique."
+        ),
+    )
 
 
 class MemoryFavoriteInput(BaseModel):

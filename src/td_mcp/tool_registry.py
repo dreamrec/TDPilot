@@ -3517,6 +3517,81 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
 
     created_nodes: dict[str, str] = {"/": parent}
     skipped_nodes: list[dict[str, str]] = []
+    created_count = 0
+
+    # v1.4.7 Bug V (V.C): opt-in root-COMP recreation.
+    # When `recreate_root=True` AND the recipe's '/' entry is a COMP,
+    # create that wrapper COMP under `parent_path` FIRST and remap
+    # created_nodes['/'] to the new path. Children then get created
+    # INSIDE the new root instead of directly under `parent_path`,
+    # producing a faithful clone of the original COMP hierarchy.
+    # Default False preserves existing flat-replay semantics.
+    if params.recreate_root:
+        root_info = recipe_nodes.get("/")
+        if isinstance(root_info, dict):
+            root_family = str(root_info.get("family", "")).strip().upper()
+            if root_family == "COMP":
+                raw_root_type = str(root_info.get("type", "")).strip()
+                root_candidates: list[str] = []
+                upper_root_type = raw_root_type.upper()
+                _suffix_by_family = {
+                    "TOP": "TOP",
+                    "CHOP": "CHOP",
+                    "SOP": "SOP",
+                    "DAT": "DAT",
+                    "COMP": "COMP",
+                    "MAT": "MAT",
+                    "POP": "POP",
+                    "POPX": "POPX",
+                }
+                if any(upper_root_type.endswith(s) for s in _suffix_by_family.values()):
+                    root_candidates.append(raw_root_type)
+                else:
+                    root_candidates.append(f"{raw_root_type}COMP")
+                    root_candidates.append(raw_root_type)
+                root_candidates = list(dict.fromkeys(root_candidates))
+                base_name = str(root_info.get("name", "")).strip() or "wrapper"
+                root_node_name = f"{prefix}_{base_name}" if prefix else base_name
+                root_result: dict[str, Any] | None = None
+                for candidate in root_candidates:
+                    try:
+                        r = await client.request(
+                            "node/create",
+                            {
+                                "parent_path": parent,
+                                "node_type": candidate,
+                                "name": root_node_name,
+                            },
+                        )
+                        if isinstance(r, dict):
+                            root_result = r
+                            break
+                    except Exception:
+                        continue
+                if root_result is not None:
+                    root_node_obj = root_result.get("node", {}) if isinstance(root_result, dict) else {}
+                    root_actual = root_node_obj.get("path") if isinstance(root_node_obj, dict) else None
+                    if not isinstance(root_actual, str) or not root_actual:
+                        fb = root_result.get("path") if isinstance(root_result, dict) else None
+                        root_actual = (
+                            fb
+                            if isinstance(fb, str) and fb
+                            else f"{parent.rstrip('/')}/{root_node_name}".replace("//", "/")
+                        )
+                    # Remap '/' so children land INSIDE the recreated COMP.
+                    created_nodes["/"] = root_actual
+                    created_count += 1
+                    # Apply root COMP's params if present (custom pars / settings).
+                    root_params_to_set = root_info.get("params", {})
+                    if isinstance(root_params_to_set, dict):
+                        clean_root_params = {k: v for k, v in root_params_to_set.items() if v is not None}
+                        if clean_root_params:
+                            await client.request(
+                                "node/params/set",
+                                {"path": root_actual, "params": clean_root_params},
+                            )
+                else:
+                    skipped_nodes.append({"path": "/", "reason": "recreate_root_create_failed"})
 
     # Build shallow-to-deep so nested paths can resolve their parent container.
     create_order = sorted(
@@ -3528,7 +3603,6 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
         key=lambda rel_path: rel_path.count("/"),
     )
 
-    created_count = 0
     for rel_path in create_order:
         node_info = recipe_nodes.get(rel_path, {})
         if not isinstance(node_info, dict):
@@ -3677,7 +3751,13 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
         )
         wired += 1
 
+    # v1.4.7 Bug V (V.C): when recreate_root actually ran (created_nodes['/']
+    # was remapped from `parent` to a newly-created COMP path), surface the
+    # new root path so callers can discover where the wrapper landed.
+    # Otherwise keep the old behavior where '/' is redundant (just = parent).
     created_paths = {key: value for key, value in created_nodes.items() if key != "/"}
+    if created_nodes.get("/") and created_nodes["/"] != parent:
+        created_paths["/"] = created_nodes["/"]
 
     # Auto-validate after replay
     validation_result = None
