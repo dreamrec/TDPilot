@@ -134,3 +134,118 @@ async def test_param_help_unknown_param_still_clean(tmp_path, monkeypatch):
     result = await registry.td_get_param_help(ctx, node_path="/project1/noise1", param_name="does_not_exist")
     assert result.get("card_param") is None
     assert "error" not in result
+
+
+# ---------------------------------------------------------------------------
+# v1.4.6 live-gap regression: td_get_param_help against real TD response shapes.
+#
+# During v1.4.5 live validation on a real TD instance, td_get_param_help
+# returned {"live": null, "card_param": null, provenance.source: "local_card"}
+# for a valid noiseTOP + valid param — despite DocsBrain being fully wired
+# (td_get_operator_doc against the same brain returned normalized key_params).
+#
+# Root cause was two orthogonal pre-existing gaps that the v1.4.5 Fix 3 tests
+# never hit because the existing _FakeClient pre-normalized the op_type to
+# "noiseTOP" and returned params regardless of the names filter:
+#
+#   Gap A (op_type short-form): TD's `node/detail` returns the short op_type
+#     (`"type": "noise"`, `"family": "TOP"` separately), but DocsBrain keys
+#     operators by canonical `"noiseTOP"`. The tool looked up with the short
+#     form only, so no card matched and `card_source` stayed None.
+#
+#   Gap B (case-sensitive param filter): TD's `node/params` is case-sensitive
+#     on the `names` filter. Passing `"outputResolution"` (mixed case) when
+#     TD stores `"outputresolution"` returned an empty parameters dict, so
+#     `live` came back null even though the param exists on the node.
+#
+# Together a user typing the natural `outputResolution` got a fully empty
+# response. These tests pin both fallbacks.
+# ---------------------------------------------------------------------------
+
+
+class _LiveShapeClient:
+    """Mimics TD's real response shapes — short op_type plus family from detail,
+    case-sensitive name filter on params (TD's built-in params are canonically
+    lowercase). Used to reproduce the gaps above without needing a live TD."""
+
+    def __init__(self, op_type_short: str = "noise", family: str = "TOP"):
+        self.op_type_short = op_type_short
+        self.family = family
+        self.params: dict = {"outputresolution": {"value": "useinput", "default": "useinput"}}
+
+    async def request(self, endpoint: str, body: dict | None = None):
+        if endpoint == "node/params":
+            names = (body or {}).get("names") or []
+            return {"parameters": {n: self.params[n] for n in names if n in self.params}}
+        if endpoint == "node/detail":
+            return {
+                "type": self.op_type_short,
+                "family": self.family,
+                "path": (body or {}).get("path"),
+            }
+        return {}
+
+
+@pytest.mark.asyncio
+async def test_param_help_falls_back_to_type_plus_family_for_card_lookup(tmp_path, monkeypatch):
+    """Gap A: with realistic TD shape (type='noise', family='TOP') the
+    tool must fall back to the canonical 'noiseTOP' key so DocsBrain
+    resolves the card. Pre-v1.4.6 this silently returned local_card."""
+    brain = _build_brain_with_noisetop(tmp_path)
+    client = _LiveShapeClient(op_type_short="noise", family="TOP")
+    ctx = _make_ctx(brain, client)
+    monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
+
+    result = await registry.td_get_param_help(
+        ctx, node_path="/project1/noise1", param_name="outputresolution"
+    )
+    assert result.get("card_param") is not None, (
+        "Gap A: short op_type 'noise' alone does not resolve in DocsBrain; "
+        "the tool must retry with type+family ('noiseTOP'). Pre-v1.4.6 this "
+        "silently returned card_param=None with provenance local_card."
+    )
+    assert result["card_param"]["name"] == "outputresolution"
+    assert result["card_param"]["source"] == "docsbrain"
+    assert result["provenance"]["source"] == "docsbrain"
+
+
+@pytest.mark.asyncio
+async def test_param_help_retries_lowercased_name_for_live_fetch(tmp_path, monkeypatch):
+    """Gap B: TD's node/params filter is case-sensitive. If the caller
+    passes a mixed-case built-in name like 'outputResolution', TD returns
+    no match. The tool must retry with the lowercase form so callers
+    don't get a silent `live: null` on a simple casing slip."""
+    brain = _build_brain_with_noisetop(tmp_path)
+    client = _LiveShapeClient(op_type_short="noise", family="TOP")
+    ctx = _make_ctx(brain, client)
+    monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
+
+    result = await registry.td_get_param_help(
+        ctx, node_path="/project1/noise1", param_name="outputResolution"
+    )
+    assert result.get("live") is not None, (
+        "Gap B: mixed-case name forwarded verbatim → TD returns empty. "
+        "The tool must retry with the lowercase form."
+    )
+    # Gap A still in play here (short type → canonical fallback), so the
+    # card_param must also resolve — both fixes together.
+    assert result.get("card_param") is not None
+    assert result["card_param"]["name"] == "outputresolution"
+    assert result["provenance"]["source"] == "docsbrain"
+
+
+@pytest.mark.asyncio
+async def test_param_help_unknown_param_still_clean_against_live_shape(tmp_path, monkeypatch):
+    """Negative control: unknown param against the live shape still
+    returns card_param: None with no exception. Protects against an
+    over-eager fallback that papers over genuinely bad input."""
+    brain = _build_brain_with_noisetop(tmp_path)
+    client = _LiveShapeClient(op_type_short="noise", family="TOP")
+    ctx = _make_ctx(brain, client)
+    monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
+
+    result = await registry.td_get_param_help(
+        ctx, node_path="/project1/noise1", param_name="totally_not_a_param"
+    )
+    assert result.get("card_param") is None
+    assert "error" not in result

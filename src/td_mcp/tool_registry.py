@@ -3860,12 +3860,27 @@ async def td_get_param_help(
 ) -> dict[str, Any]:
     """Get help for a specific parameter: live metadata + knowledge card entry + current value."""
     client = _get_client(ctx)
-    # Get live param info
-    try:
-        params = await client.request("node/params", {"path": node_path, "names": [param_name]})
-    except Exception as exc:
-        return {"error": f"Could not read param: {exc}"}
-    live_param = params.get("parameters", {}).get(param_name, params.get("params", {}).get(param_name))
+    # Live param lookup — v1.4.6 case-insensitive fallback.
+    # TD's built-in parameter names are canonical lowercase; `node/params`
+    # filters by exact name. Accepting mixed-case queries like
+    # "outputResolution" and retrying with the lowercase form keeps callers
+    # from getting a silent `live: null` on a simple casing slip.
+    tried_names: list[str] = [param_name]
+    lowered = param_name.lower()
+    if lowered != param_name:
+        tried_names.append(lowered)
+    live_param = None
+    for name in tried_names:
+        try:
+            params = await client.request("node/params", {"path": node_path, "names": [name]})
+        except Exception as exc:
+            return {"error": f"Could not read param: {exc}"}
+        candidate = params.get("parameters", {}).get(name)
+        if candidate is None:
+            candidate = params.get("params", {}).get(name)
+        if candidate is not None:
+            live_param = candidate
+            break
     # Try to get operator card for enrichment
     idx = _get_card_index(ctx)
     card_param = None
@@ -3873,7 +3888,16 @@ async def td_get_param_help(
     try:
         info = await client.request("node/detail", {"path": node_path})
         op_type = info.get("type", "")
+        family = info.get("family", "")
+        # v1.4.6 op_type fallback: TD's `node/detail` returns the short
+        # op_type (e.g. `"noise"`) and family (`"TOP"`) separately, while
+        # DocsBrain keys operators by the canonical `type+family` form
+        # (`"noiseTOP"`). Try the short form first (back-compat for stores
+        # that DO key by it, like the legacy JSON CardIndex for some entries),
+        # then fall back to the canonical form so DocsBrain resolves.
         card = idx.get_operator(op_type)
+        if card is None and op_type and family:
+            card = idx.get_operator(op_type + family.upper())
         if card:
             # v1.4.5 Fix 3: accept both CardIndex JSON cards (key_params)
             # and DocsBrain cards (key_params added via normalization), with

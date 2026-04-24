@@ -61,13 +61,33 @@ def test_collect_doctor_report_skip_td_check():
 
 # ---------------------------------------------------------------------------
 # Doctor auth-config gate — regression for v1.4.3 plugin-install auth path.
+#
+# v1.4.5 wired `bootstrap_auth()` to run before all non-init commands,
+# including doctor. Without an isolated TDPILOT_ENV_FILE, bootstrap reads
+# the developer's real `~/.tdpilot/.tdpilot.env` on any machine that has
+# run tdpilot once, silently repopulating TD_MCP_SHARED_SECRET and
+# defeating the test's `monkeypatch.delenv(...)`. Every doctor-auth test
+# below points TDPILOT_ENV_FILE at a non-existent tmp path so bootstrap
+# reads nothing (and, if AUTOGEN=1, writes there instead of the user's
+# real file).
 # ---------------------------------------------------------------------------
 
 
-def test_doctor_flags_auth_required_without_secret(monkeypatch, capsys):
+def _isolate_env_file(monkeypatch, tmp_path) -> None:
+    """Point bootstrap_auth at a non-existent tmp file so it can't read
+    the developer's real ~/.tdpilot/.tdpilot.env during the test."""
+    monkeypatch.setenv("TDPILOT_ENV_FILE", str(tmp_path / ".tdpilot.env"))
+
+
+def test_doctor_flags_auth_required_without_secret(monkeypatch, capsys, tmp_path):
     """doctor must fail (non-zero exit) when TD_MCP_REQUIRE_AUTH=1 but no secret."""
+    _isolate_env_file(monkeypatch, tmp_path)
     monkeypatch.setenv("TD_MCP_REQUIRE_AUTH", "1")
     monkeypatch.delenv("TD_MCP_SHARED_SECRET", raising=False)
+    # AUTOGEN must also be off; otherwise bootstrap would mint a secret
+    # into the tmp file and the test would no longer see the "no secret"
+    # condition it's trying to assert.
+    monkeypatch.delenv("TD_MCP_AUTOGENERATE_SECRET", raising=False)
 
     with pytest.raises(SystemExit) as exc:
         server.main(["doctor", "--skip-td-check"])
@@ -78,8 +98,9 @@ def test_doctor_flags_auth_required_without_secret(monkeypatch, capsys):
     assert "auth" in combined.lower() or "SHARED_SECRET" in combined
 
 
-def test_doctor_passes_auth_check_when_secret_set(monkeypatch, capsys):
+def test_doctor_passes_auth_check_when_secret_set(monkeypatch, capsys, tmp_path):
     """doctor's auth check must pass when required + secret set."""
+    _isolate_env_file(monkeypatch, tmp_path)
     monkeypatch.setenv("TD_MCP_REQUIRE_AUTH", "1")
     monkeypatch.setenv("TD_MCP_SHARED_SECRET", "x" * 32)
 
@@ -95,7 +116,8 @@ def test_doctor_passes_auth_check_when_secret_set(monkeypatch, capsys):
     assert "FAIL" not in auth_line
 
 
-def test_doctor_passes_auth_check_when_auth_disabled(monkeypatch, capsys):
+def test_doctor_passes_auth_check_when_auth_disabled(monkeypatch, capsys, tmp_path):
+    _isolate_env_file(monkeypatch, tmp_path)
     monkeypatch.setenv("TD_MCP_REQUIRE_AUTH", "0")
     monkeypatch.delenv("TD_MCP_SHARED_SECRET", raising=False)
 
