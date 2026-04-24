@@ -22,9 +22,7 @@ async def test_td_plan_patch_legacy_shape(mcp_ctx, td_client, monkeypatch):
     """Verify dict shape: success + plan.{intent, target_path, steps, note, ...}"""
     _patch_services(monkeypatch, td_client)
     td_client.responses = {"nodes": {"nodes": []}}
-    result = await tools_planning.td_plan_patch(
-        mcp_ctx, intent="feedback trail", target_path="/project1"
-    )
+    result = await tools_planning.td_plan_patch(mcp_ctx, intent="feedback trail", target_path="/project1")
     assert result["success"] is True
     plan = result["plan"]
     assert "intent" in plan
@@ -40,9 +38,7 @@ async def test_td_plan_patch_legacy_values(mcp_ctx, td_client, monkeypatch):
     """Verify the concrete values in the legacy plan dict."""
     _patch_services(monkeypatch, td_client)
     td_client.responses = {"nodes": {"nodes": []}}
-    result = await tools_planning.td_plan_patch(
-        mcp_ctx, intent="feedback trail", target_path="/project1"
-    )
+    result = await tools_planning.td_plan_patch(mcp_ctx, intent="feedback trail", target_path="/project1")
     assert result["success"] is True
     plan = result["plan"]
     assert plan["intent"] == "feedback trail"
@@ -85,9 +81,7 @@ async def test_td_plan_patch_probes_live_nodes(mcp_ctx, td_client, monkeypatch):
             ]
         }
     }
-    result = await tools_planning.td_plan_patch(
-        mcp_ctx, intent="feedback trail", target_path="/project1"
-    )
+    result = await tools_planning.td_plan_patch(mcp_ctx, intent="feedback trail", target_path="/project1")
     assert result["success"] is True
     plan = result["plan"]
     assert plan["current_node_count"] == 2

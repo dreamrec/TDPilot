@@ -30,6 +30,7 @@ from td_mcp import tool_registry as _tr  # noqa: E402
 from td_mcp.errors import format_tool_error
 from td_mcp.tool_registry import mcp  # noqa: E402
 
+
 def _legacy_plan_dict(
     plan,
     *,
@@ -52,23 +53,27 @@ def _legacy_plan_dict(
     steps: list[dict[str, Any]] = []
     for op in plan.operations:
         if op.kind == "create_node":
-            steps.append({
-                "op": "create_node",
-                "op_type": op.args.get("op_type", ""),
-                "name": op.args.get("name", ""),
-                "parent_path": op.target or target_path,
-                "known_to_knowledge_corpus": not any(
-                    r == f"unknown:{op.args.get('op_type', '')}" for r in plan.required_ops
-                ),
-            })
+            steps.append(
+                {
+                    "op": "create_node",
+                    "op_type": op.args.get("op_type", ""),
+                    "name": op.args.get("name", ""),
+                    "parent_path": op.target or target_path,
+                    "known_to_knowledge_corpus": not any(
+                        r == f"unknown:{op.args.get('op_type', '')}" for r in plan.required_ops
+                    ),
+                }
+            )
         elif op.kind == "macro":
-            steps.append({
-                "op": "create_macro",
-                "macro_type": op.args.get("macro_type", ""),
-                "parent_path": op.target or target_path,
-                "summary": op.args.get("summary", ""),
-                "source": "intent_heuristic",
-            })
+            steps.append(
+                {
+                    "op": "create_macro",
+                    "macro_type": op.args.get("macro_type", ""),
+                    "parent_path": op.target or target_path,
+                    "summary": op.args.get("summary", ""),
+                    "source": "intent_heuristic",
+                }
+            )
 
     dict_out: dict[str, Any] = {
         "intent": intent,
@@ -77,10 +82,7 @@ def _legacy_plan_dict(
         "current_node_count": current_node_count,
         "existing_names": existing_names or [],
         "steps": steps,
-        "note": (
-            "This plan does NOT mutate the project. "
-            "Validate with td_preflight_patch before execution."
-        ),
+        "note": ("This plan does NOT mutate the project. Validate with td_preflight_patch before execution."),
     }
     # Macro suggestion surfacing (legacy had this for intent-only plans)
     for step in steps:
