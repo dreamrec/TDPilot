@@ -106,3 +106,50 @@ async def td_patch_preview(
         return format_tool_error(exc)
     finally:
         finish()
+
+
+@mcp.tool(name="td_patch_apply")
+async def td_patch_apply(
+    ctx: Context,
+    plan: Annotated[
+        dict[str, Any],
+        Field(description="PatchPlan dict to execute"),
+    ],
+    label: Annotated[
+        str | None,
+        Field(default=None, description="Override plan.undo_label"),
+    ] = None,
+    auto_validate: Annotated[
+        bool,
+        Field(default=True, description="Run validate_target after apply"),
+    ] = True,
+) -> dict[str, Any]:
+    """Apply a PatchPlan in one undo block. Surface-to-caller on failure (no auto-rollback)."""
+    finish = _tr._start_tool(ctx, "td_patch_apply")
+    try:
+        try:
+            parsed = PatchPlan.model_validate(plan)
+        except ValidationError as exc:
+            return {"success": False, "error": f"invalid plan: {exc}"}
+        client = _tr._get_client(ctx)
+        try:
+            result = await patch.apply_plan(
+                client,
+                parsed,
+                sentinel=_tr._PATCH_SENTINEL,
+                label=label,
+                auto_validate=auto_validate,
+            )
+        except patch.NestedBlockError as exc:
+            return {"success": False, "error": str(exc)}
+        _tr._audit_log(
+            ctx,
+            "td_patch_apply",
+            {"plan_id": parsed.id, "status": result.status, "ops": len(result.applied_ops)},
+        )
+        return {"success": True, "result": result.model_dump(mode="json")}
+    except Exception as exc:  # noqa: BLE001
+        _tr._record_tool_error(ctx, "td_patch_apply")
+        return format_tool_error(exc)
+    finally:
+        finish()

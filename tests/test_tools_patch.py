@@ -32,3 +32,10 @@ def test_td_patch_plan_registered():
 def test_td_patch_preview_registered():
     t = _find_tool("td_patch_preview")
     assert "plan" in t.inputSchema.get("properties", {})
+
+
+def test_td_patch_apply_registered():
+    t = _find_tool("td_patch_apply")
+    props = t.inputSchema.get("properties", {})
+    assert "plan" in props
+    assert "auto_validate" in props
