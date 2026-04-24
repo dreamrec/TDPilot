@@ -4,22 +4,39 @@ Uses source-file parsing to verify tool registration because the MCP resource
 decorator in tool_registry has a pydantic/mcp version incompatibility that
 prevents direct import in the test environment. The structural approach is
 consistent with how other component extension tests work in this project.
+
+v1.5.0 Phase 2 update: vision tools moved to
+``src/td_mcp/registry/tools_vision.py``. These tests now scan
+``tool_registry.py`` + all ``registry/tools_*.py`` files so the assertions
+keep working whether tools live in the root or in a submodule.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-REGISTRY_PATH = Path(__file__).resolve().parents[1] / "src" / "td_mcp" / "tool_registry.py"
+_SRC_ROOT = Path(__file__).resolve().parents[1] / "src" / "td_mcp"
+REGISTRY_PATH = _SRC_ROOT / "tool_registry.py"
+REGISTRY_PKG = _SRC_ROOT / "registry"
 # models.py was split into a package — the original content now lives in models/_legacy.py.
-MODELS_PATH = Path(__file__).resolve().parents[1] / "src" / "td_mcp" / "models" / "_legacy.py"
+MODELS_PATH = _SRC_ROOT / "models" / "_legacy.py"
 
 VISION_TOOLS = {"td_capture_frame", "td_analyze_frame"}
 VISION_MODELS = {"CaptureFrameInput", "AnalyzeFrameInput"}
 
 
 def _registry_source() -> str:
-    return REGISTRY_PATH.read_text()
+    """Return concatenated source of tool_registry.py + registry/tools_*.py.
+
+    After Phase 2 module split, tools live across multiple files; tests
+    that want to verify "a tool is registered" or "a handler references
+    endpoint X" need to see all of them.
+    """
+    parts = [REGISTRY_PATH.read_text()]
+    if REGISTRY_PKG.is_dir():
+        for sub in sorted(REGISTRY_PKG.glob("tools_*.py")):
+            parts.append(sub.read_text())
+    return "\n".join(parts)
 
 
 def _models_source() -> str:
