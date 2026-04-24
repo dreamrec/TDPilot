@@ -94,3 +94,51 @@ def test_tool_registry_contains_core_and_v2_surfaces():
     missing = expected - names
     assert not missing, f"Missing expected tools: {sorted(missing)}"
     assert len(names) >= EXPECTED_MIN_TOOL_COUNT
+
+
+def test_manifest_surface_matches_registry():
+    """mcp/manifest.json surface counts must match what tool_registry.py registers.
+
+    Resources with `{param}` segments are templates; the rest are static.
+    Regression (v1.4.3): manifest claimed resource_template_count=7, but one of
+    the seven decorated resources (td://timeline/state) is static.
+    """
+    import json
+    import re
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parent.parent
+    manifest = json.loads((repo / "mcp" / "manifest.json").read_text())
+    source = (repo / "src" / "td_mcp" / "tool_registry.py").read_text()
+
+    uris = re.findall(r'@mcp\.resource\("([^"]+)"', source)
+    assert uris, "No @mcp.resource decorators found in tool_registry.py"
+    templates = [u for u in uris if "{" in u]
+    statics = [u for u in uris if "{" not in u]
+
+    surface = manifest["surface"]
+    assert surface["resource_template_count"] == len(templates), (
+        f"manifest resource_template_count={surface['resource_template_count']} "
+        f"but source has {len(templates)} template(s): {templates}"
+    )
+    assert surface.get("static_resource_count", 0) == len(statics), (
+        f"manifest static_resource_count={surface.get('static_resource_count', 0)} "
+        f"but source has {len(statics)} static resource(s): {statics}"
+    )
+
+
+def test_manifest_tool_count_matches_registry():
+    """manifest.tool_count must equal the number of @mcp.tool() decorators."""
+    import json
+    import re
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parent.parent
+    manifest = json.loads((repo / "mcp" / "manifest.json").read_text())
+    source = (repo / "src" / "td_mcp" / "tool_registry.py").read_text()
+
+    tool_decorators = re.findall(r"@mcp\.tool\(", source)
+    assert manifest["surface"]["tool_count"] == len(tool_decorators), (
+        f"manifest tool_count={manifest['surface']['tool_count']} "
+        f"but source has {len(tool_decorators)} @mcp.tool decorators"
+    )
