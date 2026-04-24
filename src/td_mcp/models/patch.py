@@ -41,3 +41,21 @@ class ValidationPlan(BaseModel):
 
     target_root: str
     capture_frames: list[str] = Field(default_factory=list)
+
+
+class PatchPlan(BaseModel):
+    """The stateless, pass-by-value patch blueprint. See spec §4.3."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    intent: str | None = None
+    target_root: str
+    source: Literal["intent_heuristic", "recipe", "operations", "variant"]
+    source_recipe_id: str | None = None
+    operations: list[PatchOperation] = Field(default_factory=list)
+    required_ops: list[str] = Field(default_factory=list)
+    risk_flags: list[str] = Field(default_factory=list)
+    undo_label: str
+    validation_plan: ValidationPlan
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

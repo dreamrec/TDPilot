@@ -47,3 +47,46 @@ class TestValidationPlan:
     def test_with_frames(self):
         vp = ValidationPlan(target_root="/p", capture_frames=["/p/out1", "/p/out2"])
         assert vp.capture_frames == ["/p/out1", "/p/out2"]
+
+
+import uuid as _uuid
+from datetime import datetime, timezone
+
+from td_mcp.models.patch import PatchPlan
+
+
+class TestPatchPlan:
+    def _minimal(self, **overrides):
+        defaults = dict(
+            target_root="/project1",
+            source="operations",
+            operations=[],
+            undo_label="test",
+            validation_plan=ValidationPlan(target_root="/project1"),
+        )
+        defaults.update(overrides)
+        return PatchPlan(**defaults)
+
+    def test_auto_generated_id_is_uuid(self):
+        plan = self._minimal()
+        _uuid.UUID(plan.id)  # raises if not a valid UUID
+
+    def test_created_at_is_utc(self):
+        plan = self._minimal()
+        assert plan.created_at.tzinfo == timezone.utc
+
+    def test_source_literal_rejects_invalid(self):
+        with pytest.raises(ValidationError):
+            self._minimal(source="arbitrary_string")
+
+    def test_source_accepts_four_values(self):
+        for s in ("intent_heuristic", "recipe", "operations", "variant"):
+            self._minimal(source=s)
+
+    def test_empty_operations_list_valid(self):
+        plan = self._minimal(operations=[])
+        assert plan.operations == []
+
+    def test_extra_field_rejected(self):
+        with pytest.raises(ValidationError):
+            self._minimal(unknown_field=True)
