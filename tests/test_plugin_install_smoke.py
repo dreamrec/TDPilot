@@ -198,5 +198,3 @@ def test_fresh_plugin_install_with_autogen_disabled_still_trips_gate(monkeypatch
     # Gate trips
     with pytest.raises(RuntimeError):
         server.verify_auth_config()
-
-

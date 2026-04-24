@@ -3886,9 +3886,7 @@ async def td_get_param_help(
             # can still fire. Defensive.
             if not candidates and card.get("parameters"):
                 candidates = [
-                    {"name": p, "source": "parameters-fallback"}
-                    if isinstance(p, str)
-                    else p
+                    {"name": p, "source": "parameters-fallback"} if isinstance(p, str) else p
                     for p in card["parameters"]
                 ]
             for kp in candidates:

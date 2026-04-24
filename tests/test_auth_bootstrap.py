@@ -25,7 +25,7 @@ import pytest
 from td_mcp import auth_bootstrap
 
 
-def _env_path(tmp_path) -> "os.PathLike":
+def _env_path(tmp_path) -> os.PathLike:
     return tmp_path / ".tdpilot.env"
 
 
@@ -63,11 +63,7 @@ class TestLoadEnvFile:
     def test_skips_comments_and_blank_lines(self, tmp_path, monkeypatch):
         env_file = _env_path(tmp_path)
         env_file.write_text(
-            "# comment line\n"
-            "\n"
-            "TD_MCP_SHARED_SECRET=ok\n"
-            "  # indented comment\n"
-            "TD_MCP_REQUIRE_AUTH=1\n",
+            "# comment line\n\nTD_MCP_SHARED_SECRET=ok\n  # indented comment\nTD_MCP_REQUIRE_AUTH=1\n",
             encoding="utf-8",
         )
         monkeypatch.delenv("TD_MCP_SHARED_SECRET", raising=False)
@@ -81,8 +77,7 @@ class TestLoadEnvFile:
     def test_strips_surrounding_quotes(self, tmp_path, monkeypatch):
         env_file = _env_path(tmp_path)
         env_file.write_text(
-            'TD_MCP_SHARED_SECRET="quoted-value"\n'
-            "OTHER_KEY='single-quoted'\n",
+            "TD_MCP_SHARED_SECRET=\"quoted-value\"\nOTHER_KEY='single-quoted'\n",
             encoding="utf-8",
         )
         monkeypatch.delenv("TD_MCP_SHARED_SECRET", raising=False)

@@ -131,8 +131,6 @@ async def test_param_help_unknown_param_still_clean(tmp_path, monkeypatch):
     ctx = _make_ctx(brain, client)
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
 
-    result = await registry.td_get_param_help(
-        ctx, node_path="/project1/noise1", param_name="does_not_exist"
-    )
+    result = await registry.td_get_param_help(ctx, node_path="/project1/noise1", param_name="does_not_exist")
     assert result.get("card_param") is None
     assert "error" not in result

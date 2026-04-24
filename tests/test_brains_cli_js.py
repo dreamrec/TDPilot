@@ -22,7 +22,6 @@ from pathlib import Path
 
 import pytest
 
-
 REPO = Path(__file__).resolve().parent.parent
 BRAINS_JS = REPO / "npm" / "brains.js"
 MANIFEST = REPO / "data" / "brains" / "brains_manifest.json"

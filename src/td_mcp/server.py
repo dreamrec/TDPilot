@@ -484,10 +484,7 @@ def _run_init_command(args: argparse.Namespace) -> int:
     # Emit secret notice BEFORE writing the profile, but route it to
     # stderr when --print-only so stdout is pure JSON.
     if generated:
-        notice = (
-            "[tdpilot] Generated a shared secret; keep the output safe — "
-            "it grants full TD control."
-        )
+        notice = "[tdpilot] Generated a shared secret; keep the output safe — it grants full TD control."
         if print_only:
             print(notice, file=sys.stderr)
         else:

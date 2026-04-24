@@ -24,7 +24,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 REPO = Path(__file__).resolve().parent.parent
 DOWNLOADER = REPO / "scripts" / "download_brains.py"
 
@@ -64,8 +63,9 @@ def test_unknown_id_in_brains_file_exits_non_zero(tmp_path):
     installed in active.json, silently polluting the allow-list.
     """
     sel = _write_selection(tmp_path, ["not_a_real_brain"])
-    proc = _run(["--manifest", str(REPO / "data" / "brains" / "brains_manifest.json"),
-                 "--brains-file", str(sel)])
+    proc = _run(
+        ["--manifest", str(REPO / "data" / "brains" / "brains_manifest.json"), "--brains-file", str(sel)]
+    )
     assert proc.returncode != 0, (
         f"expected non-zero exit for unknown brain id; got {proc.returncode}\n"
         f"stdout: {proc.stdout}\nstderr: {proc.stderr}"
@@ -75,8 +75,9 @@ def test_unknown_id_in_brains_file_exits_non_zero(tmp_path):
 def test_empty_brains_file_exits_non_zero(tmp_path):
     """Empty selection list must exit non-zero."""
     sel = _write_selection(tmp_path, [])
-    proc = _run(["--manifest", str(REPO / "data" / "brains" / "brains_manifest.json"),
-                 "--brains-file", str(sel)])
+    proc = _run(
+        ["--manifest", str(REPO / "data" / "brains" / "brains_manifest.json"), "--brains-file", str(sel)]
+    )
     assert proc.returncode != 0
 
 
@@ -85,8 +86,9 @@ def test_local_build_brain_alone_exits_non_zero(tmp_path):
     must refuse to silently succeed (the user needs to know they have to
     run the local builder)."""
     sel = _write_selection(tmp_path, ["paketa12"])
-    proc = _run(["--manifest", str(REPO / "data" / "brains" / "brains_manifest.json"),
-                 "--brains-file", str(sel)])
+    proc = _run(
+        ["--manifest", str(REPO / "data" / "brains" / "brains_manifest.json"), "--brains-file", str(sel)]
+    )
     assert proc.returncode != 0
     combined = proc.stdout + proc.stderr
     assert "local" in combined.lower() or "build" in combined.lower(), (
@@ -97,8 +99,9 @@ def test_local_build_brain_alone_exits_non_zero(tmp_path):
 def test_mixed_unknown_and_known_ids_exits_non_zero(tmp_path):
     """If any id is unknown, fail the whole run so the user catches the typo."""
     sel = _write_selection(tmp_path, ["derivative", "typox"])
-    proc = _run(["--manifest", str(REPO / "data" / "brains" / "brains_manifest.json"),
-                 "--brains-file", str(sel)])
+    proc = _run(
+        ["--manifest", str(REPO / "data" / "brains" / "brains_manifest.json"), "--brains-file", str(sel)]
+    )
     assert proc.returncode != 0
 
 
