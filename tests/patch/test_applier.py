@@ -37,7 +37,7 @@ async def test_clean_apply_three_ops():
             "node/create": lambda p: {"path": f"/p/{p['name']}", "name": p["name"]},
             "nodes/set_params": {"ok": True},
             "node/errors": {"issues": []},
-            "cooking_info": {"total_cook_ms": 1.0, "stuck": []},
+            "cooking": {"total_cook_ms": 1.0, "stuck": []},
         }
     )
     sentinel = UndoBlockSentinel()
@@ -124,7 +124,7 @@ async def test_name_collision_readback():
         scripted={
             "node/create": lambda p: {"path": "/p/noise2", "name": "noise2"},
             "node/errors": {"issues": []},
-            "cooking_info": {"total_cook_ms": 0.1, "stuck": []},
+            "cooking": {"total_cook_ms": 0.1, "stuck": []},
         }
     )
     sentinel = UndoBlockSentinel()
@@ -140,7 +140,7 @@ async def test_auto_validate_promotes_to_warnings():
         scripted={
             "node/create": lambda p: {"path": "/p/x", "name": "x"},
             "node/errors": {"issues": [{"node": "/p/x", "message": "something stinks"}]},
-            "cooking_info": {"total_cook_ms": 0.2, "stuck": []},
+            "cooking": {"total_cook_ms": 0.2, "stuck": []},
         }
     )
     sentinel = UndoBlockSentinel()

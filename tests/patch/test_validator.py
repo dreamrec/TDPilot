@@ -14,7 +14,7 @@ async def test_validate_clean():
     client = FakeTDClient(
         scripted={
             "node/errors": {"issues": []},
-            "cooking_info": {"total_cook_ms": 12.3, "stuck": []},
+            "cooking": {"total_cook_ms": 12.3, "stuck": []},
         }
     )
     plan = ValidationPlan(target_root="/project1", capture_frames=[])
@@ -30,7 +30,7 @@ async def test_validate_with_errors():
     client = FakeTDClient(
         scripted={
             "node/errors": {"issues": [{"node": "/p/n1", "message": "bad"}]},
-            "cooking_info": {"total_cook_ms": 5.0, "stuck": []},
+            "cooking": {"total_cook_ms": 5.0, "stuck": []},
         }
     )
     report = await validate_target(client, ValidationPlan(target_root="/p"))
@@ -43,7 +43,7 @@ async def test_validate_with_capture_frames():
     client = FakeTDClient(
         scripted={
             "node/errors": {"issues": []},
-            "cooking_info": {"total_cook_ms": 1.0, "stuck": []},
+            "cooking": {"total_cook_ms": 1.0, "stuck": []},
             "frame/capture": lambda params: {"b64": "Zm9v", "path": params["path"]},
         }
     )

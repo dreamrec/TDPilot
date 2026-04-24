@@ -105,15 +105,20 @@ async def apply_plan(
 async def _apply_op(td_client, op: PatchOperation) -> dict[str, Any]:
     """Route one operation to its TD endpoint. Returns the response."""
     if op.kind == "create_node":
+        # Wire field names follow the legacy td_create_node convention
+        # (CreateNodeInput.model_dump in tools_graph.py): TD's
+        # /api/node/create handler reads body['node_type'] / body['nodeX']
+        # / body['nodeY']. Phase 3 args use the friendlier 'op_type' / 'x'
+        # / 'y' aliases at the model layer; we translate at the wire here.
         return (
             await td_client.request(
                 "node/create",
                 {
                     "parent_path": op.target or "/project1",
-                    "op_type": op.args["op_type"],
+                    "node_type": op.args["op_type"],
                     "name": op.args["name"],
-                    **({"x": op.args["x"]} if "x" in op.args else {}),
-                    **({"y": op.args["y"]} if "y" in op.args else {}),
+                    **({"nodeX": op.args["x"]} if "x" in op.args else {}),
+                    **({"nodeY": op.args["y"]} if "y" in op.args else {}),
                 },
             )
             or {}
@@ -183,7 +188,18 @@ def _record_outcome(
 ) -> None:
     result.applied_ops.append(index)
     if op.kind in ("create_node", "annotate", "macro"):
-        path = outcome.get("path") if isinstance(outcome, dict) else None
+        # TD's /api/node/create returns {"success": True, "node": {"path": ..., ...}}
+        # — the path lives under the "node" key. Older spec versions of this
+        # function looked for top-level "path" and silently lost the readback.
+        # Accept either shape so unit tests with simpler scripted responses
+        # still work.
+        path = None
+        if isinstance(outcome, dict):
+            node_info = outcome.get("node")
+            if isinstance(node_info, dict):
+                path = node_info.get("path")
+            if not path:
+                path = outcome.get("path")
         if path:
             result.created_paths.append(path)
     elif op.kind == "set_params":

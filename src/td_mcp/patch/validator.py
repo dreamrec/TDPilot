@@ -2,7 +2,7 @@
 
 Composite wrapper over existing TD endpoints:
   - node/errors      -> ValidationReport.errors
-  - cooking_info     -> ValidationReport.cook_stats
+  - cooking          -> ValidationReport.cook_stats
   - frame/capture    -> ValidationReport.frames (one call per path in
                        capture_frames; empty list skips)
 
@@ -32,7 +32,7 @@ async def validate_target(td_client, plan: ValidationPlan) -> ValidationReport:
 
     cook_stats: dict[str, Any] = {}
     try:
-        cook_stats = await td_client.request("cooking_info", {"path": plan.target_root}) or {}
+        cook_stats = await td_client.request("cooking", {"path": plan.target_root}) or {}
     except Exception as exc:  # noqa: BLE001
         cook_stats = {"probe_error": str(exc)}
 
