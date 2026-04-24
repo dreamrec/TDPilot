@@ -221,3 +221,71 @@ class TestDocsBrainCompatibility:
     def test_check_compatibility(self, brain: DocsBrain):
         result = brain.check_compatibility("compositeTOP", "2025.32460")
         assert "status" in result
+
+
+# ---------------------------------------------------------------------------
+# Regression tests for v1.4.3
+# ---------------------------------------------------------------------------
+
+
+def _make_chunk(operator_name: str, family: str, doc_type: str = "operator") -> dict:
+    """Build a minimal DocsBrain chunk for an operator."""
+    page_id = operator_name.lower().replace(" ", "_")
+    return {
+        "chunk_id": f"{page_id}__summary__0001",
+        "page_id": page_id,
+        "doc_type": doc_type,
+        "section_title": operator_name,
+        "operator_family": family,
+        "operator_name": operator_name,
+        "mentioned_operators": [],
+        "parameter_names": [],
+        "python_symbols": [],
+        "build_number": None,
+        "build_date": None,
+        "change_category": None,
+        "token_estimate": 20,
+        "content": f"The {operator_name} is a {family} operator used for testing.",
+    }
+
+
+def _build_brain(tmp_path: Path, chunks: list[dict]) -> DocsBrain:
+    """Build a DocsBrain from raw chunk dicts (no changelog / manifest)."""
+    chunks_path = tmp_path / "chunks.jsonl"
+    with open(chunks_path, "w") as f:
+        for c in chunks:
+            f.write(json.dumps(c) + "\n")
+    db_path = tmp_path / "docsbrain.db"
+    build_index(chunks_path, db_path)
+    return DocsBrain(db_path=db_path)
+
+
+def test_op_type_map_multi_word_operators(tmp_path: Path):
+    """Multi-word operator names must map to correctly-cased op_types.
+
+    Regression: `_op_type_map` used `parts[0].lower() + parts[-1]`, which made
+    `Movie File In TOP` resolve as `movieTOP` instead of `moviefileinTOP`.
+    Same bug hit `Audio File In CHOP` and `GLSL Multi TOP`.
+    """
+    chunks = [
+        _make_chunk("Movie File In TOP", "TOP"),
+        _make_chunk("Audio File In CHOP", "CHOP"),
+        _make_chunk("GLSL Multi TOP", "TOP"),
+        _make_chunk("Composite TOP", "TOP"),  # two-word control
+        _make_chunk("Null CHOP", "CHOP"),  # two-word control
+    ]
+    brain_local = _build_brain(tmp_path, chunks)
+
+    # Multi-word operators must resolve by their correct op_type
+    assert brain_local.get_operator("moviefileinTOP") is not None
+    assert brain_local.get_operator("audiofileinCHOP") is not None
+    assert brain_local.get_operator("glslmultiTOP") is not None
+
+    # Two-word controls continue to resolve
+    assert brain_local.get_operator("compositeTOP") is not None
+    assert brain_local.get_operator("nullCHOP") is not None
+
+    # The buggy pre-fix keys must NOT resolve
+    assert brain_local.get_operator("movieTOP") is None
+    assert brain_local.get_operator("audioCHOP") is None
+    assert brain_local.get_operator("glslTOP") is None

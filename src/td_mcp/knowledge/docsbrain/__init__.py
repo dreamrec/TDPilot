@@ -48,13 +48,17 @@ class DocsBrain:
         except sqlite3.OperationalError:
             pass
 
-        # Build op_type → operator_name mapping
+        # Build op_type → operator_name mapping.
+        # Convention: lowercase-join every word before the family suffix, then
+        # append the suffix verbatim. e.g.
+        #   "Composite TOP"     → "compositeTOP"
+        #   "Movie File In TOP" → "moviefileinTOP"
+        #   "GLSL Multi TOP"    → "glslmultiTOP"
         self._op_type_map: dict[str, str] = {}
         for name in self._operator_names:
-            # "Composite TOP" → "compositeTOP"
             parts = name.split()
             if len(parts) >= 2:
-                op_type = parts[0].lower() + parts[-1]
+                op_type = "".join(p.lower() for p in parts[:-1]) + parts[-1]
                 self._op_type_map[op_type] = name
 
     def count(self) -> int:
