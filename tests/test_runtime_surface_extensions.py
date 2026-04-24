@@ -10,7 +10,6 @@ from td_mcp.models import (
     CustomParametersInput,
     CustomParameterSpec,
     POPInspectInput,
-    ProjectLifecycleInput,
 )
 
 
@@ -52,9 +51,10 @@ async def test_new_surface_tools_forward_to_expected_endpoints(monkeypatch):
         POPInspectInput(path="/project1/particles1", point_attributes=["P"], count=8),
         ctx,
     )
+    # Post-Bug-A (v1.5.0 batch 2) signature: ctx first, then explicit action arg.
     project_payload = await registry.td_project_lifecycle(
-        ProjectLifecycleInput(action="status"),
         ctx,
+        action="status",
     )
 
     assert json.loads(custom_payload)["endpoint"] == "custom-parameters"

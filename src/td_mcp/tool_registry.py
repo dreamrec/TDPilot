@@ -2389,12 +2389,38 @@ async def td_get_content(params: GetContentInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_set_content")
-async def td_set_content(params: SetContentInput, ctx: Context) -> str:
+async def td_set_content(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="Path to a DAT node", min_length=1),
+    ],
+    text: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Text content to write (for Text DATs, Script DATs, etc.)",
+        ),
+    ] = None,
+    table: Annotated[
+        list[list[str]] | None,
+        Field(
+            default=None,
+            description="Table content as 2D array of strings (for Table DATs)",
+        ),
+    ] = None,
+) -> str:
+    """Write DAT text/table content."""
+    body: dict[str, Any] = {"path": path}
+    if text is not None:
+        body["text"] = text
+    if table is not None:
+        body["table"] = table
     return await _forward(
         ctx,
         "td_set_content",
         "node/content/set",
-        params.model_dump(exclude_none=True),
+        body,
         audit_event="td_set_content",
     )
 
@@ -2411,27 +2437,58 @@ async def td_custom_parameters(params: CustomParametersInput, ctx: Context) -> s
 
 
 @mcp.tool(name="td_exec_python")
-async def td_exec_python(params: ExecPythonInput, ctx: Context) -> str:
+async def td_exec_python(
+    ctx: Context,
+    code: Annotated[
+        str,
+        Field(
+            description=(
+                "Python code to execute in TouchDesigner's Python environment. "
+                "Has access to: op(), ops(), project, app, absTime, me, "
+                "parent(), mod, ui, tdu. "
+                "Set __result__ = <value> to return a value to the caller. "
+                'Example: \'__result__ = op("/project1/noise1").par.type.ev'
+                "al()'"
+            ),
+            min_length=1,
+            max_length=50000,
+        ),
+    ],
+    timeout_ms: Annotated[
+        int | None,
+        Field(
+            default=None,
+            description=(
+                "Optional per-call execution timeout in milliseconds. "
+                "When omitted, TouchDesigner uses its configured default. "
+                "Bounds: 100-60000 ms."
+            ),
+            ge=100,
+            le=60000,
+        ),
+    ] = None,
+) -> str:
+    """Execute Python code inside TouchDesigner."""
     finish = _start_tool(ctx, "td_exec_python")
     try:
-        _enforce_exec_mode(params.code)
+        _enforce_exec_mode(code)
         mode = _current_exec_mode()
         body: dict[str, Any] = {
-            "code": params.code,
+            "code": code,
             "exec_mode": mode,
         }
         # Forward the per-call timeout only when the caller set one. Omitting
         # the key lets the TD-side choose its configured default.
-        if params.timeout_ms is not None:
-            body["timeout_ms"] = params.timeout_ms
+        if timeout_ms is not None:
+            body["timeout_ms"] = timeout_ms
         data = await _get_client(ctx).request("exec", body)
         _audit_log(
             ctx,
             "td_exec_python",
             {
                 "exec_mode": mode,
-                "code_length": len(params.code),
-                "timeout_ms": params.timeout_ms,
+                "code_length": len(code),
+                "timeout_ms": timeout_ms,
             },
         )
         return _as_json_output(data)
@@ -2473,8 +2530,40 @@ async def td_pop_inspect(params: POPInspectInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_cooking_info")
-async def td_cooking_info(params: CookingInfoInput, ctx: Context) -> str:
-    return await _forward(ctx, "td_cooking_info", "cooking", params.model_dump())
+async def td_cooking_info(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(default="/", description="Root path to inspect"),
+    ] = "/",
+    recurse: Annotated[
+        bool,
+        Field(default=False, description="Recursively inspect children"),
+    ] = False,
+    sort_by: Annotated[
+        str,
+        Field(
+            default="cookTime",
+            description="Sort by: 'cookTime' or 'cpuCookTime'",
+        ),
+    ] = "cookTime",
+    limit: Annotated[
+        int,
+        Field(default=20, ge=1, le=100, description="Max nodes to return"),
+    ] = 20,
+) -> str:
+    """Get cooking/performance info for a subtree."""
+    return await _forward(
+        ctx,
+        "td_cooking_info",
+        "cooking",
+        {
+            "path": path,
+            "recurse": recurse,
+            "sort_by": sort_by,
+            "limit": limit,
+        },
+    )
 
 
 @mcp.tool(name="td_search_nodes")
@@ -2483,8 +2572,33 @@ async def td_search_nodes(params: SearchNodesInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_get_errors")
-async def td_get_errors(params: GetErrorsInput, ctx: Context) -> str:
-    return await _forward(ctx, "td_get_errors", "node/errors", params.model_dump())
+async def td_get_errors(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(default="/", description="Node path to check"),
+    ] = "/",
+    recurse: Annotated[
+        bool,
+        Field(default=True, description="Recursively check children"),
+    ] = True,
+    max_depth: Annotated[
+        int,
+        Field(
+            default=10,
+            ge=1,
+            le=50,
+            description="Max recursion depth (prevents runaway on huge projects)",
+        ),
+    ] = 10,
+) -> str:
+    """Get errors + warnings for a node (optionally recursive)."""
+    return await _forward(
+        ctx,
+        "td_get_errors",
+        "node/errors",
+        {"path": path, "recurse": recurse, "max_depth": max_depth},
+    )
 
 
 @mcp.tool(name="td_timeline")
@@ -2504,12 +2618,65 @@ async def td_timeline_set(params: TimelineSetInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_project_lifecycle")
-async def td_project_lifecycle(params: ProjectLifecycleInput, ctx: Context) -> str:
+async def td_project_lifecycle(
+    ctx: Context,
+    action: Annotated[
+        str,
+        Field(
+            description=(
+                "Lifecycle action: status, save, load, undo, redo, "
+                "start_undo_block, end_undo_block, clear_undo"
+            ),
+            min_length=1,
+        ),
+    ],
+    path: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description=(
+                "Project path for save/load. For save with no path, "
+                "TouchDesigner will perform its default incremental save behavior."
+            ),
+        ),
+    ] = None,
+    save_external_toxs: Annotated[
+        bool,
+        Field(
+            default=False,
+            description="Also save external tox contents on save",
+        ),
+    ] = False,
+    name: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Undo block name when action=start_undo_block",
+        ),
+    ] = None,
+    enable: Annotated[
+        bool,
+        Field(
+            default=True,
+            description="Whether a started undo block should record undo state",
+        ),
+    ] = True,
+) -> str:
+    """Save/load/undo/redo project lifecycle operations."""
+    # Re-instantiate so the ProjectLifecycleInput custom @field_validator on
+    # ``action`` (allowed-set check) still runs and lowercases the value.
+    validated = ProjectLifecycleInput(
+        action=action,
+        path=path,
+        save_external_toxs=save_external_toxs,
+        name=name,
+        enable=enable,
+    )
     return await _forward(
         ctx,
         "td_project_lifecycle",
         "project/lifecycle",
-        params.model_dump(),
+        validated.model_dump(),
         audit_event="td_project_lifecycle",
     )
 
@@ -3418,15 +3585,30 @@ async def td_emergency_stabilize(params: DetectInstabilityInput, ctx: Context) -
 
 
 @mcp.tool(name="td_snapshot_scene")
-async def td_snapshot_scene(params: SnapshotInput, ctx: Context) -> str:
+async def td_snapshot_scene(
+    ctx: Context,
+    name: Annotated[
+        str | None,
+        Field(default=None, description="Optional snapshot label."),
+    ] = None,
+    path: Annotated[
+        str,
+        Field(default="/project1", description="Root path to snapshot."),
+    ] = "/project1",
+    include_visual: Annotated[
+        bool,
+        Field(default=False, description="Include screenshot payload."),
+    ] = False,
+) -> str:
+    """Capture a scene snapshot (structure + params; optionally visual)."""
     finish = _start_tool(ctx, "td_snapshot_scene")
     try:
         payload = await _capture_snapshot_payload(
             ctx,
-            path=params.path,
-            include_visual=params.include_visual,
+            path=path,
+            include_visual=include_visual,
         )
-        snapshot = _get_snapshot_manager(ctx).add_snapshot(payload, name=params.name)
+        snapshot = _get_snapshot_manager(ctx).add_snapshot(payload, name=name)
 
         result = {
             "success": True,
@@ -3437,7 +3619,7 @@ async def td_snapshot_scene(params: SnapshotInput, ctx: Context) -> str:
                 "captured_nodes": payload.get("captured_nodes", 0),
                 "connection_count": len(payload.get("connections", [])),
                 "truncated": payload.get("truncated", False),
-                "include_visual": params.include_visual,
+                "include_visual": include_visual,
             },
         }
         return _as_json_output(result)
@@ -3449,10 +3631,22 @@ async def td_snapshot_scene(params: SnapshotInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_list_snapshots")
-async def td_list_snapshots(params: ListSnapshotsInput, ctx: Context) -> str:
+async def td_list_snapshots(
+    ctx: Context,
+    limit: Annotated[
+        int,
+        Field(
+            default=20,
+            ge=1,
+            le=100,
+            description="Max number of snapshots to return (newest first).",
+        ),
+    ] = 20,
+) -> str:
+    """List saved scene snapshots (newest first)."""
     finish = _start_tool(ctx, "td_list_snapshots")
     try:
-        snapshots = _get_snapshot_manager(ctx).list_snapshots(limit=params.limit)
+        snapshots = _get_snapshot_manager(ctx).list_snapshots(limit=limit)
         return _as_json_output(
             {
                 "schema_version": 1,
@@ -3468,27 +3662,43 @@ async def td_list_snapshots(params: ListSnapshotsInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_diff_snapshots")
-async def td_diff_snapshots(params: DiffSnapshotsInput, ctx: Context) -> str:
+async def td_diff_snapshots(
+    ctx: Context,
+    snapshot_a: Annotated[
+        str,
+        Field(description="Baseline snapshot id.", min_length=1),
+    ],
+    snapshot_b: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="If omitted, diff snapshot_a vs live state.",
+        ),
+    ] = None,
+) -> str:
+    """Diff two snapshots, or a snapshot against live state."""
     finish = _start_tool(ctx, "td_diff_snapshots")
     try:
         manager = _get_snapshot_manager(ctx)
 
-        snap_a = manager.get_snapshot(params.snapshot_a)
+        snap_a = manager.get_snapshot(snapshot_a)
         if snap_a is None:
-            raise ValueError(f"Snapshot not found: {params.snapshot_a}")
+            raise ValueError(f"Snapshot not found: {snapshot_a}")
 
-        if params.snapshot_b:
-            snap_b = manager.get_snapshot(params.snapshot_b)
+        if snapshot_b:
+            snap_b = manager.get_snapshot(snapshot_b)
             if snap_b is None:
-                raise ValueError(f"Snapshot not found: {params.snapshot_b}")
+                raise ValueError(f"Snapshot not found: {snapshot_b}")
             compare_target = {
                 "type": "snapshot",
-                "snapshot_id": params.snapshot_b,
+                "snapshot_id": snapshot_b,
             }
             snapshot_b_payload = snap_b["snapshot"]
         else:
             live = await _capture_snapshot_payload(
-                ctx, path=snap_a["snapshot"].get("root_path", "/project1"), include_visual=False
+                ctx,
+                path=snap_a["snapshot"].get("root_path", "/project1"),
+                include_visual=False,
             )
             compare_target = {
                 "type": "live",
@@ -3499,7 +3709,7 @@ async def td_diff_snapshots(params: DiffSnapshotsInput, ctx: Context) -> str:
         diff = manager.diff(snap_a["snapshot"], snapshot_b_payload)
         payload = {
             "schema_version": 1,
-            "snapshot_a": params.snapshot_a,
+            "snapshot_a": snapshot_a,
             "compare_target": compare_target,
             "diff": diff,
         }
@@ -3512,7 +3722,33 @@ async def td_diff_snapshots(params: DiffSnapshotsInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_restore_snapshot")
-async def td_restore_snapshot(params: RestoreSnapshotInput, ctx: Context) -> str:
+async def td_restore_snapshot(
+    ctx: Context,
+    snapshot_id: Annotated[
+        str,
+        Field(
+            description="Snapshot id to restore parameter values from.",
+            min_length=1,
+        ),
+    ],
+    partial: Annotated[
+        list[str] | None,
+        Field(
+            default=None,
+            description=(
+                "Optional subset of node paths. When provided, only these nodes "
+                "(and no others) have their parameters restored from the snapshot."
+            ),
+        ),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        Field(
+            default=False,
+            description="Return diff only without applying.",
+        ),
+    ] = False,
+) -> str:
     """Restore parameter values from a previously saved snapshot.
 
     This tool replays the parameter values captured in the snapshot back onto
@@ -3528,9 +3764,9 @@ async def td_restore_snapshot(params: RestoreSnapshotInput, ctx: Context) -> str
     finish = _start_tool(ctx, "td_restore_snapshot")
     try:
         manager = _get_snapshot_manager(ctx)
-        snapshot = manager.get_snapshot(params.snapshot_id)
+        snapshot = manager.get_snapshot(snapshot_id)
         if snapshot is None:
-            raise ValueError(f"Snapshot not found: {params.snapshot_id}")
+            raise ValueError(f"Snapshot not found: {snapshot_id}")
 
         snapshot_nodes = snapshot.get("snapshot", {}).get("nodes", {})
         if not isinstance(snapshot_nodes, dict):
@@ -3542,8 +3778,8 @@ async def td_restore_snapshot(params: RestoreSnapshotInput, ctx: Context) -> str
             client,
             safety,
             snapshot_nodes,
-            partial_filters=params.partial or [],
-            dry_run=params.dry_run,
+            partial_filters=partial or [],
+            dry_run=dry_run,
         )
         restored = restore_result["restored"]
         skipped = restore_result["skipped"]
@@ -3552,8 +3788,8 @@ async def td_restore_snapshot(params: RestoreSnapshotInput, ctx: Context) -> str
 
         payload = {
             "success": not failures,
-            "snapshot_id": params.snapshot_id,
-            "dry_run": params.dry_run,
+            "snapshot_id": snapshot_id,
+            "dry_run": dry_run,
             "restored_count": len(restored),
             "skipped_count": len(skipped),
             "failure_count": len(failures),
@@ -3563,15 +3799,15 @@ async def td_restore_snapshot(params: RestoreSnapshotInput, ctx: Context) -> str
             "safety_warnings": warnings,
         }
 
-        if not params.dry_run:
+        if not dry_run:
             _audit_log(
                 ctx,
                 "td_restore_snapshot",
                 {
-                    "snapshot_id": params.snapshot_id,
+                    "snapshot_id": snapshot_id,
                     "restored_count": len(restored),
                     "failure_count": len(failures),
-                    "partial": params.partial,
+                    "partial": partial,
                 },
             )
 

@@ -310,7 +310,6 @@ class TestExecPythonForwarding:
     @pytest.mark.asyncio
     async def test_forwards_timeout_ms_when_set(self, monkeypatch):
         import td_mcp.tool_registry as registry
-        from td_mcp.models._legacy import ExecPythonInput
 
         # Permit the exec so we reach the client.request() call.
         monkeypatch.setenv("TD_MCP_EXEC_MODE", "full")
@@ -318,9 +317,11 @@ class TestExecPythonForwarding:
         client = _ExecClient()
         monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
 
+        # Post-Bug-A (v1.5.0 batch 2) signature: ctx first, then explicit args.
         await registry.td_exec_python(
-            ExecPythonInput(code="pass", timeout_ms=7500),
             _make_exec_ctx(client),
+            code="pass",
+            timeout_ms=7500,
         )
         assert client.last_endpoint == "exec"
         assert client.last_body is not None
@@ -332,16 +333,16 @@ class TestExecPythonForwarding:
         """When the caller doesn't set timeout_ms the key must not be sent,
         so the TD-side default takes effect."""
         import td_mcp.tool_registry as registry
-        from td_mcp.models._legacy import ExecPythonInput
 
         monkeypatch.setenv("TD_MCP_EXEC_MODE", "full")
 
         client = _ExecClient()
         monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
 
+        # Post-Bug-A (v1.5.0 batch 2): omit timeout_ms entirely; default is None.
         await registry.td_exec_python(
-            ExecPythonInput(code="pass"),
             _make_exec_ctx(client),
+            code="pass",
         )
         assert client.last_body is not None
         assert "timeout_ms" not in client.last_body
