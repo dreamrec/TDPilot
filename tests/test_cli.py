@@ -160,6 +160,93 @@ def test_doctor_tool_count_drift_warns_on_mismatch(monkeypatch, tmp_path):
         manifest_path.write_text(original)
 
 
+# ---------------------------------------------------------------------------
+# Install-profile unification (v1.4.4): --auth / --generate-secret / --shared-secret
+# Lets `tdpilot init` emit the same auth-enabled shape install.sh/ps1 already
+# produce, so all five install paths can converge on a single config builder.
+# ---------------------------------------------------------------------------
+
+
+def test_build_profile_no_auth_is_default():
+    profile = server._build_profile_config("generic", "td")
+    env = profile["mcpServers"]["td"]["env"]
+    assert "TD_MCP_REQUIRE_AUTH" not in env
+    assert "TD_MCP_SHARED_SECRET" not in env
+
+
+def test_build_profile_auth_without_secret_embeds_require_only():
+    profile = server._build_profile_config("generic", "td", auth_required=True)
+    env = profile["mcpServers"]["td"]["env"]
+    assert env["TD_MCP_REQUIRE_AUTH"] == "1"
+    # Intentionally NO secret — the server startup gate trips loudly.
+    assert "TD_MCP_SHARED_SECRET" not in env
+
+
+def test_build_profile_auth_with_secret_embeds_both():
+    profile = server._build_profile_config(
+        "generic", "td", auth_required=True, shared_secret="s" * 32
+    )
+    env = profile["mcpServers"]["td"]["env"]
+    assert env["TD_MCP_REQUIRE_AUTH"] == "1"
+    assert env["TD_MCP_SHARED_SECRET"] == "s" * 32
+
+
+def test_generate_shared_secret_is_urlsafe_and_sufficiently_long():
+    sec = server._generate_shared_secret()
+    # token_urlsafe(32) produces ~43 chars (base64url of 32 bytes, no padding)
+    assert len(sec) >= 32
+    # URL-safe charset: letters, digits, -, _
+    import re as _re
+
+    assert _re.match(r"^[A-Za-z0-9_-]+$", sec)
+
+
+def test_generate_shared_secret_is_unique_per_call():
+    """Sanity: we're not returning a constant by accident."""
+    seen = {server._generate_shared_secret() for _ in range(10)}
+    assert len(seen) == 10
+
+
+def test_init_with_auth_and_generate_writes_secret(tmp_path, capsys):
+    out = tmp_path / "config.json"
+    args = argparse.Namespace(
+        client="generic",
+        server_name="td",
+        output=str(out),
+        print_only=False,
+        force=False,
+        auth=True,
+        generate_secret=True,
+        shared_secret="",
+    )
+    assert server._run_init_command(args) == 0
+    data = json.loads(out.read_text())
+    env = data["mcpServers"]["td"]["env"]
+    assert env["TD_MCP_REQUIRE_AUTH"] == "1"
+    assert env["TD_MCP_SHARED_SECRET"]  # non-empty
+    # Secret was printed to stdout for the user to save
+    printed = capsys.readouterr().out
+    assert env["TD_MCP_SHARED_SECRET"] in printed
+
+
+def test_init_with_auth_and_supplied_secret(tmp_path):
+    out = tmp_path / "config.json"
+    args = argparse.Namespace(
+        client="generic",
+        server_name="td",
+        output=str(out),
+        print_only=False,
+        force=False,
+        auth=True,
+        generate_secret=False,
+        shared_secret="pre-provisioned-secret-" + "x" * 32,
+    )
+    assert server._run_init_command(args) == 0
+    data = json.loads(out.read_text())
+    env = data["mcpServers"]["td"]["env"]
+    assert env["TD_MCP_SHARED_SECRET"] == "pre-provisioned-secret-" + "x" * 32
+
+
 def test_runtime_health_from_payloads():
     health = server._runtime_health_from_payloads(
         cooking={

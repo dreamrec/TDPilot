@@ -326,17 +326,43 @@ def _default_client_output_path(client: str) -> Path:
     return Path.cwd() / "mcp.config.json"
 
 
-def _build_profile_config(client: str, server_name: str) -> dict[str, Any]:
-    profile = {
+def _build_profile_config(
+    client: str,
+    server_name: str,
+    *,
+    auth_required: bool = False,
+    shared_secret: str | None = None,
+) -> dict[str, Any]:
+    """Build an MCP client profile for TDPilot.
+
+    Auth posture:
+      - `auth_required=False` (default): minimal env, no auth. Matches the
+        pre-v1.4.4 behaviour so existing `tdpilot init` callers get the
+        same output.
+      - `auth_required=True` + `shared_secret=<str>`: embeds
+        `TD_MCP_REQUIRE_AUTH=1` and `TD_MCP_SHARED_SECRET=<str>`. Matches
+        the shape that install.sh / install.ps1 produce after generating
+        a secret per machine.
+      - `auth_required=True` + `shared_secret=None`: embeds
+        `TD_MCP_REQUIRE_AUTH=1` only. The resulting config will fail at
+        server startup via verify_auth_config — surfaced deliberately so
+        callers don't ship a misconfigured profile.
+    """
+    env: dict[str, str] = {
+        "TD_MCP_HOST": "127.0.0.1",
+        "TD_MCP_PORT": "9981",
+        "TD_MCP_WS_PORT": "9982",
+    }
+    if auth_required:
+        env["TD_MCP_REQUIRE_AUTH"] = "1"
+        if shared_secret:
+            env["TD_MCP_SHARED_SECRET"] = shared_secret
+    profile: dict[str, Any] = {
         "mcpServers": {
             server_name: {
                 "command": "npx",
                 "args": ["-y", "tdpilot"],
-                "env": {
-                    "TD_MCP_HOST": "127.0.0.1",
-                    "TD_MCP_PORT": "9981",
-                    "TD_MCP_WS_PORT": "9982",
-                },
+                "env": env,
             }
         }
     }
@@ -347,6 +373,13 @@ def _build_profile_config(client: str, server_name: str) -> dict[str, Any]:
         profile["$comment"] = "Generic MCP profile."
 
     return profile
+
+
+def _generate_shared_secret() -> str:
+    """Return a fresh URL-safe 32-byte secret suitable for TD_MCP_SHARED_SECRET."""
+    import secrets
+
+    return secrets.token_urlsafe(32)
 
 
 def _load_json_file(path: Path) -> dict[str, Any]:
@@ -377,7 +410,23 @@ def _merge_profile(existing: dict[str, Any], profile: dict[str, Any]) -> dict[st
 
 
 def _run_init_command(args: argparse.Namespace) -> int:
-    profile = _build_profile_config(args.client, args.server_name)
+    shared_secret: str | None = None
+    if getattr(args, "auth", False):
+        if getattr(args, "shared_secret", None):
+            shared_secret = args.shared_secret
+        elif getattr(args, "generate_secret", False):
+            shared_secret = _generate_shared_secret()
+            print(f"[tdpilot] Generated shared secret: {shared_secret}")
+            print("[tdpilot] Keep this secret safe — it grants full TD control.")
+        # else: auth=True with no secret is emitted intentionally so the server
+        # startup gate (verify_auth_config) trips loudly rather than silently.
+
+    profile = _build_profile_config(
+        args.client,
+        args.server_name,
+        auth_required=bool(getattr(args, "auth", False)),
+        shared_secret=shared_secret,
+    )
 
     if args.print_only:
         print(json.dumps(profile, indent=2))
@@ -423,6 +472,21 @@ def _build_parser() -> argparse.ArgumentParser:
     init_cmd.add_argument("--output", default="", help="Explicit output config path.")
     init_cmd.add_argument("--print-only", action="store_true", help="Print config JSON only.")
     init_cmd.add_argument("--force", action="store_true", help="Overwrite instead of merge.")
+    init_cmd.add_argument(
+        "--auth",
+        action="store_true",
+        help="Embed TD_MCP_REQUIRE_AUTH=1 in the generated env.",
+    )
+    init_cmd.add_argument(
+        "--generate-secret",
+        action="store_true",
+        help="Generate a fresh TD_MCP_SHARED_SECRET and embed it in the env (requires --auth).",
+    )
+    init_cmd.add_argument(
+        "--shared-secret",
+        default="",
+        help="Use this existing secret instead of generating one (requires --auth).",
+    )
 
     return parser
 
