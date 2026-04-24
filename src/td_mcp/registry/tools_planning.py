@@ -11,7 +11,10 @@ Tools in this module:
                            report build-compat issues
 
 Module-local helpers:
-    _suggest_macro_for_intent(intent)  — keyword → macro-type heuristic
+    _legacy_plan_dict(plan, ...)       — translate a typed PatchPlan back
+                                          into the pre-v1.5.0 dict shape
+                                          so legacy td_plan_patch callers
+                                          see no change.
     _STOCK_OP_TYPES: frozenset[str]    — allowlist so stock TD ops (base,
                                           null, noise, etc.) don't get
                                           flagged as "unknown" by audit.
@@ -99,44 +102,6 @@ def _legacy_plan_dict(
             "If you already have a recipe, pass recipe_id= to td_plan_patch.",
         ]
     return dict_out
-
-
-_INTENT_MACRO_KEYWORDS: tuple[tuple[tuple[str, ...], str, str], ...] = (
-    (
-        ("feedback displ", "feedback-displacement", "feedback_displacement"),
-        "feedback_displacement",
-        "Classic feedback displacement with source noise and composite merge.",
-    ),
-    (
-        ("feedback", "trail", "echo"),
-        "feedback_loop",
-        "Classic feedback chain: feedback → level → composite → out.",
-    ),
-    (
-        ("post-process", "post process", "post_processing", "grade", "bloom blur", "color grade"),
-        "post_processing",
-        "Simple post-FX chain: level → blur → out.",
-    ),
-    (
-        ("audio reactive", "audio-react", "audio_reactive", "audio analysis"),
-        "audio_reactive",
-        "Audio signal preprocessing chain with gain stage and null output.",
-    ),
-    (
-        ("particle", "gpu particle", "pop simulation", "particles"),
-        "particle_gpu",
-        "Minimal POP chain: particle → noise → render.",
-    ),
-)
-
-
-def _suggest_macro_for_intent(intent: str) -> dict[str, str] | None:
-    """Return a suggested macro match for the intent, or None."""
-    text = (intent or "").lower()
-    for keywords, macro_type, summary in _INTENT_MACRO_KEYWORDS:
-        if any(k in text for k in keywords):
-            return {"macro_type": macro_type, "summary": summary}
-    return None
 
 
 @mcp.tool(name="td_plan_patch")
