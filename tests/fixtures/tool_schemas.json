@@ -43,16 +43,14 @@
   "td_audit_project": {
     "description_present": true,
     "properties": {
-      "params": {
+      "root_path": {
         "any_of_types": [],
-        "default_present": false,
+        "default_present": true,
         "enum": null,
-        "type": null
+        "type": "string"
       }
     },
-    "required": [
-      "params"
-    ]
+    "required": []
   },
   "td_capture_and_analyze": {
     "description_present": true,
@@ -178,30 +176,27 @@
   },
   "td_color_pipeline": {
     "description_present": true,
-    "properties": {
-      "params": {
-        "any_of_types": [],
-        "default_present": false,
-        "enum": null,
-        "type": null
-      }
-    },
-    "required": [
-      "params"
-    ]
+    "properties": {},
+    "required": []
   },
   "td_component_standardize": {
     "description_present": true,
     "properties": {
-      "params": {
+      "fix": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "path": {
         "any_of_types": [],
         "default_present": false,
         "enum": null,
-        "type": null
+        "type": "string"
       }
     },
     "required": [
-      "params"
+      "path"
     ]
   },
   "td_connect_nodes": {
@@ -389,18 +384,28 @@
     ]
   },
   "td_describe_dynamics": {
-    "description_present": false,
+    "description_present": true,
     "properties": {
-      "params": {
+      "observation_window": {
         "any_of_types": [],
-        "default_present": false,
+        "default_present": true,
         "enum": null,
-        "type": null
+        "type": "number"
+      },
+      "path": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "sample_rate": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "number"
       }
     },
-    "required": [
-      "params"
-    ]
+    "required": []
   },
   "td_describe_surface": {
     "description_present": true,
@@ -408,18 +413,16 @@
     "required": []
   },
   "td_detect_instability": {
-    "description_present": false,
+    "description_present": true,
     "properties": {
-      "params": {
+      "path": {
         "any_of_types": [],
-        "default_present": false,
+        "default_present": true,
         "enum": null,
-        "type": null
+        "type": "string"
       }
     },
-    "required": [
-      "params"
-    ]
+    "required": []
   },
   "td_diff_snapshots": {
     "description_present": true,
@@ -471,18 +474,16 @@
     ]
   },
   "td_emergency_stabilize": {
-    "description_present": false,
+    "description_present": true,
     "properties": {
-      "params": {
+      "path": {
         "any_of_types": [],
-        "default_present": false,
+        "default_present": true,
         "enum": null,
-        "type": null
+        "type": "string"
       }
     },
-    "required": [
-      "params"
-    ]
+    "required": []
   },
   "td_exec_python": {
     "description_present": true,
@@ -1452,15 +1453,30 @@
   "td_plan_patch": {
     "description_present": true,
     "properties": {
-      "params": {
+      "intent": {
         "any_of_types": [],
         "default_present": false,
         "enum": null,
+        "type": "string"
+      },
+      "recipe_id": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
         "type": null
+      },
+      "target_path": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
       }
     },
     "required": [
-      "params"
+      "intent"
     ]
   },
   "td_pop_inspect": {
@@ -1537,15 +1553,15 @@
   "td_preflight_patch": {
     "description_present": true,
     "properties": {
-      "params": {
+      "plan": {
         "any_of_types": [],
         "default_present": false,
         "enum": null,
-        "type": null
+        "type": "object"
       }
     },
     "required": [
-      "params"
+      "plan"
     ]
   },
   "td_project_lifecycle": {
@@ -2060,15 +2076,31 @@
   "td_validate_recipe": {
     "description_present": true,
     "properties": {
-      "params": {
-        "any_of_types": [],
-        "default_present": false,
+      "recipe": {
+        "any_of_types": [
+          "null",
+          "object"
+        ],
+        "default_present": true,
         "enum": null,
         "type": null
+      },
+      "recipe_id": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "scope": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
       }
     },
-    "required": [
-      "params"
-    ]
+    "required": []
   }
 }

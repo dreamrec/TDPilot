@@ -3717,15 +3717,40 @@ async def td_optimize_visual(
 
 
 @mcp.tool(name="td_describe_dynamics")
-async def td_describe_dynamics(params: TemporalAnalysisInput, ctx: Context) -> str:
+async def td_describe_dynamics(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(default="/project1", description="Root path to observe."),
+    ] = "/project1",
+    observation_window: Annotated[
+        float,
+        Field(
+            default=3.0,
+            ge=0.5,
+            le=30.0,
+            description="Observation duration in seconds.",
+        ),
+    ] = 3.0,
+    sample_rate: Annotated[
+        float,
+        Field(
+            default=10.0,
+            ge=1.0,
+            le=60.0,
+            description="Samples per second while observing.",
+        ),
+    ] = 10.0,
+) -> str:
+    """Asynchronous temporal dynamics observation (frame, cooking, events)."""
     finish = _start_tool(ctx, "td_describe_dynamics")
     try:
         client = _get_client(ctx)
         jobs = _get_job_manager(ctx)
         event_manager = _get_event_manager(ctx)
 
-        sample_interval = max(1.0 / params.sample_rate, 0.01)
-        target_samples = max(1, int(round(params.observation_window * params.sample_rate)))
+        sample_interval = max(1.0 / sample_rate, 0.01)
+        target_samples = max(1, int(round(observation_window * sample_rate)))
 
         async def runner(job_id: str) -> dict[str, Any]:
             samples: list[dict[str, Any]] = []
@@ -3739,12 +3764,12 @@ async def td_describe_dynamics(params: TemporalAnalysisInput, ctx: Context) -> s
                     _safe_request(
                         client,
                         "cooking",
-                        {"path": params.path, "recurse": True, "limit": 20, "sort_by": "cookTime"},
+                        {"path": path, "recurse": True, "limit": 20, "sort_by": "cookTime"},
                     ),
                     _safe_request(
                         client,
                         "node/errors",
-                        {"path": params.path, "recurse": True, "max_depth": 10},
+                        {"path": path, "recurse": True, "max_depth": 10},
                     ),
                 )
 
@@ -3789,11 +3814,11 @@ async def td_describe_dynamics(params: TemporalAnalysisInput, ctx: Context) -> s
 
             return {
                 "schema_version": 1,
-                "path": params.path,
+                "path": path,
                 "observation": {
                     "duration_sec": elapsed,
-                    "requested_window_sec": params.observation_window,
-                    "sample_rate": params.sample_rate,
+                    "requested_window_sec": observation_window,
+                    "sample_rate": sample_rate,
                     "samples": len(samples),
                     "fps_during_mean": classifications.get("fps_mean", 0.0),
                 },
@@ -3806,7 +3831,7 @@ async def td_describe_dynamics(params: TemporalAnalysisInput, ctx: Context) -> s
             }
 
         job = jobs.start_async(
-            description=f"Describe dynamics for {params.path}",
+            description=f"Describe dynamics for {path}",
             runner=runner,
         )
 
@@ -3814,9 +3839,9 @@ async def td_describe_dynamics(params: TemporalAnalysisInput, ctx: Context) -> s
             ctx,
             "td_describe_dynamics",
             {
-                "path": params.path,
-                "observation_window": params.observation_window,
-                "sample_rate": params.sample_rate,
+                "path": path,
+                "observation_window": observation_window,
+                "sample_rate": sample_rate,
             },
         )
 
@@ -3825,9 +3850,9 @@ async def td_describe_dynamics(params: TemporalAnalysisInput, ctx: Context) -> s
             "job": job,
             "job_id": job["job_id"],
             "job_resource_uri": f"td://job/{job['job_id']}",
-            "path": params.path,
-            "observation_window": params.observation_window,
-            "sample_rate": params.sample_rate,
+            "path": path,
+            "observation_window": observation_window,
+            "sample_rate": sample_rate,
             "target_samples": target_samples,
         }
         return _as_json_output(payload)
@@ -3913,14 +3938,21 @@ async def td_clear_param_bounds(params: ClearBoundsInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_detect_instability")
-async def td_detect_instability(params: DetectInstabilityInput, ctx: Context) -> str:
+async def td_detect_instability(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(default="/project1", description="Root path to inspect."),
+    ] = "/project1",
+) -> str:
+    """Detect instability signals: FPS, heavy cookers, critical errors."""
     finish = _start_tool(ctx, "td_detect_instability")
     try:
         client = _get_client(ctx)
         cooking = await client.request(
             "cooking",
             {
-                "path": params.path,
+                "path": path,
                 "recurse": True,
                 "limit": 50,
                 "sort_by": "cookTime",
@@ -3929,7 +3961,7 @@ async def td_detect_instability(params: DetectInstabilityInput, ctx: Context) ->
         errors = await client.request(
             "node/errors",
             {
-                "path": params.path,
+                "path": path,
                 "recurse": True,
                 "max_depth": 10,
             },
@@ -3961,7 +3993,7 @@ async def td_detect_instability(params: DetectInstabilityInput, ctx: Context) ->
 
         payload = {
             "schema_version": 2,
-            "path": params.path,
+            "path": path,
             "unstable": unstable,
             "reasons": reasons,
             "signals": {
@@ -3992,7 +4024,14 @@ async def td_detect_instability(params: DetectInstabilityInput, ctx: Context) ->
 
 
 @mcp.tool(name="td_emergency_stabilize")
-async def td_emergency_stabilize(params: DetectInstabilityInput, ctx: Context) -> str:
+async def td_emergency_stabilize(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(default="/project1", description="Root path to stabilize."),
+    ] = "/project1",
+) -> str:
+    """Emergency stabilization: pause timeline, clamp safety, capture baseline snapshot."""
     finish = _start_tool(ctx, "td_emergency_stabilize")
     try:
         client = _get_client(ctx)
@@ -4000,7 +4039,7 @@ async def td_emergency_stabilize(params: DetectInstabilityInput, ctx: Context) -
 
         snapshot_payload = await _capture_snapshot_payload(
             ctx,
-            path=params.path,
+            path=path,
             include_visual=False,
         )
         saved = snapshots.add_snapshot(snapshot_payload, name="emergency_pre_stabilize")
@@ -4018,7 +4057,7 @@ async def td_emergency_stabilize(params: DetectInstabilityInput, ctx: Context) -
 
         payload = {
             "success": True,
-            "path": params.path,
+            "path": path,
             "actions": actions,
             "snapshot": {
                 "snapshot_id": saved["snapshot_id"],
@@ -4035,7 +4074,7 @@ async def td_emergency_stabilize(params: DetectInstabilityInput, ctx: Context) -
             ctx,
             "td_emergency_stabilize",
             {
-                "path": params.path,
+                "path": path,
                 "actions": actions,
                 "snapshot_id": saved["snapshot_id"],
             },
@@ -5514,7 +5553,27 @@ def _suggest_macro_for_intent(intent: str) -> dict[str, str] | None:
 
 
 @mcp.tool(name="td_plan_patch")
-async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> dict[str, Any]:
+async def td_plan_patch(
+    ctx: Context,
+    intent: Annotated[
+        str,
+        Field(description="What you want to achieve", min_length=1),
+    ],
+    target_path: Annotated[
+        str,
+        Field(
+            default="/project1",
+            description="Target path to plan changes for",
+        ),
+    ] = "/project1",
+    recipe_id: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Optional recipe ID to base plan on",
+        ),
+    ] = None,
+) -> dict[str, Any]:
     """Generate a structured patch plan for an intent without mutating the project.
 
     Inspects the current state of the target path, validates op types against the
@@ -5534,7 +5593,7 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> dict[str, Any]:
         # Inspect current state of the target path
         current_nodes = []
         try:
-            node_data = await client.request("nodes", {"path": params.target_path, "limit": 200})
+            node_data = await client.request("nodes", {"path": target_path, "limit": 200})
             current_nodes = node_data if isinstance(node_data, list) else node_data.get("nodes", [])
         except Exception:
             current_nodes = []
@@ -5544,12 +5603,12 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> dict[str, Any]:
         # If a recipe_id is provided, load it and generate steps from its nodes
         recipe_steps = []
         recipe_info = None
-        if params.recipe_id:
+        if recipe_id:
             try:
                 store = _get_technique_store(ctx)
-                recipe_info = store.get(params.recipe_id, scope="project")
+                recipe_info = store.get(recipe_id, scope="project")
                 if recipe_info is None:
-                    recipe_info = store.get(params.recipe_id, scope="global")
+                    recipe_info = store.get(recipe_id, scope="global")
                 if recipe_info:
                     tech = recipe_info.get("technique", {})
                     recipe_data = tech.get("recipe", {}) if isinstance(tech, dict) else {}
@@ -5566,7 +5625,7 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> dict[str, Any]:
                                 "op": "create_node",
                                 "op_type": op_type,
                                 "name": node.get("name", ""),
-                                "parent_path": params.target_path,
+                                "parent_path": target_path,
                                 "known_to_knowledge_corpus": card_ok,
                             }
                         )
@@ -5577,13 +5636,13 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> dict[str, Any]:
         # intent-keyword macro matching so we never return empty steps.
         macro_suggestion = None
         if not recipe_steps:
-            macro_suggestion = _suggest_macro_for_intent(params.intent)
+            macro_suggestion = _suggest_macro_for_intent(intent)
             if macro_suggestion is not None:
                 recipe_steps.append(
                     {
                         "op": "create_macro",
                         "macro_type": macro_suggestion["macro_type"],
-                        "parent_path": params.target_path,
+                        "parent_path": target_path,
                         "summary": macro_suggestion["summary"],
                         "source": "intent_heuristic",
                     }
@@ -5602,9 +5661,9 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> dict[str, Any]:
             )
 
         plan = {
-            "intent": params.intent,
-            "target_path": params.target_path,
-            "recipe_id": params.recipe_id,
+            "intent": intent,
+            "target_path": target_path,
+            "recipe_id": recipe_id,
             "current_node_count": len(current_nodes),
             "existing_names": sorted(existing_names),
             "steps": recipe_steps,
@@ -5619,7 +5678,7 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> dict[str, Any]:
         if isinstance(recipe_info, dict) and "error" not in recipe_info:
             plan["recipe_name"] = recipe_info.get("name", "")
 
-        _audit_log(ctx, "td_plan_patch", {"intent": params.intent, "target_path": params.target_path})
+        _audit_log(ctx, "td_plan_patch", {"intent": intent, "target_path": target_path})
         return {"success": True, "plan": plan}
     except Exception as exc:
         _record_tool_error(ctx, "td_plan_patch")
@@ -5629,7 +5688,13 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> dict[str, Any]:
 
 
 @mcp.tool(name="td_preflight_patch")
-async def td_preflight_patch(params: PreflightPatchInput, ctx: Context) -> dict[str, Any]:
+async def td_preflight_patch(
+    ctx: Context,
+    plan: Annotated[
+        dict[str, Any],
+        Field(description="Plan dict from td_plan_patch to validate"),
+    ],
+) -> dict[str, Any]:
     """Validate a plan from td_plan_patch before execution.
 
     Checks that the target path exists, all op types in steps have knowledge cards,
@@ -5642,7 +5707,6 @@ async def td_preflight_patch(params: PreflightPatchInput, ctx: Context) -> dict[
         svc = _get_services(ctx)
         idx = getattr(svc, "card_index", None)
 
-        plan = params.plan
         target_path = plan.get("target_path", "/project1")
         steps = plan.get("steps", [])
         existing_names = set(plan.get("existing_names", []))
@@ -5708,7 +5772,24 @@ async def td_preflight_patch(params: PreflightPatchInput, ctx: Context) -> dict[
 
 
 @mcp.tool(name="td_validate_recipe")
-async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> dict[str, Any]:
+async def td_validate_recipe(
+    ctx: Context,
+    recipe_id: Annotated[
+        str | None,
+        Field(default=None, description="Recipe ID to validate"),
+    ] = None,
+    recipe: Annotated[
+        dict[str, Any] | None,
+        Field(
+            default=None,
+            description="Inline recipe dict to validate",
+        ),
+    ] = None,
+    scope: Annotated[
+        str,
+        Field(default="project", description="'project' or 'global'"),
+    ] = "project",
+) -> dict[str, Any]:
     """Validate a technique recipe from the library or an inline dict.
 
     Checks that required op types exist in the knowledge corpus, verifies the recipe
@@ -5719,15 +5800,12 @@ async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> dict[
         svc = _get_services(ctx)
         idx = getattr(svc, "card_index", None)
 
-        recipe = params.recipe
-        recipe_id = params.recipe_id
-
         # Load recipe from store if recipe_id provided and no inline recipe
         if recipe is None and recipe_id:
             try:
                 store = _get_technique_store(ctx)
-                recipe = store.get(recipe_id, scope=params.scope)
-                if recipe is None and params.scope != "global":
+                recipe = store.get(recipe_id, scope=scope)
+                if recipe is None and scope != "global":
                     recipe = store.get(recipe_id, scope="global")
             except Exception as exc:
                 return {"error": f"Could not load recipe '{recipe_id}': {exc}"}
@@ -5799,7 +5877,7 @@ async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> dict[
             "td_validate_recipe",
             {
                 "recipe_id": recipe_id,
-                "scope": params.scope,
+                "scope": scope,
                 "valid": valid,
             },
         )
@@ -6023,7 +6101,13 @@ _STOCK_OP_TYPES: frozenset[str] = frozenset(
 
 
 @mcp.tool(name="td_audit_project")
-async def td_audit_project(params: AuditProjectInput, ctx: Context) -> dict[str, Any]:
+async def td_audit_project(
+    ctx: Context,
+    root_path: Annotated[
+        str,
+        Field(default="/project1", description="Root path to audit"),
+    ] = "/project1",
+) -> dict[str, Any]:
     """Audit a project subtree: count nodes by family and op type, detect palette
     components, find errors, and check build compatibility.
 
@@ -6039,7 +6123,7 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> dict[str,
         all_nodes: list[dict[str, Any]] = []
         max_depth = 10
         try:
-            queue: list[tuple] = [(params.root_path, 0)]
+            queue: list[tuple] = [(root_path, 0)]
             visited: set = set()
             while queue:
                 container_path, depth = queue.pop(0)
@@ -6058,7 +6142,7 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> dict[str,
                         if child_path and child_path not in visited:
                             queue.append((child_path, depth + 1))
         except Exception as exc:
-            return {"error": f"Could not fetch nodes at '{params.root_path}': {exc}"}
+            return {"error": f"Could not fetch nodes at '{root_path}': {exc}"}
 
         # Count by family and op type
         family_counts: dict[str, int] = {}
@@ -6122,7 +6206,7 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> dict[str,
         node_errors = []
         try:
             err_data = await client.request(
-                "node/errors", {"path": params.root_path, "recurse": True, "max_depth": 10}
+                "node/errors", {"path": root_path, "recurse": True, "max_depth": 10}
             )
             if isinstance(err_data, list):
                 node_errors = err_data
@@ -6135,13 +6219,13 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> dict[str,
             ctx,
             "td_audit_project",
             {
-                "root_path": params.root_path,
+                "root_path": root_path,
                 "node_count": len(all_nodes),
             },
         )
         return {
             "success": True,
-            "root_path": params.root_path,
+            "root_path": root_path,
             "total_nodes": len(all_nodes),
             "by_family": family_counts,
             "by_op_type": op_type_counts,
@@ -6574,7 +6658,20 @@ async def td_tdresources_inspect(
 
 
 @mcp.tool(name="td_component_standardize")
-async def td_component_standardize(params: ComponentStandardizeInput, ctx: Context) -> dict[str, Any]:
+async def td_component_standardize(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="Path to COMP to audit", min_length=1),
+    ],
+    fix: Annotated[
+        bool,
+        Field(
+            default=False,
+            description="If True, auto-fix issues (wrapped in undo block)",
+        ),
+    ] = False,
+) -> dict[str, Any]:
     """Audit or fix COMP standardization: required custom parameters (Version, Help, Creator), extension, naming."""
     finish = _start_tool(ctx, "td_component_standardize")
     try:
@@ -6585,8 +6682,6 @@ async def td_component_standardize(params: ComponentStandardizeInput, ctx: Conte
         if mode_err:
             return mode_err
         client = _get_client(ctx)
-        path = params.path
-        fix = params.fix
 
         safe_path = json.dumps(path)
         audit_code = (
@@ -6654,7 +6749,7 @@ async def td_component_standardize(params: ComponentStandardizeInput, ctx: Conte
 
 
 @mcp.tool(name="td_color_pipeline")
-async def td_color_pipeline(params: ColorPipelineInput, ctx: Context) -> dict[str, Any]:
+async def td_color_pipeline(ctx: Context) -> dict[str, Any]:
     """Inspect the color management pipeline in TouchDesigner: color space, gamma, display settings."""
     finish = _start_tool(ctx, "td_color_pipeline")
     try:
