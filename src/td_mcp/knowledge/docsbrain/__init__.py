@@ -139,6 +139,14 @@ class DocsBrain:
                 op_type = "".join(p.lower() for p in parts[:-1]) + parts[-1]
                 self._op_type_map[op_type] = name
 
+        # v1.4.7 Bug Q/R: reverse lookup so search() can enrich FTS rows with
+        # a CardIndex-compatible `op_type` derived from the FTS `operator_name`.
+        # Downstream tools (`td_find_official_example`, `td_explain_better_way`,
+        # `_is_informative_card`) key off CardIndex field names; without this
+        # reverse map, every DocsBrain search result lacked `op_type` and was
+        # silently filtered out.
+        self._operator_name_to_op_type: dict[str, str] = {v: k for k, v in self._op_type_map.items()}
+
     def count(self) -> int:
         """Total number of chunks in the index."""
         cursor = self._conn.execute("SELECT COUNT(*) FROM chunks")
@@ -206,7 +214,74 @@ class DocsBrain:
             logger.warning("FTS5 query failed: %s (query=%r)", exc, fts_query)
             return []
 
-        return [self._row_to_dict(row) for row in rows]
+        return [self._normalize_search_row(self._row_to_dict(row)) for row in rows]
+
+    def _normalize_search_row(self, row: dict) -> dict:
+        """Enrich a raw FTS row with CardIndex-compatible keys.
+
+        v1.4.7 Bug Q / Bug R fix. FTS chunks expose `operator_name`,
+        `section_title`, `content`, etc. — but downstream tools
+        (`td_find_official_example`, `td_explain_better_way`,
+        `_is_informative_card`) read CardIndex-shape keys (`op_type`,
+        `component_name`, `display_name`, `snippet_id`, `summary`). Pre-fix,
+        those tools saw empty strings and either emitted blank responses
+        (Bug Q) or filtered every candidate out (Bug R).
+
+        This helper is additive: raw FTS fields remain intact so any
+        consumer that reads them directly (including the existing
+        test_docsbrain_search assertions on `operator_name` /
+        `operator_family`) keeps working.
+        """
+        doc_type = row.get("doc_type", "") or ""
+        operator_name = row.get("operator_name") or ""
+        section_title = row.get("section_title") or ""
+        content = row.get("content") or ""
+
+        if doc_type in ("operator", "python_api"):
+            # TD-native operator docs. op_type is the canonical type+family
+            # form, recovered via the reverse map built from _op_type_map.
+            if operator_name:
+                op_type = self._operator_name_to_op_type.get(operator_name, "")
+                if op_type and not row.get("op_type"):
+                    row["op_type"] = op_type
+                if not row.get("display_name"):
+                    row["display_name"] = operator_name
+            if content and not row.get("summary"):
+                row["summary"] = content[:300]
+        elif doc_type in ("catalog_operators", "reference"):
+            # POPx-style docs. No op_type (non-TD-native naming), but
+            # display_name / summary still matter for informative-card
+            # filtering.
+            if operator_name and not row.get("display_name"):
+                row["display_name"] = operator_name
+            if content and not row.get("summary"):
+                row["summary"] = content[:300]
+        elif doc_type == "palette":
+            # Section titles look like "Palette:SVG" — strip the prefix so
+            # component_name matches the shape that CardIndex JSON cards
+            # store (plain component name, no scheme prefix).
+            name = section_title
+            if name.lower().startswith("palette:"):
+                name = name[len("palette:") :].strip()
+            if name:
+                if not row.get("component_name"):
+                    row["component_name"] = name
+                if not row.get("display_name"):
+                    row["display_name"] = name
+            if content and not row.get("summary"):
+                row["summary"] = content[:300]
+        elif doc_type == "snippet":
+            snippet_id = row.get("page_id") or row.get("chunk_id") or ""
+            if snippet_id and not row.get("snippet_id"):
+                row["snippet_id"] = snippet_id
+            if section_title and not row.get("display_name"):
+                row["display_name"] = section_title
+            if content and not row.get("summary"):
+                row["summary"] = content[:300]
+        # Other doc_types (general, glossary, release_notes) pass through
+        # unchanged — _is_informative_card will correctly filter them out
+        # unless a caller explicitly asks for those card_types.
+        return row
 
     def get_operator(self, op_type: str) -> dict | None:
         """Look up an operator by op_type (e.g. 'compositeTOP')."""

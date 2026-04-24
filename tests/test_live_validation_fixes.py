@@ -331,3 +331,166 @@ def test_get_operator_key_params_are_clean(tmp_path):
     kp_names = {kp["name"] for kp in card["key_params"]}
     leaked = kp_names & junk_names
     assert not leaked, f"junk entries leaked into key_params: {leaked}"
+
+
+# ---------------------------------------------------------------------------
+# Bug Q + Bug R - DocsBrain search() output shape mismatch with CardIndex consumers.
+#
+# td_find_official_example and td_explain_better_way both read CardIndex-shape
+# fields (component_name, display_name, summary, op_type, snippet_id) from
+# whatever `idx.search(...)` returns. When the card_index is DocsBrain (the
+# v1.4.5 default for the Derivative brain), search() emits FTS-chunk-shaped
+# rows with section_title / operator_name / content instead. Consumers saw
+# empty strings for every field.
+#
+# Live repro (v1.4.5+):
+#   td_find_official_example("feedback loop noise") -> 5 palette_example
+#     results with name="", display_name="", summary=""  (Bug Q)
+#   td_explain_better_way("animate noise TOP every frame") -> empty
+#     recommendation (every candidate filtered by _is_informative_card
+#     because CardIndex fields are blank)  (Bug R)
+#
+# The fix is a shape translation at the DocsBrain.search() boundary:
+# enrich each row with CardIndex-compatible keys derived from the FTS
+# columns. get_operator() / get_palette() already do this for exact-lookup
+# responses; search() should too so consumers see one consistent shape.
+# ---------------------------------------------------------------------------
+
+
+def _build_mixed_brain_with_shape_coverage(tmp_path: Path) -> DocsBrain:
+    """Chunks covering the doc_types that tools consume via search():
+    operator, palette, snippet. Each has a distinctive identifier so the
+    shape normalization can be proven unambiguously."""
+    chunks = [
+        {
+            "chunk_id": "composite_top__summary__0001",
+            "page_id": "composite_top",
+            "doc_type": "operator",
+            "section_title": "Composite TOP",
+            "operator_family": "TOP",
+            "operator_name": "Composite TOP",
+            "mentioned_operators": [],
+            "parameter_names": ["Operation\noperation", "Pre-Multiply\npremult"],
+            "python_symbols": [],
+            "build_number": None,
+            "build_date": None,
+            "change_category": None,
+            "token_estimate": 40,
+            "content": ("The Composite TOP composites two input images together using various blend modes."),
+        },
+        {
+            "chunk_id": "palette_svg__summary__0002",
+            "page_id": "palette:svg",
+            "doc_type": "palette",
+            "section_title": "Palette:SVG",
+            "operator_family": None,
+            "operator_name": None,
+            "mentioned_operators": [],
+            "parameter_names": [],
+            "python_symbols": [],
+            "build_number": None,
+            "build_date": None,
+            "change_category": None,
+            "token_estimate": 30,
+            "content": (
+                "SVG palette component. Loads and renders scalable vector "
+                "graphics in TouchDesigner pipelines."
+            ),
+        },
+        {
+            "chunk_id": "snippet_feedback_loop__0003",
+            "page_id": "snippet:feedback_loop",
+            "doc_type": "snippet",
+            "section_title": "Feedback Loop",
+            "operator_family": "TOP",
+            "operator_name": None,
+            "mentioned_operators": [],
+            "parameter_names": [],
+            "python_symbols": [],
+            "build_number": None,
+            "build_date": None,
+            "change_category": None,
+            "token_estimate": 50,
+            "content": (
+                "A feedback loop routes a TOP's output back into its own "
+                "input via a Feedback TOP, enabling trail / smear effects."
+            ),
+        },
+    ]
+    chunks_path = tmp_path / "mixed_chunks.jsonl"
+    with open(chunks_path, "w") as f:
+        for c in chunks:
+            f.write(json.dumps(c) + "\n")
+    db_path = tmp_path / "mixed.db"
+    build_index(chunks_path, db_path)
+    return DocsBrain(db_path=db_path)
+
+
+def test_search_palette_result_carries_cardindex_shape_fields(tmp_path):
+    """Bug Q root cause: palette search results must expose component_name,
+    display_name, and summary so td_find_official_example's serializer
+    can read non-empty values. Pre-fix the FTS row only had section_title
+    and content, so the tool emitted empty strings."""
+    brain = _build_mixed_brain_with_shape_coverage(tmp_path)
+    results = brain.search("svg palette", card_types=["palette"], limit=5)
+    assert results, "palette search returned no results; fixture may be wrong"
+    r = results[0]
+    assert isinstance(r.get("component_name"), str) and r["component_name"].strip(), (
+        f"palette row must expose component_name; got {r!r}"
+    )
+    assert isinstance(r.get("display_name"), str) and r["display_name"].strip(), (
+        f"palette row must expose display_name; got {r!r}"
+    )
+    assert isinstance(r.get("summary"), str) and r["summary"].strip(), (
+        f"palette row must expose summary; got {r!r}"
+    )
+    # And the raw FTS fields must still be present for back-compat.
+    assert r.get("section_title")
+    assert r.get("content")
+
+
+def test_search_operator_result_carries_op_type_and_display_name(tmp_path):
+    """Bug R root cause: operator search results must expose op_type and
+    display_name so _is_informative_card accepts them. Pre-fix only
+    operator_name existed, which isn't in the _is_informative_card key
+    set, so every candidate was filtered out and the recommendation
+    became empty."""
+    brain = _build_mixed_brain_with_shape_coverage(tmp_path)
+    results = brain.search("composite", card_types=["operator"], limit=5)
+    assert results
+    r = results[0]
+    assert r.get("op_type") == "compositeTOP", (
+        f"operator row must expose canonical op_type='compositeTOP'; got {r.get('op_type')!r}"
+    )
+    assert r.get("display_name") == "Composite TOP"
+    assert isinstance(r.get("summary"), str) and r["summary"].strip()
+
+
+def test_search_snippet_result_carries_snippet_id(tmp_path):
+    """Snippets are rarer in the corpus but td_find_official_example
+    serializes them with `snippet_id`. The shape normalization must
+    populate that field from the FTS row so the serializer picks up
+    a stable identifier."""
+    brain = _build_mixed_brain_with_shape_coverage(tmp_path)
+    results = brain.search("feedback loop", card_types=["snippet"], limit=5)
+    assert results
+    r = results[0]
+    assert isinstance(r.get("snippet_id"), str) and r["snippet_id"].strip()
+    assert isinstance(r.get("summary"), str) and r["summary"].strip()
+
+
+def test_is_informative_card_accepts_normalized_docsbrain_operator_result(tmp_path):
+    """Integration: the _is_informative_card filter used by
+    td_explain_better_way must accept DocsBrain search results post-fix.
+    Pre-fix 100% of rows were filtered out because op_type/component_name/
+    display_name/summary were all missing."""
+    from td_mcp.tool_registry import _is_informative_card
+
+    brain = _build_mixed_brain_with_shape_coverage(tmp_path)
+    results = brain.search("composite", card_types=["operator"], limit=5)
+    assert results
+    assert any(_is_informative_card(r) for r in results), (
+        "Bug R: every search result was dropped by _is_informative_card. "
+        "Post-fix rows must expose op_type/display_name/summary so the "
+        "filter sees them as informative."
+    )
