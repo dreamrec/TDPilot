@@ -3626,17 +3626,14 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
             "errors": [str(e) for e in errors[:10]],
             "warnings": [],
         }
-        # Auto-promote candidate to validated_local on clean replay
-        entry_state = entry.get("state", "candidate")
-        if validation_status == "pass" and entry_state == "candidate":
-            store.update(params.technique_id, {
-                "state": "validated_local",
-                "validation_result": validation_result,
-            }, scope=params.scope)
-        else:
-            store.update(params.technique_id, {
-                "validation_result": validation_result,
-            }, scope=params.scope)
+        # Persist validation and auto-promote candidate -> validated_local on
+        # pass. Use update_validation() (not update()) — update() enforces
+        # state-transition discipline by silently dropping `state` keys, so
+        # routing state changes through update_validation() is the canonical
+        # path. It also handles the demotion case (fail → drop back one rung).
+        store.update_validation(
+            params.technique_id, validation_result, scope=params.scope
+        )
     except Exception:
         pass  # Non-fatal: replay succeeded even if validation check fails
 

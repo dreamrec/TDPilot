@@ -280,6 +280,162 @@ async def test_replay_missing_recipe_returns_error(tmp_path, monkeypatch):
     assert result["key_params"] == {"noise_scale": 2.5}
 
 
+# ---------------------------------------------------------------------------
+# Fix #4 — replay state transition regression (v1.4.3)
+# Before the fix, td_memory_replay called TechniqueStore.update() with
+# {"state": "validated_local", ...}. update() silently drops `state` keys
+# (state changes must go through update_state() / update_validation()), so
+# the technique reported a pass validation but stayed in 'candidate'.
+# ---------------------------------------------------------------------------
+
+
+class _ReplayClientWithErrors(_ReplayClient):
+    """Extension of _ReplayClient that returns custom `node/errors` payloads."""
+
+    def __init__(
+        self,
+        *,
+        families: dict[str, list[str]] | None = None,
+        error_issues: list | None = None,
+    ):
+        super().__init__(families=families)
+        self._error_issues = error_issues or []
+
+    async def request(self, endpoint: str, body: dict | None = None):
+        body = body or {}
+        if endpoint == "node/errors":
+            self.calls.append((endpoint, body))
+            return {"issues": list(self._error_issues)}
+        return await super().request(endpoint, body)
+
+
+@pytest.mark.asyncio
+async def test_replay_clean_promotes_candidate_to_validated_local(
+    tmp_path, monkeypatch
+):
+    """Clean replay must transition state candidate -> validated_local.
+
+    Regression: the auto-promote path used TechniqueStore.update(), which
+    silently drops `state` keys — so the technique stayed 'candidate' even
+    though validation passed.
+    """
+    store = TechniqueStore(base_dir=str(tmp_path), project_name="test")
+    tid = _save_technique(
+        store,
+        name="clean-replay",
+        required_ops=["noiseTOP"],
+        nodes={"/n1": {"name": "n1", "type": "noiseTOP", "family": "TOP"}},
+    )
+    # Pre-condition: freshly saved techniques start as 'candidate'.
+    assert store.get(tid)["state"] == "candidate"
+
+    client = _ReplayClientWithErrors(
+        families={"TOP": ["noiseTOP"]},
+        error_issues=[],  # clean — no cook errors
+    )
+    monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
+    ctx = _make_ctx(client=client, store=store)
+
+    from td_mcp.models import MemoryReplayInput
+
+    result = await registry.td_memory_replay(
+        MemoryReplayInput(technique_id=tid, parent_path="/project1", scope="project"),
+        ctx,
+    )
+    assert result["status"] == "ok"
+    assert result["validation_result"]["status"] == "pass"
+
+    # The critical assertion: state must have actually persisted.
+    assert store.get(tid)["state"] == "validated_local"
+
+
+@pytest.mark.asyncio
+async def test_replay_with_errors_keeps_candidate(tmp_path, monkeypatch):
+    """Replay that validates 'fail' must leave a candidate as candidate."""
+    store = TechniqueStore(base_dir=str(tmp_path), project_name="test")
+    tid = _save_technique(
+        store,
+        name="fail-replay",
+        required_ops=["noiseTOP"],
+        nodes={"/n1": {"name": "n1", "type": "noiseTOP", "family": "TOP"}},
+    )
+
+    client = _ReplayClientWithErrors(
+        families={"TOP": ["noiseTOP"]},
+        error_issues=[{"path": "/project1/n1", "error": "cook failed"}],
+    )
+    monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
+    ctx = _make_ctx(client=client, store=store)
+
+    from td_mcp.models import MemoryReplayInput
+
+    result = await registry.td_memory_replay(
+        MemoryReplayInput(technique_id=tid, parent_path="/project1", scope="project"),
+        ctx,
+    )
+    assert result["validation_result"]["status"] == "fail"
+    assert store.get(tid)["state"] == "candidate"
+
+
+@pytest.mark.asyncio
+async def test_replay_fail_demotes_validated_local_to_candidate(
+    tmp_path, monkeypatch
+):
+    """If a previously-validated technique fails a later replay, its state
+    must demote back to candidate (per update_validation() semantics)."""
+    store = TechniqueStore(base_dir=str(tmp_path), project_name="test")
+    tid = _save_technique(
+        store,
+        name="demote-replay",
+        required_ops=["noiseTOP"],
+        nodes={"/n1": {"name": "n1", "type": "noiseTOP", "family": "TOP"}},
+    )
+    # Manually pre-promote so this test isolates the demotion path.
+    assert store.update_state(tid, "validated_local", scope="project")
+    assert store.get(tid)["state"] == "validated_local"
+
+    client = _ReplayClientWithErrors(
+        families={"TOP": ["noiseTOP"]},
+        error_issues=[{"path": "/project1/n1", "error": "cook failed"}],
+    )
+    monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
+    ctx = _make_ctx(client=client, store=store)
+
+    from td_mcp.models import MemoryReplayInput
+
+    await registry.td_memory_replay(
+        MemoryReplayInput(technique_id=tid, parent_path="/project1", scope="project"),
+        ctx,
+    )
+    assert store.get(tid)["state"] == "candidate"
+
+
+@pytest.mark.asyncio
+async def test_replay_persists_validation_result(tmp_path, monkeypatch):
+    """The validation_result payload from replay must be stored on the technique."""
+    store = TechniqueStore(base_dir=str(tmp_path), project_name="test")
+    tid = _save_technique(
+        store,
+        name="persist-validation",
+        required_ops=["noiseTOP"],
+        nodes={"/n1": {"name": "n1", "type": "noiseTOP", "family": "TOP"}},
+    )
+
+    client = _ReplayClientWithErrors(families={"TOP": ["noiseTOP"]}, error_issues=[])
+    monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
+    ctx = _make_ctx(client=client, store=store)
+
+    from td_mcp.models import MemoryReplayInput
+
+    await registry.td_memory_replay(
+        MemoryReplayInput(technique_id=tid, parent_path="/project1", scope="project"),
+        ctx,
+    )
+    entry = store.get(tid)
+    assert entry["validation_result"] is not None
+    assert entry["validation_result"]["status"] == "pass"
+
+
 @pytest.mark.asyncio
 async def test_replay_not_found_returns_error(tmp_path, monkeypatch):
     """Non-existent technique ID returns error."""
