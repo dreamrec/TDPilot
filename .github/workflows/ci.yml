@@ -119,6 +119,9 @@ jobs:
             exit 1
           fi
 
+      - name: Package build smoke (wheel + npm pack + plugin zip)
+        run: bash scripts/check_package_builds.sh --cleanup
+
   install-parse:
     name: Install script parse-check (${{ matrix.os }})
     strategy:
