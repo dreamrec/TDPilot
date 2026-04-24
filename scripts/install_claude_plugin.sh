@@ -100,7 +100,7 @@ Next steps:
 
   3. Load the TDPilot .tox component into TouchDesigner. Either:
 
-     (a) Drag td_component/tdpilot_v1_3.tox from the plugin cache into your
+     (a) Drag td_component/tdpilot.tox from the plugin cache into your
          /local container. The cache lives at:
 
            ~/.claude/plugins/cache/dreamrec-TDPilot/tdpilot/<version>/

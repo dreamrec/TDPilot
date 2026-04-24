@@ -47,7 +47,7 @@ npx tdpilot plugin-install
 
 ### TouchDesigner side (once, after install)
 
-Drag `~/.claude/plugins/cache/dreamrec-TDPilot/tdpilot/<version>/td_component/tdpilot_v1_3.tox` into your TD `/local` container. Or paste the auto-setup Python block from [`docs/INSTALL_CLAUDE_PLUGIN.md`](docs/INSTALL_CLAUDE_PLUGIN.md) into the Textport (auto-detects the latest installed version).
+Drag `~/.claude/plugins/cache/dreamrec-TDPilot/tdpilot/<version>/td_component/tdpilot.tox` into your TD `/local` container. Or paste the auto-setup Python block from [`docs/INSTALL_CLAUDE_PLUGIN.md`](docs/INSTALL_CLAUDE_PLUGIN.md) into the Textport (auto-detects the latest installed version).
 
 Using Claude Desktop instead of Claude Code? See [`docs/INSTALL_CLAUDE_PLUGIN.md`](docs/INSTALL_CLAUDE_PLUGIN.md) — the two flows shouldn't be mixed on one machine.
 
@@ -346,7 +346,7 @@ This installs the MCP component into `/local/mcp_server` by default, which means
 
 To install into a specific project instead: `os.environ["TD_MCP_PARENT_PATH"] = "/project1"` before running.
 
-Alternatively, drag-and-drop `td_component/tdpilot_v1_3.tox` into `/local` manually.
+Alternatively, drag-and-drop `td_component/tdpilot.tox` into `/local` manually.
 
 One-command setup helpers: macOS `./install.sh`, Windows `./install.ps1`
 

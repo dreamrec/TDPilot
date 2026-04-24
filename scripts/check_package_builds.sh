@@ -123,7 +123,7 @@ else
         ERRORS=$((ERRORS + 1))
     else
         CONTENTS=$(unzip -l "$PLUGIN_OUT" | awk '{print $NF}')
-        for required in ".mcp.json" ".claude-plugin/plugin.json" "td_component/tdpilot_v1_3.tox" "README.md"; do
+        for required in ".mcp.json" ".claude-plugin/plugin.json" "td_component/tdpilot.tox" "README.md"; do
             if echo "$CONTENTS" | grep -q "^${required}$"; then
                 ok "plugin zip contains ${required}"
             else

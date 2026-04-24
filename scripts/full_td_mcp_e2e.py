@@ -3,7 +3,7 @@
 
 This suite drives the MCP server over stdio (real MCP protocol), not direct HTTP,
 and exercises core + extended tools against the currently running TD project that has
-`td_component/tdpilot_v1_3.tox` loaded.
+`td_component/tdpilot.tox` loaded.
 
 Typical usage:
 
@@ -605,7 +605,7 @@ class E2ESuite:
 
         if not found:
             raise TestWarning(
-                "No new chop_change events observed for subscribed path. Check ws_client URL, active state, and event_emitter wiring in tdpilot_v1_3.tox."
+                "No new chop_change events observed for subscribed path. Check ws_client URL, active state, and event_emitter wiring in tdpilot.tox."
             )
 
     async def _step_visual_tools(self) -> None:

@@ -1,5 +1,5 @@
 """
-TDPilot — Build and export a reusable `tdpilot_v1_3.tox`
+TDPilot — Build and export a reusable `tdpilot.tox`
 =============================================================
 
 Run inside TouchDesigner Textport:
@@ -76,7 +76,7 @@ WEB_PORT = 9981
 WS_URL = "ws://127.0.0.1:9982"
 OVERWRITE_COMPONENT = True
 
-# If empty, auto-resolve to: <repo_root>/td_component/tdpilot_v1_3.tox
+# If empty, auto-resolve to: <repo_root>/td_component/tdpilot.tox
 EXPORT_TOX_PATH = ""
 
 
@@ -204,7 +204,7 @@ def _resolve_export_path(repo_root):
     if EXPORT_TOX_PATH:
         out_path = os.path.abspath(os.path.expanduser(EXPORT_TOX_PATH))
     else:
-        out_path = os.path.join(repo_root, "td_component", "tdpilot_v1_3.tox")
+        out_path = os.path.join(repo_root, "td_component", "tdpilot.tox")
     out_dir = os.path.dirname(out_path)
     if out_dir and not os.path.isdir(out_dir):
         os.makedirs(out_dir, exist_ok=True)

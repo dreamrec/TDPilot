@@ -228,7 +228,7 @@ Write-Host ""
 Write-Host "  NEXT STEPS:" -ForegroundColor Yellow
 Write-Host "  1. Restart your MCP desktop client" -ForegroundColor White
 Write-Host "  2. Open TouchDesigner and load the component (once per session):" -ForegroundColor White
-Write-Host "     Option A: Drag td_component\tdpilot_v1_3.tox into /local" -ForegroundColor White
+Write-Host "     Option A: Drag td_component\tdpilot.tox into /local" -ForegroundColor White
 Write-Host "     Option B: Run in Textport:" -ForegroundColor White
 Write-Host "       exec(open('$RepoPath\setup_mcp_in_td.py').read(), globals(), globals())" -ForegroundColor DarkGray
 Write-Host "  3. Ask your AI client: 'What's in my TouchDesigner project?'" -ForegroundColor White
@@ -236,5 +236,5 @@ Write-Host ""
 Write-Host "  Installing into /local means TDPilot persists across project opens." -ForegroundColor Green
 Write-Host ""
 Write-Host "  .tox file is at:" -ForegroundColor DarkGray
-Write-Host "  $RepoPath\td_component\tdpilot_v1_3.tox" -ForegroundColor DarkGray
+Write-Host "  $RepoPath\td_component\tdpilot.tox" -ForegroundColor DarkGray
 Write-Host ""

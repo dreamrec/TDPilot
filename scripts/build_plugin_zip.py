@@ -6,7 +6,7 @@ Since audit hardening, the plugin layout is committed at the repo root:
   - .mcp.json                         (plugin MCP config template)
   - commands/                         (slash commands)
   - skills/                           (skills, already at root)
-  - td_component/tdpilot_v1_3.tox     (binary TD component — must be built in TD)
+  - td_component/tdpilot.tox     (binary TD component — must be built in TD)
   - plugin_README.md                  (goes into ZIP as README.md)
 
 This script just zips those files. If any are missing it fails loudly rather
@@ -38,7 +38,7 @@ from td_mcp.release_gates import EXPECTED_MIN_TOOL_COUNT  # noqa: E402
 # `required=True` means the build fails if the file is missing.
 PLUGIN_FILES: list[tuple[str, str, bool]] = [
     # Binary TD component.
-    ("td_component/tdpilot_v1_3.tox", "td_component/tdpilot_v1_3.tox", True),
+    ("td_component/tdpilot.tox", "td_component/tdpilot.tox", True),
     # Plugin README (distinct from the repo's README.md).
     ("plugin_README.md", "README.md", True),
     # Plugin manifests.
@@ -98,7 +98,7 @@ def build(output: Path) -> None:
     if missing_required:
         output.unlink(missing_ok=True)
         msg = "Missing required plugin files:\n  " + "\n  ".join(missing_required)
-        if "td_component/tdpilot_v1_3.tox" in missing_required:
+        if "td_component/tdpilot.tox" in missing_required:
             msg += (
                 "\n\nThe .tox must be rebuilt inside TouchDesigner. From the Textport:\n"
                 '  exec(open("setup_mcp_in_td.py").read(), globals(), globals())'

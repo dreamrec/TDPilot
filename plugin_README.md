@@ -32,7 +32,7 @@ The MCP server connects to TouchDesigner via HTTP/WebSocket:
 
 **Recommended (persistent across projects):**
 1. Open TouchDesigner
-2. Drag-and-drop `td_component/tdpilot_v1_3.tox` into the `/local` container
+2. Drag-and-drop `td_component/tdpilot.tox` into the `/local` container
 3. The MCP server starts automatically and persists across project opens
 
 **Alternative (setup script):**
@@ -42,9 +42,9 @@ exec(open("/path/to/TDPilot/setup_mcp_in_td.py").read(), globals(), globals())
 ```
 
 **Per-project install:**
-Import `td_component/tdpilot_v1_3.tox` directly into your project root.
+Import `td_component/tdpilot.tox` directly into your project root.
 
-The TOX file is included in this plugin under `td_component/tdpilot_v1_3.tox`.
+The TOX file is included in this plugin under `td_component/tdpilot.tox`.
 
 ## Usage
 

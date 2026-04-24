@@ -52,7 +52,7 @@ uv run tdpilot init --client claude-desktop
 exec(open("/path/to/TDPilot/setup_mcp_in_td.py").read(), globals(), globals())
 ```
 
-Or drag-and-drop `td_component/tdpilot_v1_3.tox` into `/local` manually.
+Or drag-and-drop `td_component/tdpilot.tox` into `/local` manually.
 
 3. Run environment diagnostics before sessions:
 

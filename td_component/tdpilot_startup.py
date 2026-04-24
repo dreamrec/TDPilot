@@ -5,7 +5,7 @@ Place in ~/Documents/Derivative/Startup/ to auto-load TDPilot on every TD launch
 Installed automatically by: npx tdpilot install
 
 Reads ~/.tdpilot_path to find the TDPilot repo root, then either:
-  1. Loads the pre-built tdpilot_v1_3.tox into /local (fast path)
+  1. Loads the pre-built tdpilot.tox into /local (fast path)
   2. Rebuilds from source if the TOX is missing or stale (fallback)
 
 Never crashes TD startup — all errors are caught and printed to Textport.
@@ -16,7 +16,7 @@ import os
 
 _CONFIG_FILE = os.path.join(os.path.expanduser("~"), ".tdpilot_path")
 _ENV_FILE_NAME = ".tdpilot.env"
-_TOX_RELATIVE = os.path.join("td_component", "tdpilot_v1_3.tox")
+_TOX_RELATIVE = os.path.join("td_component", "tdpilot.tox")
 _BUILD_SCRIPT_RELATIVE = os.path.join("td_component", "build_export_mcp_tox.py")
 _COMP_NAME = "mcp_server"
 

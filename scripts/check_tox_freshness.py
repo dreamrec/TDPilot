@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail if the committed ``td_component/tdpilot_v1_3.tox`` is out of sync with source.
+"""Fail if the committed ``td_component/tdpilot.tox`` is out of sync with source.
 
 The .tox is a binary TD artifact and can only be rebuilt inside TouchDesigner.
 That means after any edit to the `.py` files it embeds, the .tox goes stale
@@ -29,7 +29,7 @@ SOURCE_FILES = (
     "td_component/tdpilot_startup.py",
 )
 HASH_FILE = ROOT / "td_component" / ".tox-source-hash.json"
-TOX_FILE = ROOT / "td_component" / "tdpilot_v1_3.tox"
+TOX_FILE = ROOT / "td_component" / "tdpilot.tox"
 
 
 def compute_current_hash() -> str:
@@ -69,7 +69,7 @@ def main() -> int:
         print("Rebuild the .tox in TouchDesigner before pushing:")
         print("  1. Open TD")
         print("  2. In Textport run setup_mcp_in_td.py")
-        print("  3. git add td_component/tdpilot_v1_3.tox td_component/.tox-source-hash.json")
+        print("  3. git add td_component/tdpilot.tox td_component/.tox-source-hash.json")
         return 1
 
     print(".tox is fresh (hash " + current_hash[:16] + "..., built " + str(stored.get("built_at")) + ")")

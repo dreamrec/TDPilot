@@ -63,7 +63,7 @@ exclude = [
     "dist",
     "data/normalized",
     "td_component/build_export_mcp_tox.py",  # contains TD-API-only references
-    # td_component/mcp_webserver_callbacks.py is baked into tdpilot_v1_3.tox —
+    # td_component/mcp_webserver_callbacks.py is baked into tdpilot.tox —
     # reformatting it changes the source hash and staleness-checks the .tox
     # (which can only be rebuilt inside a running TouchDesigner session).
     # Exclude from ruff format to keep format-only releases from invalidating

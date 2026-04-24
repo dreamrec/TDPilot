@@ -29,7 +29,7 @@
     "static_resource_count": 1
   },
   "artifacts": {
-    "td_component_tox": "td_component/tdpilot_v1_3.tox",
+    "td_component_tox": "td_component/tdpilot.tox",
     "profiles_dir": "mcp/profiles"
   }
 }

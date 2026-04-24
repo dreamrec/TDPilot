@@ -39,14 +39,14 @@ tdpilot doctor --strict
 The MCP server communicates with TD over HTTP. TD must be open with the TDPilot component loaded.
 
 1. Open TouchDesigner.
-2. Drag `td_component/tdpilot_v1_3.tox` into `/local` (recommended — persists across project opens) or into your project root.
+2. Drag `td_component/tdpilot.tox` into `/local` (recommended — persists across project opens) or into your project root.
 3. Verify the WebServer DAT inside the component is active (green cook indicator).
 
 ### Component not loaded or inactive
 
 The `.tox` component contains the WebServer DAT that listens on port 9981. If you deleted it, bypassed it, or it errored on load, the MCP server has nothing to connect to.
 
-- Re-import `td_component/tdpilot_v1_3.tox` into `/local` (or your project root).
+- Re-import `td_component/tdpilot.tox` into `/local` (or your project root).
 - Check the component's error state in TD (right-click > Info).
 
 ### Wrong host or port
@@ -302,7 +302,7 @@ print(app.version)
 
 ### Component version mismatch
 
-Make sure the `.tox` component version matches the MCP server version. The current component is `tdpilot_v1_3.tox` (ships with server v1.3.x). Using an older `.tox` with a newer server (or vice versa) can cause missing endpoint errors.
+Make sure the `.tox` component version matches the MCP server version. The current component is `tdpilot.tox` (ships with server v1.3.x). Using an older `.tox` with a newer server (or vice versa) can cause missing endpoint errors.
 
 ---
 

@@ -72,7 +72,7 @@ yet have the `.tox` component loaded. Two options:
 **Drag-drop (easiest):**
 1. Open Finder to
    `~/.claude/plugins/cache/dreamrec-TDPilot/tdpilot/<version>/td_component/`
-2. Drag `tdpilot_v1_3.tox` into your TD `/local` container.
+2. Drag `tdpilot.tox` into your TD `/local` container.
 
 **Or via TD Textport** — run `setup_mcp_in_td.py` from the plugin cache. Paste
 this block into the Textport (it auto-detects the latest installed version):

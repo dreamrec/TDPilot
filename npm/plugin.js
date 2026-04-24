@@ -141,7 +141,7 @@ function printNextSteps() {
     "  2. In a running Claude Code session, ask something like:",
     "       \"What's in my TouchDesigner project?\"",
     "     — the touchdesigner MCP server auto-starts on first use.",
-    "  3. Load td_component/tdpilot_v1_3.tox from the plugin cache",
+    "  3. Load td_component/tdpilot.tox from the plugin cache",
     "     (~/.claude/plugins/cache/" + MARKETPLACE_NAME + "/" + PLUGIN_NAME + "/<version>/)",
     "     by dragging it into your TD /local container.",
     "",
