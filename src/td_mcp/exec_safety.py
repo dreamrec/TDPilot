@@ -253,17 +253,32 @@ def enforce(code: str, mode=None) -> None:
     if resolved == MODE_OFF:
         raise PermissionError("Python execution is disabled by TD_MCP_EXEC_MODE=off")
 
-    if resolved in (MODE_RESTRICTED, MODE_STANDARD):
-        ast_hits = ast_violations(code)
-        if ast_hits:
-            raise PermissionError(f"{resolved} mode blocks: {ast_hits[0]}")
-
+    # v1.4.6 Bug O: in restricted mode ALL imports are blocked regardless of
+    # module name. Run `restricted_violation` FIRST so the blanket-import
+    # rejection message fires before the AST check that reports module-
+    # specific "dangerous module: <name>" — that phrasing implies the module
+    # is specially flagged when really every import is rejected in this mode.
+    # Append a hint pointing at TD_MCP_EXEC_MODE as the remediation knob so
+    # callers know how to escalate when they legitimately need imports.
     if resolved == MODE_RESTRICTED:
         violation = restricted_violation(code)
         if violation:
-            raise PermissionError(violation)
+            raise PermissionError(
+                f"{violation}. Set TD_MCP_EXEC_MODE=standard for allowlisted "
+                f"stdlib imports (json, math, re, datetime, collections, "
+                f"itertools, etc.) or TD_MCP_EXEC_MODE=full for unrestricted "
+                f"imports. See exec_safety.STANDARD_ALLOWED_IMPORTS for the "
+                f"standard-mode allowlist."
+            )
+        ast_hits = ast_violations(code)
+        if ast_hits:
+            raise PermissionError(f"{resolved} mode blocks: {ast_hits[0]}")
+        return
 
     if resolved == MODE_STANDARD:
+        ast_hits = ast_violations(code)
+        if ast_hits:
+            raise PermissionError(f"{resolved} mode blocks: {ast_hits[0]}")
         violation = standard_violation(code)
         if violation:
             raise PermissionError(violation)

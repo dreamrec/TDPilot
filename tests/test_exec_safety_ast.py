@@ -80,3 +80,75 @@ def test_enforce_restricted_blocks_ast_bypass(monkeypatch):
 def test_enforce_full_allows_everything(monkeypatch):
     monkeypatch.setenv("TD_MCP_EXEC_MODE", "full")
     exec_safety.enforce("import os\nos.getenv('HOME')")
+
+
+# ---------------------------------------------------------------------------
+# Bug O - restricted-mode import error message is accurate and actionable.
+#
+# Live repro: an agent tried to run code with "import os" via td_exec_python
+# in restricted mode (the default). The error came back as
+#     "restricted mode blocks: import of dangerous module blocked: os"
+# which implies `os` is specially flagged. It isn't - restricted mode blocks
+# ALL imports via RESTRICTED_IMPORT_RE regardless of module name. The AST
+# check just happened to fire first with a module-specific message that
+# leaks a misleading category ("dangerous") to the caller.
+#
+# The fix reorders the checks in restricted mode so the blanket-import
+# message fires first, and adds a hint pointing to TD_MCP_EXEC_MODE=standard
+# or 'full' as the remediation path.
+# ---------------------------------------------------------------------------
+
+
+def test_enforce_restricted_import_error_is_about_imports_not_dangerous_modules(monkeypatch):
+    """`import json` in restricted mode should produce a clear blanket-import
+    message - NOT imply that json specifically is dangerous."""
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "restricted")
+    with pytest.raises(PermissionError) as exc:
+        exec_safety.enforce("import json\nx = 1")
+    msg = str(exc.value)
+    assert "import" in msg.lower()
+    assert "dangerous module" not in msg, (
+        "restricted mode blocks ALL imports, so the error must not single out "
+        "the specific module as 'dangerous' - that language misleads callers "
+        f"into thinking the module was specially banned. got: {msg!r}"
+    )
+
+
+def test_enforce_restricted_import_error_is_consistent_for_os(monkeypatch):
+    """Same rule for `os` - in restricted mode, every import is blocked.
+    Pre-fix this path emitted 'dangerous module: os' which misleads callers
+    into thinking os was specifically banned rather than imports-generally."""
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "restricted")
+    with pytest.raises(PermissionError) as exc:
+        exec_safety.enforce("import os\nos.environ.get('X')")
+    msg = str(exc.value)
+    assert "dangerous module" not in msg, f"restricted mode should not say 'dangerous module' - got: {msg!r}"
+
+
+def test_enforce_restricted_import_error_hints_at_mode_escalation(monkeypatch):
+    """The error should point the caller at TD_MCP_EXEC_MODE as the knob
+    to turn when they legitimately need imports. Without this, callers
+    don't know how to escape the import-less sandbox."""
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "restricted")
+    with pytest.raises(PermissionError) as exc:
+        exec_safety.enforce("import json")
+    msg = str(exc.value)
+    assert "TD_MCP_EXEC_MODE" in msg, (
+        f"restricted-mode import error must mention the TD_MCP_EXEC_MODE env var "
+        f"as the remediation; got: {msg!r}"
+    )
+
+
+def test_enforce_standard_still_blocks_os_with_dangerous_module_label(monkeypatch):
+    """Regression guard: the standard-mode behavior is unchanged. `os` is
+    not in STANDARD_ALLOWED_IMPORTS and remains in _DANGEROUS_MODULES, so
+    the AST 'dangerous module' message is still accurate for standard mode
+    (where the category genuinely discriminates `os` from e.g. `json`)."""
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "standard")
+    with pytest.raises(PermissionError) as exc:
+        exec_safety.enforce("import os")
+    msg = str(exc.value)
+    # Allow EITHER the AST "dangerous module: os" message OR the plainer
+    # "import of: os" standard_violation message - both accurately convey
+    # that os specifically isn't allowed in standard mode.
+    assert "os" in msg

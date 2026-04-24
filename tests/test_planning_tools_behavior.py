@@ -324,6 +324,77 @@ async def test_audit_project_deep_nesting(monkeypatch):
     assert result["total_nodes"] == 3  # level1 + level2 + leaf
 
 
+class _FakeCardIndexWithPalette(_FakeCardIndex):
+    """Like _FakeCardIndex, but `get_palette` can return truthy for any
+    op_type in `palette_ops`. Mirrors the live behavior that tripped Bug T
+    — the production CardIndex returns palette-adjacent cards for stock
+    ops like `noise`, `transform`, `level`, so the audit flagged every
+    stock op as a palette_component."""
+
+    def __init__(self, known_ops=None, palette_ops=None):
+        super().__init__(known_ops)
+        self._palette_ops = set(palette_ops or [])
+
+    def get_palette(self, op_type: str):
+        if op_type in self._palette_ops:
+            return {"name": op_type, "_test_palette": True}
+        return None
+
+
+@pytest.mark.asyncio
+async def test_audit_project_palette_components_excludes_stock_ops(monkeypatch):
+    """Bug T regression: if CardIndex.get_palette returns truthy for a
+    stock op_type (e.g. `noise`, `transform`, `null`), the audit must
+    NOT label those nodes as palette components. Stock TD ops are by
+    definition NOT palette components. Real palette components are
+    custom COMPs like POPX_1_2_1, StreamDiffusionTD, etc.
+
+    Live repro (v1.4.5): running td_audit_project on a project with
+    plain noise/transform/level/null TOPs returned
+    ``palette_components: [{name: "v146b_src", op_type: "noise"}, ...]``
+    — every stock op was labeled a palette component, making the field
+    meaningless.
+    """
+    # Palette-card returns truthy for BOTH stock ops (noise, transform)
+    # AND a real palette-style op (POPX_1_2_1). Only the real one should
+    # surface in palette_components after the fix.
+    idx = _FakeCardIndexWithPalette(
+        known_ops={"noiseTOP": {}, "transformTOP": {}, "POPX_1_2_1": {}},
+        palette_ops={"noise", "transform", "POPX_1_2_1"},
+    )
+    client = _AuditClient(
+        {
+            "/project1": [
+                {"name": "noise1", "type": "noise", "family": "TOP", "path": "/project1/noise1"},
+                {"name": "xf1", "type": "transform", "family": "TOP", "path": "/project1/xf1"},
+                {
+                    "name": "POPX_real",
+                    "type": "POPX_1_2_1",
+                    "family": "COMP",
+                    "path": "/project1/POPX_real",
+                    "isCOMP": True,
+                },
+            ],
+        }
+    )
+    ctx = _make_ctx(client=client, card_index=idx)
+    monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
+
+    result = await registry.td_audit_project(
+        AuditProjectInput(root_path="/project1"),
+        ctx,
+    )
+    assert result["success"] is True
+    palette_names = {p["name"] for p in result["palette_components"]}
+    assert "POPX_real" in palette_names, "a genuine non-stock palette component must still surface"
+    assert "noise1" not in palette_names, (
+        "pre-fix: stock `noise` op was flagged as a palette component "
+        "just because get_palette(noise) returned truthy. Post-fix: stock "
+        "ops are excluded via the _STOCK_OP_TYPES allowlist."
+    )
+    assert "xf1" not in palette_names, "same for transform — a stock op should never be a palette component"
+
+
 @pytest.mark.asyncio
 async def test_audit_project_unknown_ops_detected(monkeypatch):
     """Audit reports unknown op types when card_index is available."""

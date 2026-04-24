@@ -4803,9 +4803,17 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> dict[str,
             if op_type:
                 op_type_counts[op_type] = op_type_counts.get(op_type, 0) + 1
 
-            # Detect palette components (heuristic: name starts with known palette patterns)
+            # Detect palette components.
+            # v1.4.6 Bug T fix: previously ANY op whose CardIndex `get_palette`
+            # returned truthy got flagged — which misfired for stock ops like
+            # noise/transform/null/level because the production CardIndex
+            # stores palette-adjacent cards for them too. Stock TD ops are
+            # by definition NOT palette components (palette components are
+            # installed palette COMPs like POPX, StreamDiffusionTD, etc.).
+            # Gate the flagging on `op_type NOT in _STOCK_OP_TYPES` so only
+            # non-stock ops with a palette card get listed.
             name = node.get("name", "")
-            if idx is not None and op_type:
+            if idx is not None and op_type and op_type.lower() not in _STOCK_OP_TYPES:
                 palette_card = idx.get_palette(op_type)
                 if palette_card:
                     palette_components.append({"name": name, "op_type": op_type})
