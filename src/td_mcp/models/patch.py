@@ -32,3 +32,12 @@ class PatchOperation(BaseModel):
     target: str | None = None
     args: dict[str, Any] = Field(default_factory=dict)
     depends_on: list[int] = Field(default_factory=list)
+
+
+class ValidationPlan(BaseModel):
+    """What a patch wants validated post-apply. See spec §4.2."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    target_root: str
+    capture_frames: list[str] = Field(default_factory=list)

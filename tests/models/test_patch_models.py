@@ -33,3 +33,17 @@ class TestPatchOperation:
         assert op.depends_on == []
         op2 = PatchOperation(kind="connect", args={}, depends_on=[0, 1])
         assert op2.depends_on == [0, 1]
+
+
+from td_mcp.models.patch import ValidationPlan
+
+
+class TestValidationPlan:
+    def test_minimal(self):
+        vp = ValidationPlan(target_root="/project1")
+        assert vp.target_root == "/project1"
+        assert vp.capture_frames == []
+
+    def test_with_frames(self):
+        vp = ValidationPlan(target_root="/p", capture_frames=["/p/out1", "/p/out2"])
+        assert vp.capture_frames == ["/p/out1", "/p/out2"]
