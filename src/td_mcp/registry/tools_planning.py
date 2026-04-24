@@ -25,9 +25,79 @@ from mcp.server.fastmcp import Context
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
+from td_mcp import patch  # noqa: E402
 from td_mcp import tool_registry as _tr  # noqa: E402
 from td_mcp.errors import format_tool_error
 from td_mcp.tool_registry import mcp  # noqa: E402
+
+def _legacy_plan_dict(
+    plan,
+    *,
+    intent: str,
+    target_path: str,
+    recipe_id: str | None,
+    current_node_count: int = 0,
+    existing_names: list[str] | None = None,
+) -> dict[str, Any]:
+    """Translate a typed PatchPlan into the pre-v1.5.0 dict shape so
+    legacy callers of td_plan_patch see no change. `current_node_count`
+    and `existing_names` should be freshly probed by the caller to match
+    the original td_plan_patch behaviour.
+
+    Note: `plan.required_ops` uses the 'unknown:<op_type>' sentinel
+    convention established in patch.planner (Chunk 3). The
+    `known_to_knowledge_corpus` derivation here relies on that exact
+    string format.
+    """
+    steps: list[dict[str, Any]] = []
+    for op in plan.operations:
+        if op.kind == "create_node":
+            steps.append({
+                "op": "create_node",
+                "op_type": op.args.get("op_type", ""),
+                "name": op.args.get("name", ""),
+                "parent_path": op.target or target_path,
+                "known_to_knowledge_corpus": not any(
+                    r == f"unknown:{op.args.get('op_type', '')}" for r in plan.required_ops
+                ),
+            })
+        elif op.kind == "macro":
+            steps.append({
+                "op": "create_macro",
+                "macro_type": op.args.get("macro_type", ""),
+                "parent_path": op.target or target_path,
+                "summary": op.args.get("summary", ""),
+                "source": "intent_heuristic",
+            })
+
+    dict_out: dict[str, Any] = {
+        "intent": intent,
+        "target_path": target_path,
+        "recipe_id": recipe_id,
+        "current_node_count": current_node_count,
+        "existing_names": existing_names or [],
+        "steps": steps,
+        "note": (
+            "This plan does NOT mutate the project. "
+            "Validate with td_preflight_patch before execution."
+        ),
+    }
+    # Macro suggestion surfacing (legacy had this for intent-only plans)
+    for step in steps:
+        if step.get("op") == "create_macro":
+            dict_out["macro_suggestion"] = {
+                "macro_type": step["macro_type"],
+                "summary": step.get("summary", ""),
+            }
+            break
+    if not steps:
+        dict_out["next_actions"] = [
+            "Search the technique library: td_memory_recall(query='<keyword>').",
+            "List built-in macros: td_list_macros (see td_get_macro_params for options).",
+            "If you already have a recipe, pass recipe_id= to td_plan_patch.",
+        ]
+    return dict_out
+
 
 _INTENT_MACRO_KEYWORDS: tuple[tuple[tuple[str, ...], str, str], ...] = (
     (
@@ -103,99 +173,37 @@ async def td_plan_patch(
     try:
         client = _tr._get_client(ctx)
         svc = _tr._get_services(ctx)
-        idx = getattr(svc, "card_index", None)
+        store = _tr._get_technique_store(ctx)
+        card_index = getattr(svc, "card_index", None)
 
-        # Inspect current state of the target path
+        # Probe live state for legacy shape fidelity (Option A)
         current_nodes = []
         try:
             node_data = await client.request("nodes", {"path": target_path, "limit": 200})
             current_nodes = node_data if isinstance(node_data, list) else node_data.get("nodes", [])
         except Exception:
             current_nodes = []
+        existing_names = sorted({n.get("name", "") for n in current_nodes if isinstance(n, dict)})
 
-        existing_names = {n.get("name", "") for n in current_nodes if isinstance(n, dict)}
-
-        # If a recipe_id is provided, load it and generate steps from its nodes
-        recipe_steps = []
-        recipe_info = None
-        if recipe_id:
-            try:
-                store = _tr._get_technique_store(ctx)
-                recipe_info = store.get(recipe_id, scope="project")
-                if recipe_info is None:
-                    recipe_info = store.get(recipe_id, scope="global")
-                if recipe_info:
-                    tech = recipe_info.get("technique", {})
-                    recipe_data = tech.get("recipe", {}) if isinstance(tech, dict) else {}
-                    nodes = recipe_data.get("nodes", {})
-                    if isinstance(nodes, dict):
-                        nodes = list(nodes.values())
-                    for node in nodes:
-                        op_type = node.get("type", "")
-                        card_ok = True
-                        if idx is not None:
-                            card_ok = idx.get_operator(op_type) is not None
-                        recipe_steps.append(
-                            {
-                                "op": "create_node",
-                                "op_type": op_type,
-                                "name": node.get("name", ""),
-                                "parent_path": target_path,
-                                "known_to_knowledge_corpus": card_ok,
-                            }
-                        )
-            except Exception as exc:
-                recipe_info = {"error": str(exc)}
-
-        # If no recipe was provided or it didn't yield steps, fall back to
-        # intent-keyword macro matching so we never return empty steps.
-        macro_suggestion = None
-        if not recipe_steps:
-            macro_suggestion = _suggest_macro_for_intent(intent)
-            if macro_suggestion is not None:
-                recipe_steps.append(
-                    {
-                        "op": "create_macro",
-                        "macro_type": macro_suggestion["macro_type"],
-                        "parent_path": target_path,
-                        "summary": macro_suggestion["summary"],
-                        "source": "intent_heuristic",
-                    }
-                )
-
-        # Collect actionable next-step hints the caller can use when steps is
-        # still empty (no recipe + no heuristic match).
-        next_actions: list[str] = []
-        if not recipe_steps:
-            next_actions.extend(
-                [
-                    "Search the technique library: td_memory_recall(query='<keyword>').",
-                    "List built-in macros: td_list_macros (see td_get_macro_params for options).",
-                    "If you already have a recipe, pass recipe_id= to td_plan_patch.",
-                ]
-            )
-
-        plan = {
-            "intent": intent,
-            "target_path": target_path,
-            "recipe_id": recipe_id,
-            "current_node_count": len(current_nodes),
-            "existing_names": sorted(existing_names),
-            "steps": recipe_steps,
-            "note": (
-                "This plan does NOT mutate the project. Validate with td_preflight_patch before execution."
-            ),
-        }
-        if macro_suggestion is not None:
-            plan["macro_suggestion"] = macro_suggestion
-        if next_actions:
-            plan["next_actions"] = next_actions
-        if isinstance(recipe_info, dict) and "error" not in recipe_info:
-            plan["recipe_name"] = recipe_info.get("name", "")
-
+        plan = await patch.build_plan(
+            td_client=client,
+            target_root=target_path,
+            intent=intent,
+            recipe_id=recipe_id,
+            technique_store=store,
+            card_index=card_index,
+        )
+        legacy_dict = _legacy_plan_dict(
+            plan,
+            intent=intent,
+            target_path=target_path,
+            recipe_id=recipe_id,
+            current_node_count=len(current_nodes),
+            existing_names=existing_names,
+        )
         _tr._audit_log(ctx, "td_plan_patch", {"intent": intent, "target_path": target_path})
-        return {"success": True, "plan": plan}
-    except Exception as exc:
+        return {"success": True, "plan": legacy_dict}
+    except Exception as exc:  # noqa: BLE001
         _tr._record_tool_error(ctx, "td_plan_patch")
         return {"error": str(exc)}
     finally:
