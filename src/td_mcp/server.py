@@ -511,9 +511,18 @@ def main(argv: list[str] | None = None) -> None:
     if command == "init":
         raise SystemExit(_run_init_command(args))
 
+    # Auth bootstrap (v1.4.5): load ~/.tdpilot/.tdpilot.env if present and,
+    # when TD_MCP_REQUIRE_AUTH=1 + TD_MCP_AUTOGENERATE_SECRET=1 are set with
+    # no secret resolvable, mint one and persist it. Without this, the fresh
+    # plugin install path (which can't run install.sh) deterministically
+    # failed startup after the v1.4.3 fail-loud gate landed.
+    from td_mcp import auth_bootstrap
+
+    auth_bootstrap.bootstrap_auth()
+
     # Startup gate: refuse to run the server if auth is required but no secret
-    # is resolvable. Otherwise the transport comes up and every authenticated
-    # request fails with 401 for a reason the user can't see.
+    # is resolvable. Reached only when the caller declines autogeneration —
+    # bootstrap_auth() doesn't silently rescue.
     try:
         verify_auth_config()
     except RuntimeError as exc:
