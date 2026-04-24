@@ -59,3 +59,59 @@ class PatchPlan(BaseModel):
     undo_label: str
     validation_plan: ValidationPlan
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class PatchPreview(BaseModel):
+    """Return shape of td_patch_preview. See spec §4.4."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    plan_id: str
+    summary: str
+    risk_flags: list[str] = Field(default_factory=list)
+    live_risk_flags: list[str] = Field(default_factory=list)
+    required_ops: list[str] = Field(default_factory=list)
+    op_count: int
+
+
+class ValidationReport(BaseModel):
+    """Return shape of td_patch_validate. See spec §4.5."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    target_root: str
+    errors: list[dict[str, Any]] = Field(default_factory=list)
+    cook_stats: dict[str, Any] = Field(default_factory=dict)
+    frames: dict[str, str] = Field(default_factory=dict)
+    ok: bool
+    summary: str
+
+
+class PatchResult(BaseModel):
+    """Outcome of td_patch_apply. See spec §4.6."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    plan_id: str
+    status: Literal["clean", "warnings", "broken"]
+    applied_ops: list[int] = Field(default_factory=list)
+    failed_op: int | None = None
+    failed_reason: str | None = None
+    created_paths: list[str] = Field(default_factory=list)
+    changed_params: list[dict[str, Any]] = Field(default_factory=list)
+    connections_made: list[tuple[str, str]] = Field(default_factory=list)
+    validation: ValidationReport | None = None
+    risk_flags: list[str] = Field(default_factory=list)
+    before_snapshot_id: str | None = None
+    after_snapshot_id: str | None = None
+    undo_label: str
+    rollback_hint: str | None = None
+
+
+class PatchVariant(PatchPlan):
+    """A variant of a PatchPlan derived via a variation strategy. See spec §4.7."""
+
+    source: Literal["variant"] = "variant"
+    base_plan_id: str
+    strategy: Literal["param_jitter", "operator_substitute", "topology_perturb"]
+    seed: int
