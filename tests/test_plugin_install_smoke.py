@@ -222,12 +222,9 @@ def test_doctor_also_runs_bootstrap_before_auth_check(monkeypatch, tmp_path):
 
     # Bootstrap ran → secret minted → auth_config PASS → doctor exits 0
     assert exc.value.code == 0, (
-        "doctor exited non-zero; bootstrap_auth probably isn't wired "
-        "into the doctor command path"
+        "doctor exited non-zero; bootstrap_auth probably isn't wired into the doctor command path"
     )
-    assert env_file.exists(), (
-        "doctor did not trigger bootstrap_auth — env file never created"
-    )
+    assert env_file.exists(), "doctor did not trigger bootstrap_auth — env file never created"
 
 
 def test_fresh_plugin_install_with_autogen_disabled_still_trips_gate(monkeypatch, tmp_path):
