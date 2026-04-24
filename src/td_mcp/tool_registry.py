@@ -2111,111 +2111,6 @@ async def td_python_classes(ctx: Context) -> str:
 # Extended tools
 
 
-@mcp.tool(name="td_create_macro")
-async def td_create_macro(
-    ctx: Context,
-    macro_type: Annotated[
-        MacroType,
-        Field(description="Macro template to create."),
-    ],
-    parent_path: Annotated[
-        str,
-        Field(
-            default="/project1",
-            description="Parent COMP path where the macro will be instantiated.",
-        ),
-    ] = "/project1",
-    name: Annotated[
-        str | None,
-        Field(
-            default=None,
-            description="Optional name prefix for all nodes created by this macro.",
-        ),
-    ] = None,
-    nodeX: Annotated[
-        int,
-        Field(
-            default=0,
-            description="Macro origin X position in the network editor.",
-        ),
-    ] = 0,
-    nodeY: Annotated[
-        int,
-        Field(
-            default=0,
-            description="Macro origin Y position in the network editor.",
-        ),
-    ] = 0,
-    params: Annotated[
-        dict[str, Any] | None,
-        Field(
-            default=None,
-            description="Override template parameter defaults with custom values.",
-        ),
-    ] = None,
-) -> str:
-    """Create a macro template network."""
-    finish = _start_tool(ctx, "td_create_macro")
-    try:
-        engine = _get_macro_engine(ctx)
-        data = await engine.create_macro(
-            parent_path=parent_path,
-            macro_type=macro_type.value,
-            name_prefix=name,
-            node_x=nodeX,
-            node_y=nodeY,
-            overrides=params,
-        )
-        _audit_log(
-            ctx,
-            "td_create_macro",
-            {
-                "macro_type": macro_type.value,
-                "parent_path": parent_path,
-                "name_prefix": name,
-            },
-        )
-        return _as_json_output(data)
-    except Exception as exc:
-        _record_tool_error(ctx, "td_create_macro")
-        return format_tool_error(exc)
-    finally:
-        finish()
-
-
-@mcp.tool(name="td_list_macros")
-async def td_list_macros(ctx: Context) -> str:
-    finish = _start_tool(ctx, "td_list_macros")
-    try:
-        data = _get_macro_engine(ctx).list_macros()
-        return _as_json_output(data)
-    except Exception as exc:
-        _record_tool_error(ctx, "td_list_macros")
-        return format_tool_error(exc)
-    finally:
-        finish()
-
-
-@mcp.tool(name="td_get_macro_params")
-async def td_get_macro_params(
-    ctx: Context,
-    macro_type: Annotated[
-        MacroType,
-        Field(description="Macro template to inspect."),
-    ],
-) -> str:
-    """Inspect parameter schema for a macro template."""
-    finish = _start_tool(ctx, "td_get_macro_params")
-    try:
-        data = _get_macro_engine(ctx).get_macro_params(macro_type.value)
-        return _as_json_output(data)
-    except Exception as exc:
-        _record_tool_error(ctx, "td_get_macro_params")
-        return format_tool_error(exc)
-    finally:
-        finish()
-
-
 @mcp.tool(name="td_get_capabilities")
 async def td_get_capabilities(ctx: Context) -> str:
     finish = _start_tool(ctx, "td_get_capabilities")
@@ -2452,6 +2347,11 @@ from td_mcp.registry.tools_knowledge import (  # noqa: E402
     td_search_official_docs,
     td_search_paketa12,
     td_search_popx_docs,
+)
+from td_mcp.registry.tools_macros import (  # noqa: E402
+    td_create_macro,
+    td_get_macro_params,
+    td_list_macros,
 )
 from td_mcp.registry.tools_memory import (  # noqa: E402
     td_memory_export,
