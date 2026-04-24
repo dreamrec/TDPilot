@@ -1809,308 +1809,6 @@ async def td_list_families(ctx: Context) -> str:
     return await _forward(ctx, "td_list_families", "families")
 
 
-@mcp.tool(name="td_get_content")
-async def td_get_content(
-    ctx: Context,
-    path: Annotated[
-        str,
-        Field(description="Path to a DAT node", min_length=1),
-    ],
-) -> str:
-    """Read DAT text/table content."""
-    return await _forward(ctx, "td_get_content", "node/content", {"path": path})
-
-
-@mcp.tool(name="td_set_content")
-async def td_set_content(
-    ctx: Context,
-    path: Annotated[
-        str,
-        Field(description="Path to a DAT node", min_length=1),
-    ],
-    text: Annotated[
-        str | None,
-        Field(
-            default=None,
-            description="Text content to write (for Text DATs, Script DATs, etc.)",
-        ),
-    ] = None,
-    table: Annotated[
-        list[list[str]] | None,
-        Field(
-            default=None,
-            description="Table content as 2D array of strings (for Table DATs)",
-        ),
-    ] = None,
-) -> str:
-    """Write DAT text/table content."""
-    body: dict[str, Any] = {"path": path}
-    if text is not None:
-        body["text"] = text
-    if table is not None:
-        body["table"] = table
-    return await _forward(
-        ctx,
-        "td_set_content",
-        "node/content/set",
-        body,
-        audit_event="td_set_content",
-    )
-
-
-@mcp.tool(name="td_custom_parameters")
-async def td_custom_parameters(
-    ctx: Context,
-    path: Annotated[
-        str,
-        Field(description="Path to a COMP with custom parameters", min_length=1),
-    ],
-    page: Annotated[
-        str,
-        Field(description="Custom page name", min_length=1, max_length=64),
-    ],
-    params: Annotated[
-        list[CustomParameterSpec],
-        Field(
-            min_length=1,
-            description=(
-                "One or more parameter specifications to create on the page. "
-                "Each spec has kind (float/int/toggle/menu/str/rgb/rgba/pulse/"
-                "file/filesave/folder/chop/comp/dat/mat/header), name, and "
-                "optional label/size/default/min/max."
-            ),
-        ),
-    ],
-) -> str:
-    """Create or update a custom parameter page on a COMP."""
-    # Re-instantiate so nested CustomParameterSpec.kind validator still runs.
-    validated = CustomParametersInput(path=path, page=page, params=params)
-    return await _forward(
-        ctx,
-        "td_custom_parameters",
-        "custom-parameters",
-        validated.model_dump(),
-        audit_event="td_custom_parameters",
-    )
-
-
-@mcp.tool(name="td_exec_python")
-async def td_exec_python(
-    ctx: Context,
-    code: Annotated[
-        str,
-        Field(
-            description=(
-                "Python code to execute in TouchDesigner's Python environment. "
-                "Has access to: op(), ops(), project, app, absTime, me, "
-                "parent(), mod, ui, tdu. "
-                "Set __result__ = <value> to return a value to the caller. "
-                'Example: \'__result__ = op("/project1/noise1").par.type.ev'
-                "al()'"
-            ),
-            min_length=1,
-            max_length=50000,
-        ),
-    ],
-    timeout_ms: Annotated[
-        int | None,
-        Field(
-            default=None,
-            description=(
-                "Optional per-call execution timeout in milliseconds. "
-                "When omitted, TouchDesigner uses its configured default. "
-                "Bounds: 100-60000 ms."
-            ),
-            ge=100,
-            le=60000,
-        ),
-    ] = None,
-) -> str:
-    """Execute Python code inside TouchDesigner."""
-    finish = _start_tool(ctx, "td_exec_python")
-    try:
-        _enforce_exec_mode(code)
-        mode = _current_exec_mode()
-        body: dict[str, Any] = {
-            "code": code,
-            "exec_mode": mode,
-        }
-        # Forward the per-call timeout only when the caller set one. Omitting
-        # the key lets the TD-side choose its configured default.
-        if timeout_ms is not None:
-            body["timeout_ms"] = timeout_ms
-        data = await _get_client(ctx).request("exec", body)
-        _audit_log(
-            ctx,
-            "td_exec_python",
-            {
-                "exec_mode": mode,
-                "code_length": len(code),
-                "timeout_ms": timeout_ms,
-            },
-        )
-        return _as_json_output(data)
-    except Exception as exc:
-        _record_tool_error(ctx, "td_exec_python")
-        return format_tool_error(exc)
-    finally:
-        finish()
-
-
-@mcp.tool(name="td_timeline")
-async def td_timeline(ctx: Context) -> str:
-    return await _forward(ctx, "td_timeline", "timeline")
-
-
-@mcp.tool(name="td_timeline_set")
-async def td_timeline_set(
-    ctx: Context,
-    action: Annotated[
-        str | None,
-        Field(
-            default=None,
-            description="Timeline action: 'play', 'pause', or 'frame' (set specific frame)",
-        ),
-    ] = None,
-    frame: Annotated[
-        int | None,
-        Field(
-            default=None,
-            ge=0,
-            description="Frame number to jump to (when action='frame')",
-        ),
-    ] = None,
-    fps: Annotated[
-        float | None,
-        Field(default=None, gt=0, le=240, description="Set cook rate / FPS"),
-    ] = None,
-) -> str:
-    """Control timeline playback: play/pause, jump to frame, set FPS."""
-    body: dict[str, Any] = {}
-    if action is not None:
-        body["action"] = action
-    if frame is not None:
-        body["frame"] = frame
-    if fps is not None:
-        body["fps"] = fps
-    return await _forward(
-        ctx,
-        "td_timeline_set",
-        "timeline/set",
-        body,
-        audit_event="td_timeline_set",
-    )
-
-
-@mcp.tool(name="td_project_lifecycle")
-async def td_project_lifecycle(
-    ctx: Context,
-    action: Annotated[
-        str,
-        Field(
-            description=(
-                "Lifecycle action: status, save, load, undo, redo, "
-                "start_undo_block, end_undo_block, clear_undo"
-            ),
-            min_length=1,
-        ),
-    ],
-    path: Annotated[
-        str | None,
-        Field(
-            default=None,
-            description=(
-                "Project path for save/load. For save with no path, "
-                "TouchDesigner will perform its default incremental save behavior."
-            ),
-        ),
-    ] = None,
-    save_external_toxs: Annotated[
-        bool,
-        Field(
-            default=False,
-            description="Also save external tox contents on save",
-        ),
-    ] = False,
-    name: Annotated[
-        str | None,
-        Field(
-            default=None,
-            description="Undo block name when action=start_undo_block",
-        ),
-    ] = None,
-    enable: Annotated[
-        bool,
-        Field(
-            default=True,
-            description="Whether a started undo block should record undo state",
-        ),
-    ] = True,
-) -> str:
-    """Save/load/undo/redo project lifecycle operations."""
-    # Re-instantiate so the ProjectLifecycleInput custom @field_validator on
-    # ``action`` (allowed-set check) still runs and lowercases the value.
-    validated = ProjectLifecycleInput(
-        action=action,
-        path=path,
-        save_external_toxs=save_external_toxs,
-        name=name,
-        enable=enable,
-    )
-    return await _forward(
-        ctx,
-        "td_project_lifecycle",
-        "project/lifecycle",
-        validated.model_dump(),
-        audit_event="td_project_lifecycle",
-    )
-
-
-@mcp.tool(name="td_pulse_param")
-async def td_pulse_param(
-    ctx: Context,
-    path: Annotated[
-        str,
-        Field(description="Node path", min_length=1),
-    ],
-    param: Annotated[
-        str,
-        Field(description="Parameter name to pulse", min_length=1),
-    ],
-) -> str:
-    """Pulse a pulse-type parameter (e.g. a button par)."""
-    return await _forward(
-        ctx,
-        "td_pulse_param",
-        "pulse",
-        {"path": path, "param": param},
-        audit_event="td_pulse_param",
-    )
-
-
-@mcp.tool(name="td_python_help")
-async def td_python_help(
-    ctx: Context,
-    target: Annotated[
-        str,
-        Field(
-            description=("Python object/class to get help for (e.g. 'td', 'td.OP', 'tdu', 'td.TOP')"),
-            min_length=1,
-        ),
-    ],
-) -> str:
-    """Get Python help documentation for a TD class/module."""
-    return await _forward(ctx, "td_python_help", "python/help", {"target": target})
-
-
-@mcp.tool(name="td_python_classes")
-async def td_python_classes(ctx: Context) -> str:
-    return await _forward(ctx, "td_python_classes", "python/classes")
-
-
-# Extended tools
-
-
 @mcp.tool(name="td_get_capabilities")
 async def td_get_capabilities(ctx: Context) -> str:
     finish = _start_tool(ctx, "td_get_capabilities")
@@ -2307,6 +2005,12 @@ from td_mcp.registry.resources import (  # noqa: E402
     td_resource_timeline,
     td_resource_top_frame,
 )
+from td_mcp.registry.tools_content import (  # noqa: E402
+    td_custom_parameters,
+    td_exec_python,
+    td_get_content,
+    td_set_content,
+)
 from td_mcp.registry.tools_data import (  # noqa: E402
     td_chop_data,
     td_cooking_info,
@@ -2380,6 +2084,14 @@ from td_mcp.registry.tools_recommendations import (  # noqa: E402
     td_explain_better_way,
     td_find_official_example,
     td_recommend_official_component,
+)
+from td_mcp.registry.tools_runtime import (  # noqa: E402
+    td_project_lifecycle,
+    td_pulse_param,
+    td_python_classes,
+    td_python_help,
+    td_timeline,
+    td_timeline_set,
 )
 from td_mcp.registry.tools_safety import (  # noqa: E402
     td_clear_param_bounds,
