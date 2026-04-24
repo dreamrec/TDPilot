@@ -23,8 +23,7 @@ class UndoBlockSentinel:
     def mark_active(self, label: str) -> None:
         if self._active is not None:
             raise RuntimeError(
-                f"sentinel already active: {self._active!r}; "
-                f"caller must end the prior undo block first"
+                f"sentinel already active: {self._active!r}; caller must end the prior undo block first"
             )
         self._active = label
 

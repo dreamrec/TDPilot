@@ -10,5 +10,6 @@ for the authoritative design.
 from __future__ import annotations
 
 from td_mcp.patch.undo_sentinel import UndoBlockSentinel
+from td_mcp.patch.validator import validate_target
 
-__all__ = ["UndoBlockSentinel"]
+__all__ = ["UndoBlockSentinel", "validate_target"]
