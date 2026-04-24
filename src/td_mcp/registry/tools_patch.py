@@ -26,3 +26,56 @@ from td_mcp import tool_registry as _tr  # intentional cycle — see registry/__
 from td_mcp.errors import format_tool_error
 from td_mcp.models.patch import PatchPlan, PatchPreview, ValidationPlan
 from td_mcp.tool_registry import mcp
+
+
+@mcp.tool(name="td_patch_plan")
+async def td_patch_plan(
+    ctx: Context,
+    target_root: Annotated[
+        str,
+        Field(description="Absolute TD path the plan operates on, e.g. '/project1'", min_length=1),
+    ],
+    intent: Annotated[
+        str | None,
+        Field(default=None, description="Free-text goal; triggers heuristic macro match"),
+    ] = None,
+    recipe_id: Annotated[
+        str | None,
+        Field(default=None, description="Technique/recipe ID to materialize into a plan"),
+    ] = None,
+    operations: Annotated[
+        list[dict[str, Any]] | None,
+        Field(default=None, description="Pre-built operation list (LLM-authored)"),
+    ] = None,
+    undo_label: Annotated[
+        str | None,
+        Field(default=None, description="Override for the TD undo block label"),
+    ] = None,
+) -> dict[str, Any]:
+    """Build a typed PatchPlan. Exactly one of intent/recipe_id/operations required."""
+    finish = _tr._start_tool(ctx, "td_patch_plan")
+    try:
+        client = _tr._get_client(ctx)
+        services = _tr._get_services(ctx)
+        store = _tr._get_technique_store(ctx)
+        card_index = getattr(services, "card_index", None)
+
+        plan = await patch.build_plan(
+            td_client=client,
+            target_root=target_root,
+            intent=intent,
+            recipe_id=recipe_id,
+            operations=operations,
+            undo_label=undo_label,
+            technique_store=store,
+            card_index=card_index,
+        )
+        _tr._audit_log(ctx, "td_patch_plan", {"plan_id": plan.id, "source": plan.source})
+        return {"success": True, "plan": plan.model_dump(mode="json")}
+    except ValueError as exc:
+        return {"success": False, "error": str(exc)}
+    except Exception as exc:  # noqa: BLE001
+        _tr._record_tool_error(ctx, "td_patch_plan")
+        return format_tool_error(exc)
+    finally:
+        finish()
