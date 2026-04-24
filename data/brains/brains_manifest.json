@@ -1,5 +1,5 @@
 {
-  "manifest_version": 1,
+  "manifest_version": 2,
   "updated_at": "2026-04-24",
   "source": "bundled (shipped with the repo and plugin zip)",
   "brains": {
@@ -8,6 +8,8 @@
       "description": "Official TouchDesigner documentation — 25,887 chunks, 674 operators. Scraped from docs.derivative.ca.",
       "trust_tier": "official",
       "source_url": "https://docs.derivative.ca",
+      "install_mode": "download",
+      "runtime_db": "data/normalized/derivative/docsbrain.db",
       "files": [
         {
           "name": "docsbrain.db",
@@ -31,6 +33,8 @@
       "description": "POPx GPU-accelerated operators — 480 chunks, 59 operators. Scraped from popsextension.com.",
       "trust_tier": "licensed",
       "source_url": "https://www.popsextension.com",
+      "install_mode": "download",
+      "runtime_db": "data/normalized/popx/popxbrain.db",
       "files": [
         {
           "name": "popxbrain.db",
@@ -54,8 +58,10 @@
       "description": "177 TouchDesigner tutorials by paketa12 — GPU-texture-as-compute, UV math, from-scratch simulations, Voronoi/packing, GLSL, feedback loops. No remote DB yet — build locally with scripts/build_tutorial_brain.py.",
       "trust_tier": "community",
       "source_url": "https://www.youtube.com/@paketa12",
+      "install_mode": "local_build",
+      "runtime_db": "data/normalized/paketa12/paketa12brain.db",
       "files": [],
-      "install_notes": "Local-build brain. Clone transcripts with yt-dlp, then run `uv run python scripts/build_tutorial_brain.py --config data/brains/paketa12.yaml`. No `npx tdpilot brains add paketa12` remote download is available yet; the brain appears in `brains list` so users can activate it once built locally."
+      "install_notes": "Local-build brain. Clone transcripts with yt-dlp, then run `uv run python scripts/build_tutorial_brain.py --config data/brains/paketa12.yaml`. `npx tdpilot brains add paketa12` will refuse to activate until `runtime_db` exists on disk."
     }
   }
 }

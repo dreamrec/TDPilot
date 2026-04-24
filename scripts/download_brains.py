@@ -80,14 +80,22 @@ BRAINS = {
 
 
 def _load_brains_from_manifest(manifest_path: Path) -> dict:
-    """Load brain definitions from a manifest JSON file."""
+    """Load brain definitions from a manifest JSON file.
+
+    v1.4.5: preserves `install_mode` and `runtime_db` so the downloader can
+    refuse to pretend it downloaded a local-build brain (no files) when the
+    user tried to activate one via `npx tdpilot brains add`.
+    """
     manifest = json.loads(manifest_path.read_text("utf-8"))
     brains = {}
     for brain_id, brain_data in manifest.get("brains", {}).items():
         brains[brain_id] = {
             "description": f"{brain_data['display_name']} — {brain_data['description']}",
             "output_dir": f"data/normalized/{brain_id}",
-            "files": brain_data["files"],
+            "files": brain_data.get("files", []),
+            "install_mode": brain_data.get("install_mode", "download"),
+            "runtime_db": brain_data.get("runtime_db"),
+            "install_notes": brain_data.get("install_notes", ""),
         }
     return brains
 
@@ -248,9 +256,17 @@ def main() -> None:
         print("Available brains:")
         print(f"  Shared folder: {DRIVE_FOLDER_URL}\n")
         for name, brain in brains_registry.items():
-            total_mb = sum(f["size_mb"] for f in brain["files"])
-            print(f"  {name}: {brain['description']} (~{total_mb:.0f}MB)")
-            for f in brain["files"]:
+            files = brain.get("files", [])
+            total_mb = sum(f["size_mb"] for f in files)
+            install_mode = brain.get("install_mode", "download")
+            if install_mode == "local_build":
+                mode_label = "[install_mode: local_build]"
+            else:
+                mode_label = "[install_mode: download]"
+            print(f"  {name} {mode_label}: {brain['description']} (~{total_mb:.0f}MB)")
+            if install_mode == "local_build" and brain.get("install_notes"):
+                print(f"    local build: {brain['install_notes']}")
+            for f in files:
                 print(f"    - {f['name']} ({f['size_mb']}MB)")
         return
 
@@ -272,29 +288,90 @@ def main() -> None:
 
     t0 = time.time()
 
-    # Determine which brains to download
+    # Determine which brains to download.
+    # v1.4.5: strict validation — unknown ids, empty selections, and
+    # all-local-build selections now exit non-zero so the `npx tdpilot
+    # brains add` JS wrapper doesn't pollute active.json with typos.
     if args.brains_file and args.brains_file.exists():
         selected = json.loads(args.brains_file.read_text("utf-8"))
-        brains_to_download = [b for b in selected if b in brains_registry]
-        skipped = [b for b in selected if b not in brains_registry]
-        if skipped:
-            logger.warning("Skipping unknown brains: %s", ", ".join(skipped))
+        if not isinstance(selected, list):
+            logger.error("--brains-file must contain a JSON array of strings; got %r", type(selected))
+            sys.exit(2)
+        unknown = [b for b in selected if b not in brains_registry]
+        if unknown:
+            logger.error(
+                "Unknown brain id(s): %s. Valid ids: %s",
+                ", ".join(unknown),
+                ", ".join(sorted(brains_registry.keys())),
+            )
+            sys.exit(2)
+        if not selected:
+            logger.error("--brains-file selected zero brains; nothing to do")
+            sys.exit(2)
+        brains_to_download = list(selected)
     elif args.brain:
+        if args.brain not in brains_registry:
+            logger.error(
+                "Unknown brain id: %s. Valid ids: %s",
+                args.brain,
+                ", ".join(sorted(brains_registry.keys())),
+            )
+            sys.exit(2)
         brains_to_download = [args.brain]
     else:
         brains_to_download = list(brains_registry.keys())
 
-    all_ok = True
+    # Separate local-build brains from downloadable ones. Local-build brains
+    # cannot be fetched by this script — they require running a dedicated
+    # builder (e.g. scripts/build_tutorial_brain.py). Surface them in the
+    # summary so the caller (brains.js) knows not to mark them "installed".
+    downloadable: list[str] = []
+    local_build: list[str] = []
+    for brain_id in brains_to_download:
+        entry = brains_registry[brain_id]
+        if entry.get("install_mode") == "local_build" or not entry.get("files"):
+            local_build.append(brain_id)
+        else:
+            downloadable.append(brain_id)
 
-    for brain_name in brains_to_download:
+    if local_build:
+        for brain_id in local_build:
+            entry = brains_registry[brain_id]
+            logger.error(
+                "Brain '%s' is local-build only — cannot be downloaded. %s",
+                brain_id,
+                entry.get("install_notes") or "See data/brains/brains_manifest.json for build instructions.",
+            )
+
+    if not downloadable:
+        logger.error(
+            "No downloadable brains in selection. Local-build brains must be "
+            "built on-host with their dedicated scripts before activation."
+        )
+        sys.exit(3)
+
+    all_ok = True
+    for brain_name in downloadable:
         ok = download_brain(brain_name, project_root, brains_registry)
         if not ok:
             all_ok = False
 
     elapsed = time.time() - t0
 
-    if all_ok:
+    if all_ok and not local_build:
         logger.info("All brains downloaded in %.1fs", elapsed)
+    elif all_ok and local_build:
+        # Downloaded the downloadable subset, but some selected brains were
+        # local-build and skipped. Exit non-zero so brains.js doesn't mark
+        # the local-build ones as "installed".
+        logger.error(
+            "Downloaded %d brain(s) in %.1fs, but skipped %d local-build brain(s): %s",
+            len(downloadable),
+            elapsed,
+            len(local_build),
+            ", ".join(local_build),
+        )
+        sys.exit(3)
     else:
         logger.error("Some downloads failed. Re-run or check your connection.")
         sys.exit(1)

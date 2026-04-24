@@ -113,8 +113,13 @@ function showAvailable() {
   for (const [id, brain] of Object.entries(manifest.brains || {})) {
     const status = installed.has(id) ? " [installed]" : "";
     const totalMb = (brain.files || []).reduce((s, f) => s + (f.size_mb || 0), 0);
-    console.log(`  ${id}: ${brain.display_name}${status}`);
+    const mode = brain.install_mode || "download";
+    const modeTag = mode === "local_build" ? " [local_build]" : "";
+    console.log(`  ${id}: ${brain.display_name}${status}${modeTag}`);
     console.log(`    ${brain.description} (~${Math.round(totalMb)}MB)`);
+    if (mode === "local_build" && brain.install_notes) {
+      console.log(`    note: ${brain.install_notes}`);
+    }
   }
 }
 
@@ -124,14 +129,53 @@ function addBrain(brainId) {
     process.exit(1);
   }
 
-  console.log(`[TDPilot] Adding brain: ${brainId}`);
-  const ok = downloadBrains([brainId]);
-  if (!ok) {
-    console.error(`[TDPilot] Failed to download brain '${brainId}'.`);
+  // v1.4.5: validate against manifest BEFORE calling downloader so a typo
+  // can't pollute active.json. active.json is an allow-list — adding a bogus
+  // id would disable all known brains on next server startup.
+  const manifest = readManifest();
+  if (!manifest) {
+    console.error(
+      "[TDPilot] No brains_manifest.json found. Run `npx tdpilot install` first."
+    );
     process.exit(1);
   }
+  const entry = manifest.brains && manifest.brains[brainId];
+  if (!entry) {
+    const valid = Object.keys(manifest.brains || {}).sort().join(", ");
+    console.error(
+      `[TDPilot] Unknown brain id '${brainId}'. Valid ids: ${valid}`
+    );
+    process.exit(2);
+  }
 
-  // Update active.json
+  // Local-build brains cannot be fetched by the downloader. Allow activation
+  // only when the runtime DB is already present on disk (the user ran the
+  // dedicated builder).
+  if (entry.install_mode === "local_build") {
+    const runtimeDb = entry.runtime_db;
+    const dbPath = runtimeDb ? join(INSTALL_DIR, runtimeDb) : null;
+    if (!dbPath || !existsSync(dbPath)) {
+      console.error(
+        `[TDPilot] Brain '${brainId}' is local-build only and its runtime DB\n` +
+        `          was not found at ${dbPath || "<unspecified>"}.\n` +
+        `          ${entry.install_notes || "Build it with the dedicated script first, then re-run."}\n` +
+        `          Activation refused — active.json left untouched.`
+      );
+      process.exit(3);
+    }
+    console.log(`[TDPilot] Activating local-build brain '${brainId}' (runtime DB found).`);
+  } else {
+    console.log(`[TDPilot] Adding brain: ${brainId}`);
+    const ok = downloadBrains([brainId]);
+    if (!ok) {
+      console.error(`[TDPilot] Failed to download brain '${brainId}'. active.json left untouched.`);
+      process.exit(1);
+    }
+  }
+
+  // Only write active.json AFTER verified activation (real download OR
+  // local-build DB present on disk). Pre-v1.4.5 this ran unconditionally
+  // and any typo polluted the allow-list.
   const active = readActive() || {
     installed_brains: [],
     installed_at: new Date().toISOString(),
@@ -197,3 +241,10 @@ function main(args) {
 }
 
 module.exports = { main, readActive, writeActive, readManifest };
+
+// When invoked directly (`node brains.js …` or via the `tdpilot brains` npm
+// bin dispatch), run main. Guarded by `require.main === module` so unit
+// tests that `require()` this module don't immediately consume process.argv.
+if (require.main === module) {
+  main(process.argv.slice(2));
+}
