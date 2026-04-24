@@ -47,7 +47,13 @@ def test_validation_result_field():
     with tempfile.TemporaryDirectory() as d:
         store = TechniqueStore(base_dir=d)
         tid = store.add({"recipe": {}}, scope="global", name="test")
-        vr = {"status": "pass", "validated_at": "2026-03-14T00:00:00Z", "td_build": "2025.32460", "errors": [], "warnings": []}
+        vr = {
+            "status": "pass",
+            "validated_at": "2026-03-14T00:00:00Z",
+            "td_build": "2025.32460",
+            "errors": [],
+            "warnings": [],
+        }
         ok = store.update(tid, {"validation_result": vr}, scope="global")
         assert ok
         entry = store.get(tid, scope="global")

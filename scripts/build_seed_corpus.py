@@ -61,8 +61,7 @@ def introspect_td() -> list[dict]:
         import td  # type: ignore[import-not-found]
     except ImportError:
         print(
-            "ERROR: 'td' module not available. Run this script inside "
-            "TouchDesigner Textport or via tdpy.",
+            "ERROR: 'td' module not available. Run this script inside TouchDesigner Textport or via tdpy.",
             file=sys.stderr,
         )
         return []

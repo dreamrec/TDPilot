@@ -56,4 +56,3 @@ def test_list_macros_has_defaults():
     names = {entry["name"] for entry in summary["macros"]}
     assert "feedback_loop" in names
     assert "post_processing" in names
-

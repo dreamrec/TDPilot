@@ -21,11 +21,11 @@ class MockClient:
             children = [
                 {"path": p}
                 for p in self._nodes
-                if p.startswith(parent + "/") and "/" not in p[len(parent) + 1:]
+                if p.startswith(parent + "/") and "/" not in p[len(parent) + 1 :]
             ]
             offset = params.get("offset", 0)
             limit = params.get("limit", 200)
-            return {"nodes": children[offset:offset + limit]}
+            return {"nodes": children[offset : offset + limit]}
         return {}
 
 
@@ -49,19 +49,31 @@ def small_network():
             "/project1/feedback", "feedback", "containerCOMP", "COMP", is_comp=True
         ),
         "/project1/feedback/noise1": _make_node(
-            "/project1/feedback/noise1", "noise1", "noiseTOP", "TOP",
+            "/project1/feedback/noise1",
+            "noise1",
+            "noiseTOP",
+            "TOP",
             params={"seed": {"value": 42}, "rate": {"value": 0.5}},
         ),
         "/project1/feedback/feedback1": _make_node(
-            "/project1/feedback/feedback1", "feedback1", "feedbackTOP", "TOP",
+            "/project1/feedback/feedback1",
+            "feedback1",
+            "feedbackTOP",
+            "TOP",
             inputs=[{"from": "/project1/feedback/noise1", "from_index": 0, "to_index": 0}],
         ),
         "/project1/feedback/comp1": _make_node(
-            "/project1/feedback/comp1", "comp1", "compositeTOP", "TOP",
+            "/project1/feedback/comp1",
+            "comp1",
+            "compositeTOP",
+            "TOP",
             inputs=[{"from": "/project1/feedback/feedback1", "from_index": 0, "to_index": 0}],
         ),
         "/project1/feedback/out1": _make_node(
-            "/project1/feedback/out1", "out1", "outTOP", "TOP",
+            "/project1/feedback/out1",
+            "out1",
+            "outTOP",
+            "TOP",
             inputs=[{"from": "/project1/feedback/comp1", "from_index": 0, "to_index": 0}],
         ),
     }
@@ -96,7 +108,10 @@ async def test_large_network_no_recipe():
     }
     for i in range(25):
         nodes[f"/root/node{i}"] = _make_node(
-            f"/root/node{i}", f"node{i}", "noiseTOP", "TOP",
+            f"/root/node{i}",
+            f"node{i}",
+            "noiseTOP",
+            "TOP",
             params={"seed": {"value": i}, "rate": {"value": 0.1 * i}},
         )
     client = MockClient(nodes)
@@ -134,7 +149,10 @@ async def test_expressions_extracted():
     nodes = {
         "/root": _make_node("/root", "root", "containerCOMP", "COMP", is_comp=True),
         "/root/noise": _make_node(
-            "/root/noise", "noise", "noiseTOP", "TOP",
+            "/root/noise",
+            "noise",
+            "noiseTOP",
+            "TOP",
             params={
                 "seed": {"value": 42, "expression": "absTime.frame % 100"},
                 "rate": {"value": 0.5},

@@ -169,7 +169,9 @@ def test_handle_project_lifecycle_status_and_save():
     module.ui = _FakeUI()
 
     status = module.handle_project_lifecycle({"action": "status"})
-    saved = module.handle_project_lifecycle({"action": "save", "path": "/tmp/show.toe", "save_external_toxs": True})
+    saved = module.handle_project_lifecycle(
+        {"action": "save", "path": "/tmp/show.toe", "save_external_toxs": True}
+    )
 
     assert status["success"] is True
     assert status["project"]["name"] == "demo.toe"

@@ -104,4 +104,3 @@ class MacroTemplate:
             "exit_node": self.exit_node,
             "params": {k: v.to_dict() for k, v in self.param_schema.items()},
         }
-

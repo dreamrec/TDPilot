@@ -228,13 +228,15 @@ async def test_validate_recipe_missing_fields():
 @pytest.mark.asyncio
 async def test_audit_project_shallow_tree(monkeypatch):
     """Audit correctly counts immediate children."""
-    client = _AuditClient({
-        "/project1": [
-            {"name": "noise1", "type": "noiseTOP", "family": "TOP", "path": "/project1/noise1"},
-            {"name": "null1", "type": "nullTOP", "family": "TOP", "path": "/project1/null1"},
-            {"name": "wave1", "type": "waveCHOP", "family": "CHOP", "path": "/project1/wave1"},
-        ],
-    })
+    client = _AuditClient(
+        {
+            "/project1": [
+                {"name": "noise1", "type": "noiseTOP", "family": "TOP", "path": "/project1/noise1"},
+                {"name": "null1", "type": "nullTOP", "family": "TOP", "path": "/project1/null1"},
+                {"name": "wave1", "type": "waveCHOP", "family": "CHOP", "path": "/project1/wave1"},
+            ],
+        }
+    )
     ctx = _make_ctx(client=client)
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
 
@@ -252,16 +254,24 @@ async def test_audit_project_shallow_tree(monkeypatch):
 @pytest.mark.asyncio
 async def test_audit_project_recursive_into_comps(monkeypatch):
     """Audit recurses into child COMPs to count the full subtree."""
-    client = _AuditClient({
-        "/project1": [
-            {"name": "comp1", "type": "baseCOMP", "family": "COMP", "path": "/project1/comp1", "isCOMP": True},
-            {"name": "noise1", "type": "noiseTOP", "family": "TOP", "path": "/project1/noise1"},
-        ],
-        "/project1/comp1": [
-            {"name": "inner1", "type": "noiseTOP", "family": "TOP", "path": "/project1/comp1/inner1"},
-            {"name": "inner2", "type": "levelTOP", "family": "TOP", "path": "/project1/comp1/inner2"},
-        ],
-    })
+    client = _AuditClient(
+        {
+            "/project1": [
+                {
+                    "name": "comp1",
+                    "type": "baseCOMP",
+                    "family": "COMP",
+                    "path": "/project1/comp1",
+                    "isCOMP": True,
+                },
+                {"name": "noise1", "type": "noiseTOP", "family": "TOP", "path": "/project1/noise1"},
+            ],
+            "/project1/comp1": [
+                {"name": "inner1", "type": "noiseTOP", "family": "TOP", "path": "/project1/comp1/inner1"},
+                {"name": "inner2", "type": "levelTOP", "family": "TOP", "path": "/project1/comp1/inner2"},
+            ],
+        }
+    )
     ctx = _make_ctx(client=client)
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
 
@@ -278,17 +288,31 @@ async def test_audit_project_recursive_into_comps(monkeypatch):
 @pytest.mark.asyncio
 async def test_audit_project_deep_nesting(monkeypatch):
     """Audit recurses through multiple levels of nesting."""
-    client = _AuditClient({
-        "/root": [
-            {"name": "level1", "type": "baseCOMP", "family": "COMP", "path": "/root/level1", "isCOMP": True},
-        ],
-        "/root/level1": [
-            {"name": "level2", "type": "baseCOMP", "family": "COMP", "path": "/root/level1/level2", "isCOMP": True},
-        ],
-        "/root/level1/level2": [
-            {"name": "leaf", "type": "noiseTOP", "family": "TOP", "path": "/root/level1/level2/leaf"},
-        ],
-    })
+    client = _AuditClient(
+        {
+            "/root": [
+                {
+                    "name": "level1",
+                    "type": "baseCOMP",
+                    "family": "COMP",
+                    "path": "/root/level1",
+                    "isCOMP": True,
+                },
+            ],
+            "/root/level1": [
+                {
+                    "name": "level2",
+                    "type": "baseCOMP",
+                    "family": "COMP",
+                    "path": "/root/level1/level2",
+                    "isCOMP": True,
+                },
+            ],
+            "/root/level1/level2": [
+                {"name": "leaf", "type": "noiseTOP", "family": "TOP", "path": "/root/level1/level2/leaf"},
+            ],
+        }
+    )
     ctx = _make_ctx(client=client)
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
 
@@ -304,12 +328,14 @@ async def test_audit_project_deep_nesting(monkeypatch):
 async def test_audit_project_unknown_ops_detected(monkeypatch):
     """Audit reports unknown op types when card_index is available."""
     idx = _FakeCardIndex({"noiseTOP": {}})  # only knows noiseTOP
-    client = _AuditClient({
-        "/project1": [
-            {"name": "n1", "type": "noiseTOP", "family": "TOP", "path": "/project1/n1"},
-            {"name": "n2", "type": "magicSuperTOP", "family": "TOP", "path": "/project1/n2"},
-        ],
-    })
+    client = _AuditClient(
+        {
+            "/project1": [
+                {"name": "n1", "type": "noiseTOP", "family": "TOP", "path": "/project1/n1"},
+                {"name": "n2", "type": "magicSuperTOP", "family": "TOP", "path": "/project1/n2"},
+            ],
+        }
+    )
     ctx = _make_ctx(client=client, card_index=idx)
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
 

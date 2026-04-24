@@ -33,6 +33,7 @@ def _create_test_popx_db(tmp_dir: Path) -> Path:
 def test_popx_brain_search():
     """DocsBrain can search a POPx brain DB."""
     from td_mcp.knowledge.docsbrain import DocsBrain
+
     with tempfile.TemporaryDirectory() as tmp:
         db_path = _create_test_popx_db(Path(tmp))
         brain = DocsBrain(db_path=db_path)
@@ -44,6 +45,7 @@ def test_popx_brain_search():
 def test_popx_brain_count():
     """DocsBrain.count() works on POPx DB."""
     from td_mcp.knowledge.docsbrain import DocsBrain
+
     with tempfile.TemporaryDirectory() as tmp:
         db_path = _create_test_popx_db(Path(tmp))
         brain = DocsBrain(db_path=db_path)

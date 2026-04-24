@@ -74,8 +74,8 @@ STANDARD_BLOCKED_TOKENS: tuple[str, ...] = (
     "open(",
     "compile(",
     "input(",
-    "exec" "(",
-    "eval" "(",
+    "exec(",
+    "eval(",
     "subprocess",
     "socket",
     "requests",
@@ -187,9 +187,7 @@ def ast_violations(code: str):
     for node in ast.walk(tree):
         if isinstance(node, (ast.Import, ast.ImportFrom)):
             mods = (
-                [alias.name for alias in node.names]
-                if isinstance(node, ast.Import)
-                else [node.module or ""]
+                [alias.name for alias in node.names] if isinstance(node, ast.Import) else [node.module or ""]
             )
             for mod_name in mods:
                 top = mod_name.split(".")[0]
@@ -210,7 +208,7 @@ def ast_violations(code: str):
                 chain = _attr_chain(node.func)
                 if chain:
                     for blocked in _BLOCKED_CALL_ATTR_CHAINS:
-                        if chain[-len(blocked):] == blocked:
+                        if chain[-len(blocked) :] == blocked:
                             violations.append(f"call to blocked function: {'.'.join(blocked)}")
                             break
 

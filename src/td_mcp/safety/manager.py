@@ -92,8 +92,7 @@ class SafetyManager:
                 if abs(requested_delta) > max_delta:
                     if mode == "reject":
                         raise ValueError(
-                            f"{key} violates rate bound {bound.max_rate}/s "
-                            f"(delta={requested_delta}, dt={dt})"
+                            f"{key} violates rate bound {bound.max_rate}/s (delta={requested_delta}, dt={dt})"
                         )
                     warning = f"{key} rate-limited to {bound.max_rate}/s"
                     if mode == "clamp":

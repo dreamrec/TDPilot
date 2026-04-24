@@ -21,4 +21,3 @@ async def test_job_manager_completes_job():
     assert snapshot is not None
     assert snapshot["status"] == "completed"
     assert snapshot["result"] == {"ok": True}
-

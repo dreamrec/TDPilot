@@ -91,9 +91,7 @@ def test_doctor_passes_auth_check_when_secret_set(monkeypatch, capsys):
     combined = captured.out + captured.err
     assert "auth_config" in combined
     # FAIL marker should not be on the auth line.
-    auth_line = next(
-        (line for line in combined.splitlines() if "auth_config" in line), ""
-    )
+    auth_line = next((line for line in combined.splitlines() if "auth_config" in line), "")
     assert "FAIL" not in auth_line
 
 
@@ -105,9 +103,7 @@ def test_doctor_passes_auth_check_when_auth_disabled(monkeypatch, capsys):
         server.main(["doctor", "--skip-td-check"])
     captured = capsys.readouterr()
     combined = captured.out + captured.err
-    auth_line = next(
-        (line for line in combined.splitlines() if "auth_config" in line), ""
-    )
+    auth_line = next((line for line in combined.splitlines() if "auth_config" in line), "")
     assert "FAIL" not in auth_line
 
 
@@ -183,9 +179,7 @@ def test_build_profile_auth_without_secret_embeds_require_only():
 
 
 def test_build_profile_auth_with_secret_embeds_both():
-    profile = server._build_profile_config(
-        "generic", "td", auth_required=True, shared_secret="s" * 32
-    )
+    profile = server._build_profile_config("generic", "td", auth_required=True, shared_secret="s" * 32)
     env = profile["mcpServers"]["td"]["env"]
     assert env["TD_MCP_REQUIRE_AUTH"] == "1"
     assert env["TD_MCP_SHARED_SECRET"] == "s" * 32

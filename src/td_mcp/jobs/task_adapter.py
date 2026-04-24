@@ -69,7 +69,10 @@ class TaskAdapter:
     def on_complete(self, job_id: str, result: Any = None) -> None:
         """Mark a job as completed and optionally fire the notify callback."""
         self._manager.update_job(
-            job_id, status="completed", progress=1.0, result=result,
+            job_id,
+            status="completed",
+            progress=1.0,
+            result=result,
             completed_at=datetime.now(timezone.utc).isoformat(),
         )
         if self._notify is not None:

@@ -1,6 +1,5 @@
 """Tests for TechniqueStore — CRUD, search, promote, favorite."""
 
-
 import pytest
 
 from td_mcp.memory.technique_store import TechniqueStore
@@ -32,7 +31,9 @@ def sample_technique():
 
 class TestCRUD:
     def test_add_and_get(self, store, sample_technique):
-        tid = store.add(sample_technique, scope="project", name="feedback loop", tags=["feedback", "generative"])
+        tid = store.add(
+            sample_technique, scope="project", name="feedback loop", tags=["feedback", "generative"]
+        )
         assert tid
         entry = store.get(tid, scope="project")
         assert entry is not None

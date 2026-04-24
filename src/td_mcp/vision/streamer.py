@@ -91,11 +91,7 @@ class TopStreamer:
                 )
                 frame_hash = self._frame_hash(screenshot)
 
-                if (
-                    not emit_unchanged
-                    and frame_hash is not None
-                    and self._last_hash.get(path) == frame_hash
-                ):
+                if not emit_unchanged and frame_hash is not None and self._last_hash.get(path) == frame_hash:
                     self._stats["dropped_unchanged"] += 1
                 else:
                     if frame_hash is not None:

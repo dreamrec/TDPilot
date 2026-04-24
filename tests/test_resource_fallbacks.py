@@ -64,7 +64,12 @@ def _find_decorated_functions(tree: ast.Module, decorator_substring: str) -> dic
         for dec in node.decorator_list:
             if isinstance(dec, ast.Call):
                 func = dec.func
-                if isinstance(func, ast.Attribute) and func.attr == decorator_substring or isinstance(func, ast.Name) and func.id == decorator_substring:
+                if (
+                    isinstance(func, ast.Attribute)
+                    and func.attr == decorator_substring
+                    or isinstance(func, ast.Name)
+                    and func.id == decorator_substring
+                ):
                     pass
                 else:
                     continue
@@ -192,29 +197,21 @@ def _assert_static_contract(payload: dict, expected_uri: str, tool_hint: str) ->
     assert payload.get("resource_uri") == expected_uri
     assert payload.get("mode") == "static"
     note = payload.get("note", "")
-    assert tool_hint in note, (
-        f"note does not mention the suggested tool {tool_hint!r}; got: {note!r}"
-    )
+    assert tool_hint in note, f"note does not mention the suggested tool {tool_hint!r}; got: {note!r}"
 
 
 @pytest.mark.asyncio
 async def test_resource_timeline_state_payload():
     payload = await td_resource_timeline()
-    _assert_static_contract(
-        payload, expected_uri="td://timeline/state", tool_hint="td_get_timescale_state"
-    )
+    _assert_static_contract(payload, expected_uri="td://timeline/state", tool_hint="td_get_timescale_state")
 
 
 @pytest.mark.asyncio
 async def test_resource_chop_channel_payload_roundtrips_params():
-    payload = await td_resource_chop_channel(
-        encoded_path="_project1_audio1", channel="chan1"
-    )
+    payload = await td_resource_chop_channel(encoded_path="_project1_audio1", channel="chan1")
     assert "td://chop/path/" in payload["resource_uri"]
     assert "/channel/chan1" in payload["resource_uri"]
-    _assert_static_contract(
-        payload, expected_uri=payload["resource_uri"], tool_hint="td_chop_data"
-    )
+    _assert_static_contract(payload, expected_uri=payload["resource_uri"], tool_hint="td_chop_data")
     assert payload.get("channel") == "chan1"
     # Decoded path is what the handler exposes back to callers.
     assert payload.get("path")
@@ -223,14 +220,10 @@ async def test_resource_chop_channel_payload_roundtrips_params():
 
 @pytest.mark.asyncio
 async def test_resource_parameter_payload_roundtrips_params():
-    payload = await td_resource_parameter(
-        encoded_path="_project1_noise1", name="amp"
-    )
+    payload = await td_resource_parameter(encoded_path="_project1_noise1", name="amp")
     assert "td://par/path/" in payload["resource_uri"]
     assert "/name/amp" in payload["resource_uri"]
-    _assert_static_contract(
-        payload, expected_uri=payload["resource_uri"], tool_hint="td_get_params"
-    )
+    _assert_static_contract(payload, expected_uri=payload["resource_uri"], tool_hint="td_get_params")
     assert payload.get("name") == "amp"
     assert payload.get("path")
     assert payload.get("available") is False
@@ -240,9 +233,7 @@ async def test_resource_parameter_payload_roundtrips_params():
 async def test_resource_cook_state_payload():
     payload = await td_resource_cook(encoded_path="_project1_null1")
     assert "td://cook/path/" in payload["resource_uri"]
-    _assert_static_contract(
-        payload, expected_uri=payload["resource_uri"], tool_hint="td_cooking_info"
-    )
+    _assert_static_contract(payload, expected_uri=payload["resource_uri"], tool_hint="td_cooking_info")
     assert payload.get("path")
     assert payload.get("available") is False
 
@@ -251,9 +242,7 @@ async def test_resource_cook_state_payload():
 async def test_resource_error_state_payload():
     payload = await td_resource_error(encoded_path="_project1_render1")
     assert "td://error/path/" in payload["resource_uri"]
-    _assert_static_contract(
-        payload, expected_uri=payload["resource_uri"], tool_hint="td_get_errors"
-    )
+    _assert_static_contract(payload, expected_uri=payload["resource_uri"], tool_hint="td_get_errors")
     assert payload.get("path")
     assert payload.get("available") is False
 
@@ -263,9 +252,7 @@ async def test_resource_top_frame_payload():
     payload = await td_resource_top_frame(encoded_path="_project1_render1")
     assert "td://top/path/" in payload["resource_uri"]
     assert payload["resource_uri"].endswith("/frame")
-    _assert_static_contract(
-        payload, expected_uri=payload["resource_uri"], tool_hint="td_screenshot"
-    )
+    _assert_static_contract(payload, expected_uri=payload["resource_uri"], tool_hint="td_screenshot")
     assert payload.get("path")
     assert payload.get("available") is False
 
@@ -274,9 +261,7 @@ async def test_resource_top_frame_payload():
 async def test_resource_job_state_payload():
     payload = await td_resource_job(job_id="abc123")
     assert payload["resource_uri"] == "td://job/abc123"
-    _assert_static_contract(
-        payload, expected_uri="td://job/abc123", tool_hint="job tracking"
-    )
+    _assert_static_contract(payload, expected_uri="td://job/abc123", tool_hint="job tracking")
     assert payload.get("job_id") == "abc123"
     assert payload.get("available") is False
 

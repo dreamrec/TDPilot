@@ -103,7 +103,9 @@ async def determine_config(args: argparse.Namespace) -> RenderConfig:
         await ensure_movie_node(client, args.movie_node)
 
         project_folder = Path(info.get("project_folder") or ".").resolve()
-        output_dir = Path(args.output_dir).expanduser().resolve() if args.output_dir else (project_folder / "renders")
+        output_dir = (
+            Path(args.output_dir).expanduser().resolve() if args.output_dir else (project_folder / "renders")
+        )
         output_dir.mkdir(parents=True, exist_ok=True)
         frames_dir = output_dir / args.frames_subdir
         if args.clean_frames and frames_dir.exists():
@@ -191,7 +193,7 @@ for f in range({c_start}, {c_end + 1}):
 __result__ = {{'chunk_start': {c_start}, 'chunk_end': {c_end}}}
 """
             await client.request("exec", {"code": code, "exec_mode": "full"})
-            done += (c_end - c_start + 1)
+            done += c_end - c_start + 1
             print(f"[render] frames {c_start}-{c_end} ({done}/{total})")
             sys.stdout.flush()
     finally:

@@ -173,15 +173,13 @@ _STATE_VECTOR_CACHE: dict[str, dict[str, Any]] = {}
 
 async def _with_undo_block(td_client, label: str, async_fn, *args):
     """Wrap an async operation in a TD undo block (start_undo_block / end_undo_block)."""
-    await td_client.request("project/lifecycle",
-        {"action": "start_undo_block", "name": label})
+    await td_client.request("project/lifecycle", {"action": "start_undo_block", "name": label})
     try:
         result = await async_fn(*args)
         return result
     finally:
         try:
-            await td_client.request("project/lifecycle",
-                {"action": "end_undo_block"})
+            await td_client.request("project/lifecycle", {"action": "end_undo_block"})
         except Exception:
             pass
 
@@ -279,14 +277,18 @@ async def server_lifespan(app: FastMCP):
                 component_version = info.get("mcp_component_version") or info.get("api_version", "")
                 if component_version:
                     from td_mcp import __version__ as server_version
+
                     if component_version != server_version:
                         logger.warning(
                             "VERSION MISMATCH: MCP server is v%s but TD component reports v%s. "
                             "Re-export the .tox from the latest TDPilot source to avoid stale tool behavior.",
-                            server_version, component_version,
+                            server_version,
+                            component_version,
                         )
                     else:
-                        logger.info("Version match confirmed: server and TD component both v%s", server_version)
+                        logger.info(
+                            "Version match confirmed: server and TD component both v%s", server_version
+                        )
         except Exception as exc:
             logger.debug("Could not fetch td_build at startup: %s", exc)
     except TouchDesignerConnectionError as exc:
@@ -314,6 +316,7 @@ async def server_lifespan(app: FastMCP):
     if brain_is_active(active_brains, "derivative"):
         try:
             from td_mcp.knowledge.docsbrain import DocsBrain
+
             brain_dir = Path(__file__).resolve().parent.parent.parent / "data" / "normalized" / "derivative"
             db_path = brain_dir / "docsbrain.db"
             if db_path.exists():
@@ -329,6 +332,7 @@ async def server_lifespan(app: FastMCP):
     if card_index is None:
         try:
             from td_mcp.knowledge.card_index import CardIndex
+
             cards_dir = Path(__file__).parent / "knowledge" / "cards"
             if cards_dir.is_dir():
                 card_index = CardIndex(cards_dir)
@@ -341,6 +345,7 @@ async def server_lifespan(app: FastMCP):
     if brain_is_active(active_brains, "popx"):
         try:
             from td_mcp.knowledge.docsbrain import DocsBrain as _PopxBrain
+
             popx_dir = Path(__file__).resolve().parent.parent.parent / "data" / "normalized" / "popx"
             popx_db = popx_dir / "popxbrain.db"
             if popx_db.exists():
@@ -358,6 +363,7 @@ async def server_lifespan(app: FastMCP):
     if brain_is_active(active_brains, "paketa12"):
         try:
             from td_mcp.knowledge.docsbrain import DocsBrain as _Paketa12Brain
+
             p12_dir = Path(__file__).resolve().parent.parent.parent / "data" / "normalized" / "paketa12"
             p12_db = p12_dir / "paketa12brain.db"
             if p12_db.exists():
@@ -547,9 +553,7 @@ async def _ensure_project_scope(ctx: Context) -> None:
         raw = raw[:-4]
     store.rebind_project_scope(raw)
     pref.rebind_project_scope(raw)
-    logger.info(
-        "Lazily bound project scope to %r from live TD after startup miss", raw
-    )
+    logger.info("Lazily bound project scope to %r from live TD after startup miss", raw)
 
 
 def _get_event_manager(ctx: Context) -> EventManager:
@@ -691,8 +695,7 @@ def _vision_token_notice(include_image: bool) -> dict[str, Any]:
                 "Use this mode only after explicit user confirmation."
             ),
             "ask_user_prompt": (
-                "Do you want me to inspect live output frames now? "
-                "This will increase token usage."
+                "Do you want me to inspect live output frames now? This will increase token usage."
             ),
         }
 
@@ -703,8 +706,7 @@ def _vision_token_notice(include_image: bool) -> dict[str, Any]:
             "Call td_screenshot for on-demand frame inspection."
         ),
         "ask_user_prompt": (
-            "Do you want me to inspect the visual output now? "
-            "I can fetch a frame on demand."
+            "Do you want me to inspect the visual output now? I can fetch a frame on demand."
         ),
     }
 
@@ -715,16 +717,13 @@ def _vision_confirmation_required_response() -> str:
             "success": False,
             "requires_confirmation": True,
             "message": (
-                "High-token vision mode was requested (include_image=true) "
-                "without explicit confirmation."
+                "High-token vision mode was requested (include_image=true) without explicit confirmation."
             ),
             "ask_user_prompt": (
                 "Do you want me to enable continuous full-frame output now? "
                 "This can increase token usage significantly."
             ),
-            "next_step": (
-                "After user approval, call again with confirm_high_token_mode=true."
-            ),
+            "next_step": ("After user approval, call again with confirm_high_token_mode=true."),
         }
     )
 
@@ -734,16 +733,11 @@ def _capture_confirmation_required_response() -> str:
         {
             "success": False,
             "requires_confirmation": True,
-            "message": (
-                "Image capture was requested without explicit confirmation."
-            ),
+            "message": ("Image capture was requested without explicit confirmation."),
             "ask_user_prompt": (
-                "Do you want me to capture and inspect output now? "
-                "This will add image payload tokens."
+                "Do you want me to capture and inspect output now? This will add image payload tokens."
             ),
-            "next_step": (
-                "After user approval, call again with confirm_image_capture=true."
-            ),
+            "next_step": ("After user approval, call again with confirm_image_capture=true."),
         }
     )
 
@@ -1201,11 +1195,7 @@ def _compute_unstable_signal(
         (float(node.get("cookTime", 0.0) or 0.0) for node in all_cook),
         default=0.0,
     )
-    critical = [
-        item
-        for item in issues
-        if isinstance(item, dict) and (item.get("errors") or "").strip()
-    ]
+    critical = [item for item in issues if isinstance(item, dict) and (item.get("errors") or "").strip()]
 
     fps_missed = effective_target > 0 and fps < effective_target * 0.8
     frame_blown = top_cook_ms >= frame_budget_ms
@@ -1213,14 +1203,9 @@ def _compute_unstable_signal(
 
     reasons: list[str] = []
     if fps_missed:
-        reasons.append(
-            f"fps {fps:.1f} is below 80% of target {effective_target:.1f}"
-        )
+        reasons.append(f"fps {fps:.1f} is below 80% of target {effective_target:.1f}")
     if frame_blown:
-        reasons.append(
-            f"top cook time {top_cook_ms:.2f}ms exceeds frame budget "
-            f"{frame_budget_ms:.2f}ms"
-        )
+        reasons.append(f"top cook time {top_cook_ms:.2f}ms exceeds frame budget {frame_budget_ms:.2f}ms")
     if critical:
         reasons.append(f"{len(critical)} critical node error(s)")
 
@@ -1314,11 +1299,18 @@ def _param_roles(param_name: str) -> set[str]:
         roles.add("brightness")
     if any(token in name for token in ("contrast", "gamma", "black", "white")):
         roles.add("contrast")
-    if any(token in name for token in ("noise", "seed", "detail", "octave", "jitter", "blur", "radius", "feedback")):
+    if any(
+        token in name
+        for token in ("noise", "seed", "detail", "octave", "jitter", "blur", "radius", "feedback")
+    ):
         roles.add("complexity")
-    if any(token in name for token in ("phase", "speed", "period", "freq", "frequency", "beat", "pulse", "bpm")):
+    if any(
+        token in name for token in ("phase", "speed", "period", "freq", "frequency", "beat", "pulse", "bpm")
+    ):
         roles.add("motion_rhythm")
-    if any(token in name for token in ("feedback", "gain", "opacity", "weight", "displace", "blur", "radius")):
+    if any(
+        token in name for token in ("feedback", "gain", "opacity", "weight", "displace", "blur", "radius")
+    ):
         roles.add("risk")
 
     return roles
@@ -1689,8 +1681,7 @@ async def _run_optimizer_iterations(
 
     final_values = await _read_adjustable_values(client, adjustable_params)
     final_params = [
-        {"path": path, "param": name, "value": value}
-        for (path, name), value in sorted(final_values.items())
+        {"path": path, "param": name, "value": value} for (path, name), value in sorted(final_values.items())
     ]
 
     return {
@@ -2310,6 +2301,7 @@ async def td_get_capabilities(ctx: Context) -> str:
         services = _get_services(ctx)
         capabilities = detect_capabilities(ctx, td_build=services.td_build)
         from td_mcp import __version__ as server_version
+
         # Check component version if TD is connected
         version_status = {"server_version": server_version}
         try:
@@ -2555,7 +2547,9 @@ async def td_monitor_visual(params: VisualMonitorInput, ctx: Context) -> str:
         }
 
         if params.auto_analyze:
-            payload["note"] = "auto_analyze requested; monitor captures are active but auto sampling is not implemented in this runtime."
+            payload["note"] = (
+                "auto_analyze requested; monitor captures are active but auto sampling is not implemented in this runtime."
+            )
 
         _audit_log(
             ctx,
@@ -2835,7 +2829,9 @@ async def td_describe_dynamics(params: TemporalAnalysisInput, ctx: Context) -> s
                     "index": index + 1,
                     "captured_at": datetime.now(timezone.utc).isoformat(),
                     "frame": int(timeline.get("frame", 0) or 0) if isinstance(timeline, dict) else 0,
-                    "seconds": float(timeline.get("seconds", 0.0) or 0.0) if isinstance(timeline, dict) else 0.0,
+                    "seconds": float(timeline.get("seconds", 0.0) or 0.0)
+                    if isinstance(timeline, dict)
+                    else 0.0,
                     "playing": bool(timeline.get("playing", False)) if isinstance(timeline, dict) else False,
                     "fps": float(cooking.get("fps", 0.0) or 0.0) if isinstance(cooking, dict) else 0.0,
                     "issues_count": len(issues),
@@ -3023,16 +3019,13 @@ async def td_detect_instability(params: DetectInstabilityInput, ctx: Context) ->
         frame_budget_ms = metrics["frame_budget_ms"]
         top_cook_ms = metrics["top_cook_ms"]
         critical_issues = [
-            item
-            for item in issues
-            if isinstance(item, dict) and (item.get("errors") or "").strip()
+            item for item in issues if isinstance(item, dict) and (item.get("errors") or "").strip()
         ]
         heavy_threshold_ms = max(frame_budget_ms * 0.25, 1.0)
         heavy_nodes = [
             node
             for node in all_cook_nodes
-            if isinstance(node, dict)
-            and float(node.get("cookTime", 0.0) or 0.0) >= heavy_threshold_ms
+            if isinstance(node, dict) and float(node.get("cookTime", 0.0) or 0.0) >= heavy_threshold_ms
         ]
 
         payload = {
@@ -3194,7 +3187,9 @@ async def td_diff_snapshots(params: DiffSnapshotsInput, ctx: Context) -> str:
             }
             snapshot_b_payload = snap_b["snapshot"]
         else:
-            live = await _capture_snapshot_payload(ctx, path=snap_a["snapshot"].get("root_path", "/project1"), include_visual=False)
+            live = await _capture_snapshot_payload(
+                ctx, path=snap_a["snapshot"].get("root_path", "/project1"), include_visual=False
+            )
             compare_target = {
                 "type": "live",
                 "path": live.get("root_path", "/project1"),
@@ -3449,7 +3444,10 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
     store = _get_technique_store(ctx)
     entry = store.get(params.technique_id, scope=params.scope)
     if not entry:
-        return {"status": "error", "message": f"Technique {params.technique_id} not found in {params.scope} scope."}
+        return {
+            "status": "error",
+            "message": f"Technique {params.technique_id} not found in {params.scope} scope.",
+        }
 
     technique = entry.get("technique", {})
     recipe = technique.get("recipe")
@@ -3466,9 +3464,7 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
     # Pre-replay prerequisite check: verify required op types exist in the target TD install
     if not params.force:
         required_ops: list[str] = (
-            technique.get("required_op_types")
-            or entry.get("compatibility", {}).get("required_ops")
-            or []
+            technique.get("required_op_types") or entry.get("compatibility", {}).get("required_ops") or []
         )
         if required_ops:
             client = _get_client(ctx)
@@ -3617,9 +3613,7 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
         expressions = node_info.get("expressions", {})
         if isinstance(expressions, dict):
             expr_params = {
-                key: {"expr": value}
-                for key, value in expressions.items()
-                if isinstance(value, str) and value
+                key: {"expr": value} for key, value in expressions.items() if isinstance(value, str) and value
             }
             if expr_params:
                 await client.request(
@@ -3682,9 +3676,7 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
         # state-transition discipline by silently dropping `state` keys, so
         # routing state changes through update_validation() is the canonical
         # path. It also handles the demotion case (fail → drop back one rung).
-        store.update_validation(
-            params.technique_id, validation_result, scope=params.scope
-        )
+        store.update_validation(params.technique_id, validation_result, scope=params.scope)
     except Exception:
         pass  # Non-fatal: replay succeeded even if validation check fails
 
@@ -3715,7 +3707,12 @@ async def td_memory_favorite(params: MemoryFavoriteInput, ctx: Context) -> dict:
         return {"status": "error", "message": f"Technique {params.technique_id} not found."}
     if params.rating >= 0:
         store.set_rating(params.technique_id, params.rating, scope=params.scope)
-    return {"status": "ok", "technique_id": params.technique_id, "favorite": params.favorite, "rating": params.rating}
+    return {
+        "status": "ok",
+        "technique_id": params.technique_id,
+        "favorite": params.favorite,
+        "rating": params.rating,
+    }
 
 
 @mcp.tool()
@@ -3849,7 +3846,9 @@ async def td_get_operator_doc(
     if card is None:
         provenance = Provenance(source="local_card", td_build=svc.td_build)
         return {"error": f"No card found for {resolved_type}", "provenance": provenance.to_dict()}
-    provenance = Provenance(source="local_card", td_build=svc.td_build, last_verified=card.get("last_verified", ""))
+    provenance = Provenance(
+        source="local_card", td_build=svc.td_build, last_verified=card.get("last_verified", "")
+    )
     return {"card": card, "provenance": provenance.to_dict()}
 
 
@@ -3912,7 +3911,9 @@ async def td_lookup_palette_component(
     if component_name:
         card = idx.get_palette(component_name)
         if card:
-            provenance = Provenance(source="local_card", td_build=svc.td_build, last_verified=card.get("last_verified", ""))
+            provenance = Provenance(
+                source="local_card", td_build=svc.td_build, last_verified=card.get("last_verified", "")
+            )
             return {"card": card, "provenance": provenance.to_dict()}
         provenance = Provenance(source="local_card", td_build=svc.td_build)
         return {"error": f"No palette card for {component_name}", "provenance": provenance.to_dict()}
@@ -3938,7 +3939,9 @@ async def td_get_release_delta(
     if card is None:
         provenance = Provenance(source="local_card", td_build=svc.td_build)
         return {"error": f"No release card for build {target_build}", "provenance": provenance.to_dict()}
-    provenance = Provenance(source="local_card", td_build=svc.td_build, last_verified=card.get("last_verified", ""))
+    provenance = Provenance(
+        source="local_card", td_build=svc.td_build, last_verified=card.get("last_verified", "")
+    )
     return {"card": card, "provenance": provenance.to_dict()}
 
 
@@ -3976,7 +3979,11 @@ async def td_search_popx_docs(
     """Search POPx operator documentation — GPU particles, falloffs, simulations."""
     brain = _get_popx_brain(ctx)
     if brain is None:
-        return {"error": "POPx brain not installed. Run 'npx tdpilot brains add popx' to enable.", "results": [], "count": 0}
+        return {
+            "error": "POPx brain not installed. Run 'npx tdpilot brains add popx' to enable.",
+            "results": [],
+            "count": 0,
+        }
     results = brain.search(query, limit=limit)
     svc = _get_services(ctx)
     provenance = Provenance(source="popx_brain", td_build=svc.td_build)
@@ -4020,7 +4027,11 @@ async def td_search_paketa12(
     """Search paketa12 tutorial knowledge — GPU-texture-as-compute, UV math, simulations, GLSL techniques, feedback loops, algorithmic art in TouchDesigner."""
     brain = _get_paketa12_brain(ctx)
     if brain is None:
-        return {"error": "paketa12 brain not installed. Run 'npx tdpilot brains add paketa12' to enable.", "results": [], "count": 0}
+        return {
+            "error": "paketa12 brain not installed. Run 'npx tdpilot brains add paketa12' to enable.",
+            "results": [],
+            "count": 0,
+        }
     results = brain.search(query, limit=limit)
     svc = _get_services(ctx)
     provenance = Provenance(source="paketa12_brain", td_build=svc.td_build)
@@ -4056,6 +4067,7 @@ async def td_get_paketa12_tutorial(
 async def td_describe_surface(ctx: Context) -> dict[str, Any]:
     """Describe the MCP server surface: tool count, resource count, capabilities, version."""
     from td_mcp import __version__
+
     svc = _get_services(ctx)
     # Lazily populate td_build so capabilities.td_build isn't empty when the
     # MCP server started before TD was reachable (N2 audit).
@@ -4107,16 +4119,31 @@ async def td_describe_surface(ctx: Context) -> dict[str, Any]:
 # part of the old behavior (the caller didn't know the tool was waiting on
 # a recipe_id or memory query).
 _INTENT_MACRO_KEYWORDS: tuple[tuple[tuple[str, ...], str, str], ...] = (
-    (("feedback displ", "feedback-displacement", "feedback_displacement"),
-     "feedback_displacement", "Classic feedback displacement with source noise and composite merge."),
-    (("feedback", "trail", "echo"),
-     "feedback_loop", "Classic feedback chain: feedback → level → composite → out."),
-    (("post-process", "post process", "post_processing", "grade", "bloom blur", "color grade"),
-     "post_processing", "Simple post-FX chain: level → blur → out."),
-    (("audio reactive", "audio-react", "audio_reactive", "audio analysis"),
-     "audio_reactive", "Audio signal preprocessing chain with gain stage and null output."),
-    (("particle", "gpu particle", "pop simulation", "particles"),
-     "particle_gpu", "Minimal POP chain: particle → noise → render."),
+    (
+        ("feedback displ", "feedback-displacement", "feedback_displacement"),
+        "feedback_displacement",
+        "Classic feedback displacement with source noise and composite merge.",
+    ),
+    (
+        ("feedback", "trail", "echo"),
+        "feedback_loop",
+        "Classic feedback chain: feedback → level → composite → out.",
+    ),
+    (
+        ("post-process", "post process", "post_processing", "grade", "bloom blur", "color grade"),
+        "post_processing",
+        "Simple post-FX chain: level → blur → out.",
+    ),
+    (
+        ("audio reactive", "audio-react", "audio_reactive", "audio analysis"),
+        "audio_reactive",
+        "Audio signal preprocessing chain with gain stage and null output.",
+    ),
+    (
+        ("particle", "gpu particle", "pop simulation", "particles"),
+        "particle_gpu",
+        "Minimal POP chain: particle → noise → render.",
+    ),
 )
 
 
@@ -4177,13 +4204,15 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> dict[str, Any]:
                         card_ok = True
                         if idx is not None:
                             card_ok = idx.get_operator(op_type) is not None
-                        recipe_steps.append({
-                            "op": "create_node",
-                            "op_type": op_type,
-                            "name": node.get("name", ""),
-                            "parent_path": params.target_path,
-                            "known_to_knowledge_corpus": card_ok,
-                        })
+                        recipe_steps.append(
+                            {
+                                "op": "create_node",
+                                "op_type": op_type,
+                                "name": node.get("name", ""),
+                                "parent_path": params.target_path,
+                                "known_to_knowledge_corpus": card_ok,
+                            }
+                        )
             except Exception as exc:
                 recipe_info = {"error": str(exc)}
 
@@ -4193,23 +4222,27 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> dict[str, Any]:
         if not recipe_steps:
             macro_suggestion = _suggest_macro_for_intent(params.intent)
             if macro_suggestion is not None:
-                recipe_steps.append({
-                    "op": "create_macro",
-                    "macro_type": macro_suggestion["macro_type"],
-                    "parent_path": params.target_path,
-                    "summary": macro_suggestion["summary"],
-                    "source": "intent_heuristic",
-                })
+                recipe_steps.append(
+                    {
+                        "op": "create_macro",
+                        "macro_type": macro_suggestion["macro_type"],
+                        "parent_path": params.target_path,
+                        "summary": macro_suggestion["summary"],
+                        "source": "intent_heuristic",
+                    }
+                )
 
         # Collect actionable next-step hints the caller can use when steps is
         # still empty (no recipe + no heuristic match).
         next_actions: list[str] = []
         if not recipe_steps:
-            next_actions.extend([
-                "Search the technique library: td_memory_recall(query='<keyword>').",
-                "List built-in macros: td_list_macros (see td_get_macro_params for options).",
-                "If you already have a recipe, pass recipe_id= to td_plan_patch.",
-            ])
+            next_actions.extend(
+                [
+                    "Search the technique library: td_memory_recall(query='<keyword>').",
+                    "List built-in macros: td_list_macros (see td_get_macro_params for options).",
+                    "If you already have a recipe, pass recipe_id= to td_plan_patch.",
+                ]
+            )
 
         plan = {
             "intent": params.intent,
@@ -4219,8 +4252,7 @@ async def td_plan_patch(params: PlanPatchInput, ctx: Context) -> dict[str, Any]:
             "existing_names": sorted(existing_names),
             "steps": recipe_steps,
             "note": (
-                "This plan does NOT mutate the project. "
-                "Validate with td_preflight_patch before execution."
+                "This plan does NOT mutate the project. Validate with td_preflight_patch before execution."
             ),
         }
         if macro_suggestion is not None:
@@ -4294,11 +4326,15 @@ async def td_preflight_patch(params: PreflightPatchInput, ctx: Context) -> dict[
                 )
 
         valid = len(errors) == 0
-        _audit_log(ctx, "td_preflight_patch", {
-            "target_path": target_path,
-            "steps": len(steps),
-            "valid": valid,
-        })
+        _audit_log(
+            ctx,
+            "td_preflight_patch",
+            {
+                "target_path": target_path,
+                "steps": len(steps),
+                "valid": valid,
+            },
+        )
         return {
             "success": True,
             "valid": valid,
@@ -4386,28 +4422,30 @@ async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> dict[
                         try:
                             compat = idx.check_compatibility(op_type, svc.td_build)
                             if compat.get("status") == "incompatible":
-                                compat_issues.append({
-                                    "op_type": op_type,
-                                    "reason": compat.get("reason", "unknown"),
-                                })
+                                compat_issues.append(
+                                    {
+                                        "op_type": op_type,
+                                        "reason": compat.get("reason", "unknown"),
+                                    }
+                                )
                         except Exception:
                             pass
 
         if unknown_types:
-            warnings.append(
-                f"Op types not found in knowledge corpus: {unknown_types}"
-            )
+            warnings.append(f"Op types not found in knowledge corpus: {unknown_types}")
         if compat_issues:
-            warnings.append(
-                f"Build compatibility issues: {compat_issues}"
-            )
+            warnings.append(f"Build compatibility issues: {compat_issues}")
 
         valid = len(errors) == 0
-        _audit_log(ctx, "td_validate_recipe", {
-            "recipe_id": recipe_id,
-            "scope": params.scope,
-            "valid": valid,
-        })
+        _audit_log(
+            ctx,
+            "td_validate_recipe",
+            {
+                "recipe_id": recipe_id,
+                "scope": params.scope,
+                "valid": valid,
+            },
+        )
         return {
             "success": True,
             "valid": valid,
@@ -4431,48 +4469,200 @@ async def td_validate_recipe(params: ValidateRecipeInput, ctx: Context) -> dict[
 # audit to report 8+ common ops as unknown. This allowlist short-circuits
 # that check. Sourced from the v1.3.4 td_list_families canonical set plus
 # common operator types that appear across POP/SOP/TOP/CHOP/DAT/MAT/COMP.
-_STOCK_OP_TYPES: frozenset[str] = frozenset({
-    # Universal
-    "null", "in", "out", "select", "switch", "merge",
-    # COMPs
-    "base", "container", "geo", "window", "cam", "light", "text", "time",
-    "ambient", "animation", "annotate", "button", "environment", "field",
-    "geotext", "graph", "list", "opviewer", "parameter", "replicator",
-    "slider", "table", "widget",
-    # TOPs
-    "constant", "noise", "ramp", "level", "blur", "composite", "displace",
-    "feedback", "movefilein", "moviefilein", "moviefileout", "render",
-    "renderpass", "renderselect", "rendersimple", "transform", "over",
-    "add", "multiply", "subtract", "layer", "chopto", "popto", "flip",
-    "fit", "crop", "edge", "emboss", "hsvadj", "hsvadjust", "hsvtorgb",
-    "inside", "outside", "lookup", "rectangle", "circle", "cacheselect",
-    "comp", "convolve", "cornerpin", "cube", "cubemap", "depth", "difference",
-    "glslmulti", "glsl", "lumablur", "lumalevel", "math", "matte", "mirror",
-    "monochrome", "normalmap", "pack", "panel", "point", "reorder",
-    "resolution", "rgbkey", "rgbtohsv", "screen", "screengrab", "script",
-    "ssao", "svg", "threshold", "tile", "tonemap",
-    # CHOPs
-    "wave", "analyze", "beat", "count", "datto", "delete",
-    "envelope", "express", "hold", "info", "joystick", "keyframe", "lag",
-    "limit", "logic", "midiin", "midiinmap", "midiout", "mousein",
-    "object", "par", "perform", "rename", "renderpick", "replace",
-    "resample", "shuffle", "speed", "timeline", "timeslice", "topto",
-    "trail", "trigger",
-    # SOPs (stock)
-    "box", "sphere", "torus", "tube", "grid", "line", "filein", "texture",
-    "copy", "trace", "extrude",
-    # POPs (v1.3+)
-    "attcombine", "attconvert", "attribute", "connectivity", "convert",
-    "facet", "mathcombine", "mathmix", "normal", "normalize", "pattern",
-    "pointgen", "pointgenerator", "primitive", "rerange",
-    "triangulate",
-    # MATs
-    "phong", "pbr", "wireframe", "pointsprite",
-    # DATs
-    "execute", "chopexec", "datexec", "parexec", "opexec",
-    "panelexec", "eval", "examine", "fifo", "fileout", "indices", "insert", "keyboardin", "opfind", "sort", "substitute",
-    "transpose", "web", "webclient", "webserver", "websocket",
-})
+_STOCK_OP_TYPES: frozenset[str] = frozenset(
+    {
+        # Universal
+        "null",
+        "in",
+        "out",
+        "select",
+        "switch",
+        "merge",
+        # COMPs
+        "base",
+        "container",
+        "geo",
+        "window",
+        "cam",
+        "light",
+        "text",
+        "time",
+        "ambient",
+        "animation",
+        "annotate",
+        "button",
+        "environment",
+        "field",
+        "geotext",
+        "graph",
+        "list",
+        "opviewer",
+        "parameter",
+        "replicator",
+        "slider",
+        "table",
+        "widget",
+        # TOPs
+        "constant",
+        "noise",
+        "ramp",
+        "level",
+        "blur",
+        "composite",
+        "displace",
+        "feedback",
+        "movefilein",
+        "moviefilein",
+        "moviefileout",
+        "render",
+        "renderpass",
+        "renderselect",
+        "rendersimple",
+        "transform",
+        "over",
+        "add",
+        "multiply",
+        "subtract",
+        "layer",
+        "chopto",
+        "popto",
+        "flip",
+        "fit",
+        "crop",
+        "edge",
+        "emboss",
+        "hsvadj",
+        "hsvadjust",
+        "hsvtorgb",
+        "inside",
+        "outside",
+        "lookup",
+        "rectangle",
+        "circle",
+        "cacheselect",
+        "comp",
+        "convolve",
+        "cornerpin",
+        "cube",
+        "cubemap",
+        "depth",
+        "difference",
+        "glslmulti",
+        "glsl",
+        "lumablur",
+        "lumalevel",
+        "math",
+        "matte",
+        "mirror",
+        "monochrome",
+        "normalmap",
+        "pack",
+        "panel",
+        "point",
+        "reorder",
+        "resolution",
+        "rgbkey",
+        "rgbtohsv",
+        "screen",
+        "screengrab",
+        "script",
+        "ssao",
+        "svg",
+        "threshold",
+        "tile",
+        "tonemap",
+        # CHOPs
+        "wave",
+        "analyze",
+        "beat",
+        "count",
+        "datto",
+        "delete",
+        "envelope",
+        "express",
+        "hold",
+        "info",
+        "joystick",
+        "keyframe",
+        "lag",
+        "limit",
+        "logic",
+        "midiin",
+        "midiinmap",
+        "midiout",
+        "mousein",
+        "object",
+        "par",
+        "perform",
+        "rename",
+        "renderpick",
+        "replace",
+        "resample",
+        "shuffle",
+        "speed",
+        "timeline",
+        "timeslice",
+        "topto",
+        "trail",
+        "trigger",
+        # SOPs (stock)
+        "box",
+        "sphere",
+        "torus",
+        "tube",
+        "grid",
+        "line",
+        "filein",
+        "texture",
+        "copy",
+        "trace",
+        "extrude",
+        # POPs (v1.3+)
+        "attcombine",
+        "attconvert",
+        "attribute",
+        "connectivity",
+        "convert",
+        "facet",
+        "mathcombine",
+        "mathmix",
+        "normal",
+        "normalize",
+        "pattern",
+        "pointgen",
+        "pointgenerator",
+        "primitive",
+        "rerange",
+        "triangulate",
+        # MATs
+        "phong",
+        "pbr",
+        "wireframe",
+        "pointsprite",
+        # DATs
+        "execute",
+        "chopexec",
+        "datexec",
+        "parexec",
+        "opexec",
+        "panelexec",
+        "eval",
+        "examine",
+        "fifo",
+        "fileout",
+        "indices",
+        "insert",
+        "keyboardin",
+        "opfind",
+        "sort",
+        "substitute",
+        "transpose",
+        "web",
+        "webclient",
+        "webserver",
+        "websocket",
+    }
+)
 
 
 @mcp.tool(name="td_audit_project")
@@ -4543,24 +4733,32 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> dict[str,
                 # an explicit card for every stock TD op but they're obviously
                 # known to the system, so flagging them produces noise.
                 card = idx.get_operator(op_type)
-                if card is None and op_type.lower() not in _STOCK_OP_TYPES and op_type not in unknown_op_types:
+                if (
+                    card is None
+                    and op_type.lower() not in _STOCK_OP_TYPES
+                    and op_type not in unknown_op_types
+                ):
                     unknown_op_types.append(op_type)
                 elif card is not None and svc.td_build:
                     try:
                         compat = idx.check_compatibility(op_type, svc.td_build)
                         if compat.get("status") == "incompatible":
-                            compat_issues.append({
-                                "node": name,
-                                "op_type": op_type,
-                                "reason": compat.get("reason", "unknown"),
-                            })
+                            compat_issues.append(
+                                {
+                                    "node": name,
+                                    "op_type": op_type,
+                                    "reason": compat.get("reason", "unknown"),
+                                }
+                            )
                     except Exception:
                         pass
 
         # Fetch errors for root
         node_errors = []
         try:
-            err_data = await client.request("node/errors", {"path": params.root_path, "recurse": True, "max_depth": 10})
+            err_data = await client.request(
+                "node/errors", {"path": params.root_path, "recurse": True, "max_depth": 10}
+            )
             if isinstance(err_data, list):
                 node_errors = err_data
             elif isinstance(err_data, dict):
@@ -4568,10 +4766,14 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> dict[str,
         except Exception:
             pass
 
-        _audit_log(ctx, "td_audit_project", {
-            "root_path": params.root_path,
-            "node_count": len(all_nodes),
-        })
+        _audit_log(
+            ctx,
+            "td_audit_project",
+            {
+                "root_path": params.root_path,
+                "node_count": len(all_nodes),
+            },
+        )
         return {
             "success": True,
             "root_path": params.root_path,
@@ -4594,6 +4796,7 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> dict[str,
 # ─────────────────────────────────────────────────────────────
 # Vision Diagnostics (tools 76-77)
 # ─────────────────────────────────────────────────────────────
+
 
 @mcp.tool(name="td_capture_frame")
 async def td_capture_frame(params: CaptureFrameInput, ctx: Context) -> str:
@@ -4750,8 +4953,7 @@ def _rescue_exec_mode_error(
             "tool": tool_name,
             "required_mode": required_mode,
             "remediation": (
-                f"Set TD_MCP_EXEC_MODE={required_mode} in the MCP server environment "
-                "and restart the server."
+                f"Set TD_MCP_EXEC_MODE={required_mode} in the MCP server environment and restart the server."
             ),
             "underlying": str(exc),
         }
@@ -4761,6 +4963,7 @@ def _rescue_exec_mode_error(
 # ─────────────────────────────────────────────────────────────
 # TD 2025 Native System Tools (tools 78-83)
 # ─────────────────────────────────────────────────────────────
+
 
 @mcp.tool(name="td_python_env_status")
 async def td_python_env_status(ctx: Context) -> dict[str, Any]:
@@ -5102,23 +5305,27 @@ async def td_recommend_official_component(params: RecommendOfficialInput, ctx: C
         for card in palette_results:
             if not _is_informative_card(card):
                 continue
-            recommendations.append({
-                "type": "palette",
-                "name": card.get("component_name", ""),
-                "display_name": card.get("display_name", ""),
-                "summary": card.get("summary", ""),
-                "when_to_use": card.get("when_to_use", ""),
-            })
+            recommendations.append(
+                {
+                    "type": "palette",
+                    "name": card.get("component_name", ""),
+                    "display_name": card.get("display_name", ""),
+                    "summary": card.get("summary", ""),
+                    "when_to_use": card.get("when_to_use", ""),
+                }
+            )
         for card in operator_results:
             if not _is_informative_card(card):
                 continue
-            recommendations.append({
-                "type": "operator",
-                "name": card.get("op_type", ""),
-                "display_name": card.get("display_name", ""),
-                "summary": card.get("summary", ""),
-                "family": card.get("family", ""),
-            })
+            recommendations.append(
+                {
+                    "type": "operator",
+                    "name": card.get("op_type", ""),
+                    "display_name": card.get("display_name", ""),
+                    "summary": card.get("summary", ""),
+                    "family": card.get("family", ""),
+                }
+            )
 
         payload: dict[str, Any] = {
             "success": True,
@@ -5169,20 +5376,24 @@ async def td_find_official_example(params: FindOfficialExampleInput, ctx: Contex
 
         examples = []
         for card in snippet_results:
-            examples.append({
-                "type": "snippet",
-                "id": card.get("snippet_id", ""),
-                "display_name": card.get("display_name", ""),
-                "summary": card.get("summary", ""),
-                "family": card.get("family", ""),
-            })
+            examples.append(
+                {
+                    "type": "snippet",
+                    "id": card.get("snippet_id", ""),
+                    "display_name": card.get("display_name", ""),
+                    "summary": card.get("summary", ""),
+                    "family": card.get("family", ""),
+                }
+            )
         for card in palette_results:
-            examples.append({
-                "type": "palette_example",
-                "name": card.get("component_name", ""),
-                "display_name": card.get("display_name", ""),
-                "summary": card.get("summary", ""),
-            })
+            examples.append(
+                {
+                    "type": "palette_example",
+                    "name": card.get("component_name", ""),
+                    "display_name": card.get("display_name", ""),
+                    "summary": card.get("summary", ""),
+                }
+            )
 
         _audit_log(ctx, "td_find_official_example", {"query": params.query, "family": params.family})
         return {
@@ -5249,9 +5460,7 @@ async def td_explain_better_way(params: ExplainBetterWayInput, ctx: Context) -> 
             else:
                 recommendation_parts.append(f"Consider using '{label}'")
         if gotchas:
-            recommendation_parts.append(
-                f"Watch out for {len(gotchas)} known gotcha(s)."
-            )
+            recommendation_parts.append(f"Watch out for {len(gotchas)} known gotcha(s).")
         recommendation = " ".join(recommendation_parts)
 
         payload: dict[str, Any] = {
@@ -5282,6 +5491,7 @@ async def td_explain_better_way(params: ExplainBetterWayInput, ctx: Context) -> 
 # ─────────────────────────────────────────────────────────────
 # CLI entrypoint
 # ─────────────────────────────────────────────────────────────
+
 
 def main() -> None:
     """Run the MCP server via FastMCP."""

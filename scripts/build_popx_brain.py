@@ -106,8 +106,7 @@ def slugify(text: str) -> str:
 # ── Normalizer ───────────────────────────────────────────────────────
 
 # Boilerplate selectors to strip
-_STRIP_SELECTORS = ["script", "style", "#navbar-container",
-                    "#sidebar-container", "#mobile-menu-container"]
+_STRIP_SELECTORS = ["script", "style", "#navbar-container", "#sidebar-container", "#mobile-menu-container"]
 
 
 def normalize_popx_file(filepath: Path, rel_path: str) -> dict[str, Any] | None:
@@ -143,8 +142,7 @@ def normalize_popx_file(filepath: Path, rel_path: str) -> dict[str, Any] | None:
         title = h1.get_text(strip=True)
 
     # Extract headings
-    headings = [tag.get_text(strip=True)
-                for tag in content_div.find_all(["h2", "h3", "h4"])]
+    headings = [tag.get_text(strip=True) for tag in content_div.find_all(["h2", "h3", "h4"])]
 
     # Strip boilerplate
     for sel in _STRIP_SELECTORS:
@@ -181,6 +179,7 @@ def normalize_popx_directory(site_dir: Path) -> Iterator[dict[str, Any]]:
 
 # ── Chunker ──────────────────────────────────────────────────────────
 
+
 def _extract_parameters(section: Tag) -> list[dict[str, str]]:
     """Extract structured parameters from POPx parameter divs."""
     params = []
@@ -189,11 +188,13 @@ def _extract_parameters(section: Tag) -> list[dict[str, str]]:
         name_el = item.select_one(".param-name")
         desc_el = item.select_one(".param-description, .param-group-description")
         if label_el:
-            params.append({
-                "label": label_el.get_text(strip=True),
-                "name": name_el.get_text(strip=True) if name_el else "",
-                "description": desc_el.get_text(strip=True) if desc_el else "",
-            })
+            params.append(
+                {
+                    "label": label_el.get_text(strip=True),
+                    "name": name_el.get_text(strip=True) if name_el else "",
+                    "description": desc_el.get_text(strip=True) if desc_el else "",
+                }
+            )
     return params
 
 
@@ -253,22 +254,24 @@ def chunk_popx_page(page: dict[str, Any], html_path: Path) -> list[dict[str, Any
             slug = slugify(section_title)
             chunk_id = f"{page_id}__{slug}__{seq:04d}"
 
-            chunks.append({
-                "chunk_id": chunk_id,
-                "page_id": page_id,
-                "doc_type": doc_type,
-                "section_title": section_title,
-                "operator_family": op_cat,
-                "operator_name": op_name,
-                "mentioned_operators": [],
-                "parameter_names": param_names,
-                "python_symbols": [],
-                "build_number": None,
-                "build_date": None,
-                "change_category": None,
-                "token_estimate": _token_estimate(text),
-                "content": text,
-            })
+            chunks.append(
+                {
+                    "chunk_id": chunk_id,
+                    "page_id": page_id,
+                    "doc_type": doc_type,
+                    "section_title": section_title,
+                    "operator_family": op_cat,
+                    "operator_name": op_name,
+                    "mentioned_operators": [],
+                    "parameter_names": param_names,
+                    "python_symbols": [],
+                    "build_number": None,
+                    "build_date": None,
+                    "change_category": None,
+                    "token_estimate": _token_estimate(text),
+                    "content": text,
+                }
+            )
     else:
         # Fallback: heading-based chunking
         headings = main.find_all(["h2", "h3", "h4"])
@@ -283,22 +286,24 @@ def chunk_popx_page(page: dict[str, Any], html_path: Path) -> list[dict[str, Any
             intro = "\n".join(p for p in intro_parts if p)
             if intro and len(intro.split()) >= 10:
                 seq += 1
-                chunks.append({
-                    "chunk_id": f"{page_id}__intro__{seq:04d}",
-                    "page_id": page_id,
-                    "doc_type": doc_type,
-                    "section_title": page["title"],
-                    "operator_family": op_cat,
-                    "operator_name": op_name,
-                    "mentioned_operators": [],
-                    "parameter_names": [],
-                    "python_symbols": [],
-                    "build_number": None,
-                    "build_date": None,
-                    "change_category": None,
-                    "token_estimate": _token_estimate(intro),
-                    "content": intro,
-                })
+                chunks.append(
+                    {
+                        "chunk_id": f"{page_id}__intro__{seq:04d}",
+                        "page_id": page_id,
+                        "doc_type": doc_type,
+                        "section_title": page["title"],
+                        "operator_family": op_cat,
+                        "operator_name": op_name,
+                        "mentioned_operators": [],
+                        "parameter_names": [],
+                        "python_symbols": [],
+                        "build_number": None,
+                        "build_date": None,
+                        "change_category": None,
+                        "token_estimate": _token_estimate(intro),
+                        "content": intro,
+                    }
+                )
 
             for h_tag in headings:
                 h_text = h_tag.get_text(strip=True)
@@ -319,11 +324,33 @@ def chunk_popx_page(page: dict[str, Any], html_path: Path) -> list[dict[str, Any
                     continue
                 seq += 1
                 slug = slugify(h_text)
-                chunks.append({
-                    "chunk_id": f"{page_id}__{slug}__{seq:04d}",
+                chunks.append(
+                    {
+                        "chunk_id": f"{page_id}__{slug}__{seq:04d}",
+                        "page_id": page_id,
+                        "doc_type": doc_type,
+                        "section_title": h_text,
+                        "operator_family": op_cat,
+                        "operator_name": op_name,
+                        "mentioned_operators": [],
+                        "parameter_names": [],
+                        "python_symbols": [],
+                        "build_number": None,
+                        "build_date": None,
+                        "change_category": None,
+                        "token_estimate": _token_estimate(text),
+                        "content": text,
+                    }
+                )
+        else:
+            # No structure — whole page as one chunk
+            seq += 1
+            chunks.append(
+                {
+                    "chunk_id": f"{page_id}__full__{seq:04d}",
                     "page_id": page_id,
                     "doc_type": doc_type,
-                    "section_title": h_text,
+                    "section_title": page["title"],
                     "operator_family": op_cat,
                     "operator_name": op_name,
                     "mentioned_operators": [],
@@ -332,28 +359,10 @@ def chunk_popx_page(page: dict[str, Any], html_path: Path) -> list[dict[str, Any
                     "build_number": None,
                     "build_date": None,
                     "change_category": None,
-                    "token_estimate": _token_estimate(text),
-                    "content": text,
-                })
-        else:
-            # No structure — whole page as one chunk
-            seq += 1
-            chunks.append({
-                "chunk_id": f"{page_id}__full__{seq:04d}",
-                "page_id": page_id,
-                "doc_type": doc_type,
-                "section_title": page["title"],
-                "operator_family": op_cat,
-                "operator_name": op_name,
-                "mentioned_operators": [],
-                "parameter_names": [],
-                "python_symbols": [],
-                "build_number": None,
-                "build_date": None,
-                "change_category": None,
-                "token_estimate": _token_estimate(page["text"]),
-                "content": page["text"],
-            })
+                    "token_estimate": _token_estimate(page["text"]),
+                    "content": page["text"],
+                }
+            )
 
     return chunks
 
@@ -377,10 +386,12 @@ def parse_popx_releases(chunks_path: Path, output_dir: Path) -> tuple[dict, dict
             m = _POPX_VERSION_HEADING_RE.search(chunk["section_title"])
             if m:
                 version = m.group(1)
-                builds.append({
-                    "version": version,
-                    "content": chunk["content"][:500],
-                })
+                builds.append(
+                    {
+                        "version": version,
+                        "content": chunk["content"][:500],
+                    }
+                )
 
     manifest = {"product": "POPx", "builds": builds}
     manifest_path = output_dir / "build_manifest.json"
@@ -470,15 +481,20 @@ def build_popx_index(chunks_path: Path, db_path: Path) -> int:
                         token_estimate, content)
                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (
-                        chunk["chunk_id"], chunk["page_id"], chunk["doc_type"],
-                        chunk["section_title"], chunk.get("operator_family"),
+                        chunk["chunk_id"],
+                        chunk["page_id"],
+                        chunk["doc_type"],
+                        chunk["section_title"],
+                        chunk.get("operator_family"),
                         chunk.get("operator_name"),
                         json.dumps(chunk.get("mentioned_operators", [])),
                         json.dumps(chunk.get("parameter_names", [])),
                         json.dumps(chunk.get("python_symbols", [])),
-                        chunk.get("build_number"), chunk.get("build_date"),
+                        chunk.get("build_number"),
+                        chunk.get("build_date"),
                         chunk.get("change_category"),
-                        chunk.get("token_estimate", 0), chunk["content"],
+                        chunk.get("token_estimate", 0),
+                        chunk["content"],
                     ),
                 )
                 # Insert into FTS5
@@ -506,6 +522,7 @@ def build_popx_index(chunks_path: Path, db_path: Path) -> int:
 
 # ── Refs repo ingestion (catalog.json + markdown) ────────────────────
 
+
 def _chunk_catalog_examples(catalog_path: Path) -> list[dict[str, Any]]:
     """Create chunks from catalog.json examples — one chunk per example."""
     with open(catalog_path, encoding="utf-8") as f:
@@ -525,22 +542,24 @@ def _chunk_catalog_examples(catalog_path: Path) -> list[dict[str, Any]]:
             content += f"\n\nNodes:\n{node_text}"
 
         chunk_id = f"catalog_example__{slugify(name)}__{i:04d}"
-        chunks.append({
-            "chunk_id": chunk_id,
-            "page_id": "catalog__examples",
-            "doc_type": "example",
-            "section_title": f"Example: {name}",
-            "operator_family": None,
-            "operator_name": None,
-            "mentioned_operators": [],
-            "parameter_names": [],
-            "python_symbols": [],
-            "build_number": None,
-            "build_date": None,
-            "change_category": None,
-            "token_estimate": _token_estimate(content),
-            "content": content,
-        })
+        chunks.append(
+            {
+                "chunk_id": chunk_id,
+                "page_id": "catalog__examples",
+                "doc_type": "example",
+                "section_title": f"Example: {name}",
+                "operator_family": None,
+                "operator_name": None,
+                "mentioned_operators": [],
+                "parameter_names": [],
+                "python_symbols": [],
+                "build_number": None,
+                "build_date": None,
+                "change_category": None,
+                "token_estimate": _token_estimate(content),
+                "content": content,
+            }
+        )
 
     # Also create chunks from catalog docs entries (structured summaries)
     for i, doc in enumerate(catalog.get("docs", []), 1):
@@ -558,22 +577,24 @@ def _chunk_catalog_examples(catalog_path: Path) -> list[dict[str, Any]]:
         op_family = subcat if cat == "operators" else None
 
         chunk_id = f"catalog_doc__{slugify(title)}__{i:04d}"
-        chunks.append({
-            "chunk_id": chunk_id,
-            "page_id": f"catalog__{slugify(doc.get('slug', title))}",
-            "doc_type": f"catalog_{cat}",
-            "section_title": f"{title} (catalog summary)",
-            "operator_family": op_family,
-            "operator_name": op_name,
-            "mentioned_operators": [],
-            "parameter_names": [p.get("label", "") for p in doc.get("key_parameters", [])],
-            "python_symbols": [],
-            "build_number": None,
-            "build_date": None,
-            "change_category": None,
-            "token_estimate": _token_estimate(content),
-            "content": content,
-        })
+        chunks.append(
+            {
+                "chunk_id": chunk_id,
+                "page_id": f"catalog__{slugify(doc.get('slug', title))}",
+                "doc_type": f"catalog_{cat}",
+                "section_title": f"{title} (catalog summary)",
+                "operator_family": op_family,
+                "operator_name": op_name,
+                "mentioned_operators": [],
+                "parameter_names": [p.get("label", "") for p in doc.get("key_parameters", [])],
+                "python_symbols": [],
+                "build_number": None,
+                "build_date": None,
+                "change_category": None,
+                "token_estimate": _token_estimate(content),
+                "content": content,
+            }
+        )
 
     return chunks
 
@@ -608,40 +629,50 @@ def _chunk_markdown_refs(refs_dir: Path) -> list[dict[str, Any]]:
                 if heading_match and not heading_match.group(1).startswith("#"):
                     op_name = heading_match.group(1).strip()
 
-            chunks.append({
-                "chunk_id": chunk_id,
-                "page_id": page_id,
-                "doc_type": "reference",
-                "section_title": section_title,
-                "operator_family": md_file.stem.replace("operators-", "") if md_file.stem.startswith("operators-") else None,
-                "operator_name": op_name,
-                "mentioned_operators": [],
-                "parameter_names": [],
-                "python_symbols": [],
-                "build_number": None,
-                "build_date": None,
-                "change_category": None,
-                "token_estimate": _token_estimate(section),
-                "content": section,
-            })
+            chunks.append(
+                {
+                    "chunk_id": chunk_id,
+                    "page_id": page_id,
+                    "doc_type": "reference",
+                    "section_title": section_title,
+                    "operator_family": md_file.stem.replace("operators-", "")
+                    if md_file.stem.startswith("operators-")
+                    else None,
+                    "operator_name": op_name,
+                    "mentioned_operators": [],
+                    "parameter_names": [],
+                    "python_symbols": [],
+                    "build_number": None,
+                    "build_date": None,
+                    "change_category": None,
+                    "token_estimate": _token_estimate(section),
+                    "content": section,
+                }
+            )
 
     return chunks
 
 
 # ── Main pipeline ────────────────────────────────────────────────────
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build the TDPilot POPx brain")
     parser.add_argument(
-        "--source", type=Path, default=None,
+        "--source",
+        type=Path,
+        default=None,
         help="Path to scraped popsextension.com site root",
     )
     parser.add_argument(
-        "--refs", type=Path, default=None,
+        "--refs",
+        type=Path,
+        default=None,
         help="Path to TDPilot-popx-refs repo (catalog.json + markdown files)",
     )
     parser.add_argument(
-        "--output", type=Path,
+        "--output",
+        type=Path,
         default=Path(__file__).resolve().parent.parent / "data" / "normalized" / "popx",
         help="Output directory for generated files",
     )
@@ -653,9 +684,7 @@ def main() -> None:
         if env_path:
             source = Path(env_path)
         else:
-            logger.error(
-                "No source path. Use --source or set TDPILOT_POPX_SCRAPE_PATH"
-            )
+            logger.error("No source path. Use --source or set TDPILOT_POPX_SCRAPE_PATH")
             sys.exit(1)
 
     if not source.is_dir():

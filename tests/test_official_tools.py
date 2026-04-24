@@ -1,4 +1,5 @@
 """Tests for official recommendation tools 84-86."""
+
 import asyncio
 
 from _constants import EXPECTED_MIN_TOOL_COUNT

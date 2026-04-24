@@ -19,8 +19,10 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class ResponseFormat(str, Enum):
     """Output format for tool responses."""
+
     MARKDOWN = "markdown"
     JSON = "json"
+
 
 class MacroType(str, Enum):
     """Supported built-in macro templates."""
@@ -31,45 +33,50 @@ class MacroType(str, Enum):
     PARTICLE_GPU = "particle_gpu"
     POST_PROCESSING = "post_processing"
 
+
 # ─────────────────────────────────────────────────────────────
 # Environment / Info
 # ─────────────────────────────────────────────────────────────
 
+
 class EmptyInput(BaseModel):
     """No input required."""
-    model_config = ConfigDict(extra='forbid')
+
+    model_config = ConfigDict(extra="forbid")
+
 
 # ─────────────────────────────────────────────────────────────
 # Node Navigation & Inspection
 # ─────────────────────────────────────────────────────────────
 
+
 class GetNodesInput(BaseModel):
     """Input for listing child nodes at a path."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(
         default="/",
-        description="Absolute path to a COMP node whose children to list (e.g. '/', '/project1', '/project1/myComp')"
+        description="Absolute path to a COMP node whose children to list (e.g. '/', '/project1', '/project1/myComp')",
     )
     family: str | None = Field(
-        default=None,
-        description="Filter by operator family: TOP, CHOP, SOP, DAT, COMP, MAT, or PANEL"
+        default=None, description="Filter by operator family: TOP, CHOP, SOP, DAT, COMP, MAT, or PANEL"
     )
     type: str | None = Field(
-        default=None,
-        description="Filter by specific operator type (e.g. 'noiseTOP', 'waveCHOP', 'textDAT')"
+        default=None, description="Filter by specific operator type (e.g. 'noiseTOP', 'waveCHOP', 'textDAT')"
     )
     include_params: bool = Field(
-        default=False,
-        description="If true, include all parameters for each node (slower for large networks)"
+        default=False, description="If true, include all parameters for each node (slower for large networks)"
     )
     limit: int = Field(default=100, ge=1, le=500, description="Max number of nodes to return")
     offset: int = Field(default=0, ge=0, description="Pagination offset")
     response_format: ResponseFormat = Field(default=ResponseFormat.JSON, description="Output format")
 
+
 class NodePathInput(BaseModel):
     """Input requiring a single node path."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(
         ...,
@@ -78,18 +85,22 @@ class NodePathInput(BaseModel):
     )
     response_format: ResponseFormat = Field(default=ResponseFormat.JSON, description="Output format")
 
+
 class GetParamsInput(BaseModel):
     """Input for getting node parameters."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Absolute node path", min_length=1)
     page: str | None = Field(default=None, description="Filter by parameter page name")
     names: list[str] | None = Field(default=None, description="Filter to specific parameter names")
     response_format: ResponseFormat = Field(default=ResponseFormat.JSON, description="Output format")
 
+
 class SetParamsInput(BaseModel):
     """Input for setting node parameters (static values or live expressions)."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Absolute node path", min_length=1)
     params: dict[str, Any] = Field(
@@ -106,17 +117,19 @@ class SetParamsInput(BaseModel):
         min_length=1,
     )
 
+
 # ─────────────────────────────────────────────────────────────
 # Node Creation / Deletion / Copy / Rename
 # ─────────────────────────────────────────────────────────────
 
+
 class CreateNodeInput(BaseModel):
     """Input for creating a new node."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     parent_path: str = Field(
-        default="/project1",
-        description="Path to the parent COMP where the node will be created"
+        default="/project1", description="Path to the parent COMP where the node will be created"
     )
     node_type: str = Field(
         ...,
@@ -132,23 +145,22 @@ class CreateNodeInput(BaseModel):
         min_length=1,
     )
     name: str | None = Field(
-        default=None,
-        description="Custom name for the new node. If None, TD assigns a default name."
+        default=None, description="Custom name for the new node. If None, TD assigns a default name."
     )
     nodeX: int | None = Field(
         default=None,
-        description="Horizontal position in the network editor (pixels). Use multiples of 200 for clean spacing between nodes."
+        description="Horizontal position in the network editor (pixels). Use multiples of 200 for clean spacing between nodes.",
     )
     nodeY: int | None = Field(
         default=None,
-        description="Vertical position in the network editor (pixels). Use multiples of 200 for clean spacing between rows."
+        description="Vertical position in the network editor (pixels). Use multiples of 200 for clean spacing between rows.",
     )
 
-    @field_validator('node_type')
+    @field_validator("node_type")
     @classmethod
     def validate_node_type(cls, v: str) -> str:
         """Validate the operator type ends with a known family suffix."""
-        families = ('TOP', 'CHOP', 'SOP', 'DAT', 'COMP', 'MAT', 'POP')
+        families = ("TOP", "CHOP", "SOP", "DAT", "COMP", "MAT", "POP")
         if not any(v.upper().endswith(f) for f in families):
             raise ValueError(
                 f"node_type '{v}' should end with a family suffix: {', '.join(families)}. "
@@ -156,98 +168,109 @@ class CreateNodeInput(BaseModel):
             )
         return v
 
+
 class DeleteNodeInput(BaseModel):
     """Input for deleting a node."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Absolute path of the node to delete", min_length=1)
 
+
 class CopyNodeInput(BaseModel):
     """Input for copying/duplicating a node."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     source_path: str = Field(..., description="Path of the node to copy", min_length=1)
     dest_parent: str | None = Field(
-        default=None,
-        description="Path of the destination parent COMP. If None, copies into same parent."
+        default=None, description="Path of the destination parent COMP. If None, copies into same parent."
     )
     new_name: str | None = Field(default=None, description="Name for the copy")
 
+
 class RenameNodeInput(BaseModel):
     """Input for renaming a node."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Current absolute path of the node", min_length=1)
     new_name: str = Field(..., description="New name for the node", min_length=1, max_length=100)
+
 
 # ─────────────────────────────────────────────────────────────
 # Connections / Wiring
 # ─────────────────────────────────────────────────────────────
 
+
 class ConnectNodesInput(BaseModel):
     """Input for connecting two nodes."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     source_path: str = Field(..., description="Path of the source (output) node", min_length=1)
     target_path: str = Field(..., description="Path of the target (input) node", min_length=1)
     source_index: int = Field(
-        default=0, ge=0,
-        description="Output connector index on the source node (0 = first output)"
+        default=0, ge=0, description="Output connector index on the source node (0 = first output)"
     )
     target_index: int = Field(
-        default=0, ge=0,
-        description="Input connector index on the target node (0 = first input)"
+        default=0, ge=0, description="Input connector index on the target node (0 = first input)"
     )
+
 
 class DisconnectInput(BaseModel):
     """Input for disconnecting a node connector."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Path of the node to disconnect", min_length=1)
-    connector_type: str = Field(
-        default="input",
-        description="Which connector: 'input' or 'output'"
-    )
+    connector_type: str = Field(default="input", description="Which connector: 'input' or 'output'")
     index: int = Field(default=0, ge=0, description="Connector index to disconnect")
 
-    @field_validator('connector_type')
+    @field_validator("connector_type")
     @classmethod
     def validate_connector_type(cls, v: str) -> str:
-        if v not in ('input', 'output'):
+        if v not in ("input", "output"):
             raise ValueError("connector_type must be 'input' or 'output'")
         return v
+
 
 # ─────────────────────────────────────────────────────────────
 # DAT Content
 # ─────────────────────────────────────────────────────────────
 
+
 class GetContentInput(BaseModel):
     """Input for reading DAT text/table content."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Path to a DAT node", min_length=1)
+
 
 class SetContentInput(BaseModel):
     """Input for writing DAT text/table content."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Path to a DAT node", min_length=1)
     text: str | None = Field(
-        default=None,
-        description="Text content to write (for Text DATs, Script DATs, etc.)"
+        default=None, description="Text content to write (for Text DATs, Script DATs, etc.)"
     )
     table: list[list[str]] | None = Field(
-        default=None,
-        description="Table content as 2D array of strings (for Table DATs)"
+        default=None, description="Table content as 2D array of strings (for Table DATs)"
     )
+
 
 # ─────────────────────────────────────────────────────────────
 # Python Execution
 # ─────────────────────────────────────────────────────────────
 
+
 class ExecPythonInput(BaseModel):
     """Input for executing Python code inside TouchDesigner."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     code: str = Field(
         ...,
@@ -271,13 +294,16 @@ class ExecPythonInput(BaseModel):
         le=60000,
     )
 
+
 # ─────────────────────────────────────────────────────────────
 # Screenshot / Visual
 # ─────────────────────────────────────────────────────────────
 
+
 class ScreenshotInput(BaseModel):
     """Input for capturing a TOP node as a JPEG image."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(
         ...,
@@ -291,37 +317,44 @@ class ScreenshotInput(BaseModel):
         le=1.0,
     )
 
+
 # ─────────────────────────────────────────────────────────────
 # CHOP / Geometry Data
 # ─────────────────────────────────────────────────────────────
 
+
 class CHOPDataInput(BaseModel):
     """Input for reading CHOP channel data."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Path to a CHOP node", min_length=1)
     channels: list[str] | None = Field(
-        default=None,
-        description="List of channel names to read. If None, reads all channels."
+        default=None, description="List of channel names to read. If None, reads all channels."
     )
     range: list[int] | None = Field(
         default=None,
         description="Sample range [start, end] to read. If None, reads all samples.",
-        min_length=2, max_length=2,
+        min_length=2,
+        max_length=2,
     )
+
 
 class GeometryDataInput(BaseModel):
     """Input for reading SOP/POP geometry data."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Path to a SOP or POP node", min_length=1)
     include_points: bool = Field(default=True, description="Include point position data")
     include_prims: bool = Field(default=False, description="Include primitive data")
     limit: int = Field(default=500, ge=1, le=10000, description="Max points/prims to return")
 
+
 class POPInspectInput(BaseModel):
     """Input for reading structured POP metadata and attribute samples."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Path to a POP node", min_length=1)
     include_bounds: bool = Field(default=True, description="Include POP bounds and dimension metadata")
@@ -339,55 +372,63 @@ class POPInspectInput(BaseModel):
         description="Specific vertex attributes to sample. If omitted, no vertex attribute samples are returned unless requested.",
     )
     start: int = Field(default=0, ge=0, description="Starting element index for attribute sampling")
-    count: int = Field(default=32, ge=1, le=2048, description="Max elements to sample per requested attribute")
+    count: int = Field(
+        default=32, ge=1, le=2048, description="Max elements to sample per requested attribute"
+    )
     delayed: bool = Field(
         default=False,
         description="Use TouchDesigner's delayed GPU readback mode where supported to reduce stalls",
     )
 
+
 # ─────────────────────────────────────────────────────────────
 # Cooking / Performance
 # ─────────────────────────────────────────────────────────────
 
+
 class CookingInfoInput(BaseModel):
     """Input for getting cooking/performance info."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(default="/", description="Root path to inspect")
     recurse: bool = Field(default=False, description="Recursively inspect children")
     sort_by: str = Field(default="cookTime", description="Sort by: 'cookTime' or 'cpuCookTime'")
     limit: int = Field(default=20, ge=1, le=100, description="Max nodes to return")
 
+
 # ─────────────────────────────────────────────────────────────
 # Search
 # ─────────────────────────────────────────────────────────────
 
+
 class SearchNodesInput(BaseModel):
     """Input for searching nodes."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     query: str = Field(..., description="Search string (case-insensitive)", min_length=1)
     path: str = Field(default="/", description="Root path to search from")
-    search_type: str = Field(
-        default="all",
-        description="What to search: 'name', 'type', 'family', or 'all'"
-    )
+    search_type: str = Field(default="all", description="What to search: 'name', 'type', 'family', or 'all'")
     limit: int = Field(default=50, ge=1, le=200, description="Max results")
 
-    @field_validator('search_type')
+    @field_validator("search_type")
     @classmethod
     def validate_search_type(cls, v: str) -> str:
-        if v not in ('name', 'type', 'family', 'all'):
+        if v not in ("name", "type", "family", "all"):
             raise ValueError("search_type must be 'name', 'type', 'family', or 'all'")
         return v
+
 
 # ─────────────────────────────────────────────────────────────
 # Python Help / Introspection
 # ─────────────────────────────────────────────────────────────
 
+
 class PythonHelpInput(BaseModel):
     """Input for getting Python help documentation."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     target: str = Field(
         ...,
@@ -395,13 +436,16 @@ class PythonHelpInput(BaseModel):
         min_length=1,
     )
 
+
 # ─────────────────────────────────────────────────────────────
 # Custom Parameters / Project Lifecycle
 # ─────────────────────────────────────────────────────────────
 
+
 class CustomParameterSpec(BaseModel):
     """Specification for a single custom parameter to create on a COMP."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     kind: str = Field(
         ...,
@@ -426,36 +470,38 @@ class CustomParameterSpec(BaseModel):
     clamp_min: bool | None = Field(default=None, description="Clamp to the minimum value")
     clamp_max: bool | None = Field(default=None, description="Clamp to the maximum value")
 
-    @field_validator('kind')
+    @field_validator("kind")
     @classmethod
     def validate_kind(cls, v: str) -> str:
         allowed = {
-            'float',
-            'int',
-            'toggle',
-            'menu',
-            'str',
-            'string',
-            'rgb',
-            'rgba',
-            'pulse',
-            'file',
-            'filesave',
-            'folder',
-            'chop',
-            'comp',
-            'dat',
-            'mat',
-            'header',
+            "float",
+            "int",
+            "toggle",
+            "menu",
+            "str",
+            "string",
+            "rgb",
+            "rgba",
+            "pulse",
+            "file",
+            "filesave",
+            "folder",
+            "chop",
+            "comp",
+            "dat",
+            "mat",
+            "header",
         }
         value = v.lower()
         if value not in allowed:
             raise ValueError(f"Unsupported custom parameter kind '{v}'")
         return value
 
+
 class CustomParametersInput(BaseModel):
     """Create or update a custom parameter page on a COMP."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Path to a COMP with custom parameters", min_length=1)
     page: str = Field(..., description="Custom page name", min_length=1, max_length=64)
@@ -465,9 +511,11 @@ class CustomParametersInput(BaseModel):
         description="One or more parameter specifications to create on the page",
     )
 
+
 class ProjectLifecycleInput(BaseModel):
     """Input for save/load/undo/redo project lifecycle operations."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     action: str = Field(
         ...,
@@ -484,70 +532,82 @@ class ProjectLifecycleInput(BaseModel):
     name: str | None = Field(default=None, description="Undo block name when action=start_undo_block")
     enable: bool = Field(default=True, description="Whether a started undo block should record undo state")
 
-    @field_validator('action')
+    @field_validator("action")
     @classmethod
     def validate_action(cls, v: str) -> str:
         allowed = {
-            'status',
-            'save',
-            'load',
-            'undo',
-            'redo',
-            'start_undo_block',
-            'end_undo_block',
-            'clear_undo',
+            "status",
+            "save",
+            "load",
+            "undo",
+            "redo",
+            "start_undo_block",
+            "end_undo_block",
+            "clear_undo",
         }
         value = v.lower()
         if value not in allowed:
             raise ValueError(f"Unknown project lifecycle action '{v}'")
         return value
 
+
 # ─────────────────────────────────────────────────────────────
 # Timeline
 # ─────────────────────────────────────────────────────────────
 
+
 class TimelineSetInput(BaseModel):
     """Input for controlling timeline playback."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     action: str | None = Field(
-        default=None,
-        description="Timeline action: 'play', 'pause', or 'frame' (set specific frame)"
+        default=None, description="Timeline action: 'play', 'pause', or 'frame' (set specific frame)"
     )
     frame: int | None = Field(default=None, ge=0, description="Frame number to jump to (when action='frame')")
     fps: float | None = Field(default=None, gt=0, le=240, description="Set cook rate / FPS")
+
 
 # ─────────────────────────────────────────────────────────────
 # Pulse Parameter
 # ─────────────────────────────────────────────────────────────
 
+
 class PulseParamInput(BaseModel):
     """Input for pulsing a pulse-type parameter."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Node path", min_length=1)
     param: str = Field(..., description="Parameter name to pulse", min_length=1)
+
 
 # ─────────────────────────────────────────────────────────────
 # Error Checking
 # ─────────────────────────────────────────────────────────────
 
+
 class GetErrorsInput(BaseModel):
     """Input for checking node errors."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(default="/", description="Node path to check")
     recurse: bool = Field(default=True, description="Recursively check children")
-    max_depth: int = Field(default=10, ge=1, le=50, description="Max recursion depth (prevents runaway on huge projects)")
+    max_depth: int = Field(
+        default=10, ge=1, le=50, description="Max recursion depth (prevents runaway on huge projects)"
+    )
+
 
 # ─────────────────────────────────────────────────────────────
 # Macros
 # ─────────────────────────────────────────────────────────────
 
+
 class CreateMacroInput(BaseModel):
     """Input for creating a macro template network."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     parent_path: str = Field(
         default="/project1",
@@ -571,21 +631,24 @@ class CreateMacroInput(BaseModel):
         description="Override template parameter defaults with custom values.",
     )
 
+
 class GetMacroParamsInput(BaseModel):
     """Input for inspecting parameter schema for a macro."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     macro_type: MacroType = Field(..., description="Macro template to inspect.")
+
 
 # ─────────────────────────────────────────────────────────────
 # Events / Subscriptions
 # ─────────────────────────────────────────────────────────────
 
+
 class SubscribeInput(BaseModel):
     """Input for subscribing to runtime TD events."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="TD node path to monitor, e.g. '/project1/audio1'.")
     event_types: list[str] = Field(
@@ -620,16 +683,18 @@ class SubscribeInput(BaseModel):
             raise ValueError(f"Unsupported event types: {', '.join(invalid)}")
         return values
 
+
 class UnsubscribeInput(BaseModel):
     """Input for removing a node subscription."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     path: str = Field(..., description="TD node path to stop monitoring.")
+
 
 class GetEventsInput(BaseModel):
     """Input for reading recent event history."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     event_type: str | None = Field(
         default=None,
         description="Optional event type filter.",
@@ -641,14 +706,16 @@ class GetEventsInput(BaseModel):
         description="Maximum number of events to return.",
     )
 
+
 # ─────────────────────────────────────────────────────────────
 # Vision
 # ─────────────────────────────────────────────────────────────
 
+
 class CaptureAndAnalyzeInput(BaseModel):
     """Input for screenshot capture with optional AI analysis."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Path to TOP node to capture.")
     quality: float = Field(default=0.5, ge=0.0, le=1.0, description="JPEG quality 0.0–1.0.")
@@ -663,10 +730,11 @@ class CaptureAndAnalyzeInput(BaseModel):
     analysis_prompt: str | None = Field(default=None, description="Custom analysis prompt.")
     compare_with: str | None = Field(default=None, description="Optional resource URI to compare against.")
 
+
 class VisualMonitorInput(BaseModel):
     """Input for periodic visual monitoring."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="TOP path to monitor.")
     interval: float = Field(default=2.0, ge=0.5, le=30.0, description="Capture interval seconds.")
@@ -688,16 +756,18 @@ class VisualMonitorInput(BaseModel):
     auto_analyze: bool = Field(default=False, description="Auto analyze each capture if sampling available.")
     analysis_prompt: str | None = Field(default=None, description="Optional analysis prompt.")
 
+
 class StopMonitorInput(BaseModel):
     """Input for stopping visual monitor."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     path: str = Field(..., description="TOP path being monitored.")
+
 
 class StreamTopInput(BaseModel):
     """Input for continuous TOP stream."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="TOP path to stream continuously.")
     fps: float = Field(
@@ -731,20 +801,23 @@ class StreamTopInput(BaseModel):
         description="When false, identical consecutive frames are suppressed.",
     )
 
+
 class StopStreamTopInput(BaseModel):
     """Input for stopping a TOP stream."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     path: str = Field(..., description="TOP path being streamed.")
+
 
 # ─────────────────────────────────────────────────────────────
 # Goal Optimizer
 # ─────────────────────────────────────────────────────────────
 
+
 class AdjustableParamInput(BaseModel):
     """Single parameter definition for optimizer search space."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Node path containing the parameter.")
     param: str = Field(..., description="Parameter name to adjust.")
@@ -760,10 +833,11 @@ class AdjustableParamInput(BaseModel):
             raise ValueError("max_val must be >= min_val")
         return value
 
+
 class OptimizeVisualInput(BaseModel):
     """Input for autonomous visual goal optimization."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     goal: str = Field(..., min_length=3, description="Natural-language optimization goal.")
     profile: str | None = Field(
@@ -782,8 +856,12 @@ class OptimizeVisualInput(BaseModel):
         default="balanced",
         description="Optimizer safety profile: conservative | balanced | aggressive",
     )
-    root_path: str = Field(default="/project1", description="Root scope for instability checks and snapshots.")
-    snapshot_before: bool = Field(default=True, description="Capture snapshot before optimization loop starts.")
+    root_path: str = Field(
+        default="/project1", description="Root scope for instability checks and snapshots."
+    )
+    snapshot_before: bool = Field(
+        default=True, description="Capture snapshot before optimization loop starts."
+    )
 
     @field_validator("safety_profile")
     @classmethod
@@ -801,14 +879,16 @@ class OptimizeVisualInput(BaseModel):
             raise ValueError("profile must be one of: balanced, complexity, motion_rhythm, stability_guard")
         return value
 
+
 # ─────────────────────────────────────────────────────────────
 # Safety + Memory
 # ─────────────────────────────────────────────────────────────
 
+
 class ParamBound(BaseModel):
     """Single parameter safety bound."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Node path.")
     param: str = Field(..., description="Parameter name.")
@@ -816,10 +896,11 @@ class ParamBound(BaseModel):
     max_val: float | None = Field(default=None)
     max_rate: float | None = Field(default=None, ge=0.0, description="Max value change per second.")
 
+
 class SetBoundsInput(BaseModel):
     """Input for setting bounds."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     bounds: list[ParamBound] = Field(..., min_length=1, max_length=500)
     enforce_mode: str = Field(default="clamp", description="clamp | reject | warn")
 
@@ -830,62 +911,71 @@ class SetBoundsInput(BaseModel):
             raise ValueError("enforce_mode must be one of: clamp, reject, warn")
         return value
 
+
 class ClearBoundsInput(BaseModel):
     """Input for clearing bounds."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     paths: list[str] | None = Field(default=None, description="Clear bounds for specific node paths.")
+
 
 class DetectInstabilityInput(BaseModel):
     """Input for instability check."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     path: str = Field(default="/project1", description="Root path to inspect.")
+
 
 class SnapshotInput(BaseModel):
     """Input for scene snapshot."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     name: str | None = Field(default=None, description="Optional snapshot label.")
     path: str = Field(default="/project1", description="Root path to snapshot.")
     include_visual: bool = Field(default=False, description="Include screenshot payload.")
 
+
 class ListSnapshotsInput(BaseModel):
     """Input for listing snapshots."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     limit: int = Field(default=20, ge=1, le=100)
+
 
 class RestoreSnapshotInput(BaseModel):
     """Input for restoring snapshot values."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     snapshot_id: str = Field(..., min_length=1)
     partial: list[str] | None = Field(default=None, description="Optional subset of node paths.")
     dry_run: bool = Field(default=False, description="Return diff only without applying.")
 
+
 class DiffSnapshotsInput(BaseModel):
     """Input for snapshot diff."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     snapshot_a: str = Field(..., min_length=1)
     snapshot_b: str | None = Field(default=None, description="If omitted, diff snapshot_a vs live state.")
+
 
 # ─────────────────────────────────────────────────────────────
 # State/Timescale Semantics
 # ─────────────────────────────────────────────────────────────
 
+
 class StateVectorInput(BaseModel):
     """Input for aggregated scene state vector."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     path: str = Field(default="/project1", description="Root path for aggregated diagnostics.")
     force_refresh: bool = Field(default=False, description="Bypass cache and fetch fresh state.")
+
 
 class TimescaleStateInput(BaseModel):
     """Input for beat/phrase derived timeline state."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     bpm_hint: float | None = Field(
         default=None,
         gt=0.0,
@@ -899,14 +989,16 @@ class TimescaleStateInput(BaseModel):
         description="Musical beats per bar for phase calculations.",
     )
 
+
 # ─────────────────────────────────────────────────────────────
 # Runtime Architecture
 # ─────────────────────────────────────────────────────────────
 
+
 class TemporalAnalysisInput(BaseModel):
     """Input for asynchronous temporal dynamics observation."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(default="/project1", description="Root path to observe.")
     observation_window: float = Field(
@@ -931,7 +1023,7 @@ class TemporalAnalysisInput(BaseModel):
 class MemoryLearnInput(BaseModel):
     """Input for td_memory_learn — analyze a network subtree to extract a technique recipe."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Root path of the network subtree to analyze.")
     name: str = Field(default="", description="Human-readable name for this technique.")
@@ -943,7 +1035,7 @@ class MemoryLearnInput(BaseModel):
 class MemorySaveInput(BaseModel):
     """Input for td_memory_save — persist a technique dict to the library."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     technique: dict = Field(..., description="Technique dict (from td_memory_learn output).")
     scope: str = Field(default="project", description="'project' or 'global'.")
@@ -956,7 +1048,7 @@ class MemorySaveInput(BaseModel):
 class MemoryRecallInput(BaseModel):
     """Input for td_memory_recall — search the technique library."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     query: str = Field(default="", description="Text search across names, descriptions, tags.")
     tags: list[str] = Field(default_factory=list, description="Filter by tags.")
@@ -967,7 +1059,7 @@ class MemoryRecallInput(BaseModel):
 class MemoryReplayInput(BaseModel):
     """Input for td_memory_replay — rebuild a saved technique in a new location."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     technique_id: str = Field(..., description="ID of the saved technique to replay.")
     parent_path: str = Field(..., description="Parent COMP path where the technique will be rebuilt.")
@@ -979,7 +1071,7 @@ class MemoryReplayInput(BaseModel):
 class MemoryFavoriteInput(BaseModel):
     """Input for td_memory_favorite — mark/rate a technique."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     technique_id: str = Field(..., description="ID of the technique.")
     favorite: bool = Field(default=True, description="Set favorite status.")
@@ -990,7 +1082,7 @@ class MemoryFavoriteInput(BaseModel):
 class MemoryPromoteInput(BaseModel):
     """Input for td_memory_promote — copy a project technique to the global library."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     technique_id: str = Field(..., description="Project technique ID to promote.")
 
@@ -998,7 +1090,7 @@ class MemoryPromoteInput(BaseModel):
 class MemoryExportInput(BaseModel):
     """Input for td_memory_export — export technique library as JSON."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     scope: str = Field(default="project", description="'project' or 'global'.")
 
@@ -1006,7 +1098,7 @@ class MemoryExportInput(BaseModel):
 class MemoryImportInput(BaseModel):
     """Input for td_memory_import — import techniques from exported JSON."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     data: dict[str, Any] = Field(..., description="Exported library data (from td_memory_export).")
     scope: str = Field(default="project", description="'project' or 'global'.")
@@ -1016,7 +1108,7 @@ class MemoryImportInput(BaseModel):
 class MemoryPreferencesInput(BaseModel):
     """Input for td_memory_preferences — get/set/list/delete preferences."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     action: str = Field(..., description="One of: 'get', 'set', 'list', 'delete'.")
     key: str = Field(default="", description="Preference key (required for get/set/delete).")
@@ -1028,6 +1120,7 @@ class MemoryPreferencesInput(BaseModel):
         if v not in allowed:
             raise ValueError(f"action must be one of {allowed} — got '{v}'")
         return v
+
     value: Any = Field(default=None, description="Value to set (required for 'set').")
     scope: str = Field(default="project", description="'project' or 'global'.")
 
@@ -1035,7 +1128,7 @@ class MemoryPreferencesInput(BaseModel):
 class MemoryListInput(BaseModel):
     """Input for td_memory_list — list techniques with filters."""
 
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     scope: str = Field(default="all", description="'project', 'global', or 'all'.")
     tags: list[str] = Field(default_factory=list, description="Filter by tags.")
@@ -1047,31 +1140,39 @@ class MemoryListInput(BaseModel):
 # Planning & Validation
 # ─────────────────────────────────────────────────────────────
 
+
 class PlanPatchInput(BaseModel):
     """Input for generating a structured patch plan."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     intent: str = Field(..., description="What you want to achieve", min_length=1)
     target_path: str = Field(default="/project1", description="Target path to plan changes for")
     recipe_id: str | None = Field(default=None, description="Optional recipe ID to base plan on")
 
+
 class PreflightPatchInput(BaseModel):
     """Input for validating a plan before execution."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     plan: dict[str, Any] = Field(..., description="Plan dict from td_plan_patch to validate")
 
+
 class ValidateRecipeInput(BaseModel):
     """Input for validating a technique recipe."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     recipe_id: str | None = Field(default=None, description="Recipe ID to validate")
     recipe: dict[str, Any] | None = Field(default=None, description="Inline recipe dict to validate")
     scope: str = Field(default="project", description="'project' or 'global'")
 
+
 class AuditProjectInput(BaseModel):
     """Input for auditing a project subtree."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     root_path: str = Field(default="/project1", description="Root path to audit")
 
@@ -1080,9 +1181,11 @@ class AuditProjectInput(BaseModel):
 # Vision Diagnostics (tools 76-77)
 # ─────────────────────────────────────────────────────────────
 
+
 class CaptureFrameInput(BaseModel):
     """Input for capturing a single frame from a TOP node."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Path to a TOP node to capture")
     quality: float = Field(default=0.8, ge=0.0, le=1.0, description="JPEG quality 0.0-1.0")
@@ -1091,14 +1194,17 @@ class CaptureFrameInput(BaseModel):
 
 class AnalyzeFrameInput(BaseModel):
     """Input for analyzing pixel data of a TOP node."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Path to a TOP node to analyze")
     modes: list[str] = Field(
         default=["histogram", "luminance"],
         description="Analysis modes: histogram, luminance, alpha_coverage, color_dominant, roi_diff",
     )
-    roi: list[int] | None = Field(default=None, description="Region of interest [x, y, w, h] for roi_diff mode")
+    roi: list[int] | None = Field(
+        default=None, description="Region of interest [x, y, w, h] for roi_diff mode"
+    )
     reference_path: str | None = Field(default=None, description="Reference TOP path for roi_diff mode")
 
 
@@ -1106,42 +1212,56 @@ class AnalyzeFrameInput(BaseModel):
 # TD 2025 Native System Tools
 # ─────────────────────────────────────────────────────────────
 
+
 class TDResourcesInspectInput(BaseModel):
     """Input for inspecting TDResources."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
 
-    category: str | None = Field(default=None, description="Category: fonts, icons, defaults, or None for all")
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    category: str | None = Field(
+        default=None, description="Category: fonts, icons, defaults, or None for all"
+    )
+
 
 class ComponentStandardizeInput(BaseModel):
     """Input for auditing/fixing COMP standardization."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     path: str = Field(..., description="Path to COMP to audit", min_length=1)
     fix: bool = Field(default=False, description="If True, auto-fix issues (wrapped in undo block)")
 
+
 class ColorPipelineInput(BaseModel):
     """Input for color pipeline inspection."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
 
 # ── Official Recommendation Tools (tools 84-86) ──────────────
 
+
 class RecommendOfficialInput(BaseModel):
     """Input for recommending official palette/operator components."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     goal: str = Field(..., description="What you want to achieve", min_length=1)
 
+
 class FindOfficialExampleInput(BaseModel):
     """Input for finding official examples and snippets."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     query: str = Field(..., description="Search query for official examples", min_length=1)
     family: str | None = Field(default=None, description="Filter by operator family: TOP, CHOP, SOP, etc.")
 
+
 class ExplainBetterWayInput(BaseModel):
     """Input for suggesting better official alternatives."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     intent: str = Field(..., description="What you intend to do", min_length=1)
     current_plan: str | None = Field(default=None, description="Current approach to evaluate")

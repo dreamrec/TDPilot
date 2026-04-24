@@ -13,11 +13,11 @@ from pydantic import ValidationError
 # triggering the MCP decorator registrations that fail outside a server.
 # ---------------------------------------------------------------------------
 
+
 def _load_exec_helpers():
     """Return a namespace dict with the exec-safety helpers."""
     src_path = (
-        __import__("pathlib").Path(__file__).resolve().parent.parent
-        / "src" / "td_mcp" / "tool_registry.py"
+        __import__("pathlib").Path(__file__).resolve().parent.parent / "src" / "td_mcp" / "tool_registry.py"
     )
     source = src_path.read_text()
     # We only need lines up to the first @mcp decorator.
@@ -57,6 +57,7 @@ _enforce_exec_mode = _helpers._enforce_exec_mode
 # _normalize_exec_mode
 # ---------------------------------------------------------------------------
 
+
 class TestNormalizeExecMode:
     def test_standard_recognized(self):
         assert _normalize_exec_mode("standard") == "standard"
@@ -75,68 +76,121 @@ class TestNormalizeExecMode:
 # _standard_exec_violation
 # ---------------------------------------------------------------------------
 
+
 class TestStandardExecViolation:
     @pytest.fixture(autouse=True)
     def _import_fn(self):
         self.fn = _helpers._standard_exec_violation
 
     # -- allowed imports --
-    @pytest.mark.parametrize("mod", [
-        "json", "math", "re", "datetime", "collections",
-        "itertools", "functools", "copy", "textwrap",
-        "string", "random", "decimal", "fractions", "statistics",
-    ])
+    @pytest.mark.parametrize(
+        "mod",
+        [
+            "json",
+            "math",
+            "re",
+            "datetime",
+            "collections",
+            "itertools",
+            "functools",
+            "copy",
+            "textwrap",
+            "string",
+            "random",
+            "decimal",
+            "fractions",
+            "statistics",
+        ],
+    )
     def test_allows_whitelisted_import(self, mod):
         assert self.fn(f"import {mod}") is None
 
-    @pytest.mark.parametrize("mod", [
-        "json", "math", "re", "datetime", "collections",
-        "itertools", "functools", "copy", "textwrap",
-        "string", "random", "decimal", "fractions", "statistics",
-    ])
+    @pytest.mark.parametrize(
+        "mod",
+        [
+            "json",
+            "math",
+            "re",
+            "datetime",
+            "collections",
+            "itertools",
+            "functools",
+            "copy",
+            "textwrap",
+            "string",
+            "random",
+            "decimal",
+            "fractions",
+            "statistics",
+        ],
+    )
     def test_allows_whitelisted_from_import(self, mod):
         assert self.fn(f"from {mod} import something") is None
 
     # -- blocked imports --
-    @pytest.mark.parametrize("mod", [
-        "os", "sys", "subprocess", "socket", "importlib", "pathlib", "shutil",
-    ])
+    @pytest.mark.parametrize(
+        "mod",
+        [
+            "os",
+            "sys",
+            "subprocess",
+            "socket",
+            "importlib",
+            "pathlib",
+            "shutil",
+        ],
+    )
     def test_blocks_dangerous_import(self, mod):
         result = self.fn(f"import {mod}")
         assert result is not None
 
-    @pytest.mark.parametrize("mod", [
-        "os", "sys", "subprocess", "socket", "importlib", "pathlib", "shutil",
-    ])
+    @pytest.mark.parametrize(
+        "mod",
+        [
+            "os",
+            "sys",
+            "subprocess",
+            "socket",
+            "importlib",
+            "pathlib",
+            "shutil",
+        ],
+    )
     def test_blocks_dangerous_from_import(self, mod):
         result = self.fn(f"from {mod} import something")
         assert result is not None
 
     # -- blocked builtins / tokens --
-    @pytest.mark.parametrize("snippet", [
-        "__import__('os')",
-        "open('/etc/passwd')",
-        "compile('x', '', 'exec')",
-        "setattr(obj, 'x', 1)",
-        "delattr(obj, 'x')",
-        "cls.__subclasses__()",
-        "cls.__bases__",
-        "globals()",
-        "locals()",
-        "eval('1+1')",
-    ])
+    @pytest.mark.parametrize(
+        "snippet",
+        [
+            "__import__('os')",
+            "open('/etc/passwd')",
+            "compile('x', '', 'exec')",
+            "setattr(obj, 'x', 1)",
+            "delattr(obj, 'x')",
+            "cls.__subclasses__()",
+            "cls.__bases__",
+            "globals()",
+            "locals()",
+            "eval('1+1')",
+        ],
+    )
     def test_blocks_dangerous_builtins(self, snippet):
         result = self.fn(snippet)
         assert result is not None
 
     # -- allowed read-only introspection --
-    @pytest.mark.parametrize("snippet", [
-        "dir(obj)",
-        "type(obj)",
-        "isinstance(obj, int)",
-        "hasattr(obj, 'x')",
-        "getattr(obj, 'x')",
-    ])
+    @pytest.mark.parametrize(
+        "snippet",
+        [
+            "dir(obj)",
+            "type(obj)",
+            "isinstance(obj, int)",
+            "hasattr(obj, 'x')",
+            "getattr(obj, 'x')",
+        ],
+    )
     def test_allows_readonly_introspection(self, snippet):
         assert self.fn(snippet) is None
 
@@ -154,6 +208,7 @@ class TestStandardExecViolation:
 # _enforce_exec_mode — standard branch
 # ---------------------------------------------------------------------------
 
+
 class TestEnforceExecModeStandard:
     def test_standard_allows_safe_code(self):
         with patch.object(_helpers, "_current_exec_mode", return_value="standard"):
@@ -168,6 +223,7 @@ class TestEnforceExecModeStandard:
 # ---------------------------------------------------------------------------
 # Restricted mode unchanged
 # ---------------------------------------------------------------------------
+
 
 class TestRestrictedUnchanged:
     def test_restricted_still_blocks_all_imports(self):

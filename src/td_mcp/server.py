@@ -186,7 +186,9 @@ def _collect_doctor_report(*, timeout: float, skip_td_check: bool, strict: bool)
         {
             "name": "tox_component",
             "status": "pass" if tox_path and tox_path.is_file() else "fail",
-            "detail": str(tox_path) if tox_path and tox_path.is_file() else f"td_component/{TOX_FILENAME} not found",
+            "detail": str(tox_path)
+            if tox_path and tox_path.is_file()
+            else f"td_component/{TOX_FILENAME} not found",
         }
     )
 
@@ -282,9 +284,7 @@ def _print_doctor_report(report: dict[str, Any]) -> None:
         status = str(item.get("status", "unknown")).upper().ljust(5)
         print(f"[{status}] {item.get('name')}: {item.get('detail')}")
     summary = report.get("summary", {})
-    print(
-        f"Result: ok={summary.get('ok')} fails={summary.get('fails')} warnings={summary.get('warnings')}"
-    )
+    print(f"Result: ok={summary.get('ok')} fails={summary.get('fails')} warnings={summary.get('warnings')}")
 
 
 def _runtime_health_from_payloads(

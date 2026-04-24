@@ -67,7 +67,10 @@ class TestDeriveUrl:
         assert derive_url("Composite_TOP.html") == "https://docs.derivative.ca/Composite_TOP"
 
     def test_release_notes(self):
-        assert derive_url("Release_Notes/2025.30000.html") == "https://docs.derivative.ca/Release_Notes/2025.30000"
+        assert (
+            derive_url("Release_Notes/2025.30000.html")
+            == "https://docs.derivative.ca/Release_Notes/2025.30000"
+        )
 
 
 class TestShouldSkipFile:

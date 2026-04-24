@@ -18,11 +18,13 @@ logger = logging.getLogger("td_mcp.client")
 
 class TouchDesignerConnectionError(Exception):
     """Raised when TouchDesigner is not reachable."""
+
     pass
 
 
 class TouchDesignerAPIError(Exception):
     """Raised when the TD API returns an error response."""
+
     def __init__(self, message: str, status_code: int = 0, details: dict | None = None):
         self.status_code = status_code
         self.details = details or {}
@@ -144,9 +146,9 @@ class TDClient:
                 result = await self._raw_request(endpoint, body)
 
                 # Check for application-level errors
-                if isinstance(result, dict) and 'error' in result:
+                if isinstance(result, dict) and "error" in result:
                     raise TouchDesignerAPIError(
-                        result['error'],
+                        result["error"],
                         status_code=200,
                         details=result,
                     )
@@ -157,7 +159,7 @@ class TDClient:
                 self._is_connected = False
                 last_error = e
                 if attempt < self.max_retries:
-                    backoff = min(2 ** attempt, 8)  # 1s, 2s, 4s, 8s max
+                    backoff = min(2**attempt, 8)  # 1s, 2s, 4s, 8s max
                     logger.warning(f"Connection failed (attempt {attempt + 1}), retrying in {backoff}s...")
                     await asyncio.sleep(backoff)
                     continue
@@ -173,7 +175,7 @@ class TDClient:
                 self._is_connected = False
                 last_error = e
                 if attempt < self.max_retries:
-                    backoff = min(2 ** attempt, 8)
+                    backoff = min(2**attempt, 8)
                     logger.warning(f"Request timed out (attempt {attempt + 1}), retrying in {backoff}s...")
                     await asyncio.sleep(backoff)
                     continue
@@ -207,7 +209,7 @@ class TDClient:
 
         response.raise_for_status()
 
-        if response.headers.get('content-type', '').startswith('application/json'):
+        if response.headers.get("content-type", "").startswith("application/json"):
             return response.json()
         else:
             return {"raw": response.text}

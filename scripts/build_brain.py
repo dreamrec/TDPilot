@@ -40,6 +40,7 @@ except ImportError:
 
 # ── Config ────────────────────────────────────────────────────
 
+
 def load_config(config_path: Path) -> dict[str, Any]:
     """Load and validate a brain YAML config."""
     if yaml is None:
@@ -57,9 +58,11 @@ def load_config(config_path: Path) -> dict[str, Any]:
 
 # ── Normalizer ────────────────────────────────────────────────
 
+
 def _classify_page(rel_path: str, rules: list[dict]) -> str:
     """Classify a page by matching its path against config rules."""
     from fnmatch import fnmatch
+
     for rule in rules:
         pattern = rule.get("pattern", "*")
         if fnmatch(rel_path, pattern):
@@ -70,6 +73,7 @@ def _classify_page(rel_path: str, rules: list[dict]) -> str:
 def _extract_operator_name(rel_path: str, rules: list[dict]) -> str | None:
     """Extract operator name from path if the matching rule says to."""
     from fnmatch import fnmatch
+
     for rule in rules:
         pattern = rule.get("pattern", "*")
         if fnmatch(rel_path, pattern) and rule.get("extract_operator_name"):
@@ -82,7 +86,9 @@ def _extract_operator_name(rel_path: str, rules: list[dict]) -> str | None:
 
 
 def normalize_file(
-    filepath: Path, rel_path: str, config: dict[str, Any],
+    filepath: Path,
+    rel_path: str,
+    config: dict[str, Any],
 ) -> dict[str, Any] | None:
     """Normalize one HTML file according to config."""
     if BeautifulSoup is None:
@@ -135,7 +141,8 @@ def normalize_file(
 
 
 def normalize_directory(
-    site_dir: Path, config: dict[str, Any],
+    site_dir: Path,
+    config: dict[str, Any],
 ) -> Iterator[dict[str, Any]]:
     """Normalize all HTML in a scrape directory."""
     for filepath in sorted(site_dir.rglob("*.html")):
@@ -146,6 +153,7 @@ def normalize_directory(
 
 
 # ── Chunker ───────────────────────────────────────────────────
+
 
 def _slugify(text: str) -> str:
     slug = text.lower().strip()
@@ -224,8 +232,12 @@ def chunk_page(page: dict[str, Any], html_path: Path, config: dict[str, Any]) ->
 
 
 def _make_chunk(
-    page_id: str, seq: int, section_title: str,
-    doc_type: str, operator_name: str | None, content: str,
+    page_id: str,
+    seq: int,
+    section_title: str,
+    doc_type: str,
+    operator_name: str | None,
+    content: str,
 ) -> dict[str, Any]:
     slug = _slugify(section_title)
     return {
@@ -247,6 +259,7 @@ def _make_chunk(
 
 
 # ── Indexer ───────────────────────────────────────────────────
+
 
 def build_fts_index(chunks_path: Path, db_path: Path, brain_id: str) -> int:
     """Build SQLite FTS5 index from chunks.jsonl."""
@@ -305,15 +318,20 @@ def build_fts_index(chunks_path: Path, db_path: Path, brain_id: str) -> int:
                         build_date, change_category, token_estimate, content)
                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (
-                        chunk["chunk_id"], chunk["page_id"], chunk["doc_type"],
-                        chunk["section_title"], chunk.get("operator_family"),
+                        chunk["chunk_id"],
+                        chunk["page_id"],
+                        chunk["doc_type"],
+                        chunk["section_title"],
+                        chunk.get("operator_family"),
                         chunk.get("operator_name"),
                         json.dumps(chunk.get("mentioned_operators", [])),
                         json.dumps(chunk.get("parameter_names", [])),
                         json.dumps(chunk.get("python_symbols", [])),
-                        chunk.get("build_number"), chunk.get("build_date"),
+                        chunk.get("build_number"),
+                        chunk.get("build_date"),
                         chunk.get("change_category"),
-                        chunk.get("token_estimate", 0), chunk["content"],
+                        chunk.get("token_estimate", 0),
+                        chunk["content"],
                     ),
                 )
                 conn.execute(
@@ -340,24 +358,33 @@ def build_fts_index(chunks_path: Path, db_path: Path, brain_id: str) -> int:
 
 # ── Main pipeline ─────────────────────────────────────────────
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Generic config-driven brain builder for TDPilot",
     )
     parser.add_argument(
-        "--config", type=Path, required=True,
+        "--config",
+        type=Path,
+        required=True,
         help="Path to brain config YAML file",
     )
     parser.add_argument(
-        "--source", type=Path, required=True,
+        "--source",
+        type=Path,
+        required=True,
         help="Path to scraped HTML site root",
     )
     parser.add_argument(
-        "--output", type=Path, default=None,
+        "--output",
+        type=Path,
+        default=None,
         help="Output directory (default: data/normalized/<brain_id>/)",
     )
     parser.add_argument(
-        "--refs", type=Path, default=None,
+        "--refs",
+        type=Path,
+        default=None,
         help="Optional path to reference markdown files to ingest",
     )
     args = parser.parse_args()
@@ -369,9 +396,7 @@ def main() -> None:
         logger.error("Source directory not found: %s", args.source)
         sys.exit(1)
 
-    output = args.output or (
-        Path(__file__).resolve().parent.parent / "data" / "normalized" / brain_id
-    )
+    output = args.output or (Path(__file__).resolve().parent.parent / "data" / "normalized" / brain_id)
     output.mkdir(parents=True, exist_ok=True)
 
     t0 = time.time()

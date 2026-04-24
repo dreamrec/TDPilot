@@ -15,9 +15,7 @@ from typing import Any
 
 from bs4 import BeautifulSoup, Tag
 
-DEFAULT_EXPORT_PATH = (
-    Path(__file__).resolve().parent.parent / "references" / "raw-example-export.pyrepr"
-)
+DEFAULT_EXPORT_PATH = Path(__file__).resolve().parent.parent / "references" / "raw-example-export.pyrepr"
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent.parent / "references"
 
 GENERIC_PAGES = {
@@ -124,7 +122,11 @@ def parse_parameter_pages(main: Tag) -> list[dict[str, Any]]:
         current = heading.next_sibling
         blocks: list[dict[str, Any]] = []
         while current is not None:
-            if isinstance(current, Tag) and current.name == "h3" and "page-heading" in current.get("class", []):
+            if (
+                isinstance(current, Tag)
+                and current.name == "h3"
+                and "page-heading" in current.get("class", [])
+            ):
                 break
             if isinstance(current, Tag):
                 blocks.extend(parse_parameter_blocks(current))
@@ -158,7 +160,9 @@ def parse_doc_page(path: Path, docs_root: Path) -> dict[str, Any]:
             "title": title,
             "version": "",
             "meta_description": f"Redirect page to {target}" if target else "Redirect page",
-            "summary": [f"This page redirects to `{target}`."] if target else ["This page redirects elsewhere in the POPX docs."],
+            "summary": [f"This page redirects to `{target}`."]
+            if target
+            else ["This page redirects elsewhere in the POPX docs."],
             "headings": [],
             "category": rel_parts[0],
             "subcategory": rel_parts[1] if len(rel_parts) > 2 else "",
@@ -314,7 +318,9 @@ def normalize_snapshot_value(value: Any, examples_root: Path | None) -> Any:
     return value
 
 
-def normalize_examples_payload(examples_payload: dict[str, Any], examples_root: Path | None) -> dict[str, Any]:
+def normalize_examples_payload(
+    examples_payload: dict[str, Any], examples_root: Path | None
+) -> dict[str, Any]:
     normalized = normalize_snapshot_value(examples_payload, examples_root)
     if not isinstance(normalized, dict):
         raise ValueError("Normalized example payload must be a dict")
@@ -442,7 +448,9 @@ def render_examples(examples_payload: dict[str, Any]) -> str:
             lines.append("- Related docs: " + ", ".join(f"`{name}`" for name in example["related_docs"]))
         top_nodes = example.get("top_nodes", [])
         if top_nodes:
-            rendered = ", ".join(f"`{node['name']}` ({node['family']}/{node['type']})" for node in top_nodes[:14])
+            rendered = ", ".join(
+                f"`{node['name']}` ({node['family']}/{node['type']})" for node in top_nodes[:14]
+            )
             lines.append(f"- Top nodes: {rendered}")
         notable = example.get("notable_nodes", [])
         if notable:
@@ -490,7 +498,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    docs_root_arg = args.docs_root or (Path(os.environ["POPX_DOCS_ROOT"]) if os.environ.get("POPX_DOCS_ROOT") else None)
+    docs_root_arg = args.docs_root or (
+        Path(os.environ["POPX_DOCS_ROOT"]) if os.environ.get("POPX_DOCS_ROOT") else None
+    )
     if docs_root_arg is None:
         raise SystemExit("Missing docs root. Pass --docs-root or set POPX_DOCS_ROOT to rebuild references.")
     docs_root = docs_root_arg.expanduser().resolve()
@@ -502,10 +512,7 @@ def main() -> int:
     export_path = args.example_export.expanduser().resolve()
     output_dir = args.output_dir.expanduser().resolve()
 
-    docs = [
-        parse_doc_page(path, docs_root)
-        for path in sorted(docs_root.rglob("index.html"))
-    ]
+    docs = [parse_doc_page(path, docs_root) for path in sorted(docs_root.rglob("index.html"))]
     examples_payload = normalize_examples_payload(load_examples(export_path), examples_root)
     catalog = build_catalog(docs, examples_payload)
 

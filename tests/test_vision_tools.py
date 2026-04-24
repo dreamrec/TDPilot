@@ -5,6 +5,7 @@ decorator in tool_registry has a pydantic/mcp version incompatibility that
 prevents direct import in the test environment. The structural approach is
 consistent with how other component extension tests work in this project.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

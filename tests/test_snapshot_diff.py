@@ -11,14 +11,13 @@ def _make_manager():
 # Connection diff tests
 # ---------------------------------------------------------------------------
 
+
 def test_diff_added_connections():
     manager = _make_manager()
     snap_a = {"nodes": {}, "connections": []}
     snap_b = {
         "nodes": {},
-        "connections": [
-            {"from": "/p/noise1", "to": "/p/null1", "from_index": 0, "to_index": 0}
-        ],
+        "connections": [{"from": "/p/noise1", "to": "/p/null1", "from_index": 0, "to_index": 0}],
     }
     diff = manager.diff(snap_a, snap_b)
     assert len(diff["added_connections"]) == 1
@@ -30,9 +29,7 @@ def test_diff_removed_connections():
     manager = _make_manager()
     snap_a = {
         "nodes": {},
-        "connections": [
-            {"from": "/p/noise1", "to": "/p/null1", "from_index": 0, "to_index": 0}
-        ],
+        "connections": [{"from": "/p/noise1", "to": "/p/null1", "from_index": 0, "to_index": 0}],
     }
     snap_b = {"nodes": {}, "connections": []}
     diff = manager.diff(snap_a, snap_b)
@@ -45,15 +42,11 @@ def test_diff_rewired_connections():
     manager = _make_manager()
     snap_a = {
         "nodes": {},
-        "connections": [
-            {"from": "/p/noise1", "to": "/p/null1", "from_index": 0, "to_index": 0}
-        ],
+        "connections": [{"from": "/p/noise1", "to": "/p/null1", "from_index": 0, "to_index": 0}],
     }
     snap_b = {
         "nodes": {},
-        "connections": [
-            {"from": "/p/noise1", "to": "/p/null2", "from_index": 0, "to_index": 0}
-        ],
+        "connections": [{"from": "/p/noise1", "to": "/p/null2", "from_index": 0, "to_index": 0}],
     }
     diff = manager.diff(snap_a, snap_b)
     # old connection removed, new one added
@@ -66,6 +59,7 @@ def test_diff_rewired_connections():
 # ---------------------------------------------------------------------------
 # Expression diff tests
 # ---------------------------------------------------------------------------
+
 
 def test_diff_expression_changes():
     manager = _make_manager()
@@ -161,6 +155,7 @@ def test_diff_modified_expressions():
 # Summary string includes connection and expression counts
 # ---------------------------------------------------------------------------
 
+
 def test_diff_summary_includes_connections_and_expressions():
     manager = _make_manager()
     snap_a = {
@@ -171,9 +166,7 @@ def test_diff_summary_includes_connections_and_expressions():
                 }
             }
         },
-        "connections": [
-            {"from": "/p/noise1", "to": "/p/null1", "from_index": 0, "to_index": 0}
-        ],
+        "connections": [{"from": "/p/noise1", "to": "/p/null1", "from_index": 0, "to_index": 0}],
     }
     snap_b = {
         "nodes": {
@@ -183,9 +176,7 @@ def test_diff_summary_includes_connections_and_expressions():
                 }
             }
         },
-        "connections": [
-            {"from": "/p/noise1", "to": "/p/null2", "from_index": 0, "to_index": 0}
-        ],
+        "connections": [{"from": "/p/noise1", "to": "/p/null2", "from_index": 0, "to_index": 0}],
     }
     diff = manager.diff(snap_a, snap_b)
     summary = diff["summary"]

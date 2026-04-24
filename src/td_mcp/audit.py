@@ -35,4 +35,3 @@ class AuditLogger:
         except Exception:
             # Audit failures must never break user operations.
             return
-

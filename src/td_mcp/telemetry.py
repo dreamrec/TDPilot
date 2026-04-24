@@ -47,4 +47,3 @@ class TelemetryCollector:
                 "counters": dict(self.counters),
                 "latency_avg_ms": avg_latency,
             }
-

@@ -188,4 +188,3 @@ def build_default_templates() -> dict[str, MacroTemplate]:
     )
 
     return templates
-

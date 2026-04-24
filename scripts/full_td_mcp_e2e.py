@@ -187,7 +187,9 @@ class E2ESuite:
         await self._run_step("capture_geometry_and_debug", self._step_capture_geometry_and_debug)
         await self._run_step("timeline_tools", self._step_timeline_tools)
         await self._run_step("macro_tools", self._step_macro_tools)
-        await self._run_step("event_subscription_tools", self._step_event_tools, allow_warn=not self.strict_events)
+        await self._run_step(
+            "event_subscription_tools", self._step_event_tools, allow_warn=not self.strict_events
+        )
         await self._run_step("visual_monitor_and_stream", self._step_visual_tools)
         await self._run_step("safety_snapshot_state", self._step_safety_snapshot_state)
         await self._run_step("async_job_tools", self._step_async_jobs)
@@ -233,9 +235,7 @@ class E2ESuite:
         tool_names = {tool.name for tool in tools.tools}
 
         if len(tool_names) < EXPECTED_MIN_TOOL_COUNT:
-            raise TestFailure(
-                f"Expected at least {EXPECTED_MIN_TOOL_COUNT} tools, got {len(tool_names)}"
-            )
+            raise TestFailure(f"Expected at least {EXPECTED_MIN_TOOL_COUNT} tools, got {len(tool_names)}")
 
         required_tools = {
             "td_geometry_data",
@@ -323,13 +323,27 @@ class E2ESuite:
         self.ctx["base_name"] = base_name
         self.ctx["base_path"] = base_path
 
-        self.ctx["noise_top"] = await self._create_node(parent=base_path, node_type="noiseTOP", name="noise_main", x=0, y=0)
-        self.ctx["out_top"] = await self._create_node(parent=base_path, node_type="nullTOP", name="out_top", x=220, y=0)
-        self.ctx["ctrl_chop"] = await self._create_node(parent=base_path, node_type="constantCHOP", name="ctrl", x=0, y=-180)
-        self.ctx["out_chop"] = await self._create_node(parent=base_path, node_type="nullCHOP", name="ctrl_out", x=220, y=-180)
-        self.ctx["geo_sop"] = await self._create_node(parent=base_path, node_type="sphereSOP", name="geo", x=0, y=-360)
-        self.ctx["text_dat"] = await self._create_node(parent=base_path, node_type="textDAT", name="notes", x=0, y=-540)
-        self.ctx["table_dat"] = await self._create_node(parent=base_path, node_type="tableDAT", name="table", x=220, y=-540)
+        self.ctx["noise_top"] = await self._create_node(
+            parent=base_path, node_type="noiseTOP", name="noise_main", x=0, y=0
+        )
+        self.ctx["out_top"] = await self._create_node(
+            parent=base_path, node_type="nullTOP", name="out_top", x=220, y=0
+        )
+        self.ctx["ctrl_chop"] = await self._create_node(
+            parent=base_path, node_type="constantCHOP", name="ctrl", x=0, y=-180
+        )
+        self.ctx["out_chop"] = await self._create_node(
+            parent=base_path, node_type="nullCHOP", name="ctrl_out", x=220, y=-180
+        )
+        self.ctx["geo_sop"] = await self._create_node(
+            parent=base_path, node_type="sphereSOP", name="geo", x=0, y=-360
+        )
+        self.ctx["text_dat"] = await self._create_node(
+            parent=base_path, node_type="textDAT", name="notes", x=0, y=-540
+        )
+        self.ctx["table_dat"] = await self._create_node(
+            parent=base_path, node_type="tableDAT", name="table", x=220, y=-540
+        )
 
         # POP is optional depending build/license; treat absence as warning only.
         try:
@@ -695,7 +709,9 @@ class E2ESuite:
         if sv1.get("cache", {}).get("hit") not in {False, None}:
             raise TestFailure("first td_get_state_vector expected cache miss")
 
-        cached_state = await self._call_tool("td_get_state_vector", {"path": base_path, "force_refresh": False})
+        cached_state = await self._call_tool(
+            "td_get_state_vector", {"path": base_path, "force_refresh": False}
+        )
         if cached_state.get("cache", {}).get("hit") is not True:
             raise TestFailure("second td_get_state_vector expected cache hit")
 
@@ -751,7 +767,6 @@ class E2ESuite:
             raise TestFailure(f"Optimize job did not complete: {opt_result}")
         if not isinstance(opt_job_payload.get("result"), dict):
             raise TestFailure(f"Optimize job missing result payload: {opt_result}")
-
 
     async def _step_cleanup(self) -> None:
         base_path = self.ctx.get("base_path")

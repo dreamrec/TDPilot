@@ -16,9 +16,7 @@ class MacroEngine:
     def __init__(self, td_client, user_template_dir: str | None = None):
         self._td_client = td_client
         self._templates: dict[str, MacroTemplate] = build_default_templates()
-        self._template_sources: dict[str, str] = {
-            name: "built_in" for name in self._templates.keys()
-        }
+        self._template_sources: dict[str, str] = {name: "built_in" for name in self._templates.keys()}
         self._load_warnings: list[str] = []
 
         user_templates, warnings = load_user_templates(user_template_dir)
@@ -70,13 +68,9 @@ class MacroEngine:
         override_values = overrides or {}
         unknown_keys = [key for key in override_values if key not in template.param_schema]
         if unknown_keys:
-            raise ValueError(
-                f"Unknown macro params for '{macro_type}': {', '.join(sorted(unknown_keys))}"
-            )
+            raise ValueError(f"Unknown macro params for '{macro_type}': {', '.join(sorted(unknown_keys))}")
 
-        resolved_values = {
-            key: spec.default for key, spec in template.param_schema.items()
-        }
+        resolved_values = {key: spec.default for key, spec in template.param_schema.items()}
         resolved_values.update(override_values)
         self._validate_param_ranges(template, resolved_values)
 
@@ -121,9 +115,7 @@ class MacroEngine:
             source_path = logical_to_path.get(connection.source)
             target_path = logical_to_path.get(connection.target)
             if not source_path or not target_path:
-                warnings.append(
-                    f"Skipped connection {connection.source}->{connection.target}: missing node."
-                )
+                warnings.append(f"Skipped connection {connection.source}->{connection.target}: missing node.")
                 continue
             try:
                 await self._td_client.request(
@@ -144,17 +136,13 @@ class MacroEngine:
                     }
                 )
             except Exception as exc:  # pragma: no cover - dependent on TD runtime
-                warnings.append(
-                    f"connect failed {connection.source}->{connection.target}: {exc}"
-                )
+                warnings.append(f"connect failed {connection.source}->{connection.target}: {exc}")
 
         for ref in template.node_references:
             node_path = logical_to_path.get(ref.node)
             target_path = logical_to_path.get(ref.target_node)
             if not node_path or not target_path:
-                warnings.append(
-                    f"Skipped node ref {ref.node}.{ref.param}->{ref.target_node}: missing node."
-                )
+                warnings.append(f"Skipped node ref {ref.node}.{ref.param}->{ref.target_node}: missing node.")
                 continue
             target_name = target_path.rsplit("/", 1)[-1]
             try:

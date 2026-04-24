@@ -14,4 +14,3 @@ def test_chop_uri_uses_encoded_path():
 def test_par_uri_uses_encoded_path():
     uri = par_uri("/project1/noise1", "amp")
     assert uri == "td://par/path/%2Fproject1%2Fnoise1/name/amp"
-

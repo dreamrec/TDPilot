@@ -125,8 +125,11 @@ def brain(tmp_path: Path) -> DocsBrain:
     # Write changelog and manifest for DocsBrain
     changelog = {
         "Trail POP": [
-            {"build": "2025.32460", "category": "bug_fix",
-             "text": "Fixed double-transforming when cooking a second time."}
+            {
+                "build": "2025.32460",
+                "category": "bug_fix",
+                "text": "Fixed double-transforming when cooking a second time.",
+            }
         ]
     }
     manifest = {

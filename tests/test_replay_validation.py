@@ -91,11 +91,13 @@ async def test_replay_blocks_when_ops_missing(tmp_path, monkeypatch):
         nodes={"/inst1": {"name": "inst1", "type": "popxInstancer", "family": "COMP"}},
     )
 
-    client = _ReplayClient(families={
-        "TOP": ["noiseTOP", "nullTOP"],
-        "CHOP": ["waveCHOP"],
-        # No popx operators
-    })
+    client = _ReplayClient(
+        families={
+            "TOP": ["noiseTOP", "nullTOP"],
+            "CHOP": ["waveCHOP"],
+            # No popx operators
+        }
+    )
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
     ctx = _make_ctx(client=client, store=store)
 
@@ -128,10 +130,12 @@ async def test_replay_proceeds_when_ops_available(tmp_path, monkeypatch):
         },
     )
 
-    client = _ReplayClient(families={
-        "TOP": ["noiseTOP", "nullTOP", "levelTOP"],
-        "CHOP": ["waveCHOP"],
-    })
+    client = _ReplayClient(
+        families={
+            "TOP": ["noiseTOP", "nullTOP", "levelTOP"],
+            "CHOP": ["waveCHOP"],
+        }
+    )
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
     ctx = _make_ctx(client=client, store=store)
 
@@ -310,9 +314,7 @@ class _ReplayClientWithErrors(_ReplayClient):
 
 
 @pytest.mark.asyncio
-async def test_replay_clean_promotes_candidate_to_validated_local(
-    tmp_path, monkeypatch
-):
+async def test_replay_clean_promotes_candidate_to_validated_local(tmp_path, monkeypatch):
     """Clean replay must transition state candidate -> validated_local.
 
     Regression: the auto-promote path used TechniqueStore.update(), which
@@ -378,9 +380,7 @@ async def test_replay_with_errors_keeps_candidate(tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_replay_fail_demotes_validated_local_to_candidate(
-    tmp_path, monkeypatch
-):
+async def test_replay_fail_demotes_validated_local_to_candidate(tmp_path, monkeypatch):
     """If a previously-validated technique fails a later replay, its state
     must demote back to candidate (per update_validation() semantics)."""
     store = TechniqueStore(base_dir=str(tmp_path), project_name="test")

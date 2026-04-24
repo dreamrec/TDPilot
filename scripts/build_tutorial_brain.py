@@ -64,7 +64,8 @@ def expand_toe(toe_path: Path, toeexpand_bin: str) -> Path | None:
     try:
         subprocess.run(
             [toeexpand_bin, str(toe_path)],
-            capture_output=True, timeout=30,
+            capture_output=True,
+            timeout=30,
         )
     except (subprocess.TimeoutExpired, OSError) as exc:
         logger.warning("toeexpand failed on %s: %s", toe_path.name, exc)
@@ -151,10 +152,13 @@ def extract_toe_data(dir_path: Path) -> dict[str, Any]:
                     if len(parts) >= 2:
                         input_idx = parts[0]
                         source_node = parts[1]
-                        result["connections"].append({
-                            "from": source_node, "to": node_path.split("/")[-1],
-                            "input": int(input_idx),
-                        })
+                        result["connections"].append(
+                            {
+                                "from": source_node,
+                                "to": node_path.split("/")[-1],
+                                "input": int(input_idx),
+                            }
+                        )
 
         result["operators"].append(op_info)
 
@@ -181,11 +185,21 @@ def extract_toe_data(dir_path: Path) -> dict[str, Any]:
             param_name = parts[0]
             rest = parts[2] if len(parts) > 2 else ""
             # Only capture params with expressions or non-trivial values
-            if ("parent" in rest or "op(" in rest or "me." in rest
-                    or "absTime" in rest or "ipar" in rest or "mod(" in rest):
-                result["parameters"].append({
-                    "path": node_path, "param": param_name, "expr": rest,
-                })
+            if (
+                "parent" in rest
+                or "op(" in rest
+                or "me." in rest
+                or "absTime" in rest
+                or "ipar" in rest
+                or "mod(" in rest
+            ):
+                result["parameters"].append(
+                    {
+                        "path": node_path,
+                        "param": param_name,
+                        "expr": rest,
+                    }
+                )
                 interesting_params.add(param_name)
 
     # Read .text files (GLSL, Python, DAT content)
@@ -204,22 +218,36 @@ def extract_toe_data(dir_path: Path) -> dict[str, Any]:
 
         # Detect language
         lang = "python"
-        if any(kw in code for kw in ("vec2", "vec3", "vec4", "uniform",
-                                      "fragColor", "gl_", "void main",
-                                      "iResolution", "iTime", "float ",
-                                      "sampler2D", "#version")):
+        if any(
+            kw in code
+            for kw in (
+                "vec2",
+                "vec3",
+                "vec4",
+                "uniform",
+                "fragColor",
+                "gl_",
+                "void main",
+                "iResolution",
+                "iTime",
+                "float ",
+                "sampler2D",
+                "#version",
+            )
+        ):
             lang = "glsl"
 
-        result["code_snippets"].append({
-            "path": rel, "language": lang,
-            "code": code.strip()[:2000],  # cap at 2000 chars
-        })
+        result["code_snippets"].append(
+            {
+                "path": rel,
+                "language": lang,
+                "code": code.strip()[:2000],  # cap at 2000 chars
+            }
+        )
 
     # Build operator summary
     sorted_ops = sorted(op_type_counts.items(), key=lambda x: -x[1])
-    result["operator_summary"] = ", ".join(
-        f"{op}({c})" if c > 1 else op for op, c in sorted_ops
-    )
+    result["operator_summary"] = ", ".join(f"{op}({c})" if c > 1 else op for op, c in sorted_ops)
 
     return result
 
@@ -284,6 +312,7 @@ def clean_transcript(text: str) -> str:
 
 # ── SRT Parser ───────────────────────────────────────────────
 
+
 def parse_srt(srt_path: Path) -> list[dict[str, Any]]:
     """Parse SRT file into list of {start_ms, end_ms, text} entries."""
     try:
@@ -339,21 +368,25 @@ def chunk_by_time(
 
     for entry in srt_entries:
         if entry["start_ms"] - chunk_start >= chunk_duration_ms and current_texts:
-            chunks.append({
-                "start_ms": chunk_start,
-                "end_ms": entry["start_ms"],
-                "text": " ".join(current_texts),
-            })
+            chunks.append(
+                {
+                    "start_ms": chunk_start,
+                    "end_ms": entry["start_ms"],
+                    "text": " ".join(current_texts),
+                }
+            )
             current_texts = []
             chunk_start = entry["start_ms"]
         current_texts.append(entry["text"])
 
     if current_texts:
-        chunks.append({
-            "start_ms": chunk_start,
-            "end_ms": srt_entries[-1]["end_ms"],
-            "text": " ".join(current_texts),
-        })
+        chunks.append(
+            {
+                "start_ms": chunk_start,
+                "end_ms": srt_entries[-1]["end_ms"],
+                "text": " ".join(current_texts),
+            }
+        )
 
     return chunks
 
@@ -370,6 +403,7 @@ def ms_to_timestamp(ms: int) -> str:
 
 # ── Tutorial Processing ──────────────────────────────────────
 
+
 def classify_tutorial(folder_name: str) -> dict[str, str]:
     """Extract metadata from folder name."""
     match = re.match(
@@ -380,29 +414,98 @@ def classify_tutorial(folder_name: str) -> dict[str, str]:
         return {"date": match.group(1), "title": match.group(2).strip()}
     return {"date": "", "title": folder_name}
 
+
 # Topic classification keywords
 TOPIC_KEYWORDS: dict[str, list[str]] = {
-    "simulation": ["physarum", "verlet", "collision", "particle", "spring", "flock",
-                    "fluid", "belousov", "falling sand", "soft body", "elastic",
-                    "dla", "dlg", "differential growth", "lava lamp", "firework"],
-    "uv_math": ["uv ", "uv_", "melty uv", "uv shred", "uv slice", "uv partition",
-                 "uv mountain", "uv pick", "uv ruler", "uv cut", "ramp tunnel"],
-    "math_vectors": ["linear interpolation", "unit vector", "cross product",
-                     "perpendicular", "vector", "matrix", "angle", "line segment",
-                     "sdf", "intersection"],
-    "noise_procedural": ["noise", "recursive displace", "cellular", "fractal",
-                         "noisecream", "fractus"],
+    "simulation": [
+        "physarum",
+        "verlet",
+        "collision",
+        "particle",
+        "spring",
+        "flock",
+        "fluid",
+        "belousov",
+        "falling sand",
+        "soft body",
+        "elastic",
+        "dla",
+        "dlg",
+        "differential growth",
+        "lava lamp",
+        "firework",
+    ],
+    "uv_math": [
+        "uv ",
+        "uv_",
+        "melty uv",
+        "uv shred",
+        "uv slice",
+        "uv partition",
+        "uv mountain",
+        "uv pick",
+        "uv ruler",
+        "uv cut",
+        "ramp tunnel",
+    ],
+    "math_vectors": [
+        "linear interpolation",
+        "unit vector",
+        "cross product",
+        "perpendicular",
+        "vector",
+        "matrix",
+        "angle",
+        "line segment",
+        "sdf",
+        "intersection",
+    ],
+    "noise_procedural": ["noise", "recursive displace", "cellular", "fractal", "noisecream", "fractus"],
     "glsl_gpu": ["glsl", "compute shader", "gpu", "tops vs pops"],
-    "voronoi_packing": ["voronoi", "circle packing", "sphere packing", "lloyd",
-                        "jfa", "shapes packing", "close-packing"],
+    "voronoi_packing": [
+        "voronoi",
+        "circle packing",
+        "sphere packing",
+        "lloyd",
+        "jfa",
+        "shapes packing",
+        "close-packing",
+    ],
     "feedback_recursive": ["feedback", "recursive", "fdbk", "datamosh"],
-    "geometry": ["mobius", "moebius", "snail", "pottery", "potter", "onion",
-                 "menger", "penrose", "donut", "mesh a spiral"],
-    "visual_effects": ["mondrian", "joy division", "ryoji ikeda", "kensuke koike",
-                       "dithering", "pointillism", "cubism", "stroma", "weaving",
-                       "latte art"],
-    "algorithmic": ["mandelbrot", "truchet", "substrate", "random walker",
-                    "sokoban", "abacus", "hex grid", "labyrinth"],
+    "geometry": [
+        "mobius",
+        "moebius",
+        "snail",
+        "pottery",
+        "potter",
+        "onion",
+        "menger",
+        "penrose",
+        "donut",
+        "mesh a spiral",
+    ],
+    "visual_effects": [
+        "mondrian",
+        "joy division",
+        "ryoji ikeda",
+        "kensuke koike",
+        "dithering",
+        "pointillism",
+        "cubism",
+        "stroma",
+        "weaving",
+        "latte art",
+    ],
+    "algorithmic": [
+        "mandelbrot",
+        "truchet",
+        "substrate",
+        "random walker",
+        "sokoban",
+        "abacus",
+        "hex grid",
+        "labyrinth",
+    ],
 }
 
 
@@ -461,9 +564,7 @@ def process_tutorial(
     all_op_summaries: list[str] = []
 
     for td in toe_data_list:
-        all_op_summaries.append(
-            f"[{td['toe_name']}] {td.get('operator_summary', '')}"
-        )
+        all_op_summaries.append(f"[{td['toe_name']}] {td.get('operator_summary', '')}")
         for op in td.get("operators", []):
             all_operators.append(f"{op['path']} ({op['type']})")
         for conn in td.get("connections", []):
@@ -495,24 +596,26 @@ def process_tutorial(
             continue
         slug = re.sub(r"[^a-z0-9]+", "_", snippet["path"].lower()).strip("_")
         chunk_id = f"tutorial__{_slugify(meta['title'])}__{lang}_{slug}"
-        code_chunks.append({
-            "chunk_id": chunk_id,
-            "page_id": f"tutorial__{_slugify(meta['title'])}",
-            "doc_type": "tutorial_code",
-            "section_title": f"{meta['title']} -- {lang.upper()} ({snippet['path']})",
-            "operator_family": None,
-            "operator_name": None,
-            "mentioned_operators": [],
-            "parameter_names": [],
-            "python_symbols": [],
-            "build_number": None,
-            "build_date": meta["date"],
-            "change_category": topic,
-            "token_estimate": _token_estimate(code),
-            "content": f"```{lang}\n{code}\n```",
-            "source": "toeexpand",
-            "url": "",
-        })
+        code_chunks.append(
+            {
+                "chunk_id": chunk_id,
+                "page_id": f"tutorial__{_slugify(meta['title'])}",
+                "doc_type": "tutorial_code",
+                "section_title": f"{meta['title']} -- {lang.upper()} ({snippet['path']})",
+                "operator_family": None,
+                "operator_name": None,
+                "mentioned_operators": [],
+                "parameter_names": [],
+                "python_symbols": [],
+                "build_number": None,
+                "build_date": meta["date"],
+                "change_category": topic,
+                "token_estimate": _token_estimate(code),
+                "content": f"```{lang}\n{code}\n```",
+                "source": "toeexpand",
+                "url": "",
+            }
+        )
 
     # Chunk transcript by time
     chunks: list[dict[str, Any]] = []
@@ -538,31 +641,33 @@ def process_tutorial(
 
             mentioned_ops = _extract_mentioned_operators(text)
 
-            chunks.append({
-                "chunk_id": f"{page_id}__t{i:04d}",
-                "page_id": page_id,
-                "doc_type": "tutorial",
-                "section_title": section,
-                "operator_family": None,
-                "operator_name": None,
-                "mentioned_operators": mentioned_ops,
-                "parameter_names": [],
-                "python_symbols": [],
-                "build_number": None,
-                "build_date": meta["date"],
-                "change_category": topic,
-                "token_estimate": _token_estimate(content),
-                "content": content,
-                "source": "transcript",
-                "url": "",
-            })
+            chunks.append(
+                {
+                    "chunk_id": f"{page_id}__t{i:04d}",
+                    "page_id": page_id,
+                    "doc_type": "tutorial",
+                    "section_title": section,
+                    "operator_family": None,
+                    "operator_name": None,
+                    "mentioned_operators": mentioned_ops,
+                    "parameter_names": [],
+                    "python_symbols": [],
+                    "build_number": None,
+                    "build_date": meta["date"],
+                    "change_category": topic,
+                    "token_estimate": _token_estimate(content),
+                    "content": content,
+                    "source": "transcript",
+                    "url": "",
+                }
+            )
     elif txt_files:
         # Fallback: chunk plain transcript by word count
         text = clean_transcript(txt_files[0].read_text(encoding="utf-8", errors="replace"))
         words = text.split()
         chunk_size = 400  # ~400 words per chunk
         for i in range(0, len(words), chunk_size):
-            chunk_text = " ".join(words[i:i + chunk_size])
+            chunk_text = " ".join(words[i : i + chunk_size])
             if len(chunk_text.split()) < 15:
                 continue
 
@@ -572,48 +677,52 @@ def process_tutorial(
 
             mentioned_ops = _extract_mentioned_operators(chunk_text)
 
-            chunks.append({
-                "chunk_id": f"{page_id}__w{i // chunk_size + 1:04d}",
-                "page_id": page_id,
-                "doc_type": "tutorial",
-                "section_title": meta["title"],
-                "operator_family": None,
-                "operator_name": None,
-                "mentioned_operators": mentioned_ops,
-                "parameter_names": [],
-                "python_symbols": [],
-                "build_number": None,
-                "build_date": meta["date"],
-                "change_category": topic,
-                "token_estimate": _token_estimate(content),
-                "content": content,
-                "source": "transcript",
-                "url": "",
-            })
+            chunks.append(
+                {
+                    "chunk_id": f"{page_id}__w{i // chunk_size + 1:04d}",
+                    "page_id": page_id,
+                    "doc_type": "tutorial",
+                    "section_title": meta["title"],
+                    "operator_family": None,
+                    "operator_name": None,
+                    "mentioned_operators": mentioned_ops,
+                    "parameter_names": [],
+                    "python_symbols": [],
+                    "build_number": None,
+                    "build_date": meta["date"],
+                    "change_category": topic,
+                    "token_estimate": _token_estimate(content),
+                    "content": content,
+                    "source": "transcript",
+                    "url": "",
+                }
+            )
 
     # Add a project overview chunk if we have TOE data and no transcript chunks
     if toe_data_list and not chunks:
         overview = f"Project: {meta['title']}\nDate: {meta['date']}\n"
         if toe_context:
             overview += f"\n{toe_context}"
-        chunks.append({
-            "chunk_id": f"{page_id}__overview",
-            "page_id": page_id,
-            "doc_type": "tutorial_project",
-            "section_title": f"{meta['title']} -- Project Overview",
-            "operator_family": None,
-            "operator_name": None,
-            "mentioned_operators": [],
-            "parameter_names": [],
-            "python_symbols": [],
-            "build_number": None,
-            "build_date": meta["date"],
-            "change_category": topic,
-            "token_estimate": _token_estimate(overview),
-            "content": overview,
-            "source": "toeexpand",
-            "url": "",
-        })
+        chunks.append(
+            {
+                "chunk_id": f"{page_id}__overview",
+                "page_id": page_id,
+                "doc_type": "tutorial_project",
+                "section_title": f"{meta['title']} -- Project Overview",
+                "operator_family": None,
+                "operator_name": None,
+                "mentioned_operators": [],
+                "parameter_names": [],
+                "python_symbols": [],
+                "build_number": None,
+                "build_date": meta["date"],
+                "change_category": topic,
+                "token_estimate": _token_estimate(overview),
+                "content": overview,
+                "source": "toeexpand",
+                "url": "",
+            }
+        )
 
     # Add code chunks
     chunks.extend(code_chunks)
@@ -622,6 +731,7 @@ def process_tutorial(
 
 
 # ── Helpers ──────────────────────────────────────────────────
+
 
 def _slugify(text: str) -> str:
     slug = text.lower().strip()
@@ -659,6 +769,7 @@ def _extract_mentioned_operators(text: str) -> list[str]:
 
 
 # ── FTS5 Indexer ─────────────────────────────────────────────
+
 
 def build_fts_index(chunks: list[dict[str, Any]], db_path: Path, brain_id: str) -> int:
     """Build SQLite FTS5 index from chunk list."""
@@ -715,17 +826,22 @@ def build_fts_index(chunks: list[dict[str, Any]], db_path: Path, brain_id: str) 
                     build_date, change_category, source, token_estimate, content)
                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
-                    chunk["chunk_id"], chunk["page_id"], chunk.get("url", ""),
-                    chunk["doc_type"], chunk["section_title"],
+                    chunk["chunk_id"],
+                    chunk["page_id"],
+                    chunk.get("url", ""),
+                    chunk["doc_type"],
+                    chunk["section_title"],
                     chunk.get("operator_family"),
                     chunk.get("operator_name"),
                     json.dumps(chunk.get("mentioned_operators", [])),
                     json.dumps(chunk.get("parameter_names", [])),
                     json.dumps(chunk.get("python_symbols", [])),
-                    chunk.get("build_number"), chunk.get("build_date"),
+                    chunk.get("build_number"),
+                    chunk.get("build_date"),
                     chunk.get("change_category"),
                     chunk.get("source", "transcript"),
-                    chunk.get("token_estimate", 0), chunk["content"],
+                    chunk.get("token_estimate", 0),
+                    chunk["content"],
                 ),
             )
             conn.execute(
@@ -736,8 +852,9 @@ def build_fts_index(chunks: list[dict[str, Any]], db_path: Path, brain_id: str) 
                 (
                     count + 1,
                     chunk.get("section_title", ""),
-                    " ".join(filter(None, [chunk.get("operator_name", ""),
-                                           *chunk.get("mentioned_operators", [])])),
+                    " ".join(
+                        filter(None, [chunk.get("operator_name", ""), *chunk.get("mentioned_operators", [])])
+                    ),
                     " ".join(chunk.get("parameter_names", [])),
                     " ".join(chunk.get("python_symbols", [])),
                     chunk["content"],
@@ -753,32 +870,44 @@ def build_fts_index(chunks: list[dict[str, Any]], db_path: Path, brain_id: str) 
 
 # ── Main Pipeline ────────────────────────────────────────────
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Tutorial brain builder for TDPilot",
     )
     parser.add_argument(
-        "--config", type=Path, required=True,
+        "--config",
+        type=Path,
+        required=True,
         help="Path to brain config YAML",
     )
     parser.add_argument(
-        "--source", type=Path, required=True,
+        "--source",
+        type=Path,
+        required=True,
         help="Path to tutorial corpus root directory",
     )
     parser.add_argument(
-        "--output", type=Path, default=None,
+        "--output",
+        type=Path,
+        default=None,
         help="Output directory (default: data/normalized/<brain_id>/)",
     )
     parser.add_argument(
-        "--no-toeexpand", action="store_true",
+        "--no-toeexpand",
+        action="store_true",
         help="Skip TOE/TOX expansion (transcript-only mode)",
     )
     parser.add_argument(
-        "--toeexpand-bin", type=str, default=None,
+        "--toeexpand-bin",
+        type=str,
+        default=None,
         help="Path to toeexpand binary",
     )
     parser.add_argument(
-        "--chunk-duration", type=int, default=120,
+        "--chunk-duration",
+        type=int,
+        default=120,
         help="Chunk duration in seconds (default: 120)",
     )
     args = parser.parse_args()
@@ -794,9 +923,7 @@ def main() -> None:
         logger.error("Source directory not found: %s", args.source)
         sys.exit(1)
 
-    output = args.output or (
-        Path(__file__).resolve().parent.parent / "data" / "normalized" / brain_id
-    )
+    output = args.output or (Path(__file__).resolve().parent.parent / "data" / "normalized" / brain_id)
     output.mkdir(parents=True, exist_ok=True)
 
     # Find toeexpand
@@ -812,10 +939,9 @@ def main() -> None:
 
     # Stage 1: Discover tutorials
     logger.info("Stage 1: Discovering tutorials in %s", args.source)
-    tutorial_dirs = sorted([
-        d for d in args.source.iterdir()
-        if d.is_dir() and not d.name.startswith((".", "_"))
-    ])
+    tutorial_dirs = sorted(
+        [d for d in args.source.iterdir() if d.is_dir() and not d.name.startswith((".", "_"))]
+    )
     logger.info("  -> %d tutorial folders found", len(tutorial_dirs))
 
     # Stage 2: Process tutorials
@@ -839,8 +965,9 @@ def main() -> None:
         else:
             skipped += 1
 
-    logger.info("  -> %d tutorials processed, %d skipped (teasers), %d with TOE data",
-                processed, skipped, toe_count)
+    logger.info(
+        "  -> %d tutorials processed, %d skipped (teasers), %d with TOE data", processed, skipped, toe_count
+    )
     logger.info("  -> %d total chunks", len(all_chunks))
 
     # Stage 2b: Process _patreon_exclusive TOE files if present
@@ -871,48 +998,52 @@ def main() -> None:
             if params:
                 overview += f"Expressions: {'; '.join(params[:20])}\n"
 
-            all_chunks.append({
-                "chunk_id": f"{page_id}__overview",
-                "page_id": page_id,
-                "doc_type": "tutorial_project",
-                "section_title": f"{toe_file.stem} -- Patreon Project",
-                "operator_family": None,
-                "operator_name": None,
-                "mentioned_operators": [],
-                "parameter_names": [],
-                "python_symbols": [],
-                "build_number": data.get("build_info", {}).get("build"),
-                "build_date": None,
-                "change_category": "technique",
-                "token_estimate": _token_estimate(overview),
-                "content": overview,
-                "source": "toeexpand",
-                "url": "",
-            })
+            all_chunks.append(
+                {
+                    "chunk_id": f"{page_id}__overview",
+                    "page_id": page_id,
+                    "doc_type": "tutorial_project",
+                    "section_title": f"{toe_file.stem} -- Patreon Project",
+                    "operator_family": None,
+                    "operator_name": None,
+                    "mentioned_operators": [],
+                    "parameter_names": [],
+                    "python_symbols": [],
+                    "build_number": data.get("build_info", {}).get("build"),
+                    "build_date": None,
+                    "change_category": "technique",
+                    "token_estimate": _token_estimate(overview),
+                    "content": overview,
+                    "source": "toeexpand",
+                    "url": "",
+                }
+            )
 
             # Add code snippets
             for snippet in data.get("code_snippets", []):
                 if len(snippet["code"].split()) < 10:
                     continue
                 slug = re.sub(r"[^a-z0-9]+", "_", snippet["path"].lower()).strip("_")
-                all_chunks.append({
-                    "chunk_id": f"{page_id}__{snippet['language']}_{slug}",
-                    "page_id": page_id,
-                    "doc_type": "tutorial_code",
-                    "section_title": f"{toe_file.stem} -- {snippet['language'].upper()}",
-                    "operator_family": None,
-                    "operator_name": None,
-                    "mentioned_operators": [],
-                    "parameter_names": [],
-                    "python_symbols": [],
-                    "build_number": None,
-                    "build_date": None,
-                    "change_category": "technique",
-                    "token_estimate": _token_estimate(snippet["code"]),
-                    "content": f"```{snippet['language']}\n{snippet['code']}\n```",
-                    "source": "toeexpand",
-                    "url": "",
-                })
+                all_chunks.append(
+                    {
+                        "chunk_id": f"{page_id}__{snippet['language']}_{slug}",
+                        "page_id": page_id,
+                        "doc_type": "tutorial_code",
+                        "section_title": f"{toe_file.stem} -- {snippet['language'].upper()}",
+                        "operator_family": None,
+                        "operator_name": None,
+                        "mentioned_operators": [],
+                        "parameter_names": [],
+                        "python_symbols": [],
+                        "build_number": None,
+                        "build_date": None,
+                        "change_category": "technique",
+                        "token_estimate": _token_estimate(snippet["code"]),
+                        "content": f"```{snippet['language']}\n{snippet['code']}\n```",
+                        "source": "toeexpand",
+                        "url": "",
+                    }
+                )
 
         logger.info("  -> %d Patreon TOE files processed", len(patreon_toes))
 
@@ -964,7 +1095,11 @@ def main() -> None:
     db_size = db_path.stat().st_size / 1024 / 1024
     logger.info(
         "Done in %.1fs. DB: %.1fMB (%d chunks from %d tutorials). Output: %s",
-        elapsed, db_size, indexed, processed, output,
+        elapsed,
+        db_size,
+        indexed,
+        processed,
+        output,
     )
 
 

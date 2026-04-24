@@ -31,7 +31,6 @@ import pytest
 
 import td_mcp.server as server
 
-
 REPO = Path(__file__).resolve().parent.parent
 MCP_JSON = REPO / ".mcp.json"
 
@@ -97,9 +96,7 @@ def test_plugin_install_unconfigured_doctor_fails(monkeypatch, capsys):
     assert exc.value.code != 0
 
     out = capsys.readouterr().out
-    auth_line = next(
-        (line for line in out.splitlines() if "auth_config" in line), ""
-    )
+    auth_line = next((line for line in out.splitlines() if "auth_config" in line), "")
     assert "FAIL" in auth_line
 
 
@@ -119,9 +116,7 @@ def test_plugin_install_with_secret_doctor_auth_passes(monkeypatch, capsys):
         server.main(["doctor", "--skip-td-check"])
 
     out = capsys.readouterr().out
-    auth_line = next(
-        (line for line in out.splitlines() if "auth_config" in line), ""
-    )
+    auth_line = next((line for line in out.splitlines() if "auth_config" in line), "")
     assert "PASS" in auth_line
     assert "FAIL" not in auth_line
 

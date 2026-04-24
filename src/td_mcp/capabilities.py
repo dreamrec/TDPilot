@@ -95,4 +95,3 @@ def detect_capabilities(
         mcp_sdk_version=mcp_sdk_version,
         td_build=td_build,
     )
-

@@ -142,9 +142,7 @@ class CardIndex:
     # Compatibility check
     # ------------------------------------------------------------------
 
-    def check_compatibility(
-        self, op_type: str, current_build: str
-    ) -> dict[str, Any]:
+    def check_compatibility(self, op_type: str, current_build: str) -> dict[str, Any]:
         """Compare an operator card's build_relevance against a build string.
 
         Returns ``{"status": "compatible"|"caution"|"incompatible", "reason": "..."}``.

@@ -51,9 +51,7 @@ def main() -> None:
         if env_path:
             source = Path(env_path)
         else:
-            logger.error(
-                "No source path. Use --source or set TDPILOT_DOCS_SCRAPE_PATH"
-            )
+            logger.error("No source path. Use --source or set TDPILOT_DOCS_SCRAPE_PATH")
             sys.exit(1)
 
     if not source.is_dir():

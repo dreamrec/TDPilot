@@ -12,10 +12,7 @@ import pytest
 
 def _load_undo_helper():
     """Load _with_undo_block from tool_registry without triggering MCP decorators."""
-    src_path = (
-        pathlib.Path(__file__).resolve().parent.parent
-        / "src" / "td_mcp" / "tool_registry.py"
-    )
+    src_path = pathlib.Path(__file__).resolve().parent.parent / "src" / "td_mcp" / "tool_registry.py"
     source = src_path.read_text()
     # Cut before the first @mcp. decorator to avoid server registration
     cut = source.find("\n@mcp.")
@@ -60,9 +57,7 @@ def test_with_undo_block_calls_lifecycle():
     assert result == "result"
     assert td_client.request.call_count == 2
     calls = td_client.request.call_args_list
-    assert calls[0] == call(
-        "project/lifecycle", {"action": "start_undo_block", "name": "my_label"}
-    )
+    assert calls[0] == call("project/lifecycle", {"action": "start_undo_block", "name": "my_label"})
     assert calls[1] == call("project/lifecycle", {"action": "end_undo_block"})
 
 
@@ -80,7 +75,5 @@ def test_with_undo_block_calls_end_on_error():
     # start + end both called despite the exception
     assert td_client.request.call_count == 2
     calls = td_client.request.call_args_list
-    assert calls[0] == call(
-        "project/lifecycle", {"action": "start_undo_block", "name": "err_label"}
-    )
+    assert calls[0] == call("project/lifecycle", {"action": "start_undo_block", "name": "err_label"})
     assert calls[1] == call("project/lifecycle", {"action": "end_undo_block"})

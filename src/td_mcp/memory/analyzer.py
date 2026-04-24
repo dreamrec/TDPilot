@@ -15,12 +15,39 @@ _PAGE_SIZE = 200
 
 # File extensions that indicate external assets referenced in param values
 _ASSET_EXTENSIONS = (
-    ".toe", ".tox", ".txt", ".csv", ".json", ".xml",
-    ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".tga", ".exr", ".hdr",
-    ".mp4", ".mov", ".avi", ".mkv", ".webm",
-    ".wav", ".mp3", ".aiff", ".ogg", ".flac",
-    ".obj", ".fbx", ".glb", ".gltf", ".abc",
-    ".glsl", ".vert", ".frag",
+    ".toe",
+    ".tox",
+    ".txt",
+    ".csv",
+    ".json",
+    ".xml",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".bmp",
+    ".tiff",
+    ".tga",
+    ".exr",
+    ".hdr",
+    ".mp4",
+    ".mov",
+    ".avi",
+    ".mkv",
+    ".webm",
+    ".wav",
+    ".mp3",
+    ".aiff",
+    ".ogg",
+    ".flac",
+    ".obj",
+    ".fbx",
+    ".glb",
+    ".gltf",
+    ".abc",
+    ".glsl",
+    ".vert",
+    ".frag",
 )
 
 
@@ -205,17 +232,13 @@ def _build_full_recipe(
                 if expr:
                     expressions[pname] = expr
                 # Scan value for file paths
-                if isinstance(value, str) and any(
-                    value.lower().endswith(ext) for ext in _ASSET_EXTENSIONS
-                ):
+                if isinstance(value, str) and any(value.lower().endswith(ext) for ext in _ASSET_EXTENSIONS):
                     if value not in external_assets:
                         external_assets.append(value)
             else:
                 params_clean[pname] = pval
                 # Scan plain string values for file paths
-                if isinstance(pval, str) and any(
-                    pval.lower().endswith(ext) for ext in _ASSET_EXTENSIONS
-                ):
+                if isinstance(pval, str) and any(pval.lower().endswith(ext) for ext in _ASSET_EXTENSIONS):
                     if pval not in external_assets:
                         external_assets.append(pval)
 
@@ -275,18 +298,43 @@ def _extract_key_params(
 
     # Param names that are usually interesting
     interesting_names = {
-        "file", "top", "chop", "sop", "dat", "mat",
-        "resolutionw", "resolutionh",
-        "seed", "rate", "speed", "freq", "amp", "phase",
-        "feedback", "noise", "displace",
-        "tx", "ty", "tz", "rx", "ry", "rz", "sx", "sy", "sz",
-        "r", "g", "b", "a", "opacity",
+        "file",
+        "top",
+        "chop",
+        "sop",
+        "dat",
+        "mat",
+        "resolutionw",
+        "resolutionh",
+        "seed",
+        "rate",
+        "speed",
+        "freq",
+        "amp",
+        "phase",
+        "feedback",
+        "noise",
+        "displace",
+        "tx",
+        "ty",
+        "tz",
+        "rx",
+        "ry",
+        "rz",
+        "sx",
+        "sy",
+        "sz",
+        "r",
+        "g",
+        "b",
+        "a",
+        "opacity",
     }
 
     for abs_path, node in nodes.items():
         rel_path = abs_path
         if abs_path.startswith(prefix + "/"):
-            rel_path = abs_path[len(prefix):]
+            rel_path = abs_path[len(prefix) :]
 
         raw_params = node.get("params", {})
         for pname, pval in raw_params.items():
@@ -307,10 +355,12 @@ def _extract_key_params(
             else:
                 # Plain scalar param — include if interesting
                 if pname_lower in interesting_names:
-                    key_params.append({
-                        "path": rel_path,
-                        "param": pname,
-                        "value": pval,
-                    })
+                    key_params.append(
+                        {
+                            "path": rel_path,
+                            "param": pname,
+                            "value": pval,
+                        }
+                    )
 
     return key_params[:200]  # Cap at 200 key params

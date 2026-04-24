@@ -92,7 +92,11 @@ class RuntimeMatrix:
                 payload = {"value": payload}
             last = payload
             job = payload.get("job", {})
-            if isinstance(job, dict) and str(job.get("status", "")).lower() in {"completed", "failed", "cancelled"}:
+            if isinstance(job, dict) and str(job.get("status", "")).lower() in {
+                "completed",
+                "failed",
+                "cancelled",
+            }:
                 return payload
             await anyio.sleep(0.25)
         raise MatrixFailure(f"Timed out waiting for job {job_id}. Last={last}")
@@ -145,9 +149,7 @@ class RuntimeMatrix:
         tools = await self.session.list_tools()
         names = {t.name for t in tools.tools}
         if len(names) < EXPECTED_MIN_TOOL_COUNT:
-            raise MatrixFailure(
-                f"Expected at least {EXPECTED_MIN_TOOL_COUNT} tools, got {len(names)}"
-            )
+            raise MatrixFailure(f"Expected at least {EXPECTED_MIN_TOOL_COUNT} tools, got {len(names)}")
 
     async def _build_runtime_fixture(self) -> None:
         suffix = datetime.now().strftime("%H%M%S")
@@ -211,7 +213,6 @@ class RuntimeMatrix:
             {"path": out_top, "fps": 1.0, "quality": 0.2, "include_image": True},
             expect_error=True,
         )
-
 
     async def _cleanup(self) -> None:
         base_path = self.ctx.get("base_path")

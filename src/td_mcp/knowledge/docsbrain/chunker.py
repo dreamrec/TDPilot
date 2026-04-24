@@ -35,9 +35,7 @@ _CHANGE_CATEGORIES = {
 
 # Regex to extract build number and date from heading text
 # e.g. "Build 2025.32460 Mar 10, 2026"
-_BUILD_HEADING_RE = re.compile(
-    r"Build\s+(\d{4}\.\d{4,5})\s+(\w+\s+\d{1,2},?\s+\d{4})", re.IGNORECASE
-)
+_BUILD_HEADING_RE = re.compile(r"Build\s+(\d{4}\.\d{4,5})\s+(\w+\s+\d{1,2},?\s+\d{4})", re.IGNORECASE)
 
 
 def _extract_mentioned_operators(section: Tag) -> list[str]:
@@ -45,8 +43,9 @@ def _extract_mentioned_operators(section: Tag) -> list[str]:
     ops = []
     for a in section.find_all("a"):
         title = a.get("title", "")
-        if title and any(title.endswith(f" {fam}") for fam in
-                         ("TOP", "CHOP", "SOP", "DAT", "COMP", "MAT", "POP")):
+        if title and any(
+            title.endswith(f" {fam}") for fam in ("TOP", "CHOP", "SOP", "DAT", "COMP", "MAT", "POP")
+        ):
             if title not in ops:
                 ops.append(title)
     return ops
@@ -165,15 +164,17 @@ def chunk_page(page: dict[str, Any], html_path: Path) -> list[dict[str, Any]]:
 
         if intro_text and len(intro_text.split()) >= 10:
             sequence += 1
-            chunks.append(_make_chunk(
-                page_id=page_id,
-                section_title=page["title"],
-                sequence=sequence,
-                content=intro_text,
-                doc_type=doc_type,
-                operator_family=operator_family,
-                operator_name=operator_name,
-            ))
+            chunks.append(
+                _make_chunk(
+                    page_id=page_id,
+                    section_title=page["title"],
+                    sequence=sequence,
+                    content=intro_text,
+                    doc_type=doc_type,
+                    operator_family=operator_family,
+                    operator_name=operator_name,
+                )
+            )
 
         # Process each heading section
         for heading_tag in headings:
@@ -201,32 +202,36 @@ def chunk_page(page: dict[str, Any], html_path: Path) -> list[dict[str, Any]]:
             param_names = _extract_parameter_names(section_text) if doc_type == "operator" else []
 
             sequence += 1
-            chunks.append(_make_chunk(
-                page_id=page_id,
-                section_title=heading,
-                sequence=sequence,
-                content=section_text,
-                doc_type=doc_type,
-                operator_family=operator_family,
-                operator_name=operator_name,
-                mentioned_operators=mentioned_ops,
-                parameter_names=param_names,
-                build_number=current_build if doc_type == "release_notes" else None,
-                build_date=current_build_date if doc_type == "release_notes" else None,
-                change_category=change_category,
-            ))
+            chunks.append(
+                _make_chunk(
+                    page_id=page_id,
+                    section_title=heading,
+                    sequence=sequence,
+                    content=section_text,
+                    doc_type=doc_type,
+                    operator_family=operator_family,
+                    operator_name=operator_name,
+                    mentioned_operators=mentioned_ops,
+                    parameter_names=param_names,
+                    build_number=current_build if doc_type == "release_notes" else None,
+                    build_date=current_build_date if doc_type == "release_notes" else None,
+                    change_category=change_category,
+                )
+            )
     else:
         # No headings — single chunk for the whole page
         sequence += 1
-        chunks.append(_make_chunk(
-            page_id=page_id,
-            section_title=page["title"],
-            sequence=sequence,
-            content=page["text"],
-            doc_type=doc_type,
-            operator_family=operator_family,
-            operator_name=operator_name,
-        ))
+        chunks.append(
+            _make_chunk(
+                page_id=page_id,
+                section_title=page["title"],
+                sequence=sequence,
+                content=page["text"],
+                doc_type=doc_type,
+                operator_family=operator_family,
+                operator_name=operator_name,
+            )
+        )
 
     return chunks
 

@@ -134,13 +134,9 @@ class SnapshotManager:
                 expr_b = param_b.get("expression")
                 if expr_a != expr_b:
                     if expr_a is None and expr_b is not None:
-                        added_expressions.append(
-                            {"path": path, "param": param_name, "expression": expr_b}
-                        )
+                        added_expressions.append({"path": path, "param": param_name, "expression": expr_b})
                     elif expr_a is not None and expr_b is None:
-                        removed_expressions.append(
-                            {"path": path, "param": param_name, "expression": expr_a}
-                        )
+                        removed_expressions.append({"path": path, "param": param_name, "expression": expr_a})
                     else:
                         modified_expressions.append(
                             {

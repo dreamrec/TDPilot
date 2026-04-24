@@ -59,14 +59,16 @@ def _make_ctx(*, client=None):
 async def test_standardize_audit_clean_comp(monkeypatch):
     """Audit mode on a clean COMP returns zero issues."""
     monkeypatch.setenv("TD_MCP_EXEC_MODE", "standard")
-    client = _ExecClient({
-        "path": "/project1/MyComp",
-        "issues": [],
-        "fixed": [],
-        "issue_count": 0,
-        "has_extension": True,
-        "op_type": "baseCOMP",
-    })
+    client = _ExecClient(
+        {
+            "path": "/project1/MyComp",
+            "issues": [],
+            "fixed": [],
+            "issue_count": 0,
+            "has_extension": True,
+            "op_type": "baseCOMP",
+        }
+    )
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
     ctx = _make_ctx(client=client)
 
@@ -86,18 +88,20 @@ async def test_standardize_audit_clean_comp(monkeypatch):
 async def test_standardize_audit_missing_params(monkeypatch):
     """Audit mode detects missing custom parameters."""
     monkeypatch.setenv("TD_MCP_EXEC_MODE", "standard")
-    client = _ExecClient({
-        "path": "/project1/mycomp",
-        "issues": [
-            "Missing custom parameter: Version",
-            "Missing custom parameter: Help",
-            "Name does not start with uppercase: mycomp",
-        ],
-        "fixed": [],
-        "issue_count": 3,
-        "has_extension": False,
-        "op_type": "baseCOMP",
-    })
+    client = _ExecClient(
+        {
+            "path": "/project1/mycomp",
+            "issues": [
+                "Missing custom parameter: Version",
+                "Missing custom parameter: Help",
+                "Name does not start with uppercase: mycomp",
+            ],
+            "fixed": [],
+            "issue_count": 3,
+            "has_extension": False,
+            "op_type": "baseCOMP",
+        }
+    )
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
     ctx = _make_ctx(client=client)
 
@@ -114,14 +118,16 @@ async def test_standardize_audit_missing_params(monkeypatch):
 async def test_standardize_fix_uses_undo_block(monkeypatch):
     """Fix mode wraps the exec call in an undo block."""
     monkeypatch.setenv("TD_MCP_EXEC_MODE", "standard")
-    client = _ExecClient({
-        "path": "/project1/mycomp",
-        "issues": [],
-        "fixed": ["Added parameter: Version", "Added parameter: Help", "Added parameter: Creator"],
-        "issue_count": 0,
-        "has_extension": False,
-        "op_type": "baseCOMP",
-    })
+    client = _ExecClient(
+        {
+            "path": "/project1/mycomp",
+            "issues": [],
+            "fixed": ["Added parameter: Version", "Added parameter: Help", "Added parameter: Creator"],
+            "issue_count": 0,
+            "has_extension": False,
+            "op_type": "baseCOMP",
+        }
+    )
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
     ctx = _make_ctx(client=client)
 

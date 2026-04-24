@@ -43,12 +43,14 @@ class TechniqueStore:
     # ------------------------------------------------------------------
 
     # Valid state transitions
-    _VALID_STATES = frozenset({
-        "candidate",
-        "validated_local",
-        "validated_portable",
-        "deprecated",
-    })
+    _VALID_STATES = frozenset(
+        {
+            "candidate",
+            "validated_local",
+            "validated_portable",
+            "deprecated",
+        }
+    )
 
     def add(
         self,

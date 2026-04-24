@@ -124,7 +124,8 @@ def _download_file(file_id: str, dest: Path, size_mb: float) -> bool:
                 html = response.read().decode("utf-8", errors="replace")
                 # Look for confirm token in the HTML
                 import re
-                match = re.search(r'confirm=([0-9A-Za-z_-]+)', html)
+
+                match = re.search(r"confirm=([0-9A-Za-z_-]+)", html)
                 if match:
                     confirm = match.group(1)
                     url = _gdrive_confirm_url(file_id, confirm)
@@ -158,7 +159,7 @@ def _download_file(file_id: str, dest: Path, size_mb: float) -> bool:
                         pct = downloaded / total * 100
                         mb = downloaded / 1024 / 1024
                         sys.stdout.write(
-                            f"\r  downloading {dest.name}: {mb:.1f}MB / {total/1024/1024:.1f}MB ({pct:.0f}%)"
+                            f"\r  downloading {dest.name}: {mb:.1f}MB / {total / 1024 / 1024:.1f}MB ({pct:.0f}%)"
                         )
                     else:
                         mb = downloaded / 1024 / 1024
@@ -210,27 +211,29 @@ def download_brain(brain_name: str, project_root: Path, brains_registry: dict | 
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Download TDPilot brain databases from Google Drive"
-    )
+    parser = argparse.ArgumentParser(description="Download TDPilot brain databases from Google Drive")
     parser.add_argument(
         "--brain",
         help="Download a specific brain (default: all)",
     )
     parser.add_argument(
-        "--list", action="store_true",
+        "--list",
+        action="store_true",
         help="List available brains and exit",
     )
     parser.add_argument(
-        "--force", action="store_true",
+        "--force",
+        action="store_true",
         help="Re-download even if files exist",
     )
     parser.add_argument(
-        "--manifest", type=Path,
+        "--manifest",
+        type=Path,
         help="Path to brains_manifest.json (overrides built-in BRAINS dict)",
     )
     parser.add_argument(
-        "--brains-file", type=Path,
+        "--brains-file",
+        type=Path,
         help="JSON file listing brain IDs to download (array of strings)",
     )
     args = parser.parse_args()

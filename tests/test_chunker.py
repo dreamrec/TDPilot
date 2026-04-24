@@ -20,10 +20,22 @@ class TestChunkPage:
     def test_chunk_has_required_fields(self):
         page = normalize_file(FIXTURES / "Composite_TOP.html", "Composite_TOP.html")
         chunks = chunk_page(page, FIXTURES / "Composite_TOP.html")
-        required = {"chunk_id", "page_id", "doc_type", "section_title",
-                     "operator_family", "operator_name", "mentioned_operators",
-                     "parameter_names", "python_symbols", "build_number",
-                     "build_date", "change_category", "token_estimate", "content"}
+        required = {
+            "chunk_id",
+            "page_id",
+            "doc_type",
+            "section_title",
+            "operator_family",
+            "operator_name",
+            "mentioned_operators",
+            "parameter_names",
+            "python_symbols",
+            "build_number",
+            "build_date",
+            "change_category",
+            "token_estimate",
+            "content",
+        }
         for chunk in chunks:
             assert required.issubset(chunk.keys()), f"Missing: {required - chunk.keys()}"
 

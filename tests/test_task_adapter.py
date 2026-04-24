@@ -12,6 +12,7 @@ from td_mcp.jobs.task_adapter import TaskAdapter
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _caps(supports_tasks: bool = False) -> CapabilitySet:
     return CapabilitySet(supports_tasks=supports_tasks)
 
@@ -26,6 +27,7 @@ def _make_adapter(supports_tasks: bool = False, notify_fn=None) -> tuple[JobMana
 # ---------------------------------------------------------------------------
 # Task 1 — TaskAdapter.wrap_job
 # ---------------------------------------------------------------------------
+
 
 def test_adapter_no_tasks_support():
     """wrap_job returns plain job dict without mcp_task when tasks not supported."""
@@ -59,6 +61,7 @@ def test_adapter_tasks_supported_property():
 # ---------------------------------------------------------------------------
 # Task 1 — TaskAdapter.on_progress / on_complete
 # ---------------------------------------------------------------------------
+
 
 def test_on_progress_callback():
     """on_progress updates job progress via JobManager."""
@@ -117,6 +120,7 @@ def test_on_complete_fires_notify():
 # ---------------------------------------------------------------------------
 # Task 2 — JobManager callback hooks
 # ---------------------------------------------------------------------------
+
 
 def test_job_manager_progress_hook():
     """JobManager fires on_progress_hook when progress field is updated."""

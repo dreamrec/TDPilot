@@ -243,12 +243,14 @@ class DocsBrain:
         entries = []
         for row in rows:
             d = dict(row)
-            entries.append({
-                "section": d.get("section_title", ""),
-                "category": d.get("change_category", "other"),
-                "content": d.get("content", ""),
-                "mentioned_operators": json.loads(d.get("mentioned_operators", "[]")),
-            })
+            entries.append(
+                {
+                    "section": d.get("section_title", ""),
+                    "category": d.get("change_category", "other"),
+                    "content": d.get("content", ""),
+                    "mentioned_operators": json.loads(d.get("mentioned_operators", "[]")),
+                }
+            )
 
         return {
             "build": build,
@@ -273,9 +275,7 @@ class DocsBrain:
         """Get the build manifest with all known builds."""
         return self._manifest
 
-    def search_release_notes(
-        self, query: str, build: str | None = None, limit: int = 10
-    ) -> list[dict]:
+    def search_release_notes(self, query: str, build: str | None = None, limit: int = 10) -> list[dict]:
         """Search release notes, optionally filtered by build."""
         results = self.search(query, card_types=["release_notes"], limit=limit)
         if build:
@@ -299,7 +299,11 @@ class DocsBrain:
             return "palette"
 
         # Glossary
-        if "glossary" in query_lower or query_lower.startswith("what does ") or query_lower.startswith("define "):
+        if (
+            "glossary" in query_lower
+            or query_lower.startswith("what does ")
+            or query_lower.startswith("define ")
+        ):
             return "glossary"
 
         # Operator name match

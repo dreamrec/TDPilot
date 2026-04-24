@@ -70,11 +70,13 @@ def build_release_artifacts(
             content = chunk.get("content", "")
             for op_name in chunk.get("mentioned_operators", []):
                 bullet_text = _extract_operator_bullet(content, op_name)
-                changelog[op_name].append({
-                    "build": build_num,
-                    "category": category,
-                    "text": bullet_text,
-                })
+                changelog[op_name].append(
+                    {
+                        "build": build_num,
+                        "category": category,
+                        "text": bullet_text,
+                    }
+                )
 
     # Sort builds newest first
     sorted_builds = sorted(
@@ -93,14 +95,10 @@ def build_release_artifacts(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     manifest_path = output_dir / "build_manifest.json"
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
+    manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
 
     changelog_path = output_dir / "operator_changelog.json"
-    changelog_path.write_text(
-        json.dumps(dict(changelog), indent=2, ensure_ascii=False), encoding="utf-8"
-    )
+    changelog_path.write_text(json.dumps(dict(changelog), indent=2, ensure_ascii=False), encoding="utf-8")
 
     logger.info(
         "Release artifacts: %d builds, %d operators with changelog entries",

@@ -41,9 +41,7 @@ def _collect_snapshot() -> dict[str, Any]:
                 name: {
                     "type": prop.get("type"),
                     # 'anyOf' encodes X | None; we keep only the key names.
-                    "any_of_types": sorted(
-                        [m.get("type") for m in prop.get("anyOf", []) if m.get("type")]
-                    ),
+                    "any_of_types": sorted([m.get("type") for m in prop.get("anyOf", []) if m.get("type")]),
                     "enum": prop.get("enum"),
                     "default_present": "default" in prop,
                 }
@@ -81,11 +79,7 @@ def test_tool_schemas_match_snapshot():
     # Build a small diff report if they disagree.
     added = sorted(set(current) - set(stored))
     removed = sorted(set(stored) - set(current))
-    changed = sorted(
-        name
-        for name in set(current) & set(stored)
-        if current[name] != stored[name]
-    )
+    changed = sorted(name for name in set(current) & set(stored) if current[name] != stored[name])
 
     if added or removed or changed:
         details = []

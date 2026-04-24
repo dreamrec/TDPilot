@@ -12,4 +12,3 @@ def test_create_macro_input_defaults():
 def test_get_macro_params_input():
     model = GetMacroParamsInput(macro_type=MacroType.POST_PROCESSING)
     assert model.macro_type.value == "post_processing"
-

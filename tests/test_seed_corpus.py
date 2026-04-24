@@ -69,9 +69,7 @@ class TestOperatorCards:
     def test_family_valid(self, operators: list[tuple[Path, dict]]) -> None:
         valid_families = {"TOP", "CHOP", "SOP", "COMP", "DAT", "MAT", "POP"}
         for path, card in operators:
-            assert card["family"] in valid_families, (
-                f"{path.name} has invalid family '{card['family']}'"
-            )
+            assert card["family"] in valid_families, f"{path.name} has invalid family '{card['family']}'"
 
 
 class TestPaletteCards:

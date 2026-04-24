@@ -34,11 +34,7 @@ def score_text(query: str, text: str) -> int:
 def format_doc(doc: dict[str, Any], score: int) -> str:
     summary = " ".join(doc.get("summary", [])) or doc.get("meta_description", "")
     params = ", ".join(doc.get("key_parameters", [])[:6])
-    return (
-        f"[doc score={score}] {doc['title']} | {doc['rel_path']}\n"
-        f"  summary: {summary}\n"
-        f"  params: {params}"
-    )
+    return f"[doc score={score}] {doc['title']} | {doc['rel_path']}\n  summary: {summary}\n  params: {params}"
 
 
 def format_example(example: dict[str, Any], score: int) -> str:
