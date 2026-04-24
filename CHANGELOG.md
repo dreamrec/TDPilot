@@ -1,5 +1,105 @@
 # Changelog
 
+## 1.4.5 - 2026-04-24
+
+Review-fix patch. Four issues surfaced during local review of v1.4.3 and
+v1.4.4. No TD-side protocol changes — `API_VERSION` stays at 1.4.2,
+no `.tox` rebuild required. Tool count unchanged at 92. Tests: 509 → 551
+(+42 new regression tests across the four fixes).
+
+### Fixed
+
+- **Plugin auth bootstrap actually works now:** v1.4.3's fail-loud gate
+  for `TD_MCP_REQUIRE_AUTH=1` + missing secret was *correct*, but the
+  default plugin path deterministically tripped it on first boot because
+  nothing was provisioning the secret. Ships a new
+  `src/td_mcp/auth_bootstrap.py` module that:
+  - loads `~/.tdpilot/.tdpilot.env` (canonical cross-process path shared
+    with TD-side `tdpilot_startup.py` — they converge naturally because
+    `tdpilot_startup.py` reads `<repo_root>/.tdpilot.env` and
+    `repo_root` = `~/.tdpilot` when the user ran `npx tdpilot install`);
+  - when `TD_MCP_AUTOGENERATE_SECRET=1` is set (opt-in to prevent
+    surprise disk writes) and no secret is resolvable, mints a 256-bit
+    secret via `secrets.token_urlsafe(32)`, writes it atomically with
+    0600 permissions, and injects it into `os.environ`;
+  - is called before `verify_auth_config()` at server startup so the
+    gate sees the populated env;
+  - never echoes secrets to stdout (stdio MCP transport).
+  `.mcp.json` now declares `TD_MCP_AUTOGENERATE_SECRET=1` so fresh
+  plugin installs actually work.
+
+- **Brain manager refuses bogus activations:** `npx tdpilot brains add`
+  previously wrote any requested id to `active.json` after a zero-exit
+  downloader, even if the id was a typo or a `local_build` brain with
+  no files. Because `active.json` acts as an allow-list, a typo could
+  silently disable all known brains on next startup. Hardens both
+  surfaces:
+  - `scripts/download_brains.py` exits non-zero on unknown ids, empty
+    selections, or selections containing only local-build brains;
+    `--list` now surfaces `install_mode` per brain.
+  - `npm/brains.js addBrain()` validates the id against the manifest
+    BEFORE calling the downloader; for `install_mode: local_build`,
+    refuses activation unless the runtime DB (`runtime_db`) is
+    already on disk. Only writes `active.json` after verified success.
+  - Also fixes a pre-existing bug where `brains.js` exported `main()`
+    but never invoked it when run directly (no `require.main === module`
+    dispatch) — invocations actually run now.
+  - `data/brains/brains_manifest.json` bumped to manifest_version 2
+    with per-brain `install_mode` and `runtime_db`. `paketa12` correctly
+    tagged as local-build.
+
+- **DocsBrain parameter help no longer hollow:** `td_get_param_help`
+  read `card.get("key_params", [])`, but DocsBrain's `get_operator()`
+  returned `parameters: list[str]` with no `key_params` key. When
+  DocsBrain was the active source, parameter help silently returned
+  `card_param: None` for every parameter. DocsBrain now synthesizes a
+  CardIndex-compatible `key_params: list[dict]` with
+  `{name, label, raw, source: "docsbrain"}` per entry. `td_get_param_help`
+  iterates either shape case-insensitively and the provenance field now
+  reflects the actual card origin (`docsbrain` vs. `local_card`).
+
+- **`tdpilot init --print-only` stays machine-readable:**
+  `tdpilot init --print-only --auth --generate-secret | jq .` was
+  silently broken because secret-generated notices were printed to
+  stdout before the JSON profile. Also, `--generate-secret` and
+  `--shared-secret` were silently ignored without `--auth` and could be
+  combined ambiguously. Fixes all three:
+  - stdout under `--print-only` contains EXACTLY the JSON profile;
+    secret notice goes to stderr.
+  - The secret itself is NEVER echoed to stdout anymore (only surfaces
+    via the written config file — security tightening).
+  - `--generate-secret` without `--auth` → exits 2 with clear message.
+  - `--shared-secret` without `--auth` → exits 2.
+  - `--generate-secret` AND `--shared-secret` together → exits 2.
+  - `--auth` alone now generates a secret by default (previously
+    produced an invalid "require auth + no secret" config).
+  - Profile now includes `TD_MCP_EXEC_MODE=restricted` when
+    `--auth` is set (matches shipped `.mcp.json`).
+
+### Tests
+
+- +17 `test_auth_bootstrap.py` — load semantics, autogen opt-in/opt-out,
+  file permissions, idempotency, stdout non-leakage, default path.
+- +6 `test_download_brains_cli.py` subprocess tests — unknown id, empty
+  selection, local-build-only, mixed, list output.
+- +5 `test_brains_cli_js.py` node-subprocess tests against isolated
+  HOME — unknown id rejected, local-build without db rejected, with
+  db activates, showInstalled clean.
+- +3 `test_docsbrain_search.py` tests — key_params shape, name parity
+  with parameters list, missing-op returns None.
+- +3 `test_param_help_docsbrain.py` end-to-end tests — known param,
+  case-insensitive match, unknown param clean fall-through.
+- +7 `test_cli.py` tests — print-only stdout parseable, flag-combo
+  validation, --auth default-generate, exec_mode=restricted baked.
+- Updated: 2 v1.4.4 plugin-install-smoke tests + 1 v1.4.4 init test
+  that pinned the (now-improved) old behavior.
+
+### Unchanged
+
+- Tool count: 92.
+- `API_VERSION` in `td_component/mcp_webserver_callbacks.py`: still
+  `1.4.2`. No `.tox` rebuild required for this release.
+
 ## 1.4.4 - 2026-04-24
 
 Reliability release. Ten tasks shipped — behavioral tests replacing
