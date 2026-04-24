@@ -2304,275 +2304,6 @@ async def td_get_server_metrics(ctx: Context) -> str:
         finish()
 
 
-@mcp.tool(name="td_subscribe")
-async def td_subscribe(
-    ctx: Context,
-    path: Annotated[
-        str,
-        Field(description="TD node path to monitor, e.g. '/project1/audio1'."),
-    ],
-    event_types: Annotated[
-        list[str] | None,
-        Field(
-            default=None,
-            description=(
-                "Event types: chop_change, par_change, cook_complete, "
-                "node_error, timeline. Defaults to ['chop_change', 'par_change']."
-            ),
-        ),
-    ] = None,
-    channels: Annotated[
-        list[str] | None,
-        Field(
-            default=None,
-            description="Specific CHOP channels to monitor. None means all channels.",
-        ),
-    ] = None,
-    params: Annotated[
-        list[str] | None,
-        Field(
-            default=None,
-            description="Specific parameters to monitor. None means all tracked params.",
-        ),
-    ] = None,
-    threshold: Annotated[
-        float | None,
-        Field(
-            default=None,
-            description="Only emit events when delta exceeds this threshold.",
-        ),
-    ] = None,
-    rate_limit: Annotated[
-        float,
-        Field(
-            default=0.016,
-            ge=0.001,
-            le=10.0,
-            description="Minimum seconds between repeated events from same source.",
-        ),
-    ] = 0.016,
-) -> str:
-    """Subscribe to runtime TD events for a node."""
-    # Re-instantiate so the SubscribeInput @field_validator on event_types
-    # (allowed set: chop_change|par_change|cook_complete|node_error|timeline)
-    # still runs.
-    validated = SubscribeInput(
-        path=path,
-        event_types=event_types or ["chop_change", "par_change"],
-        channels=channels,
-        params=params,
-        threshold=threshold,
-        rate_limit=rate_limit,
-    )
-    finish = _start_tool(ctx, "td_subscribe")
-    try:
-        body = validated.model_dump(exclude_none=True)
-        provisioning = await _get_client(ctx).request("monitor/subscribe", body)
-
-        event_manager = _get_event_manager(ctx)
-        for et in validated.event_types:
-            event_manager.register_subscription(validated.path, et, body)
-
-        payload = {
-            "success": True,
-            "path": validated.path,
-            "subscription": body,
-            "resource_uris": _build_subscription_resource_uris(validated),
-            "provisioning": provisioning,
-            "active_subscriptions": len(event_manager.list_subscriptions()),
-        }
-        _audit_log(
-            ctx,
-            "td_subscribe",
-            {
-                "path": validated.path,
-                "event_types": validated.event_types,
-            },
-        )
-        return _as_json_output(payload)
-    except Exception as exc:
-        _record_tool_error(ctx, "td_subscribe")
-        return format_tool_error(exc)
-    finally:
-        finish()
-
-
-@mcp.tool(name="td_unsubscribe")
-async def td_unsubscribe(
-    ctx: Context,
-    path: Annotated[
-        str,
-        Field(description="TD node path to stop monitoring."),
-    ],
-) -> str:
-    """Remove a node subscription."""
-    finish = _start_tool(ctx, "td_unsubscribe")
-    try:
-        provisioning = await _get_client(ctx).request(
-            "monitor/unsubscribe",
-            {"path": path},
-        )
-
-        event_manager = _get_event_manager(ctx)
-        removed = event_manager.unregister_all_for_path(path)
-
-        payload = {
-            "success": removed > 0,
-            "path": path,
-            "provisioning": provisioning,
-            "active_subscriptions": len(event_manager.list_subscriptions()),
-        }
-        _audit_log(ctx, "td_unsubscribe", {"path": path})
-        return _as_json_output(payload)
-    except Exception as exc:
-        _record_tool_error(ctx, "td_unsubscribe")
-        return format_tool_error(exc)
-    finally:
-        finish()
-
-
-@mcp.tool(name="td_get_events")
-async def td_get_events(
-    ctx: Context,
-    event_type: Annotated[
-        str | None,
-        Field(default=None, description="Optional event type filter."),
-    ] = None,
-    limit: Annotated[
-        int,
-        Field(
-            default=50,
-            ge=1,
-            le=1000,
-            description="Maximum number of events to return.",
-        ),
-    ] = 50,
-) -> str:
-    """Read recent event history."""
-    finish = _start_tool(ctx, "td_get_events")
-    try:
-        manager = _get_event_manager(ctx)
-        events = manager.get_recent_events(event_type=event_type, limit=limit)
-        payload = {
-            "schema_version": 1,
-            "event_type": event_type,
-            "count": len(events),
-            "events": events,
-        }
-        return _as_json_output(payload)
-    except Exception as exc:
-        _record_tool_error(ctx, "td_get_events")
-        return format_tool_error(exc)
-    finally:
-        finish()
-
-
-@mcp.tool(name="td_get_state_vector")
-async def td_get_state_vector(
-    ctx: Context,
-    path: Annotated[
-        str,
-        Field(
-            default="/project1",
-            description="Root path for aggregated diagnostics.",
-        ),
-    ] = "/project1",
-    force_refresh: Annotated[
-        bool,
-        Field(
-            default=False,
-            description="Bypass cache and fetch fresh state.",
-        ),
-    ] = False,
-) -> str:
-    """Aggregated scene state vector (cached for TD_STATE_VECTOR_TTL seconds)."""
-    finish = _start_tool(ctx, "td_get_state_vector")
-    try:
-        cache_key = path
-        cached = _STATE_VECTOR_CACHE.get(cache_key)
-        now = time.time()
-
-        if not force_refresh and cached:
-            cached_at = float(cached.get("cached_at", 0.0) or 0.0)
-            age = now - cached_at
-            if age <= max(0.0, TD_STATE_VECTOR_TTL):
-                payload = dict(cached["data"])
-                payload["cache"] = {
-                    "hit": True,
-                    "age_sec": age,
-                    "ttl_sec": TD_STATE_VECTOR_TTL,
-                }
-                return _as_json_output(payload)
-
-        state_vector = await _build_state_vector(path, ctx)
-        if len(_STATE_VECTOR_CACHE) >= 100:
-            _STATE_VECTOR_CACHE.clear()
-        _STATE_VECTOR_CACHE[cache_key] = {
-            "cached_at": now,
-            "data": state_vector,
-        }
-        state_vector["cache"] = {
-            "hit": False,
-            "ttl_sec": TD_STATE_VECTOR_TTL,
-        }
-        return _as_json_output(state_vector)
-    except Exception as exc:
-        _record_tool_error(ctx, "td_get_state_vector")
-        return format_tool_error(exc)
-    finally:
-        finish()
-
-
-@mcp.tool(name="td_get_timescale_state")
-async def td_get_timescale_state(
-    ctx: Context,
-    bpm_hint: Annotated[
-        float | None,
-        Field(
-            default=None,
-            gt=0.0,
-            le=400.0,
-            description="Optional BPM hint. Defaults to 120 when omitted.",
-        ),
-    ] = None,
-    beats_per_bar: Annotated[
-        int,
-        Field(
-            default=4,
-            ge=1,
-            le=32,
-            description="Musical beats per bar for phase calculations.",
-        ),
-    ] = 4,
-) -> str:
-    """Beat/phrase derived timeline state."""
-    finish = _start_tool(ctx, "td_get_timescale_state")
-    try:
-        timeline = await _get_client(ctx).request("timeline")
-        bpm = float(bpm_hint if bpm_hint is not None else 120.0)
-
-        payload = {
-            "schema_version": 1,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
-            "timeline": timeline,
-            "timescale": _compute_timescale_from_timeline(
-                timeline if isinstance(timeline, dict) else {},
-                bpm=bpm,
-                beats_per_bar=beats_per_bar,
-            ),
-            "notes": [
-                "BPM is currently hint-based; use an external detector to feed live BPM.",
-                "Beat/bar/phrase phases can drive modulation curves or macro transitions.",
-            ],
-        }
-        return _as_json_output(payload)
-    except Exception as exc:
-        _record_tool_error(ctx, "td_get_timescale_state")
-        return format_tool_error(exc)
-    finally:
-        finish()
-
-
 def _check_exec_not_off() -> dict[str, Any] | None:
     """Return an error dict if exec_mode is 'off', else None."""
     if _current_exec_mode() == "off":
@@ -2690,6 +2421,11 @@ from td_mcp.registry.tools_data import (  # noqa: E402
     td_screenshot,
     td_search_nodes,
 )
+from td_mcp.registry.tools_events import (  # noqa: E402
+    td_get_events,
+    td_subscribe,
+    td_unsubscribe,
+)
 from td_mcp.registry.tools_graph import (  # noqa: E402
     td_connect_nodes,
     td_copy_node,
@@ -2756,6 +2492,10 @@ from td_mcp.registry.tools_snapshots import (  # noqa: E402
     td_list_snapshots,
     td_restore_snapshot,
     td_snapshot_scene,
+)
+from td_mcp.registry.tools_state import (  # noqa: E402
+    td_get_state_vector,
+    td_get_timescale_state,
 )
 from td_mcp.registry.tools_streaming import (  # noqa: E402
     td_capture_and_analyze,
