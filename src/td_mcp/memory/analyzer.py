@@ -246,15 +246,87 @@ def _build_full_recipe(
     connections: list[dict[str, Any]],
     root_path: str,
 ) -> dict[str, Any]:
-    """Build a portable recipe dict with relative paths."""
+    """Build a portable recipe dict with relative paths.
+
+    v1.4.7 Bug S follow-up: wire-walked recipes (from non-COMP roots)
+    capture nodes that live outside the root's hierarchy — typically
+    siblings under a shared parent. Before the follow-up, those siblings
+    kept their absolute paths in the recipe (e.g. ``/stage/mid``),
+    which made replay to a new parent fail with ``missing_parent``
+    because the recipe assumed the absolute TD layout would be preserved.
+
+    Fix: for each captured node, derive a rel_path that's portable:
+
+    - Root itself                        -> ``"/"``
+    - Descendants of root (tree walk)    -> ``"/relative/subpath"``
+    - Non-descendants (wire-walked)      -> ``"/<leaf_name>"``, with a
+      numeric suffix on leaf-name collisions so distinct abs_paths never
+      share a rel_path.
+
+    The resulting recipe is a flat namespace under ``/``, which replay
+    handles natively: every non-root rel_path's parent lookup resolves
+    to ``created_nodes["/"]`` (the replay's effective parent), so each
+    wire-walked sibling lands under ``parent_path`` correctly.
+
+    A single ``_rel()`` closure caches the abs->rel mapping so connection
+    endpoints use the exact same rel_paths as the node keys; that keeps
+    replay's ``{from,to} in nodes`` filter in agreement with the
+    rel_path it needs to look up.
+    """
     prefix = root_path.rstrip("/")
+    path_to_rel: dict[str, str] = {}
+    used_rels: set[str] = set()
+
+    # Walk mode is derivable from the root's family:
+    #   COMP root  -> tree walk: recipe has `/` for the wrapper, `/path`
+    #                 for descendants. Replay aliases `/` to parent_path
+    #                 (children fill the wrapper; wrapper itself is
+    #                 implicit unless recreate_root=True — see V.C).
+    #   Non-COMP   -> wire walk: EVERY captured node is a peer of the
+    #                 others. Recipe has NO `/` entry — all nodes get
+    #                 leaf-name rel_paths (`/head`, `/mid`, ...) and
+    #                 replay creates them as siblings under parent_path.
+    #                 This is what makes wire-walked recipes portable.
+    root_node = nodes.get(root_path)
+    root_is_comp = isinstance(root_node, dict) and root_node.get("family") == "COMP"
 
     def _rel(p: str) -> str:
-        if p.startswith(prefix + "/"):
-            return p[len(prefix) :]
-        if p == prefix:
-            return "/"
-        return p
+        # Cache first so every call for the same abs_path returns the
+        # same rel_path — crucial for keeping connection endpoints in
+        # sync with the node keys in the recipe.
+        if p in path_to_rel:
+            return path_to_rel[p]
+
+        if root_is_comp:
+            if p == prefix:
+                rel = "/"
+            elif p.startswith(prefix + "/"):
+                rel = p[len(prefix) :]
+            else:
+                # Shouldn't normally happen in tree mode, but handle
+                # defensively with the same leaf-name strategy.
+                name = p.rsplit("/", 1)[-1] or "unnamed"
+                candidate = "/" + name
+                counter = 1
+                while candidate in used_rels:
+                    counter += 1
+                    candidate = f"/{name}_{counter}"
+                rel = candidate
+        else:
+            # Wire walk: leaf-name rel_path for every node — including
+            # the root. No `/` entry in the recipe's node map; all
+            # nodes are peers on replay.
+            name = p.rsplit("/", 1)[-1] or "unnamed"
+            candidate = "/" + name
+            counter = 1
+            while candidate in used_rels:
+                counter += 1
+                candidate = f"/{name}_{counter}"
+            rel = candidate
+
+        used_rels.add(rel)
+        path_to_rel[p] = rel
+        return rel
 
     recipe_nodes: dict[str, dict[str, Any]] = {}
     external_assets: list[str] = []
