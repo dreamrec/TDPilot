@@ -1,6 +1,8 @@
 import argparse
 import json
 
+import pytest
+
 import td_mcp.server as server
 
 
@@ -55,6 +57,58 @@ def test_collect_doctor_report_skip_td_check():
     checks = {item["name"]: item for item in report["checks"]}
     assert checks["td_health"]["status"] == "skip"
     assert checks["transport_config"]["status"] in {"pass", "fail"}
+
+
+# ---------------------------------------------------------------------------
+# Doctor auth-config gate — regression for v1.4.3 plugin-install auth path.
+# ---------------------------------------------------------------------------
+
+
+def test_doctor_flags_auth_required_without_secret(monkeypatch, capsys):
+    """doctor must fail (non-zero exit) when TD_MCP_REQUIRE_AUTH=1 but no secret."""
+    monkeypatch.setenv("TD_MCP_REQUIRE_AUTH", "1")
+    monkeypatch.delenv("TD_MCP_SHARED_SECRET", raising=False)
+
+    with pytest.raises(SystemExit) as exc:
+        server.main(["doctor", "--skip-td-check"])
+    assert exc.value.code != 0
+
+    captured = capsys.readouterr()
+    combined = captured.out + captured.err
+    assert "auth" in combined.lower() or "SHARED_SECRET" in combined
+
+
+def test_doctor_passes_auth_check_when_secret_set(monkeypatch, capsys):
+    """doctor's auth check must pass when required + secret set."""
+    monkeypatch.setenv("TD_MCP_REQUIRE_AUTH", "1")
+    monkeypatch.setenv("TD_MCP_SHARED_SECRET", "x" * 32)
+
+    with pytest.raises(SystemExit) as exc:
+        server.main(["doctor", "--skip-td-check"])
+    # Exit code is about overall doctor health (tox etc). The auth line itself
+    # must not be a FAIL; grep the output.
+    captured = capsys.readouterr()
+    combined = captured.out + captured.err
+    assert "auth_config" in combined
+    # FAIL marker should not be on the auth line.
+    auth_line = next(
+        (line for line in combined.splitlines() if "auth_config" in line), ""
+    )
+    assert "FAIL" not in auth_line
+
+
+def test_doctor_passes_auth_check_when_auth_disabled(monkeypatch, capsys):
+    monkeypatch.setenv("TD_MCP_REQUIRE_AUTH", "0")
+    monkeypatch.delenv("TD_MCP_SHARED_SECRET", raising=False)
+
+    with pytest.raises(SystemExit):
+        server.main(["doctor", "--skip-td-check"])
+    captured = capsys.readouterr()
+    combined = captured.out + captured.err
+    auth_line = next(
+        (line for line in combined.splitlines() if "auth_config" in line), ""
+    )
+    assert "FAIL" not in auth_line
 
 
 def test_runtime_health_from_payloads():

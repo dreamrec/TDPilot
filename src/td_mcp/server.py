@@ -68,6 +68,37 @@ def _find_repo_root() -> Path | None:
     return None
 
 
+_TRUTHY_REQUIRE_AUTH = {"1", "true", "yes", "on"}
+
+
+def _auth_required() -> bool:
+    return os.environ.get("TD_MCP_REQUIRE_AUTH", "0").strip().lower() in _TRUTHY_REQUIRE_AUTH
+
+
+def _auth_secret_present() -> bool:
+    return bool(os.environ.get("TD_MCP_SHARED_SECRET", "").strip())
+
+
+def verify_auth_config() -> None:
+    """Fail loud if auth is required but no shared secret is resolvable.
+
+    Prevents the misconfiguration where `.mcp.json` ships with
+    `TD_MCP_REQUIRE_AUTH=1` but the plugin install path never runs the
+    installer (install.sh / install.ps1) to generate a shared secret. Without
+    this check, the server starts happily and every authenticated request
+    returns 401 with no startup signal about why.
+    """
+    if not _auth_required():
+        return
+    if _auth_secret_present():
+        return
+    raise RuntimeError(
+        "TDPilot: TD_MCP_REQUIRE_AUTH=1 but TD_MCP_SHARED_SECRET is not set.\n"
+        "Run the installer (install.sh or install.ps1) to generate one, "
+        "or set TD_MCP_REQUIRE_AUTH=0 to disable auth (not recommended)."
+    )
+
+
 def _check_tcp_port(host: str, port: int, timeout: float) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.settimeout(timeout)
@@ -169,6 +200,23 @@ def _collect_doctor_report(*, timeout: float, skip_td_check: bool, strict: bool)
             "detail": f"transport={transport}, http={TD_HTTP_HOST}:{TD_HTTP_PORT}, ws={TD_WS_PORT}, exec_mode={TD_EXEC_MODE}",
         }
     )
+
+    # Auth config — fail-loud gate for the plugin-install misconfiguration where
+    # TD_MCP_REQUIRE_AUTH=1 is set but no shared secret is resolvable.
+    if _auth_required():
+        if _auth_secret_present():
+            auth_status = "pass"
+            auth_detail = "TD_MCP_REQUIRE_AUTH=1 with TD_MCP_SHARED_SECRET set"
+        else:
+            auth_status = "fail"
+            auth_detail = (
+                "TD_MCP_REQUIRE_AUTH=1 but TD_MCP_SHARED_SECRET is not set; "
+                "run install.sh/install.ps1 to generate one"
+            )
+    else:
+        auth_status = "pass"
+        auth_detail = "auth disabled (TD_MCP_REQUIRE_AUTH!=1)"
+    checks.append({"name": "auth_config", "status": auth_status, "detail": auth_detail})
 
     fail_count = sum(1 for item in checks if item["status"] == "fail")
     warn_count = sum(1 for item in checks if item["status"] == "warn")
@@ -360,6 +408,15 @@ def main(argv: list[str] | None = None) -> None:
     if command == "init":
         raise SystemExit(_run_init_command(args))
 
+    # Startup gate: refuse to run the server if auth is required but no secret
+    # is resolvable. Otherwise the transport comes up and every authenticated
+    # request fails with 401 for a reason the user can't see.
+    try:
+        verify_auth_config()
+    except RuntimeError as exc:
+        print(str(exc), file=sys.stderr)
+        raise SystemExit(2)
+
     _run_server()
 
 
@@ -372,6 +429,7 @@ __all__ = [
     "_apply_safety_to_set_params",
     "_build_profile_config",
     "_collect_doctor_report",
+    "verify_auth_config",
 ]
 
 

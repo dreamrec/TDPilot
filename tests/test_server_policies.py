@@ -37,3 +37,59 @@ def test_apply_safety_to_set_params_clamps_numeric_values():
     assert adjusted["amp"] == 1.0
     assert adjusted["seed"] == {"expr": "absTime.seconds"}
     assert warnings
+
+
+# ---------------------------------------------------------------------------
+# Auth startup config — regression for v1.4.3
+# .mcp.json ships with TD_MCP_REQUIRE_AUTH=1 and no secret; the plugin install
+# path reads it directly and never runs install.sh/install.ps1, so the server
+# would start happily and every authenticated request would 401. Fix:
+# verify_auth_config() raises loud at startup if required-but-missing.
+# ---------------------------------------------------------------------------
+
+
+def test_verify_auth_config_refuses_auth_required_without_secret(monkeypatch):
+    monkeypatch.setenv("TD_MCP_REQUIRE_AUTH", "1")
+    monkeypatch.delenv("TD_MCP_SHARED_SECRET", raising=False)
+
+    with pytest.raises(RuntimeError) as exc:
+        server.verify_auth_config()
+    msg = str(exc.value)
+    assert "TD_MCP_SHARED_SECRET" in msg
+    assert "install" in msg.lower()
+
+
+def test_verify_auth_config_accepts_auth_required_with_secret(monkeypatch):
+    monkeypatch.setenv("TD_MCP_REQUIRE_AUTH", "1")
+    monkeypatch.setenv("TD_MCP_SHARED_SECRET", "x" * 32)
+    server.verify_auth_config()  # must not raise
+
+
+def test_verify_auth_config_accepts_auth_disabled_without_secret(monkeypatch):
+    monkeypatch.setenv("TD_MCP_REQUIRE_AUTH", "0")
+    monkeypatch.delenv("TD_MCP_SHARED_SECRET", raising=False)
+    server.verify_auth_config()  # must not raise
+
+
+def test_verify_auth_config_accepts_auth_unset(monkeypatch):
+    monkeypatch.delenv("TD_MCP_REQUIRE_AUTH", raising=False)
+    monkeypatch.delenv("TD_MCP_SHARED_SECRET", raising=False)
+    server.verify_auth_config()  # must not raise
+
+
+def test_verify_auth_config_accepts_truthy_require_values(monkeypatch):
+    for value in ("1", "true", "yes", "TRUE", "Yes"):
+        monkeypatch.setenv("TD_MCP_REQUIRE_AUTH", value)
+        monkeypatch.setenv("TD_MCP_SHARED_SECRET", "secret-value")
+        server.verify_auth_config()
+
+        monkeypatch.delenv("TD_MCP_SHARED_SECRET", raising=False)
+        with pytest.raises(RuntimeError):
+            server.verify_auth_config()
+
+
+def test_verify_auth_config_treats_whitespace_secret_as_missing(monkeypatch):
+    monkeypatch.setenv("TD_MCP_REQUIRE_AUTH", "1")
+    monkeypatch.setenv("TD_MCP_SHARED_SECRET", "   ")
+    with pytest.raises(RuntimeError):
+        server.verify_auth_config()
