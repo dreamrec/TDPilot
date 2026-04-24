@@ -74,7 +74,7 @@ Using Claude Desktop instead of Claude Code? See [`docs/INSTALL_CLAUDE_PLUGIN.md
 
 ## Start Here: Core Workflow
 
-You don't need all 92 tools. Start with these and expand as needed:
+You don't need all 97 tools. Start with these and expand as needed:
 
 | Step | Tools | What You're Doing |
 |------|-------|-------------------|

@@ -6,7 +6,7 @@
 [![license](https://img.shields.io/badge/license-MIT-blue)](https://github.com/dreamrec/TDPilot/blob/main/LICENSE)
 [![MCP tools](https://img.shields.io/badge/MCP%20tools-92-blueviolet)](https://github.com/dreamrec/TDPilot/blob/main/docs/API_REFERENCE.md)
 
-AI copilot for TouchDesigner — 92 tools for full live control via MCP, with technique memory, POPx inspection, project lifecycle control, and custom parameter authoring.
+AI copilot for TouchDesigner — 97 tools for full live control via MCP, with technique memory, POPx inspection, project lifecycle control, and custom parameter authoring.
 
 ## Quick start
 

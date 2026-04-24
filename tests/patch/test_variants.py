@@ -55,15 +55,18 @@ def test_unknown_strategy_raises():
 
 
 def test_non_numeric_params_untouched():
-    base = _plan([
-        PatchOperation(
-            kind="set_params", target="/p/n",
-            args={"params": {"freq": 2.0, "label": "hello", "enabled": True}},
-        )
-    ])
+    base = _plan(
+        [
+            PatchOperation(
+                kind="set_params",
+                target="/p/n",
+                args={"params": {"freq": 2.0, "label": "hello", "enabled": True}},
+            )
+        ]
+    )
     variants, _ = generate_variants(base, n=1, strategies=["param_jitter"], seed=0)
     params = variants[0].operations[0].args["params"]
-    assert params["label"] == "hello"   # untouched
-    assert params["enabled"] is True    # untouched
-    assert params["freq"] != 2.0         # jittered
-    assert 1.4 <= params["freq"] <= 2.6   # within ±30%
+    assert params["label"] == "hello"  # untouched
+    assert params["enabled"] is True  # untouched
+    assert params["freq"] != 2.0  # jittered
+    assert 1.4 <= params["freq"] <= 2.6  # within ±30%

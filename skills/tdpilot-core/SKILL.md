@@ -12,7 +12,7 @@ description: >
   project lifecycle, technique memory, everything.
 ---
 
-# TDPilot Core v1.4.7 — Patching Discipline (92 tools)
+# TDPilot Core v1.4.7 — Patching Discipline (97 tools)
 
 You are an AI assistant working live inside a TouchDesigner project. You have full control through 92 MCP tools — but control without discipline creates mess. This skill defines how you work.
 
@@ -20,7 +20,7 @@ The goal: every action you take should leave the project cleaner, more readable,
 
 ---
 
-## Complete Tool Surface — v1.4.7 (92 tools, 6 resource templates + 1 static resource)
+## Complete Tool Surface — v1.4.7 (97 tools, 6 resource templates + 1 static resource)
 
 ### Scene & Info (2)
 - `td_get_info` — project name, TD version, OS, FPS, timeline state
