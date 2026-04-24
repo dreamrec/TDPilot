@@ -176,3 +176,115 @@ class TestRestrictedUnchanged:
     def test_restricted_still_blocks_tokens(self):
         result = _restricted_exec_violation("open('/etc/passwd')")
         assert result is not None
+
+
+# ---------------------------------------------------------------------------
+# Fix #6 (v1.4.3) — timeout_ms field on ExecPythonInput and forwarding
+# through td_exec_python to the TD-side exec endpoint.
+# ---------------------------------------------------------------------------
+
+
+class TestExecPythonInputSchema:
+    """ExecPythonInput must expose a bounded optional timeout_ms field."""
+
+    def test_timeout_ms_field_declared(self):
+        from td_mcp.models._legacy import ExecPythonInput
+
+        assert "timeout_ms" in ExecPythonInput.model_fields
+
+    def test_timeout_ms_defaults_to_none(self):
+        from td_mcp.models._legacy import ExecPythonInput
+
+        assert ExecPythonInput(code="pass").timeout_ms is None
+
+    def test_timeout_ms_accepts_bounded_int(self):
+        from td_mcp.models._legacy import ExecPythonInput
+
+        assert ExecPythonInput(code="pass", timeout_ms=100).timeout_ms == 100
+        assert ExecPythonInput(code="pass", timeout_ms=5000).timeout_ms == 5000
+        assert ExecPythonInput(code="pass", timeout_ms=60000).timeout_ms == 60000
+
+    def test_timeout_ms_rejects_below_minimum(self):
+        from td_mcp.models._legacy import ExecPythonInput
+
+        with pytest.raises(Exception):
+            ExecPythonInput(code="pass", timeout_ms=50)
+        with pytest.raises(Exception):
+            ExecPythonInput(code="pass", timeout_ms=99)
+
+    def test_timeout_ms_rejects_above_maximum(self):
+        from td_mcp.models._legacy import ExecPythonInput
+
+        with pytest.raises(Exception):
+            ExecPythonInput(code="pass", timeout_ms=60001)
+        with pytest.raises(Exception):
+            ExecPythonInput(code="pass", timeout_ms=120000)
+
+
+class _ExecClient:
+    """Fake TD client that records the last request for forwarding tests."""
+
+    def __init__(self) -> None:
+        self.last_endpoint: str | None = None
+        self.last_body: dict | None = None
+
+    async def request(self, endpoint: str, body: dict | None = None):
+        self.last_endpoint = endpoint
+        self.last_body = body or {}
+        return {"status": "ok"}
+
+
+def _make_exec_ctx(client):
+    """Minimal Context-like object that passes _get_client via monkeypatch."""
+    from types import SimpleNamespace
+
+    lifespan_state = {"services": SimpleNamespace(td_client=client)}
+    return SimpleNamespace(
+        request_context=SimpleNamespace(
+            lifespan_context=lifespan_state,
+            lifespan_state=lifespan_state,
+        )
+    )
+
+
+class TestExecPythonForwarding:
+    """td_exec_python must forward timeout_ms to the TD-side exec endpoint."""
+
+    @pytest.mark.asyncio
+    async def test_forwards_timeout_ms_when_set(self, monkeypatch):
+        import td_mcp.tool_registry as registry
+        from td_mcp.models._legacy import ExecPythonInput
+
+        # Permit the exec so we reach the client.request() call.
+        monkeypatch.setenv("TD_MCP_EXEC_MODE", "full")
+
+        client = _ExecClient()
+        monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
+
+        await registry.td_exec_python(
+            ExecPythonInput(code="pass", timeout_ms=7500),
+            _make_exec_ctx(client),
+        )
+        assert client.last_endpoint == "exec"
+        assert client.last_body is not None
+        assert client.last_body.get("timeout_ms") == 7500
+        assert client.last_body.get("code") == "pass"
+
+    @pytest.mark.asyncio
+    async def test_omits_timeout_ms_when_none(self, monkeypatch):
+        """When the caller doesn't set timeout_ms the key must not be sent,
+        so the TD-side default takes effect."""
+        import td_mcp.tool_registry as registry
+        from td_mcp.models._legacy import ExecPythonInput
+
+        monkeypatch.setenv("TD_MCP_EXEC_MODE", "full")
+
+        client = _ExecClient()
+        monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
+
+        await registry.td_exec_python(
+            ExecPythonInput(code="pass"),
+            _make_exec_ctx(client),
+        )
+        assert client.last_body is not None
+        assert "timeout_ms" not in client.last_body

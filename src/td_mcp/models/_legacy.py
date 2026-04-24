@@ -260,6 +260,16 @@ class ExecPythonInput(BaseModel):
         min_length=1,
         max_length=50000,
     )
+    timeout_ms: int | None = Field(
+        default=None,
+        description=(
+            "Optional per-call execution timeout in milliseconds. "
+            "When omitted, TouchDesigner uses its configured default. "
+            "Bounds: 100-60000 ms."
+        ),
+        ge=100,
+        le=60000,
+    )
 
 # ─────────────────────────────────────────────────────────────
 # Screenshot / Visual

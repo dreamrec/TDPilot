@@ -2080,19 +2080,22 @@ async def td_exec_python(params: ExecPythonInput, ctx: Context) -> str:
     try:
         _enforce_exec_mode(params.code)
         mode = _current_exec_mode()
-        data = await _get_client(ctx).request(
-            "exec",
-            {
-                "code": params.code,
-                "exec_mode": mode,
-            },
-        )
+        body: dict[str, Any] = {
+            "code": params.code,
+            "exec_mode": mode,
+        }
+        # Forward the per-call timeout only when the caller set one. Omitting
+        # the key lets the TD-side choose its configured default.
+        if params.timeout_ms is not None:
+            body["timeout_ms"] = params.timeout_ms
+        data = await _get_client(ctx).request("exec", body)
         _audit_log(
             ctx,
             "td_exec_python",
             {
                 "exec_mode": mode,
                 "code_length": len(params.code),
+                "timeout_ms": params.timeout_ms,
             },
         )
         return _as_json_output(data)
