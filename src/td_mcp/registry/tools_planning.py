@@ -224,6 +224,7 @@ async def td_preflight_patch(
     and that there are no name conflicts with existing nodes. Returns a validation
     report with any warnings or errors found.
     """
+    # TODO(v1.5.1): delegate to patch.preview_plan
     finish = _tr._start_tool(ctx, "td_preflight_patch")
     try:
         client = _tr._get_client(ctx)
