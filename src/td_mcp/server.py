@@ -332,6 +332,7 @@ def _build_profile_config(
     *,
     auth_required: bool = False,
     shared_secret: str | None = None,
+    exec_mode: str | None = None,
 ) -> dict[str, Any]:
     """Build an MCP client profile for TDPilot.
 
@@ -345,8 +346,13 @@ def _build_profile_config(
         a secret per machine.
       - `auth_required=True` + `shared_secret=None`: embeds
         `TD_MCP_REQUIRE_AUTH=1` only. The resulting config will fail at
-        server startup via verify_auth_config — surfaced deliberately so
-        callers don't ship a misconfigured profile.
+        server startup via verify_auth_config unless the caller has also
+        arranged for a secret via env, .tdpilot.env, or auth_bootstrap
+        autogeneration.
+
+    v1.4.5: `exec_mode` lets callers bake `TD_MCP_EXEC_MODE=<value>` into
+    the env. When `auth_required=True` and the caller doesn't override,
+    defaults to "restricted" to match the shipped `.mcp.json` posture.
     """
     env: dict[str, str] = {
         "TD_MCP_HOST": "127.0.0.1",
@@ -357,6 +363,11 @@ def _build_profile_config(
         env["TD_MCP_REQUIRE_AUTH"] = "1"
         if shared_secret:
             env["TD_MCP_SHARED_SECRET"] = shared_secret
+        # Default exec_mode when auth is on — matches shipped .mcp.json.
+        if exec_mode is None:
+            exec_mode = "restricted"
+    if exec_mode:
+        env["TD_MCP_EXEC_MODE"] = exec_mode
     profile: dict[str, Any] = {
         "mcpServers": {
             server_name: {
@@ -410,23 +421,77 @@ def _merge_profile(existing: dict[str, Any], profile: dict[str, Any]) -> dict[st
 
 
 def _run_init_command(args: argparse.Namespace) -> int:
+    """Validate flag combinations, resolve the secret, build the profile.
+
+    v1.4.5 flag rules (enforced here, not by argparse, because argparse
+    can't express "X requires Y"):
+
+      - `--generate-secret` without `--auth` → exit 2
+      - `--shared-secret` without `--auth` → exit 2
+      - `--generate-secret` AND `--shared-secret` together → exit 2
+      - `--auth` alone (no secret flag) → generate a secret by default
+
+    Secret notices go to STDERR when `--print-only` so the JSON profile on
+    stdout stays pipeable through `jq`. File-write mode keeps notices on
+    stdout for user visibility.
+    """
+    auth = bool(getattr(args, "auth", False))
+    generate_flag = bool(getattr(args, "generate_secret", False))
+    supplied_secret = getattr(args, "shared_secret", "") or ""
+    print_only = bool(getattr(args, "print_only", False))
+
+    # Validate flag combinations before touching anything
+    if generate_flag and not auth:
+        print(
+            "[tdpilot] --generate-secret requires --auth. Aborting.",
+            file=sys.stderr,
+        )
+        return 2
+    if supplied_secret and not auth:
+        print(
+            "[tdpilot] --shared-secret requires --auth. Aborting.",
+            file=sys.stderr,
+        )
+        return 2
+    if generate_flag and supplied_secret:
+        print(
+            "[tdpilot] --generate-secret and --shared-secret are mutually exclusive. Aborting.",
+            file=sys.stderr,
+        )
+        return 2
+
+    # Resolve the secret
     shared_secret: str | None = None
-    if getattr(args, "auth", False):
-        if getattr(args, "shared_secret", None):
-            shared_secret = args.shared_secret
-        elif getattr(args, "generate_secret", False):
+    generated = False
+    if auth:
+        if supplied_secret:
+            shared_secret = supplied_secret
+        else:
+            # v1.4.5: --auth alone (or --auth + --generate-secret) now
+            # generates a secret by default. Pre-v1.4.5 you could get a
+            # "require auth + no secret" config that tripped the startup
+            # gate — deliberate fail-loud, but bad CLI UX.
             shared_secret = _generate_shared_secret()
-            print(f"[tdpilot] Generated shared secret: {shared_secret}")
-            print("[tdpilot] Keep this secret safe — it grants full TD control.")
-        # else: auth=True with no secret is emitted intentionally so the server
-        # startup gate (verify_auth_config) trips loudly rather than silently.
+            generated = True
 
     profile = _build_profile_config(
         args.client,
         args.server_name,
-        auth_required=bool(getattr(args, "auth", False)),
+        auth_required=auth,
         shared_secret=shared_secret,
     )
+
+    # Emit secret notice BEFORE writing the profile, but route it to
+    # stderr when --print-only so stdout is pure JSON.
+    if generated:
+        notice = (
+            "[tdpilot] Generated a shared secret; keep the output safe — "
+            "it grants full TD control."
+        )
+        if print_only:
+            print(notice, file=sys.stderr)
+        else:
+            print(notice)
 
     if args.print_only:
         print(json.dumps(profile, indent=2))

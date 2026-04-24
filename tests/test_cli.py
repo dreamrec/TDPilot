@@ -202,6 +202,12 @@ def test_generate_shared_secret_is_unique_per_call():
 
 
 def test_init_with_auth_and_generate_writes_secret(tmp_path, capsys):
+    """--auth + --generate-secret bakes the secret into the config file.
+
+    v1.4.5 tightening: the secret is NOT echoed to stdout anymore (it's a
+    security smell). The config file is the source of truth. The stdout
+    line just confirms that a secret was generated.
+    """
     out = tmp_path / "config.json"
     args = argparse.Namespace(
         client="generic",
@@ -218,9 +224,12 @@ def test_init_with_auth_and_generate_writes_secret(tmp_path, capsys):
     env = data["mcpServers"]["td"]["env"]
     assert env["TD_MCP_REQUIRE_AUTH"] == "1"
     assert env["TD_MCP_SHARED_SECRET"]  # non-empty
-    # Secret was printed to stdout for the user to save
+    # v1.4.5: stdout confirms a secret was generated but does NOT leak it.
     printed = capsys.readouterr().out
-    assert env["TD_MCP_SHARED_SECRET"] in printed
+    assert "Generated a shared secret" in printed
+    assert env["TD_MCP_SHARED_SECRET"] not in printed, (
+        "v1.4.5: secret must not be echoed to stdout — it's only in the config file"
+    )
 
 
 def test_init_with_auth_and_supplied_secret(tmp_path):
@@ -239,6 +248,87 @@ def test_init_with_auth_and_supplied_secret(tmp_path):
     data = json.loads(out.read_text())
     env = data["mcpServers"]["td"]["env"]
     assert env["TD_MCP_SHARED_SECRET"] == "pre-provisioned-secret-" + "x" * 32
+
+
+# ---------------------------------------------------------------------------
+# v1.4.5 Fix 4: init --print-only keeps stdout machine-readable.
+# Flag-combination validation, default-generate-with-auth, secret notices
+# on stderr under --print-only, and TD_MCP_EXEC_MODE=restricted baked in
+# when auth is enabled.
+# ---------------------------------------------------------------------------
+
+
+def _init_main(argv: list[str]):
+    """Invoke server.main(['init', ...argv]) and return the SystemExit code."""
+    try:
+        server.main(["init"] + argv)
+    except SystemExit as exc:
+        return exc.code
+    return 0
+
+
+def test_init_print_only_stdout_is_pure_json(tmp_path, capsys):
+    """--print-only --auth --generate-secret: stdout MUST parse as JSON.
+
+    Pre-v1.4.5 the generated-secret notice was printed to stdout before the
+    JSON, so `tdpilot init --print-only --auth --generate-secret | jq .`
+    silently broke. Pipe discipline matters.
+    """
+    code = _init_main(["--print-only", "--auth", "--generate-secret"])
+    assert code == 0
+    captured = capsys.readouterr()
+    # Stdout must parse as JSON, end-to-end
+    payload = json.loads(captured.out)
+    env = payload["mcpServers"]["touchdesigner"]["env"]
+    assert env["TD_MCP_REQUIRE_AUTH"] == "1"
+    assert env["TD_MCP_SHARED_SECRET"]
+    # Secret notice went to stderr
+    assert "Generated" in captured.err or "secret" in captured.err.lower()
+    # The secret itself may or may not appear — but it must NOT be on stdout
+    # ahead of the JSON
+    assert env["TD_MCP_SHARED_SECRET"] not in captured.out.split("\n")[0]
+
+
+def test_init_generate_secret_without_auth_fails(capsys):
+    """--generate-secret without --auth must exit non-zero, not silently ignore."""
+    code = _init_main(["--generate-secret"])
+    assert code != 0
+
+
+def test_init_shared_secret_without_auth_fails(capsys):
+    """--shared-secret without --auth must exit non-zero."""
+    code = _init_main(["--shared-secret", "some-value"])
+    assert code != 0
+
+
+def test_init_generate_and_shared_secret_together_fails(capsys):
+    """Passing both --generate-secret and --shared-secret is ambiguous."""
+    code = _init_main(["--auth", "--generate-secret", "--shared-secret", "x" * 32])
+    assert code != 0
+
+
+def test_init_auth_alone_generates_secret_by_default(tmp_path, capsys):
+    """v1.4.5 ergonomics: `--auth` with no explicit secret flag should
+    generate one by default. Pre-v1.4.5 it produced a "require auth + no
+    secret" config that would trip the server startup gate."""
+    out = tmp_path / "config.json"
+    code = _init_main(["--auth", "--output", str(out), "--force"])
+    assert code == 0
+    data = json.loads(out.read_text())
+    env = data["mcpServers"]["touchdesigner"]["env"]
+    assert env["TD_MCP_REQUIRE_AUTH"] == "1"
+    assert env["TD_MCP_SHARED_SECRET"], "--auth alone should mint a secret now"
+
+
+def test_init_auth_config_includes_exec_mode_restricted(tmp_path):
+    """Plan §4.4: when auth is enabled, default exec mode should be
+    `restricted` unless the user overrides. Matches .mcp.json posture."""
+    out = tmp_path / "config.json"
+    code = _init_main(["--auth", "--output", str(out), "--force"])
+    assert code == 0
+    data = json.loads(out.read_text())
+    env = data["mcpServers"]["touchdesigner"]["env"]
+    assert env.get("TD_MCP_EXEC_MODE") == "restricted"
 
 
 def test_runtime_health_from_payloads():
