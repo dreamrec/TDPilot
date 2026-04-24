@@ -79,3 +79,30 @@ async def td_patch_plan(
         return format_tool_error(exc)
     finally:
         finish()
+
+
+@mcp.tool(name="td_patch_preview")
+async def td_patch_preview(
+    ctx: Context,
+    plan: Annotated[
+        dict[str, Any],
+        Field(description="PatchPlan dict (from td_patch_plan)"),
+    ],
+) -> dict[str, Any]:
+    """Preview what a patch will change. Checks live state; does not mutate."""
+    finish = _tr._start_tool(ctx, "td_patch_preview")
+    try:
+        try:
+            parsed = PatchPlan.model_validate(plan)
+        except ValidationError as exc:
+            return {"success": False, "error": f"invalid plan: {exc}"}
+        client = _tr._get_client(ctx)
+        preview_dict = await patch.preview_plan(client, parsed)
+        preview = PatchPreview(**preview_dict)
+        _tr._audit_log(ctx, "td_patch_preview", {"plan_id": parsed.id})
+        return {"success": True, "preview": preview.model_dump(mode="json")}
+    except Exception as exc:  # noqa: BLE001
+        _tr._record_tool_error(ctx, "td_patch_preview")
+        return format_tool_error(exc)
+    finally:
+        finish()

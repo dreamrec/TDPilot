@@ -163,3 +163,74 @@ def _derive_label(intent: str | None, source: str) -> str:
     if source == "recipe":
         return "td patch: recipe"
     return "td patch"
+
+
+async def preview_plan(
+    td_client,
+    plan: PatchPlan,
+) -> dict[str, Any]:
+    """Return a PatchPreview-shaped dict (not the model — avoids circular
+    import; caller wraps). See spec §5.2 + §6.
+
+    live_risk_flags populated from live TD state:
+      - target-missing:<path>  if target_root cannot be queried
+      - name-conflict:<path>   if any create_node name matches an existing
+                               child of its target (parent)
+    """
+    live_flags: list[str] = []
+
+    existing_by_parent: dict[str, set[str]] = {}
+
+    async def children(path: str) -> set[str]:
+        if path in existing_by_parent:
+            return existing_by_parent[path]
+        try:
+            resp = await td_client.request("nodes", {"path": path, "limit": 500})
+            nodes = resp if isinstance(resp, list) else resp.get("nodes", [])
+            names = {n.get("name", "") for n in nodes if isinstance(n, dict)}
+        except Exception:  # noqa: BLE001
+            live_flags.append(f"target-missing:{path}")
+            names = set()
+        existing_by_parent[path] = names
+        return names
+
+    # Probe the plan's target_root
+    await children(plan.target_root)
+
+    # Check every create_node for name collision with its parent's children
+    for op in plan.operations:
+        if op.kind != "create_node":
+            continue
+        parent = op.target or plan.target_root
+        name = op.args.get("name")
+        if not name:
+            continue
+        siblings = await children(parent)
+        if name in siblings:
+            live_flags.append(f"name-conflict:{parent}/{name}")
+
+    summary = _summarize(plan)
+    return {
+        "plan_id": plan.id,
+        "summary": summary,
+        "risk_flags": list(plan.risk_flags),
+        "live_risk_flags": live_flags,
+        "required_ops": list(plan.required_ops),
+        "op_count": len(plan.operations),
+    }
+
+
+def _summarize(plan: PatchPlan) -> str:
+    n_create = sum(1 for o in plan.operations if o.kind == "create_node")
+    n_params = sum(1 for o in plan.operations if o.kind == "set_params")
+    n_connect = sum(1 for o in plan.operations if o.kind == "connect")
+    parts = []
+    if n_create:
+        parts.append(f"create {n_create} node(s)")
+    if n_params:
+        parts.append(f"set params on {n_params} node(s)")
+    if n_connect:
+        parts.append(f"make {n_connect} connection(s)")
+    if not parts:
+        return f"empty plan at {plan.target_root}"
+    return f"at {plan.target_root}: " + "; ".join(parts)

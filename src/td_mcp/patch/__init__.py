@@ -14,7 +14,7 @@ from td_mcp.patch.applier import (
     PatchOperationArgsError,
     apply_plan,
 )
-from td_mcp.patch.planner import build_plan
+from td_mcp.patch.planner import build_plan, preview_plan
 from td_mcp.patch.undo_sentinel import UndoBlockSentinel
 from td_mcp.patch.validator import validate_target
 from td_mcp.patch.variants import generate_variants
@@ -26,5 +26,6 @@ __all__ = [
     "apply_plan",
     "build_plan",
     "generate_variants",
+    "preview_plan",
     "validate_target",
 ]

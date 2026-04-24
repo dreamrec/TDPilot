@@ -27,3 +27,8 @@ def test_td_patch_plan_registered():
     props = t.inputSchema.get("properties", {})
     assert "target_root" in props
     assert list(props.keys()) != ["params"]
+
+
+def test_td_patch_preview_registered():
+    t = _find_tool("td_patch_preview")
+    assert "plan" in t.inputSchema.get("properties", {})
