@@ -9,9 +9,22 @@ for the authoritative design.
 
 from __future__ import annotations
 
+from td_mcp.patch.applier import (
+    NestedBlockError,
+    PatchOperationArgsError,
+    apply_plan,
+)
 from td_mcp.patch.planner import build_plan
 from td_mcp.patch.undo_sentinel import UndoBlockSentinel
 from td_mcp.patch.validator import validate_target
 from td_mcp.patch.variants import generate_variants
 
-__all__ = ["UndoBlockSentinel", "build_plan", "generate_variants", "validate_target"]
+__all__ = [
+    "NestedBlockError",
+    "PatchOperationArgsError",
+    "UndoBlockSentinel",
+    "apply_plan",
+    "build_plan",
+    "generate_variants",
+    "validate_target",
+]
