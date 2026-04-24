@@ -558,6 +558,18 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
     command = args.command or "run"
 
+    # Run auth bootstrap BEFORE dispatching the command so `doctor` sees the
+    # same environment `run` would — otherwise autogeneration works for the
+    # server but doctor reports a misleading auth_config FAIL telling the
+    # user to run install.sh, when autogen was supposed to handle it.
+    # Skip for `init` because `init` is the config-generator, not a server
+    # that consumes the secret; loading / minting at init time would be a
+    # side-effect on the wrong path.
+    if command != "init":
+        from td_mcp import auth_bootstrap
+
+        auth_bootstrap.bootstrap_auth()
+
     if command == "doctor":
         report = _collect_doctor_report(
             timeout=max(0.2, float(args.timeout)),
@@ -572,15 +584,6 @@ def main(argv: list[str] | None = None) -> None:
 
     if command == "init":
         raise SystemExit(_run_init_command(args))
-
-    # Auth bootstrap (v1.4.5): load ~/.tdpilot/.tdpilot.env if present and,
-    # when TD_MCP_REQUIRE_AUTH=1 + TD_MCP_AUTOGENERATE_SECRET=1 are set with
-    # no secret resolvable, mint one and persist it. Without this, the fresh
-    # plugin install path (which can't run install.sh) deterministically
-    # failed startup after the v1.4.3 fail-loud gate landed.
-    from td_mcp import auth_bootstrap
-
-    auth_bootstrap.bootstrap_auth()
 
     # Startup gate: refuse to run the server if auth is required but no secret
     # is resolvable. Reached only when the caller declines autogeneration —

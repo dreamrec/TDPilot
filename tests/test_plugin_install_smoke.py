@@ -96,19 +96,34 @@ def test_plugin_install_unconfigured_trips_auth_gate(monkeypatch):
     assert "install" in str(exc.value).lower()
 
 
-def test_plugin_install_unconfigured_doctor_fails(monkeypatch, capsys):
-    """Shipped .mcp.json + no external secret → doctor exits non-zero
-    and the auth_config line is marked FAIL."""
+def test_plugin_install_unconfigured_doctor_succeeds_via_autogen(monkeypatch, capsys, tmp_path):
+    """Shipped .mcp.json env (which has TD_MCP_AUTOGENERATE_SECRET=1) +
+    isolated env-file location + no external secret → bootstrap_auth
+    mints a secret and doctor's auth_config line is PASS.
+
+    v1.4.5 semantics reversal vs v1.4.4: previously this test asserted
+    doctor FAILED because nothing was bootstrapping the secret. The v1.4.5
+    fix adds autogen via bootstrap_auth, which is now called before the
+    doctor report collection, so this same starting state now succeeds.
+    That's the point — it's the whole v1.4.5 regression fix.
+    """
     env = _shipped_mcp_env()
     _apply_env(monkeypatch, env, secret=None)
+    # Isolate the env-file write so we don't touch the user's real
+    # ~/.tdpilot/.tdpilot.env.
+    monkeypatch.setenv("TDPILOT_ENV_FILE", str(tmp_path / ".tdpilot.env"))
 
     with pytest.raises(SystemExit) as exc:
         server.main(["doctor", "--skip-td-check"])
-    assert exc.value.code != 0
-
+    assert exc.value.code == 0, (
+        "v1.4.5: shipped .mcp.json env with autogen should produce a "
+        "working doctor run; if this fails the bootstrap integration regressed"
+    )
     out = capsys.readouterr().out
     auth_line = next((line for line in out.splitlines() if "auth_config" in line), "")
-    assert "FAIL" in auth_line
+    assert "PASS" in auth_line
+    # Sanity: the env file was created in tmp, not in the user's home
+    assert (tmp_path / ".tdpilot.env").exists()
 
 
 def test_plugin_install_with_secret_passes_gate(monkeypatch):
@@ -118,10 +133,14 @@ def test_plugin_install_with_secret_passes_gate(monkeypatch):
     server.verify_auth_config()  # must not raise
 
 
-def test_plugin_install_with_secret_doctor_auth_passes(monkeypatch, capsys):
+def test_plugin_install_with_secret_doctor_auth_passes(monkeypatch, capsys, tmp_path):
     """Shipped .mcp.json + external secret → doctor's auth_config line is PASS."""
     env = _shipped_mcp_env()
     _apply_env(monkeypatch, env, secret="plugin-install-secret-" + "x" * 32)
+    # Isolate env-file writes (shipped env has AUTOGEN=1 which would touch
+    # the real ~/.tdpilot/.tdpilot.env; here the secret is already set via
+    # process env so bootstrap is a no-op, but we isolate defensively).
+    monkeypatch.setenv("TDPILOT_ENV_FILE", str(tmp_path / ".tdpilot.env"))
 
     with pytest.raises(SystemExit):
         server.main(["doctor", "--skip-td-check"])
@@ -175,6 +194,40 @@ def test_fresh_plugin_install_end_to_end_bootstraps_and_passes(monkeypatch, tmp_
     assert env_file.exists()
     # The gate now passes
     server.verify_auth_config()
+
+
+def test_doctor_also_runs_bootstrap_before_auth_check(monkeypatch, tmp_path):
+    """v1.4.5 live-test regression: `tdpilot doctor` must call
+    bootstrap_auth() before collecting the report, otherwise the
+    auth_config line lies about needing install.sh when autogen was
+    supposed to handle it.
+
+    Caught by running (before the fix):
+      TDPILOT_ENV_FILE=<tmp> TD_MCP_AUTOGENERATE_SECRET=1 \\
+      TD_MCP_REQUIRE_AUTH=1 uv run tdpilot doctor --skip-td-check
+    → auth_config FAIL even though autogen should have minted a secret.
+
+    The bootstrap code path was only wired into the `run` command, not
+    `doctor`. v1.4.5 moves bootstrap to the top of main() for all
+    non-init commands.
+    """
+    env_file = tmp_path / ".tdpilot.env"
+    monkeypatch.setenv("TD_MCP_REQUIRE_AUTH", "1")
+    monkeypatch.setenv("TD_MCP_AUTOGENERATE_SECRET", "1")
+    monkeypatch.delenv("TD_MCP_SHARED_SECRET", raising=False)
+    monkeypatch.setenv("TDPILOT_ENV_FILE", str(env_file))
+
+    with pytest.raises(SystemExit) as exc:
+        server.main(["doctor", "--skip-td-check"])
+
+    # Bootstrap ran → secret minted → auth_config PASS → doctor exits 0
+    assert exc.value.code == 0, (
+        "doctor exited non-zero; bootstrap_auth probably isn't wired "
+        "into the doctor command path"
+    )
+    assert env_file.exists(), (
+        "doctor did not trigger bootstrap_auth — env file never created"
+    )
 
 
 def test_fresh_plugin_install_with_autogen_disabled_still_trips_gate(monkeypatch, tmp_path):

@@ -55,11 +55,17 @@ _TRUTHY = {"1", "true", "yes", "on"}
 def default_env_file() -> Path:
     """Canonical cross-process env-file location.
 
-    ~/.tdpilot/.tdpilot.env — user-scoped, survives plugin reinstalls,
-    found by both the Python MCP server and the TD-side tdpilot_startup.py
-    (the latter falls back to this path when ``<repo_root>/.tdpilot.env``
-    is missing — see td_component/tdpilot_startup.py).
+    Default: ``~/.tdpilot/.tdpilot.env`` — user-scoped, survives plugin
+    reinstalls, found by both the Python MCP server and the TD-side
+    tdpilot_startup.py.
+
+    Override via ``TDPILOT_ENV_FILE=<path>`` env var — primarily for
+    isolated test runs that must not touch the real user file, but also
+    useful for CI, multi-profile setups, or custom install roots.
     """
+    override = (os.environ.get("TDPILOT_ENV_FILE") or "").strip()
+    if override:
+        return Path(override).expanduser()
     return Path.home() / ".tdpilot" / ".tdpilot.env"
 
 
