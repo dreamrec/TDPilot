@@ -3869,19 +3869,41 @@ async def td_get_param_help(
     # Try to get operator card for enrichment
     idx = _get_card_index(ctx)
     card_param = None
+    card_source = None
     try:
         info = await client.request("node/detail", {"path": node_path})
         op_type = info.get("type", "")
         card = idx.get_operator(op_type)
         if card:
-            for kp in card.get("key_params", []):
-                if kp.get("name") == param_name:
+            # v1.4.5 Fix 3: accept both CardIndex JSON cards (key_params)
+            # and DocsBrain cards (key_params added via normalization), with
+            # case-insensitive matching so "outputResolution" and
+            # "outputresolution" resolve to the same entry.
+            param_name_lc = param_name.lower()
+            candidates = card.get("key_params") or []
+            # Fallback: if a card somehow has only `parameters` (list of
+            # strings), synthesize a minimal key_params list so the match
+            # can still fire. Defensive.
+            if not candidates and card.get("parameters"):
+                candidates = [
+                    {"name": p, "source": "parameters-fallback"}
+                    if isinstance(p, str)
+                    else p
+                    for p in card["parameters"]
+                ]
+            for kp in candidates:
+                if not isinstance(kp, dict):
+                    continue
+                if str(kp.get("name", "")).lower() == param_name_lc:
                     card_param = kp
+                    card_source = kp.get("source", "local_card")
                     break
     except Exception:
         pass
     svc = _get_services(ctx)
-    provenance = Provenance(source="local_card", td_build=svc.td_build)
+    # Provenance reflects where the card data actually came from so callers
+    # can tell CardIndex JSON cards apart from DocsBrain-normalized ones.
+    provenance = Provenance(source=card_source or "local_card", td_build=svc.td_build)
     return {"live": live_param, "card_param": card_param, "provenance": provenance.to_dict()}
 
 

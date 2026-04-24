@@ -345,3 +345,45 @@ def test_card_type_unknown_passes_through_unchanged(brain: DocsBrain):
     # "some_new_type" is not in the alias table; it should reach the DB filter
     # unchanged and produce zero hits (since no chunk has that doc_type).
     assert brain.search("composite", card_types=["some_new_type"]) == []
+
+
+# ---------------------------------------------------------------------------
+# v1.4.5 Fix 3: DocsBrain.get_operator() must normalize parameter shape.
+# Pre-v1.4.5 it returned `parameters: list[str]` but CardIndex / td_get_param_help
+# expected `key_params: list[dict]`. When DocsBrain was active, parameter
+# help silently returned card_param: None.
+# ---------------------------------------------------------------------------
+
+
+def test_get_operator_returns_key_params_in_cardindex_shape(brain: DocsBrain):
+    """Docsbrain's get_operator must expose `key_params` as a list of dicts
+    with `name`, mirroring the CardIndex JSON card shape so
+    td_get_param_help can iterate over it."""
+    result = brain.get_operator("compositeTOP")
+    assert result is not None
+    assert "key_params" in result, "DocsBrain must expose key_params (was previously only `parameters`)"
+    assert isinstance(result["key_params"], list)
+    # Preserves raw parameters too (no information loss)
+    assert "parameters" in result
+    # Each key_param is a dict with at minimum `name` and `source`
+    for kp in result["key_params"]:
+        assert isinstance(kp, dict)
+        assert "name" in kp
+        assert kp.get("source") == "docsbrain"
+
+
+def test_get_operator_key_params_names_match_parameters(brain: DocsBrain):
+    """Every parameter name from the raw list appears in key_params."""
+    result = brain.get_operator("compositeTOP")
+    assert result is not None
+    param_names = {p if isinstance(p, str) else p.get("name") for p in result["parameters"]}
+    key_param_names = {kp["name"] for kp in result["key_params"]}
+    # Normalized names come from the raw parameter list
+    assert key_param_names.issubset(param_names), (
+        f"key_params {key_param_names} should be a subset of parameters {param_names}"
+    )
+
+
+def test_get_operator_missing_still_returns_none(brain: DocsBrain):
+    """Normalization must not regress the missing-op path."""
+    assert brain.get_operator("nonexistentOP") is None

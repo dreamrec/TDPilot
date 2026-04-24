@@ -40,6 +40,41 @@ def _canonical_card_types(card_types: list[str] | None) -> list[str] | None:
     return [_CARD_TYPE_ALIASES.get(ct, ct) for ct in card_types]
 
 
+def _normalize_key_param(raw: str) -> dict:
+    """Turn a raw FTS parameter string into a CardIndex-compatible dict.
+
+    DocsBrain stores parameters as strings from the FTS parameter_names
+    column. They can be simple ("amp") or multi-line labels
+    ("Output\\nResolution\\noutputresolution"). CardIndex JSON cards
+    represent key_params as objects like
+    ``{"name": "outputresolution", "type": "...", "note": "..."}``.
+
+    Bringing them to a common shape lets ``td_get_param_help`` iterate
+    over either source with the same loop. The original raw string is
+    preserved under ``raw`` so future enrichment can recover it.
+    """
+    text = (raw or "").strip()
+    if not text:
+        return {"name": "", "label": "", "raw": raw, "source": "docsbrain"}
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if len(lines) <= 1:
+        # Simple parameter name — just use it as both label and name lowered.
+        return {
+            "name": lines[0] if lines else text,
+            "label": lines[0] if lines else text,
+            "raw": raw,
+            "source": "docsbrain",
+        }
+    # Multi-line: last line is the programmatic name; the preceding lines
+    # are the human label (joined with spaces).
+    return {
+        "name": lines[-1],
+        "label": " ".join(lines[:-1]),
+        "raw": raw,
+        "source": "docsbrain",
+    }
+
+
 class DocsBrain:
     """Runtime search interface for the docs brain SQLite FTS5 database.
 
@@ -188,12 +223,19 @@ class DocsBrain:
             params = json.loads(chunk.get("parameter_names", "[]"))
             all_params.extend(p for p in params if p not in all_params)
 
+        # Normalize to CardIndex-compatible `key_params` shape (v1.4.5 Fix 3).
+        # Before this, tools like `td_get_param_help` that looked up
+        # `card["key_params"]` silently got [] when DocsBrain was active,
+        # making parameter-help hollow.
+        key_params = [_normalize_key_param(p) for p in all_params]
+
         result = {
             "op_type": op_type,
             "family": first.get("operator_family", ""),
             "display_name": operator_name,
             "summary": summary[:500],
             "parameters": all_params,
+            "key_params": key_params,
             "docs_url": f"https://docs.derivative.ca/{operator_name.replace(' ', '_')}",
             "recent_changes": self._changelog.get(operator_name, []),
         }
