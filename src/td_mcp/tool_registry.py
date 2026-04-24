@@ -507,6 +507,51 @@ async def _ensure_td_build(ctx: Context) -> str:
     return build
 
 
+async def _ensure_project_scope(ctx: Context) -> None:
+    """Lazily bind the memory stores to TD's current project name.
+
+    Background: if the TDPilot server starts before TouchDesigner is reachable,
+    `server_lifespan` constructs TechniqueStore and PreferenceStore with
+    ``project_name=None``, and every project-scoped tool call fails with
+    "TDPILOT_PROJECT_NAME is not set" for the whole session. This was observed
+    live against the installed 1.4.0 server while TD *was* reachable — the
+    startup-time resolution had silently skipped the fetch.
+
+    Resolution: on every memory-tool call, if the stores are still unbound,
+    fetch the project_name from TD on demand and rebind both stores in place.
+    Idempotent if already bound. Silent on TD unreachable — tries again next
+    call. The TD ``info`` request is cheap (<10ms loopback); no timer-based
+    throttling added unless profiling shows it's needed.
+    """
+    services = _get_services(ctx)
+    store = services.technique_store
+    pref = services.preference_store
+    # Nothing to do if either store is absent or already bound.
+    if store is None or pref is None:
+        return
+    if getattr(store, "_project_name", None):
+        return
+    client = services.td_client
+    if not hasattr(client, "request"):
+        return
+    try:
+        info = await client.request("info")
+    except Exception:
+        return  # TD still unreachable; retry next call
+    if not isinstance(info, dict):
+        return
+    raw = str(info.get("project_name", "") or "").strip()
+    if not raw:
+        return
+    if raw.lower().endswith(".toe"):
+        raw = raw[:-4]
+    store.rebind_project_scope(raw)
+    pref.rebind_project_scope(raw)
+    logger.info(
+        "Lazily bound project scope to %r from live TD after startup miss", raw
+    )
+
+
 def _get_event_manager(ctx: Context) -> EventManager:
     services = _get_services(ctx)
     if not isinstance(services.event_manager, EventManager):
@@ -3349,6 +3394,7 @@ async def td_memory_save(params: MemorySaveInput, ctx: Context) -> dict:
     Use the output of td_memory_learn as the technique input,
     or construct a technique dict manually.
     """
+    await _ensure_project_scope(ctx)
     store = _get_technique_store(ctx)
     # Build compatibility dict from technique metadata if present
     tech = params.technique
@@ -3381,6 +3427,7 @@ async def td_memory_recall(params: MemoryRecallInput, ctx: Context) -> dict:
 
     Returns summaries (not full recipes). Use td_memory_replay to rebuild a found technique.
     """
+    await _ensure_project_scope(ctx)
     store = _get_technique_store(ctx)
     results = store.search(
         query=params.query,
@@ -3398,6 +3445,7 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
     Creates nodes, sets parameters and expressions, wires connections.
     Only works for techniques with a full recipe (small/medium complexity).
     """
+    await _ensure_project_scope(ctx)
     store = _get_technique_store(ctx)
     entry = store.get(params.technique_id, scope=params.scope)
     if not entry:
@@ -3660,6 +3708,7 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
 @mcp.tool()
 async def td_memory_favorite(params: MemoryFavoriteInput, ctx: Context) -> dict:
     """Mark a technique as favorite and/or rate it (0-5)."""
+    await _ensure_project_scope(ctx)
     store = _get_technique_store(ctx)
     ok = store.set_favorite(params.technique_id, params.favorite, scope=params.scope)
     if not ok:
@@ -3672,6 +3721,7 @@ async def td_memory_favorite(params: MemoryFavoriteInput, ctx: Context) -> dict:
 @mcp.tool()
 async def td_memory_promote(params: MemoryPromoteInput, ctx: Context) -> dict:
     """Copy a project technique to the global library so it's available across all projects."""
+    await _ensure_project_scope(ctx)
     store = _get_technique_store(ctx)
     new_id = store.promote(params.technique_id)
     if not new_id:
@@ -3682,6 +3732,7 @@ async def td_memory_promote(params: MemoryPromoteInput, ctx: Context) -> dict:
 @mcp.tool()
 async def td_memory_export(params: MemoryExportInput, ctx: Context) -> dict:
     """Export the technique library as a portable JSON object for sharing or backup."""
+    await _ensure_project_scope(ctx)
     store = _get_technique_store(ctx)
     return {"status": "ok", "library": store.export_library(scope=params.scope)}
 
@@ -3689,6 +3740,7 @@ async def td_memory_export(params: MemoryExportInput, ctx: Context) -> dict:
 @mcp.tool()
 async def td_memory_import(params: MemoryImportInput, ctx: Context) -> dict:
     """Import techniques from an exported library (from td_memory_export)."""
+    await _ensure_project_scope(ctx)
     store = _get_technique_store(ctx)
     result = store.import_library(params.data, scope=params.scope, overwrite=params.overwrite)
     return {"status": "ok", **result}
@@ -3701,6 +3753,7 @@ async def td_memory_preferences(params: MemoryPreferencesInput, ctx: Context) ->
     Preferences store things like: preferred color palettes, default resolutions,
     favorite operator types, naming conventions, etc.
     """
+    await _ensure_project_scope(ctx)
     pref = _get_preference_store(ctx)
     action = params.action.lower()
 
@@ -3733,6 +3786,7 @@ async def td_memory_preferences(params: MemoryPreferencesInput, ctx: Context) ->
 @mcp.tool()
 async def td_memory_list(params: MemoryListInput, ctx: Context) -> dict:
     """List saved techniques with optional filtering by scope, tags, and favorites."""
+    await _ensure_project_scope(ctx)
     store = _get_technique_store(ctx)
     results = store.list_techniques(
         scope=params.scope,

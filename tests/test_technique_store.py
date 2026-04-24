@@ -162,3 +162,42 @@ class TestStats:
         assert stats["project_count"] == 1
         assert stats["global_count"] == 1
         assert stats["project_name"] == "test_project"
+
+
+# ---------------------------------------------------------------------------
+# Lazy project-scope rebind (v1.4.4 reliability release)
+# Mirrors the PreferenceStore rebind tests — same mechanism, different store.
+# ---------------------------------------------------------------------------
+
+
+class TestRebindProjectScope:
+    def test_store_starts_unbound_raises_on_project_save(self, tmp_path, sample_technique):
+        store = TechniqueStore(base_dir=str(tmp_path), project_name=None)
+        with pytest.raises(ValueError) as exc:
+            store.add(sample_technique, scope="project")
+        assert "TDPILOT_PROJECT_NAME" in str(exc.value)
+
+    def test_rebind_enables_project_scope(self, tmp_path, sample_technique):
+        store = TechniqueStore(base_dir=str(tmp_path), project_name=None)
+        assert store.stats()["project_name"] is None
+
+        store.rebind_project_scope("LiveProject")
+
+        assert store.stats()["project_name"] == "LiveProject"
+        tid = store.add(sample_technique, scope="project", name="after-rebind")
+        assert store.get(tid, scope="project") is not None
+
+    def test_rebind_sanitizes_filesystem_unsafe_chars(self, tmp_path, sample_technique):
+        store = TechniqueStore(base_dir=str(tmp_path), project_name=None)
+        store.rebind_project_scope("My Project/v2!")
+        store.add(sample_technique, scope="project", name="test")
+        assert (tmp_path / "projects" / "My_Project_v2_" / "techniques.json").exists()
+
+    def test_rebind_loads_existing_project_data(self, tmp_path, sample_technique):
+        seed = TechniqueStore(base_dir=str(tmp_path), project_name="Preexisting")
+        seed_id = seed.add(sample_technique, scope="project", name="seeded")
+
+        store = TechniqueStore(base_dir=str(tmp_path), project_name=None)
+        store.rebind_project_scope("Preexisting")
+        assert store.get(seed_id, scope="project") is not None
+        assert store.get(seed_id, scope="project")["name"] == "seeded"

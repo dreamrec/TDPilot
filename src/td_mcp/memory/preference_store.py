@@ -61,6 +61,26 @@ class PreferenceStore:
         }
 
     # ------------------------------------------------------------------
+    # Lazy rebinding — used when the TDPilot server starts before TD is
+    # reachable. See _ensure_project_scope in tool_registry.py.
+    # ------------------------------------------------------------------
+
+    def rebind_project_scope(self, project_name: str) -> None:
+        """Re-target this store at a new project folder without a restart.
+
+        Replaces _project_name / _project_dir, creates the directory,
+        drops the in-memory project cache, and reloads from disk.
+        Existing global data is untouched.
+        """
+        if not project_name:
+            return
+        safe_name = "".join(c if c.isalnum() or c in "-_." else "_" for c in project_name)
+        self._project_name = project_name
+        self._project_dir = self._base / "projects" / safe_name
+        self._project_dir.mkdir(parents=True, exist_ok=True)
+        self._project = self._load_file(self._project_dir / "preferences.json")
+
+    # ------------------------------------------------------------------
     # Internals
     # ------------------------------------------------------------------
 
