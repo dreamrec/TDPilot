@@ -11,5 +11,6 @@ from __future__ import annotations
 
 from td_mcp.patch.undo_sentinel import UndoBlockSentinel
 from td_mcp.patch.validator import validate_target
+from td_mcp.patch.variants import generate_variants
 
-__all__ = ["UndoBlockSentinel", "validate_target"]
+__all__ = ["UndoBlockSentinel", "validate_target", "generate_variants"]
