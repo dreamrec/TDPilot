@@ -1,5 +1,118 @@
 # Changelog
 
+## 1.4.4 - 2026-04-24
+
+Reliability release. Ten tasks shipped — behavioral tests replacing
+structural-only ones, runtime bind fixes for late-starting TD, CI
+hardening (package build smoke, plugin install/auth smoke, coverage
+ratchet, enforced ruff format), brain installer unbreak, and security
+doc sharpening. No TD-side protocol changes — API_VERSION stays at
+1.4.2, no .tox rebuild required. Tool count unchanged at 92.
+
+### Fixed
+
+- **Late-start project-memory rebind:** `TechniqueStore` /
+  `PreferenceStore` now expose `rebind_project_scope()`, and every
+  project-scoped memory tool calls a new `_ensure_project_scope(ctx)`
+  helper that demand-binds the stores from live TD's `info`. Retroactively
+  confirmed against the installed 1.4.0 server: `td_memory_save
+  scope=project` was raising "TDPILOT_PROJECT_NAME is not set" even
+  while `td_get_info` reported a valid project_name on the same live
+  server. Now the first memory-tool call after TD becomes reachable
+  transparently binds the stores for the rest of the session.
+
+- **Brain installer placeholder:** `npm/brains.js` had a literal
+  `MANIFEST_DRIVE_ID = "MANIFEST_FILE_ID"` string and no
+  `brains_manifest.json` was shipped anywhere. `npx tdpilot brains list`
+  printed "No manifest found"; `paketa12` (defined in
+  `data/brains/paketa12.yaml`) was invisible to the installer. Ship
+  `data/brains/brains_manifest.json` listing derivative + popx (with
+  real Drive IDs) and paketa12 (local-build brain pointing users at
+  `scripts/build_tutorial_brain.py`).
+
+- **Security-doc sharpening:** `docs/SECURITY.md`'s exec-modes table
+  previously claimed restricted mode has "TD API: read-only", which
+  misreads the guarantee. Rewrote the table row and added a new
+  "what we don't protect against" item 6 stating explicitly that
+  restricted is a Python-level sandbox (blocks OS escapes, imports,
+  dunder reflection, `.text=` DAT writes, `.par.file=` path writes)
+  but does NOT prevent `.par.amp = 2.5`, `op('x').destroy()`, or most
+  TD Python API method calls. `TD_MCP_EXEC_MODE=off` is the only true
+  read-only posture.
+
+### Added
+
+- **Resource handler behavioral tests:** seven new tests in
+  `tests/test_resource_fallbacks.py` — one per handler — that actually
+  call the handler and assert the static-mode contract
+  (`resource_schema_version`, `resource_uri`, `mode`, `note` points at
+  the correct tool, and URI templates round-trip args). Pre-v1.4.4
+  coverage was AST-only and didn't prove the handlers worked.
+
+- **Doctor tool-count drift check:** `tdpilot doctor` now includes a
+  `tool_count_drift` line that compares `@mcp.tool(` count in
+  `tool_registry.py` against `manifest.surface.tool_count`. Emits
+  warn on mismatch, pass on match; non-fatal since it's local
+  developer ergonomics (CI has the hard gate via `check_versions.py`).
+
+- **Package build smoke:** new `scripts/check_package_builds.sh`
+  builds wheel (`uv build`), npm tarball (`npm pack`), and plugin
+  zip, then greps each for the critical files they must contain (~11
+  total). Wired into `.github/workflows/ci.yml`.
+
+- **Plugin install / auth smoke test:** six tests in
+  `tests/test_plugin_install_smoke.py` pin the whole plugin-install →
+  auth-behavior loop. Covers shipped `.mcp.json` still declaring
+  `TD_MCP_REQUIRE_AUTH=1`, no embedded literal secret, and that the
+  v1.4.3 Fix #1 gate trips in the unconfigured state.
+
+- **Install-profile unification (partial):** `tdpilot init` gains
+  `--auth`, `--generate-secret`, and `--shared-secret` flags so the
+  CLI can emit the same auth-enabled config shape
+  `install.sh`/`install.ps1` already generate. `install.sh` /
+  `install.ps1` themselves left untouched (larger refactor risk for a
+  reliability release).
+
+- **Store-level `rebind_project_scope()`:** exposed on both
+  TechniqueStore and PreferenceStore. In-place mutation so other
+  consumers of the store reference automatically benefit from the
+  binding; safe to call repeatedly.
+
+- **`_ensure_project_scope(ctx)` helper:** async demand-binder called
+  at the top of every project-scoped memory tool
+  (`td_memory_save`/`recall`/`replay`/`favorite`/`promote`/`export`/
+  `import`/`list`/`preferences`). Silent on TD unreachable; retries
+  next call.
+
+### CI and tooling
+
+- **Coverage ratchet:** `fail_under = 60` in
+  `[tool.coverage.report]`. Current baseline ~61%; raises ~5% per
+  release as `tool_registry.py` gets split into focused modules in
+  v1.5.0.
+
+- **Ruff format enforced:** 68 files reformatted in one mechanical
+  commit (e9ca15e), listed in new `.git-blame-ignore-revs`. The
+  `ruff format --check` CI step no longer has
+  `continue-on-error: true`. `td_component/mcp_webserver_callbacks.py`
+  added to the format exclude list — it's baked into the .tox and
+  reformatting would stale the hash.
+
+- **.gitignore:** added `.coverage`, `.coverage.*`, `coverage.xml`,
+  `htmlcov/` so local coverage artifacts don't leak into commits.
+
+### Tests
+
+- Tests: 472 (end of v1.4.3) → 509 (end of v1.4.4). +37 new tests
+  across rebind, `_ensure_project_scope`, drift check, install smoke,
+  auth init flags, resource behavioral, package build smoke-shaped.
+
+### Unchanged
+
+- Tool count: 92.
+- `API_VERSION` in `td_component/mcp_webserver_callbacks.py`: still
+  `1.4.2`. No `.tox` rebuild required for this release.
+
 ## 1.4.3 - 2026-04-24
 
 Release-blocker patch. Six targeted fixes shipped behind regression tests.

@@ -1,6 +1,6 @@
 """TouchDesigner MCP Server — AI-powered control of TouchDesigner via MCP."""
 
-__version__ = "1.4.3"
+__version__ = "1.4.4"
 
 TOX_FILENAME = "tdpilot_v1_3.tox"
 
