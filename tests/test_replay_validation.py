@@ -104,12 +104,10 @@ async def test_replay_blocks_when_ops_missing(tmp_path, monkeypatch):
     from td_mcp.models import MemoryReplayInput
 
     result = await registry.td_memory_replay(
-        MemoryReplayInput(
-            technique_id=tid,
-            parent_path="/project1",
-            scope="project",
-        ),
         ctx,
+        technique_id=tid,
+        parent_path="/project1",
+        scope="project",
     )
     assert result["status"] == "blocked"
     assert "popxInstancer" in result["missing_ops"]
@@ -142,12 +140,10 @@ async def test_replay_proceeds_when_ops_available(tmp_path, monkeypatch):
     from td_mcp.models import MemoryReplayInput
 
     result = await registry.td_memory_replay(
-        MemoryReplayInput(
-            technique_id=tid,
-            parent_path="/project1",
-            scope="project",
-        ),
         ctx,
+        technique_id=tid,
+        parent_path="/project1",
+        scope="project",
     )
     # Should NOT be blocked — should proceed to create nodes
     assert result.get("status") != "blocked"
@@ -174,13 +170,11 @@ async def test_replay_force_skips_validation(tmp_path, monkeypatch):
     from td_mcp.models import MemoryReplayInput
 
     result = await registry.td_memory_replay(
-        MemoryReplayInput(
-            technique_id=tid,
-            parent_path="/project1",
-            scope="project",
-            force=True,
-        ),
         ctx,
+        technique_id=tid,
+        parent_path="/project1",
+        scope="project",
+        force=True,
     )
     # Should NOT be blocked despite missing ops
     assert result.get("status") != "blocked"
@@ -207,12 +201,10 @@ async def test_replay_no_required_ops_skips_check(tmp_path, monkeypatch):
     from td_mcp.models import MemoryReplayInput
 
     result = await registry.td_memory_replay(
-        MemoryReplayInput(
-            technique_id=tid,
-            parent_path="/project1",
-            scope="project",
-        ),
         ctx,
+        technique_id=tid,
+        parent_path="/project1",
+        scope="project",
     )
     assert result.get("status") != "blocked"
     # Should NOT have queried families (no ops to check)
@@ -238,12 +230,10 @@ async def test_replay_families_error_allows_replay(tmp_path, monkeypatch):
     from td_mcp.models import MemoryReplayInput
 
     result = await registry.td_memory_replay(
-        MemoryReplayInput(
-            technique_id=tid,
-            parent_path="/project1",
-            scope="project",
-        ),
         ctx,
+        technique_id=tid,
+        parent_path="/project1",
+        scope="project",
     )
     # Should NOT be blocked — error means we allow replay
     assert result.get("status") != "blocked"
@@ -272,12 +262,10 @@ async def test_replay_missing_recipe_returns_error(tmp_path, monkeypatch):
     from td_mcp.models import MemoryReplayInput
 
     result = await registry.td_memory_replay(
-        MemoryReplayInput(
-            technique_id=tid,
-            parent_path="/project1",
-            scope="project",
-        ),
         ctx,
+        technique_id=tid,
+        parent_path="/project1",
+        scope="project",
     )
     assert result["status"] == "error"
     assert "recipe" in result["message"].lower()
@@ -341,8 +329,10 @@ async def test_replay_clean_promotes_candidate_to_validated_local(tmp_path, monk
     from td_mcp.models import MemoryReplayInput
 
     result = await registry.td_memory_replay(
-        MemoryReplayInput(technique_id=tid, parent_path="/project1", scope="project"),
         ctx,
+        technique_id=tid,
+        parent_path="/project1",
+        scope="project",
     )
     assert result["status"] == "ok"
     assert result["validation_result"]["status"] == "pass"
@@ -372,8 +362,10 @@ async def test_replay_with_errors_keeps_candidate(tmp_path, monkeypatch):
     from td_mcp.models import MemoryReplayInput
 
     result = await registry.td_memory_replay(
-        MemoryReplayInput(technique_id=tid, parent_path="/project1", scope="project"),
         ctx,
+        technique_id=tid,
+        parent_path="/project1",
+        scope="project",
     )
     assert result["validation_result"]["status"] == "fail"
     assert store.get(tid)["state"] == "candidate"
@@ -404,8 +396,10 @@ async def test_replay_fail_demotes_validated_local_to_candidate(tmp_path, monkey
     from td_mcp.models import MemoryReplayInput
 
     await registry.td_memory_replay(
-        MemoryReplayInput(technique_id=tid, parent_path="/project1", scope="project"),
         ctx,
+        technique_id=tid,
+        parent_path="/project1",
+        scope="project",
     )
     assert store.get(tid)["state"] == "candidate"
 
@@ -428,8 +422,10 @@ async def test_replay_persists_validation_result(tmp_path, monkeypatch):
     from td_mcp.models import MemoryReplayInput
 
     await registry.td_memory_replay(
-        MemoryReplayInput(technique_id=tid, parent_path="/project1", scope="project"),
         ctx,
+        technique_id=tid,
+        parent_path="/project1",
+        scope="project",
     )
     entry = store.get(tid)
     assert entry["validation_result"] is not None
@@ -448,12 +444,10 @@ async def test_replay_not_found_returns_error(tmp_path, monkeypatch):
     from td_mcp.models import MemoryReplayInput
 
     result = await registry.td_memory_replay(
-        MemoryReplayInput(
-            technique_id="nonexistent-id-12345",
-            parent_path="/project1",
-            scope="project",
-        ),
         ctx,
+        technique_id="nonexistent-id-12345",
+        parent_path="/project1",
+        scope="project",
     )
     assert result["status"] == "error"
     assert "not found" in result["message"].lower()

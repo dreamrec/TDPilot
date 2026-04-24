@@ -38,33 +38,35 @@ async def test_memory_tools_support_dict_lifespan_context(tmp_path):
     ctx = _make_ctx(store=store, pref=pref)
 
     saved = await registry.td_memory_save(
-        MemorySaveInput(
-            technique={"node_count": 1, "complexity": "small"},
-            scope="project",
-            name="demo-technique",
-            tags=["demo"],
-        ),
         ctx,
+        technique={"node_count": 1, "complexity": "small"},
+        scope="project",
+        name="demo-technique",
+        tags=["demo"],
     )
     assert saved["status"] == "ok"
 
-    listed = await registry.td_memory_list(MemoryListInput(scope="project"), ctx)
+    listed = await registry.td_memory_list(ctx, scope="project")
     assert listed["status"] == "ok"
     assert listed["count"] == 1
 
-    recalled = await registry.td_memory_recall(MemoryRecallInput(query="demo"), ctx)
+    recalled = await registry.td_memory_recall(ctx, query="demo")
     assert recalled["status"] == "ok"
     assert recalled["count"] == 1
 
     set_pref = await registry.td_memory_preferences(
-        MemoryPreferencesInput(action="set", key="palette", value="warm", scope="project"),
         ctx,
+        action="set",
+        key="palette",
+        value="warm",
+        scope="project",
     )
     assert set_pref["status"] == "ok"
 
     list_pref = await registry.td_memory_preferences(
-        MemoryPreferencesInput(action="list", scope="project"),
         ctx,
+        action="list",
+        scope="project",
     )
     assert list_pref["status"] == "ok"
     assert list_pref["preferences"]["palette"] == "warm"
@@ -194,13 +196,11 @@ async def test_memory_save_rebinds_and_succeeds_after_startup_miss(tmp_path):
     # Before the fix: this raised "TDPILOT_PROJECT_NAME is not set". After:
     # the tool auto-rebinds via _ensure_project_scope and the save succeeds.
     result = await registry.td_memory_save(
-        MemorySaveInput(
-            technique={"node_count": 1, "complexity": "small"},
-            scope="project",
-            name="belated",
-            tags=["v1.4.4"],
-        ),
         ctx,
+        technique={"node_count": 1, "complexity": "small"},
+        scope="project",
+        name="belated",
+        tags=["v1.4.4"],
     )
     assert result["status"] == "ok"
     assert store.stats()["project_name"] == "BelatedProject"
@@ -245,12 +245,10 @@ async def test_memory_replay_uses_live_endpoint_contract(tmp_path, monkeypatch):
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: recording_client)
 
     replayed = await registry.td_memory_replay(
-        MemoryReplayInput(
-            technique_id=technique_id,
-            parent_path="/project1/replay",
-            scope="project",
-        ),
         ctx,
+        technique_id=technique_id,
+        parent_path="/project1/replay",
+        scope="project",
     )
 
     assert replayed["status"] == "ok"

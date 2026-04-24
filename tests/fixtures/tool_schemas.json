@@ -933,141 +933,316 @@
   "td_memory_export": {
     "description_present": true,
     "properties": {
-      "params": {
+      "scope": {
         "any_of_types": [],
-        "default_present": false,
+        "default_present": true,
         "enum": null,
-        "type": null
+        "type": "string"
       }
     },
-    "required": [
-      "params"
-    ]
+    "required": []
   },
   "td_memory_favorite": {
     "description_present": true,
     "properties": {
-      "params": {
+      "favorite": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "rating": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "integer"
+      },
+      "scope": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "technique_id": {
         "any_of_types": [],
         "default_present": false,
         "enum": null,
-        "type": null
+        "type": "string"
       }
     },
     "required": [
-      "params"
+      "technique_id"
     ]
   },
   "td_memory_import": {
     "description_present": true,
     "properties": {
-      "params": {
+      "data": {
         "any_of_types": [],
         "default_present": false,
         "enum": null,
-        "type": null
+        "type": "object"
+      },
+      "overwrite": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "scope": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
       }
     },
     "required": [
-      "params"
+      "data"
     ]
   },
   "td_memory_learn": {
     "description_present": true,
     "properties": {
-      "params": {
+      "description": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "max_depth": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "integer"
+      },
+      "name": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "path": {
         "any_of_types": [],
         "default_present": false,
+        "enum": null,
+        "type": "string"
+      },
+      "tags": {
+        "any_of_types": [
+          "array",
+          "null"
+        ],
+        "default_present": true,
         "enum": null,
         "type": null
       }
     },
     "required": [
-      "params"
+      "path"
     ]
   },
   "td_memory_list": {
     "description_present": true,
     "properties": {
-      "params": {
+      "favorites_only": {
         "any_of_types": [],
-        "default_present": false,
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "limit": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "integer"
+      },
+      "scope": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "tags": {
+        "any_of_types": [
+          "array",
+          "null"
+        ],
+        "default_present": true,
         "enum": null,
         "type": null
       }
     },
-    "required": [
-      "params"
-    ]
+    "required": []
   },
   "td_memory_preferences": {
     "description_present": true,
     "properties": {
-      "params": {
+      "action": {
         "any_of_types": [],
         "default_present": false,
+        "enum": null,
+        "type": "string"
+      },
+      "key": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "scope": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "value": {
+        "any_of_types": [],
+        "default_present": true,
         "enum": null,
         "type": null
       }
     },
     "required": [
-      "params"
+      "action"
     ]
   },
   "td_memory_promote": {
     "description_present": true,
     "properties": {
-      "params": {
+      "technique_id": {
         "any_of_types": [],
         "default_present": false,
         "enum": null,
-        "type": null
+        "type": "string"
       }
     },
     "required": [
-      "params"
+      "technique_id"
     ]
   },
   "td_memory_recall": {
     "description_present": true,
     "properties": {
-      "params": {
+      "limit": {
         "any_of_types": [],
-        "default_present": false,
+        "default_present": true,
+        "enum": null,
+        "type": "integer"
+      },
+      "query": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "scope": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "tags": {
+        "any_of_types": [
+          "array",
+          "null"
+        ],
+        "default_present": true,
         "enum": null,
         "type": null
       }
     },
-    "required": [
-      "params"
-    ]
+    "required": []
   },
   "td_memory_replay": {
     "description_present": true,
     "properties": {
-      "params": {
+      "force": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "name_prefix": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "parent_path": {
         "any_of_types": [],
         "default_present": false,
         "enum": null,
-        "type": null
+        "type": "string"
+      },
+      "recreate_root": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "scope": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "technique_id": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "string"
       }
     },
     "required": [
-      "params"
+      "parent_path",
+      "technique_id"
     ]
   },
   "td_memory_save": {
     "description_present": true,
     "properties": {
-      "params": {
+      "description": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "name": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "notes": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "scope": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "tags": {
+        "any_of_types": [
+          "array",
+          "null"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "technique": {
         "any_of_types": [],
         "default_present": false,
         "enum": null,
-        "type": null
+        "type": "object"
       }
     },
     "required": [
-      "params"
+      "technique"
     ]
   },
   "td_monitor_visual": {

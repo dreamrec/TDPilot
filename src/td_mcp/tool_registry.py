@@ -4084,7 +4084,29 @@ async def td_get_timescale_state(params: TimescaleStateInput, ctx: Context) -> s
 
 
 @mcp.tool()
-async def td_memory_learn(params: MemoryLearnInput, ctx: Context) -> dict:
+async def td_memory_learn(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="Root path of the network subtree to analyze."),
+    ],
+    name: Annotated[
+        str,
+        Field(default="", description="Human-readable name for this technique."),
+    ] = "",
+    description: Annotated[
+        str,
+        Field(default="", description="What this technique does."),
+    ] = "",
+    tags: Annotated[
+        list[str] | None,
+        Field(default=None, description="Tags for categorization."),
+    ] = None,
+    max_depth: Annotated[
+        int,
+        Field(default=3, ge=1, le=10, description="Max child depth to walk."),
+    ] = 3,
+) -> dict:
     """Analyze a network subtree and extract a reusable technique recipe.
 
     Auto-detects complexity:
@@ -4098,18 +4120,44 @@ async def td_memory_learn(params: MemoryLearnInput, ctx: Context) -> dict:
     client = _get_client(ctx)
     technique = await analyze_network(
         client,
-        params.path,
-        max_depth=params.max_depth,
-        name=params.name,
-        description=params.description,
-        tags=params.tags,
+        path,
+        max_depth=max_depth,
+        name=name,
+        description=description,
+        tags=tags or [],
         td_build=svc.td_build,
     )
     return {"status": "ok", "technique": technique}
 
 
 @mcp.tool()
-async def td_memory_save(params: MemorySaveInput, ctx: Context) -> dict:
+async def td_memory_save(
+    ctx: Context,
+    technique: Annotated[
+        dict,
+        Field(description="Technique dict (from td_memory_learn output)."),
+    ],
+    scope: Annotated[
+        str,
+        Field(default="project", description="'project' or 'global'."),
+    ] = "project",
+    name: Annotated[
+        str,
+        Field(default="", description="Override technique name."),
+    ] = "",
+    description: Annotated[
+        str,
+        Field(default="", description="Override description."),
+    ] = "",
+    tags: Annotated[
+        list[str] | None,
+        Field(default=None, description="Additional tags."),
+    ] = None,
+    notes: Annotated[
+        str,
+        Field(default="", description="Freeform notes about this technique."),
+    ] = "",
+) -> dict:
     """Save a technique to the project or global library.
 
     Use the output of td_memory_learn as the technique input,
@@ -4118,7 +4166,7 @@ async def td_memory_save(params: MemorySaveInput, ctx: Context) -> dict:
     await _ensure_project_scope(ctx)
     store = _get_technique_store(ctx)
     # Build compatibility dict from technique metadata if present
-    tech = params.technique
+    tech = technique
     td_build = tech.get("td_build", "") if isinstance(tech, dict) else ""
     required_op_types = tech.get("required_op_types", []) if isinstance(tech, dict) else []
     compatibility: dict = {}
@@ -4127,23 +4175,44 @@ async def td_memory_save(params: MemorySaveInput, ctx: Context) -> dict:
     if required_op_types:
         compatibility["required_ops"] = required_op_types
     # Fall back to values from the technique dict if caller didn't provide them
-    name = params.name or (tech.get("name", "") if isinstance(tech, dict) else "")
-    description = params.description or (tech.get("description", "") if isinstance(tech, dict) else "")
-    tags = params.tags or (tech.get("tags", []) if isinstance(tech, dict) else [])
+    resolved_name = name or (tech.get("name", "") if isinstance(tech, dict) else "")
+    resolved_description = description or (tech.get("description", "") if isinstance(tech, dict) else "")
+    resolved_tags = (tags or []) or (tech.get("tags", []) if isinstance(tech, dict) else [])
     technique_id = store.add(
-        technique=params.technique,
-        scope=params.scope,
-        name=name,
-        description=description,
-        tags=tags,
-        notes=params.notes,
+        technique=technique,
+        scope=scope,
+        name=resolved_name,
+        description=resolved_description,
+        tags=resolved_tags,
+        notes=notes,
         compatibility=compatibility or None,
     )
-    return {"status": "ok", "technique_id": technique_id, "scope": params.scope}
+    return {"status": "ok", "technique_id": technique_id, "scope": scope}
 
 
 @mcp.tool()
-async def td_memory_recall(params: MemoryRecallInput, ctx: Context) -> dict:
+async def td_memory_recall(
+    ctx: Context,
+    query: Annotated[
+        str,
+        Field(
+            default="",
+            description="Text search across names, descriptions, tags.",
+        ),
+    ] = "",
+    tags: Annotated[
+        list[str] | None,
+        Field(default=None, description="Filter by tags."),
+    ] = None,
+    scope: Annotated[
+        str,
+        Field(default="all", description="'project', 'global', or 'all'."),
+    ] = "all",
+    limit: Annotated[
+        int,
+        Field(default=20, ge=1, le=100, description="Max results."),
+    ] = 20,
+) -> dict:
     """Search the technique library by text query and/or tags.
 
     Returns summaries (not full recipes). Use td_memory_replay to rebuild a found technique.
@@ -4151,16 +4220,61 @@ async def td_memory_recall(params: MemoryRecallInput, ctx: Context) -> dict:
     await _ensure_project_scope(ctx)
     store = _get_technique_store(ctx)
     results = store.search(
-        query=params.query,
-        tags=params.tags if params.tags else None,
-        scope=params.scope,
-        limit=params.limit,
+        query=query,
+        tags=tags if tags else None,
+        scope=scope,
+        limit=limit,
     )
     return {"status": "ok", "count": len(results), "techniques": results}
 
 
 @mcp.tool()
-async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
+async def td_memory_replay(
+    ctx: Context,
+    technique_id: Annotated[
+        str,
+        Field(description="ID of the saved technique to replay."),
+    ],
+    parent_path: Annotated[
+        str,
+        Field(
+            description="Parent COMP path where the technique will be rebuilt.",
+        ),
+    ],
+    name_prefix: Annotated[
+        str,
+        Field(
+            default="",
+            description="Optional prefix for created node names.",
+        ),
+    ] = "",
+    scope: Annotated[
+        str,
+        Field(default="project", description="'project' or 'global'."),
+    ] = "project",
+    force: Annotated[
+        bool,
+        Field(
+            default=False,
+            description="Skip build compatibility checks and replay anyway.",
+        ),
+    ] = False,
+    recreate_root: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=(
+                "v1.4.7 Bug V opt-in. If True and the recipe's '/' entry "
+                "has family='COMP', the replay creates that wrapper COMP "
+                "under parent_path first and builds all children inside "
+                "it. Default False preserves the existing flat-replay "
+                "behavior where '/' is aliased to parent_path (children "
+                "land as siblings). Set to True when you want a faithful "
+                "clone of a COMP-wrapped technique."
+            ),
+        ),
+    ] = False,
+) -> dict:
     """Rebuild a saved technique in a new location in the TD project.
 
     Creates nodes, sets parameters and expressions, wires connections.
@@ -4168,11 +4282,11 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
     """
     await _ensure_project_scope(ctx)
     store = _get_technique_store(ctx)
-    entry = store.get(params.technique_id, scope=params.scope)
+    entry = store.get(technique_id, scope=scope)
     if not entry:
         return {
             "status": "error",
-            "message": f"Technique {params.technique_id} not found in {params.scope} scope.",
+            "message": f"Technique {technique_id} not found in {scope} scope.",
         }
 
     technique = entry.get("technique", {})
@@ -4188,7 +4302,7 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
         }
 
     # Pre-replay prerequisite check: verify required op types exist in the target TD install
-    if not params.force:
+    if not force:
         required_ops: list[str] = (
             technique.get("required_op_types") or entry.get("compatibility", {}).get("required_ops") or []
         )
@@ -4213,8 +4327,8 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
                 pass  # If we can't verify, allow replay (checked at create time anyway)
 
     client = _get_client(ctx)
-    parent = params.parent_path.rstrip("/") or "/"
-    prefix = params.name_prefix.strip()
+    parent = parent_path.rstrip("/") or "/"
+    prefix = name_prefix.strip()
 
     recipe_nodes = recipe.get("nodes", {})
     if not isinstance(recipe_nodes, dict) or not recipe_nodes:
@@ -4231,7 +4345,7 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
     # INSIDE the new root instead of directly under `parent_path`,
     # producing a faithful clone of the original COMP hierarchy.
     # Default False preserves existing flat-replay semantics.
-    if params.recreate_root:
+    if recreate_root:
         root_info = recipe_nodes.get("/")
         if isinstance(root_info, dict):
             root_family = str(root_info.get("family", "")).strip().upper()
@@ -4482,7 +4596,7 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
         # state-transition discipline by silently dropping `state` keys, so
         # routing state changes through update_validation() is the canonical
         # path. It also handles the demotion case (fail → drop back one rung).
-        store.update_validation(params.technique_id, validation_result, scope=params.scope)
+        store.update_validation(technique_id, validation_result, scope=scope)
     except Exception:
         pass  # Non-fatal: replay succeeded even if validation check fails
 
@@ -4498,104 +4612,206 @@ async def td_memory_replay(params: MemoryReplayInput, ctx: Context) -> dict:
         response["validation_result"] = validation_result
 
     # Track replay usage
-    store.record_replay(params.technique_id, scope=params.scope)
+    store.record_replay(technique_id, scope=scope)
 
     return response
 
 
 @mcp.tool()
-async def td_memory_favorite(params: MemoryFavoriteInput, ctx: Context) -> dict:
+async def td_memory_favorite(
+    ctx: Context,
+    technique_id: Annotated[
+        str,
+        Field(description="ID of the technique."),
+    ],
+    favorite: Annotated[
+        bool,
+        Field(default=True, description="Set favorite status."),
+    ] = True,
+    rating: Annotated[
+        int,
+        Field(default=-1, ge=-1, le=5, description="Rating 0-5, or -1 to skip."),
+    ] = -1,
+    scope: Annotated[
+        str,
+        Field(default="project", description="'project' or 'global'."),
+    ] = "project",
+) -> dict:
     """Mark a technique as favorite and/or rate it (0-5)."""
     await _ensure_project_scope(ctx)
     store = _get_technique_store(ctx)
-    ok = store.set_favorite(params.technique_id, params.favorite, scope=params.scope)
+    ok = store.set_favorite(technique_id, favorite, scope=scope)
     if not ok:
-        return {"status": "error", "message": f"Technique {params.technique_id} not found."}
-    if params.rating >= 0:
-        store.set_rating(params.technique_id, params.rating, scope=params.scope)
+        return {"status": "error", "message": f"Technique {technique_id} not found."}
+    if rating >= 0:
+        store.set_rating(technique_id, rating, scope=scope)
     return {
         "status": "ok",
-        "technique_id": params.technique_id,
-        "favorite": params.favorite,
-        "rating": params.rating,
+        "technique_id": technique_id,
+        "favorite": favorite,
+        "rating": rating,
     }
 
 
 @mcp.tool()
-async def td_memory_promote(params: MemoryPromoteInput, ctx: Context) -> dict:
+async def td_memory_promote(
+    ctx: Context,
+    technique_id: Annotated[
+        str,
+        Field(description="Project technique ID to promote."),
+    ],
+) -> dict:
     """Copy a project technique to the global library so it's available across all projects."""
     await _ensure_project_scope(ctx)
     store = _get_technique_store(ctx)
-    new_id = store.promote(params.technique_id)
+    new_id = store.promote(technique_id)
     if not new_id:
-        return {"status": "error", "message": f"Technique {params.technique_id} not found in project scope."}
-    return {"status": "ok", "global_technique_id": new_id, "promoted_from": params.technique_id}
+        return {
+            "status": "error",
+            "message": f"Technique {technique_id} not found in project scope.",
+        }
+    return {
+        "status": "ok",
+        "global_technique_id": new_id,
+        "promoted_from": technique_id,
+    }
 
 
 @mcp.tool()
-async def td_memory_export(params: MemoryExportInput, ctx: Context) -> dict:
+async def td_memory_export(
+    ctx: Context,
+    scope: Annotated[
+        str,
+        Field(default="project", description="'project' or 'global'."),
+    ] = "project",
+) -> dict:
     """Export the technique library as a portable JSON object for sharing or backup."""
     await _ensure_project_scope(ctx)
     store = _get_technique_store(ctx)
-    return {"status": "ok", "library": store.export_library(scope=params.scope)}
+    return {"status": "ok", "library": store.export_library(scope=scope)}
 
 
 @mcp.tool()
-async def td_memory_import(params: MemoryImportInput, ctx: Context) -> dict:
+async def td_memory_import(
+    ctx: Context,
+    data: Annotated[
+        dict[str, Any],
+        Field(
+            description="Exported library data (from td_memory_export).",
+        ),
+    ],
+    scope: Annotated[
+        str,
+        Field(default="project", description="'project' or 'global'."),
+    ] = "project",
+    overwrite: Annotated[
+        bool,
+        Field(
+            default=False,
+            description="Overwrite existing techniques with same ID.",
+        ),
+    ] = False,
+) -> dict:
     """Import techniques from an exported library (from td_memory_export)."""
     await _ensure_project_scope(ctx)
     store = _get_technique_store(ctx)
-    result = store.import_library(params.data, scope=params.scope, overwrite=params.overwrite)
+    result = store.import_library(data, scope=scope, overwrite=overwrite)
     return {"status": "ok", **result}
 
 
 @mcp.tool()
-async def td_memory_preferences(params: MemoryPreferencesInput, ctx: Context) -> dict:
+async def td_memory_preferences(
+    ctx: Context,
+    action: Annotated[
+        str,
+        Field(description="One of: 'get', 'set', 'list', 'delete'."),
+    ],
+    key: Annotated[
+        str,
+        Field(
+            default="",
+            description="Preference key (required for get/set/delete).",
+        ),
+    ] = "",
+    value: Annotated[
+        Any,
+        Field(default=None, description="Value to set (required for 'set')."),
+    ] = None,
+    scope: Annotated[
+        str,
+        Field(default="project", description="'project' or 'global'."),
+    ] = "project",
+) -> dict:
     """Get, set, list, or delete user preferences.
 
     Preferences store things like: preferred color palettes, default resolutions,
     favorite operator types, naming conventions, etc.
     """
+    # Re-instantiate so the MemoryPreferencesInput custom @field_validator on
+    # ``action`` (allowed-set: get/set/list/delete) still runs.
+    MemoryPreferencesInput(action=action, key=key, value=value, scope=scope)
+
     await _ensure_project_scope(ctx)
     pref = _get_preference_store(ctx)
-    action = params.action.lower()
+    action_normalized = action.lower()
 
-    if action == "get":
-        if not params.key:
+    if action_normalized == "get":
+        if not key:
             return {"status": "error", "message": "Key is required for 'get'."}
-        value = pref.get(params.key, scope=params.scope)
-        return {"status": "ok", "key": params.key, "value": value}
+        got_value = pref.get(key, scope=scope)
+        return {"status": "ok", "key": key, "value": got_value}
 
-    elif action == "set":
-        if not params.key:
+    elif action_normalized == "set":
+        if not key:
             return {"status": "error", "message": "Key is required for 'set'."}
-        pref.set(params.key, params.value, scope=params.scope)
-        return {"status": "ok", "key": params.key, "value": params.value}
+        pref.set(key, value, scope=scope)
+        return {"status": "ok", "key": key, "value": value}
 
-    elif action == "list":
-        all_prefs = pref.list_all(scope=params.scope)
+    elif action_normalized == "list":
+        all_prefs = pref.list_all(scope=scope)
         return {"status": "ok", "preferences": all_prefs, "count": len(all_prefs)}
 
-    elif action == "delete":
-        if not params.key:
+    elif action_normalized == "delete":
+        if not key:
             return {"status": "error", "message": "Key is required for 'delete'."}
-        deleted = pref.delete(params.key, scope=params.scope)
-        return {"status": "ok", "deleted": deleted, "key": params.key}
+        deleted = pref.delete(key, scope=scope)
+        return {"status": "ok", "deleted": deleted, "key": key}
 
     else:
-        return {"status": "error", "message": f"Unknown action '{action}'. Use get/set/list/delete."}
+        return {
+            "status": "error",
+            "message": f"Unknown action '{action_normalized}'. Use get/set/list/delete.",
+        }
 
 
 @mcp.tool()
-async def td_memory_list(params: MemoryListInput, ctx: Context) -> dict:
+async def td_memory_list(
+    ctx: Context,
+    scope: Annotated[
+        str,
+        Field(default="all", description="'project', 'global', or 'all'."),
+    ] = "all",
+    tags: Annotated[
+        list[str] | None,
+        Field(default=None, description="Filter by tags."),
+    ] = None,
+    favorites_only: Annotated[
+        bool,
+        Field(default=False, description="Only return favorites."),
+    ] = False,
+    limit: Annotated[
+        int,
+        Field(default=50, ge=1, le=200, description="Max results."),
+    ] = 50,
+) -> dict:
     """List saved techniques with optional filtering by scope, tags, and favorites."""
     await _ensure_project_scope(ctx)
     store = _get_technique_store(ctx)
     results = store.list_techniques(
-        scope=params.scope,
-        tags=params.tags if params.tags else None,
-        favorites_only=params.favorites_only,
-        limit=params.limit,
+        scope=scope,
+        tags=tags if tags else None,
+        favorites_only=favorites_only,
+        limit=limit,
     )
     return {"status": "ok", "count": len(results), "techniques": results}
 
