@@ -54,6 +54,7 @@ from td_mcp.models import (
     CreateMacroInput,
     CreateNodeInput,
     CustomParametersInput,
+    CustomParameterSpec,
     DeleteNodeInput,
     DetectInstabilityInput,
     DiffSnapshotsInput,
@@ -69,6 +70,7 @@ from td_mcp.models import (
     GetNodesInput,
     GetParamsInput,
     ListSnapshotsInput,
+    MacroType,
     MemoryExportInput,
     MemoryFavoriteInput,
     MemoryImportInput,
@@ -81,6 +83,7 @@ from td_mcp.models import (
     MemorySaveInput,
     NodePathInput,
     OptimizeVisualInput,
+    ParamBound,
     PlanPatchInput,
     POPInspectInput,
     PreflightPatchInput,
@@ -2433,12 +2436,37 @@ async def td_set_content(
 
 
 @mcp.tool(name="td_custom_parameters")
-async def td_custom_parameters(params: CustomParametersInput, ctx: Context) -> str:
+async def td_custom_parameters(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="Path to a COMP with custom parameters", min_length=1),
+    ],
+    page: Annotated[
+        str,
+        Field(description="Custom page name", min_length=1, max_length=64),
+    ],
+    params: Annotated[
+        list[CustomParameterSpec],
+        Field(
+            min_length=1,
+            description=(
+                "One or more parameter specifications to create on the page. "
+                "Each spec has kind (float/int/toggle/menu/str/rgb/rgba/pulse/"
+                "file/filesave/folder/chop/comp/dat/mat/header), name, and "
+                "optional label/size/default/min/max."
+            ),
+        ),
+    ],
+) -> str:
+    """Create or update a custom parameter page on a COMP."""
+    # Re-instantiate so nested CustomParameterSpec.kind validator still runs.
+    validated = CustomParametersInput(path=path, page=page, params=params)
     return await _forward(
         ctx,
         "td_custom_parameters",
         "custom-parameters",
-        params.model_dump(),
+        validated.model_dump(),
         audit_event="td_custom_parameters",
     )
 
@@ -2815,12 +2843,41 @@ async def td_timeline(ctx: Context) -> str:
 
 
 @mcp.tool(name="td_timeline_set")
-async def td_timeline_set(params: TimelineSetInput, ctx: Context) -> str:
+async def td_timeline_set(
+    ctx: Context,
+    action: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Timeline action: 'play', 'pause', or 'frame' (set specific frame)",
+        ),
+    ] = None,
+    frame: Annotated[
+        int | None,
+        Field(
+            default=None,
+            ge=0,
+            description="Frame number to jump to (when action='frame')",
+        ),
+    ] = None,
+    fps: Annotated[
+        float | None,
+        Field(default=None, gt=0, le=240, description="Set cook rate / FPS"),
+    ] = None,
+) -> str:
+    """Control timeline playback: play/pause, jump to frame, set FPS."""
+    body: dict[str, Any] = {}
+    if action is not None:
+        body["action"] = action
+    if frame is not None:
+        body["frame"] = frame
+    if fps is not None:
+        body["fps"] = fps
     return await _forward(
         ctx,
         "td_timeline_set",
         "timeline/set",
-        params.model_dump(exclude_none=True),
+        body,
         audit_event="td_timeline_set",
     )
 
@@ -2890,12 +2947,23 @@ async def td_project_lifecycle(
 
 
 @mcp.tool(name="td_pulse_param")
-async def td_pulse_param(params: PulseParamInput, ctx: Context) -> str:
+async def td_pulse_param(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="Node path", min_length=1),
+    ],
+    param: Annotated[
+        str,
+        Field(description="Parameter name to pulse", min_length=1),
+    ],
+) -> str:
+    """Pulse a pulse-type parameter (e.g. a button par)."""
     return await _forward(
         ctx,
         "td_pulse_param",
         "pulse",
-        params.model_dump(),
+        {"path": path, "param": param},
         audit_event="td_pulse_param",
     )
 
@@ -2924,25 +2992,67 @@ async def td_python_classes(ctx: Context) -> str:
 
 
 @mcp.tool(name="td_create_macro")
-async def td_create_macro(params: CreateMacroInput, ctx: Context) -> str:
+async def td_create_macro(
+    ctx: Context,
+    macro_type: Annotated[
+        MacroType,
+        Field(description="Macro template to create."),
+    ],
+    parent_path: Annotated[
+        str,
+        Field(
+            default="/project1",
+            description="Parent COMP path where the macro will be instantiated.",
+        ),
+    ] = "/project1",
+    name: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Optional name prefix for all nodes created by this macro.",
+        ),
+    ] = None,
+    nodeX: Annotated[
+        int,
+        Field(
+            default=0,
+            description="Macro origin X position in the network editor.",
+        ),
+    ] = 0,
+    nodeY: Annotated[
+        int,
+        Field(
+            default=0,
+            description="Macro origin Y position in the network editor.",
+        ),
+    ] = 0,
+    params: Annotated[
+        dict[str, Any] | None,
+        Field(
+            default=None,
+            description="Override template parameter defaults with custom values.",
+        ),
+    ] = None,
+) -> str:
+    """Create a macro template network."""
     finish = _start_tool(ctx, "td_create_macro")
     try:
         engine = _get_macro_engine(ctx)
         data = await engine.create_macro(
-            parent_path=params.parent_path,
-            macro_type=params.macro_type.value,
-            name_prefix=params.name,
-            node_x=params.nodeX,
-            node_y=params.nodeY,
-            overrides=params.params,
+            parent_path=parent_path,
+            macro_type=macro_type.value,
+            name_prefix=name,
+            node_x=nodeX,
+            node_y=nodeY,
+            overrides=params,
         )
         _audit_log(
             ctx,
             "td_create_macro",
             {
-                "macro_type": params.macro_type.value,
-                "parent_path": params.parent_path,
-                "name_prefix": params.name,
+                "macro_type": macro_type.value,
+                "parent_path": parent_path,
+                "name_prefix": name,
             },
         )
         return _as_json_output(data)
@@ -2967,10 +3077,17 @@ async def td_list_macros(ctx: Context) -> str:
 
 
 @mcp.tool(name="td_get_macro_params")
-async def td_get_macro_params(params: GetMacroParamsInput, ctx: Context) -> str:
+async def td_get_macro_params(
+    ctx: Context,
+    macro_type: Annotated[
+        MacroType,
+        Field(description="Macro template to inspect."),
+    ],
+) -> str:
+    """Inspect parameter schema for a macro template."""
     finish = _start_tool(ctx, "td_get_macro_params")
     try:
-        data = _get_macro_engine(ctx).get_macro_params(params.macro_type.value)
+        data = _get_macro_engine(ctx).get_macro_params(macro_type.value)
         return _as_json_output(data)
     except Exception as exc:
         _record_tool_error(ctx, "td_get_macro_params")
@@ -3068,21 +3185,79 @@ async def td_get_server_metrics(ctx: Context) -> str:
 
 
 @mcp.tool(name="td_subscribe")
-async def td_subscribe(params: SubscribeInput, ctx: Context) -> str:
+async def td_subscribe(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="TD node path to monitor, e.g. '/project1/audio1'."),
+    ],
+    event_types: Annotated[
+        list[str] | None,
+        Field(
+            default=None,
+            description=(
+                "Event types: chop_change, par_change, cook_complete, "
+                "node_error, timeline. Defaults to ['chop_change', 'par_change']."
+            ),
+        ),
+    ] = None,
+    channels: Annotated[
+        list[str] | None,
+        Field(
+            default=None,
+            description="Specific CHOP channels to monitor. None means all channels.",
+        ),
+    ] = None,
+    params: Annotated[
+        list[str] | None,
+        Field(
+            default=None,
+            description="Specific parameters to monitor. None means all tracked params.",
+        ),
+    ] = None,
+    threshold: Annotated[
+        float | None,
+        Field(
+            default=None,
+            description="Only emit events when delta exceeds this threshold.",
+        ),
+    ] = None,
+    rate_limit: Annotated[
+        float,
+        Field(
+            default=0.016,
+            ge=0.001,
+            le=10.0,
+            description="Minimum seconds between repeated events from same source.",
+        ),
+    ] = 0.016,
+) -> str:
+    """Subscribe to runtime TD events for a node."""
+    # Re-instantiate so the SubscribeInput @field_validator on event_types
+    # (allowed set: chop_change|par_change|cook_complete|node_error|timeline)
+    # still runs.
+    validated = SubscribeInput(
+        path=path,
+        event_types=event_types or ["chop_change", "par_change"],
+        channels=channels,
+        params=params,
+        threshold=threshold,
+        rate_limit=rate_limit,
+    )
     finish = _start_tool(ctx, "td_subscribe")
     try:
-        body = params.model_dump(exclude_none=True)
+        body = validated.model_dump(exclude_none=True)
         provisioning = await _get_client(ctx).request("monitor/subscribe", body)
 
         event_manager = _get_event_manager(ctx)
-        for et in params.event_types:
-            event_manager.register_subscription(params.path, et, body)
+        for et in validated.event_types:
+            event_manager.register_subscription(validated.path, et, body)
 
         payload = {
             "success": True,
-            "path": params.path,
+            "path": validated.path,
             "subscription": body,
-            "resource_uris": _build_subscription_resource_uris(params),
+            "resource_uris": _build_subscription_resource_uris(validated),
             "provisioning": provisioning,
             "active_subscriptions": len(event_manager.list_subscriptions()),
         }
@@ -3090,8 +3265,8 @@ async def td_subscribe(params: SubscribeInput, ctx: Context) -> str:
             ctx,
             "td_subscribe",
             {
-                "path": params.path,
-                "event_types": params.event_types,
+                "path": validated.path,
+                "event_types": validated.event_types,
             },
         )
         return _as_json_output(payload)
@@ -3103,24 +3278,31 @@ async def td_subscribe(params: SubscribeInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_unsubscribe")
-async def td_unsubscribe(params: UnsubscribeInput, ctx: Context) -> str:
+async def td_unsubscribe(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="TD node path to stop monitoring."),
+    ],
+) -> str:
+    """Remove a node subscription."""
     finish = _start_tool(ctx, "td_unsubscribe")
     try:
         provisioning = await _get_client(ctx).request(
             "monitor/unsubscribe",
-            params.model_dump(),
+            {"path": path},
         )
 
         event_manager = _get_event_manager(ctx)
-        removed = event_manager.unregister_all_for_path(params.path)
+        removed = event_manager.unregister_all_for_path(path)
 
         payload = {
             "success": removed > 0,
-            "path": params.path,
+            "path": path,
             "provisioning": provisioning,
             "active_subscriptions": len(event_manager.list_subscriptions()),
         }
-        _audit_log(ctx, "td_unsubscribe", {"path": params.path})
+        _audit_log(ctx, "td_unsubscribe", {"path": path})
         return _as_json_output(payload)
     except Exception as exc:
         _record_tool_error(ctx, "td_unsubscribe")
@@ -3130,14 +3312,30 @@ async def td_unsubscribe(params: UnsubscribeInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_get_events")
-async def td_get_events(params: GetEventsInput, ctx: Context) -> str:
+async def td_get_events(
+    ctx: Context,
+    event_type: Annotated[
+        str | None,
+        Field(default=None, description="Optional event type filter."),
+    ] = None,
+    limit: Annotated[
+        int,
+        Field(
+            default=50,
+            ge=1,
+            le=1000,
+            description="Maximum number of events to return.",
+        ),
+    ] = 50,
+) -> str:
+    """Read recent event history."""
     finish = _start_tool(ctx, "td_get_events")
     try:
         manager = _get_event_manager(ctx)
-        events = manager.get_recent_events(event_type=params.event_type, limit=params.limit)
+        events = manager.get_recent_events(event_type=event_type, limit=limit)
         payload = {
             "schema_version": 1,
-            "event_type": params.event_type,
+            "event_type": event_type,
             "count": len(events),
             "events": events,
         }
@@ -3864,13 +4062,37 @@ async def td_describe_dynamics(
 
 
 @mcp.tool(name="td_set_param_bounds")
-async def td_set_param_bounds(params: SetBoundsInput, ctx: Context) -> str:
+async def td_set_param_bounds(
+    ctx: Context,
+    bounds: Annotated[
+        list[ParamBound],
+        Field(
+            min_length=1,
+            max_length=500,
+            description=(
+                "One or more parameter safety bounds. Each bound has "
+                "path, param, and optional min_val / max_val / max_rate."
+            ),
+        ),
+    ],
+    enforce_mode: Annotated[
+        str,
+        Field(
+            default="clamp",
+            description="Enforcement mode: clamp | reject | warn",
+        ),
+    ] = "clamp",
+) -> str:
+    """Set parameter safety bounds with enforcement mode."""
+    # Re-instantiate so the SetBoundsInput @field_validator on enforce_mode
+    # (clamp|reject|warn) still runs.
+    validated = SetBoundsInput(bounds=bounds, enforce_mode=enforce_mode)
     finish = _start_tool(ctx, "td_set_param_bounds")
     try:
         safety = _get_safety_manager(ctx)
-        safety.set_mode(params.enforce_mode)
+        safety.set_mode(validated.enforce_mode)
 
-        for bound in params.bounds:
+        for bound in validated.bounds:
             key = f"{bound.path}/{bound.param}"
             safety.set_bound(
                 key,
@@ -3890,8 +4112,8 @@ async def td_set_param_bounds(params: SetBoundsInput, ctx: Context) -> str:
             ctx,
             "td_set_param_bounds",
             {
-                "mode": params.enforce_mode,
-                "count": len(params.bounds),
+                "mode": validated.enforce_mode,
+                "count": len(validated.bounds),
             },
         )
         return _as_json_output(payload)
@@ -3903,16 +4125,26 @@ async def td_set_param_bounds(params: SetBoundsInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_clear_param_bounds")
-async def td_clear_param_bounds(params: ClearBoundsInput, ctx: Context) -> str:
+async def td_clear_param_bounds(
+    ctx: Context,
+    paths: Annotated[
+        list[str] | None,
+        Field(
+            default=None,
+            description="Clear bounds for specific node paths (None = clear all).",
+        ),
+    ] = None,
+) -> str:
+    """Clear parameter bounds for specific paths, or all bounds if paths is None."""
     finish = _start_tool(ctx, "td_clear_param_bounds")
     try:
         safety = _get_safety_manager(ctx)
 
         cleared = 0
-        if params.paths:
+        if paths:
             keys = list(safety.list_bounds().keys())
             for key in keys:
-                if any(key.startswith(path.rstrip("/") + "/") or key == path for path in params.paths):
+                if any(key.startswith(p.rstrip("/") + "/") or key == p for p in paths):
                     if safety.clear_bound(key):
                         cleared += 1
         else:
@@ -3927,7 +4159,7 @@ async def td_clear_param_bounds(params: ClearBoundsInput, ctx: Context) -> str:
         _audit_log(
             ctx,
             "td_clear_param_bounds",
-            {"paths": params.paths, "cleared": cleared},
+            {"paths": paths, "cleared": cleared},
         )
         return _as_json_output(payload)
     except Exception as exc:
@@ -4323,14 +4555,31 @@ async def td_restore_snapshot(
 
 
 @mcp.tool(name="td_get_state_vector")
-async def td_get_state_vector(params: StateVectorInput, ctx: Context) -> str:
+async def td_get_state_vector(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(
+            default="/project1",
+            description="Root path for aggregated diagnostics.",
+        ),
+    ] = "/project1",
+    force_refresh: Annotated[
+        bool,
+        Field(
+            default=False,
+            description="Bypass cache and fetch fresh state.",
+        ),
+    ] = False,
+) -> str:
+    """Aggregated scene state vector (cached for TD_STATE_VECTOR_TTL seconds)."""
     finish = _start_tool(ctx, "td_get_state_vector")
     try:
-        cache_key = params.path
+        cache_key = path
         cached = _STATE_VECTOR_CACHE.get(cache_key)
         now = time.time()
 
-        if not params.force_refresh and cached:
+        if not force_refresh and cached:
             cached_at = float(cached.get("cached_at", 0.0) or 0.0)
             age = now - cached_at
             if age <= max(0.0, TD_STATE_VECTOR_TTL):
@@ -4342,7 +4591,7 @@ async def td_get_state_vector(params: StateVectorInput, ctx: Context) -> str:
                 }
                 return _as_json_output(payload)
 
-        state_vector = await _build_state_vector(params.path, ctx)
+        state_vector = await _build_state_vector(path, ctx)
         if len(_STATE_VECTOR_CACHE) >= 100:
             _STATE_VECTOR_CACHE.clear()
         _STATE_VECTOR_CACHE[cache_key] = {
@@ -4362,12 +4611,32 @@ async def td_get_state_vector(params: StateVectorInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_get_timescale_state")
-async def td_get_timescale_state(params: TimescaleStateInput, ctx: Context) -> str:
+async def td_get_timescale_state(
+    ctx: Context,
+    bpm_hint: Annotated[
+        float | None,
+        Field(
+            default=None,
+            gt=0.0,
+            le=400.0,
+            description="Optional BPM hint. Defaults to 120 when omitted.",
+        ),
+    ] = None,
+    beats_per_bar: Annotated[
+        int,
+        Field(
+            default=4,
+            ge=1,
+            le=32,
+            description="Musical beats per bar for phase calculations.",
+        ),
+    ] = 4,
+) -> str:
+    """Beat/phrase derived timeline state."""
     finish = _start_tool(ctx, "td_get_timescale_state")
     try:
         timeline = await _get_client(ctx).request("timeline")
-        bpm = float(params.bpm_hint if params.bpm_hint is not None else 120.0)
-        beats_per_bar = int(params.beats_per_bar)
+        bpm = float(bpm_hint if bpm_hint is not None else 120.0)
 
         payload = {
             "schema_version": 1,
