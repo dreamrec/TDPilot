@@ -1,5 +1,68 @@
 # Changelog
 
+## 1.4.3 - 2026-04-24
+
+Release-blocker patch. Six targeted fixes shipped behind regression tests.
+No TD-side protocol changes — API_VERSION stays at 1.4.2, no .tox rebuild
+required.
+
+### Fixed
+
+- **Plugin install auth path**: the server now refuses to start when
+  `TD_MCP_REQUIRE_AUTH=1` is set but no `TD_MCP_SHARED_SECRET` is resolvable,
+  and exits with a clear message pointing to the installer. Previously the
+  default `.mcp.json` shipped auth-required without a secret, and the Claude
+  Code plugin install path reads `.mcp.json` directly — so the server would
+  boot happily and every authenticated tool call returned 401 with no signal
+  about why. `tdpilot doctor` now also flags this misconfiguration explicitly.
+
+- **DocsBrain multi-word operator lookup**: operators with three or more
+  words in their name now resolve by the correct op_type:
+  - `Movie File In TOP` → `moviefileinTOP`
+  - `Audio File In CHOP` → `audiofileinCHOP`
+  - `GLSL Multi TOP` → `glslmultiTOP`
+  The op-type map previously used only the first word before the family
+  suffix, so multi-word operators silently returned `None` when looked up
+  via `get_operator()`.
+
+- **DocsBrain card-type aliases**: searches with plural or expanded
+  `card_types` values (e.g. `["operators"]`, `["release"]`, `["releases"]`,
+  `["palettes"]`) now match the singular canonical `doc_type` values stored
+  in the index (`operator`, `release_notes`, `palette`). Previously these
+  filters built `WHERE doc_type IN ('operators')` and silently returned zero
+  hits. Unknown card types pass through unchanged so future additions don't
+  need an alias entry.
+
+- **`td_memory_replay` state transition**: clean replays now correctly
+  promote techniques from `candidate` → `validated_local`, and failing
+  replays demote `validated_local` → `candidate`. Previously the promotion
+  path used `TechniqueStore.update()`, which intentionally drops `state`
+  keys to enforce state-transition discipline — so the validation_result
+  reported a pass while the technique silently stayed a candidate. Replay
+  now routes through `update_validation()`, which handles both state
+  directions.
+
+- **Resource template count manifest**: `mcp/manifest.json` now reports 6
+  templates + 1 static resource. Previously it claimed 7 templates, which
+  mismatched the registry (one of the seven `@mcp.resource` entries,
+  `td://timeline/state`, has no URI parameters). Two new regression tests
+  verify that both `tool_count` and the resource counts stay in sync with
+  the `@mcp.tool()` and `@mcp.resource()` decorators.
+
+### Added
+
+- **`ExecPythonInput.timeout_ms`**: optional per-call execution timeout in
+  milliseconds (bounds 100–60000). When set, `td_exec_python` forwards it
+  to the TD-side exec endpoint; when omitted, TD's configured default
+  applies. Previously the TD side supported a per-call timeout but the
+  Python schema had no way to express it.
+
+### Unchanged
+
+- Tool count: 92 (no `@mcp.tool()` added or removed).
+- `API_VERSION` in `td_component/mcp_webserver_callbacks.py`: still `1.4.2`
+  (TD-side untouched, `.tox` rebuild not required).
+
 ## 1.4.2 - 2026-04-19
 
 Follow-up bugfix release from the v1.4.1 ultra-debug sweep. All fixes address

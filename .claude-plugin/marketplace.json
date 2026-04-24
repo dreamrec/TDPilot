@@ -10,7 +10,7 @@
     {
       "name": "tdpilot",
       "description": "AI copilot for TouchDesigner with live MCP control — 92 tools, POPx inspection, project lifecycle, custom parameter authoring, snapshots, and undo-block safety. Works with Claude Desktop, Claude Code, and any MCP-compatible client.",
-      "version": "1.4.2",
+      "version": "1.4.3",
       "author": {
         "name": "silviu"
       },
