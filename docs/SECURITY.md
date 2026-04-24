@@ -34,12 +34,24 @@ When you call `td_exec_python`:
 
 ## Exec modes
 
-| Mode | Default | Imports | Builtins | TD API | Intended for |
+| Mode | Default | Imports | Builtins | TD API (via `td_exec_python`) | Intended for |
 |---|---|---|---|---|---|
-| off | no | - | - | - | Read-only MCP clients |
-| restricted | yes | blocked | curated (no getattr/hasattr/type) | read-only | Default agent loop |
-| standard | no | 14 whitelisted (json, math, re, ...) | curated | mutating | Agent loop with safe helpers |
+| off | no | — | — | `td_exec_python` disabled entirely | Read-only MCP clients |
+| restricted | yes | blocked | curated (no getattr/hasattr/type) | `.text=` + `.par.file=` blocked; `.par.*` writes + node methods **allowed**¹ | Default agent loop |
+| standard | no | 14 whitelisted (json, math, re, …) | curated | same restricted blocks + 14 whitelisted imports | Agent loop with safe helpers |
 | full | no | unrestricted | unrestricted | unrestricted | Developer sessions only |
+
+¹ **`restricted` is a Python-level sandbox, not a TD-graph read-only mode.** It
+blocks shell-exec escapes (e.g. the `os` module's `system` / `popen` helpers,
+`subprocess`), all imports, dunder reflection (`__subclasses__`, `__bases__`,
+`__builtins__` subscript), and two specific TD-side vectors: `.text = …`
+writes on DATs and `.par.file = …` dynamic path writes. It does NOT prevent
+parameter writes (`op('x').par.amp = 2.5`), node method calls
+(`op('x').destroy()`, `parent().copy(...)`), or most of the TouchDesigner
+Python API. Use `TD_MCP_EXEC_MODE=off` if you need `td_exec_python` fully
+disabled. Note that write-mutating *tools* (`td_set_params`, `td_create_node`,
+etc.) are never gated by exec mode — exec mode only controls the
+`td_exec_python` escape hatch.
 
 ## What we do NOT protect against
 
@@ -65,6 +77,18 @@ sensitive files.
 **5. Network calls from TD's native operators.** Web Client DATs, WebSocket
 DATs, OSC In/Out CHOPs — none are gated by exec mode. Mitigate at the OS or
 network layer.
+
+**6. TD-graph mutation under "restricted" mode.** A common misreading of
+the exec-modes table: `restricted` is a Python-level sandbox (no imports,
+no shell exec, no dunder reflection, no `.text=` on DATs, no `.par.file=`
+on operators), not a TD-graph read-only mode. Parameter writes
+(`op('/project1/noise1').par.amp = 2.5`), node destruction
+(`op('x').destroy()`), node creation through the TD Python API, and most
+other TD API method calls are not blocked. If you need a read-only
+posture, set `TD_MCP_EXEC_MODE=off` — that disables `td_exec_python`
+entirely. The write-mutating *tools* (`td_set_params`, `td_create_node`,
+`td_connect_nodes`, `td_project_lifecycle`, …) are a separate surface;
+they are governed by the SafetyManager bounds system, not by exec mode.
 
 ## Threat-model posture
 
