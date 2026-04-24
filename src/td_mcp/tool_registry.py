@@ -2507,13 +2507,41 @@ async def td_exec_python(
 
 
 @mcp.tool(name="td_screenshot")
-async def td_screenshot(params: ScreenshotInput, ctx: Context) -> str:
+async def td_screenshot(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(
+            description=(
+                "Path to a TOP node to capture as an image (e.g. '/project1/null1', '/project1/render1')"
+            ),
+            min_length=1,
+        ),
+    ],
+    quality: Annotated[
+        float,
+        Field(
+            default=0.5,
+            ge=0.0,
+            le=1.0,
+            description=(
+                "JPEG quality from 0.0 (smallest) to 1.0 (best). "
+                "Default 0.5 gives good diagnostic quality at ~85KB."
+            ),
+        ),
+    ] = 0.5,
+) -> str:
     """Capture a TOP frame.
 
     Ask the user before repeated screenshots because each base64 image can
     consume significant tokens in model context.
     """
-    return await _forward(ctx, "td_screenshot", "screenshot", params.model_dump())
+    return await _forward(
+        ctx,
+        "td_screenshot",
+        "screenshot",
+        {"path": path, "quality": quality},
+    )
 
 
 @mcp.tool(name="td_chop_data")
@@ -3122,29 +3150,69 @@ async def td_get_events(params: GetEventsInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_capture_and_analyze")
-async def td_capture_and_analyze(params: CaptureAndAnalyzeInput, ctx: Context) -> str:
+async def td_capture_and_analyze(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="Path to TOP node to capture."),
+    ],
+    quality: Annotated[
+        float,
+        Field(default=0.5, ge=0.0, le=1.0, description="JPEG quality 0.0-1.0."),
+    ] = 0.5,
+    confirm_image_capture: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=(
+                "Must be true to execute the capture. "
+                "This is an explicit acknowledgement that image payloads can "
+                "consume tokens."
+            ),
+        ),
+    ] = False,
+    analyze: Annotated[
+        bool,
+        Field(
+            default=False,
+            description="Request AI analysis if sampling is supported.",
+        ),
+    ] = False,
+    analysis_prompt: Annotated[
+        str | None,
+        Field(default=None, description="Custom analysis prompt."),
+    ] = None,
+    compare_with: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Optional resource URI to compare against.",
+        ),
+    ] = None,
+) -> str:
+    """Screenshot capture with optional AI analysis."""
     finish = _start_tool(ctx, "td_capture_and_analyze")
     try:
-        if not params.confirm_image_capture:
+        if not confirm_image_capture:
             return _capture_confirmation_required_response()
 
         screenshot = await _get_client(ctx).request(
             "screenshot",
             {
-                "path": params.path,
-                "quality": params.quality,
+                "path": path,
+                "quality": quality,
             },
         )
 
         capabilities = detect_capabilities(ctx)
         analysis = None
 
-        if params.analyze:
+        if analyze:
             if capabilities.supports_sampling:
                 analysis = {
                     "status": "not_implemented",
                     "message": "Sampling capability detected but this runtime does not expose a sampling API.",
-                    "prompt": params.analysis_prompt,
+                    "prompt": analysis_prompt,
                 }
             else:
                 analysis = {
@@ -3156,7 +3224,7 @@ async def td_capture_and_analyze(params: CaptureAndAnalyzeInput, ctx: Context) -
             "schema_version": 1,
             "capture": screenshot,
             "analysis": analysis,
-            "compare_with": params.compare_with,
+            "compare_with": compare_with,
             "token_notice": {
                 "advice": (
                     "Image payloads include base64 data and can consume many tokens when repeated. "
@@ -3177,33 +3245,85 @@ async def td_capture_and_analyze(params: CaptureAndAnalyzeInput, ctx: Context) -
 
 
 @mcp.tool(name="td_monitor_visual")
-async def td_monitor_visual(params: VisualMonitorInput, ctx: Context) -> str:
+async def td_monitor_visual(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="TOP path to monitor."),
+    ],
+    interval: Annotated[
+        float,
+        Field(
+            default=2.0,
+            ge=0.5,
+            le=30.0,
+            description="Capture interval seconds.",
+        ),
+    ] = 2.0,
+    quality: Annotated[
+        float,
+        Field(default=0.3, ge=0.0, le=1.0, description="JPEG quality."),
+    ] = 0.3,
+    include_image: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=(
+                "When false (default), monitor events omit base64 image "
+                "data to reduce token usage. Set true only when you "
+                "explicitly want frame payloads in context."
+            ),
+        ),
+    ] = False,
+    confirm_high_token_mode: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=(
+                "Must be true when include_image=true. This is an explicit "
+                "acknowledgement that continuous image payloads can consume "
+                "many tokens."
+            ),
+        ),
+    ] = False,
+    auto_analyze: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=("Auto analyze each capture if sampling available."),
+        ),
+    ] = False,
+    analysis_prompt: Annotated[
+        str | None,
+        Field(default=None, description="Optional analysis prompt."),
+    ] = None,
+) -> str:
     """Start periodic monitor for a TOP.
 
     Default mode omits base64 frames to keep token usage low.
     """
     finish = _start_tool(ctx, "td_monitor_visual")
     try:
-        if params.include_image and not params.confirm_high_token_mode:
+        if include_image and not confirm_high_token_mode:
             return _vision_confirmation_required_response()
 
         monitor = _get_visual_monitor(ctx)
         config = await monitor.start_monitor(
-            path=params.path,
-            interval=params.interval,
-            quality=params.quality,
-            include_image=params.include_image,
+            path=path,
+            interval=interval,
+            quality=quality,
+            include_image=include_image,
         )
 
         payload = {
             "success": True,
             "monitor": config,
-            "resource_uri": top_frame_uri(params.path),
+            "resource_uri": top_frame_uri(path),
             "active_monitors": monitor.active_monitors(),
-            "token_notice": _vision_token_notice(params.include_image),
+            "token_notice": _vision_token_notice(include_image),
         }
 
-        if params.auto_analyze:
+        if auto_analyze:
             payload["note"] = (
                 "auto_analyze requested; monitor captures are active but auto sampling is not implemented in this runtime."
             )
@@ -3212,11 +3332,11 @@ async def td_monitor_visual(params: VisualMonitorInput, ctx: Context) -> str:
             ctx,
             "td_monitor_visual",
             {
-                "path": params.path,
-                "interval": params.interval,
-                "quality": params.quality,
-                "include_image": params.include_image,
-                "confirm_high_token_mode": params.confirm_high_token_mode,
+                "path": path,
+                "interval": interval,
+                "quality": quality,
+                "include_image": include_image,
+                "confirm_high_token_mode": confirm_high_token_mode,
             },
         )
         return _as_json_output(payload)
@@ -3228,14 +3348,21 @@ async def td_monitor_visual(params: VisualMonitorInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_stop_monitor_visual")
-async def td_stop_monitor_visual(params: StopMonitorInput, ctx: Context) -> str:
+async def td_stop_monitor_visual(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="TOP path being monitored."),
+    ],
+) -> str:
+    """Stop a running visual monitor."""
     finish = _start_tool(ctx, "td_stop_monitor_visual")
     try:
         monitor = _get_visual_monitor(ctx)
-        stopped = await monitor.stop_monitor(params.path)
+        stopped = await monitor.stop_monitor(path)
         payload = {
             "success": stopped,
-            "path": params.path,
+            "path": path,
             "active_monitors": monitor.active_monitors(),
         }
         return _as_json_output(payload)
@@ -3247,33 +3374,86 @@ async def td_stop_monitor_visual(params: StopMonitorInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_stream_top")
-async def td_stream_top(params: StreamTopInput, ctx: Context) -> str:
+async def td_stream_top(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="TOP path to stream continuously."),
+    ],
+    fps: Annotated[
+        float,
+        Field(
+            default=8.0,
+            ge=0.5,
+            le=60.0,
+            description="Target stream frame rate.",
+        ),
+    ] = 8.0,
+    quality: Annotated[
+        float,
+        Field(
+            default=0.25,
+            ge=0.0,
+            le=1.0,
+            description="JPEG quality for stream frames.",
+        ),
+    ] = 0.25,
+    include_image: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=(
+                "When false (default), streamed resource updates omit "
+                "base64 image data to reduce token usage. Set true only "
+                "when you explicitly want frame payloads in context."
+            ),
+        ),
+    ] = False,
+    confirm_high_token_mode: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=(
+                "Must be true when include_image=true. This is an explicit "
+                "acknowledgement that continuous image payloads can consume "
+                "many tokens."
+            ),
+        ),
+    ] = False,
+    emit_unchanged: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=("When false, identical consecutive frames are suppressed."),
+        ),
+    ] = False,
+) -> str:
     """Start continuous TOP stream.
 
     Default mode omits base64 frames to keep token usage low.
     """
     finish = _start_tool(ctx, "td_stream_top")
     try:
-        if params.include_image and not params.confirm_high_token_mode:
+        if include_image and not confirm_high_token_mode:
             return _vision_confirmation_required_response()
 
         streamer = _get_top_streamer(ctx)
-        normalized_fps = max(0.5, min(float(params.fps), TD_STREAM_MAX_FPS))
+        normalized_fps = max(0.5, min(float(fps), TD_STREAM_MAX_FPS))
         config = await streamer.start_stream(
-            path=params.path,
+            path=path,
             fps=normalized_fps,
-            quality=params.quality,
-            include_image=params.include_image,
-            emit_unchanged=params.emit_unchanged,
+            quality=quality,
+            include_image=include_image,
+            emit_unchanged=emit_unchanged,
         )
         payload = {
             "success": True,
             "stream": config,
-            "resource_uri": top_frame_uri(params.path),
+            "resource_uri": top_frame_uri(path),
             "active_streams": streamer.active_streams(),
-            "token_notice": _vision_token_notice(params.include_image),
+            "token_notice": _vision_token_notice(include_image),
             "limits": {
-                "requested_fps": params.fps,
+                "requested_fps": fps,
                 "applied_fps": normalized_fps,
                 "max_fps": TD_STREAM_MAX_FPS,
             },
@@ -3282,12 +3462,12 @@ async def td_stream_top(params: StreamTopInput, ctx: Context) -> str:
             ctx,
             "td_stream_top",
             {
-                "path": params.path,
+                "path": path,
                 "fps": normalized_fps,
-                "quality": params.quality,
-                "include_image": params.include_image,
-                "confirm_high_token_mode": params.confirm_high_token_mode,
-                "emit_unchanged": params.emit_unchanged,
+                "quality": quality,
+                "include_image": include_image,
+                "confirm_high_token_mode": confirm_high_token_mode,
+                "emit_unchanged": emit_unchanged,
             },
         )
         return _as_json_output(payload)
@@ -3299,14 +3479,21 @@ async def td_stream_top(params: StreamTopInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_stop_stream_top")
-async def td_stop_stream_top(params: StopStreamTopInput, ctx: Context) -> str:
+async def td_stop_stream_top(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="TOP path being streamed."),
+    ],
+) -> str:
+    """Stop a running TOP stream."""
     finish = _start_tool(ctx, "td_stop_stream_top")
     try:
         streamer = _get_top_streamer(ctx)
-        stopped = await streamer.stop_stream(params.path)
+        stopped = await streamer.stop_stream(path)
         payload = {
             "success": stopped,
-            "path": params.path,
+            "path": path,
             "active_streams": streamer.active_streams(),
             "stats": streamer.stats(),
         }
@@ -3319,7 +3506,94 @@ async def td_stop_stream_top(params: StopStreamTopInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_optimize_visual")
-async def td_optimize_visual(params: OptimizeVisualInput, ctx: Context) -> str:
+async def td_optimize_visual(
+    ctx: Context,
+    goal: Annotated[
+        str,
+        Field(min_length=3, description="Natural-language optimization goal."),
+    ],
+    output_top: Annotated[
+        str,
+        Field(description="TOP path used as output reference."),
+    ],
+    adjustable_params: Annotated[
+        list[AdjustableParamInput],
+        Field(
+            min_length=1,
+            max_length=200,
+            description=(
+                "Parameter search space. Each entry specifies path/param/"
+                "min_val/max_val/step for a parameter the optimizer may "
+                "adjust."
+            ),
+        ),
+    ],
+    profile: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description=(
+                "Optional optimizer profile: balanced | complexity | motion_rhythm | stability_guard"
+            ),
+        ),
+    ] = None,
+    objective_weights: Annotated[
+        dict[str, float] | None,
+        Field(
+            default=None,
+            description=(
+                "Optional explicit objective weights, e.g. {'motion_rhythm': 0.8, 'stability': 0.4}."
+            ),
+        ),
+    ] = None,
+    max_iterations: Annotated[
+        int,
+        Field(default=10, ge=1, le=50, description="Max iterations."),
+    ] = 10,
+    convergence_threshold: Annotated[
+        float,
+        Field(default=0.8, ge=0.0, le=1.0, description="Convergence threshold."),
+    ] = 0.8,
+    safety_profile: Annotated[
+        str,
+        Field(
+            default="balanced",
+            description=("Optimizer safety profile: conservative | balanced | aggressive"),
+        ),
+    ] = "balanced",
+    root_path: Annotated[
+        str,
+        Field(
+            default="/project1",
+            description="Root scope for instability checks and snapshots.",
+        ),
+    ] = "/project1",
+    snapshot_before: Annotated[
+        bool,
+        Field(
+            default=True,
+            description="Capture snapshot before optimization loop starts.",
+        ),
+    ] = True,
+) -> str:
+    """Autonomous visual goal optimization via bounded parameter search."""
+    # Re-instantiate so OptimizeVisualInput's @field_validator decorators on
+    # ``safety_profile`` (conservative|balanced|aggressive) and ``profile``
+    # (balanced|complexity|motion_rhythm|stability_guard) still run. Each
+    # AdjustableParamInput also has a cross-field validator (max_val >= min_val).
+    validated = OptimizeVisualInput(
+        goal=goal,
+        profile=profile,
+        objective_weights=objective_weights,
+        output_top=output_top,
+        adjustable_params=adjustable_params,
+        max_iterations=max_iterations,
+        convergence_threshold=convergence_threshold,
+        safety_profile=safety_profile,
+        root_path=root_path,
+        snapshot_before=snapshot_before,
+    )
+
     finish = _start_tool(ctx, "td_optimize_visual")
     try:
         client = _get_client(ctx)
@@ -3337,8 +3611,8 @@ async def td_optimize_visual(params: OptimizeVisualInput, ctx: Context) -> str:
             "motion_rhythm": 0.0,
         }
         goal_profile: dict[str, float] = dict(default_weights)
-        if params.objective_weights:
-            for key, value in params.objective_weights.items():
+        if validated.objective_weights:
+            for key, value in validated.objective_weights.items():
                 if key in goal_profile:
                     try:
                         goal_profile[key] = max(-1.0, min(1.0, float(value)))
@@ -3347,16 +3621,16 @@ async def td_optimize_visual(params: OptimizeVisualInput, ctx: Context) -> str:
 
         baseline_snapshot_id: str | None = None
         snapshot_warning: str | None = None
-        if params.snapshot_before:
+        if validated.snapshot_before:
             try:
                 snapshot_payload = await _capture_snapshot_payload(
                     ctx,
-                    path=params.root_path,
+                    path=validated.root_path,
                     include_visual=False,
                 )
                 saved = snapshots.add_snapshot(
                     snapshot_payload,
-                    name=f"optimize_start_{params.output_top.strip('/').replace('/', '_') or 'top'}",
+                    name=f"optimize_start_{validated.output_top.strip('/').replace('/', '_') or 'top'}",
                 )
                 baseline_snapshot_id = saved["snapshot_id"]
             except Exception as exc:
@@ -3368,12 +3642,12 @@ async def td_optimize_visual(params: OptimizeVisualInput, ctx: Context) -> str:
                 safety=safety,
                 jobs=jobs,
                 job_id=job_id,
-                adjustable_params=params.adjustable_params,
+                adjustable_params=validated.adjustable_params,
                 goal_profile=goal_profile,
-                max_iterations=params.max_iterations,
-                convergence_threshold=params.convergence_threshold,
-                safety_profile=params.safety_profile,
-                root_path=params.root_path,
+                max_iterations=validated.max_iterations,
+                convergence_threshold=validated.convergence_threshold,
+                safety_profile=validated.safety_profile,
+                root_path=validated.root_path,
                 phase_label="optimize_visual",
             )
 
@@ -3381,20 +3655,20 @@ async def td_optimize_visual(params: OptimizeVisualInput, ctx: Context) -> str:
                 "schema_version": 1,
                 "mode": "bounded_search",
                 "sampling_supported": capabilities.supports_sampling,
-                "goal": params.goal,
+                "goal": validated.goal,
                 "goal_profile": goal_profile,
-                "output_top": params.output_top,
-                "root_path": params.root_path,
-                "safety_profile": params.safety_profile,
-                "snapshot_before": params.snapshot_before,
+                "output_top": validated.output_top,
+                "root_path": validated.root_path,
+                "safety_profile": validated.safety_profile,
+                "snapshot_before": validated.snapshot_before,
                 "baseline_snapshot_id": baseline_snapshot_id,
                 "snapshot_warning": snapshot_warning,
                 "converged": optimize_result["converged"],
                 "emergency_stop": optimize_result["emergency_stop"],
                 "stop_reason": optimize_result["stop_reason"],
                 "iterations_completed": optimize_result["iterations_completed"],
-                "max_iterations": params.max_iterations,
-                "convergence_threshold": params.convergence_threshold,
+                "max_iterations": validated.max_iterations,
+                "convergence_threshold": validated.convergence_threshold,
                 "final_score": optimize_result["final_score"],
                 "iterations": optimize_result["iterations"],
                 "final_params": optimize_result["final_params"],
@@ -3405,7 +3679,7 @@ async def td_optimize_visual(params: OptimizeVisualInput, ctx: Context) -> str:
             }
 
         job = jobs.start_async(
-            description=f"Optimize visual goal: {params.goal}",
+            description=f"Optimize visual goal: {validated.goal}",
             runner=runner,
         )
 
@@ -3413,11 +3687,11 @@ async def td_optimize_visual(params: OptimizeVisualInput, ctx: Context) -> str:
             ctx,
             "td_optimize_visual",
             {
-                "goal": params.goal,
-                "output_top": params.output_top,
-                "adjustable_count": len(params.adjustable_params),
-                "max_iterations": params.max_iterations,
-                "safety_profile": params.safety_profile,
+                "goal": validated.goal,
+                "output_top": validated.output_top,
+                "adjustable_count": len(validated.adjustable_params),
+                "max_iterations": validated.max_iterations,
+                "safety_profile": validated.safety_profile,
                 "goal_profile": goal_profile,
                 "baseline_snapshot_id": baseline_snapshot_id,
             },
@@ -5890,7 +6164,29 @@ async def td_audit_project(params: AuditProjectInput, ctx: Context) -> dict[str,
 
 
 @mcp.tool(name="td_capture_frame")
-async def td_capture_frame(params: CaptureFrameInput, ctx: Context) -> str:
+async def td_capture_frame(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="Path to a TOP node to capture"),
+    ],
+    quality: Annotated[
+        float,
+        Field(
+            default=0.8,
+            ge=0.0,
+            le=1.0,
+            description="JPEG quality 0.0-1.0",
+        ),
+    ] = 0.8,
+    confirm: Annotated[
+        bool,
+        Field(
+            default=False,
+            description="If True, include base64 image in response",
+        ),
+    ] = False,
+) -> str:
     """Capture a single frame from a TOP node and return metadata.
 
     Returns resolution, format, and byte size. If confirm=True, also includes
@@ -5902,21 +6198,21 @@ async def td_capture_frame(params: CaptureFrameInput, ctx: Context) -> str:
         client = _get_client(ctx)
         data = await client.request(
             "screenshot",
-            {"path": params.path, "quality": params.quality},
+            {"path": path, "quality": quality},
         )
         if isinstance(data, dict) and data.get("success"):
             result: dict[str, Any] = {
                 "success": True,
-                "path": data.get("path", params.path),
+                "path": data.get("path", path),
                 "resolution": [
                     data.get("width", 0),
                     data.get("height", 0),
                 ],
                 "format": data.get("format", "jpeg"),
                 "size_bytes": data.get("size_bytes", 0),
-                "quality": params.quality,
+                "quality": quality,
             }
-            if params.confirm:
+            if confirm:
                 result["data_base64"] = data.get("data_base64", "")
             else:
                 result["data_omitted"] = True
@@ -5934,7 +6230,38 @@ async def td_capture_frame(params: CaptureFrameInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_analyze_frame")
-async def td_analyze_frame(params: AnalyzeFrameInput, ctx: Context) -> str:
+async def td_analyze_frame(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="Path to a TOP node to analyze"),
+    ],
+    modes: Annotated[
+        list[str] | None,
+        Field(
+            default=None,
+            description=(
+                "Analysis modes: histogram, luminance, alpha_coverage, "
+                "color_dominant, roi_diff. Defaults to "
+                "['histogram', 'luminance'] when omitted."
+            ),
+        ),
+    ] = None,
+    roi: Annotated[
+        list[int] | None,
+        Field(
+            default=None,
+            description="Region of interest [x, y, w, h] for roi_diff mode",
+        ),
+    ] = None,
+    reference_path: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Reference TOP path for roi_diff mode",
+        ),
+    ] = None,
+) -> str:
     """Analyze pixel data of a TOP node without transferring full image data.
 
     Runs server-side numpy analysis inside TouchDesigner and returns statistical
@@ -5951,13 +6278,13 @@ async def td_analyze_frame(params: AnalyzeFrameInput, ctx: Context) -> str:
     try:
         client = _get_client(ctx)
         body: dict[str, Any] = {
-            "path": params.path,
-            "modes": params.modes,
+            "path": path,
+            "modes": modes or ["histogram", "luminance"],
         }
-        if params.roi is not None:
-            body["roi"] = params.roi
-        if params.reference_path is not None:
-            body["reference_path"] = params.reference_path
+        if roi is not None:
+            body["roi"] = roi
+        if reference_path is not None:
+            body["reference_path"] = reference_path
         data = await client.request("analyze_frame", body)
         return _as_json_output(data)
     except Exception as exc:

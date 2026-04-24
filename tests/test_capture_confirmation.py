@@ -16,8 +16,11 @@ class _DummyContext:
 
 @pytest.mark.asyncio
 async def test_capture_and_analyze_requires_explicit_confirmation():
-    params = CaptureAndAnalyzeInput(path="/project1/out1")
-    result = await tool_registry.td_capture_and_analyze(params, _DummyContext())
+    # Post-Bug-A (v1.5.0 batch 5) signature: ctx first, then explicit args.
+    result = await tool_registry.td_capture_and_analyze(
+        _DummyContext(),
+        path="/project1/out1",
+    )
     payload = json.loads(result)
 
     assert payload["success"] is False
