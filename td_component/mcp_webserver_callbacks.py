@@ -27,9 +27,7 @@ import traceback
 # ─────────────────────────────────────────────────────────────
 
 API_VERSION = "1.4.2"
-SCREENSHOT_TEMP_PATH = os.path.join(
-    os.environ.get("TEMP", os.environ.get("TMP", "/tmp")), "td_mcp_screenshot.jpg"
-)
+SCREENSHOT_TEMP_PATH = os.path.join(os.environ.get('TEMP', os.environ.get('TMP', '/tmp')), 'td_mcp_screenshot.jpg')
 
 # Auth + policy env is read at CALL TIME, not import time — otherwise TD's
 # compiled-callback module cache pins stale values for the whole session, and
@@ -37,10 +35,9 @@ SCREENSHOT_TEMP_PATH = os.path.join(
 # audit A-1. Module-level aliases remain below for backward compatibility with
 # external callers and tests that inspect them.
 
-
 def _current_shared_secret():
     """Read TD_MCP_SHARED_SECRET fresh from the environment."""
-    return os.environ.get("TD_MCP_SHARED_SECRET", "").strip()
+    return os.environ.get('TD_MCP_SHARED_SECRET', '').strip()
 
 
 def _current_require_auth():
@@ -51,7 +48,7 @@ def _current_require_auth():
       - If TD_MCP_REQUIRE_AUTH=1 (default in production): refuse when secret is empty.
       - If TD_MCP_REQUIRE_AUTH=0: legacy permissive mode. Use only for local dev.
     """
-    return os.environ.get("TD_MCP_REQUIRE_AUTH", "1").strip() not in ("0", "false", "no", "")
+    return os.environ.get('TD_MCP_REQUIRE_AUTH', '1').strip() not in ('0', 'false', 'no', '')
 
 
 def _current_cors_origin():
@@ -63,14 +60,14 @@ def _current_cors_origin():
       - TD_MCP_CORS_ORIGIN can be set to an exact origin (e.g. http://localhost:3000).
       - Wildcard '*' is NEVER used.
     """
-    return os.environ.get("TD_MCP_CORS_ORIGIN", "").strip()
+    return os.environ.get('TD_MCP_CORS_ORIGIN', '').strip()
 
 
 def _current_exec_mode():
     """Read TD_MCP_EXEC_MODE fresh from the environment."""
-    mode = os.environ.get("TD_MCP_EXEC_MODE", "restricted").strip().lower()
-    if mode not in ("off", "restricted", "standard", "full"):
-        return "restricted"
+    mode = os.environ.get('TD_MCP_EXEC_MODE', 'restricted').strip().lower()
+    if mode not in ('off', 'restricted', 'standard', 'full'):
+        return 'restricted'
     return mode
 
 
@@ -81,69 +78,56 @@ SHARED_SECRET = _current_shared_secret()
 REQUIRE_AUTH = _current_require_auth()
 CORS_ORIGIN = _current_cors_origin()
 DEFAULT_EXEC_MODE = _current_exec_mode()
-RESTRICTED_IMPORT_RE = re.compile(r"(?:^|;)\s*(import|from)\s+\w+", re.MULTILINE)
+RESTRICTED_IMPORT_RE = re.compile(r'(?:^|;)\s*(import|from)\s+\w+', re.MULTILINE)
 RESTRICTED_TOKENS = (
-    "__import__",
-    "open\x28",
-    "compile\x28",
-    "input\x28",
-    "subprocess",
-    "socket",
-    "requests",
-    "httpx",
-    "urllib",
-    "pathlib",
-    "shutil",
-    "os.system",
-    "os.popen",
-    "__subclasses__",
-    "__bases__",
-    "__mro__",
-    "__class__",
+    '__import__',
+    'open\x28',
+    'compile\x28',
+    'input\x28',
+    'subprocess',
+    'socket',
+    'requests',
+    'httpx',
+    'urllib',
+    'pathlib',
+    'shutil',
+    'os.system',
+    'os.popen',
+    '__subclasses__',
+    '__bases__',
+    '__mro__',
+    '__class__',
 )
-STANDARD_ALLOWED_IMPORTS = frozenset(
-    {
-        "json",
-        "math",
-        "re",
-        "datetime",
-        "collections",
-        "itertools",
-        "functools",
-        "copy",
-        "textwrap",
-        "string",
-        "random",
-        "decimal",
-        "fractions",
-        "statistics",
-    }
-)
-_EXEC_PAREN = "exec" + "("
-_EVAL_PAREN = "eval" + "("
-_GLOBALS_PAREN = "globals" + "("
-_LOCALS_PAREN = "locals" + "("
+STANDARD_ALLOWED_IMPORTS = frozenset({
+    'json', 'math', 're', 'datetime', 'collections',
+    'itertools', 'functools', 'copy', 'textwrap',
+    'string', 'random', 'decimal', 'fractions', 'statistics',
+})
+_EXEC_PAREN = 'exec' + '('
+_EVAL_PAREN = 'eval' + '('
+_GLOBALS_PAREN = 'globals' + '('
+_LOCALS_PAREN = 'locals' + '('
 STANDARD_BLOCKED_TOKENS = (
-    "__import__(",
-    "open(",
-    "compile(",
-    "input(",
+    '__import__(',
+    'open(',
+    'compile(',
+    'input(',
     _EXEC_PAREN,
     _EVAL_PAREN,
-    "subprocess",
-    "socket",
-    "requests",
-    "httpx",
-    "urllib",
-    "pathlib",
-    "shutil",
-    "setattr",
-    "delattr",
-    "__subclasses__",
-    "__bases__",
-    "__mro__",
-    "os.system",
-    "os.popen",
+    'subprocess',
+    'socket',
+    'requests',
+    'httpx',
+    'urllib',
+    'pathlib',
+    'shutil',
+    'setattr',
+    'delattr',
+    '__subclasses__',
+    '__bases__',
+    '__mro__',
+    'os.system',
+    'os.popen',
     _GLOBALS_PAREN,
     _LOCALS_PAREN,
 )
@@ -153,22 +137,21 @@ MONITOR_SUBSCRIPTIONS = {}
 # Main HTTP Router
 # ─────────────────────────────────────────────────────────────
 
-
 def onHTTPRequest(webServerDAT, request, response):
     """
     Main entry point for all MCP server requests.
     Routes to handler functions based on URI path.
     """
-    uri = request.get("uri", "/")
-    method = request.get("method", "GET")
+    uri = request.get('uri', '/')
+    method = request.get('method', 'GET')
 
     # Parse JSON body
     body = {}
-    raw_data = request.get("data", None)
+    raw_data = request.get('data', None)
     if raw_data:
         try:
             if isinstance(raw_data, bytes):
-                body = json.loads(raw_data.decode("utf-8"))
+                body = json.loads(raw_data.decode('utf-8'))
             elif isinstance(raw_data, str):
                 body = json.loads(raw_data)
         except (json.JSONDecodeError, UnicodeDecodeError):
@@ -178,92 +161,96 @@ def onHTTPRequest(webServerDAT, request, response):
     # Never emit '*' — combined with weak auth, that lets any webpage drive TD.
     cors_origin = _current_cors_origin()
     if cors_origin:
-        response["Access-Control-Allow-Origin"] = cors_origin
-        response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-        response["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-TD-MCP-Secret"
-        response["Vary"] = "Origin"
+        response['Access-Control-Allow-Origin'] = cors_origin
+        response['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-TD-MCP-Secret'
+        response['Vary'] = 'Origin'
 
     # Handle OPTIONS preflight
-    if method == "OPTIONS":
-        response["statusCode"] = 204
-        response["statusReason"] = "No Content"
-        response["data"] = ""
+    if method == 'OPTIONS':
+        response['statusCode'] = 204
+        response['statusReason'] = 'No Content'
+        response['data'] = ''
         return response
 
     # Reject cross-site requests from browsers — MCP clients don't set Sec-Fetch-Site,
     # so this only blocks malicious webpage fetches. Same-origin/none is allowed.
     headers = _extract_headers(request)
-    fetch_site = headers.get("sec-fetch-site", "")
-    if fetch_site and fetch_site not in ("same-origin", "none"):
-        response["statusCode"] = 403
-        response["statusReason"] = "Forbidden"
-        _send_json(response, {"error": f"cross-site fetch blocked (Sec-Fetch-Site={fetch_site})"})
+    fetch_site = headers.get('sec-fetch-site', '')
+    if fetch_site and fetch_site not in ('same-origin', 'none'):
+        response['statusCode'] = 403
+        response['statusReason'] = 'Forbidden'
+        _send_json(response, {'error': f'cross-site fetch blocked (Sec-Fetch-Site={fetch_site})'})
         return response
 
     auth_error = _check_auth_error(request)
     if auth_error:
-        response["statusCode"] = 401
-        response["statusReason"] = "Unauthorized"
-        _send_json(response, {"error": auth_error})
+        response['statusCode'] = 401
+        response['statusReason'] = 'Unauthorized'
+        _send_json(response, {'error': auth_error})
         return response
 
     try:
         # ── Route table ──
         routes = {
-            "/api/health": handle_health,
-            "/api/info": handle_info,
-            "/api/nodes": handle_get_nodes,
-            "/api/node/detail": handle_get_node_detail,
-            "/api/node/params": handle_get_params,
-            "/api/node/params/set": handle_set_params,
-            "/api/node/create": handle_create_node,
-            "/api/node/delete": handle_delete_node,
-            "/api/node/connect": handle_connect_nodes,
-            "/api/node/disconnect": handle_disconnect_nodes,
-            "/api/node/connections": handle_get_connections,
-            "/api/node/errors": handle_get_errors,
-            "/api/node/content": handle_get_content,
-            "/api/node/content/set": handle_set_content,
-            "/api/node/copy": handle_copy_node,
-            "/api/node/rename": handle_rename_node,
-            "/api/custom-parameters": handle_custom_parameters,
-            "/api/exec": handle_exec_python,
-            "/api/screenshot": handle_screenshot,
-            "/api/chop/data": handle_chop_data,
-            "/api/geometry/data": handle_geometry_data,
-            "/api/pop/inspect": handle_pop_inspect,
-            "/api/cooking": handle_cooking_info,
-            "/api/search": handle_search_nodes,
-            "/api/families": handle_list_families,
-            "/api/python/help": handle_python_help,
-            "/api/python/classes": handle_python_classes,
-            "/api/project/lifecycle": handle_project_lifecycle,
-            "/api/timeline": handle_timeline,
-            "/api/timeline/set": handle_timeline_set,
-            "/api/pulse": handle_pulse_param,
-            "/api/monitor/subscribe": handle_monitor_subscribe,
-            "/api/monitor/unsubscribe": handle_monitor_unsubscribe,
-            "/api/analyze_frame": handle_analyze_frame,
+            '/api/health':              handle_health,
+            '/api/info':                handle_info,
+            '/api/nodes':               handle_get_nodes,
+            '/api/node/detail':         handle_get_node_detail,
+            '/api/node/params':         handle_get_params,
+            '/api/node/params/set':     handle_set_params,
+            '/api/node/create':         handle_create_node,
+            '/api/node/delete':         handle_delete_node,
+            '/api/node/connect':        handle_connect_nodes,
+            '/api/node/disconnect':     handle_disconnect_nodes,
+            '/api/node/connections':    handle_get_connections,
+            '/api/node/errors':         handle_get_errors,
+            '/api/node/content':        handle_get_content,
+            '/api/node/content/set':    handle_set_content,
+            '/api/node/copy':           handle_copy_node,
+            '/api/node/rename':         handle_rename_node,
+            '/api/custom-parameters':   handle_custom_parameters,
+            '/api/exec':                handle_exec_python,
+            '/api/screenshot':          handle_screenshot,
+            '/api/chop/data':           handle_chop_data,
+            '/api/geometry/data':       handle_geometry_data,
+            '/api/pop/inspect':         handle_pop_inspect,
+            '/api/cooking':             handle_cooking_info,
+            '/api/search':              handle_search_nodes,
+            '/api/families':            handle_list_families,
+            '/api/python/help':         handle_python_help,
+            '/api/python/classes':      handle_python_classes,
+            '/api/project/lifecycle':   handle_project_lifecycle,
+            '/api/timeline':            handle_timeline,
+            '/api/timeline/set':        handle_timeline_set,
+            '/api/pulse':               handle_pulse_param,
+            '/api/monitor/subscribe':   handle_monitor_subscribe,
+            '/api/monitor/unsubscribe': handle_monitor_unsubscribe,
+            '/api/analyze_frame':       handle_analyze_frame,
         }
 
         handler = routes.get(uri)
         if handler:
             result = handler(body)
         else:
-            result = {"error": f"Unknown endpoint: {uri}", "available": list(routes.keys())}
-            response["statusCode"] = 404
-            response["statusReason"] = "Not Found"
+            result = {'error': f'Unknown endpoint: {uri}', 'available': list(routes.keys())}
+            response['statusCode'] = 404
+            response['statusReason'] = 'Not Found'
             _send_json(response, result)
             return response
 
-        response["statusCode"] = 200
-        response["statusReason"] = "OK"
+        response['statusCode'] = 200
+        response['statusReason'] = 'OK'
         _send_json(response, result)
 
     except Exception as e:
-        error_result = {"error": str(e), "type": type(e).__name__, "traceback": traceback.format_exc()}
-        response["statusCode"] = 500
-        response["statusReason"] = "Internal Server Error"
+        error_result = {
+            'error': str(e),
+            'type': type(e).__name__,
+            'traceback': traceback.format_exc()
+        }
+        response['statusCode'] = 500
+        response['statusReason'] = 'Internal Server Error'
         _send_json(response, error_result)
 
     return response
@@ -271,7 +258,7 @@ def onHTTPRequest(webServerDAT, request, response):
 
 def _extract_headers(request):
     headers = {}
-    raw = request.get("headers", {})
+    raw = request.get('headers', {})
     if isinstance(raw, dict):
         for key, value in raw.items():
             if key is None:
@@ -281,11 +268,11 @@ def _extract_headers(request):
         for item in raw:
             if isinstance(item, (tuple, list)) and len(item) == 2:
                 headers[str(item[0]).strip().lower()] = str(item[1]).strip()
-            elif isinstance(item, str) and ":" in item:
-                key, value = item.split(":", 1)
+            elif isinstance(item, str) and ':' in item:
+                key, value = item.split(':', 1)
                 headers[key.strip().lower()] = value.strip()
 
-    for key in ("authorization", "x-td-mcp-secret"):
+    for key in ('authorization', 'x-td-mcp-secret'):
         if key in request and key not in headers:
             headers[key] = str(request.get(key)).strip()
     return headers
@@ -301,22 +288,22 @@ def _check_auth_error(request):
     if not secret:
         if require:
             return (
-                "TD_MCP_SHARED_SECRET is not configured. Set it in the TD env or run "
-                "scripts/render_mcp_config.py to generate one. To opt out for local dev, "
-                "set TD_MCP_REQUIRE_AUTH=0 (not recommended)."
+                'TD_MCP_SHARED_SECRET is not configured. Set it in the TD env or run '
+                'scripts/render_mcp_config.py to generate one. To opt out for local dev, '
+                'set TD_MCP_REQUIRE_AUTH=0 (not recommended).'
             )
         return None
 
     headers = _extract_headers(request)
-    token = headers.get("x-td-mcp-secret", "")
+    token = headers.get('x-td-mcp-secret', '')
     if not token:
-        auth = headers.get("authorization", "")
-        if auth.lower().startswith("bearer "):
-            token = auth.split(" ", 1)[1].strip()
+        auth = headers.get('authorization', '')
+        if auth.lower().startswith('bearer '):
+            token = auth.split(' ', 1)[1].strip()
 
     if _constant_time_equals(token, secret):
         return None
-    return "Unauthorized: missing or invalid TD_MCP_SHARED_SECRET."
+    return 'Unauthorized: missing or invalid TD_MCP_SHARED_SECRET.'
 
 
 def _constant_time_equals(a, b):
@@ -335,36 +322,36 @@ def _constant_time_equals(a, b):
 
 def _send_json(response, data):
     """Helper to serialize and set JSON response."""
-    response["data"] = json.dumps(data, default=str).encode("utf-8")
-    response["content-type"] = "application/json"
+    response['data'] = json.dumps(data, default=str).encode('utf-8')
+    response['content-type'] = 'application/json'
 
 
 def _serialize_op(node, include_params=False):
     """Serialize a TD operator to a dict."""
     info = {
-        "name": node.name,
-        "path": node.path,
-        "type": node.type,
-        "family": node.family,
-        "label": getattr(node, "label", ""),
-        "nodeX": node.nodeX,
-        "nodeY": node.nodeY,
-        "isCOMP": node.isCOMP,
-        "isTOP": node.isTOP,
-        "isCHOP": node.isCHOP,
-        "isSOP": node.isSOP,
-        "isDAT": node.isDAT,
-        "isMAT": node.isMAT,
-        "isPOP": getattr(node, "isPOP", False),
-        "bypass": node.bypass,
-        "lock": node.lock,
-        "display": node.display if hasattr(node, "display") else False,
-        "render": node.render if hasattr(node, "render") else False,
-        "errors": node.errors(recurse=False) if hasattr(node, "errors") else "",
-        "warnings": node.warnings(recurse=False) if hasattr(node, "warnings") else "",
+        'name': node.name,
+        'path': node.path,
+        'type': node.type,
+        'family': node.family,
+        'label': getattr(node, 'label', ''),
+        'nodeX': node.nodeX,
+        'nodeY': node.nodeY,
+        'isCOMP': node.isCOMP,
+        'isTOP': node.isTOP,
+        'isCHOP': node.isCHOP,
+        'isSOP': node.isSOP,
+        'isDAT': node.isDAT,
+        'isMAT': node.isMAT,
+        'isPOP': getattr(node, 'isPOP', False),
+        'bypass': node.bypass,
+        'lock': node.lock,
+        'display': node.display if hasattr(node, 'display') else False,
+        'render': node.render if hasattr(node, 'render') else False,
+        'errors': node.errors(recurse=False) if hasattr(node, 'errors') else '',
+        'warnings': node.warnings(recurse=False) if hasattr(node, 'warnings') else '',
     }
     if include_params:
-        info["parameters"] = _serialize_params(node)
+        info['parameters'] = _serialize_params(node)
     return info
 
 
@@ -374,32 +361,32 @@ def _serialize_params(node):
     for p in node.pars():
         try:
             info = {
-                "value": p.eval(),
-                "default": p.default,
-                "label": p.label,
-                "page": p.page.name if p.page else "",
-                "style": p.style,
-                "min": p.min if hasattr(p, "min") else None,
-                "max": p.max if hasattr(p, "max") else None,
-                "readOnly": p.readOnly,
-                "isPulse": p.isPulse,
-                "isMomentary": p.isMomentary,
-                "isToggle": p.isToggle,
-                "isMenu": p.isMenu,
-                "menuNames": list(p.menuNames) if p.isMenu else [],
-                "menuLabels": list(p.menuLabels) if p.isMenu else [],
+                'value': p.eval(),
+                'default': p.default,
+                'label': p.label,
+                'page': p.page.name if p.page else '',
+                'style': p.style,
+                'min': p.min if hasattr(p, 'min') else None,
+                'max': p.max if hasattr(p, 'max') else None,
+                'readOnly': p.readOnly,
+                'isPulse': p.isPulse,
+                'isMomentary': p.isMomentary,
+                'isToggle': p.isToggle,
+                'isMenu': p.isMenu,
+                'menuNames': list(p.menuNames) if p.isMenu else [],
+                'menuLabels': list(p.menuLabels) if p.isMenu else [],
             }
             # Include expression info — this tells the AI whether a param
             # is static or driven by an expression/export
             try:
-                info["expr"] = p.expr if p.expr else ""
-                info["mode"] = str(p.mode)
+                info['expr'] = p.expr if p.expr else ''
+                info['mode'] = str(p.mode)
             except Exception:
-                info["expr"] = ""
-                info["mode"] = "CONSTANT"
+                info['expr'] = ''
+                info['mode'] = 'CONSTANT'
             params[p.name] = info
         except Exception:
-            params[p.name] = {"value": str(p), "error": "Could not fully serialize"}
+            params[p.name] = {'value': str(p), 'error': 'Could not fully serialize'}
     return params
 
 
@@ -407,52 +394,51 @@ def _serialize_params(node):
 # Handlers
 # ─────────────────────────────────────────────────────────────
 
-
 def handle_health(body):
     """Health check endpoint."""
     return {
-        "status": "ok",
-        "api_version": API_VERSION,
-        "timestamp": time.time(),
+        'status': 'ok',
+        'api_version': API_VERSION,
+        'timestamp': time.time(),
     }
 
 
 def handle_info(body):
     """Get TouchDesigner environment info."""
     return {
-        "version": app.version,
-        "build": app.build,
-        "osName": app.osName,
-        "osVersion": app.osVersion,
-        "product": app.product,
-        "project_name": project.name,
-        "project_folder": project.folder,
-        "fps": project.cookRate,
-        "realTime": project.realTime,
-        "frame": absTime.frame,
-        "seconds": absTime.seconds,
-        "timeline_start": project.cookRange[0] if hasattr(project, "cookRange") else 1,
-        "timeline_end": project.cookRange[1] if hasattr(project, "cookRange") else 600,
-        "api_version": API_VERSION,
+        'version': app.version,
+        'build': app.build,
+        'osName': app.osName,
+        'osVersion': app.osVersion,
+        'product': app.product,
+        'project_name': project.name,
+        'project_folder': project.folder,
+        'fps': project.cookRate,
+        'realTime': project.realTime,
+        'frame': absTime.frame,
+        'seconds': absTime.seconds,
+        'timeline_start': project.cookRange[0] if hasattr(project, 'cookRange') else 1,
+        'timeline_end': project.cookRange[1] if hasattr(project, 'cookRange') else 600,
+        'api_version': API_VERSION,
     }
 
 
 def handle_get_nodes(body):
     """List children of a path, with optional filtering."""
-    path = body.get("path", "/")
-    family_filter = body.get("family", None)
-    type_filter = body.get("type", None)
-    depth = body.get("depth", 1)
-    include_params = body.get("include_params", False)
-    limit = body.get("limit", 100)
-    offset = body.get("offset", 0)
+    path = body.get('path', '/')
+    family_filter = body.get('family', None)
+    type_filter = body.get('type', None)
+    depth = body.get('depth', 1)
+    include_params = body.get('include_params', False)
+    limit = body.get('limit', 100)
+    offset = body.get('offset', 0)
 
     target = op(path)
     if target is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
     if not target.isCOMP:
-        return {"error": f"Node is not a COMP (cannot have children): {path}", "node_type": target.type}
+        return {'error': f'Node is not a COMP (cannot have children): {path}', 'node_type': target.type}
 
     children = target.children
 
@@ -464,75 +450,71 @@ def handle_get_nodes(body):
         children = [c for c in children if c.type == type_filter]
 
     total = len(children)
-    children = children[offset : offset + limit]
+    children = children[offset:offset + limit]
 
     nodes = [_serialize_op(c, include_params=include_params) for c in children]
 
     return {
-        "path": path,
-        "total": total,
-        "count": len(nodes),
-        "offset": offset,
-        "has_more": total > offset + len(nodes),
-        "nodes": nodes,
+        'path': path,
+        'total': total,
+        'count': len(nodes),
+        'offset': offset,
+        'has_more': total > offset + len(nodes),
+        'nodes': nodes,
     }
 
 
 def handle_get_node_detail(body):
     """Get detailed info about a single node."""
-    path = body.get("path")
+    path = body.get('path')
     if not path:
-        return {"error": "Missing required field: path"}
+        return {'error': 'Missing required field: path'}
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
     detail = _serialize_op(node, include_params=True)
 
     # Add connection info
-    detail["inputs"] = []
+    detail['inputs'] = []
     for conn in node.inputConnectors:
         for c in conn.connections:
-            detail["inputs"].append(
-                {
-                    "from": c.owner.path,
-                    "from_index": c.index,
-                    "to_index": conn.index,
-                }
-            )
+            detail['inputs'].append({
+                'from': c.owner.path,
+                'from_index': c.index,
+                'to_index': conn.index,
+            })
 
-    detail["outputs"] = []
+    detail['outputs'] = []
     for conn in node.outputConnectors:
         for c in conn.connections:
-            detail["outputs"].append(
-                {
-                    "to": c.owner.path,
-                    "to_index": c.index,
-                    "from_index": conn.index,
-                }
-            )
+            detail['outputs'].append({
+                'to': c.owner.path,
+                'to_index': c.index,
+                'from_index': conn.index,
+            })
 
     # Children count if COMP
     if node.isCOMP:
-        detail["children_count"] = len(node.children)
-        detail["child_names"] = [c.name for c in node.children[:50]]
+        detail['children_count'] = len(node.children)
+        detail['child_names'] = [c.name for c in node.children[:50]]
 
     return detail
 
 
 def handle_get_params(body):
     """Get parameters for a specific node."""
-    path = body.get("path")
+    path = body.get('path')
     if not path:
-        return {"error": "Missing required field: path"}
+        return {'error': 'Missing required field: path'}
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
-    page_filter = body.get("page", None)
-    name_filter = body.get("names", None)
+    page_filter = body.get('page', None)
+    name_filter = body.get('names', None)
 
     params = {}
     for p in node.pars():
@@ -542,28 +524,28 @@ def handle_get_params(body):
             continue
         try:
             info = {
-                "value": p.eval(),
-                "default": p.default,
-                "label": p.label,
-                "page": p.page.name if p.page else "",
-                "style": p.style,
-                "readOnly": p.readOnly,
-                "isPulse": p.isPulse,
-                "isMenu": p.isMenu,
-                "menuNames": list(p.menuNames) if p.isMenu else [],
+                'value': p.eval(),
+                'default': p.default,
+                'label': p.label,
+                'page': p.page.name if p.page else '',
+                'style': p.style,
+                'readOnly': p.readOnly,
+                'isPulse': p.isPulse,
+                'isMenu': p.isMenu,
+                'menuNames': list(p.menuNames) if p.isMenu else [],
             }
             # Include expression info
             try:
-                info["expr"] = p.expr if p.expr else ""
-                info["mode"] = str(p.mode)
+                info['expr'] = p.expr if p.expr else ''
+                info['mode'] = str(p.mode)
             except Exception:
-                info["expr"] = ""
-                info["mode"] = "CONSTANT"
+                info['expr'] = ''
+                info['mode'] = 'CONSTANT'
             params[p.name] = info
         except Exception:
-            params[p.name] = {"value": str(p), "error": "Could not serialize"}
+            params[p.name] = {'value': str(p), 'error': 'Could not serialize'}
 
-    return {"path": path, "type": node.type, "parameters": params}
+    return {'path': path, 'type': node.type, 'parameters': params}
 
 
 def handle_set_params(body):
@@ -581,80 +563,80 @@ def handle_set_params(body):
     Expressions make networks REACTIVE — the parameter updates every frame.
     Without expressions, values are static snapshots.
     """
-    path = body.get("path")
-    params = body.get("params", {})
+    path = body.get('path')
+    params = body.get('params', {})
 
     if not path:
-        return {"error": "Missing required field: path"}
+        return {'error': 'Missing required field: path'}
     if not params:
-        return {"error": "Missing required field: params"}
+        return {'error': 'Missing required field: params'}
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
     results = {}
     for name, value in params.items():
         try:
             p = getattr(node.par, name, None)
             if p is None:
-                results[name] = {"success": False, "error": f"Parameter not found: {name}"}
+                results[name] = {'success': False, 'error': f'Parameter not found: {name}'}
                 continue
             if p.readOnly:
-                results[name] = {"success": False, "error": f"Parameter is read-only: {name}"}
+                results[name] = {'success': False, 'error': f'Parameter is read-only: {name}'}
                 continue
 
             # Expression mode: {"param": {"expr": "absTime.seconds * 10"}}
-            if isinstance(value, dict) and "expr" in value:
-                p.expr = value["expr"]
+            if isinstance(value, dict) and 'expr' in value:
+                p.expr = value['expr']
                 results[name] = {
-                    "success": True,
-                    "mode": "expression",
-                    "expr": value["expr"],
-                    "current_value": p.eval(),
+                    'success': True,
+                    'mode': 'expression',
+                    'expr': value['expr'],
+                    'current_value': p.eval(),
                 }
             # Reset to default: {"param": {"reset": true}}
-            elif isinstance(value, dict) and value.get("reset"):
+            elif isinstance(value, dict) and value.get('reset'):
                 p.val = p.default
-                p.expr = ""
-                results[name] = {"success": True, "mode": "reset", "new_value": p.eval()}
+                p.expr = ''
+                results[name] = {'success': True, 'mode': 'reset', 'new_value': p.eval()}
             # Clear expression, force constant: {"param": {"mode": "constant", "val": 42}}
-            elif isinstance(value, dict) and value.get("mode") == "constant":
-                p.expr = ""
-                if "val" in value:
-                    p.val = value["val"]
-                results[name] = {"success": True, "mode": "constant", "new_value": p.eval()}
+            elif isinstance(value, dict) and value.get('mode') == 'constant':
+                p.expr = ''
+                if 'val' in value:
+                    p.val = value['val']
+                results[name] = {'success': True, 'mode': 'constant', 'new_value': p.eval()}
             # Explicit val mode: {"param": {"val": 42}}
-            elif isinstance(value, dict) and "val" in value:
-                p.val = value["val"]
-                results[name] = {"success": True, "mode": "constant", "new_value": p.eval()}
+            elif isinstance(value, dict) and 'val' in value:
+                p.val = value['val']
+                results[name] = {'success': True, 'mode': 'constant', 'new_value': p.eval()}
             # Plain value (backwards compatible)
             else:
                 p.val = value
-                results[name] = {"success": True, "mode": "constant", "new_value": p.eval()}
+                results[name] = {'success': True, 'mode': 'constant', 'new_value': p.eval()}
         except Exception as e:
-            results[name] = {"success": False, "error": str(e)}
+            results[name] = {'success': False, 'error': str(e)}
 
-    return {"path": path, "results": results}
+    return {'path': path, 'results': results}
 
 
 def handle_create_node(body):
     """Create a new node with optional positioning."""
-    parent_path = body.get("parent_path", "/")
-    node_type = body.get("node_type")
-    name = body.get("name", None)
-    node_x = body.get("nodeX", None)
-    node_y = body.get("nodeY", None)
+    parent_path = body.get('parent_path', '/')
+    node_type = body.get('node_type')
+    name = body.get('name', None)
+    node_x = body.get('nodeX', None)
+    node_y = body.get('nodeY', None)
 
     if not node_type:
-        return {"error": "Missing required field: node_type"}
+        return {'error': 'Missing required field: node_type'}
 
     parent_node = op(parent_path)
     if parent_node is None:
-        return {"error": f"Parent node not found: {parent_path}"}
+        return {'error': f'Parent node not found: {parent_path}'}
 
     if not parent_node.isCOMP:
-        return {"error": f"Parent is not a COMP: {parent_path}"}
+        return {'error': f'Parent is not a COMP: {parent_path}'}
 
     try:
         new_node = parent_node.create(node_type, name)
@@ -666,172 +648,160 @@ def handle_create_node(body):
             new_node.nodeY = int(node_y)
 
         return {
-            "success": True,
-            "node": _serialize_op(new_node),
+            'success': True,
+            'node': _serialize_op(new_node),
         }
     except Exception as e:
-        return {"error": f"Failed to create node: {str(e)}", "node_type": node_type}
+        return {'error': f'Failed to create node: {str(e)}', 'node_type': node_type}
 
 
 def handle_delete_node(body):
     """Delete a node by path."""
-    path = body.get("path")
+    path = body.get('path')
     if not path:
-        return {"error": "Missing required field: path"}
+        return {'error': 'Missing required field: path'}
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
-    node_info = {"name": node.name, "path": node.path, "type": node.type}
+    node_info = {'name': node.name, 'path': node.path, 'type': node.type}
 
     try:
         node.destroy()
-        return {"success": True, "deleted": node_info}
+        return {'success': True, 'deleted': node_info}
     except Exception as e:
-        return {"error": f"Failed to delete node: {str(e)}"}
+        return {'error': f'Failed to delete node: {str(e)}'}
 
 
 def handle_connect_nodes(body):
     """Connect output of one node to input of another."""
-    source_path = body.get("source_path")
-    target_path = body.get("target_path")
-    source_index = body.get("source_index", 0)
-    target_index = body.get("target_index", 0)
+    source_path = body.get('source_path')
+    target_path = body.get('target_path')
+    source_index = body.get('source_index', 0)
+    target_index = body.get('target_index', 0)
 
     if not source_path or not target_path:
-        return {"error": "Missing required fields: source_path and target_path"}
+        return {'error': 'Missing required fields: source_path and target_path'}
 
     source = op(source_path)
     target = op(target_path)
 
     if source is None:
-        return {"error": f"Source node not found: {source_path}"}
+        return {'error': f'Source node not found: {source_path}'}
     if target is None:
-        return {"error": f"Target node not found: {target_path}"}
+        return {'error': f'Target node not found: {target_path}'}
 
     # Validate connector indices before access
     num_outputs = len(source.outputConnectors)
     num_inputs = len(target.inputConnectors)
     if source_index >= num_outputs:
-        return {
-            "error": f"source_index {source_index} out of range — {source.path} has {num_outputs} output(s) (0–{num_outputs - 1})"
-        }
+        return {'error': f'source_index {source_index} out of range — {source.path} has {num_outputs} output(s) (0–{num_outputs - 1})'}
     if target_index >= num_inputs:
-        return {
-            "error": f"target_index {target_index} out of range — {target.path} has {num_inputs} input(s) (0–{num_inputs - 1})"
-        }
+        return {'error': f'target_index {target_index} out of range — {target.path} has {num_inputs} input(s) (0–{num_inputs - 1})'}
 
     try:
         source.outputConnectors[source_index].connect(target.inputConnectors[target_index])
         return {
-            "success": True,
-            "connection": {
-                "source": source.path,
-                "source_index": source_index,
-                "target": target.path,
-                "target_index": target_index,
-            },
+            'success': True,
+            'connection': {
+                'source': source.path,
+                'source_index': source_index,
+                'target': target.path,
+                'target_index': target_index,
+            }
         }
     except Exception as e:
-        return {"error": f"Failed to connect: {str(e)}"}
+        return {'error': f'Failed to connect: {str(e)}'}
 
 
 def handle_disconnect_nodes(body):
     """Disconnect a node's input or output."""
-    path = body.get("path")
-    connector_type = body.get("connector_type", "input")  # 'input' or 'output'
-    index = body.get("index", 0)
+    path = body.get('path')
+    connector_type = body.get('connector_type', 'input')  # 'input' or 'output'
+    index = body.get('index', 0)
 
     if not path:
-        return {"error": "Missing required field: path"}
+        return {'error': 'Missing required field: path'}
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
     # Validate connector index
-    if connector_type == "input":
+    if connector_type == 'input':
         num_connectors = len(node.inputConnectors)
     else:
         num_connectors = len(node.outputConnectors)
     if index >= num_connectors:
-        return {
-            "error": f"{connector_type} index {index} out of range — {path} has {num_connectors} {connector_type}(s) (0–{num_connectors - 1})"
-        }
+        return {'error': f'{connector_type} index {index} out of range — {path} has {num_connectors} {connector_type}(s) (0–{num_connectors - 1})'}
 
     try:
-        if connector_type == "input":
+        if connector_type == 'input':
             node.inputConnectors[index].disconnect()
         else:
             node.outputConnectors[index].disconnect()
-        return {"success": True, "path": path, "connector_type": connector_type, "index": index}
+        return {'success': True, 'path': path, 'connector_type': connector_type, 'index': index}
     except Exception as e:
-        return {"error": f"Failed to disconnect: {str(e)}"}
+        return {'error': f'Failed to disconnect: {str(e)}'}
 
 
 def handle_get_connections(body):
     """Get all connections for a node."""
-    path = body.get("path")
+    path = body.get('path')
     if not path:
-        return {"error": "Missing required field: path"}
+        return {'error': 'Missing required field: path'}
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
     inputs = []
     for conn in node.inputConnectors:
         for c in conn.connections:
-            inputs.append(
-                {
-                    "from_path": c.owner.path,
-                    "from_index": c.index,
-                    "to_index": conn.index,
-                }
-            )
+            inputs.append({
+                'from_path': c.owner.path,
+                'from_index': c.index,
+                'to_index': conn.index,
+            })
 
     outputs = []
     for conn in node.outputConnectors:
         for c in conn.connections:
-            outputs.append(
-                {
-                    "to_path": c.owner.path,
-                    "to_index": c.index,
-                    "from_index": conn.index,
-                }
-            )
+            outputs.append({
+                'to_path': c.owner.path,
+                'to_index': c.index,
+                'from_index': conn.index,
+            })
 
-    return {"path": path, "inputs": inputs, "outputs": outputs}
+    return {'path': path, 'inputs': inputs, 'outputs': outputs}
 
 
 def handle_get_errors(body):
     """Get errors/warnings for a node, optionally recursive with depth limit."""
-    path = body.get("path", "/")
-    recurse = body.get("recurse", True)
-    max_depth = body.get("max_depth", 10)  # prevent runaway on huge projects
+    path = body.get('path', '/')
+    recurse = body.get('recurse', True)
+    max_depth = body.get('max_depth', 10)  # prevent runaway on huge projects
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
     results = []
     truncated = False
 
     def collect_errors(n, depth=0):
         nonlocal truncated
-        errs = n.errors(recurse=False) if hasattr(n, "errors") else ""
-        warns = n.warnings(recurse=False) if hasattr(n, "warnings") else ""
+        errs = n.errors(recurse=False) if hasattr(n, 'errors') else ''
+        warns = n.warnings(recurse=False) if hasattr(n, 'warnings') else ''
         if errs or warns:
-            results.append(
-                {
-                    "path": n.path,
-                    "name": n.name,
-                    "type": n.type,
-                    "errors": errs,
-                    "warnings": warns,
-                }
-            )
+            results.append({
+                'path': n.path,
+                'name': n.name,
+                'type': n.type,
+                'errors': errs,
+                'warnings': warns,
+            })
         if recurse and n.isCOMP and depth < max_depth:
             for child in n.children:
                 collect_errors(child, depth + 1)
@@ -839,30 +809,30 @@ def handle_get_errors(body):
             truncated = True
 
     collect_errors(node)
-    result = {"path": path, "recurse": recurse, "count": len(results), "issues": results}
+    result = {'path': path, 'recurse': recurse, 'count': len(results), 'issues': results}
     if truncated:
-        result["warning"] = f"Search truncated at depth {max_depth}. Use max_depth to go deeper."
+        result['warning'] = f'Search truncated at depth {max_depth}. Use max_depth to go deeper.'
     return result
 
 
 def handle_get_content(body):
     """Get text/table content from a DAT."""
-    path = body.get("path")
+    path = body.get('path')
     if not path:
-        return {"error": "Missing required field: path"}
+        return {'error': 'Missing required field: path'}
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
     if not node.isDAT:
-        return {"error": f"Node is not a DAT: {path} (type: {node.type})"}
+        return {'error': f'Node is not a DAT: {path} (type: {node.type})'}
 
     # Prefer the DAT's own isTable flag over heuristic numRows check.
     # textDAT.numRows is 1 (the full text counted as one row) which previously
     # caused textDAT to be returned as a 1x1 table — unintuitive for callers
     # expecting plain text back from a text DAT.
-    is_table = bool(getattr(node, "isTable", False))
+    is_table = bool(getattr(node, 'isTable', False))
     try:
         if is_table:
             rows = []
@@ -872,51 +842,51 @@ def handle_get_content(body):
                     row.append(node[r, c].val)
                 rows.append(row)
             return {
-                "path": path,
-                "format": "table",
-                "numRows": node.numRows,
-                "numCols": node.numCols,
-                "data": rows,
+                'path': path,
+                'format': 'table',
+                'numRows': node.numRows,
+                'numCols': node.numCols,
+                'data': rows,
             }
         return {
-            "path": path,
-            "format": "text",
-            "text": node.text if hasattr(node, "text") else "",
+            'path': path,
+            'format': 'text',
+            'text': node.text if hasattr(node, 'text') else '',
         }
     except Exception as e:
         return {
-            "path": path,
-            "format": "text",
-            "text": node.text if hasattr(node, "text") else "",
-            "warning": f"Content read failed, fell back to text: {str(e)}",
+            'path': path,
+            'format': 'text',
+            'text': node.text if hasattr(node, 'text') else '',
+            'warning': f'Content read failed, fell back to text: {str(e)}',
         }
 
 
 def handle_set_content(body):
     """Set text/table content on a DAT."""
-    path = body.get("path")
-    text = body.get("text", None)
-    table = body.get("table", None)
+    path = body.get('path')
+    text = body.get('text', None)
+    table = body.get('table', None)
 
     if not path:
-        return {"error": "Missing required field: path"}
+        return {'error': 'Missing required field: path'}
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
     if not node.isDAT:
-        return {"error": f"Node is not a DAT: {path}"}
+        return {'error': f'Node is not a DAT: {path}'}
 
     try:
         if text is not None:
             node.text = text
-            return {"success": True, "path": path, "format": "text", "length": len(text)}
+            return {'success': True, 'path': path, 'format': 'text', 'length': len(text)}
         elif table is not None:
             node.clear()
             wrote = False
             # Preferred path for Table DATs.
-            if hasattr(node, "appendRow"):
+            if hasattr(node, 'appendRow'):
                 try:
                     for row in table:
                         node.appendRow([str(v) for v in row])
@@ -926,7 +896,7 @@ def handle_set_content(body):
 
             # Fallback path for DATs that expose indexed assignment only.
             if not wrote:
-                if hasattr(node, "setSize"):
+                if hasattr(node, 'setSize'):
                     try:
                         rows = len(table)
                         cols = max((len(row) for row in table), default=0)
@@ -936,31 +906,31 @@ def handle_set_content(body):
                 for r, row in enumerate(table):
                     for c, val in enumerate(row):
                         node[r, c] = val
-            return {"success": True, "path": path, "format": "table", "rows": len(table)}
+            return {'success': True, 'path': path, 'format': 'table', 'rows': len(table)}
         else:
-            return {"error": 'Provide either "text" or "table" field'}
+            return {'error': 'Provide either "text" or "table" field'}
     except Exception as e:
-        return {"error": f"Failed to set content: {str(e)}"}
+        return {'error': f'Failed to set content: {str(e)}'}
 
 
 def handle_copy_node(body):
     """Copy/duplicate a node."""
-    source_path = body.get("source_path")
-    dest_parent = body.get("dest_parent", None)
-    new_name = body.get("new_name", None)
-    node_x = body.get("nodeX", None)
-    node_y = body.get("nodeY", None)
+    source_path = body.get('source_path')
+    dest_parent = body.get('dest_parent', None)
+    new_name = body.get('new_name', None)
+    node_x = body.get('nodeX', None)
+    node_y = body.get('nodeY', None)
 
     if not source_path:
-        return {"error": "Missing required field: source_path"}
+        return {'error': 'Missing required field: source_path'}
 
     source = op(source_path)
     if source is None:
-        return {"error": f"Source node not found: {source_path}"}
+        return {'error': f'Source node not found: {source_path}'}
 
     parent = op(dest_parent) if dest_parent else source.parent()
     if parent is None:
-        return {"error": f"Destination parent not found: {dest_parent}"}
+        return {'error': f'Destination parent not found: {dest_parent}'}
 
     try:
         new_node = parent.copy(source, name=new_name)
@@ -971,102 +941,102 @@ def handle_copy_node(body):
             if node_x is not None:
                 new_node.nodeX = int(node_x)
             else:
-                new_node.nodeX = int(getattr(source, "nodeX", 0)) + 150
+                new_node.nodeX = int(getattr(source, 'nodeX', 0)) + 150
             if node_y is not None:
                 new_node.nodeY = int(node_y)
             else:
-                new_node.nodeY = int(getattr(source, "nodeY", 0))
+                new_node.nodeY = int(getattr(source, 'nodeY', 0))
         except Exception:
             # Node position is cosmetic; don't fail the copy if it can't be set.
             pass
-        return {"success": True, "node": _serialize_op(new_node)}
+        return {'success': True, 'node': _serialize_op(new_node)}
     except Exception as e:
-        return {"error": f"Failed to copy node: {str(e)}"}
+        return {'error': f'Failed to copy node: {str(e)}'}
 
 
 def handle_rename_node(body):
     """Rename a node."""
-    path = body.get("path")
-    new_name = body.get("new_name")
+    path = body.get('path')
+    new_name = body.get('new_name')
 
     if not path or not new_name:
-        return {"error": "Missing required fields: path and new_name"}
+        return {'error': 'Missing required fields: path and new_name'}
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
     old_name = node.name
     try:
         node.name = new_name
-        return {"success": True, "old_name": old_name, "new_name": node.name, "new_path": node.path}
+        return {'success': True, 'old_name': old_name, 'new_name': node.name, 'new_path': node.path}
     except Exception as e:
-        return {"error": f"Failed to rename: {str(e)}"}
+        return {'error': f'Failed to rename: {str(e)}'}
 
 
 def handle_custom_parameters(body):
     """Create or update custom parameter pages and parameters on a COMP."""
-    path = body.get("path")
-    page_name = body.get("page")
-    param_specs = body.get("params", [])
+    path = body.get('path')
+    page_name = body.get('page')
+    param_specs = body.get('params', [])
 
     if not path or not page_name:
-        return {"error": "Missing required fields: path and page"}
+        return {'error': 'Missing required fields: path and page'}
     if not isinstance(param_specs, list) or not param_specs:
-        return {"error": "Missing required field: params"}
+        return {'error': 'Missing required field: params'}
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
-    if not getattr(node, "isCOMP", False):
-        return {"error": f"Node is not a COMP: {path}"}
+        return {'error': f'Node not found: {path}'}
+    if not getattr(node, 'isCOMP', False):
+        return {'error': f'Node is not a COMP: {path}'}
 
     try:
         page, page_created = _find_custom_page(node, page_name)
         created = []
         for spec in param_specs:
             if not isinstance(spec, dict):
-                return {"error": "Each param specification must be an object"}
+                return {'error': 'Each param specification must be an object'}
             created.append(_create_custom_parameter(page, spec))
         return {
-            "success": True,
-            "path": path,
-            "page": page_name,
-            "page_created": page_created,
-            "count": len(created),
-            "parameters": created,
+            'success': True,
+            'path': path,
+            'page': page_name,
+            'page_created': page_created,
+            'count': len(created),
+            'parameters': created,
         }
     except Exception as exc:
-        return {"error": f"Failed to create custom parameters: {str(exc)}"}
+        return {'error': f'Failed to create custom parameters: {str(exc)}'}
 
 
 def _normalize_for_check(code):
     """Lowercase and collapse whitespace before '(' to defeat bypass via 'open (' etc."""
-    return re.sub(r"\s+\(", "(", code.lower())
+    return re.sub(r'\s+\(', '(', code.lower())
 
 
 def _restricted_exec_violation(code):
     if RESTRICTED_IMPORT_RE.search(code):
-        return "restricted mode blocks import statements"
+        return 'restricted mode blocks import statements'
     normalized = _normalize_for_check(code)
     for token in RESTRICTED_TOKENS:
         if token in normalized:
-            return f"restricted mode blocks token: {token}"
+            return f'restricted mode blocks token: {token}'
     # TD-side sandbox escape: `op(...).create(textDAT)` then write `.text` lets
     # a caller stash arbitrary Python in a DAT and then execute it via
     # `mod.<dat>.func()`. Block the pieces of that pattern in restricted mode.
     # Users who genuinely need DAT authoring should run in standard or full.
     dat_escape_tokens = (
-        "create(textdat",
-        "create(textDAT".lower(),
-        ".text=",
-        ".text =",
-        ".par.file=",
-        ".par.file =",
+        'create(textdat',
+        'create(textDAT'.lower(),
+        '.text=',
+        '.text =',
+        '.par.file=',
+        '.par.file =',
     )
     for token in dat_escape_tokens:
         if token in normalized:
-            return f"restricted mode blocks DAT-exec pattern: {token}"
+            return f'restricted mode blocks DAT-exec pattern: {token}'
     return None
 
 
@@ -1074,89 +1044,85 @@ def _standard_exec_violation(code):
     normalized = _normalize_for_check(code)
     for token in STANDARD_BLOCKED_TOKENS:
         if token in normalized:
-            return f"standard mode blocks token: {token}"
+            return f'standard mode blocks token: {token}'
 
     for match in RESTRICTED_IMPORT_RE.finditer(code):
         line = match.group(0).strip()
         parts = line.split()
-        if parts[0] == "from":
+        if parts[0] == 'from':
             mod_name = parts[1]
         else:
             mod_name = parts[1]
-        top_level = mod_name.split(".")[0]
+        top_level = mod_name.split('.')[0]
         if top_level not in STANDARD_ALLOWED_IMPORTS:
-            return f"standard mode blocks import of: {top_level}"
+            return f'standard mode blocks import of: {top_level}'
 
     return None
 
 
 def _build_exec_globals(exec_mode):
     import importlib as _importlib
-
     context = {
-        "op": op,
-        "ops": ops,
-        "project": project,
-        "app": app,
-        "absTime": absTime,
-        "me": me,
-        "parent": parent,
-        "mod": mod,
-        "ui": ui,
-        "tdu": tdu,
+        'op': op,
+        'ops': ops,
+        'project': project,
+        'app': app,
+        'absTime': absTime,
+        'me': me,
+        'parent': parent,
+        'mod': mod,
+        'ui': ui,
+        'tdu': tdu,
     }
     # Builtins safe for both standard and restricted modes — no exec/eval/open/import/__subclasses__
     safe_builtins = {
-        "abs": abs,
-        "all": all,
-        "any": any,
-        "bool": bool,
-        "dict": dict,
-        "enumerate": enumerate,
-        "float": float,
-        "getattr": getattr,
-        "hasattr": hasattr,
-        "isinstance": isinstance,
-        "issubclass": issubclass,
-        "int": int,
-        "len": len,
-        "list": list,
-        "map": map,
-        "filter": filter,
-        "max": max,
-        "min": min,
-        "pow": pow,
-        "print": print,
-        "range": range,
-        "repr": repr,
-        "reversed": reversed,
-        "round": round,
-        "set": set,
-        "sorted": sorted,
-        "str": str,
-        "sum": sum,
-        "tuple": tuple,
-        "type": type,
-        "zip": zip,
+        'abs': abs,
+        'all': all,
+        'any': any,
+        'bool': bool,
+        'dict': dict,
+        'enumerate': enumerate,
+        'float': float,
+        'getattr': getattr,
+        'hasattr': hasattr,
+        'isinstance': isinstance,
+        'issubclass': issubclass,
+        'int': int,
+        'len': len,
+        'list': list,
+        'map': map,
+        'filter': filter,
+        'max': max,
+        'min': min,
+        'pow': pow,
+        'print': print,
+        'range': range,
+        'repr': repr,
+        'reversed': reversed,
+        'round': round,
+        'set': set,
+        'sorted': sorted,
+        'str': str,
+        'sum': sum,
+        'tuple': tuple,
+        'type': type,
+        'zip': zip,
     }
-    if exec_mode == "standard":
+    if exec_mode == 'standard':
         for _mod_name in STANDARD_ALLOWED_IMPORTS:
             try:
                 context[_mod_name] = _importlib.import_module(_mod_name)
             except ImportError:
                 pass
-        context["__builtins__"] = safe_builtins
+        context['__builtins__'] = safe_builtins
         return context
-    if exec_mode != "restricted":
+    if exec_mode != 'restricted':
         return context
 
     # Restricted mode — even fewer builtins (no getattr/hasattr/type/isinstance)
-    restricted_builtins = {
-        k: v
-        for k, v in safe_builtins.items()
-        if k not in ("getattr", "hasattr", "isinstance", "issubclass", "type", "map", "filter", "repr")
-    }
-    safe = {"__builtins__": restricted_builtins}
+    restricted_builtins = {k: v for k, v in safe_builtins.items()
+                           if k not in ('getattr', 'hasattr', 'isinstance', 'issubclass', 'type', 'map', 'filter', 'repr')}
+    safe = {'__builtins__': restricted_builtins}
     safe.update(context)
     return safe
 
@@ -1170,13 +1136,13 @@ def _json_safe_value(value, depth=0, max_items=128):
         return value
 
     if isinstance(value, bytes):
-        return base64.b64encode(value).decode("ascii")
+        return base64.b64encode(value).decode('ascii')
 
     if isinstance(value, dict):
         result = {}
         for i, (key, item) in enumerate(value.items()):
             if i >= max_items:
-                result["__truncated__"] = True
+                result['__truncated__'] = True
                 break
             result[str(key)] = _json_safe_value(item, depth + 1, max_items=max_items)
         return result
@@ -1185,21 +1151,21 @@ def _json_safe_value(value, depth=0, max_items=128):
         result = []
         for i, item in enumerate(value):
             if i >= max_items:
-                result.append({"__truncated__": True})
+                result.append({'__truncated__': True})
                 break
             result.append(_json_safe_value(item, depth + 1, max_items=max_items))
         return result
 
-    if hasattr(value, "path") and hasattr(value, "name"):
+    if hasattr(value, 'path') and hasattr(value, 'name'):
         return {
-            "path": str(getattr(value, "path", "")),
-            "name": str(getattr(value, "name", "")),
-            "type": str(getattr(value, "type", value.__class__.__name__)),
+            'path': str(getattr(value, 'path', '')),
+            'name': str(getattr(value, 'name', '')),
+            'type': str(getattr(value, 'type', value.__class__.__name__)),
         }
 
-    if all(hasattr(value, attr) for attr in ("x", "y")):
+    if all(hasattr(value, attr) for attr in ('x', 'y')):
         coords = [float(value.x), float(value.y)]
-        if hasattr(value, "z"):
+        if hasattr(value, 'z'):
             coords.append(float(value.z))
         return coords
 
@@ -1209,9 +1175,9 @@ def _json_safe_value(value, depth=0, max_items=128):
 def _serialize_exec_result(value):
     structured_types = (type(None), bool, int, float, str, dict, list, tuple, set)
     return {
-        "result": _json_safe_value(value),
-        "result_type": type(value).__name__ if value is not None else "NoneType",
-        "result_is_structured": isinstance(value, structured_types),
+        'result': _json_safe_value(value),
+        'result_type': type(value).__name__ if value is not None else 'NoneType',
+        'result_is_structured': isinstance(value, structured_types),
     }
 
 
@@ -1237,12 +1203,12 @@ def _parse_attribute_descriptor(item):
     match = re.match(r"^([^:]+):\s*(\d+)\s*<class '([^']+)'>$", text)
     if match:
         return {
-            "name": match.group(1),
-            "size": int(match.group(2)),
-            "type": match.group(3),
-            "raw": text,
+            'name': match.group(1),
+            'size': int(match.group(2)),
+            'type': match.group(3),
+            'raw': text,
         }
-    return {"name": text, "raw": text}
+    return {'name': text, 'raw': text}
 
 
 def _collect_attribute_descriptors(collection):
@@ -1258,7 +1224,7 @@ def _collect_attribute_descriptors(collection):
 def _attribute_names(descriptors):
     names = []
     for item in descriptors:
-        name = item.get("name")
+        name = item.get('name')
         if isinstance(name, str) and name:
             names.append(name)
     return names
@@ -1272,43 +1238,43 @@ def _serialize_bounds(bounds):
         if obj is None:
             return None
         result = []
-        for attr in ("x", "y", "z"):
+        for attr in ('x', 'y', 'z'):
             if hasattr(obj, attr):
                 result.append(float(getattr(obj, attr)))
         return result or None
 
     return {
-        "min": _vec(getattr(bounds, "min", None)),
-        "max": _vec(getattr(bounds, "max", None)),
-        "center": _vec(getattr(bounds, "center", None)),
-        "size": _vec(getattr(bounds, "size", None)),
+        'min': _vec(getattr(bounds, 'min', None)),
+        'max': _vec(getattr(bounds, 'max', None)),
+        'center': _vec(getattr(bounds, 'center', None)),
+        'size': _vec(getattr(bounds, 'size', None)),
     }
 
 
 def _sample_pop_attribute(node, method_name, attr_name, start, count, delayed):
     method = getattr(node, method_name, None)
     if not callable(method):
-        return {"error": f"{method_name} unavailable"}
+        return {'error': f'{method_name} unavailable'}
     try:
         values = method(attr_name, startIndex=start, count=count, delayed=delayed)
     except TypeError:
         try:
             values = method(attr_name, start, count, delayed)
         except Exception as exc:
-            return {"error": str(exc)}
+            return {'error': str(exc)}
     except Exception as exc:
-        return {"error": str(exc)}
+        return {'error': str(exc)}
 
     return {
-        "attribute": attr_name,
-        "start": start,
-        "count": count,
-        "values": _json_safe_value(values),
+        'attribute': attr_name,
+        'start': start,
+        'count': count,
+        'values': _json_safe_value(values),
     }
 
 
 def _pick_default_pop_samples(available_names):
-    preferred = ["P", "PartVel", "PartAge", "PartLifeSpan", "Noise", "PartForce", "PartId"]
+    preferred = ['P', 'PartVel', 'PartAge', 'PartLifeSpan', 'Noise', 'PartForce', 'PartId']
     result = []
     for name in preferred:
         if name in available_names:
@@ -1359,40 +1325,40 @@ def _assign_custom_group_defaults(group, spec):
     if not members:
         return
 
-    if spec.get("menu_names"):
-        menu_names = list(spec.get("menu_names") or [])
-        menu_labels = list(spec.get("menu_labels") or menu_names)
+    if spec.get('menu_names'):
+        menu_names = list(spec.get('menu_names') or [])
+        menu_labels = list(spec.get('menu_labels') or menu_names)
         for target in [group] + members[:1]:
-            _set_attr_if_supported(target, "menuNames", menu_names)
-            _set_attr_if_supported(target, "menuLabels", menu_labels)
+            _set_attr_if_supported(target, 'menuNames', menu_names)
+            _set_attr_if_supported(target, 'menuLabels', menu_labels)
 
-    for attr_name in ("min", "max", "norm_min", "norm_max", "clamp_min", "clamp_max"):
+    for attr_name in ('min', 'max', 'norm_min', 'norm_max', 'clamp_min', 'clamp_max'):
         source_value = spec.get(attr_name)
         target_attr = {
-            "norm_min": "normMin",
-            "norm_max": "normMax",
-            "clamp_min": "clampMin",
-            "clamp_max": "clampMax",
+            'norm_min': 'normMin',
+            'norm_max': 'normMax',
+            'clamp_min': 'clampMin',
+            'clamp_max': 'clampMax',
         }.get(attr_name, attr_name)
         for member in members:
             _set_attr_if_supported(member, target_attr, source_value)
 
-    if spec.get("default", None) is None:
+    if spec.get('default', None) is None:
         return
 
-    for member, value in zip(members, _broadcast_values(spec.get("default"), len(members))):
-        _set_attr_if_supported(member, "default", value)
-        _set_attr_if_supported(member, "val", value)
+    for member, value in zip(members, _broadcast_values(spec.get('default'), len(members))):
+        _set_attr_if_supported(member, 'default', value)
+        _set_attr_if_supported(member, 'val', value)
 
 
 def _find_custom_page(node, page_name):
-    for collection_name in ("customPages", "pages"):
+    for collection_name in ('customPages', 'pages'):
         pages = getattr(node, collection_name, None)
         if pages is None:
             continue
         try:
             for page in pages:
-                if str(getattr(page, "name", "")) == page_name:
+                if str(getattr(page, 'name', '')) == page_name:
                     return page, False
         except Exception:
             continue
@@ -1400,25 +1366,25 @@ def _find_custom_page(node, page_name):
 
 
 def _create_custom_parameter(page, spec):
-    kind = str(spec.get("kind", "")).lower()
+    kind = str(spec.get('kind', '')).lower()
     method_name = {
-        "float": "appendFloat",
-        "int": "appendInt",
-        "toggle": "appendToggle",
-        "menu": "appendMenu",
-        "str": "appendStr",
-        "string": "appendStr",
-        "rgb": "appendRGB",
-        "rgba": "appendRGBA",
-        "pulse": "appendPulse",
-        "file": "appendFile",
-        "filesave": "appendFileSave",
-        "folder": "appendFolder",
-        "chop": "appendCHOP",
-        "comp": "appendCOMP",
-        "dat": "appendDAT",
-        "mat": "appendMAT",
-        "header": "appendHeader",
+        'float': 'appendFloat',
+        'int': 'appendInt',
+        'toggle': 'appendToggle',
+        'menu': 'appendMenu',
+        'str': 'appendStr',
+        'string': 'appendStr',
+        'rgb': 'appendRGB',
+        'rgba': 'appendRGBA',
+        'pulse': 'appendPulse',
+        'file': 'appendFile',
+        'filesave': 'appendFileSave',
+        'folder': 'appendFolder',
+        'chop': 'appendCHOP',
+        'comp': 'appendCOMP',
+        'dat': 'appendDAT',
+        'mat': 'appendMAT',
+        'header': 'appendHeader',
     }.get(kind)
     if not method_name:
         raise ValueError(f"Unsupported custom parameter kind: {kind}")
@@ -1428,23 +1394,23 @@ def _create_custom_parameter(page, spec):
         raise ValueError(f"Page does not support method {method_name}")
 
     kwargs = {
-        "label": spec.get("label"),
-        "order": spec.get("order"),
-        "replace": bool(spec.get("replace", True)),
+        'label': spec.get('label'),
+        'order': spec.get('order'),
+        'replace': bool(spec.get('replace', True)),
     }
     kwargs = {key: value for key, value in kwargs.items() if value is not None}
-    if kind in ("float", "int"):
-        kwargs["size"] = int(spec.get("size", 1) or 1)
+    if kind in ('float', 'int'):
+        kwargs['size'] = int(spec.get('size', 1) or 1)
 
-    group = method(spec.get("name"), **kwargs)
+    group = method(spec.get('name'), **kwargs)
     _assign_custom_group_defaults(group, spec)
     members = _group_members(group)
     return {
-        "kind": kind,
-        "name": spec.get("name"),
-        "label": spec.get("label") or spec.get("name"),
-        "member_count": len(members),
-        "members": [str(getattr(member, "name", member)) for member in members],
+        'kind': kind,
+        'name': spec.get('name'),
+        'label': spec.get('label') or spec.get('name'),
+        'member_count': len(members),
+        'members': [str(getattr(member, 'name', member)) for member in members],
     }
 
 
@@ -1455,52 +1421,51 @@ def handle_exec_python(body):
     runaway code from freezing TD.  Uses a threading.Timer to interrupt
     execution via a KeyboardInterrupt if it exceeds the limit.
     """
-    code = body.get("code")
+    code = body.get('code')
     if not code:
-        return {"error": "Missing required field: code"}
+        return {'error': 'Missing required field: code'}
 
-    _MODE_RANK = {"off": 0, "restricted": 1, "standard": 2, "full": 3}
+    _MODE_RANK = {'off': 0, 'restricted': 1, 'standard': 2, 'full': 3}
     default_mode = _current_exec_mode()  # read env per-request; see A-1
-    exec_mode = str(body.get("exec_mode", default_mode)).strip().lower()
+    exec_mode = str(body.get('exec_mode', default_mode)).strip().lower()
     if exec_mode not in _MODE_RANK:
         exec_mode = default_mode
     # Cap requested mode at server-configured default — clients cannot escalate
     if _MODE_RANK.get(exec_mode, 0) > _MODE_RANK.get(default_mode, 0):
         exec_mode = default_mode
 
-    if exec_mode == "off":
+    if exec_mode == 'off':
         return {
-            "error": "Python execution is disabled by TD_MCP_EXEC_MODE=off",
-            "type": "PermissionError",
-            "exec_mode": exec_mode,
+            'error': 'Python execution is disabled by TD_MCP_EXEC_MODE=off',
+            'type': 'PermissionError',
+            'exec_mode': exec_mode,
         }
 
-    if exec_mode == "restricted":
+    if exec_mode == 'restricted':
         violation = _restricted_exec_violation(code)
         if violation:
             return {
-                "error": violation,
-                "type": "PermissionError",
-                "exec_mode": exec_mode,
+                'error': violation,
+                'type': 'PermissionError',
+                'exec_mode': exec_mode,
             }
 
-    if exec_mode == "standard":
+    if exec_mode == 'standard':
         violation = _standard_exec_violation(code)
         if violation:
             return {
-                "error": violation,
-                "type": "PermissionError",
-                "exec_mode": exec_mode,
+                'error': violation,
+                'type': 'PermissionError',
+                'exec_mode': exec_mode,
             }
 
-    timeout_ms = body.get("timeout_ms", 10000)
+    timeout_ms = body.get('timeout_ms', 10000)
     timeout_sec = max(1, min(timeout_ms / 1000, 30))  # clamp 1–30s
 
     # Capture stdout
     import ctypes
     import io
     import threading
-
     old_stdout = sys.stdout
     old_stderr = sys.stderr
     captured_out = io.StringIO()
@@ -1513,7 +1478,8 @@ def handle_exec_python(body):
         # Raise KeyboardInterrupt in the main thread
         try:
             ctypes.pythonapi.PyThreadState_SetAsyncExc(
-                ctypes.c_ulong(threading.main_thread().ident), ctypes.py_object(KeyboardInterrupt)
+                ctypes.c_ulong(threading.main_thread().ident),
+                ctypes.py_object(KeyboardInterrupt)
             )
         except Exception:
             pass  # best-effort timeout
@@ -1530,7 +1496,7 @@ def handle_exec_python(body):
         try:
             exec(code, exec_globals)
             # Check if there's a __result__ variable
-            result_value = exec_globals.get("__result__", None)
+            result_value = exec_globals.get('__result__', None)
         except SyntaxError:
             # Might be a simple expression
             result_value = eval(code, exec_globals)
@@ -1539,23 +1505,23 @@ def handle_exec_python(body):
         sys.stderr = old_stderr
         timer.cancel()
         return {
-            "error": f"Execution timed out after {timeout_sec}s. Avoid infinite loops or blocking operations.",
-            "type": "TimeoutError",
-            "exec_mode": exec_mode,
-            "stdout": captured_out.getvalue(),
-            "stderr": captured_err.getvalue(),
+            'error': f'Execution timed out after {timeout_sec}s. Avoid infinite loops or blocking operations.',
+            'type': 'TimeoutError',
+            'exec_mode': exec_mode,
+            'stdout': captured_out.getvalue(),
+            'stderr': captured_err.getvalue(),
         }
     except Exception as e:
         sys.stdout = old_stdout
         sys.stderr = old_stderr
         timer.cancel()
         return {
-            "error": str(e),
-            "type": type(e).__name__,
-            "exec_mode": exec_mode,
-            "traceback": traceback.format_exc(),
-            "stdout": captured_out.getvalue(),
-            "stderr": captured_err.getvalue(),
+            'error': str(e),
+            'type': type(e).__name__,
+            'exec_mode': exec_mode,
+            'traceback': traceback.format_exc(),
+            'stdout': captured_out.getvalue(),
+            'stderr': captured_err.getvalue(),
         }
     finally:
         timer.cancel()
@@ -1563,10 +1529,10 @@ def handle_exec_python(body):
         sys.stderr = old_stderr
 
     payload = {
-        "success": True,
-        "exec_mode": exec_mode,
-        "stdout": captured_out.getvalue(),
-        "stderr": captured_err.getvalue(),
+        'success': True,
+        'exec_mode': exec_mode,
+        'stdout': captured_out.getvalue(),
+        'stderr': captured_err.getvalue(),
     }
     payload.update(_serialize_exec_result(result_value))
     return payload
@@ -1578,73 +1544,73 @@ def handle_screenshot(body):
     Uses JPEG with configurable quality (0.0–1.0 scale, TD 2025+) to keep
     captures well under the 1 MB MCP response-size limit after base64 encoding.
     """
-    path = body.get("path", None)
-    quality = float(body.get("quality", 0.5))  # TD 2025 uses 0.0–1.0 scale
+    path = body.get('path', None)
+    quality = float(body.get('quality', 0.5))  # TD 2025 uses 0.0–1.0 scale
 
     try:
         if path:
             target = op(path)
             if target is None:
-                return {"error": f"Node not found: {path}"}
+                return {'error': f'Node not found: {path}'}
             if not target.isTOP:
-                return {"error": f"Node is not a TOP: {path} (type: {target.type})"}
+                return {'error': f'Node is not a TOP: {path} (type: {target.type})'}
         else:
-            return {"error": "Provide path to a TOP node to screenshot"}
+            return {'error': 'Provide path to a TOP node to screenshot'}
 
         # Use saveByteArray for in-memory JPEG capture
-        img_bytes = target.saveByteArray(".jpg", quality=quality)
-        img_b64 = base64.b64encode(bytes(img_bytes)).decode("ascii")
+        img_bytes = target.saveByteArray('.jpg', quality=quality)
+        img_b64 = base64.b64encode(bytes(img_bytes)).decode('ascii')
 
         return {
-            "success": True,
-            "path": target.path,
-            "width": target.width,
-            "height": target.height,
-            "format": "jpeg",
-            "data_base64": img_b64,
-            "size_bytes": len(img_bytes),
+            'success': True,
+            'path': target.path,
+            'width': target.width,
+            'height': target.height,
+            'format': 'jpeg',
+            'data_base64': img_b64,
+            'size_bytes': len(img_bytes),
         }
     except Exception as e:
         # Fallback: try file-based save
         try:
             target.save(SCREENSHOT_TEMP_PATH, quality=quality)
-            with open(SCREENSHOT_TEMP_PATH, "rb") as f:
+            with open(SCREENSHOT_TEMP_PATH, 'rb') as f:
                 img_bytes = f.read()
-            img_b64 = base64.b64encode(img_bytes).decode("ascii")
+            img_b64 = base64.b64encode(img_bytes).decode('ascii')
             return {
-                "success": True,
-                "path": target.path,
-                "format": "jpeg",
-                "data_base64": img_b64,
-                "size_bytes": len(img_bytes),
-                "method": "file_fallback",
+                'success': True,
+                'path': target.path,
+                'format': 'jpeg',
+                'data_base64': img_b64,
+                'size_bytes': len(img_bytes),
+                'method': 'file_fallback',
             }
         except Exception as e2:
-            return {"error": f"Screenshot failed: {str(e)} / fallback: {str(e2)}"}
+            return {'error': f'Screenshot failed: {str(e)} / fallback: {str(e2)}'}
 
 
 def handle_chop_data(body):
     """Read channel data from a CHOP."""
-    path = body.get("path")
-    channel_names = body.get("channels", None)  # list of names, or None for all
-    sample_range = body.get("range", None)  # [start, end] or None for all
+    path = body.get('path')
+    channel_names = body.get('channels', None)  # list of names, or None for all
+    sample_range = body.get('range', None)  # [start, end] or None for all
 
     if not path:
-        return {"error": "Missing required field: path"}
+        return {'error': 'Missing required field: path'}
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
     if not node.isCHOP:
-        return {"error": f"Node is not a CHOP: {path}"}
+        return {'error': f'Node is not a CHOP: {path}'}
 
     result = {
-        "path": path,
-        "numChans": node.numChans,
-        "numSamples": node.numSamples,
-        "rate": node.rate,
-        "channels": {},
+        'path': path,
+        'numChans': node.numChans,
+        'numSamples': node.numSamples,
+        'rate': node.rate,
+        'channels': {},
     }
 
     for chan in node.chans():
@@ -1661,15 +1627,15 @@ def handle_chop_data(body):
         if len(samples) > 1000:
             step = len(samples) // 1000
             samples = samples[::step]
-            result["channels"][chan.name] = {
-                "values": samples,
-                "downsampled": True,
-                "original_length": node.numSamples,
+            result['channels'][chan.name] = {
+                'values': samples,
+                'downsampled': True,
+                'original_length': node.numSamples,
             }
         else:
-            result["channels"][chan.name] = {
-                "values": samples,
-                "downsampled": False,
+            result['channels'][chan.name] = {
+                'values': samples,
+                'downsampled': False,
             }
 
     return result
@@ -1677,22 +1643,22 @@ def handle_chop_data(body):
 
 def handle_geometry_data(body):
     """Read geometry data from a SOP or POP."""
-    path = body.get("path")
-    include_points = body.get("include_points", True)
-    include_prims = body.get("include_prims", False)
-    limit = body.get("limit", 500)
+    path = body.get('path')
+    include_points = body.get('include_points', True)
+    include_prims = body.get('include_prims', False)
+    limit = body.get('limit', 500)
 
     if not path:
-        return {"error": "Missing required field: path"}
+        return {'error': 'Missing required field: path'}
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
-    is_sop = bool(getattr(node, "isSOP", False))
-    is_pop = bool(getattr(node, "isPOP", False))
+    is_sop = bool(getattr(node, 'isSOP', False))
+    is_pop = bool(getattr(node, 'isPOP', False))
     if not (is_sop or is_pop):
-        return {"error": f"Node is not a SOP/POP geometry operator: {path}"}
+        return {'error': f'Node is not a SOP/POP geometry operator: {path}'}
 
     def _safe_count(attr_name):
         value = getattr(node, attr_name, 0)
@@ -1706,22 +1672,22 @@ def handle_geometry_data(body):
         except Exception:
             return 0
 
-    family = "POP" if is_pop and not is_sop else "SOP"
-    num_points = _safe_count("numPoints")
-    num_prims = _safe_count("numPrims")
-    num_vertices = _safe_count("numVertices")
+    family = 'POP' if is_pop and not is_sop else 'SOP'
+    num_points = _safe_count('numPoints')
+    num_prims = _safe_count('numPrims')
+    num_vertices = _safe_count('numVertices')
 
     result = {
-        "path": path,
-        "family": family,
-        "numPoints": num_points,
-        "numPrims": num_prims,
-        "numVertices": num_vertices,
+        'path': path,
+        'family': family,
+        'numPoints': num_points,
+        'numPrims': num_prims,
+        'numVertices': num_vertices,
     }
 
     if include_points:
         points_iter = []
-        points_attr = getattr(node, "points", None)
+        points_attr = getattr(node, 'points', None)
         if points_attr is not None:
             try:
                 points_iter = points_attr() if callable(points_attr) else points_attr
@@ -1729,9 +1695,9 @@ def handle_geometry_data(body):
                 points_iter = []
 
         def _point_xyz(point):
-            if all(hasattr(point, k) for k in ("x", "y", "z")):
+            if all(hasattr(point, k) for k in ('x', 'y', 'z')):
                 return float(point.x), float(point.y), float(point.z)
-            for attr in ("P", "position", "pos"):
+            for attr in ('P', 'position', 'pos'):
                 if not hasattr(point, attr):
                     continue
                 value = getattr(point, attr)
@@ -1751,21 +1717,21 @@ def handle_geometry_data(body):
         for i, pt in enumerate(points_iter):
             if i >= limit:
                 break
-            point_data = {"index": int(getattr(pt, "index", i))}
+            point_data = {'index': int(getattr(pt, 'index', i))}
             xyz = _point_xyz(pt)
             if xyz is not None:
-                point_data["x"] = xyz[0]
-                point_data["y"] = xyz[1]
-                point_data["z"] = xyz[2]
+                point_data['x'] = xyz[0]
+                point_data['y'] = xyz[1]
+                point_data['z'] = xyz[2]
             else:
-                point_data["raw"] = str(pt)
+                point_data['raw'] = str(pt)
             points.append(point_data)
-        result["points"] = points
-        result["points_truncated"] = num_points > limit
+        result['points'] = points
+        result['points_truncated'] = num_points > limit
 
     if include_prims:
         prims = []
-        prims_attr = getattr(node, "prims", None)
+        prims_attr = getattr(node, 'prims', None)
         if prims_attr is not None:
             try:
                 prims_iter = prims_attr() if callable(prims_attr) else prims_attr
@@ -1780,48 +1746,46 @@ def handle_geometry_data(body):
                 try:
                     vert_count = int(len(prim))
                 except Exception:
-                    vert_count = int(getattr(prim, "numVertices", 0) or 0)
-                prims.append(
-                    {
-                        "index": int(getattr(prim, "index", i)),
-                        "numVertices": vert_count,
-                    }
-                )
-        result["prims"] = prims
-        result["prims_truncated"] = num_prims > limit
+                    vert_count = int(getattr(prim, 'numVertices', 0) or 0)
+                prims.append({
+                    'index': int(getattr(prim, 'index', i)),
+                    'numVertices': vert_count,
+                })
+        result['prims'] = prims
+        result['prims_truncated'] = num_prims > limit
 
     return result
 
 
 def handle_pop_inspect(body):
     """Read POP-specific metadata and attribute samples."""
-    path = body.get("path")
+    path = body.get('path')
     if not path:
-        return {"error": "Missing required field: path"}
+        return {'error': 'Missing required field: path'}
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
-    if not bool(getattr(node, "isPOP", False)):
-        return {"error": f"Node is not a POP: {path}"}
+        return {'error': f'Node not found: {path}'}
+    if not bool(getattr(node, 'isPOP', False)):
+        return {'error': f'Node is not a POP: {path}'}
 
-    include_bounds = bool(body.get("include_bounds", True))
-    include_attributes = bool(body.get("include_attributes", True))
-    start = max(0, int(body.get("start", 0) or 0))
-    count = max(1, min(int(body.get("count", 32) or 32), 2048))
-    delayed = bool(body.get("delayed", False))
+    include_bounds = bool(body.get('include_bounds', True))
+    include_attributes = bool(body.get('include_attributes', True))
+    start = max(0, int(body.get('start', 0) or 0))
+    count = max(1, min(int(body.get('count', 32) or 32), 2048))
+    delayed = bool(body.get('delayed', False))
 
-    point_descriptors = _collect_attribute_descriptors(getattr(node, "pointAttributes", []))
-    prim_descriptors = _collect_attribute_descriptors(getattr(node, "primAttributes", []))
-    vert_descriptors = _collect_attribute_descriptors(getattr(node, "vertAttributes", []))
+    point_descriptors = _collect_attribute_descriptors(getattr(node, 'pointAttributes', []))
+    prim_descriptors = _collect_attribute_descriptors(getattr(node, 'primAttributes', []))
+    vert_descriptors = _collect_attribute_descriptors(getattr(node, 'vertAttributes', []))
 
     point_names = _attribute_names(point_descriptors)
     prim_names = _attribute_names(prim_descriptors)
     vert_names = _attribute_names(vert_descriptors)
 
-    requested_point = body.get("point_attributes")
-    requested_prim = body.get("prim_attributes")
-    requested_vert = body.get("vert_attributes")
+    requested_point = body.get('point_attributes')
+    requested_prim = body.get('prim_attributes')
+    requested_vert = body.get('vert_attributes')
 
     if not isinstance(requested_point, list):
         requested_point = _pick_default_pop_samples(point_names)
@@ -1831,90 +1795,88 @@ def handle_pop_inspect(body):
         requested_vert = []
 
     payload = {
-        "path": path,
-        "family": "POP",
-        "summary": {
-            "numPoints": _safe_td_call(node, "numPoints", delayed) or 0,
-            "numPointsAllocated": _safe_td_call(node, "numPoints", False, True) or 0,
-            "numPrims": _safe_td_call(node, "numPrims", delayed) or 0,
-            "numPrimsAllocated": _safe_td_call(node, "numPrims", False, True) or 0,
-            "numVerts": _safe_td_call(node, "numVerts", delayed) or 0,
-            "numVertsAllocated": _safe_td_call(node, "numVerts", False, True) or 0,
-            "dimension": str(getattr(node, "dimension", "")),
-            "maxVertsPerLineStrip": _safe_td_call(node, "maxVertsPerLineStrip") or 0,
+        'path': path,
+        'family': 'POP',
+        'summary': {
+            'numPoints': _safe_td_call(node, 'numPoints', delayed) or 0,
+            'numPointsAllocated': _safe_td_call(node, 'numPoints', False, True) or 0,
+            'numPrims': _safe_td_call(node, 'numPrims', delayed) or 0,
+            'numPrimsAllocated': _safe_td_call(node, 'numPrims', False, True) or 0,
+            'numVerts': _safe_td_call(node, 'numVerts', delayed) or 0,
+            'numVertsAllocated': _safe_td_call(node, 'numVerts', False, True) or 0,
+            'dimension': str(getattr(node, 'dimension', '')),
+            'maxVertsPerLineStrip': _safe_td_call(node, 'maxVertsPerLineStrip') or 0,
         },
-        "sampling": {
-            "start": start,
-            "count": count,
-            "delayed": delayed,
+        'sampling': {
+            'start': start,
+            'count': count,
+            'delayed': delayed,
         },
     }
 
     if include_bounds:
-        payload["bounds"] = _serialize_bounds(_safe_td_call(node, "computeBounds", False, False, delayed))
+        payload['bounds'] = _serialize_bounds(_safe_td_call(node, 'computeBounds', False, False, delayed))
 
     if include_attributes:
-        payload["attributes"] = {
-            "point": point_descriptors,
-            "point_changed": _collect_attribute_descriptors(getattr(node, "pointAttributesChanged", [])),
-            "prim": prim_descriptors,
-            "prim_changed": _collect_attribute_descriptors(getattr(node, "primAttributesChanged", [])),
-            "vert": vert_descriptors,
-            "vert_changed": _collect_attribute_descriptors(getattr(node, "vertAttributesChanged", [])),
+        payload['attributes'] = {
+            'point': point_descriptors,
+            'point_changed': _collect_attribute_descriptors(getattr(node, 'pointAttributesChanged', [])),
+            'prim': prim_descriptors,
+            'prim_changed': _collect_attribute_descriptors(getattr(node, 'primAttributesChanged', [])),
+            'vert': vert_descriptors,
+            'vert_changed': _collect_attribute_descriptors(getattr(node, 'vertAttributesChanged', [])),
         }
 
     point_samples = {}
     for attr_name in requested_point:
         if attr_name in point_names:
-            point_samples[attr_name] = _sample_pop_attribute(node, "points", attr_name, start, count, delayed)
+            point_samples[attr_name] = _sample_pop_attribute(node, 'points', attr_name, start, count, delayed)
 
     prim_samples = {}
     for attr_name in requested_prim:
         if attr_name in prim_names:
-            prim_samples[attr_name] = _sample_pop_attribute(node, "prims", attr_name, start, count, delayed)
+            prim_samples[attr_name] = _sample_pop_attribute(node, 'prims', attr_name, start, count, delayed)
 
     vert_samples = {}
     for attr_name in requested_vert:
         if attr_name in vert_names:
-            vert_samples[attr_name] = _sample_pop_attribute(node, "verts", attr_name, start, count, delayed)
+            vert_samples[attr_name] = _sample_pop_attribute(node, 'verts', attr_name, start, count, delayed)
 
-    payload["samples"] = {
-        "points": point_samples,
-        "prims": prim_samples,
-        "verts": vert_samples,
+    payload['samples'] = {
+        'points': point_samples,
+        'prims': prim_samples,
+        'verts': vert_samples,
     }
-    payload["notes"] = [
-        "POP downloads can stall the GPU. Use delayed=true for repeat sampling workflows.",
-        "Request only the attributes you need for debugging large particle systems.",
+    payload['notes'] = [
+        'POP downloads can stall the GPU. Use delayed=true for repeat sampling workflows.',
+        'Request only the attributes you need for debugging large particle systems.',
     ]
     return payload
 
 
 def handle_cooking_info(body):
     """Get cooking/performance info for a node."""
-    path = body.get("path", "/")
-    recurse = body.get("recurse", False)
-    sort_by = body.get("sort_by", "cookTime")  # cookTime, cpuCookTime
-    limit = body.get("limit", 20)
+    path = body.get('path', '/')
+    recurse = body.get('recurse', False)
+    sort_by = body.get('sort_by', 'cookTime')  # cookTime, cpuCookTime
+    limit = body.get('limit', 20)
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
     results = []
 
     def collect_cook(n):
         try:
-            results.append(
-                {
-                    "path": n.path,
-                    "name": n.name,
-                    "type": n.type,
-                    "cookTime": n.cookTime if hasattr(n, "cookTime") else 0,
-                    "cpuCookTime": n.cpuCookTime if hasattr(n, "cpuCookTime") else 0,
-                    "cookFrame": n.cookFrame if hasattr(n, "cookFrame") else 0,
-                }
-            )
+            results.append({
+                'path': n.path,
+                'name': n.name,
+                'type': n.type,
+                'cookTime': n.cookTime if hasattr(n, 'cookTime') else 0,
+                'cpuCookTime': n.cpuCookTime if hasattr(n, 'cpuCookTime') else 0,
+                'cookFrame': n.cookFrame if hasattr(n, 'cookFrame') else 0,
+            })
         except Exception:
             # Skip nodes that can't provide cook info (e.g., locked or internal)
             pass  # intentional — not all nodes expose cook timing
@@ -1929,28 +1891,28 @@ def handle_cooking_info(body):
     results = results[:limit]
 
     return {
-        "path": path,
-        "fps": project.cookRate,
-        "realTime": project.realTime,
-        "frame": absTime.frame,
-        "total_nodes": len(results),
-        "nodes": results,
+        'path': path,
+        'fps': project.cookRate,
+        'realTime': project.realTime,
+        'frame': absTime.frame,
+        'total_nodes': len(results),
+        'nodes': results,
     }
 
 
 def handle_search_nodes(body):
     """Search for nodes by name, type, or family."""
-    query = body.get("query", "")
-    search_path = body.get("path", "/")
-    search_type = body.get("search_type", "name")  # name, type, family, all
-    limit = body.get("limit", 50)
+    query = body.get('query', '')
+    search_path = body.get('path', '/')
+    search_type = body.get('search_type', 'name')  # name, type, family, all
+    limit = body.get('limit', 50)
 
     if not query:
-        return {"error": "Missing required field: query"}
+        return {'error': 'Missing required field: query'}
 
     root = op(search_path)
     if root is None:
-        return {"error": f"Search root not found: {search_path}"}
+        return {'error': f'Search root not found: {search_path}'}
 
     query_lower = query.lower()
     results = []
@@ -1960,11 +1922,11 @@ def handle_search_nodes(body):
             return
 
         match = False
-        if search_type in ("name", "all") and query_lower in n.name.lower():
+        if search_type in ('name', 'all') and query_lower in n.name.lower():
             match = True
-        if search_type in ("type", "all") and query_lower in n.type.lower():
+        if search_type in ('type', 'all') and query_lower in n.type.lower():
             match = True
-        if search_type in ("family", "all") and query_lower in n.family.lower():
+        if search_type in ('family', 'all') and query_lower in n.family.lower():
             match = True
 
         if match:
@@ -1976,16 +1938,16 @@ def handle_search_nodes(body):
 
     search_recursive(root)
 
-    return {"query": query, "search_type": search_type, "count": len(results), "nodes": results}
+    return {'query': query, 'search_type': search_type, 'count': len(results), 'nodes': results}
 
 
 def handle_list_families(body):
     """List available operator families and types."""
-    path = body.get("path", "/")
+    path = body.get('path', '/')
 
     root = op(path)
     if root is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
     families = {}
 
@@ -2001,134 +1963,131 @@ def handle_list_families(body):
     collect_types(root)
 
     return {
-        "families": {k: sorted(list(v)) for k, v in sorted(families.items())},
+        'families': {k: sorted(list(v)) for k, v in sorted(families.items())},
     }
 
 
 def handle_python_help(body):
     """Get Python help() output for a TD module/class."""
-    target = body.get("target", "")
+    target = body.get('target', '')
     if not target:
-        return {"error": 'Missing required field: target (e.g. "td", "td.OP", "tdu")'}
+        return {'error': 'Missing required field: target (e.g. "td", "td.OP", "tdu")'}
 
     # Security: only allow dotted identifiers — no arbitrary expressions
     import re as _re_mod
-
-    if not _re_mod.match(r"^[A-Za-z_][A-Za-z0-9_.]*$", target):
-        return {"error": 'Invalid target: must be a dotted identifier like "td.OP" or "tdu"'}
+    if not _re_mod.match(r'^[A-Za-z_][A-Za-z0-9_.]*$', target):
+        return {'error': 'Invalid target: must be a dotted identifier like "td.OP" or "tdu"'}
 
     import io
-
     old_stdout = sys.stdout
     captured = io.StringIO()
     sys.stdout = captured
 
     try:
         # Resolve via getattr chain instead of eval for safety
-        parts = target.split(".")
+        parts = target.split('.')
         obj = eval(parts[0])  # only the root identifier
         for attr in parts[1:]:
             obj = getattr(obj, attr)
         help(obj)
     except Exception as e:
         sys.stdout = old_stdout
-        return {"error": f'Help failed for "{target}": {str(e)}'}
+        return {'error': f'Help failed for "{target}": {str(e)}'}
     finally:
         sys.stdout = old_stdout
 
     help_text = captured.getvalue()
     # Truncate if too long
     if len(help_text) > 10000:
-        help_text = help_text[:10000] + "\n\n... (truncated, use more specific target)"
+        help_text = help_text[:10000] + '\n\n... (truncated, use more specific target)'
 
-    return {"target": target, "help": help_text}
+    return {'target': target, 'help': help_text}
 
 
 def handle_python_classes(body):
     """List available TouchDesigner Python classes."""
     try:
         import td
-
-        classes = [name for name in dir(td) if not name.startswith("_")]
-        return {"module": "td", "classes": classes, "count": len(classes)}
+        classes = [name for name in dir(td) if not name.startswith('_')]
+        return {'module': 'td', 'classes': classes, 'count': len(classes)}
     except Exception as e:
-        return {"error": f"Failed to list classes: {str(e)}"}
+        return {'error': f'Failed to list classes: {str(e)}'}
 
 
 def _project_lifecycle_status():
-    modified = getattr(project, "modified", [])
+    modified = getattr(project, 'modified', [])
     try:
         modified_count = len(modified)
     except Exception:
         modified_count = 0
 
-    undo_obj = getattr(ui, "undo", None)
-    undo_stack = list(getattr(undo_obj, "undoStack", []) or []) if undo_obj is not None else []
-    redo_stack = list(getattr(undo_obj, "redoStack", []) or []) if undo_obj is not None else []
+    undo_obj = getattr(ui, 'undo', None)
+    undo_stack = list(getattr(undo_obj, 'undoStack', []) or []) if undo_obj is not None else []
+    redo_stack = list(getattr(undo_obj, 'redoStack', []) or []) if undo_obj is not None else []
 
     return {
-        "project": {
-            "name": str(getattr(project, "name", "")),
-            "folder": str(getattr(project, "folder", "")),
-            "saveVersion": str(getattr(project, "saveVersion", "")),
-            "saveBuild": str(getattr(project, "saveBuild", "")),
-            "modifiedCount": modified_count,
+        'project': {
+            'name': str(getattr(project, 'name', '')),
+            'folder': str(getattr(project, 'folder', '')),
+            'saveVersion': str(getattr(project, 'saveVersion', '')),
+            'saveBuild': str(getattr(project, 'saveBuild', '')),
+            'modifiedCount': modified_count,
         },
-        "undo": {
-            "state": bool(getattr(undo_obj, "state", False)) if undo_obj is not None else False,
-            "globalState": bool(getattr(undo_obj, "globalState", False)) if undo_obj is not None else False,
-            "undoStack": undo_stack,
-            "redoStack": redo_stack,
+        'undo': {
+            'state': bool(getattr(undo_obj, 'state', False)) if undo_obj is not None else False,
+            'globalState': bool(getattr(undo_obj, 'globalState', False)) if undo_obj is not None else False,
+            'undoStack': undo_stack,
+            'redoStack': redo_stack,
         },
     }
 
 
 def handle_project_lifecycle(body):
     """Inspect and control save/load/undo lifecycle operations."""
-    action = str(body.get("action", "status")).strip().lower() or "status"
-    path = body.get("path")
-    save_external_toxs = bool(body.get("save_external_toxs", False))
-    undo_obj = getattr(ui, "undo", None)
+    action = str(body.get('action', 'status')).strip().lower() or 'status'
+    path = body.get('path')
+    save_external_toxs = bool(body.get('save_external_toxs', False))
+    undo_obj = getattr(ui, 'undo', None)
 
-    if action == "status":
-        payload = {"success": True, "action": action}
+    if action == 'status':
+        payload = {'success': True, 'action': action}
         payload.update(_project_lifecycle_status())
         return payload
 
     try:
-        if action == "save":
+        if action == 'save':
             if path:
                 saved = project.save(path, saveExternalToxs=save_external_toxs)
             else:
                 saved = project.save(saveExternalToxs=save_external_toxs)
             payload = {
-                "success": bool(saved),
-                "action": action,
-                "path": path or str(getattr(project, "name", "")),
-                "save_external_toxs": save_external_toxs,
+                'success': bool(saved),
+                'action': action,
+                'path': path or str(getattr(project, 'name', '')),
+                'save_external_toxs': save_external_toxs,
             }
             payload.update(_project_lifecycle_status())
             return payload
 
-        if action == "load":
+        if action == 'load':
             if not path:
-                return {"error": "Path is required for action=load"}
+                return {'error': 'Path is required for action=load'}
             project.load(path)
-            payload = {"success": True, "action": action, "path": path}
+            payload = {'success': True, 'action': action, 'path': path}
             payload.update(_project_lifecycle_status())
             return payload
 
         if undo_obj is None:
-            return {"error": "ui.undo is unavailable in this TouchDesigner build/context"}
+            return {'error': 'ui.undo is unavailable in this TouchDesigner build/context'}
 
         soft_warning = None
-        if action == "undo":
+        if action == 'undo':
             undo_obj.undo()
-        elif action == "redo":
+        elif action == 'redo':
             undo_obj.redo()
-        elif action == "start_undo_block":
-            undo_obj.startBlock(body.get("name") or "TDPilot Edit", enable=bool(body.get("enable", True)))
-        elif action == "end_undo_block":
+        elif action == 'start_undo_block':
+            undo_obj.startBlock(body.get('name') or 'TDPilot Edit', enable=bool(body.get('enable', True)))
+        elif action == 'end_undo_block':
             # TD auto-closes the active block on certain cascading mutations
             # (e.g. deleting the parent COMP that contained the block scope).
             # Calling endBlock() on an already-closed block raises "Cannot
@@ -2139,33 +2098,33 @@ def handle_project_lifecycle(body):
                 undo_obj.endBlock()
             except Exception as block_exc:
                 msg = str(block_exc).lower()
-                if "non existent" in msg or "nonexistent" in msg or "no undo" in msg:
+                if 'non existent' in msg or 'nonexistent' in msg or 'no undo' in msg:
                     soft_warning = (
-                        "Undo block was already closed (TouchDesigner auto-closes "
-                        "blocks on certain cascading mutations like cross-scope deletes). "
-                        "Treating end_undo_block as idempotent."
+                        'Undo block was already closed (TouchDesigner auto-closes '
+                        'blocks on certain cascading mutations like cross-scope deletes). '
+                        'Treating end_undo_block as idempotent.'
                     )
                 else:
                     raise
-        elif action == "clear_undo":
+        elif action == 'clear_undo':
             undo_obj.clear()
         else:
-            return {"error": f"Unknown project lifecycle action: {action}"}
+            return {'error': f'Unknown project lifecycle action: {action}'}
 
-        payload = {"success": True, "action": action}
+        payload = {'success': True, 'action': action}
         if soft_warning is not None:
-            payload["warning"] = soft_warning
+            payload['warning'] = soft_warning
         payload.update(_project_lifecycle_status())
         return payload
     except Exception as exc:
-        return {"error": f"Project lifecycle action failed: {str(exc)}", "action": action}
+        return {'error': f'Project lifecycle action failed: {str(exc)}', 'action': action}
 
 
 def handle_timeline(body):
     """Get timeline/playback state."""
     timeline = None
     try:
-        timeline = (op("/project1") or op("/")).time
+        timeline = (op('/project1') or op('/')).time
     except Exception:
         timeline = None
 
@@ -2173,57 +2132,57 @@ def handle_timeline(body):
     seconds = absTime.seconds
     playing = project.realTime
     fps = project.cookRate
-    start = project.cookRange[0] if hasattr(project, "cookRange") else 1
-    end = project.cookRange[1] if hasattr(project, "cookRange") else 600
+    start = project.cookRange[0] if hasattr(project, 'cookRange') else 1
+    end = project.cookRange[1] if hasattr(project, 'cookRange') else 600
 
     if timeline is not None:
         for attr, target in (
-            ("frame", "frame"),
-            ("seconds", "seconds"),
-            ("play", "playing"),
-            ("rate", "fps"),
-            ("start", "start"),
-            ("end", "end"),
+            ('frame', 'frame'),
+            ('seconds', 'seconds'),
+            ('play', 'playing'),
+            ('rate', 'fps'),
+            ('start', 'start'),
+            ('end', 'end'),
         ):
             try:
                 value = getattr(timeline, attr)
             except Exception:
                 continue
-            if target == "frame":
+            if target == 'frame':
                 frame = value
-            elif target == "seconds":
+            elif target == 'seconds':
                 seconds = value
-            elif target == "playing":
+            elif target == 'playing':
                 playing = value
-            elif target == "fps":
+            elif target == 'fps':
                 fps = value
-            elif target == "start":
+            elif target == 'start':
                 start = value
-            elif target == "end":
+            elif target == 'end':
                 end = value
 
     return {
-        "frame": frame,
-        "seconds": seconds,
-        "playing": playing,
-        "fps": fps,
-        "start": start,
-        "end": end,
+        'frame': frame,
+        'seconds': seconds,
+        'playing': playing,
+        'fps': fps,
+        'start': start,
+        'end': end,
     }
 
 
 def handle_timeline_set(body):
     """Control timeline playback."""
-    action = body.get("action")  # play, pause, frame
-    frame = body.get("frame", None)
-    fps = body.get("fps", None)
+    action = body.get('action')  # play, pause, frame
+    frame = body.get('frame', None)
+    fps = body.get('fps', None)
     timeline = None
     try:
-        timeline = (op("/project1") or op("/")).time
+        timeline = (op('/project1') or op('/')).time
     except Exception:
         timeline = None
 
-    if action == "play":
+    if action == 'play':
         if timeline is not None:
             try:
                 timeline.play = True
@@ -2231,8 +2190,8 @@ def handle_timeline_set(body):
                 project.realTime = True
         else:
             project.realTime = True
-        return {"success": True, "playing": True}
-    elif action == "pause":
+        return {'success': True, 'playing': True}
+    elif action == 'pause':
         if timeline is not None:
             try:
                 timeline.play = False
@@ -2240,20 +2199,20 @@ def handle_timeline_set(body):
                 project.realTime = False
         else:
             project.realTime = False
-        return {"success": True, "playing": False}
-    elif action == "frame" and frame is not None:
+        return {'success': True, 'playing': False}
+    elif action == 'frame' and frame is not None:
         target = int(frame)
         if timeline is not None:
             try:
                 timeline.frame = target
-                return {"success": True, "frame": timeline.frame}
+                return {'success': True, 'frame': timeline.frame}
             except Exception:
                 pass
         try:
             absTime.frame = target
-            return {"success": True, "frame": absTime.frame}
+            return {'success': True, 'frame': absTime.frame}
         except Exception as e:
-            return {"error": f"Failed to set frame: {str(e)}"}
+            return {'error': f'Failed to set frame: {str(e)}'}
     elif fps is not None:
         if timeline is not None:
             try:
@@ -2261,52 +2220,52 @@ def handle_timeline_set(body):
             except Exception:
                 pass
         project.cookRate = fps
-        return {"success": True, "fps": project.cookRate}
+        return {'success': True, 'fps': project.cookRate}
     else:
-        return {"error": "Provide action (play/pause/frame) or fps"}
+        return {'error': 'Provide action (play/pause/frame) or fps'}
 
 
 def handle_pulse_param(body):
     """Pulse a pulse-type parameter."""
-    path = body.get("path")
-    param_name = body.get("param")
+    path = body.get('path')
+    param_name = body.get('param')
 
     if not path or not param_name:
-        return {"error": "Missing required fields: path and param"}
+        return {'error': 'Missing required fields: path and param'}
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
     p = getattr(node.par, param_name, None)
     if p is None:
-        return {"error": f"Parameter not found: {param_name} on {path}"}
+        return {'error': f'Parameter not found: {param_name} on {path}'}
 
     try:
         p.pulse()
-        return {"success": True, "path": path, "param": param_name}
+        return {'success': True, 'path': path, 'param': param_name}
     except Exception as e:
-        return {"error": f"Failed to pulse: {str(e)}"}
+        return {'error': f'Failed to pulse: {str(e)}'}
 
 
 def _monitor_safe_name(value):
-    token = re.sub(r"[^A-Za-z0-9_]+", "_", value).strip("_")
-    return (token or "monitor")[:80]
+    token = re.sub(r'[^A-Za-z0-9_]+', '_', value).strip('_')
+    return (token or 'monitor')[:80]
 
 
 def _monitor_root():
-    host = me.parent() if hasattr(me, "parent") else None
+    host = me.parent() if hasattr(me, 'parent') else None
     if host is None:
-        host = op("/project1")
+        host = op('/project1')
     if host is None or not host.isCOMP:
         return None
 
-    root = host.op("mcp_monitors")
+    root = host.op('mcp_monitors')
     if root is not None:
         return root
 
-    root = host.create("baseCOMP", "mcp_monitors")
-    root.comment = "Auto-generated by TD MCP monitor provisioning"
+    root = host.create('baseCOMP', 'mcp_monitors')
+    root.comment = 'Auto-generated by TD MCP monitor provisioning'
     try:
         root.nodeX = me.nodeX + 300
         root.nodeY = me.nodeY
@@ -2345,7 +2304,7 @@ def _create_with_fallback(parent, node_types, name):
             return _create_or_replace(parent, node_type, name)
         except Exception as exc:
             last_error = exc
-    raise Exception(f"Could not create DAT {name}: {last_error}")
+    raise Exception(f'Could not create DAT {name}: {last_error}')
 
 
 def _destroy_monitor_nodes(paths):
@@ -2742,155 +2701,158 @@ def onFrameStart(frame):
 def _provision_monitor_nodes(node, config):
     root = _monitor_root()
     if root is None:
-        raise Exception("Unable to resolve monitor root COMP.")
+        raise Exception('Unable to resolve monitor root COMP.')
 
     created = []
     warnings = []
-    base = _monitor_safe_name(config["path"].strip("/"))
-    event_types = config.get("event_types", [])
+    base = _monitor_safe_name(config['path'].strip('/'))
+    event_types = config.get('event_types', [])
 
-    if "chop_change" in event_types:
+    if 'chop_change' in event_types:
         if not node.isCHOP:
-            warnings.append("chop_change requested on non-CHOP node; skipped.")
+            warnings.append('chop_change requested on non-CHOP node; skipped.')
         else:
-            cb_name = f"{base}_chop_cb"
-            exec_name = f"{base}_chop_exec"
-            callback_dat = _create_or_replace(root, "textDAT", cb_name)
+            cb_name = f'{base}_chop_cb'
+            exec_name = f'{base}_chop_exec'
+            callback_dat = _create_or_replace(root, 'textDAT', cb_name)
             try:
                 callback_dat.text = _render_chop_callback(
-                    config["path"],
-                    config.get("channels"),
-                    config.get("threshold"),
-                    config.get("rate_limit", 0.016),
+                    config['path'],
+                    config.get('channels'),
+                    config.get('threshold'),
+                    config.get('rate_limit', 0.016),
                 )
-                chop_exec = _create_with_fallback(root, ("chopExecuteDAT", "chopexecDAT"), exec_name)
-                _set_first_par(chop_exec, ("active",), 1)
-                _set_first_par(chop_exec, ("chop",), config["path"])
-                _set_first_par(chop_exec, ("valuechange", "onvaluechange"), 1)
-                _set_first_par(chop_exec, ("callbacks", "callbackdat", "callback"), callback_dat.path)
+                chop_exec = _create_with_fallback(root, ('chopExecuteDAT', 'chopexecDAT'), exec_name)
+                _set_first_par(chop_exec, ('active',), 1)
+                _set_first_par(chop_exec, ('chop',), config['path'])
+                _set_first_par(chop_exec, ('valuechange', 'onvaluechange'), 1)
+                _set_first_par(chop_exec, ('callbacks', 'callbackdat', 'callback'), callback_dat.path)
                 created.extend([callback_dat.path, chop_exec.path])
             except Exception:
                 callback_dat.text = _render_chop_poll_callback(
-                    config["path"],
-                    config.get("channels"),
-                    config.get("threshold"),
-                    config.get("rate_limit", 0.016),
+                    config['path'],
+                    config.get('channels'),
+                    config.get('threshold'),
+                    config.get('rate_limit', 0.016),
                 )
-                exec_dat = _create_with_fallback(root, ("executeDAT",), exec_name)
-                _set_first_par(exec_dat, ("active",), 1)
-                _set_first_par(exec_dat, ("framestart", "onframestart", "frameStart"), 1)
-                _set_first_par(exec_dat, ("callbacks", "callbackdat", "callback"), callback_dat.path)
+                exec_dat = _create_with_fallback(root, ('executeDAT',), exec_name)
+                _set_first_par(exec_dat, ('active',), 1)
+                _set_first_par(exec_dat, ('framestart', 'onframestart', 'frameStart'), 1)
+                _set_first_par(exec_dat, ('callbacks', 'callbackdat', 'callback'), callback_dat.path)
                 try:
                     exec_dat.text = callback_dat.text
                 except Exception:
                     pass
                 created.extend([callback_dat.path, exec_dat.path])
-                warnings.append("chopExecuteDAT unavailable; using executeDAT polling fallback.")
+                warnings.append('chopExecuteDAT unavailable; using executeDAT polling fallback.')
 
-    if "par_change" in event_types:
-        cb_name = f"{base}_par_cb"
-        exec_name = f"{base}_par_exec"
-        callback_dat = _create_or_replace(root, "textDAT", cb_name)
+    if 'par_change' in event_types:
+        cb_name = f'{base}_par_cb'
+        exec_name = f'{base}_par_exec'
+        callback_dat = _create_or_replace(root, 'textDAT', cb_name)
         callback_dat.text = _render_par_callback(
-            config["path"],
-            config.get("params"),
-            config.get("threshold"),
-            config.get("rate_limit", 0.016),
+            config['path'],
+            config.get('params'),
+            config.get('threshold'),
+            config.get('rate_limit', 0.016),
         )
-        par_exec = _create_with_fallback(root, ("parameterexecuteDAT", "parexecDAT"), exec_name)
-        _set_first_par(par_exec, ("active",), 1)
-        _set_first_par(par_exec, ("op", "ops", "targetop"), config["path"])
-        _set_first_par(par_exec, ("pars", "parameters"), " ".join(config.get("params") or []))
-        _set_first_par(par_exec, ("valuechange", "onvaluechange"), 1)
-        _set_first_par(par_exec, ("onpulse", "pulse"), 1)
-        _set_first_par(par_exec, ("callbacks", "callbackdat", "callback"), callback_dat.path)
+        par_exec = _create_with_fallback(root, ('parameterexecuteDAT', 'parexecDAT'), exec_name)
+        _set_first_par(par_exec, ('active',), 1)
+        _set_first_par(par_exec, ('op', 'ops', 'targetop'), config['path'])
+        _set_first_par(par_exec, ('pars', 'parameters'), ' '.join(config.get('params') or []))
+        _set_first_par(par_exec, ('valuechange', 'onvaluechange'), 1)
+        _set_first_par(par_exec, ('onpulse', 'pulse'), 1)
+        _set_first_par(par_exec, ('callbacks', 'callbackdat', 'callback'), callback_dat.path)
         created.extend([callback_dat.path, par_exec.path])
 
-    runtime_types = [event for event in ("cook_complete", "node_error", "timeline") if event in event_types]
+    runtime_types = [
+        event for event in ('cook_complete', 'node_error', 'timeline')
+        if event in event_types
+    ]
     if runtime_types:
-        cb_name = f"{base}_runtime_cb"
-        exec_name = f"{base}_runtime_exec"
-        callback_dat = _create_or_replace(root, "textDAT", cb_name)
+        cb_name = f'{base}_runtime_cb'
+        exec_name = f'{base}_runtime_exec'
+        callback_dat = _create_or_replace(root, 'textDAT', cb_name)
         callback_dat.text = _render_runtime_callback(
-            config["path"],
+            config['path'],
             runtime_types,
-            config.get("rate_limit", 0.016),
+            config.get('rate_limit', 0.016),
         )
         try:
-            exec_dat = _create_with_fallback(root, ("executeDAT",), exec_name)
-            _set_first_par(exec_dat, ("active",), 1)
-            _set_first_par(exec_dat, ("framestart", "onframestart", "frameStart"), 1)
-            _set_first_par(exec_dat, ("callbacks", "callbackdat", "callback"), callback_dat.path)
+            exec_dat = _create_with_fallback(root, ('executeDAT',), exec_name)
+            _set_first_par(exec_dat, ('active',), 1)
+            _set_first_par(exec_dat, ('framestart', 'onframestart', 'frameStart'), 1)
+            _set_first_par(exec_dat, ('callbacks', 'callbackdat', 'callback'), callback_dat.path)
             try:
                 exec_dat.text = callback_dat.text
             except Exception:
                 pass
             created.extend([callback_dat.path, exec_dat.path])
         except Exception as exc:
-            warnings.append(f"Failed to provision runtime monitor DAT: {exc}")
+            warnings.append(f'Failed to provision runtime monitor DAT: {exc}')
 
     return created, warnings
 
 
 def handle_monitor_subscribe(body):
     """Create/update monitor DATs for real-time event subscription."""
-    path = body.get("path")
+    path = body.get('path')
     if not path:
-        return {"error": "Missing required field: path"}
+        return {'error': 'Missing required field: path'}
 
     node = op(path)
     if node is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
 
     existing = MONITOR_SUBSCRIPTIONS.get(path, {})
-    if existing.get("monitor_nodes"):
-        _destroy_monitor_nodes(existing.get("monitor_nodes", []))
+    if existing.get('monitor_nodes'):
+        _destroy_monitor_nodes(existing.get('monitor_nodes', []))
 
     config = {
-        "path": path,
-        "event_types": body.get("event_types", ["chop_change", "par_change"]),
-        "channels": body.get("channels"),
-        "params": body.get("params"),
-        "threshold": body.get("threshold"),
-        "rate_limit": body.get("rate_limit", 0.016),
+        'path': path,
+        'event_types': body.get('event_types', ['chop_change', 'par_change']),
+        'channels': body.get('channels'),
+        'params': body.get('params'),
+        'threshold': body.get('threshold'),
+        'rate_limit': body.get('rate_limit', 0.016),
     }
 
     try:
         monitor_nodes, warnings = _provision_monitor_nodes(node, config)
     except Exception as exc:
-        return {"error": f"Failed to provision monitors: {str(exc)}"}
+        return {'error': f'Failed to provision monitors: {str(exc)}'}
 
     MONITOR_SUBSCRIPTIONS[path] = {
-        "config": config,
-        "monitor_nodes": monitor_nodes,
-        "created_at": time.time(),
+        'config': config,
+        'monitor_nodes': monitor_nodes,
+        'created_at': time.time(),
     }
 
     return {
-        "success": True,
-        "monitoring": config,
-        "monitor_nodes": monitor_nodes,
-        "warnings": warnings,
-        "active_subscriptions": len(MONITOR_SUBSCRIPTIONS),
+        'success': True,
+        'monitoring': config,
+        'monitor_nodes': monitor_nodes,
+        'warnings': warnings,
+        'active_subscriptions': len(MONITOR_SUBSCRIPTIONS),
     }
 
 
 def handle_monitor_unsubscribe(body):
     """Remove monitor DATs and subscription state for a path."""
-    path = body.get("path")
+    path = body.get('path')
     if not path:
-        return {"error": "Missing required field: path"}
+        return {'error': 'Missing required field: path'}
 
     removed = MONITOR_SUBSCRIPTIONS.pop(path, None)
     destroyed = []
     if removed:
-        destroyed = _destroy_monitor_nodes(removed.get("monitor_nodes", []))
+        destroyed = _destroy_monitor_nodes(removed.get('monitor_nodes', []))
 
     return {
-        "success": removed is not None,
-        "path": path,
-        "destroyed_nodes": destroyed,
-        "active_subscriptions": len(MONITOR_SUBSCRIPTIONS),
+        'success': removed is not None,
+        'path': path,
+        'destroyed_nodes': destroyed,
+        'active_subscriptions': len(MONITOR_SUBSCRIPTIONS),
     }
 
 
@@ -2900,36 +2862,35 @@ def handle_analyze_frame(body):
     Supported modes: histogram, luminance, alpha_coverage, color_dominant, roi_diff.
     Returns per-mode result dicts plus resolution metadata.
     """
-    path = body.get("path")
+    path = body.get('path')
     if not path:
-        return {"error": "Missing required field: path"}
+        return {'error': 'Missing required field: path'}
 
-    modes = body.get("modes", ["histogram", "luminance"])
+    modes = body.get('modes', ['histogram', 'luminance'])
     if not isinstance(modes, list) or len(modes) == 0:
-        modes = ["histogram", "luminance"]
+        modes = ['histogram', 'luminance']
 
     top = op(path)
     if top is None:
-        return {"error": f"Node not found: {path}"}
+        return {'error': f'Node not found: {path}'}
     if not top.isTOP:
-        return {"error": f"Node is not a TOP: {path} (type: {top.type})"}
+        return {'error': f'Node is not a TOP: {path} (type: {top.type})'}
 
     try:
-        np = sys.modules.get("numpy")
+        np = sys.modules.get('numpy')
         if np is None:
             import importlib
-
-            np = importlib.import_module("numpy")
+            np = importlib.import_module('numpy')
     except Exception as exc:
-        return {"error": f"numpy not available: {str(exc)}"}
+        return {'error': f'numpy not available: {str(exc)}'}
 
     try:
         arr = top.numpyArray()
     except Exception as exc:
-        return {"error": f"Could not get pixel data: {str(exc)}"}
+        return {'error': f'Could not get pixel data: {str(exc)}'}
 
     if arr is None:
-        return {"error": f"numpyArray() returned None for: {path}"}
+        return {'error': f'numpyArray() returned None for: {path}'}
 
     # Ensure 3D array — grayscale TOPs may return 2D (H, W) without channel axis
     if arr.ndim == 2:
@@ -2939,54 +2900,56 @@ def handle_analyze_frame(body):
     num_channels = arr.shape[2]
 
     if h == 0 or w == 0:
-        return {"error": f"Image has zero pixels ({w}x{h})", "path": path}
+        return {'error': f'Image has zero pixels ({w}x{h})', 'path': path}
 
     mode_results = {}
 
     for mode in modes:
         try:
-            if mode == "histogram":
+            if mode == 'histogram':
                 rgb = arr[:, :, :3] if num_channels >= 3 else arr[:, :, :1]
                 bins = 16
                 hists = {}
-                chan_names = ["r", "g", "b"] if num_channels >= 3 else ["l"]
+                chan_names = ['r', 'g', 'b'] if num_channels >= 3 else ['l']
                 for i, name in enumerate(chan_names):
                     channel = rgb[:, :, i].flatten()
                     counts, edges = np.histogram(channel, bins=bins, range=(0.0, 1.0))
                     hists[name] = {
-                        "counts": counts.tolist(),
-                        "edges": [round(float(e), 4) for e in edges.tolist()],
+                        'counts': counts.tolist(),
+                        'edges': [round(float(e), 4) for e in edges.tolist()],
                     }
-                mode_results["histogram"] = {"bins": bins, "channels": hists}
+                mode_results['histogram'] = {'bins': bins, 'channels': hists}
 
-            elif mode == "luminance":
+            elif mode == 'luminance':
                 if num_channels >= 3:
-                    lum = 0.2126 * arr[:, :, 0] + 0.7152 * arr[:, :, 1] + 0.0722 * arr[:, :, 2]
+                    lum = (0.2126 * arr[:, :, 0]
+                           + 0.7152 * arr[:, :, 1]
+                           + 0.0722 * arr[:, :, 2])
                 else:
                     lum = arr[:, :, 0]
-                mode_results["luminance"] = {
-                    "mean": float(np.mean(lum)),
-                    "min": float(np.min(lum)),
-                    "max": float(np.max(lum)),
-                    "std": float(np.std(lum)),
-                    "p5": float(np.percentile(lum, 5)),
-                    "p95": float(np.percentile(lum, 95)),
+                mode_results['luminance'] = {
+                    'mean': float(np.mean(lum)),
+                    'min': float(np.min(lum)),
+                    'max': float(np.max(lum)),
+                    'std': float(np.std(lum)),
+                    'p5': float(np.percentile(lum, 5)),
+                    'p95': float(np.percentile(lum, 95)),
                 }
 
-            elif mode == "alpha_coverage":
+            elif mode == 'alpha_coverage':
                 if num_channels >= 4:
                     alpha = arr[:, :, 3]
                     total_pixels = h * w
                     above_half = int(np.sum(alpha > 0.5))
-                    mode_results["alpha_coverage"] = {
-                        "mean_alpha": float(np.mean(alpha)),
-                        "opaque_fraction": above_half / float(total_pixels) if total_pixels > 0 else 0.0,
-                        "fully_transparent_fraction": float(np.mean(alpha < 0.01)),
+                    mode_results['alpha_coverage'] = {
+                        'mean_alpha': float(np.mean(alpha)),
+                        'opaque_fraction': above_half / float(total_pixels) if total_pixels > 0 else 0.0,
+                        'fully_transparent_fraction': float(np.mean(alpha < 0.01)),
                     }
                 else:
-                    mode_results["alpha_coverage"] = {"error": f"No alpha channel (channels={num_channels})"}
+                    mode_results['alpha_coverage'] = {'error': f'No alpha channel (channels={num_channels})'}
 
-            elif mode == "color_dominant":
+            elif mode == 'color_dominant':
                 if num_channels >= 3:
                     rgb_flat = arr[:, :, :3].reshape(-1, 3)
                     # quantize to 4-bit per channel (16 levels) then find mode
@@ -2997,21 +2960,21 @@ def handle_analyze_frame(body):
                     dominant_q = unique_colors[best_idx]
                     dominant = [round(float(c) / 15.0, 3) for c in dominant_q]
                     best_count = int(color_counts[best_idx])
-                    mode_results["color_dominant"] = {
-                        "rgb": dominant,
-                        "hex": f"#{int(dominant[0] * 255):02x}{int(dominant[1] * 255):02x}{int(dominant[2] * 255):02x}",
-                        "pixel_count": best_count,
-                        "fraction": round(best_count / float(h * w), 4) if h * w > 0 else 0.0,
+                    mode_results['color_dominant'] = {
+                        'rgb': dominant,
+                        'hex': f'#{int(dominant[0] * 255):02x}{int(dominant[1] * 255):02x}{int(dominant[2] * 255):02x}',
+                        'pixel_count': best_count,
+                        'fraction': round(best_count / float(h * w), 4) if h * w > 0 else 0.0,
                     }
                 else:
-                    mode_results["color_dominant"] = {"error": "Need at least 3 channels for color_dominant"}
+                    mode_results['color_dominant'] = {'error': 'Need at least 3 channels for color_dominant'}
 
-            elif mode == "roi_diff":
-                roi = body.get("roi")
-                reference_path = body.get("reference_path")
+            elif mode == 'roi_diff':
+                roi = body.get('roi')
+                reference_path = body.get('reference_path')
                 if roi is None or reference_path is None:
-                    mode_results["roi_diff"] = {
-                        "error": "roi_diff requires roi=[x,y,w,h] and reference_path in request body"
+                    mode_results['roi_diff'] = {
+                        'error': 'roi_diff requires roi=[x,y,w,h] and reference_path in request body'
                     }
                 else:
                     rx, ry, rw, rh = int(roi[0]), int(roi[1]), int(roi[2]), int(roi[3])
@@ -3023,25 +2986,23 @@ def handle_analyze_frame(body):
 
                     ref_top = op(reference_path)
                     if ref_top is None:
-                        mode_results["roi_diff"] = {"error": f"Reference node not found: {reference_path}"}
+                        mode_results['roi_diff'] = {'error': f'Reference node not found: {reference_path}'}
                     elif not ref_top.isTOP:
-                        mode_results["roi_diff"] = {"error": f"Reference is not a TOP: {reference_path}"}
+                        mode_results['roi_diff'] = {'error': f'Reference is not a TOP: {reference_path}'}
                     else:
                         ref_arr = ref_top.numpyArray()
                         if ref_arr is None:
-                            mode_results["roi_diff"] = {"error": "Reference numpyArray() returned None"}
+                            mode_results['roi_diff'] = {'error': 'Reference numpyArray() returned None'}
                         elif ref_arr.ndim == 2:
                             ref_arr = ref_arr[:, :, None]
                         if ref_arr is not None and ref_arr.ndim >= 3:
-                            patch_a = arr[ry : ry + rh, rx : rx + rw, :3].astype(float)
+                            patch_a = arr[ry:ry + rh, rx:rx + rw, :3].astype(float)
                             ref_h, ref_w = ref_arr.shape[:2]
                             ref_rx = max(0, min(rx, ref_w - 1))
                             ref_ry = max(0, min(ry, ref_h - 1))
                             ref_rw = max(1, min(rw, ref_w - ref_rx))
                             ref_rh = max(1, min(rh, ref_h - ref_ry))
-                            patch_b = ref_arr[ref_ry : ref_ry + ref_rh, ref_rx : ref_rx + ref_rw, :3].astype(
-                                float
-                            )
+                            patch_b = ref_arr[ref_ry:ref_ry + ref_rh, ref_rx:ref_rx + ref_rw, :3].astype(float)
                             # Crop both patches to their common overlap size
                             if patch_a.shape != patch_b.shape:
                                 min_h = min(patch_a.shape[0], patch_b.shape[0])
@@ -3049,23 +3010,23 @@ def handle_analyze_frame(body):
                                 patch_a = patch_a[:min_h, :min_w, :]
                                 patch_b = patch_b[:min_h, :min_w, :]
                             diff = patch_a - patch_b
-                            mode_results["roi_diff"] = {
-                                "roi": [rx, ry, rw, rh],
-                                "reference_path": reference_path,
-                                "mean_abs_diff": float(np.mean(np.abs(diff))),
-                                "max_abs_diff": float(np.max(np.abs(diff))),
-                                "rmse": float(np.sqrt(np.mean(diff**2))),
+                            mode_results['roi_diff'] = {
+                                'roi': [rx, ry, rw, rh],
+                                'reference_path': reference_path,
+                                'mean_abs_diff': float(np.mean(np.abs(diff))),
+                                'max_abs_diff': float(np.max(np.abs(diff))),
+                                'rmse': float(np.sqrt(np.mean(diff ** 2))),
                             }
 
             else:
-                mode_results[mode] = {"error": f"Unknown mode: {mode}"}
+                mode_results[mode] = {'error': f'Unknown mode: {mode}'}
 
         except Exception as exc:
-            mode_results[mode] = {"error": f"Mode {mode} failed: {str(exc)}"}
+            mode_results[mode] = {'error': f'Mode {mode} failed: {str(exc)}'}
 
     return {
-        "path": path,
-        "resolution": [w, h],
-        "channels": num_channels,
-        "modes": mode_results,
+        'path': path,
+        'resolution': [w, h],
+        'channels': num_channels,
+        'modes': mode_results,
     }
