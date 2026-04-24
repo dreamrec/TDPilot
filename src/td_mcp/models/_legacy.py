@@ -159,12 +159,18 @@ class CreateNodeInput(BaseModel):
     @field_validator("node_type")
     @classmethod
     def validate_node_type(cls, v: str) -> str:
-        """Validate the operator type ends with a known family suffix."""
-        families = ("TOP", "CHOP", "SOP", "DAT", "COMP", "MAT", "POP")
+        """Validate the operator type ends with a known family suffix.
+
+        Note: POPX is listed before POP so that callers parsing family out of
+        node_type match the LONGER suffix first — `noisePOPX` is a POPX op,
+        not a POP op. `endswith` alone is safe since `noisePOP` doesn't
+        endswith POPX and `noisePOPX` doesn't endswith POP.
+        """
+        families = ("TOP", "CHOP", "SOP", "DAT", "COMP", "MAT", "POPX", "POP")
         if not any(v.upper().endswith(f) for f in families):
             raise ValueError(
                 f"node_type '{v}' should end with a family suffix: {', '.join(families)}. "
-                f"Example: 'noiseTOP', 'waveCHOP', 'boxSOP'"
+                f"Example: 'noiseTOP', 'waveCHOP', 'boxSOP', 'noiseFalloffPOPX'"
             )
         return v
 

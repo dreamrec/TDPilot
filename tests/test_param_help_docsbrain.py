@@ -34,7 +34,16 @@ def _build_brain_with_noisetop(tmp_path: Path) -> DocsBrain:
             "operator_family": "TOP",
             "operator_name": "Noise TOP",
             "mentioned_operators": [],
-            "parameter_names": ["amp", "period", "outputresolution"],
+            # v1.4.6: real DocsBrain scraping always emits "Label\nname"
+            # (MediaWiki docs have the label and internal name on separate
+            # lines). _normalize_key_param now drops single-token entries
+            # as junk (stray doc text / menu values). Use the realistic
+            # structure here so the test exercises the production path.
+            "parameter_names": [
+                "Amplitude\namp",
+                "Period\nperiod",
+                "Output\nResolution\noutputresolution",
+            ],
             "python_symbols": [],
             "build_number": None,
             "build_date": None,

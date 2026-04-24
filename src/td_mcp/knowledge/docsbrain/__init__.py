@@ -40,31 +40,46 @@ def _canonical_card_types(card_types: list[str] | None) -> list[str] | None:
     return [_CARD_TYPE_ALIASES.get(ct, ct) for ct in card_types]
 
 
-def _normalize_key_param(raw: str) -> dict:
-    """Turn a raw FTS parameter string into a CardIndex-compatible dict.
+def _normalize_key_param(raw: str) -> dict | None:
+    """Turn a raw FTS parameter string into a CardIndex-compatible dict,
+    or return ``None`` to signal the entry is junk and should be skipped.
 
     DocsBrain stores parameters as strings from the FTS parameter_names
-    column. They can be simple ("amp") or multi-line labels
-    ("Output\\nResolution\\noutputresolution"). CardIndex JSON cards
-    represent key_params as objects like
+    column. Real entries from the scraped docs follow the pattern
+    ``"Human Label\\ninternalname"`` (one or more label lines, then the
+    TD internal name on its own line). CardIndex JSON cards represent
+    key_params as objects like
     ``{"name": "outputresolution", "type": "...", "note": "..."}``.
 
-    Bringing them to a common shape lets ``td_get_param_help`` iterate
-    over either source with the same loop. The original raw string is
-    preserved under ``raw`` so future enrichment can recover it.
+    v1.4.6 junk filter
+    ------------------
+    Pre-v1.4.6 this function accepted **any** non-empty string, which
+    meant the FTS ``parameter_names`` column bled stray doc words
+    (``"Back"``, ``"Z"``, ``"Early Depth"``), menu option values
+    (``"useinput"``, ``"2x"``, ``"8"``), and UI fragments
+    (``"_separator_"``, ``"Where i is the 0"``) into every operator card.
+    Live runs against TD 2025 confirmed this contaminated key_params
+    for glslTOP, renderTOP, and other menu-heavy operators.
+
+    The safest filter — without building a per-operator menu-value
+    blocklist — is to require the ``"Label\\nname"`` structure: any
+    entry without an internal newline is rejected. Real TD param names
+    reach this function with that structure because the scraper writes
+    label + name on separate lines. Single-line single-word fragments
+    from the FTS are overwhelmingly junk.
+
+    The original raw string is preserved under ``raw`` so downstream
+    tools can recover it if enrichment is ever added.
     """
     text = (raw or "").strip()
     if not text:
-        return {"name": "", "label": "", "raw": raw, "source": "docsbrain"}
+        return None
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     if len(lines) <= 1:
-        # Simple parameter name — just use it as both label and name lowered.
-        return {
-            "name": lines[0] if lines else text,
-            "label": lines[0] if lines else text,
-            "raw": raw,
-            "source": "docsbrain",
-        }
+        # Single-token entries almost always come from stray doc text or
+        # menu option values leaking into FTS `parameter_names`. Real
+        # TD param entries arrive as "Label\ninternalname".
+        return None
     # Multi-line: last line is the programmatic name; the preceding lines
     # are the human label (joined with spaces).
     return {
@@ -226,8 +241,10 @@ class DocsBrain:
         # Normalize to CardIndex-compatible `key_params` shape (v1.4.5 Fix 3).
         # Before this, tools like `td_get_param_help` that looked up
         # `card["key_params"]` silently got [] when DocsBrain was active,
-        # making parameter-help hollow.
-        key_params = [_normalize_key_param(p) for p in all_params]
+        # making parameter-help hollow. v1.4.6: _normalize_key_param may
+        # return None for junk entries (single-word doc fragments, menu
+        # values) — drop those here.
+        key_params = [kp for kp in (_normalize_key_param(p) for p in all_params) if kp]
 
         result = {
             "op_type": op_type,
@@ -348,10 +365,18 @@ class DocsBrain:
         ):
             return "glossary"
 
-        # Operator name match
+        # Operator name match.
+        # v1.4.6: the returned doc_type list must cover all brains that store
+        # operator-reference chunks. The Derivative brain uses "operator" and
+        # "python_api"; the POPx brain uses "catalog_operators" and
+        # "reference". Before this fix, POPx brain calls were silently
+        # filtered out because the hardcoded `["operator", "python_api"]`
+        # list didn't include POPx's doc_types. Doc_types not present in a
+        # given brain are no-ops in the SQL IN clause, so the expanded list
+        # is safe for both brains.
         for op_name in self._operator_names:
             if op_name.lower() in query_lower:
-                return ["operator", "python_api"]
+                return ["operator", "python_api", "catalog_operators", "reference"]
 
         return None
 

@@ -3832,16 +3832,33 @@ async def td_get_operator_doc(
     """Get full documentation card for an operator type or a specific node."""
     idx = _get_card_index(ctx)
     resolved_type = op_type
+    resolved_family = ""  # only populated when we went via node_path
     if resolved_type is None and node_path:
         # Resolve op_type from live node
         try:
             info = await _get_client(ctx).request("node/detail", {"path": node_path})
             resolved_type = info.get("type", "")
+            resolved_family = info.get("family", "")
         except Exception:
             return {"error": f"Could not resolve node at {node_path}"}
     if not resolved_type:
         return {"error": "Provide op_type or node_path"}
+    # v1.4.6 short-form fallback (mirrors the fix in td_get_param_help).
+    # TD's `node/detail` returns short op_types like "glsl", "render" while
+    # DocsBrain keys by canonical type+family ("glslTOP", "renderTOP").
+    # When the short-form lookup misses, retry with each known family
+    # suffix so users typing `td_get_operator_doc("glsl")` get a real card.
     card = idx.get_operator(resolved_type)
+    if card is None:
+        if resolved_family:
+            card = idx.get_operator(resolved_type + resolved_family.upper())
+        else:
+            # Pure op_type path — try each family suffix in frequency order.
+            for fam in ("TOP", "COMP", "CHOP", "SOP", "MAT", "DAT", "POPX", "POP"):
+                candidate = idx.get_operator(resolved_type + fam)
+                if candidate is not None:
+                    card = candidate
+                    break
     svc = _get_services(ctx)
     if card is None:
         provenance = Provenance(source="local_card", td_build=svc.td_build)
