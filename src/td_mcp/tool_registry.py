@@ -174,6 +174,12 @@ STANDARD_BLOCKED_TOKENS = exec_safety.STANDARD_BLOCKED_TOKENS
 
 _STATE_VECTOR_CACHE: dict[str, dict[str, Any]] = {}
 
+# Process-wide sentinel for the Patch Session MVP undo-block guard.
+# Injected into patch.applier.apply_plan by tools_patch.td_patch_apply.
+from td_mcp.patch.undo_sentinel import UndoBlockSentinel  # noqa: E402
+
+_PATCH_SENTINEL = UndoBlockSentinel()
+
 
 async def _with_undo_block(td_client, label: str, async_fn, *args):
     """Wrap an async operation in a TD undo block (start_undo_block / end_undo_block)."""
@@ -2036,6 +2042,7 @@ from td_mcp.registry.tools_vision import (  # noqa: E402
     td_analyze_frame,
     td_capture_frame,
 )
+from td_mcp.registry import tools_patch  # noqa: F401, E402  — registers 5 patch tools
 
 # ─────────────────────────────────────────────────────────────
 # CLI entrypoint
