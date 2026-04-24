@@ -107,6 +107,12 @@ omit = ["*/__main__.py", "*/tests/*"]
 [tool.coverage.report]
 skip_empty = true
 show_missing = true
+# Ratchet: fail CI (and local `uv run pytest --cov`) if total coverage
+# drops below this floor. Current baseline at v1.4.4 is ~61% (measured
+# via `uv run --with pytest-cov python -m pytest --cov=src/td_mcp`);
+# floor set 1% below that to absorb minor fluctuation. Raise by ~5% per
+# release as tool_registry.py gets split into focused modules (v1.5.0).
+fail_under = 60
 exclude_lines = [
     "pragma: no cover",
     "raise NotImplementedError",
