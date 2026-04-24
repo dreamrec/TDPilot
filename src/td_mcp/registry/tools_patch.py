@@ -153,3 +153,37 @@ async def td_patch_apply(
         return format_tool_error(exc)
     finally:
         finish()
+
+
+@mcp.tool(name="td_patch_validate")
+async def td_patch_validate(
+    ctx: Context,
+    target_root: Annotated[
+        str,
+        Field(description="Subtree to validate", min_length=1),
+    ],
+    capture_frames: Annotated[
+        list[str] | None,
+        Field(default=None, description="TOP paths to capture; None = none (cheap)"),
+    ] = None,
+) -> dict[str, Any]:
+    """Composite errors + cook + optional frame captures on a TD subtree."""
+    finish = _tr._start_tool(ctx, "td_patch_validate")
+    try:
+        client = _tr._get_client(ctx)
+        plan = ValidationPlan(
+            target_root=target_root,
+            capture_frames=capture_frames or [],
+        )
+        report = await patch.validate_target(client, plan)
+        _tr._audit_log(
+            ctx,
+            "td_patch_validate",
+            {"target_root": target_root, "ok": report.ok, "errors": len(report.errors)},
+        )
+        return {"success": True, "report": report.model_dump(mode="json")}
+    except Exception as exc:  # noqa: BLE001
+        _tr._record_tool_error(ctx, "td_patch_validate")
+        return format_tool_error(exc)
+    finally:
+        finish()

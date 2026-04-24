@@ -39,3 +39,12 @@ def test_td_patch_apply_registered():
     props = t.inputSchema.get("properties", {})
     assert "plan" in props
     assert "auto_validate" in props
+
+
+def test_td_patch_validate_registered():
+    t = _find_tool("td_patch_validate")
+    props = t.inputSchema.get("properties", {})
+    assert "target_root" in props
+    assert "capture_frames" in props
+    # Flat schema — Bug A discipline
+    assert list(props.keys()) != ["params"]
