@@ -46,12 +46,37 @@ class FakeMCPServer:
 # ---------------------------------------------------------------------------
 
 
-def _get_tool_registry_ast():
-    """Parse tool_registry.py as AST to inspect structure without importing."""
+def _merged_source() -> str:
+    """Return merged text of tool_registry.py + registry/*.py submodules.
+
+    v1.5.0 Phase 2 module split: resources moved to
+    ``src/td_mcp/registry/resources.py``. Tests that do AST-level
+    decorator discovery or ``ast.get_source_segment`` lookups need the
+    merged source text so node line-numbers from the AST index into
+    the same string.
+    """
     import pathlib
 
-    path = pathlib.Path(__file__).resolve().parent.parent / "src" / "td_mcp" / "tool_registry.py"
-    return ast.parse(path.read_text(), filename=str(path))
+    src_root = pathlib.Path(__file__).resolve().parent.parent / "src" / "td_mcp"
+    main_src = (src_root / "tool_registry.py").read_text()
+    pkg_dir = src_root / "registry"
+    extra_srcs: list[str] = []
+    if pkg_dir.is_dir():
+        for sub in sorted(pkg_dir.glob("*.py")):
+            if sub.name == "__init__.py":
+                continue
+            extra_srcs.append(sub.read_text())
+    return main_src + "\n" + "\n".join(extra_srcs)
+
+
+def _get_tool_registry_ast():
+    """Parse merged tool_registry.py + registry/*.py as a single AST.
+
+    The AST's node line-numbers index into the string returned by
+    ``_merged_source()``, so helpers using ``ast.get_source_segment``
+    must pass the same string.
+    """
+    return ast.parse(_merged_source(), filename="<merged tool_registry + registry/*.py>")
 
 
 def _find_decorated_functions(tree: ast.Module, decorator_substring: str) -> dict:
@@ -132,12 +157,7 @@ def test_resource_handler_signatures():
 
 def test_resource_handlers_include_mode_field():
     """Every resource handler return dict should include a 'mode' key."""
-    import pathlib
-
-    source = (
-        pathlib.Path(__file__).resolve().parent.parent / "src" / "td_mcp" / "tool_registry.py"
-    ).read_text()
-
+    source = _merged_source()
     tree = _get_tool_registry_ast()
     resources = _find_decorated_functions(tree, "resource")
 
@@ -155,12 +175,7 @@ def test_resource_handlers_include_mode_field():
 
 def test_cache_resources_have_fallback_try_except():
     """Cache-mode resources with fallbacks (chop, par, cook, error) should have try/except blocks."""
-    import pathlib
-
-    source = (
-        pathlib.Path(__file__).resolve().parent.parent / "src" / "td_mcp" / "tool_registry.py"
-    ).read_text()
-
+    source = _merged_source()
     tree = _get_tool_registry_ast()
     resources = _find_decorated_functions(tree, "resource")
 

@@ -97,11 +97,15 @@ def test_tool_registry_contains_core_and_v2_surfaces():
 
 
 def test_manifest_surface_matches_registry():
-    """mcp/manifest.json surface counts must match what tool_registry.py registers.
+    """mcp/manifest.json surface counts must match what the registry registers.
 
     Resources with `{param}` segments are templates; the rest are static.
     Regression (v1.4.3): manifest claimed resource_template_count=7, but one of
     the seven decorated resources (td://timeline/state) is static.
+
+    v1.5.0 Phase 2: resources moved to
+    ``src/td_mcp/registry/resources.py``; this test now scans the merged
+    source across ``tool_registry.py`` + ``registry/*.py``.
     """
     import json
     import re
@@ -109,10 +113,19 @@ def test_manifest_surface_matches_registry():
 
     repo = Path(__file__).resolve().parent.parent
     manifest = json.loads((repo / "mcp" / "manifest.json").read_text())
-    source = (repo / "src" / "td_mcp" / "tool_registry.py").read_text()
+
+    src_root = repo / "src" / "td_mcp"
+    sources = [(src_root / "tool_registry.py").read_text()]
+    pkg_dir = src_root / "registry"
+    if pkg_dir.is_dir():
+        for sub in sorted(pkg_dir.glob("*.py")):
+            if sub.name == "__init__.py":
+                continue
+            sources.append(sub.read_text())
+    source = "\n".join(sources)
 
     uris = re.findall(r'@mcp\.resource\("([^"]+)"', source)
-    assert uris, "No @mcp.resource decorators found in tool_registry.py"
+    assert uris, "No @mcp.resource decorators found across tool_registry.py + registry/*.py"
     templates = [u for u in uris if "{" in u]
     statics = [u for u in uris if "{" not in u]
 

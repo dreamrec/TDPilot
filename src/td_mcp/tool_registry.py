@@ -1799,133 +1799,6 @@ def _classify_temporal_character(samples: list[dict[str, Any]]) -> dict[str, Any
 # Resources
 
 
-@mcp.resource("td://timeline/state", name="td_timeline_state")
-async def td_resource_timeline() -> str:
-    # NOTE: Context injection not supported for parameter-less resources in mcp>=1.3.
-    # Clients should use the td_get_timescale_state tool for live timeline data.
-    return {
-        "resource_schema_version": 1,
-        "resource_uri": "td://timeline/state",
-        "mode": "static",
-        "note": "Use td_get_timescale_state tool for live timeline data.",
-    }
-
-
-@mcp.resource("td://chop/path/{encoded_path}/channel/{channel}", name="td_chop_channel")
-async def td_resource_chop_channel(encoded_path: str, channel: str) -> str:
-    # NOTE: Context injection removed for mcp>=1.3 compatibility.
-    # Use td_chop_data tool for live CHOP data.
-    path = decode_td_path(encoded_path)
-    uri = chop_uri(path, channel)
-    try:
-        pass  # read-through fallback requires context; see td_chop_data tool
-    except Exception:
-        pass
-    return {
-        "resource_schema_version": 1,
-        "resource_uri": uri,
-        "mode": "static",
-        "path": path,
-        "channel": channel,
-        "available": False,
-        "note": "Use td_chop_data tool for live CHOP channel data.",
-    }
-
-
-@mcp.resource("td://par/path/{encoded_path}/name/{name}", name="td_parameter")
-async def td_resource_parameter(encoded_path: str, name: str) -> str:
-    # NOTE: Context injection removed for mcp>=1.3 compatibility.
-    # Use td_get_params tool for live parameter data.
-    path = decode_td_path(encoded_path)
-    uri = par_uri(path, name)
-    try:
-        pass  # read-through fallback requires context; see td_get_params tool
-    except Exception:
-        pass
-    return {
-        "resource_schema_version": 1,
-        "resource_uri": uri,
-        "mode": "static",
-        "path": path,
-        "name": name,
-        "available": False,
-        "note": "Use td_get_params tool for live parameter data.",
-    }
-
-
-@mcp.resource("td://cook/path/{encoded_path}", name="td_cook_state")
-async def td_resource_cook(encoded_path: str) -> str:
-    # NOTE: Context injection removed for mcp>=1.3 compatibility.
-    # Use td_cooking_info tool for live cook data.
-    path = decode_td_path(encoded_path)
-    uri = cook_uri(path)
-    try:
-        pass  # read-through fallback requires context; see td_cooking_info tool
-    except Exception:
-        pass
-    return {
-        "resource_schema_version": 1,
-        "resource_uri": uri,
-        "mode": "static",
-        "path": path,
-        "available": False,
-        "note": "Use td_cooking_info tool for live cook state data.",
-    }
-
-
-@mcp.resource("td://error/path/{encoded_path}", name="td_error_state")
-async def td_resource_error(encoded_path: str) -> str:
-    # NOTE: Context injection removed for mcp>=1.3 compatibility.
-    # Use td_get_errors tool for live error data.
-    path = decode_td_path(encoded_path)
-    uri = error_uri(path)
-    try:
-        pass  # read-through fallback requires context; see td_get_errors tool
-    except Exception:
-        pass
-    return {
-        "resource_schema_version": 1,
-        "resource_uri": uri,
-        "mode": "static",
-        "path": path,
-        "available": False,
-        "note": "Use td_get_errors tool for live error data.",
-    }
-
-
-@mcp.resource("td://top/path/{encoded_path}/frame", name="td_top_frame")
-async def td_resource_top_frame(encoded_path: str) -> str:
-    # NOTE: Context injection removed for mcp>=1.3 compatibility.
-    # Use td_screenshot or td_stream_top tool for live TOP frame data.
-    path = decode_td_path(encoded_path)
-    uri = top_frame_uri(path)
-    return {
-        "resource_schema_version": 1,
-        "resource_uri": uri,
-        "mode": "static",
-        "path": path,
-        "available": False,
-        "note": "Use td_screenshot or td_stream_top tool for live TOP frame data.",
-    }
-
-
-@mcp.resource("td://job/{job_id}", name="td_job_state")
-async def td_resource_job(job_id: str) -> str:
-    # NOTE: Context injection removed for mcp>=1.3 compatibility.
-    # Job state cannot be retrieved via resource; use job tracking tools.
-    return {
-        "resource_schema_version": 1,
-        "resource_uri": f"td://job/{job_id}",
-        "mode": "static",
-        "job_id": job_id,
-        "available": False,
-        "note": "Use job tracking tools for live job state.",
-    }
-
-
-# Core tools (v1)
-
-
 @mcp.tool(name="td_get_info")
 async def td_get_info(ctx: Context) -> str:
     return await _forward(ctx, "td_get_info", "info")
@@ -3413,6 +3286,17 @@ def _rescue_exec_mode_error(
 # ``mcp`` instance. The explicit name imports below re-export the tool
 # functions at module level so callers using ``from td_mcp import
 # tool_registry as registry; registry.td_memory_save(...)`` still work.
+# Resource handlers registered via @mcp.resource. Re-exported so tests
+# like test_resource_fallbacks.py that import by Python name keep working.
+from td_mcp.registry.resources import (  # noqa: E402
+    td_resource_chop_channel,
+    td_resource_cook,
+    td_resource_error,
+    td_resource_job,
+    td_resource_parameter,
+    td_resource_timeline,
+    td_resource_top_frame,
+)
 from td_mcp.registry.tools_data import (  # noqa: E402
     td_chop_data,
     td_cooking_info,
