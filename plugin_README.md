@@ -1,6 +1,6 @@
 # TDPilot — TouchDesigner AI Assistant Plugin
 
-TDPilot v1.4.5 provides 92 MCP tools for live control of TouchDesigner projects from Claude. This plugin makes TDPilot's skills and MCP server configuration permanently available across all Cowork sessions.
+TDPilot v1.4.7 provides 92 MCP tools for live control of TouchDesigner projects from Claude. This plugin makes TDPilot's skills and MCP server configuration permanently available across all Cowork sessions.
 
 ## Components
 

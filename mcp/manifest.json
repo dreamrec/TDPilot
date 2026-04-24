@@ -2,7 +2,7 @@
   "schema_version": 1,
   "name": "TDPilot",
   "slug": "tdpilot",
-  "version": "1.4.5",
+  "version": "1.4.7",
   "repository": "https://github.com/dreamrec/TDPilot",
   "description": "MCP server for TouchDesigner with live graph control, diagnostics, safety, streaming, knowledge corpus, and technique memory.",
   "entrypoints": {

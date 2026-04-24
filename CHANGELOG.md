@@ -1,5 +1,206 @@
 # Changelog
 
+## 1.4.7 - 2026-04-24
+
+Live-validation release. Thirteen behavioral bugs surfaced during a
+systematic exploratory pass against a running TouchDesigner instance
+after v1.4.5 shipped. Each fix is pinned with a behavioral regression
+test that starts RED against the pre-fix code and stays GREEN post-fix.
+Tool count unchanged at 92. `API_VERSION` bumps 1.4.6 → 1.4.7;
+`.tox` rebuild is required for the TD-side handler to pick up the
+Bug J silent-null guard (the TD-side fix already landed in the 1.4.6
+intermediate `.tox` in the repo — this version just keeps the API
+version aligned with the Python package). Tests: 551 → 594 (+43 new
+regression tests across twelve distinct fixes).
+
+### Fixed
+
+- **`td_get_operator_doc("glsl")` short-form finally resolves.**
+  TD's `node/detail` returns the short op type (`"noise"`) and family
+  (`"TOP"`) as separate fields, but DocsBrain keys operators by the
+  canonical `type+family` form (`"noiseTOP"`). Before v1.4.7 the tool
+  only tried the short form, so every short-form query returned
+  `"No card found"` while the canonical form returned a rich card. Now
+  retries with `op_type + family.upper()` when the short-form lookup
+  misses; when only `op_type` is given without a `node_path`, iterates
+  known family suffixes in frequency order. Mirrors the same fix
+  landed for `td_get_param_help` in v1.4.6 but on a second tool that
+  was missed in that pass.
+
+- **POPx `td_search_popx_docs` returns hits again.** Queries like
+  `td_search_popx_docs("Noise Falloff")` silently returned 0 results
+  despite the POPx DB containing 962 palette chunks + 59 operators
+  with exact matches. Root cause: `DocsBrain._detect_intent` narrowed
+  operator-name queries to `doc_type IN ('operator', 'python_api')`,
+  but the POPx corpus uses `catalog_operators` and `reference`
+  doc_types — so every chunk was filtered out. The intent filter now
+  emits a superset list covering both conventions. Derivative-brain
+  queries are unaffected (those doc_types don't exist there).
+
+- **Operator `key_params` no longer contain stray doc text.** Cards
+  for menu-heavy ops (glslTOP, renderTOP, etc.) surfaced
+  `key_params` entries like `{name: "Back"}`, `{name: "8"}`,
+  `{name: "_separator_"}`, `{name: "DCI"}` — menu option values and
+  stray doc-text fragments bleeding through the FTS
+  `parameter_names` column. `DocsBrain._normalize_key_param` now
+  requires the `"Label\ninternalname"` structure in the raw entry —
+  single-token fragments without a newline are dropped. Real params
+  from scraped docs always have that shape; the drop-rate is zero
+  false negatives across the test corpus.
+
+- **`td_create_node` accepts the POPX family suffix.** TD 2025 ships
+  a native POPX operator family (visible as a dedicated tab in the
+  OP Create Dialog — Noise Falloff, DLA, Particle, Physarum, …).
+  The `CreateNodeInput` validator only allowed TOP/CHOP/SOP/DAT/COMP/
+  MAT/POP — so any attempt to create a POPX op via MCP failed with
+  a misleading Pydantic error pointing at the wrong cause. Added
+  POPX to the allowed suffix tuple, listed before POP so callers
+  that parse family via longest-suffix match pick the correct one
+  for `noisePOPX` (POPX, not POP).
+
+- **`td_set_params` no longer silently succeeds on reference-style
+  params.** TD accepts a plain string assigned to DAT/OP/CHOP/SOP/
+  TOP/COMP/MAT/POP/POPX reference params without raising, but
+  internally resolves the value to `None` and emits a node-level
+  warning. Pre-v1.4.7 the handler reported `success: true,
+  new_value: null`, hiding the failure. Live repro: writing
+  `"../pixel_shader"` to a `glslTOP.pixeldat` returned a phantom
+  success while TD's own `.warnings()` said "Invalid path for node".
+  The TD-side handler now validates post-assignment: if the
+  resolved value is None AND the caller passed a non-empty string
+  AND the param style is reference-type, it flips the per-param
+  result to `success: false` with a structured error citing the
+  style and TD's warning text. Numeric zeros, empty strings on Str
+  params, and False on Toggles are unaffected — None-after-set is
+  the precise discriminator. (Implemented in
+  `td_component/mcp_webserver_callbacks.py`; `API_VERSION` bumped
+  and the shipped `.tox` was rebuilt.)
+
+- **`td_exec_python` restricted-mode error is actionable.** Agents
+  hitting `exec('import os')` in the default `restricted` mode got
+  `"import of dangerous module blocked: os"` — which implies `os`
+  is specially flagged. It isn't; restricted mode blocks ALL
+  imports regardless of module name. The AST check just happened
+  to fire first with a misleading module-specific label, and the
+  error gave no remediation path. The message now reads
+  `"restricted mode blocks import statements. Set
+  TD_MCP_EXEC_MODE=standard for allowlisted stdlib imports (json,
+  math, re, datetime, collections, itertools, etc.) or
+  TD_MCP_EXEC_MODE=full for unrestricted imports."`. Standard-mode
+  behavior is unchanged — there, the module-specific "dangerous
+  module" message IS accurate because standard genuinely
+  discriminates by module name.
+
+- **`td_audit_project` stops mis-labeling stock ops as palette
+  components.** Running audit on a project with plain noise / level
+  / null / transform TOPs surfaced every one of them in
+  `palette_components` — the field was meant to highlight installed
+  palette COMPs (POPX_1_2_1, StreamDiffusionTD, WebRTC) that add
+  external capabilities, not stock primitives. Root cause: the
+  heuristic was `if idx.get_palette(op_type): flag`, and the
+  production CardIndex happens to store palette-adjacent cards for
+  stock ops too. Gated the flag on `op_type.lower() not in
+  _STOCK_OP_TYPES` so only non-stock ops with a palette card are
+  listed.
+
+- **DocsBrain `search()` now returns CardIndex-shape rows.** Two
+  symptom-coupled bugs with one root cause. `td_find_official_example`
+  emitted 5 `palette_example` entries with every field empty; and
+  `td_explain_better_way("animate noise TOP every frame")` returned
+  an empty recommendation every time. Both consumers read
+  CardIndex-shape keys (`component_name`, `display_name`,
+  `summary`, `op_type`, `snippet_id`) from `idx.search()` output,
+  but DocsBrain's `search()` emitted raw FTS-chunk-shaped rows with
+  `section_title`, `operator_name`, `content`, etc. — none of the
+  expected keys existed, so consumers saw blanks and
+  `_is_informative_card` dropped every candidate.
+  `get_operator()` and `get_palette()` already translated to
+  CardIndex shape for their exact-lookup responses;
+  `search()` did not. Added `_normalize_search_row()` that
+  enriches each row by doc_type (operator → adds `op_type` +
+  `display_name` + `summary`; palette → strips `Palette:` prefix
+  into `component_name` + `display_name` + `summary`; snippet →
+  adds `snippet_id`). Additive — raw FTS fields stay intact so
+  existing consumers that read `operator_name` / `operator_family`
+  keep working.
+
+- **`td_memory_learn` follows wire connections for non-COMP roots.**
+  Pre-v1.4.7 `_collect_subtree` only descended when the current
+  node had `isCOMP=True`. Learning from a TOP/CHOP/SOP returned
+  just that single node — users with a wire-connected chain had to
+  pre-wrap it in a baseCOMP before saving. Auto-detect fix: the
+  walk mode is determined from the ROOT node's type. COMP root →
+  classic tree walk (unchanged). Non-COMP root → bidirectional
+  wire-graph walk, following `inputs` upstream AND `outputs`
+  downstream, bounded by `max_depth` hops and `max_nodes` total.
+  Supports both "learn from the source" and "learn from the
+  terminal" workflows. Mode is locked at the root so COMP tree
+  walks can't leak out via wires and wire walks can't fan out
+  through deeply-nested COMPs.
+
+- **Wire-walked recipes are portable across `parent_path`.**
+  Follow-up to the non-COMP wire walk. Recipes captured by
+  wire-walk kept absolute paths for siblings (e.g.
+  `/project1/my_sibling`) — replaying to a different
+  `parent_path` skipped them with `missing_parent`. The recipe
+  builder now branches on walk mode: COMP-rooted recipes keep
+  `/` as the wrapper (unchanged); wire-walked recipes have NO
+  `/` entry at all — every captured node (including the head)
+  gets a leaf-name rel_path (`/head`, `/mid`, `/tail`) and all
+  of them land as peers under `parent_path` on replay. Leaf-name
+  collisions get a numeric suffix.
+
+- **`td_memory_replay` can now recreate the root COMP wrapper
+  (opt-in).** New `recreate_root: bool = False` flag on
+  `MemoryReplayInput`. When True AND the recipe's `/` entry is a
+  COMP, the replay creates that wrapper COMP under `parent_path`
+  first and builds children INSIDE it — producing a faithful
+  clone of a COMP-packaged technique. Default False preserves the
+  existing flat-replay behavior. Edge cases (recipe without `/`,
+  or with non-COMP `/`) are safe no-ops. Root COMP's params are
+  carried through after create.
+
+- **`td_delete_node` ships with an explicit flat schema (PoC for
+  the 70-tool Bug A sweep).** One of the 70 TDPilot tools that
+  use the `params: InputModel, ctx: Context` FastMCP signature
+  surfaces an opaque `"params": {}` JSONSchema to MCP clients —
+  the client can't discover what fields are valid without
+  reading source. `td_delete_node` rewritten to
+  `ctx: Context, path: Annotated[str, Field(description=...,
+  min_length=1)]` — flat schema with description + minLength
+  visible to every MCP client. Investigation memo at
+  `docs/superpowers/reports/2026-04-24-bug-a-opaque-params-investigation.md`
+  documents the pattern and the 69-tool migration plan for v1.5.0.
+
+- **Param-help op_type + case-insensitive live fetch (pre-branch
+  work).** `td_get_param_help` against a live TD node now retries
+  with `type+family` when the short-form lookup misses, AND
+  retries live param fetch with lowercased name when TD's
+  case-sensitive filter returns empty. (Shipped separately as
+  `ad36cd1` before the fix branch landed — included here for
+  release-note completeness.)
+
+### Also
+
+- Test-isolation hardening in `tests/test_cli.py` — three
+  doctor-auth tests were leaky on developer machines because
+  v1.4.5's auth bootstrap runs before every non-init command and
+  reads `~/.tdpilot/.tdpilot.env`. Added `TDPILOT_ENV_FILE` tmp
+  override so the tests can't silently pick up the developer's
+  real secret.
+
+- `tests/fixtures/tool_schemas.json` regenerated for the Bug A
+  PoC schema change — confirms the `td_delete_node` rewrite
+  produces a flat schema visible to MCP clients.
+
+### Not shipped
+
+- `Bug A full migration` (remaining 69 tools) — deferred to
+  v1.5.0. Memo documents the plan.
+- The wire-walked recipe portable-paths follow-up is the last
+  piece from Bug S and landed in `11d4c9d`; included in this
+  release.
+
 ## 1.4.5 - 2026-04-24
 
 Review-fix patch. Four issues surfaced during local review of v1.4.3 and
