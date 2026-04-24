@@ -12,6 +12,34 @@ from typing import Any, Optional
 logger = logging.getLogger(__name__)
 
 
+# Aliases for card_type values that callers historically passed in plural or
+# expanded form. DocsBrain stores doc_type values in singular / canonical form
+# (e.g. 'operator', 'release_notes'), so without this map a search with
+# card_types=['operators'] silently returned nothing.
+#
+# Unknown values pass through unchanged so that adding a new doc_type later
+# doesn't require an alias entry.
+_CARD_TYPE_ALIASES: dict[str, str] = {
+    "operators": "operator",
+    "palettes": "palette",
+    "glossaries": "glossary",
+    "snippets": "snippet",
+    "release": "release_notes",
+    "releases": "release_notes",
+}
+
+
+def _canonical_card_types(card_types: list[str] | None) -> list[str] | None:
+    """Normalize any alias in `card_types` to the canonical doc_type value.
+
+    Returns the input unchanged when it is None or empty so the caller's
+    'no filter' semantics are preserved.
+    """
+    if not card_types:
+        return card_types
+    return [_CARD_TYPE_ALIASES.get(ct, ct) for ct in card_types]
+
+
 class DocsBrain:
     """Runtime search interface for the docs brain SQLite FTS5 database.
 
@@ -74,6 +102,10 @@ class DocsBrain:
         limit: int = 10,
     ) -> list[dict]:
         """Search the docs brain with intent-based routing and boosted ranking."""
+        # Normalize plural / expanded aliases (e.g. 'operators' → 'operator')
+        # so callers using either form get matching results.
+        card_types = _canonical_card_types(card_types)
+
         # Intent detection: narrow doc_type filter
         intent_filter = self._detect_intent(query)
 

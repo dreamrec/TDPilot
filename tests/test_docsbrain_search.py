@@ -289,3 +289,56 @@ def test_op_type_map_multi_word_operators(tmp_path: Path):
     assert brain_local.get_operator("movieTOP") is None
     assert brain_local.get_operator("audioCHOP") is None
     assert brain_local.get_operator("glslTOP") is None
+
+
+# ---------------------------------------------------------------------------
+# Fix #3 — card_type alias normalization.
+# Callers historically passed plural ("operators") or expanded ("release")
+# forms; DocsBrain stores singular doc_type values ("operator",
+# "release_notes"). Without alias normalization, plural filters silently
+# matched nothing.
+# ---------------------------------------------------------------------------
+
+
+def test_card_type_alias_operators_plural_resolves(brain: DocsBrain):
+    """'operators' (plural) must match stored doc_type='operator'."""
+    results_plural = brain.search("composite", card_types=["operators"])
+    results_singular = brain.search("composite", card_types=["operator"])
+    assert len(results_plural) > 0
+    assert len(results_plural) == len(results_singular)
+
+
+def test_card_type_alias_release_resolves(brain: DocsBrain):
+    """'release' (short form) must match stored doc_type='release_notes'."""
+    r1 = brain.search("Trail", card_types=["release"])
+    r2 = brain.search("Trail", card_types=["release_notes"])
+    assert len(r1) == len(r2)
+    assert len(r1) > 0
+
+
+def test_card_type_alias_releases_plural_resolves(brain: DocsBrain):
+    """'releases' must also resolve to 'release_notes'."""
+    r1 = brain.search("Trail", card_types=["releases"])
+    r2 = brain.search("Trail", card_types=["release_notes"])
+    assert len(r1) == len(r2)
+
+
+def test_card_type_alias_palettes_plural_resolves(brain: DocsBrain):
+    """'palettes' must resolve to 'palette'."""
+    r1 = brain.search("camera", card_types=["palettes"])
+    r2 = brain.search("camera", card_types=["palette"])
+    assert len(r1) == len(r2)
+
+
+def test_card_type_singular_canonical_still_works(brain: DocsBrain):
+    """Canonical singular forms must remain unaffected by the alias layer."""
+    assert brain.search("composite", card_types=["operator"])
+    assert brain.search("Trail", card_types=["release_notes"])
+    assert brain.search("camera", card_types=["palette"])
+
+
+def test_card_type_unknown_passes_through_unchanged(brain: DocsBrain):
+    """Unknown card_types must pass through without coercion (future-proof)."""
+    # "some_new_type" is not in the alias table; it should reach the DB filter
+    # unchanged and produce zero hits (since no chunk has that doc_type).
+    assert brain.search("composite", card_types=["some_new_type"]) == []
