@@ -32,8 +32,9 @@ Thumbs.db
 # Scratch TD projects inside td_component (build artifacts)
 td_component/NewProject*.toe
 
-# Generated QA artifacts
-reports/
+# Generated QA artifacts (repo-root /reports/ only — don't swallow
+# docs/superpowers/reports/ which holds session review artifacts)
+/reports/
 zivfETsb
 
 # Coverage artifacts (coverage.xml is uploaded by CI; .coverage is local)
