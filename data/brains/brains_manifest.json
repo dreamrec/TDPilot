@@ -1,0 +1,61 @@
+{
+  "manifest_version": 1,
+  "updated_at": "2026-04-24",
+  "source": "bundled (shipped with the repo and plugin zip)",
+  "brains": {
+    "derivative": {
+      "display_name": "Derivative Official Docs",
+      "description": "Official TouchDesigner documentation — 25,887 chunks, 674 operators. Scraped from docs.derivative.ca.",
+      "trust_tier": "official",
+      "source_url": "https://docs.derivative.ca",
+      "files": [
+        {
+          "name": "docsbrain.db",
+          "drive_id": "1yDJ8LYpv_lBmIzFMfN7DrBgb7RB39u1b",
+          "size_mb": 164
+        },
+        {
+          "name": "build_manifest.json",
+          "drive_id": "12sR9Et2s6qrDEDYZB-mBYHZi8u_Sy35J",
+          "size_mb": 0.001
+        },
+        {
+          "name": "operator_changelog.json",
+          "drive_id": "18eLY03sFo0jlyrJOe3btSI5X5mHnp0f_",
+          "size_mb": 0.3
+        }
+      ]
+    },
+    "popx": {
+      "display_name": "POPx Operator Reference",
+      "description": "POPx GPU-accelerated operators — 480 chunks, 59 operators. Scraped from popsextension.com.",
+      "trust_tier": "licensed",
+      "source_url": "https://www.popsextension.com",
+      "files": [
+        {
+          "name": "popxbrain.db",
+          "drive_id": "1a2KXRiR03FHlwQhYVws_nK5sQtovpTu0",
+          "size_mb": 1.3
+        },
+        {
+          "name": "build_manifest.json",
+          "drive_id": "16L2YkwyO0h8Zr1OnRR0iHHxAzQJ629u1",
+          "size_mb": 0.001
+        },
+        {
+          "name": "operator_changelog.json",
+          "drive_id": "16dyAWyA9tR_0zlnGbbDhBZuvF_DxjLZJ",
+          "size_mb": 0.001
+        }
+      ]
+    },
+    "paketa12": {
+      "display_name": "paketa12 Tutorials",
+      "description": "177 TouchDesigner tutorials by paketa12 — GPU-texture-as-compute, UV math, from-scratch simulations, Voronoi/packing, GLSL, feedback loops. No remote DB yet — build locally with scripts/build_tutorial_brain.py.",
+      "trust_tier": "community",
+      "source_url": "https://www.youtube.com/@paketa12",
+      "files": [],
+      "install_notes": "Local-build brain. Clone transcripts with yt-dlp, then run `uv run python scripts/build_tutorial_brain.py --config data/brains/paketa12.yaml`. No `npx tdpilot brains add paketa12` remote download is available yet; the brain appears in `brains list` so users can activate it once built locally."
+    }
+  }
+}

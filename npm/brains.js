@@ -16,9 +16,11 @@ const os = require("os");
 
 const INSTALL_DIR = join(os.homedir(), ".tdpilot");
 const ACTIVE_PATH = join(INSTALL_DIR, "data", "brains", "active.json");
-const MANIFEST_CACHE = join(INSTALL_DIR, "data", "brains", "manifest.json");
-// Replace after uploading manifest to Google Drive
-const MANIFEST_DRIVE_ID = "MANIFEST_FILE_ID";
+// Bundled manifest (shipped with the repo and plugin zip). The installer
+// copies it to ~/.tdpilot/brains_manifest.json so `readManifest()` resolves
+// it even when the npx CLI is run without cwd=INSTALL_DIR.
+const BUNDLED_MANIFEST = join(INSTALL_DIR, "data", "brains", "brains_manifest.json");
+const HOME_MANIFEST = join(INSTALL_DIR, "brains_manifest.json");
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -37,18 +39,17 @@ function writeActive(data) {
 }
 
 function readManifest() {
-  // Try local manifest first (bundled in Dreamrec repo)
-  const localManifest = join(INSTALL_DIR, "brains_manifest.json");
-  if (existsSync(localManifest)) {
-    try {
-      return JSON.parse(readFileSync(localManifest, "utf-8"));
-    } catch { /* fall through */ }
-  }
-  // Try cached manifest
-  if (existsSync(MANIFEST_CACHE)) {
-    try {
-      return JSON.parse(readFileSync(MANIFEST_CACHE, "utf-8"));
-    } catch { /* fall through */ }
+  // Resolution order:
+  //   1. ~/.tdpilot/brains_manifest.json   (installer-copied, user-facing)
+  //   2. ~/.tdpilot/data/brains/brains_manifest.json  (bundled with repo)
+  // Both are shipped from `data/brains/brains_manifest.json` in the repo;
+  // the first path just avoids a nested traversal on the happy CLI path.
+  for (const candidate of [HOME_MANIFEST, BUNDLED_MANIFEST]) {
+    if (existsSync(candidate)) {
+      try {
+        return JSON.parse(readFileSync(candidate, "utf-8"));
+      } catch { /* fall through to next candidate */ }
+    }
   }
   return null;
 }
