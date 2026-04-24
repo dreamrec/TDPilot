@@ -9,5 +9,6 @@ for the authoritative design.
 
 from __future__ import annotations
 
-# Re-exports get filled in as each module lands.
-__all__: list[str] = []
+from td_mcp.patch.undo_sentinel import UndoBlockSentinel
+
+__all__ = ["UndoBlockSentinel"]
