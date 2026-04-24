@@ -2384,8 +2384,15 @@ async def td_get_connections(
 
 
 @mcp.tool(name="td_get_content")
-async def td_get_content(params: GetContentInput, ctx: Context) -> str:
-    return await _forward(ctx, "td_get_content", "node/content", params.model_dump())
+async def td_get_content(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="Path to a DAT node", min_length=1),
+    ],
+) -> str:
+    """Read DAT text/table content."""
+    return await _forward(ctx, "td_get_content", "node/content", {"path": path})
 
 
 @mcp.tool(name="td_set_content")
@@ -2510,23 +2517,171 @@ async def td_screenshot(params: ScreenshotInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_chop_data")
-async def td_chop_data(params: CHOPDataInput, ctx: Context) -> str:
-    return await _forward(
-        ctx,
-        "td_chop_data",
-        "chop/data",
-        params.model_dump(exclude_none=True),
-    )
+async def td_chop_data(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="Path to a CHOP node", min_length=1),
+    ],
+    channels: Annotated[
+        list[str] | None,
+        Field(
+            default=None,
+            description="List of channel names to read. If None, reads all channels.",
+        ),
+    ] = None,
+    range: Annotated[
+        list[int] | None,
+        Field(
+            default=None,
+            description="Sample range [start, end] to read. If None, reads all samples.",
+            min_length=2,
+            max_length=2,
+        ),
+    ] = None,
+) -> str:
+    """Read CHOP channel data (values/samples)."""
+    body: dict[str, Any] = {"path": path}
+    if channels is not None:
+        body["channels"] = channels
+    if range is not None:
+        body["range"] = range
+    return await _forward(ctx, "td_chop_data", "chop/data", body)
 
 
 @mcp.tool(name="td_geometry_data")
-async def td_geometry_data(params: GeometryDataInput, ctx: Context) -> str:
-    return await _forward(ctx, "td_geometry_data", "geometry/data", params.model_dump())
+async def td_geometry_data(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="Path to a SOP or POP node", min_length=1),
+    ],
+    include_points: Annotated[
+        bool,
+        Field(default=True, description="Include point position data"),
+    ] = True,
+    include_prims: Annotated[
+        bool,
+        Field(default=False, description="Include primitive data"),
+    ] = False,
+    limit: Annotated[
+        int,
+        Field(
+            default=500,
+            ge=1,
+            le=10000,
+            description="Max points/prims to return",
+        ),
+    ] = 500,
+) -> str:
+    """Read SOP/POP geometry data (points/prims)."""
+    return await _forward(
+        ctx,
+        "td_geometry_data",
+        "geometry/data",
+        {
+            "path": path,
+            "include_points": include_points,
+            "include_prims": include_prims,
+            "limit": limit,
+        },
+    )
 
 
 @mcp.tool(name="td_pop_inspect")
-async def td_pop_inspect(params: POPInspectInput, ctx: Context) -> str:
-    return await _forward(ctx, "td_pop_inspect", "pop/inspect", params.model_dump())
+async def td_pop_inspect(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="Path to a POP node", min_length=1),
+    ],
+    include_bounds: Annotated[
+        bool,
+        Field(
+            default=True,
+            description="Include POP bounds and dimension metadata",
+        ),
+    ] = True,
+    include_attributes: Annotated[
+        bool,
+        Field(
+            default=True,
+            description="Include point/prim/vert attribute metadata",
+        ),
+    ] = True,
+    point_attributes: Annotated[
+        list[str] | None,
+        Field(
+            default=None,
+            description=(
+                "Specific point attributes to sample. If omitted, the tool "
+                "samples common attributes such as P, PartVel, PartAge, "
+                "Noise, and PartForce when present."
+            ),
+        ),
+    ] = None,
+    prim_attributes: Annotated[
+        list[str] | None,
+        Field(
+            default=None,
+            description=(
+                "Specific primitive attributes to sample. If omitted, no "
+                "primitive attribute samples are returned unless requested."
+            ),
+        ),
+    ] = None,
+    vert_attributes: Annotated[
+        list[str] | None,
+        Field(
+            default=None,
+            description=(
+                "Specific vertex attributes to sample. If omitted, no "
+                "vertex attribute samples are returned unless requested."
+            ),
+        ),
+    ] = None,
+    start: Annotated[
+        int,
+        Field(
+            default=0,
+            ge=0,
+            description="Starting element index for attribute sampling",
+        ),
+    ] = 0,
+    count: Annotated[
+        int,
+        Field(
+            default=32,
+            ge=1,
+            le=2048,
+            description="Max elements to sample per requested attribute",
+        ),
+    ] = 32,
+    delayed: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=("Use TouchDesigner's delayed GPU readback mode where supported to reduce stalls"),
+        ),
+    ] = False,
+) -> str:
+    """Read structured POP metadata and attribute samples."""
+    return await _forward(
+        ctx,
+        "td_pop_inspect",
+        "pop/inspect",
+        {
+            "path": path,
+            "include_bounds": include_bounds,
+            "include_attributes": include_attributes,
+            "point_attributes": point_attributes,
+            "prim_attributes": prim_attributes,
+            "vert_attributes": vert_attributes,
+            "start": start,
+            "count": count,
+            "delayed": delayed,
+        },
+    )
 
 
 @mcp.tool(name="td_cooking_info")
@@ -2567,8 +2722,33 @@ async def td_cooking_info(
 
 
 @mcp.tool(name="td_search_nodes")
-async def td_search_nodes(params: SearchNodesInput, ctx: Context) -> str:
-    return await _forward(ctx, "td_search_nodes", "search", params.model_dump())
+async def td_search_nodes(
+    ctx: Context,
+    query: Annotated[
+        str,
+        Field(description="Search string (case-insensitive)", min_length=1),
+    ],
+    path: Annotated[
+        str,
+        Field(default="/", description="Root path to search from"),
+    ] = "/",
+    search_type: Annotated[
+        str,
+        Field(
+            default="all",
+            description="What to search: 'name', 'type', 'family', or 'all'",
+        ),
+    ] = "all",
+    limit: Annotated[
+        int,
+        Field(default=50, ge=1, le=200, description="Max results"),
+    ] = 50,
+) -> str:
+    """Search nodes by name/type/family across a subtree."""
+    # Re-instantiate so the SearchNodesInput custom @field_validator on
+    # ``search_type`` (must be 'name', 'type', 'family', or 'all') still runs.
+    validated = SearchNodesInput(query=query, path=path, search_type=search_type, limit=limit)
+    return await _forward(ctx, "td_search_nodes", "search", validated.model_dump())
 
 
 @mcp.tool(name="td_get_errors")
@@ -2693,8 +2873,18 @@ async def td_pulse_param(params: PulseParamInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_python_help")
-async def td_python_help(params: PythonHelpInput, ctx: Context) -> str:
-    return await _forward(ctx, "td_python_help", "python/help", params.model_dump())
+async def td_python_help(
+    ctx: Context,
+    target: Annotated[
+        str,
+        Field(
+            description=("Python object/class to get help for (e.g. 'td', 'td.OP', 'tdu', 'td.TOP')"),
+            min_length=1,
+        ),
+    ],
+) -> str:
+    """Get Python help documentation for a TD class/module."""
+    return await _forward(ctx, "td_python_help", "python/help", {"target": target})
 
 
 @mcp.tool(name="td_python_classes")
@@ -5779,7 +5969,16 @@ async def td_logger_status(ctx: Context) -> dict[str, Any]:
 
 
 @mcp.tool(name="td_tdresources_inspect")
-async def td_tdresources_inspect(params: TDResourcesInspectInput, ctx: Context) -> dict[str, Any]:
+async def td_tdresources_inspect(
+    ctx: Context,
+    category: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Category: fonts, icons, defaults, or None for all",
+        ),
+    ] = None,
+) -> dict[str, Any]:
     """Inspect TDResources available in the TouchDesigner installation: fonts, icons, defaults."""
     finish = _start_tool(ctx, "td_tdresources_inspect")
     try:
@@ -5790,7 +5989,7 @@ async def td_tdresources_inspect(params: TDResourcesInspectInput, ctx: Context) 
         if mode_err:
             return mode_err
         client = _get_client(ctx)
-        category_filter = params.category or ""
+        category_filter = category or ""
         safe_filter = json.dumps(category_filter)
         code = (
             "import json\n"
@@ -5822,7 +6021,7 @@ async def td_tdresources_inspect(params: TDResourcesInspectInput, ctx: Context) 
             data = {"raw": raw}
         if isinstance(data, dict):
             data["mode"] = "live"
-        _audit_log(ctx, "td_tdresources_inspect", {"category": params.category})
+        _audit_log(ctx, "td_tdresources_inspect", {"category": category})
         return data
     except Exception as exc:
         _record_tool_error(ctx, "td_tdresources_inspect")
@@ -5973,7 +6172,13 @@ def _is_informative_card(card: dict) -> bool:
 
 
 @mcp.tool(name="td_recommend_official_component")
-async def td_recommend_official_component(params: RecommendOfficialInput, ctx: Context) -> dict[str, Any]:
+async def td_recommend_official_component(
+    ctx: Context,
+    goal: Annotated[
+        str,
+        Field(description="What you want to achieve", min_length=1),
+    ],
+) -> dict[str, Any]:
     """Recommend official palette or built-in operator components for a given goal."""
     finish = _start_tool(ctx, "td_recommend_official_component")
     try:
@@ -5982,9 +6187,9 @@ async def td_recommend_official_component(params: RecommendOfficialInput, ctx: C
         provenance = Provenance(source="local_card", td_build=svc.td_build)
 
         # Search palette components
-        palette_results = idx.search(params.goal, card_types=["palette"], limit=5)
+        palette_results = idx.search(goal, card_types=["palette"], limit=5)
         # Search operators for built-in alternatives
-        operator_results = idx.search(params.goal, card_types=["operators"], limit=5)
+        operator_results = idx.search(goal, card_types=["operators"], limit=5)
 
         recommendations = []
         for card in palette_results:
@@ -6014,7 +6219,7 @@ async def td_recommend_official_component(params: RecommendOfficialInput, ctx: C
 
         payload: dict[str, Any] = {
             "success": True,
-            "goal": params.goal,
+            "goal": goal,
             "recommendations": recommendations,
             "count": len(recommendations),
             "provenance": provenance.to_dict(),
@@ -6026,7 +6231,7 @@ async def td_recommend_official_component(params: RecommendOfficialInput, ctx: C
                 "for palette components, or td_memory_recall for saved techniques."
             )
 
-        _audit_log(ctx, "td_recommend_official_component", {"goal": params.goal})
+        _audit_log(ctx, "td_recommend_official_component", {"goal": goal})
         return payload
     except Exception as exc:
         _record_tool_error(ctx, "td_recommend_official_component")
@@ -6036,7 +6241,20 @@ async def td_recommend_official_component(params: RecommendOfficialInput, ctx: C
 
 
 @mcp.tool(name="td_find_official_example")
-async def td_find_official_example(params: FindOfficialExampleInput, ctx: Context) -> dict[str, Any]:
+async def td_find_official_example(
+    ctx: Context,
+    query: Annotated[
+        str,
+        Field(description="Search query for official examples", min_length=1),
+    ],
+    family: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Filter by operator family: TOP, CHOP, SOP, etc.",
+        ),
+    ] = None,
+) -> dict[str, Any]:
     """Search for official examples and snippets matching a query."""
     finish = _start_tool(ctx, "td_find_official_example")
     try:
@@ -6046,16 +6264,16 @@ async def td_find_official_example(params: FindOfficialExampleInput, ctx: Contex
 
         # Search snippets
         snippet_results = idx.search(
-            params.query,
+            query,
             card_types=["snippets"],
-            family=params.family,
+            family=family,
             limit=5,
         )
         # Search palette for example components
         palette_results = idx.search(
-            params.query,
+            query,
             card_types=["palette"],
-            family=params.family,
+            family=family,
             limit=5,
         )
 
@@ -6080,11 +6298,15 @@ async def td_find_official_example(params: FindOfficialExampleInput, ctx: Contex
                 }
             )
 
-        _audit_log(ctx, "td_find_official_example", {"query": params.query, "family": params.family})
+        _audit_log(
+            ctx,
+            "td_find_official_example",
+            {"query": query, "family": family},
+        )
         return {
             "success": True,
-            "query": params.query,
-            "family": params.family,
+            "query": query,
+            "family": family,
             "examples": examples,
             "count": len(examples),
             "provenance": provenance.to_dict(),
@@ -6097,7 +6319,17 @@ async def td_find_official_example(params: FindOfficialExampleInput, ctx: Contex
 
 
 @mcp.tool(name="td_explain_better_way")
-async def td_explain_better_way(params: ExplainBetterWayInput, ctx: Context) -> dict[str, Any]:
+async def td_explain_better_way(
+    ctx: Context,
+    intent: Annotated[
+        str,
+        Field(description="What you intend to do", min_length=1),
+    ],
+    current_plan: Annotated[
+        str | None,
+        Field(default=None, description="Current approach to evaluate"),
+    ] = None,
+) -> dict[str, Any]:
     """Suggest better official alternatives for a given intent, with gotcha warnings."""
     finish = _start_tool(ctx, "td_explain_better_way")
     try:
@@ -6108,13 +6340,13 @@ async def td_explain_better_way(params: ExplainBetterWayInput, ctx: Context) -> 
         # Search for official alternatives across all card types. Filter out
         # skeleton cards (every identifying field empty) so we don't emit
         # "Consider using '': " recommendations when the corpus has no match.
-        raw_alternatives = idx.search(params.intent, limit=10)
+        raw_alternatives = idx.search(intent, limit=10)
         alternatives = [c for c in raw_alternatives if _is_informative_card(c)]
 
         # Extract gotchas from operator cards if current_plan mentions specific ops
         gotchas = []
-        if params.current_plan:
-            for card in idx.search(params.current_plan, card_types=["operators"], limit=10):
+        if current_plan:
+            for card in idx.search(current_plan, card_types=["operators"], limit=10):
                 if not _is_informative_card(card):
                     continue
                 card_gotchas = card.get("common_gotchas", [])
@@ -6150,8 +6382,8 @@ async def td_explain_better_way(params: ExplainBetterWayInput, ctx: Context) -> 
 
         payload: dict[str, Any] = {
             "success": True,
-            "intent": params.intent,
-            "current_plan": params.current_plan,
+            "intent": intent,
+            "current_plan": current_plan,
             "recommendation": recommendation,
             "official_alternative": official_alternative,
             "gotchas": gotchas,
@@ -6164,7 +6396,7 @@ async def td_explain_better_way(params: ExplainBetterWayInput, ctx: Context) -> 
                 "td_memory_recall to look for saved techniques."
             )
 
-        _audit_log(ctx, "td_explain_better_way", {"intent": params.intent})
+        _audit_log(ctx, "td_explain_better_way", {"intent": intent})
         return payload
     except Exception as exc:
         _record_tool_error(ctx, "td_explain_better_way")

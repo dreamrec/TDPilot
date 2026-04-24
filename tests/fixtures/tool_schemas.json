@@ -56,17 +56,35 @@
     ]
   },
   "td_chop_data": {
-    "description_present": false,
+    "description_present": true,
     "properties": {
-      "params": {
+      "channels": {
+        "any_of_types": [
+          "array",
+          "null"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "path": {
         "any_of_types": [],
         "default_present": false,
+        "enum": null,
+        "type": "string"
+      },
+      "range": {
+        "any_of_types": [
+          "array",
+          "null"
+        ],
+        "default_present": true,
         "enum": null,
         "type": null
       }
     },
     "required": [
-      "params"
+      "path"
     ]
   },
   "td_clear_param_bounds": {
@@ -417,43 +435,79 @@
   "td_explain_better_way": {
     "description_present": true,
     "properties": {
-      "params": {
+      "current_plan": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "intent": {
         "any_of_types": [],
         "default_present": false,
         "enum": null,
-        "type": null
+        "type": "string"
       }
     },
     "required": [
-      "params"
+      "intent"
     ]
   },
   "td_find_official_example": {
     "description_present": true,
     "properties": {
-      "params": {
+      "family": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "query": {
         "any_of_types": [],
         "default_present": false,
         "enum": null,
-        "type": null
+        "type": "string"
       }
     },
     "required": [
-      "params"
+      "query"
     ]
   },
   "td_geometry_data": {
-    "description_present": false,
+    "description_present": true,
     "properties": {
-      "params": {
+      "include_points": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "include_prims": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "limit": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "integer"
+      },
+      "path": {
         "any_of_types": [],
         "default_present": false,
         "enum": null,
-        "type": null
+        "type": "string"
       }
     },
     "required": [
-      "params"
+      "path"
     ]
   },
   "td_get_build_compatibility": {
@@ -499,17 +553,17 @@
     ]
   },
   "td_get_content": {
-    "description_present": false,
+    "description_present": true,
     "properties": {
-      "params": {
+      "path": {
         "any_of_types": [],
         "default_present": false,
         "enum": null,
-        "type": null
+        "type": "string"
       }
     },
     "required": [
-      "params"
+      "path"
     ]
   },
   "td_get_errors": {
@@ -1059,17 +1113,74 @@
     ]
   },
   "td_pop_inspect": {
-    "description_present": false,
+    "description_present": true,
     "properties": {
-      "params": {
+      "count": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "integer"
+      },
+      "delayed": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "include_attributes": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "include_bounds": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "path": {
         "any_of_types": [],
         "default_present": false,
+        "enum": null,
+        "type": "string"
+      },
+      "point_attributes": {
+        "any_of_types": [
+          "array",
+          "null"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "prim_attributes": {
+        "any_of_types": [
+          "array",
+          "null"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "start": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "integer"
+      },
+      "vert_attributes": {
+        "any_of_types": [
+          "array",
+          "null"
+        ],
+        "default_present": true,
         "enum": null,
         "type": null
       }
     },
     "required": [
-      "params"
+      "path"
     ]
   },
   "td_preflight_patch": {
@@ -1155,31 +1266,31 @@
     "required": []
   },
   "td_python_help": {
-    "description_present": false,
+    "description_present": true,
     "properties": {
-      "params": {
+      "target": {
         "any_of_types": [],
         "default_present": false,
         "enum": null,
-        "type": null
+        "type": "string"
       }
     },
     "required": [
-      "params"
+      "target"
     ]
   },
   "td_recommend_official_component": {
     "description_present": true,
     "properties": {
-      "params": {
+      "goal": {
         "any_of_types": [],
         "default_present": false,
         "enum": null,
-        "type": null
+        "type": "string"
       }
     },
     "required": [
-      "params"
+      "goal"
     ]
   },
   "td_rename_node": {
@@ -1247,17 +1358,35 @@
     ]
   },
   "td_search_nodes": {
-    "description_present": false,
+    "description_present": true,
     "properties": {
-      "params": {
+      "limit": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "integer"
+      },
+      "path": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "query": {
         "any_of_types": [],
         "default_present": false,
         "enum": null,
-        "type": null
+        "type": "string"
+      },
+      "search_type": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
       }
     },
     "required": [
-      "params"
+      "query"
     ]
   },
   "td_search_official_docs": {
@@ -1491,16 +1620,17 @@
   "td_tdresources_inspect": {
     "description_present": true,
     "properties": {
-      "params": {
-        "any_of_types": [],
-        "default_present": false,
+      "category": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
         "enum": null,
         "type": null
       }
     },
-    "required": [
-      "params"
-    ]
+    "required": []
   },
   "td_threading_status": {
     "description_present": true,
