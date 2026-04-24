@@ -1917,15 +1917,68 @@ async def td_list_families(ctx: Context) -> str:
 
 
 @mcp.tool(name="td_get_nodes")
-async def td_get_nodes(params: GetNodesInput, ctx: Context) -> str:
+async def td_get_nodes(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(
+            default="/",
+            description=(
+                "Absolute path to a COMP node whose children to list "
+                "(e.g. '/', '/project1', '/project1/myComp')"
+            ),
+        ),
+    ] = "/",
+    family: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Filter by operator family: TOP, CHOP, SOP, DAT, COMP, MAT, or PANEL",
+        ),
+    ] = None,
+    type: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Filter by specific operator type (e.g. 'noiseTOP', 'waveCHOP', 'textDAT')",
+        ),
+    ] = None,
+    include_params: Annotated[
+        bool,
+        Field(
+            default=False,
+            description="If true, include all parameters for each node (slower for large networks)",
+        ),
+    ] = False,
+    limit: Annotated[
+        int,
+        Field(default=100, ge=1, le=500, description="Max number of nodes to return"),
+    ] = 100,
+    offset: Annotated[
+        int,
+        Field(default=0, ge=0, description="Pagination offset"),
+    ] = 0,
+    response_format: Annotated[
+        ResponseFormat,
+        Field(default=ResponseFormat.JSON, description="Output format"),
+    ] = ResponseFormat.JSON,
+) -> str:
+    """List child nodes at a path."""
     finish = _start_tool(ctx, "td_get_nodes")
     try:
-        data = await _get_client(ctx).request(
-            "nodes",
-            params.model_dump(exclude={"response_format"}, exclude_none=True),
-        )
-        if params.response_format == ResponseFormat.MARKDOWN:
-            return _format_nodes_markdown(data.get("nodes", []), f"Children of {params.path}")
+        body: dict[str, Any] = {
+            "path": path,
+            "include_params": include_params,
+            "limit": limit,
+            "offset": offset,
+        }
+        if family is not None:
+            body["family"] = family
+        if type is not None:
+            body["type"] = type
+        data = await _get_client(ctx).request("nodes", body)
+        if response_format == ResponseFormat.MARKDOWN:
+            return _format_nodes_markdown(data.get("nodes", []), f"Children of {path}")
         return _as_json_output(data)
     except Exception as exc:
         _record_tool_error(ctx, "td_get_nodes")
@@ -1935,11 +1988,25 @@ async def td_get_nodes(params: GetNodesInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_get_node_detail")
-async def td_get_node_detail(params: NodePathInput, ctx: Context) -> str:
+async def td_get_node_detail(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(
+            description=("Absolute path to the node (e.g. '/project1/noise1', '/project1/geo1/sphere1')"),
+            min_length=1,
+        ),
+    ],
+    response_format: Annotated[
+        ResponseFormat,
+        Field(default=ResponseFormat.JSON, description="Output format"),
+    ] = ResponseFormat.JSON,
+) -> str:
+    """Get detailed info about a node (type, errors, warnings, parameters)."""
     finish = _start_tool(ctx, "td_get_node_detail")
     try:
-        data = await _get_client(ctx).request("node/detail", {"path": params.path})
-        if params.response_format == ResponseFormat.MARKDOWN:
+        data = await _get_client(ctx).request("node/detail", {"path": path})
+        if response_format == ResponseFormat.MARKDOWN:
             lines = [f"## {data.get('name', '?')} (`{data.get('path', '?')}`)"]
             lines.append(f"- Type: {data.get('type', '?')} ({data.get('family', '?')})")
             if data.get("errors"):
@@ -1947,7 +2014,7 @@ async def td_get_node_detail(params: NodePathInput, ctx: Context) -> str:
             if data.get("warnings"):
                 lines.append(f"- Warnings: {data['warnings']}")
             if data.get("parameters"):
-                lines.append(_format_params_markdown(data["parameters"], params.path))
+                lines.append(_format_params_markdown(data["parameters"], path))
             return "\n".join(lines)
         return _as_json_output(data)
     except Exception as exc:
@@ -1958,15 +2025,36 @@ async def td_get_node_detail(params: NodePathInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_get_params")
-async def td_get_params(params: GetParamsInput, ctx: Context) -> str:
+async def td_get_params(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="Absolute node path", min_length=1),
+    ],
+    page: Annotated[
+        str | None,
+        Field(default=None, description="Filter by parameter page name"),
+    ] = None,
+    names: Annotated[
+        list[str] | None,
+        Field(default=None, description="Filter to specific parameter names"),
+    ] = None,
+    response_format: Annotated[
+        ResponseFormat,
+        Field(default=ResponseFormat.JSON, description="Output format"),
+    ] = ResponseFormat.JSON,
+) -> str:
+    """Get parameter values and metadata for a node."""
     finish = _start_tool(ctx, "td_get_params")
     try:
-        data = await _get_client(ctx).request(
-            "node/params",
-            params.model_dump(exclude={"response_format"}, exclude_none=True),
-        )
-        if params.response_format == ResponseFormat.MARKDOWN:
-            return _format_params_markdown(data.get("parameters", {}), params.path)
+        body: dict[str, Any] = {"path": path}
+        if page is not None:
+            body["page"] = page
+        if names is not None:
+            body["names"] = names
+        data = await _get_client(ctx).request("node/params", body)
+        if response_format == ResponseFormat.MARKDOWN:
+            return _format_params_markdown(data.get("parameters", {}), path)
         return _as_json_output(data)
     except Exception as exc:
         _record_tool_error(ctx, "td_get_params")
@@ -1976,16 +2064,42 @@ async def td_get_params(params: GetParamsInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_set_params")
-async def td_set_params(params: SetParamsInput, ctx: Context) -> str:
+async def td_set_params(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="Absolute node path", min_length=1),
+    ],
+    params: Annotated[
+        dict[str, Any],
+        Field(
+            description=(
+                "Dictionary of parameter names to values. Supports five modes:\n"
+                "• Static value (plain): {'seed': 42, 'colorr': 1.0}\n"
+                "• Expression (reactive, updates every frame): "
+                "{'seed': {'expr': 'absTime.seconds * 10'}, "
+                "'tx': {'expr': \"op('noise1')['chan1']\"}}\n"
+                "• Explicit static: {'seed': {'val': 42}}\n"
+                "• Reset to default: {'seed': {'reset': true}} — "
+                "resets value and clears expression\n"
+                "• Clear expression: {'seed': {'mode': 'constant', 'val': 42}} — "
+                "force constant mode\n\n"
+                "Expressions make networks ALIVE — use them for anything that "
+                "should move, react, or change over time."
+            ),
+            min_length=1,
+        ),
+    ],
+) -> str:
+    """Set node parameters (static values or live expressions)."""
     finish = _start_tool(ctx, "td_set_params")
     try:
-        body = params.model_dump()
         adjusted, warnings = _apply_safety_to_set_params(
             _get_safety_manager(ctx),
-            params.path,
-            dict(body.get("params", {})),
+            path,
+            dict(params),
         )
-        body["params"] = adjusted
+        body = {"path": path, "params": adjusted}
 
         data = await _get_client(ctx).request("node/params/set", body)
         if warnings:
@@ -1995,7 +2109,7 @@ async def td_set_params(params: SetParamsInput, ctx: Context) -> str:
             ctx,
             "td_set_params",
             {
-                "path": params.path,
+                "path": path,
                 "param_count": len(adjusted),
                 "warnings": warnings,
             },
@@ -2009,12 +2123,80 @@ async def td_set_params(params: SetParamsInput, ctx: Context) -> str:
 
 
 @mcp.tool(name="td_create_node")
-async def td_create_node(params: CreateNodeInput, ctx: Context) -> str:
+async def td_create_node(
+    ctx: Context,
+    node_type: Annotated[
+        str,
+        Field(
+            description=(
+                "TouchDesigner operator type to create. Examples: "
+                "TOPs: 'noiseTOP', 'levelTOP', 'nullTOP', 'compositeTOP', "
+                "'feedbackTOP', 'moviefileinTOP' | "
+                "CHOPs: 'waveCHOP', 'noiseCHOP', 'nullCHOP', 'mathCHOP', "
+                "'constantCHOP', 'selectCHOP' | "
+                "SOPs: 'sphereSOP', 'boxSOP', 'gridSOP', 'lineSOP', 'nullSOP', "
+                "'transformSOP', 'noiseSOP' | "
+                "DATs: 'textDAT', 'tableDAT', 'scriptDAT', 'nullDAT', "
+                "'selectDAT', 'chopexecDAT' | "
+                "COMPs: 'baseCOMP', 'containerCOMP', 'geometryCOMP', "
+                "'cameraCOMP', 'lightCOMP' | "
+                "MATs: 'pbrMAT', 'phongMAT', 'wireframeMAT', 'constMAT'"
+            ),
+            min_length=1,
+        ),
+    ],
+    parent_path: Annotated[
+        str,
+        Field(
+            default="/project1",
+            description="Path to the parent COMP where the node will be created",
+        ),
+    ] = "/project1",
+    name: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Custom name for the new node. If None, TD assigns a default name.",
+        ),
+    ] = None,
+    nodeX: Annotated[
+        int | None,
+        Field(
+            default=None,
+            description=(
+                "Horizontal position in the network editor (pixels). "
+                "Use multiples of 200 for clean spacing between nodes."
+            ),
+        ),
+    ] = None,
+    nodeY: Annotated[
+        int | None,
+        Field(
+            default=None,
+            description=(
+                "Vertical position in the network editor (pixels). "
+                "Use multiples of 200 for clean spacing between rows."
+            ),
+        ),
+    ] = None,
+) -> str:
+    """Create a new TouchDesigner operator."""
+    # Re-instantiate so the CreateNodeInput custom @field_validator on
+    # ``node_type`` (family-suffix check: TOP/CHOP/SOP/DAT/COMP/MAT/POPX/POP)
+    # still runs. ``Annotated[str, Field(...)]`` captures min_length/description
+    # but not cross-field or custom validators.
+    validated = CreateNodeInput(
+        parent_path=parent_path,
+        node_type=node_type,
+        name=name,
+        nodeX=nodeX,
+        nodeY=nodeY,
+    )
     return await _forward(
         ctx,
         "td_create_node",
         "node/create",
-        params.model_dump(exclude_none=True),
+        validated.model_dump(exclude_none=True),
         audit_event="td_create_node",
     )
 
@@ -2051,56 +2233,153 @@ async def td_delete_node(
 
 
 @mcp.tool(name="td_copy_node")
-async def td_copy_node(params: CopyNodeInput, ctx: Context) -> str:
+async def td_copy_node(
+    ctx: Context,
+    source_path: Annotated[
+        str,
+        Field(description="Path of the node to copy", min_length=1),
+    ],
+    dest_parent: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description=("Path of the destination parent COMP. If None, copies into the same parent."),
+        ),
+    ] = None,
+    new_name: Annotated[
+        str | None,
+        Field(default=None, description="Name for the copy"),
+    ] = None,
+) -> str:
+    """Copy/duplicate a node."""
+    body: dict[str, Any] = {"source_path": source_path}
+    if dest_parent is not None:
+        body["dest_parent"] = dest_parent
+    if new_name is not None:
+        body["new_name"] = new_name
     return await _forward(
         ctx,
         "td_copy_node",
         "node/copy",
-        params.model_dump(exclude_none=True),
+        body,
         audit_event="td_copy_node",
     )
 
 
 @mcp.tool(name="td_rename_node")
-async def td_rename_node(params: RenameNodeInput, ctx: Context) -> str:
+async def td_rename_node(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="Current absolute path of the node", min_length=1),
+    ],
+    new_name: Annotated[
+        str,
+        Field(description="New name for the node", min_length=1, max_length=100),
+    ],
+) -> str:
+    """Rename a node."""
     return await _forward(
         ctx,
         "td_rename_node",
         "node/rename",
-        params.model_dump(),
+        {"path": path, "new_name": new_name},
         audit_event="td_rename_node",
     )
 
 
 @mcp.tool(name="td_connect_nodes")
-async def td_connect_nodes(params: ConnectNodesInput, ctx: Context) -> str:
+async def td_connect_nodes(
+    ctx: Context,
+    source_path: Annotated[
+        str,
+        Field(description="Path of the source (output) node", min_length=1),
+    ],
+    target_path: Annotated[
+        str,
+        Field(description="Path of the target (input) node", min_length=1),
+    ],
+    source_index: Annotated[
+        int,
+        Field(
+            default=0,
+            ge=0,
+            description="Output connector index on the source node (0 = first output)",
+        ),
+    ] = 0,
+    target_index: Annotated[
+        int,
+        Field(
+            default=0,
+            ge=0,
+            description="Input connector index on the target node (0 = first input)",
+        ),
+    ] = 0,
+) -> str:
+    """Connect two nodes (source output → target input)."""
     return await _forward(
         ctx,
         "td_connect_nodes",
         "node/connect",
-        params.model_dump(),
+        {
+            "source_path": source_path,
+            "target_path": target_path,
+            "source_index": source_index,
+            "target_index": target_index,
+        },
         audit_event="td_connect_nodes",
     )
 
 
 @mcp.tool(name="td_disconnect")
-async def td_disconnect(params: DisconnectInput, ctx: Context) -> str:
+async def td_disconnect(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(description="Path of the node to disconnect", min_length=1),
+    ],
+    connector_type: Annotated[
+        str,
+        Field(
+            default="input",
+            description="Which connector side to disconnect: 'input' or 'output'",
+        ),
+    ] = "input",
+    index: Annotated[
+        int,
+        Field(default=0, ge=0, description="Connector index to disconnect"),
+    ] = 0,
+) -> str:
+    """Disconnect a node's input or output connector."""
+    # Re-instantiate so the DisconnectInput custom @field_validator on
+    # ``connector_type`` (must be 'input' or 'output') still runs.
+    validated = DisconnectInput(path=path, connector_type=connector_type, index=index)
     return await _forward(
         ctx,
         "td_disconnect",
         "node/disconnect",
-        params.model_dump(),
+        validated.model_dump(),
         audit_event="td_disconnect",
     )
 
 
 @mcp.tool(name="td_get_connections")
-async def td_get_connections(params: NodePathInput, ctx: Context) -> str:
+async def td_get_connections(
+    ctx: Context,
+    path: Annotated[
+        str,
+        Field(
+            description=("Absolute path to the node (e.g. '/project1/noise1', '/project1/geo1/sphere1')"),
+            min_length=1,
+        ),
+    ],
+) -> str:
+    """Get upstream/downstream connections for a node."""
     return await _forward(
         ctx,
         "td_get_connections",
         "node/connections",
-        {"path": params.path},
+        {"path": path},
     )
 
 
