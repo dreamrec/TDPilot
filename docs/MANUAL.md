@@ -1,4 +1,4 @@
-# TDPilot v1.4.7 Production Manual
+# TDPilot v1.5.0 Production Manual
 
 This manual is for people who need real output in TouchDesigner, not theory. It explains what TDPilot does well, what it does not do, and how to run it with repeatable production discipline.
 
@@ -11,6 +11,7 @@ This manual is for people who need real output in TouchDesigner, not theory. It 
 - Recoverability: snapshots, diff, restore, and safety boundaries.
 - Technique reuse: memory tools convert successful subnet patterns into reusable recipes.
 - Team consistency: shared naming, tags, and preference memory reduce random drift between sessions.
+- **Typed patch sessions (v1.5.0):** plan → preview → apply → validate → undo flow with sentinel-guarded undo blocks, name-collision readback, and live-state risk flags. Each patch is a typed `PatchPlan` value object that can be inspected, varied (`td_patch_variations`), and replayed.
 
 ### What TDPilot is not
 

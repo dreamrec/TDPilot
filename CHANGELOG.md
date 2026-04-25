@@ -1,22 +1,43 @@
 # Changelog
 
-## [Unreleased] — v1.5.0 Phase 3
+## 1.5.0 - 2026-04-25
+
+Major feature release. Phase 1 (Bug A schema migration) and Phase 2
+(monolithic `tool_registry.py` decomposed into 21 themed submodules)
+were merged earlier on `v1.5.0/bug-a-migration` and `v1.5.0/module-splits`
+respectively; this entry summarizes the user-visible surface delta.
+
+`API_VERSION` bumps 1.4.7 → 1.5.0; `.tox` rebuild is required for the
+TD-side handler to pick up the new version. The auto-rebuild path in
+`tdpilot_startup.py` will detect staleness on the next TD launch and
+rebuild from source — no manual action needed for users.
 
 ### Added
 - **Patch Session MVP (5 new MCP tools):**
   - `td_patch_plan` — build typed PatchPlan from intent/recipe/operations.
-  - `td_patch_preview` — summarize changes + live_risk_flags, no mutation.
+  - `td_patch_preview` — summarize changes + live_risk_flags (live state probe).
   - `td_patch_apply` — execute in one undo block; structured PatchResult.
   - `td_patch_validate` — composite errors + cook stats + frame capture.
   - `td_patch_variations` — N variants from a base plan (param_jitter).
-- 7 new Pydantic models: PatchOperation, ValidationPlan, PatchPlan, PatchPreview, ValidationReport, PatchResult, PatchVariant.
-- New `src/td_mcp/patch/` package with MCP-free business logic (planner, applier, validator, variants, undo_sentinel).
-- ~63 new tests across three layers.
+- 7 new Pydantic v2 models in `src/td_mcp/models/patch.py`: `PatchOperation`, `ValidationPlan`, `PatchPlan`, `PatchPreview`, `ValidationReport`, `PatchResult`, `PatchVariant`. All `extra="forbid"`.
+- New `src/td_mcp/patch/` package with MCP-free business logic (planner, applier, validator, variants, undo_sentinel). Three-layer testing seam: model-level (Pydantic), patch-package-level (FakeTDClient), MCP-tool-level (RecordingTDClient + monkeypatched services).
+- 64 new tests across the three layers (596 → 660).
+- `scripts/patch_session_smoke.py` — live-TD end-to-end smoke covering plan → preview → apply → validate → undo → cleanup.
+- New `_PATCH_SENTINEL` process-wide singleton in `tool_registry.py` (an `UndoBlockSentinel` instance). DI-injected into `patch.applier.apply_plan` to refuse re-entry when an undo block is already active. `NestedBlockError` is raised on collision.
 
 ### Changed
-- `td_plan_patch` internally now delegates to `patch.build_plan`; external dict shape unchanged (byte-for-byte compat).
+- **Module splits (Phase 2):** `tool_registry.py` decomposed into 21 themed submodules under `src/td_mcp/registry/` (graph, params, planning, vision, knowledge, memory, etc.). Intentional cycle pattern via `from td_mcp import tool_registry as _tr` — see `src/td_mcp/registry/__init__.py`. No external schema drift.
+- **Bug A migration (Phase 1):** all 92 pre-existing tools migrated from the opaque `params: dict` wrapper to explicit `Annotated[T, Field(...)]` per-arg signatures. `tests/test_no_opaque_params_wrapper.py` enforces this discipline going forward.
+- `td_plan_patch` internally now delegates to `patch.build_plan` via `_legacy_plan_dict()` shim in `tools_planning.py`; external dict shape preserved byte-for-byte (verified by `tests/test_legacy_patch_shim.py`).
 - Tool count: 92 → 97.
-- User-facing docs (README, npm/README, plugin_README, docs/, skills/) updated to reflect 97-tool surface.
+- `EXPECTED_MIN_TOOL_COUNT` in `release_gates.py` bumped 92 → 97 (used by contract tests, schema-snapshot test, plugin builder).
+- User-facing docs (README, npm/README, plugin_README, docs/, skills/) updated to reflect 97-tool surface and Patch Session capability.
+
+### Fixed
+- **TD-side auth bootstrap:** `tdpilot_startup.py` now loads BOTH `<repo>/.tdpilot.env` AND `~/.tdpilot/.tdpilot.env` so the dragged-in / auto-rebuilt .tox sees the auth_bootstrap-generated secret. Before this fix, the Python MCP server's auto-generated secret in `~/.tdpilot/.tdpilot.env` was never visible to the TD webserver, causing every request to 401 even on fresh installs.
+- **Wire-format alignment:** `applier._apply_op` for `kind=create_node` now sends body['node_type'] (was 'op_type') and body['nodeX'/'nodeY'] (were 'x'/'y') matching TD's `/api/node/create` handler. Path readback now extracts from the nested `{"node": {...}}` response shape.
+- **Validator endpoint name:** `validate_target` now calls `/api/cooking` (was `/api/cooking_info`, which doesn't exist).
+- **Removed dead code:** `_suggest_macro_for_intent` + `_INTENT_MACRO_KEYWORDS` from `tools_planning.py` — logic now lives in `patch.planner`.
 
 ### Deferred to v1.5.1
 - Destructive op kinds: delete, disconnect, set_content, exec_python.
@@ -24,6 +45,11 @@
 - Variant strategies: `operator_substitute`, `topology_perturb`.
 - Auto-snapshot on apply.
 - `td_preflight_patch` delegation to `patch.preview_plan`.
+- **Macro endpoint gap:** `applier._apply_op` for `kind=macro` calls `/api/macro/create` which TD doesn't expose — needs routing through `/api/exec` like the legacy `td_create_macro` Python path.
+- **`ui.undo` from webserver context unreliable:** `project/lifecycle action=undo` returns success but doesn't actually revert webserver-initiated mutations. Smoke uses explicit `node/delete` cleanup as workaround.
+- **applier wire-format unverified for `set_params`/`connect`/`layout`/`annotate`** — only `create_node` exercised by live smoke; field-name fixups likely needed for the others.
+
+
 
 ## 1.4.7 - 2026-04-24
 

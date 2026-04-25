@@ -54,6 +54,14 @@ htmlcov/
 # tree via Claude Code marketplace install. Release CI publishes the ZIP.
 tdpilot.plugin
 
+# tdpilot.mcpb is a Claude Desktop one-click-install bundle, rebuilt by
+# scripts/build_mcpb.py from committed sources. Same not-tracked pattern as
+# tdpilot.plugin — published via GitHub Releases for Claude Desktop users.
+tdpilot.mcpb
+
+# Staging directory used by scripts/build_mcpb.py during pack
+.mcpb-build/
+
 # Secret env file written by installer (contains TD_MCP_SHARED_SECRET)
 .tdpilot.env
 
