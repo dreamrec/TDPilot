@@ -1,14 +1,32 @@
 # Changelog
 
-## Unreleased
+## 1.5.2 - 2026-04-25
 
-Post-1.5.1 deep-debug pass. The audit-1.5.1 commit explicitly deferred a
-small set of issues to v1.5.2; an independent ultradebug pass picked
-those up plus a few siblings the audit didn't reach. None alter
-behavior of the 666 passing tests; none touch the wire format. All
-tracked deferrals from `release(v1.5.1)` and `fix(audit-1.5.1)` that
-do not need TD-only rework are now resolved on `main` and will roll
-into the v1.5.2 tag at next release.
+Deferral cleanup + real auth bug + npm publishing pipeline. The
+audit-1.5.1 commit explicitly deferred a small set of issues to
+v1.5.2; an independent ultradebug pass picked those up plus a few
+siblings the audit didn't reach. Plus one genuine bug discovered
+during live verification: `bootstrap_auth()` ran *after*
+`tool_registry`'s module-level `TD_SHARED_SECRET` capture, so the
+MCP server's secret was always frozen as `None` when relying on
+`auth_bootstrap` to load it from `~/.tdpilot/.tdpilot.env`. Result:
+401s on every TD request for users on the v1.5.1 marketplace install
+path. Fixed.
+
+None alter behavior of the 666 passing tests; none touch the wire
+format. The patch session API verified live 13/13 against TD
+2025.32460.
+
+Highlights:
+- Auth-bootstrap ordering bug fixed (real bug, was silently breaking
+  marketplace installs)
+- Install scripts now auto-pin to the latest git tag
+- npm tag-push auto-publish workflow added (no more manual
+  `cd npm && npm publish` step that was missed for v1.5.0/v1.5.1)
+- Startup banner reads API_VERSION dynamically — no more hardcoded
+  v1.3 string drift across releases
+- CI runners moved to Node-24-compatible action majors ahead of
+  the 2026-06-02 deadline
 
 ### Fixed
 - **Install scripts didn't pin to release tags** — `npm/run.js`,
