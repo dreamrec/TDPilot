@@ -15,6 +15,23 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+# v1.5.2: bootstrap auth BEFORE importing td_mcp.tool_registry. The latter
+# captures TD_SHARED_SECRET at module-load time (line 165) — if the secret
+# only lives in ~/.tdpilot/.tdpilot.env (the v1.4.5+ design), and bootstrap
+# runs later (inside main()), TD_SHARED_SECRET is frozen as None and the
+# Authorization header sent to TD's WebServer DAT is empty, producing
+# "Unauthorized: missing or invalid TD_MCP_SHARED_SECRET" forever.
+# Calling bootstrap_auth here makes the secret available in os.environ
+# before any module-level capture. Skipped for `init` (which runs
+# render_mcp_config without needing real auth state).
+if os.environ.get("TDPILOT_SKIP_AUTH_BOOTSTRAP", "").strip() not in ("1", "true", "yes"):
+    from td_mcp import auth_bootstrap as _auth_bootstrap
+
+    try:
+        _auth_bootstrap.bootstrap_auth()
+    except Exception:  # noqa: BLE001 — startup must not crash on file I/O
+        pass
+
 from td_mcp import LEGACY_TOX_FILENAMES, TOX_FILENAME, __version__, normalize_transport
 from td_mcp.td_client import TDClient, TouchDesignerConnectionError
 from td_mcp.tool_registry import (
