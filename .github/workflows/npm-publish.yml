@@ -84,7 +84,17 @@ jobs:
 
       - name: Publish
         working-directory: npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # Auth model: this workflow is registered as a Trusted Publisher on
+        # the `tdpilot` npm package (npmjs.com -> Settings -> Trusted Publisher
+        # -> GitHub Actions -> dreamrec/TDPilot, npm-publish.yml). With that
+        # binding, `npm publish --provenance` performs an OIDC handshake
+        # against npm's registry using the workflow's `id-token: write`
+        # permission and uses the resulting short-lived token to publish.
+        # NODE_AUTH_TOKEN is intentionally NOT set — when it is present,
+        # npm uses it instead of OIDC, and any token (granular or classic)
+        # then needs the "bypass 2FA" flag because the package's
+        # publishing-access policy demands it. OIDC sidesteps that whole
+        # axis: the publish identity is the workflow run itself, verified
+        # against the Trusted Publisher binding npm has on file.
         run: |
           npm publish --provenance --access public
