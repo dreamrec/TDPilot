@@ -1,7 +1,8 @@
 """Info/metadata tools — TD build, capabilities, runtime metrics.
 
 Part of the v1.5.0 Phase 2 module split. This is the final extraction
-— all 92 tools + 7 resources now live in themed submodules.
+— all 97 tools + 7 resources now live in themed submodules (the 5 new
+td_patch_* tools landed in Phase 3).
 
 Tools in this module (4):
     td_get_info            — TD build, version, mcp-component version

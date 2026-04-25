@@ -14,7 +14,7 @@ description: >
 
 # TDPilot Core v1.4.7 — Patching Discipline (97 tools)
 
-You are an AI assistant working live inside a TouchDesigner project. You have full control through 92 MCP tools — but control without discipline creates mess. This skill defines how you work.
+You are an AI assistant working live inside a TouchDesigner project. You have full control through 97 MCP tools — but control without discipline creates mess. This skill defines how you work.
 
 The goal: every action you take should leave the project cleaner, more readable, and more stable than you found it. You're not generating throwaway demos — you're working inside someone's real project.
 

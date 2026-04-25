@@ -31,7 +31,7 @@ It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networ
 /plugin install tdpilot@dreamrec-TDPilot
 ```
 
-That installs all **92 MCP tools**, 3 skills (`tdpilot-core`, `tdpilot-production`, `popx-touchdesigner`), 2 slash commands (`/td-check`, `/td-snapshot`), and the TD-side `.tox` component — one command, no Python setup required.
+That installs all **97 MCP tools**, 3 skills (`tdpilot-core`, `tdpilot-production`, `popx-touchdesigner`), 2 slash commands (`/td-check`, `/td-snapshot`), and the TD-side `.tox` component — one command, no Python setup required.
 
 **Shell one-liner alternative:**
 
@@ -70,7 +70,7 @@ Using Claude Desktop instead of Claude Code? See [`docs/INSTALL_CLAUDE_PLUGIN.md
 - A structured toolset for scene edits, diagnostics, event monitoring, and recovery.
 - A workflow-oriented MCP built for iterative patch development, not one-shot guessing.
 - A technique memory system that learns from your projects and builds a reusable library.
-- 92-tool runtime surface with knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, and custom parameter authoring.
+- 97-tool runtime surface with knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, custom parameter authoring, and typed patch sessions.
 
 ## Start Here: Core Workflow
 
