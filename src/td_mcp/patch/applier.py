@@ -52,6 +52,7 @@ async def apply_plan(
     sentinel: UndoBlockSentinel,
     label: str | None = None,
     auto_validate: bool = True,
+    macro_engine=None,
 ) -> PatchResult:
     """Apply a PatchPlan inside one TD undo block.
 
@@ -78,7 +79,7 @@ async def apply_plan(
             for i, op in enumerate(plan.operations):
                 try:
                     _validate_args(op, i)
-                    outcome = await _apply_op(td_client, op)
+                    outcome = await _apply_op(td_client, op, macro_engine=macro_engine)
                     _record_outcome(result, i, op, outcome)
                 except Exception as exc:  # noqa: BLE001
                     result.failed_op = i
@@ -102,14 +103,18 @@ async def apply_plan(
     return result
 
 
-async def _apply_op(td_client, op: PatchOperation) -> dict[str, Any]:
-    """Route one operation to its TD endpoint. Returns the response."""
+async def _apply_op(td_client, op: PatchOperation, *, macro_engine=None) -> dict[str, Any]:
+    """Route one operation to its TD endpoint. Returns the response.
+
+    Wire formats are aligned with the legacy MCP tools (see tools_graph.py /
+    tools_macros.py) and TD's webserver handlers in
+    td_component/mcp_webserver_callbacks.py. Phase 3 model args use friendlier
+    aliases (``op_type``/``x``/``y``/``from``/``to``) at the typed layer; we
+    translate to the on-the-wire names here.
+    """
     if op.kind == "create_node":
-        # Wire field names follow the legacy td_create_node convention
-        # (CreateNodeInput.model_dump in tools_graph.py): TD's
-        # /api/node/create handler reads body['node_type'] / body['nodeX']
-        # / body['nodeY']. Phase 3 args use the friendlier 'op_type' / 'x'
-        # / 'y' aliases at the model layer; we translate at the wire here.
+        # Mirrors legacy td_create_node (tools_graph.py:308):
+        # body uses ``node_type`` / ``nodeX`` / ``nodeY``.
         return (
             await td_client.request(
                 "node/create",
@@ -124,59 +129,97 @@ async def _apply_op(td_client, op: PatchOperation) -> dict[str, Any]:
             or {}
         )
     if op.kind == "set_params":
+        # Mirrors legacy td_set_params (tools_graph.py:227):
+        # endpoint is ``node/params/set`` (NOT ``nodes/set_params``).
         return (
             await td_client.request(
-                "nodes/set_params",
+                "node/params/set",
                 {"path": op.target, "params": op.args["params"]},
             )
             or {}
         )
     if op.kind == "connect":
+        # Mirrors legacy td_connect_nodes (tools_graph.py:415):
+        # body uses ``source_path`` / ``target_path`` / ``source_index`` /
+        # ``target_index``. Phase 3 args use friendlier aliases.
         return (
             await td_client.request(
                 "node/connect",
                 {
-                    "from": op.args["from"],
-                    "to": op.args["to"],
-                    "from_output": op.args.get("from_output", 0),
-                    "to_input": op.args.get("to_input", 0),
+                    "source_path": op.args["from"],
+                    "target_path": op.args["to"],
+                    "source_index": op.args.get("from_output", 0),
+                    "target_index": op.args.get("to_input", 0),
                 },
             )
             or {}
         )
     if op.kind == "layout":
-        return (
-            await td_client.request(
-                "nodes/set_position",
-                {"path": op.target, "x": op.args["x"], "y": op.args["y"]},
-            )
-            or {}
-        )
+        # TD has no dedicated set-position endpoint, so we route through
+        # /api/exec with a minimal one-liner. Restricted exec mode allows
+        # this — no imports, no banned tokens. Returns whatever exec
+        # returns; the path itself is the readback we record.
+        target = op.target
+        x = int(op.args["x"])
+        y = int(op.args["y"])
+        # Use repr() for the path so quoting is correct regardless of
+        # special characters; coords are int so they're inline-safe.
+        code = f"o = op({target!r})\nif o is not None:\n    o.nodeX = {x}\n    o.nodeY = {y}"
+        await td_client.request("exec", {"code": code})
+        return {"path": target, "nodeX": x, "nodeY": y}
     if op.kind == "annotate":
-        return (
+        # TD's annotation primitive is ``annotateCOMP`` — a Base COMP variant
+        # whose ``text`` parameter holds the annotation body. Two calls:
+        # 1) node/create node_type=annotateCOMP
+        # 2) node/params/set on the new path with text=<text>
+        text = str(op.args["text"])
+        create_resp = (
             await td_client.request(
                 "node/create",
                 {
                     "parent_path": op.target or "/project1",
-                    "op_type": "annotate",
-                    "name": "annotate1",
-                    "annotation_text": op.args["text"],
+                    "node_type": "annotateCOMP",
+                    "name": op.args.get("name") or "annotation1",
                 },
             )
             or {}
         )
-    if op.kind == "macro":
-        return (
+        # Extract the actual created path (TD may have suffixed it for
+        # collision avoidance — see _record_outcome's nested-shape parsing).
+        created_path = None
+        if isinstance(create_resp, dict):
+            node_info = create_resp.get("node")
+            if isinstance(node_info, dict):
+                created_path = node_info.get("path")
+            created_path = created_path or create_resp.get("path")
+        if created_path:
             await td_client.request(
-                "macro/create",
-                {
-                    "parent_path": op.target or "/project1",
-                    "macro_type": op.args["macro_type"],
-                    "prefix": op.args.get("prefix", ""),
-                },
+                "node/params/set",
+                {"path": created_path, "params": {"text": text}},
             )
-            or {}
+        return create_resp
+    if op.kind == "macro":
+        # TD has no /api/macro/create endpoint — macros are server-side
+        # compositions of multiple TD calls (see tools_macros.py). The
+        # macro_engine encapsulates that logic. The MCP wrapper
+        # td_patch_apply injects the engine via DI; if absent (e.g.
+        # called directly without an MCP context), we surface a clear
+        # error rather than calling a phantom HTTP endpoint.
+        if macro_engine is None:
+            raise PatchOperationArgsError(
+                f"op kind={op.kind!r} requires macro_engine DI; "
+                "this only works through td_patch_apply, not via patch.apply_plan() "
+                "called directly without injecting the macro engine."
+            )
+        result = await macro_engine.create_macro(
+            parent_path=op.target or "/project1",
+            macro_type=op.args["macro_type"],
+            name_prefix=op.args.get("name_prefix") or op.args.get("prefix") or None,
+            node_x=int(op.args.get("nodeX", 0)),
+            node_y=int(op.args.get("nodeY", 0)),
+            overrides=op.args.get("params"),
         )
+        return result or {}
     raise PatchOperationArgsError(f"unreachable: unknown kind {op.kind!r}")
 
 

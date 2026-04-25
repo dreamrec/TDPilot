@@ -132,6 +132,13 @@ async def td_patch_apply(
         except ValidationError as exc:
             return {"success": False, "error": f"invalid plan: {exc}"}
         client = _tr._get_client(ctx)
+        # Inject the macro engine so kind=macro ops can route through the
+        # server-side composition path (TD has no /api/macro/create endpoint).
+        # If the engine isn't available (rare — only if services aren't
+        # configured), pass None and let the applier surface a clear error
+        # for any kind=macro op it encounters.
+        services = _tr._get_services(ctx)
+        macro_engine = getattr(services, "macro_engine", None)
         try:
             result = await patch.apply_plan(
                 client,
@@ -139,6 +146,7 @@ async def td_patch_apply(
                 sentinel=_tr._PATCH_SENTINEL,
                 label=label,
                 auto_validate=auto_validate,
+                macro_engine=macro_engine,
             )
         except patch.NestedBlockError as exc:
             return {"success": False, "error": str(exc)}

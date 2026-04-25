@@ -1,5 +1,68 @@
 # Changelog
 
+## 1.5.1 - 2026-04-25
+
+Wire-format alignment release for the Phase 3 Patch Session API. v1.5.0
+shipped with `create_node` verified live but the other 5 op kinds
+(`set_params`, `connect`, `layout`, `annotate`, `macro`) carrying
+spec-derived endpoint/field names that didn't match TD's actual
+webserver. A comprehensive live-TD probe at
+`scripts/patch_session_smoke.py` now exercises all 6 kinds end-to-end
+and 6 new unit tests pin the on-the-wire contract.
+
+`API_VERSION` bumps 1.5.0 → 1.5.1; `.tox` rebuild required (auto-detected
+on next TD launch via `tdpilot_startup.py:_is_tox_stale`).
+
+### Fixed
+- **`kind=set_params`**: dispatched to non-existent `/api/nodes/set_params`.
+  Now uses `node/params/set` matching the legacy `td_set_params` tool.
+- **`kind=connect`**: body fields `from`/`to` / `from_output`/`to_input`
+  didn't match TD's `handle_connect_nodes`. Now sends `source_path` /
+  `target_path` / `source_index` / `target_index`.
+- **`kind=layout`**: dispatched to non-existent `/api/nodes/set_position`.
+  TD has no dedicated set-position endpoint, so layout now routes
+  through `/api/exec` with a minimal `op(path).nodeX = X; nodeY = Y`
+  one-liner (restricted-mode safe — no banned tokens).
+- **`kind=annotate`**: tried `node/create` with `op_type="annotate"`
+  (wrong field name + wrong type string). Now creates a real
+  `annotateCOMP` and sets the `text` parameter via a follow-up
+  `node/params/set` call.
+- **`kind=macro`**: dispatched to non-existent `/api/macro/create`. TD
+  has no macro endpoint at all — macros are server-side compositions
+  in the `MacroEngine`. `apply_plan()` now accepts a `macro_engine`
+  DI parameter (mirroring the planner's `card_index` pattern); the
+  `td_patch_apply` MCP wrapper injects it from the service container.
+  Calling `apply_plan()` directly without injecting will surface a
+  clear `PatchOperationArgsError` rather than calling a phantom
+  endpoint.
+
+### Added
+- 6 new wire-format unit tests in `tests/patch/test_applier.py`
+  pinning each op kind's endpoint path + body field names against
+  TD's actual handler signatures. Test count 660 → 666.
+- Comprehensive live-TD debug probe (`/tmp/tdpilot_v150_debug.py`,
+  not committed — used during release validation). 12/12 scenarios
+  green: connectivity, all 6 op kinds, sentinel guard, variations,
+  legacy intent path, validator, auto_validate.
+
+### Changed
+- `apply_plan()` signature: added `macro_engine=None` keyword.
+  Backward-compatible — existing callers that don't use `kind=macro`
+  ops are unaffected.
+
+### Deferred to v1.5.2
+- Destructive op kinds: `delete`, `disconnect`, `set_content`,
+  `exec_python` (still pending from v1.5.0 deferral list).
+- TD-callback `project/lifecycle action=undo_block_status` endpoint.
+- Variant strategies: `operator_substitute`, `topology_perturb`.
+- Auto-snapshot on apply.
+- `td_preflight_patch` delegation to `patch.preview_plan`.
+- `_record_outcome` for `kind=macro`: surface the multiple paths
+  the engine creates (currently looks for top-level `path` only).
+- `ui.undo` from webserver context: still doesn't reliably revert
+  webserver-initiated mutations; smoke uses explicit `node/delete`
+  cleanup.
+
 ## 1.5.0 - 2026-04-25
 
 Major feature release. Phase 1 (Bug A schema migration) and Phase 2

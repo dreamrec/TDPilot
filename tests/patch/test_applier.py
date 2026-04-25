@@ -161,3 +161,158 @@ async def test_auto_validate_skipped_on_broken():
     assert result.validation is None
     err_calls = [c for c in client.calls if c[0] == "node/errors"]
     assert err_calls == []
+
+
+# ─── Wire-format tests (v1.5.1) ─────────────────────────────────────
+# These pin the on-the-wire endpoint paths and body field names against
+# what TD's actual /api/* handlers expect. Caught the v1.5.0 → v1.5.1
+# wire-mismatch surface that unit tests with permissive FakeTDClient
+# scripts had let through.
+
+
+@pytest.mark.asyncio
+async def test_set_params_uses_node_params_set_endpoint():
+    """v1.5.1: set_params dispatches to ``node/params/set``, not the
+    fictional ``nodes/set_params`` from the v1.5.0 spec."""
+    ops = [PatchOperation(kind="set_params", target="/p/n", args={"params": {"period": 0.5}})]
+    client = FakeTDClient(
+        scripted={
+            "node/params/set": {"ok": True},
+            "node/errors": {"issues": []},
+            "cooking": {},
+        }
+    )
+    sentinel = UndoBlockSentinel()
+    result = await apply_plan(client, _plan(ops), sentinel=sentinel)
+    assert result.status == "clean"
+    set_calls = [c for c in client.calls if c[0] == "node/params/set"]
+    assert len(set_calls) == 1
+    body = set_calls[0][1]
+    assert body == {"path": "/p/n", "params": {"period": 0.5}}
+
+
+@pytest.mark.asyncio
+async def test_connect_uses_source_target_path_fields():
+    """v1.5.1: connect body uses ``source_path`` / ``target_path`` /
+    ``source_index`` / ``target_index`` matching TD's handle_connect_nodes."""
+    ops = [
+        PatchOperation(
+            kind="connect",
+            target="/p",
+            args={"from": "/p/a", "to": "/p/b", "from_output": 1, "to_input": 0},
+        )
+    ]
+    client = FakeTDClient(
+        scripted={
+            "node/connect": {"ok": True},
+            "node/errors": {"issues": []},
+            "cooking": {},
+        }
+    )
+    sentinel = UndoBlockSentinel()
+    result = await apply_plan(client, _plan(ops), sentinel=sentinel)
+    assert result.status == "clean"
+    body = next(c[1] for c in client.calls if c[0] == "node/connect")
+    assert body == {
+        "source_path": "/p/a",
+        "target_path": "/p/b",
+        "source_index": 1,
+        "target_index": 0,
+    }
+
+
+@pytest.mark.asyncio
+async def test_layout_uses_exec_endpoint():
+    """v1.5.1: layout has no dedicated TD endpoint — routes through /api/exec
+    to set ``op.nodeX`` / ``op.nodeY`` directly."""
+    ops = [PatchOperation(kind="layout", target="/p/n", args={"x": 100, "y": 200})]
+    client = FakeTDClient(
+        scripted={
+            "exec": {"ok": True},
+            "node/errors": {"issues": []},
+            "cooking": {},
+        }
+    )
+    sentinel = UndoBlockSentinel()
+    result = await apply_plan(client, _plan(ops), sentinel=sentinel)
+    assert result.status == "clean"
+    exec_calls = [c for c in client.calls if c[0] == "exec"]
+    assert len(exec_calls) == 1
+    code = exec_calls[0][1]["code"]
+    assert "/p/n" in code
+    assert ".nodeX = 100" in code
+    assert ".nodeY = 200" in code
+
+
+@pytest.mark.asyncio
+async def test_annotate_creates_annotateCOMP():
+    """v1.5.1: annotate uses ``node/create`` with ``node_type=annotateCOMP``
+    then sets the text via a follow-up ``node/params/set`` call."""
+    ops = [PatchOperation(kind="annotate", target="/p", args={"text": "hello"})]
+    client = FakeTDClient(
+        scripted={
+            "node/create": lambda p: {
+                "success": True,
+                "node": {"path": "/p/" + p["name"], "name": p["name"]},
+            },
+            "node/params/set": {"ok": True},
+            "node/errors": {"issues": []},
+            "cooking": {},
+        }
+    )
+    sentinel = UndoBlockSentinel()
+    result = await apply_plan(client, _plan(ops), sentinel=sentinel)
+    assert result.status == "clean"
+    create_body = next(c[1] for c in client.calls if c[0] == "node/create")
+    assert create_body["node_type"] == "annotateCOMP"
+    set_body = next(c[1] for c in client.calls if c[0] == "node/params/set")
+    assert set_body["params"] == {"text": "hello"}
+
+
+@pytest.mark.asyncio
+async def test_macro_requires_macro_engine_di():
+    """v1.5.1: kind=macro raises if macro_engine isn't injected — TD has
+    no /api/macro/create endpoint, so direct apply_plan() invocations
+    (e.g., scripts that don't go through td_patch_apply) can't dispatch
+    macros and we surface that clearly rather than calling a phantom
+    HTTP endpoint."""
+    ops = [PatchOperation(kind="macro", target="/p", args={"macro_type": "feedback_loop"})]
+    client = FakeTDClient()
+    sentinel = UndoBlockSentinel()
+    result = await apply_plan(client, _plan(ops), sentinel=sentinel, auto_validate=False)
+    assert result.status == "broken"
+    assert "macro_engine" in (result.failed_reason or "")
+
+
+@pytest.mark.asyncio
+async def test_macro_dispatches_through_macro_engine():
+    """v1.5.1: when macro_engine is injected, kind=macro routes to
+    engine.create_macro(...) with the spec'd kwargs. No phantom HTTP."""
+
+    class FakeMacroEngine:
+        def __init__(self):
+            self.calls = []
+
+        async def create_macro(self, **kwargs):
+            self.calls.append(kwargs)
+            return {"path": "/p/feedback_macro", "created": ["/p/feedback_macro/inner"]}
+
+    engine = FakeMacroEngine()
+    ops = [
+        PatchOperation(
+            kind="macro",
+            target="/p",
+            args={"macro_type": "feedback_loop", "name_prefix": "fb"},
+        )
+    ]
+    client = FakeTDClient(scripted={"node/errors": {"issues": []}, "cooking": {}})
+    sentinel = UndoBlockSentinel()
+    result = await apply_plan(client, _plan(ops), sentinel=sentinel, macro_engine=engine)
+    assert result.status == "clean"
+    assert len(engine.calls) == 1
+    assert engine.calls[0]["macro_type"] == "feedback_loop"
+    assert engine.calls[0]["parent_path"] == "/p"
+    assert engine.calls[0]["name_prefix"] == "fb"
+    # No phantom macro/create HTTP calls.
+    macro_http = [c for c in client.calls if c[0] == "macro/create"]
+    assert macro_http == []
