@@ -156,12 +156,33 @@ def _load_tox_fast(tox_path):
         # loadTox on a COMP in TD 2025+ loads as a child and returns the new COMP
         loaded = local.loadTox(tox_path)
         if loaded is not None:
-            print(f"[TDPilot] v1.3 loaded from {tox_path}")
+            print(f"[TDPilot] v{_read_api_version(tox_path)} loaded from {tox_path}")
             return True
     except Exception as e:
         print(f"[TDPilot] loadTox failed ({e}), falling back to rebuild")
 
     return False
+
+
+def _read_api_version(tox_path):
+    """Read API_VERSION from mcp_webserver_callbacks.py adjacent to the .tox.
+
+    Reading the version from source (rather than hardcoding it here) means
+    the startup banner stays correct forever — no per-release maintenance,
+    no drift between this file and ``mcp_webserver_callbacks.py``. Falls
+    back to ``"?"`` if the file is missing (e.g. the user dragged the .tox
+    into a directory without the rest of the repo). A fallback string is
+    preferable to crashing TD startup over a banner.
+    """
+    callbacks_path = os.path.join(os.path.dirname(tox_path), "mcp_webserver_callbacks.py")
+    try:
+        with open(callbacks_path, encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("API_VERSION"):
+                    return line.split("=", 1)[1].strip().strip('"').strip("'")
+    except OSError:
+        pass
+    return "?"
 
 
 def _rebuild_from_source(repo_root):
