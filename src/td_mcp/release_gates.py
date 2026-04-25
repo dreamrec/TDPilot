@@ -9,4 +9,5 @@ from __future__ import annotations
 # Minimum tool count enforced by contract tests, the registry smoke check,
 # the full e2e suite, and the runtime stress matrix. Kept as a floor (not an
 # exact match) so adding tools never breaks downstream checks.
-EXPECTED_MIN_TOOL_COUNT: int = 97
+# 2026-04-25: bumped 97 → 101 with td_knowledge_{save,recall,get,list}.
+EXPECTED_MIN_TOOL_COUNT: int = 101

@@ -465,16 +465,51 @@ def handle_get_nodes(body):
 
 
 def handle_get_node_detail(body):
-    """Get detailed info about a single node."""
+    """Get detailed info about a single node.
+
+    Caps parameter serialization at NODE_DETAIL_PARAM_LIMIT entries (default 50)
+    so a single COMP with hundreds of internal params can't blow the model
+    context. Callers needing full params should use td_get_params with paging.
+    """
     path = body.get('path')
     if not path:
         return {'error': 'Missing required field: path'}
+
+    # Allow callers to override the cap via the request body, otherwise use
+    # the default. Hard ceiling at 200 to keep responses bounded.
+    try:
+        param_limit = int(body.get('param_limit', 50))
+    except (TypeError, ValueError):
+        param_limit = 50
+    param_limit = max(1, min(200, param_limit))
 
     node = op(path)
     if node is None:
         return {'error': f'Node not found: {path}'}
 
-    detail = _serialize_op(node, include_params=True)
+    detail = _serialize_op(node, include_params=False)
+
+    # Manual capped param serialization. We deliberately don't reuse
+    # _serialize_op(include_params=True) because that takes ALL params and
+    # the v1.5.2 audit found a single COMP yielding ~88 KB of JSON, which
+    # exceeded the model context budget on the client side.
+    full_params = _serialize_params(node)
+    if len(full_params) > param_limit:
+        names = list(full_params.keys())[:param_limit]
+        detail['parameters'] = {n: full_params[n] for n in names}
+        detail['parameters_truncated'] = True
+        detail['parameters_total'] = len(full_params)
+        detail['parameters_returned'] = param_limit
+        detail['parameters_hint'] = (
+            f'Only first {param_limit}/{len(full_params)} parameters serialized to '
+            'cap response size. Use td_get_params with name or page filters '
+            'for the rest.'
+        )
+    else:
+        detail['parameters'] = full_params
+        detail['parameters_truncated'] = False
+        detail['parameters_total'] = len(full_params)
+        detail['parameters_returned'] = len(full_params)
 
     # Add connection info
     detail['inputs'] = []
@@ -582,8 +617,19 @@ def handle_set_params(body):
     # reported success=True with new_value=null, hiding the failure from the
     # MCP caller. The _silent_null_set check below catches that pattern and
     # flips the per-param result to success=False with the TD warning text.
+    # Single-OP styles plus multi-OP list styles. The list styles caught a
+    # render TOP regression in 2026-04 where camera/lights/geometry on a
+    # render TOP silently resolved to None when assigned a plain string path
+    # because their style is COMPS/OPS (list), not COMP/OP (single), so the
+    # original singleton-only set let the silent-null slip through.
     REFERENCE_PAR_STYLES = {
+        # Single-OP reference styles.
         'DAT', 'OP', 'CHOP', 'SOP', 'TOP', 'COMP', 'MAT', 'POP', 'POPX',
+        # Multi-OP list reference styles (TD uses the plural form for
+        # render TOP camera/lights/geometry, attribute COMP COMPs, etc.).
+        'DATS', 'OPS', 'CHOPS', 'SOPS', 'TOPS', 'COMPS', 'MATS', 'POPS', 'POPXS',
+        # OPLIST shows up in some TD builds for the same role.
+        'OPLIST',
     }
 
     def _is_silent_null(par, requested_value, resolved_value):

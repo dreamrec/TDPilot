@@ -36,7 +36,7 @@ from td_mcp.events.uri import (
 from td_mcp.jobs import JobManager
 from td_mcp.knowledge.freshness import Provenance
 from td_mcp.macros import MacroEngine
-from td_mcp.memory import PreferenceStore, SnapshotManager, TechniqueStore
+from td_mcp.memory import KnowledgeStore, PreferenceStore, SnapshotManager, TechniqueStore
 from td_mcp.memory.analyzer import analyze_network
 from td_mcp.models import (
     AdjustableParamInput,
@@ -309,6 +309,14 @@ async def server_lifespan(app: FastMCP):
         base_dir=memory_base or None,
         project_name=project_name or None,
     )
+    # Knowledge store lives at ~/.tdpilot/knowledge by default — separate
+    # subtree from technique_store's ~/.tdpilot/memory so users can wipe
+    # one without affecting the other. Same project-scope semantics.
+    knowledge_base = os.environ.get("TDPILOT_KNOWLEDGE_BASE", "").strip()
+    knowledge_store = KnowledgeStore(
+        base_dir=knowledge_base or None,
+        project_name=project_name or None,
+    )
     preference_store = PreferenceStore(
         base_dir=memory_base or None,
         project_name=project_name or None,
@@ -396,6 +404,7 @@ async def server_lifespan(app: FastMCP):
         snapshot_manager=snapshot_manager,
         job_manager=job_manager,
         technique_store=technique_store,
+        knowledge_store=knowledge_store,
         preference_store=preference_store,
         telemetry=telemetry,
         audit=audit,
@@ -417,6 +426,7 @@ async def server_lifespan(app: FastMCP):
             "snapshot_manager": snapshot_manager,
             "job_manager": job_manager,
             "technique_store": technique_store,
+            "knowledge_store": knowledge_store,
             "preference_store": preference_store,
             "telemetry": telemetry,
             "audit": audit,
@@ -482,6 +492,7 @@ def _get_services(ctx: Context) -> ServiceContainer:
         telemetry=state.get("telemetry"),
         audit=state.get("audit"),
         technique_store=state.get("technique_store"),
+        knowledge_store=state.get("knowledge_store"),
         preference_store=state.get("preference_store"),
         card_index=state.get("card_index"),
         td_build=str(state.get("td_build", "")),
@@ -613,6 +624,13 @@ def _get_technique_store(ctx: Context) -> TechniqueStore:
     if not isinstance(services.technique_store, TechniqueStore):
         raise RuntimeError("Technique store unavailable in lifespan state")
     return services.technique_store
+
+
+def _get_knowledge_store(ctx: Context) -> KnowledgeStore:
+    services = _get_services(ctx)
+    if not isinstance(services.knowledge_store, KnowledgeStore):
+        raise RuntimeError("Knowledge store unavailable in lifespan state")
+    return services.knowledge_store
 
 
 def _get_preference_store(ctx: Context) -> PreferenceStore:
@@ -1971,6 +1989,12 @@ from td_mcp.registry.tools_macros import (  # noqa: E402
     td_create_macro,
     td_get_macro_params,
     td_list_macros,
+)
+from td_mcp.registry.tools_knowledge_store import (  # noqa: E402
+    td_knowledge_get,
+    td_knowledge_list,
+    td_knowledge_recall,
+    td_knowledge_save,
 )
 from td_mcp.registry.tools_memory import (  # noqa: E402
     td_memory_export,

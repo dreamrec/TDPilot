@@ -124,11 +124,32 @@ async def td_get_node_detail(
         ResponseFormat,
         Field(default=ResponseFormat.JSON, description="Output format"),
     ] = ResponseFormat.JSON,
+    param_limit: Annotated[
+        int,
+        Field(
+            default=50,
+            ge=1,
+            le=200,
+            description=(
+                "Max parameters to serialize. Default 50; hard cap 200. "
+                "If the node has more, the response sets parameters_truncated=true "
+                "and parameters_total to the real count. Use td_get_params for the rest."
+            ),
+        ),
+    ] = 50,
 ) -> str:
-    """Get detailed info about a node (type, errors, warnings, parameters)."""
+    """Get detailed info about a node (type, errors, warnings, parameters).
+
+    The parameters dict is capped at param_limit entries (default 50, hard
+    ceiling 200) — full COMP serialization can blow past 80 KB. Use
+    td_get_params with name/page filters when you need the rest.
+    """
     finish = _tr._start_tool(ctx, "td_get_node_detail")
     try:
-        data = await _tr._get_client(ctx).request("node/detail", {"path": path})
+        data = await _tr._get_client(ctx).request(
+            "node/detail",
+            {"path": path, "param_limit": param_limit},
+        )
         if response_format == ResponseFormat.MARKDOWN:
             lines = [f"## {data.get('name', '?')} (`{data.get('path', '?')}`)"]
             lines.append(f"- Type: {data.get('type', '?')} ({data.get('family', '?')})")

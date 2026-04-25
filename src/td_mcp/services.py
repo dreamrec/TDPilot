@@ -14,7 +14,7 @@ try:
 except ImportError:
     DocsBrain = None  # type: ignore[assignment,misc]
 from td_mcp.macros import MacroEngine
-from td_mcp.memory import SnapshotManager, TechniqueStore
+from td_mcp.memory import KnowledgeStore, SnapshotManager, TechniqueStore
 from td_mcp.memory.preference_store import PreferenceStore
 from td_mcp.safety import SafetyManager
 from td_mcp.td_client import TDClient
@@ -36,6 +36,7 @@ class ServiceContainer:
     job_manager: JobManager | None = None
     task_adapter: TaskAdapter | None = None
     technique_store: TechniqueStore | None = None
+    knowledge_store: KnowledgeStore | None = None
     preference_store: PreferenceStore | None = None
     telemetry: TelemetryCollector | None = None
     audit: AuditLogger | None = None

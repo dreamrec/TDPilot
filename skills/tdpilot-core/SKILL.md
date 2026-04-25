@@ -285,7 +285,38 @@ When unsure about a technique, research before building. Always ask the user fir
 
 ---
 
-## 11. Communication Style
+## 11. Render Pipeline Pitfalls (TD 2025+)
+
+These are real traps from session debugging — assume them by default in any new geometry/render build.
+
+**`geometryCOMP` defaults to a POP-family `torus1` inside, not a SOP.** When you create a fresh `geometryCOMP` in TD 2025+, the auto-populated child is `torus1` of family `POP`, not the legacy SOP torus. This breaks SOP-based instancing patterns: setting `geo.par.instanceop` to a SOP outside the COMP and expecting the inside POP torus to be instanced **does not produce visible geometry**. Fix: delete the default POP torus and create a SOP shape inside the COMP (`sphereSOP`, `boxSOP`, low-poly), with `render=True` and `display=True` flags.
+
+**Reference-style params (`instanceop`, `material`, `camera`, `lights`, `geometry`) need real OP refs, not strings.** `td_set_params({'instanceop': '../noise'})` on a `geometryCOMP` returns `success=False` with "did not resolve" — the v1.5.2 silent-null guard now catches this for both single and list reference styles. Use `td_exec_python` with `op(target_path).par.instanceop = op(source_path)` for reliable assignment.
+
+**Always set `viewer = True` on test/debug COMPs.** Without the viewer flag, red-bordered TD errors aren't visible in the network editor and `td_get_errors == 0` becomes a false greenlight. Bake this into every new test build: `op(test_comp).viewer = True`.
+
+**`td_get_errors == 0` is NOT a render-success signal.** It only catches engine-level errors (broken refs, type mismatches). It does NOT catch: empty geometry inside a geo COMP, scale=0, camera frustum miss, unrendered SOPs, broken material assignment, instances at NaN positions. After EVERY render-chain build, `td_screenshot` the output and visually verify it isn't black/uniform before claiming the test works.
+
+**`feedbackTOP` canonical pattern (verified node-by-node against Derivative's reference demo):**
+```
+src ──┬──► fb (in 0)              [seed]
+      ├──► over (in 0 = BG)       [fresh frame, NOT feedback's output]
+      └──► dryWetMix (in 0 = dry) [optional dry-path crossfade]
+
+fb → level → over (in 1 = OVERLAY) → dryWetMix (in 1 = wet) → out
+
+fb.par.top      = over            ← mid-chain compositor, NOT final out
+level.opacity   = 0.9 (Post page) ← THIS is the trail decay, NOT brightness1
+level.brightness1 = 1.0
+over.size       = "input1"        ← sizes output from the overlay (level) input
+```
+Critical details: `src` is a **trifurcation** (feedback seed + over BG + dry path). `over1` takes `src` on input 0 (background) and `level` on input 1 (overlay) — NOT reversed. Trail decay happens via `level.opacity` on the Post page, not brightness. `fb.par.top` points at the compositor (`over`), not the final out.
+
+**`feedbackTOP` "Not enough sources specified" error — read carefully.** This is a TD *static-analysis* warning about an unresolved cyclic dependency. It is NOT necessarily a runtime "this won't render" error — TD's runtime cycle resolver often handles the chain fine. **Screenshot the output before assuming the error means the render is broken.** A 1280×720 chain that "errors" but produces a 25+ KB JPEG with real variation is rendering correctly. The error attribution is also non-deterministic (the same cycle may flag `feedback` one wiring and `null` another) — that's a static-analyzer placement artifact, not a real difference.
+
+---
+
+## 12. Communication Style
 
 Be direct. Say what you did, what you found, what you changed. If something broke, say it and explain how you're fixing it. Include node paths and actual error messages.
 
