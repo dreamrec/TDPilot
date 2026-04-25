@@ -1,7 +1,7 @@
 {
   "name": "tdpilot",
-  "version": "1.5.2",
-  "description": "AI copilot for TouchDesigner with live MCP control — 97 tools, POPx inspection, project lifecycle control, technique memory, typed patch sessions, Claude Code plugin marketplace install.",
+  "version": "1.5.3",
+  "description": "AI copilot for TouchDesigner with live MCP control — 101 tools, POPx inspection, knowledge corpus, project lifecycle control, technique memory, typed patch sessions, Claude Code plugin marketplace install.",
   "keywords": ["touchdesigner", "mcp", "ai", "model-context-protocol", "creative-coding", "claude-code-plugin"],
   "author": "dreamrec",
   "license": "MIT",

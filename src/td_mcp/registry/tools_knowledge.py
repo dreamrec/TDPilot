@@ -274,9 +274,9 @@ async def td_search_popx_docs(
     if brain is None:
         return {
             "error": "POPx brain not installed. Run `npx tdpilot brains add popx` (terminal) "
-                "to enable, then restart the MCP client. Alternatively use the "
-                "local docs at <repo>/skills/popx-touchdesigner/references/ which "
-                "ship with the plugin and don't depend on the brain.",
+            "to enable, then restart the MCP client. Alternatively use the "
+            "local docs at <repo>/skills/popx-touchdesigner/references/ which "
+            "ship with the plugin and don't depend on the brain.",
             "results": [],
             "count": 0,
         }
@@ -294,10 +294,12 @@ async def td_get_popx_operator(
     """Get full documentation for a POPx operator (e.g. 'Particle SIM', 'Shape Falloff')."""
     brain = _get_popx_brain(ctx)
     if brain is None:
-        return {"error": "POPx brain not installed. Run `npx tdpilot brains add popx` (terminal) "
-                "to enable, then restart the MCP client. Alternatively use the "
-                "local docs at <repo>/skills/popx-touchdesigner/references/ which "
-                "ship with the plugin and don't depend on the brain."}
+        return {
+            "error": "POPx brain not installed. Run `npx tdpilot brains add popx` (terminal) "
+            "to enable, then restart the MCP client. Alternatively use the "
+            "local docs at <repo>/skills/popx-touchdesigner/references/ which "
+            "ship with the plugin and don't depend on the brain."
+        }
     results = brain.search(operator_name, limit=5)
     op_results = [r for r in results if r.get("operator_name", "").lower() == operator_name.lower()]
     if not op_results:

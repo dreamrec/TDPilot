@@ -1,5 +1,142 @@
 # Changelog
 
+## 1.5.3 - 2026-04-25
+
+Knowledge corpus + MCP source-fix release. v1.5.3 adds a free-form
+markdown knowledge store as a parallel surface to technique memory
+(prose-with-math reference essays vs. replayable network recipes), 4
+new MCP tools to query/persist knowledge entries, and 3 source-side
+bug fixes that surfaced during real-world TD verification on TD
+2025.32460.
+
+The original v1.5.3 plan (auth-bootstrap regression test,
+`td_preflight_patch` delegation, auto-snapshot on `apply_plan`,
+`_record_outcome` for macro, additional variant strategy) was scoped
+against an earlier dev cycle; that work is deferred to v1.5.4.
+Substantively, this release ships the WIP knowledge-store branch
+verified against TD 2025+ across three live tests: deep feedback patch
+(3D render → feedbackEdge chain → bloom), GLSL raymarched composition
+with chromatic aberration + bloom, and a beat-reactive video sequencer
+with 5-way switching driven by bass-band audio analysis.
+
+Tool count: 97 → 101. `API_VERSION` bumps 1.5.2 → 1.5.3 to reflect the
+response-shape changes from the silent-null guard expansion and the
+new `node_detail` truncation metadata fields; `.tox` rebuild
+auto-detected on next TD launch via
+`tdpilot_startup.py:_is_tox_stale`.
+
+Highlights:
+- 4 new `td_knowledge_*` MCP tools (`save`/`recall`/`get`/`list`) with
+  markdown body storage at `~/.tdpilot/knowledge/{global,projects/<name>}/`.
+  Project-scope auto-derives from `TDPILOT_PROJECT_NAME`. Body cap
+  200 KB per entry, stored as plain `.md` files for direct user
+  editing — separate corpus from technique memory.
+- Silent-null guard expanded to plural OP-reference styles
+  (`OPS/COMPS/TOPS/CHOPS/SOPS/DATS/MATS/POPS/POPXS/OPLIST`).
+  `renderTOP` `cameras`/`lights`/`geometry`, attribute-COMP `COMPs`,
+  and similar list-style references no longer silently null on string
+  assignment — they surface a structured silent-null error like the
+  singular reference styles already did.
+- `td_get_node_detail` now caps parameters at `param_limit` (default
+  50, hard ceiling 200) with `parameters_truncated` /
+  `parameters_total` / `parameters_returned` / `parameters_hint`
+  metadata fields. Heavy COMPs that previously returned 80 KB+ JSON
+  payloads now stay under reasonable response sizes; callers use
+  `td_get_params` with `names`/`page` filters for the rest.
+- Better `td_search_popx_docs` not-installed message — actionable
+  install command (`npx tdpilot brains add popx`) plus local-docs
+  fallback path (`skills/popx-touchdesigner/references/`) instead of
+  the previous bare error.
+- New `tdpilot-core` SKILL §11 "Render Pipeline Pitfalls" documenting
+  the `geometryCOMP`-defaults-to-POP-`torus1` trap, OP-ref-not-string
+  requirement for reference params, `viewer=True` discipline for
+  test/debug COMPs, and `feedbackTOP` canonical wiring (verified
+  node-by-node against the Derivative palette demo).
+
+### Added
+- **Knowledge store** (`src/td_mcp/memory/knowledge_store.py`,
+  `src/td_mcp/registry/tools_knowledge_store.py`): free-form markdown
+  reference essays as a parallel surface to technique memory. CRUD
+  via `td_knowledge_save` / `td_knowledge_recall` / `td_knowledge_get`
+  / `td_knowledge_list`. Storage at `~/.tdpilot/knowledge/` with
+  project + global scopes (mirrors `TechniqueStore`). 12-test pytest
+  suite covers add/get/search/update/delete/promote/favorite/rating/
+  size-cap/persistence/list-filters. Real-data smoke verified against
+  the migrated `feedbackTOP-canonical-patterns` and
+  `Belousov-Zhabotinsky-in-pure-TOPs` essays.
+
+### Fixed
+- **Silent-null on plural OP-reference styles**: `REFERENCE_PAR_STYLES`
+  in `td_component/mcp_webserver_callbacks.py` was singular-only
+  (`OP/COMP/CHOP/SOP/TOP/DAT/MAT/POP/POPX`). List-style references on
+  `renderTOP` (`cameras`/`lights`/`geometry`) silently resolved to
+  None when assigned a string and the caller got `success=True` on a
+  parameter that didn't actually take. Set now includes
+  `OPS/COMPS/TOPS/CHOPS/SOPS/DATS/MATS/POPS/POPXS/OPLIST`. Verified
+  live: `renderTOP.par.{geometry,cameras,lights}` now resolve to OP
+  paths (single OR list) with `style="Object"`, no nulls.
+- **`td_get_node_detail` returning 80 KB+ for heavy COMPs**: the
+  `parameters` dict was unconditionally serialized with no cap. A
+  `geometryCOMP` could yield 79+ params totaling 80+ KB. Now defaults
+  to `param_limit=50` (hard ceiling 200) with structured truncation
+  metadata. Use `td_get_params` with `names=[...]` or `page="..."`
+  filter for the rest.
+- **POPx-not-installed message ambiguity**: `td_search_popx_docs`
+  used to fail with a bare error when the `popx_brain` service was
+  None. Now returns an actionable hint (`npx tdpilot brains add popx`)
+  plus the local-docs fallback path
+  (`skills/popx-touchdesigner/references/` — build locally per
+  `BUILD.md`).
+
+### Changed
+- **`tdpilot-core` SKILL §11 "Render Pipeline Pitfalls"**: new section
+  documenting four real traps from session debugging on TD 2025.32460:
+  (1) `geometryCOMP` defaults to a POP `torus1`, not SOP — breaks
+  SOP-based instancing; (2) reference params need real OP refs, not
+  strings; (3) `viewer=True` must be set on test/debug COMPs for
+  error visibility; (4) `td_get_errors == 0` is NOT a render-success
+  signal — always `td_screenshot` the output. Plus the
+  verified-against-Derivative `feedbackTOP` canonical wiring with the
+  "Not enough sources" static-analysis warning explained.
+- **`README.md` v1.5.1 → v1.5.3**: title was stale since v1.5.2;
+  fixed in this release.
+- **`TODO(v1.5.2)` retagged to `TODO(v1.5.4)`** in
+  `src/td_mcp/registry/tools_planning.py:194` — `td_preflight_patch`
+  → `patch.preview_plan` delegation deferred to next cycle.
+
+### Still deferred (carried into v1.5.4 work)
+The original v1.5.3 plan items 1-5 did not ship in this release; they
+remain on the v1.5.4 backlog:
+- Auth-bootstrap regression test (catches if `bootstrap_auth()` is
+  moved back inside `main()` — would silently regress the v1.5.2 fix).
+- `td_preflight_patch` → `patch.preview_plan` delegation (needs
+  dict↔PatchPlan adapter + parity tests; signature mismatch is the
+  real blocker).
+- Auto-snapshot before `apply_plan` (opt-out safety net for multi-op
+  patches).
+- `_record_outcome` for `kind=macro` (surface paths created by macro
+  expansion, not just the macro op metadata).
+- Additional variant strategy beyond `param_jitter` (e.g.
+  `seed_perturb` for cheap visual variations).
+
+Plus older deferrals from v1.5.0/v1.5.1/v1.5.2:
+- Destructive op kinds (`delete`, `disconnect`, `reset_params`) —
+  needs safety/confirmation design pass first.
+- Exec-policy duplication refactor (Python AST + TD-side runtime
+  checks parallel each other; long-term: shared generated policy).
+- `ui.undo` from webserver context (TD threading constraint research
+  needed).
+
+### Operational notes
+- `API_VERSION` bumps 1.5.2 → 1.5.3. `.tox` rebuild required;
+  auto-detected on next TD launch via
+  `tdpilot_startup.py:_is_tox_stale`.
+- `td_knowledge_*` storage lives at `~/.tdpilot/knowledge/` — fully
+  local, never pushed to remote. Project entries scoped by
+  `TDPILOT_PROJECT_NAME`.
+- `EXPECTED_MIN_TOOL_COUNT` bumped to 101 in
+  `src/td_mcp/release_gates.py`. Tool schema snapshot regenerated.
+
 ## 1.5.2 - 2026-04-25
 
 Deferral cleanup + real auth bug + npm publishing pipeline. The

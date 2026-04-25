@@ -51,9 +51,7 @@ async def td_knowledge_save(
         list[str] | None,
         Field(
             default=None,
-            description=(
-                "Lowercase tags for filtering, e.g. ['feedback', 'reaction-diffusion']."
-            ),
+            description=("Lowercase tags for filtering, e.g. ['feedback', 'reaction-diffusion']."),
         ),
     ] = None,
     source: Annotated[

@@ -72,7 +72,7 @@ def test_update_metadata_and_body(store: KnowledgeStore) -> None:
     assert store.update_body(eid, "v2 markdown")
     after2 = store.get(eid)
     assert after2 is not None and after2["body"] == "v2 markdown"
-    assert after2["body_bytes"] == len("v2 markdown".encode("utf-8"))
+    assert after2["body_bytes"] == len(b"v2 markdown")
 
 
 def test_delete_removes_body_file(store: KnowledgeStore) -> None:

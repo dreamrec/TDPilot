@@ -1985,16 +1985,16 @@ from td_mcp.registry.tools_knowledge import (  # noqa: E402
     td_search_paketa12,
     td_search_popx_docs,
 )
-from td_mcp.registry.tools_macros import (  # noqa: E402
-    td_create_macro,
-    td_get_macro_params,
-    td_list_macros,
-)
 from td_mcp.registry.tools_knowledge_store import (  # noqa: E402
     td_knowledge_get,
     td_knowledge_list,
     td_knowledge_recall,
     td_knowledge_save,
+)
+from td_mcp.registry.tools_macros import (  # noqa: E402
+    td_create_macro,
+    td_get_macro_params,
+    td_list_macros,
 )
 from td_mcp.registry.tools_memory import (  # noqa: E402
     td_memory_export,

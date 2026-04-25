@@ -1,7 +1,7 @@
 ---
 name: tdpilot-core
 description: >
-  Core patching discipline for TDPilot v1.5.2 — the AI assistant inside TouchDesigner.
+  Core patching discipline for TDPilot v1.5.3 — the AI assistant inside TouchDesigner.
   Use this skill whenever working with TouchDesigner through the td_ MCP tools.
   It governs how you build, debug, modify, and maintain TD projects: clean node
   layouts with color coding, error checking after every operation, visual
@@ -12,15 +12,15 @@ description: >
   project lifecycle, technique memory, everything.
 ---
 
-# TDPilot Core v1.5.2 — Patching Discipline (97 tools)
+# TDPilot Core v1.5.3 — Patching Discipline (101 tools)
 
-You are an AI assistant working live inside a TouchDesigner project. You have full control through 97 MCP tools — but control without discipline creates mess. This skill defines how you work.
+You are an AI assistant working live inside a TouchDesigner project. You have full control through 101 MCP tools — but control without discipline creates mess. This skill defines how you work.
 
 The goal: every action you take should leave the project cleaner, more readable, and more stable than you found it. You're not generating throwaway demos — you're working inside someone's real project.
 
 ---
 
-## Complete Tool Surface — v1.5.2 (97 tools, 6 resource templates + 1 static resource)
+## Complete Tool Surface — v1.5.3 (101 tools, 6 resource templates + 1 static resource)
 
 ### Scene & Info (2)
 - `td_get_info` — project name, TD version, OS, FPS, timeline state
@@ -291,7 +291,7 @@ These are real traps from session debugging — assume them by default in any ne
 
 **`geometryCOMP` defaults to a POP-family `torus1` inside, not a SOP.** When you create a fresh `geometryCOMP` in TD 2025+, the auto-populated child is `torus1` of family `POP`, not the legacy SOP torus. This breaks SOP-based instancing patterns: setting `geo.par.instanceop` to a SOP outside the COMP and expecting the inside POP torus to be instanced **does not produce visible geometry**. Fix: delete the default POP torus and create a SOP shape inside the COMP (`sphereSOP`, `boxSOP`, low-poly), with `render=True` and `display=True` flags.
 
-**Reference-style params (`instanceop`, `material`, `camera`, `lights`, `geometry`) need real OP refs, not strings.** `td_set_params({'instanceop': '../noise'})` on a `geometryCOMP` returns `success=False` with "did not resolve" — the v1.5.2 silent-null guard now catches this for both single and list reference styles. Use `td_exec_python` with `op(target_path).par.instanceop = op(source_path)` for reliable assignment.
+**Reference-style params (`instanceop`, `material`, `camera`, `lights`, `geometry`) need real OP refs, not strings.** `td_set_params({'instanceop': '../noise'})` on a `geometryCOMP` returns `success=False` with "did not resolve" — the silent-null guard (introduced v1.5.2, expanded v1.5.3 to plural list styles like `OPS`/`COMPS`/`OPLIST` for `renderTOP.cameras/lights/geometry`) catches this for both single and list reference styles. Use `td_exec_python` with `op(target_path).par.instanceop = op(source_path)` for reliable assignment.
 
 **Always set `viewer = True` on test/debug COMPs.** Without the viewer flag, red-bordered TD errors aren't visible in the network editor and `td_get_errors == 0` becomes a false greenlight. Bake this into every new test build: `op(test_comp).viewer = True`.
 

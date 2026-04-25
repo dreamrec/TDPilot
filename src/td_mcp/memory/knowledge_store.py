@@ -98,9 +98,7 @@ class KnowledgeStore:
         if not isinstance(body, str):
             raise TypeError("body must be a string")
         if len(body.encode("utf-8")) > MAX_BODY_BYTES:
-            raise ValueError(
-                f"body exceeds MAX_BODY_BYTES ({MAX_BODY_BYTES}); split into multiple entries"
-            )
+            raise ValueError(f"body exceeds MAX_BODY_BYTES ({MAX_BODY_BYTES}); split into multiple entries")
 
         entry_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc).isoformat()
@@ -243,9 +241,7 @@ class KnowledgeStore:
         if not isinstance(body, str):
             return False
         if len(body.encode("utf-8")) > MAX_BODY_BYTES:
-            raise ValueError(
-                f"body exceeds MAX_BODY_BYTES ({MAX_BODY_BYTES}); split into multiple entries"
-            )
+            raise ValueError(f"body exceeds MAX_BODY_BYTES ({MAX_BODY_BYTES}); split into multiple entries")
         store = self._store_for(scope)
         record = store.get(entry_id)
         if not record:
