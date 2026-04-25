@@ -1,5 +1,65 @@
 # Changelog
 
+## Unreleased
+
+Post-1.5.1 deep-debug pass. The audit-1.5.1 commit explicitly deferred a
+small set of issues to v1.5.2; an independent ultradebug pass picked
+those up plus a few siblings the audit didn't reach. None alter
+behavior of the 666 passing tests; none touch the wire format. All
+tracked deferrals from `release(v1.5.1)` and `fix(audit-1.5.1)` that
+do not need TD-only rework are now resolved on `main` and will roll
+into the v1.5.2 tag at next release.
+
+### Fixed
+- **Install scripts didn't pin to release tags** — `npm/run.js`,
+  `install.sh`, and `install.ps1` all did `git clone <repo>` on the
+  default branch with no checkout step, so `npx tdpilot@1.5.1` (and
+  the macOS / Windows installers) ran whatever HEAD of `main` happened
+  to be at fetch time. The `version` field in `npm/package.json` was
+  decorative. All three install paths now run `git describe --tags
+  --abbrev=0` after clone and check out that tag, falling back to
+  main with a warning if no tag exists (offline / pre-release / private
+  fork). The fix auto-advances when v1.5.2 ships — no per-release
+  install-script bumps needed. (Audit deferred this to v1.5.2; the
+  audit only mentioned npm but the same bug existed in install.sh and
+  install.ps1.)
+### Changed
+- **`td_preflight_patch` TODO retagged** — the comment
+  `# TODO(v1.5.1): delegate to patch.preview_plan` in
+  `src/td_mcp/registry/tools_planning.py:194` referred to the current
+  shipped version. Retagged to `TODO(v1.5.2)` with a one-line note
+  explaining why delegation is non-trivial (signatures differ — the
+  MCP tool takes a dict, the helper takes a typed `PatchPlan`, so a
+  deserializer + parity tests are needed before delegating).
+
+### Still deferred (carried into v1.5.2 work)
+- `tdpilot_startup.py:159` startup banner hardcoded `v1.3`. The robust
+  fix (read `API_VERSION` dynamically from
+  `mcp_webserver_callbacks.py`) is staged but not committed: it
+  requires a `.tox` rebuild that can only happen inside TouchDesigner
+  with `TD_MCP_EXEC_MODE=full` (the default `restricted` mode blocks
+  the build script's stdlib imports through the MCP `/api/exec`
+  gate). Will land alongside the next functional td_component change
+  to amortize the rebuild cycle, matching the audit's original call.
+- `td_preflight_patch` → `patch.preview_plan` delegation (signature
+  reconciliation needed; see retag in `tools_planning.py:194`).
+- Exec-policy duplication between Python AST checks and TD-side
+  runtime checks. Long-term: shared generated policy.
+- v1.5.0 deferrals still pending: destructive op kinds, additional
+  variant strategies, auto-snapshot on apply, `_record_outcome` for
+  `kind=macro` to surface multiple paths, `ui.undo` from webserver
+  context.
+
+### Diagnostics surfaced (not bugs, useful to record)
+- `td_get_capabilities` now reports `version.mismatch=true` whenever
+  the running Python MCP server (`server_version`) and the loaded TD
+  component (`component_version`) disagree. During the ultradebug pass
+  this caught a deployment-state issue: the marketplace-installed
+  plugin path was running v1.4.7 server code against a v1.5.1 .tox.
+  Root cause: the npm version-pinning bug above (already fixed).
+  Worth keeping the diagnostic prominent — it's how operational drift
+  becomes visible.
+
 ## 1.5.1 - 2026-04-25
 
 Wire-format alignment + audit-fix release. v1.5.0 shipped with

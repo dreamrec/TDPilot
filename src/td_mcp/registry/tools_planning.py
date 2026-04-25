@@ -191,7 +191,10 @@ async def td_preflight_patch(
     and that there are no name conflicts with existing nodes. Returns a validation
     report with any warnings or errors found.
     """
-    # TODO(v1.5.1): delegate to patch.preview_plan
+    # TODO(v1.5.2): delegate to patch.preview_plan once the dict↔PatchPlan
+    # adapter lands. Signatures differ (this tool takes the MCP-friendly
+    # dict shape; patch.preview_plan takes a typed PatchPlan), so the
+    # delegation needs a deserializer + parity tests against this body.
     finish = _tr._start_tool(ctx, "td_preflight_patch")
     try:
         client = _tr._get_client(ctx)

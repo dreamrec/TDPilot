@@ -77,6 +77,27 @@ if (Test-Path $PyprojectHere) {
             $gitCmd = Get-Command git -ErrorAction SilentlyContinue
             if ($gitCmd) {
                 & git clone $RepoUrl $InstallDir 2>&1 | Out-Null
+                # Auto-pin to the latest reachable tag rather than HEAD of
+                # main so the install matches the most recent published
+                # release. Without this, fresh clones run bleeding-edge
+                # main even mid-development. Falls back to main with a
+                # warning if no tags exist (offline / private fork).
+                Push-Location $InstallDir
+                try {
+                    $LatestTag = (& git describe --tags --abbrev=0 2>$null).Trim()
+                    if ($LatestTag) {
+                        & git checkout $LatestTag 2>&1 | Out-Null
+                        if ($LASTEXITCODE -eq 0) {
+                            Write-Host "  Pinned to $LatestTag" -ForegroundColor Green
+                        } else {
+                            Write-Host "  WARN: Could not check out $LatestTag; staying on main" -ForegroundColor Yellow
+                        }
+                    } else {
+                        Write-Host "  WARN: No release tag found upstream; staying on main" -ForegroundColor Yellow
+                    }
+                } finally {
+                    Pop-Location
+                }
             } else {
                 Write-Host "  git not found — downloading ZIP instead..." -ForegroundColor Yellow
                 $ZipUrl = "https://github.com/dreamrec/TDPilot/archive/refs/heads/main.zip"

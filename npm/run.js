@@ -23,6 +23,26 @@ function run(cmd, opts = {}) {
   return execSync(cmd, { encoding: "utf-8", stdio: "pipe", ...opts }).trim();
 }
 
+function pinToLatestTag(dir) {
+  // Auto-pin clones to the most recent reachable git tag rather than HEAD
+  // of main. Without this, `npx tdpilot@1.5.1` would happily run whatever
+  // bleeding-edge code is on main at fetch time — package.json's `version`
+  // field would be decorative. With this, users get the latest published
+  // release. Falls back silently if no tags exist (offline / private fork
+  // / pre-release) since stay-on-main is a reasonable degraded mode.
+  try {
+    const latestTag = run("git describe --tags --abbrev=0", { cwd: dir });
+    if (latestTag) {
+      run(`git checkout ${latestTag}`, { cwd: dir });
+      console.log(`[TDPilot] Pinned to ${latestTag}`);
+      return latestTag;
+    }
+  } catch {
+    console.warn("[TDPilot] No release tag found upstream; staying on main.");
+  }
+  return null;
+}
+
 function hasCommand(cmd) {
   try {
     run(os.platform() === "win32" ? `where ${cmd}` : `which ${cmd}`);
@@ -62,7 +82,12 @@ function ensureRepo() {
     // for an explicit refresh.
     if (process.env.TDPILOT_AUTO_UPDATE === "1") {
       try {
+        // Fetch tags too, then re-pin to the latest tag so users move
+        // forward across releases (not just to HEAD of main).
+        run("git fetch --tags origin main", { cwd: INSTALL_DIR });
+        run("git checkout main", { cwd: INSTALL_DIR });
         run("git pull", { cwd: INSTALL_DIR });
+        pinToLatestTag(INSTALL_DIR);
         console.log("[TDPilot] Updated to latest version (TDPILOT_AUTO_UPDATE=1).");
       } catch {
         // Offline or no git — fine, use what we have
@@ -74,6 +99,7 @@ function ensureRepo() {
   console.log(`[TDPilot] Downloading to ${INSTALL_DIR}...`);
   if (hasCommand("git")) {
     execSync(`git clone ${REPO} "${INSTALL_DIR}"`, { stdio: "inherit" });
+    pinToLatestTag(INSTALL_DIR);
   } else {
     // Fallback: download zip
     const zipUrl =

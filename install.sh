@@ -71,6 +71,21 @@ else
         echo "  Cloning to: $INSTALL_DIR"
         if command -v git &>/dev/null; then
             git clone "$REPO_URL" "$INSTALL_DIR" 2>&1
+            # Auto-pin to the latest reachable tag rather than HEAD of main
+            # so the install matches the most recent published release.
+            # Without this, fresh clones run whatever bleeding-edge code is
+            # on main mid-development. Falls back to main with a notice if
+            # no tags exist (offline / private fork / pre-release).
+            LATEST_TAG="$( cd "$INSTALL_DIR" && git describe --tags --abbrev=0 2>/dev/null || true )"
+            if [ -n "$LATEST_TAG" ]; then
+                if ( cd "$INSTALL_DIR" && git checkout "$LATEST_TAG" >/dev/null 2>&1 ); then
+                    echo "  Pinned to $LATEST_TAG"
+                else
+                    echo "  WARN: Could not check out $LATEST_TAG; staying on main"
+                fi
+            else
+                echo "  WARN: No release tag found upstream; staying on main"
+            fi
         else
             echo "  git not found — downloading ZIP..."
             ZIP_URL="https://github.com/dreamrec/TDPilot/archive/refs/heads/main.zip"
