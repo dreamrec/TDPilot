@@ -15,7 +15,7 @@
 7. [Python Execution](#7-python-execution)
 8. [Timeline & Pulse](#8-timeline--pulse)
 9. [Events & Monitoring](#9-events--monitoring)
-10. [Technique Memory](#10-technique-memory)
+10. [Technique Memory & User Knowledge Store](#10-technique-memory--user-knowledge-store)
 11. [Safety & Recovery (Snapshots, Param Bounds, Instability)](#11-safety--recovery-snapshots-param-bounds-instability)
 12. [Macros & Planning](#12-macros--planning)
 13. [Vision & Streaming](#13-vision--streaming)
@@ -129,7 +129,11 @@
 
 ---
 
-## 10. Technique Memory
+## 10. Technique Memory & User Knowledge Store
+
+Two parallel persistence surfaces — **technique memory** for replayable network recipes, **user knowledge store** *(new in v1.5.3)* for free-form markdown reference essays (prose + math).
+
+### 10a. Technique memory (replayable network recipes)
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
@@ -141,6 +145,17 @@
 | `td_memory_promote` | Copy a project technique to the global library. | `technique_id` (str, **required**): Project technique ID. | JSON with `global_technique_id`. |
 | `td_memory_preferences` | Get, set, list, or delete user preferences (color palettes, default resolutions, naming conventions, etc.). | `action` (str, **required**): `get`, `set`, `list`, or `delete`. `key` (str, opt): Preference key (required for get/set/delete). `value` (any, opt): Value (required for `set`). `scope` (str, opt, default `"project"`). | JSON with preference data. |
 | `td_memory_list` | List saved techniques with optional filtering. | `scope` (str, opt, default `"all"`): `project`, `global`, or `all`. `tags` (list[str], opt). `favorites_only` (bool, opt, default `false`). `limit` (int, opt, default `50`, 1-200). | JSON with `techniques` array and `count`. |
+
+### 10b. User knowledge store (markdown reference essays) — new in v1.5.3
+
+For prose-with-math reference content (BZ reaction equations, feedback recipes, "why this approach works" essays). Storage at `~/.tdpilot/knowledge/{global,projects/<safe_name>}/entries/<uuid>.md` with metadata in adjacent `index.json`. Body capped at 200 KB per entry — split larger writeups into linked entries.
+
+| Tool | Description | Parameters | Returns |
+|------|-------------|------------|---------|
+| `td_knowledge_save` | Persist a free-form markdown knowledge entry. Body stored at `entries/<id>.md`, metadata in `index.json`. Local-only, never pushed. | `body` (str, **required**, min 1 char, max 200 KB UTF-8): Markdown body. `name` (str, opt): Short title. `description` (str, opt): One-line summary used in search results. `tags` (list[str], opt): Lowercase, e.g. `['feedback', 'reaction-diffusion']`. `source` (str, opt): Attribution (e.g. "paketa12 MBGA tutorial"). `notes` (str, opt). `scope` (str, opt, default `"project"`): `project` or `global`. Project requires `TDPILOT_PROJECT_NAME`. | JSON with `success`, `id`, `scope`, `stats`. |
+| `td_knowledge_recall` | Search knowledge entries by query and/or tags. Returns summaries (no bodies — use `td_knowledge_get` to fetch a body). | `query` (str, opt): Free-text across name/description/tags/source/notes. `tags` (list[str], opt): At-least-one-match. `scope` (str, opt, default `"all"`): `project`, `global`, or `all`. `limit` (int, opt, default `20`, 1-100). `full_text` (bool, opt, default `false`): If true, also reads each body file (slower but more thorough). | JSON with `success`, `count`, `results` array of summaries. |
+| `td_knowledge_get` | Fetch the full markdown body + metadata for one entry. | `entry_id` (str, **required**, min 1 char): Entry id from `td_knowledge_recall`. `scope` (str, opt, default `"project"`): `project` or `global`. | JSON with `success`, `entry` (full record + `body` field). Returns `success=False` with error if not found. |
+| `td_knowledge_list` | List entry summaries newest-first with optional filtering. | `scope` (str, opt, default `"all"`): `project`, `global`, or `all`. `tags` (list[str], opt): At-least-one-match filter. `favorites_only` (bool, opt, default `false`). `limit` (int, opt, default `50`, 1-200). | JSON with `success`, `count`, `results` array, `stats` dict. |
 
 ---
 

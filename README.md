@@ -89,6 +89,24 @@ You don't need all 101 tools. Start with these and expand as needed:
 
 Everything else (vision, streaming, optimization, planning, TD2025 inspection) builds on top of this core.
 
+## What's New In 1.5.3
+
+Knowledge corpus + MCP source-fix release. Adds a parallel surface to technique memory for **prose-with-math reference essays** (vs. replayable network recipes), plus 3 source-side bug fixes surfaced during real-world TD verification on TD 2025.32460.
+
+- **Knowledge store** — 4 new tools (`td_knowledge_save` / `recall` / `get` / `list`) backed by a `KnowledgeStore` class that persists free-form markdown reference essays at `~/.tdpilot/knowledge/{global,projects/<name>}/`. Body cap 200 KB per entry, stored as plain `.md` files for direct user editing. Project-scope auto-derives from `TDPILOT_PROJECT_NAME`.
+- **Silent-null guard expanded to plural OP-reference styles** (`OPS/COMPS/TOPS/CHOPS/SOPS/DATS/MATS/POPS/POPXS/OPLIST`). `renderTOP.cameras/lights/geometry`, attribute-COMP `COMPs`, and similar list-style references no longer silently null on string assignment.
+- **`td_get_node_detail` parameter truncation** — caps at `param_limit` (default 50, ceiling 200) with `parameters_truncated` / `parameters_total` / `parameters_returned` / `parameters_hint` metadata. Heavy COMPs no longer return 80 KB+ JSON.
+- **Better POPx-not-installed message** — `td_search_popx_docs` now returns an actionable `npx tdpilot brains add popx` install command plus the local-docs fallback path.
+- **`tdpilot-core` SKILL §11 "Render Pipeline Pitfalls"** — new section documenting the `geometryCOMP`-defaults-to-POP-`torus1` trap, OP-ref-not-string requirement for reference params, `viewer=True` discipline for test/debug COMPs, and the verified-against-Derivative `feedbackTOP` canonical wiring.
+- Tool count: 97 → 101. `API_VERSION` 1.5.2 → 1.5.3 (`.tox` rebuild auto-detected on next TD launch).
+
+## What's New In 1.5.0 – 1.5.2
+
+See [CHANGELOG.md](CHANGELOG.md) for full details. Highlights:
+- **v1.5.2** — auth-bootstrap ordering bug fixed (the silent 401 on marketplace installs); install scripts now auto-pin to release tags; npm tag-push auto-publish workflow.
+- **v1.5.1** — wire-format alignment for all 6 patch op kinds (`set_params`, `connect`, `layout`, `annotate`, `macro`, `create_node`); plugin-ZIP runtime missing fix; 13-scenario live-TD smoke at `scripts/patch_session_smoke.py`.
+- **v1.5.0** — typed patch-session API (`td_plan_patch`, `td_preflight_patch`, `td_patch_apply`, `td_patch_validate`, `td_patch_variations`); module split into `registry/tools_*.py` themed submodules.
+
 ## What's New In 1.4.2
 
 Follow-up bugfix release from the v1.4.1 ultra-debug sweep (N1–N7):
@@ -202,8 +220,10 @@ Use for guardrails, emergency control, and rollback confidence.
 - `td_snapshot_scene`, `td_list_snapshots`, `td_diff_snapshots`, `td_restore_snapshot`
 - `td_get_state_vector`, `td_get_timescale_state`
 
-### 8) Technique Memory
-Use for learning, saving, and replaying reusable network patterns.
+### 8) Technique Memory & User Knowledge Store
+Two parallel persistence surfaces — **technique memory** for replayable network recipes, **knowledge store** (new in v1.5.3) for free-form markdown reference essays (prose + math).
+
+**Technique memory** — learning, saving, and replaying reusable network patterns:
 
 - `td_memory_learn` — Analyze a live network subtree and extract a portable recipe. Auto-detects complexity: small/medium networks get full recipes with all params and expressions; large networks get structure summaries + key params.
 - `td_memory_save` — Persist a technique to the project or global library.
@@ -216,16 +236,30 @@ Use for learning, saving, and replaying reusable network patterns.
 - `td_memory_import` — Import techniques from an exported library (from `td_memory_export`).
 - `td_memory_preferences` — Get/set user preferences (color palettes, default resolutions, naming conventions, etc.)
 
-Memory storage lives at `~/.tdpilot/memory/` with per-project and global scopes:
+**User knowledge store** *(new in v1.5.3)* — free-form markdown reference essays for prose-with-math reference content (BZ reaction equations, feedback recipes, "why this approach works" essays):
+
+- `td_knowledge_save` — Persist a markdown body with name/description/tags/source/notes. Project- or global-scoped. Body capped at 200 KB; split larger writeups into linked entries.
+- `td_knowledge_recall` — Search by free-text query and/or tags across name/description/tags/source/notes. Optional `full_text=true` also reads bodies (slower but more thorough).
+- `td_knowledge_get` — Fetch full markdown body + metadata for one entry by id.
+- `td_knowledge_list` — List entry summaries newest-first with optional filtering.
+
+Storage lives at `~/.tdpilot/{memory,knowledge}/` with per-project and global scopes:
 ```
-~/.tdpilot/memory/
-  global/
-    techniques.json
-    preferences.json
-  projects/
-    {project_name}/
+~/.tdpilot/
+  memory/
+    global/
       techniques.json
       preferences.json
+    projects/{project_name}/
+      techniques.json
+      preferences.json
+  knowledge/
+    global/
+      index.json
+      entries/<uuid>.md
+    projects/{project_name}/
+      index.json
+      entries/<uuid>.md
 ```
 
 ### 9. Macros & Planning (7)
