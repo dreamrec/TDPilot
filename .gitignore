@@ -65,6 +65,15 @@ tdpilot.mcpb
 # Secret env file written by installer (contains TD_MCP_SHARED_SECRET)
 .tdpilot.env
 
+# User data — written by the running TDPilot server into the install dir
+# when ``~/.tdpilot/`` IS the install (npx-tdpilot pattern). Both subtrees
+# hold per-user content (technique recipes, knowledge essays, snapshots)
+# that must NEVER end up in the public repo. Defense-in-depth even though
+# nothing should ``git add`` them — keeps a stray ``git add -A`` in the
+# install dir from accidentally staging private notes for a push.
+memory/
+knowledge/
+
 # Dev tooling scratch
 .playwright-mcp/
 .claude/
