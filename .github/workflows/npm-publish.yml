@@ -1,0 +1,90 @@
+name: Publish to npm
+
+# Auto-publishes the npm/ directory's JS wrapper to the npm registry
+# whenever a release tag (vX.Y.Z) is pushed. Also supports manual
+# dispatch so you can backfill releases that pre-date this workflow.
+#
+# Why this exists: prior to this workflow, publishing was manual
+# (cd npm && npm publish) — and was missed for v1.5.0 and v1.5.1.
+# Result: `npx tdpilot` users got the v1.4.2 wrapper which lacked the
+# auto-pin-to-latest-tag fix landed in 0dc633e. With this workflow,
+# every release auto-publishes and stays in sync.
+#
+# Setup required (one-time):
+#   1. Create an npm access token at npmjs.com -> Access Tokens ->
+#      "Granular" or "Automation" type with publish scope for the
+#      `tdpilot` package.
+#   2. Add it to this repo's GitHub Actions secrets as `NPM_TOKEN`
+#      (Settings -> Secrets and variables -> Actions -> New secret).
+#   3. After this workflow lands, push a tag (e.g. v1.5.2) and the
+#      workflow fires. Or backfill v1.5.1 via Actions UI ->
+#      "Publish to npm" -> "Run workflow" -> tag: v1.5.1.
+#
+# All run: blocks below capture untrusted/dispatch inputs into env
+# vars first and reference them as shell variables, per
+# https://github.blog/security/vulnerability-research/how-to-catch-github-actions-workflow-injections-before-attackers-do/
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to publish (e.g. v1.5.1). Leave blank to use the current ref."
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: npm publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve ref
+        id: resolve
+        env:
+          DISPATCH_TAG: ${{ inputs.tag }}
+          GH_REF: ${{ github.ref }}
+        run: |
+          if [ -n "$DISPATCH_TAG" ]; then
+            ref="$DISPATCH_TAG"
+          else
+            ref="${GH_REF#refs/tags/}"
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "Publishing ref: $ref"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.resolve.outputs.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Verify package.json version matches the tag
+        env:
+          REF: ${{ steps.resolve.outputs.ref }}
+        run: |
+          tag_version="${REF#v}"
+          pkg_version=$(node -p "require('./npm/package.json').version")
+          echo "Tag version:        $tag_version"
+          echo "package.json version: $pkg_version"
+          if [ "$tag_version" != "$pkg_version" ]; then
+            echo "::error::npm/package.json version ($pkg_version) does not match tag ($tag_version)."
+            exit 1
+          fi
+
+      - name: Publish
+        working-directory: npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm publish --provenance --access public
