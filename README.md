@@ -149,7 +149,7 @@ Use this loop for every non-trivial task:
 
 6. **Control token cost** — Prefer metadata checks over continuous image payloads. Ask the user before enabling high-token frame streaming.
 
-## Tool Map (92 Tools)
+## Tool Map (97 Tools)
 
 ### 1) Scene + Timeline + Project Lifecycle
 Use for global context, playback control, save/load, and undo operations.

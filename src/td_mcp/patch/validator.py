@@ -3,7 +3,7 @@
 Composite wrapper over existing TD endpoints:
   - node/errors      -> ValidationReport.errors
   - cooking          -> ValidationReport.cook_stats
-  - frame/capture    -> ValidationReport.frames (one call per path in
+  - screenshot       -> ValidationReport.frames (one call per path in
                        capture_frames; empty list skips)
 
 See spec §6 + §5.4. This module is MCP-free.
@@ -36,12 +36,21 @@ async def validate_target(td_client, plan: ValidationPlan) -> ValidationReport:
     except Exception as exc:  # noqa: BLE001
         cook_stats = {"probe_error": str(exc)}
 
+    # v1.5.1: TD has no /api/frame/capture endpoint — the canonical path
+    # for capturing a TOP frame is /api/screenshot which returns base64
+    # JPEG under the ``data_base64`` key (see handle_screenshot in
+    # mcp_webserver_callbacks.py:1612). Pre-v1.5.1 the validator silently
+    # 404'd on every capture_frames entry and reported "ERROR: …" strings.
     frames: dict[str, str] = {}
     for top_path in plan.capture_frames:
         try:
-            frame = await td_client.request("frame/capture", {"path": top_path})
-            if isinstance(frame, dict) and frame.get("b64"):
-                frames[top_path] = frame["b64"]
+            frame = await td_client.request("screenshot", {"path": top_path, "quality": 0.5})
+            if isinstance(frame, dict):
+                b64 = frame.get("data_base64") or frame.get("b64")
+                if b64:
+                    frames[top_path] = b64
+                elif frame.get("error"):
+                    frames[top_path] = f"ERROR: {frame['error']}"
         except Exception as exc:  # noqa: BLE001
             frames[top_path] = f"ERROR: {exc}"
 

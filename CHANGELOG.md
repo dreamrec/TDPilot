@@ -2,13 +2,18 @@
 
 ## 1.5.1 - 2026-04-25
 
-Wire-format alignment release for the Phase 3 Patch Session API. v1.5.0
-shipped with `create_node` verified live but the other 5 op kinds
+Wire-format alignment + audit-fix release. v1.5.0 shipped with
+`create_node` verified live but the other 5 patch op kinds
 (`set_params`, `connect`, `layout`, `annotate`, `macro`) carrying
 spec-derived endpoint/field names that didn't match TD's actual
-webserver. A comprehensive live-TD probe at
+webserver. A comprehensive 13-scenario live-TD probe at
 `scripts/patch_session_smoke.py` now exercises all 6 kinds end-to-end
 and 6 new unit tests pin the on-the-wire contract.
+
+A pre-release audit also surfaced four orthogonal bugs (P1: plugin
+ZIP runtime missing, memory_replay families parsing; P2: validator
+frame/capture endpoint nonexistent, doc drift). All fixed in this
+release; a fifth (npm wrapper not version-pinned) is deferred to v1.5.2.
 
 `API_VERSION` bumps 1.5.0 → 1.5.1; `.tox` rebuild required (auto-detected
 on next TD launch via `tdpilot_startup.py:_is_tox_stale`).
@@ -35,6 +40,35 @@ on next TD launch via `tdpilot_startup.py:_is_tox_stale`).
   Calling `apply_plan()` directly without injecting will surface a
   clear `PatchOperationArgsError` rather than calling a phantom
   endpoint.
+- **plugin ZIP runtime missing (P1, audit finding):** the legacy
+  `tdpilot.plugin` archive bundled manifests + skills + the .tox but
+  omitted `pyproject.toml` / `src/td_mcp/` / `uv.lock`. Its
+  `.mcp.json` runs `uv run --directory ${CLAUDE_PLUGIN_ROOT} tdpilot`,
+  so an unpacked plugin failed with `ModuleNotFoundError: No module
+  named 'td_mcp'`. Marketplace install worked by accident (it cloned
+  the full repo separately). `scripts/build_plugin_zip.py` now bundles
+  the source so both install paths are self-contained. ZIP size 60 KB
+  → 346 KB.
+- **`td_memory_replay` op-availability check silently disabled (P1,
+  audit finding):** TD's `/api/families` returns
+  `{"families": {"TOP": [...], "CHOP": [...], ...}}`. The pre-v1.5.1
+  loop iterated `families_resp.values()` directly, which yielded the
+  inner dict (not a list), so the `isinstance(fam_types, list)` check
+  always failed and `available_types` stayed empty — silently
+  disabling the prereq guard. Now unwraps the `"families"` key first
+  while still accepting the legacy flat shape.
+- **validator frame/capture endpoint nonexistent (P2, audit finding):**
+  `validate_target` called `/api/frame/capture` which TD doesn't
+  expose; capture probes silently 404'd and recorded `"ERROR: …"`
+  strings instead of base64 frames. Switched to the canonical
+  `/api/screenshot` endpoint and read `data_base64` from the response
+  (matching `handle_screenshot` in mcp_webserver_callbacks.py).
+- **doc drift (audit finding):** README's "Tool Map (92 Tools)"
+  section header bumped to 97. (`tdpilot_startup.py` "v1.3 loaded
+  from …" log line is also stale, but rewriting it would invalidate
+  the .tox-source-hash and force another rebuild cycle for an
+  user-invisible change. Tracked in v1.5.2 deferrals to ride along
+  with the next functional .tox rebuild.)
 
 ### Added
 - 6 new wire-format unit tests in `tests/patch/test_applier.py`
@@ -62,6 +96,19 @@ on next TD launch via `tdpilot_startup.py:_is_tox_stale`).
 - `ui.undo` from webserver context: still doesn't reliably revert
   webserver-initiated mutations; smoke uses explicit `node/delete`
   cleanup.
+- **npm wrapper not version-pinned (P2, audit finding):** `npx
+  tdpilot@1.5.1` clones GitHub `main` into `~/.tdpilot` (or keeps
+  whatever checkout is already there), so the npm package version
+  doesn't gate the actual code that runs. Fix requires either pinning
+  `git clone -b v<version>` to the npm package's version string or
+  bundling the Python source in the npm package. Tracked for v1.5.2.
+- Exec-policy duplication between Python AST checks and TD-side
+  token/runtime checks (audit finding): policy lives in two places
+  and could drift. Long-term fix: shared generated policy + behavioral
+  tests for the TD callback helpers.
+- `tdpilot_startup.py` log line cosmetic ("v1.3 loaded from …"):
+  carries a stale version literal. Defer until the next functional
+  td_component change so the rebuild cycle isn't paid for a cosmetic.
 
 ## 1.5.0 - 2026-04-25
 

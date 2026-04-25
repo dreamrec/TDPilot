@@ -279,8 +279,18 @@ async def td_memory_replay(
             try:
                 families_resp = await client.request("families", {})
                 available_types: set = set()
-                if isinstance(families_resp, dict):
-                    for fam_types in families_resp.values():
+                # v1.5.1: TD's /api/families returns
+                # {"families": {"TOP": [...], "CHOP": [...], ...}}.
+                # Pre-v1.5.1 this loop iterated families_resp.values() which
+                # gave the inner dict (not a list), so the isinstance check
+                # always failed and available_types stayed empty — silently
+                # disabling the prereq guard. Unwrap the "families" key first
+                # but accept the legacy flat shape too in case TD ever changes.
+                families_data = families_resp.get("families") if isinstance(families_resp, dict) else None
+                if not isinstance(families_data, dict):
+                    families_data = families_resp if isinstance(families_resp, dict) else {}
+                if isinstance(families_data, dict):
+                    for fam_types in families_data.values():
                         if isinstance(fam_types, list):
                             available_types.update(fam_types)
                 if available_types:

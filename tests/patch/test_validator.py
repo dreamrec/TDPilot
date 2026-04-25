@@ -40,16 +40,27 @@ async def test_validate_with_errors():
 
 @pytest.mark.asyncio
 async def test_validate_with_capture_frames():
+    """v1.5.1: validator now uses TD's /api/screenshot endpoint
+    (returns ``data_base64``), not the fictional /api/frame/capture
+    that pre-v1.5.1 silently 404'd against."""
     client = FakeTDClient(
         scripted={
             "node/errors": {"issues": []},
             "cooking": {"total_cook_ms": 1.0, "stuck": []},
-            "frame/capture": lambda params: {"b64": "Zm9v", "path": params["path"]},
+            "screenshot": lambda params: {
+                "success": True,
+                "path": params["path"],
+                "data_base64": "Zm9v",
+            },
         }
     )
     plan = ValidationPlan(target_root="/p", capture_frames=["/p/out1", "/p/out2"])
     report = await validate_target(client, plan)
     assert set(report.frames.keys()) == {"/p/out1", "/p/out2"}
-    # Verify the client was asked for frames
-    frame_calls = [c for c in client.calls if c[0] == "frame/capture"]
-    assert len(frame_calls) == 2
+    assert report.frames["/p/out1"] == "Zm9v"
+    # Verify the client hit the canonical screenshot endpoint, not the
+    # nonexistent frame/capture path.
+    screenshot_calls = [c for c in client.calls if c[0] == "screenshot"]
+    assert len(screenshot_calls) == 2
+    legacy_calls = [c for c in client.calls if c[0] == "frame/capture"]
+    assert legacy_calls == []

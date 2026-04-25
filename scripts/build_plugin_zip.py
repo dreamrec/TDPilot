@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
 """Rebuild ``tdpilot.plugin`` ZIP from committed plugin sources.
 
-Since audit hardening, the plugin layout is committed at the repo root:
+The plugin layout is committed at the repo root:
   - .claude-plugin/plugin.json        (plugin manifest)
   - .mcp.json                         (plugin MCP config template)
   - commands/                         (slash commands)
   - skills/                           (skills, already at root)
-  - td_component/tdpilot.tox     (binary TD component — must be built in TD)
+  - td_component/tdpilot.tox          (binary TD component — built in TD)
   - plugin_README.md                  (goes into ZIP as README.md)
 
-This script just zips those files. If any are missing it fails loudly rather
-than synthesizing fallbacks — the committed files are the source of truth.
+v1.5.1: the plugin ZIP also bundles the Python source so it can be
+installed via drag-drop OR via Claude Code marketplace. Pre-v1.5.1 the
+ZIP only had manifests + skills + the .tox; users who unpacked the ZIP
+manually hit ``ModuleNotFoundError: No module named 'td_mcp'`` because
+``${CLAUDE_PLUGIN_ROOT}`` resolves to the unpacked ZIP path which had no
+runtime code. The marketplace-clone path worked by accident — it cloned
+the full repo separately. Bundling source makes both install paths
+self-contained.
 
-The legacy ZIP artifact is still produced so that users who don't install via
-the Claude Code marketplace can drag-drop `tdpilot.plugin` into their plugin
-folder.
+This script just zips those files. If any are missing it fails loudly
+rather than synthesizing fallbacks — the committed files are the source
+of truth.
 
 Usage:
     uv run python scripts/build_plugin_zip.py
@@ -24,6 +30,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import sys
 import zipfile
 from pathlib import Path
@@ -83,10 +90,39 @@ PLUGIN_FILES: list[tuple[str, str, bool]] = [
     ),
 ]
 
+# Directories bundled recursively (source code + lockfile so ``uv run``
+# inside the unpacked ZIP can resolve dependencies). Mirrors the
+# .mcpb bundle (scripts/build_mcpb.py) layout for consistency.
+PLUGIN_DIRS: tuple[tuple[str, str], ...] = (("src", "src"),)
+PLUGIN_EXTRA_FILES: tuple[tuple[str, str, bool], ...] = (
+    ("pyproject.toml", "pyproject.toml", True),
+    ("uv.lock", "uv.lock", False),  # optional but recommended
+    ("LICENSE", "LICENSE", False),
+)
+# Patterns excluded when copying directories.
+DIR_EXCLUDES: tuple[str, ...] = ("__pycache__", "*.pyc", "*.pyo", "tests", ".pytest_cache")
+
+
+def _excluded(name: str) -> bool:
+    """True if a directory entry name matches any DIR_EXCLUDES pattern."""
+    return any(fnmatch.fnmatch(name, pat) for pat in DIR_EXCLUDES)
+
+
+def _walk_dir_into_zip(zf: zipfile.ZipFile, src_root: Path, arc_root: str) -> None:
+    """Add every non-excluded file under ``src_root`` to the zip under ``arc_root``."""
+    for path in sorted(src_root.rglob("*")):
+        rel_parts = path.relative_to(src_root).parts
+        if any(_excluded(part) for part in rel_parts):
+            continue
+        if path.is_file():
+            arc = f"{arc_root}/{'/'.join(rel_parts)}"
+            zf.write(path, arc)
+
 
 def build(output: Path) -> None:
     missing_required = []
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        # 1. Manifest + skills + .tox (the original plugin layout).
         for src_rel, arc, required in PLUGIN_FILES:
             src = ROOT / src_rel
             if not src.exists():
@@ -94,6 +130,21 @@ def build(output: Path) -> None:
                     missing_required.append(src_rel)
                 continue
             zf.write(src, arc)
+        # 2. Extra top-level files (pyproject, uv.lock, LICENSE).
+        for src_rel, arc, required in PLUGIN_EXTRA_FILES:
+            src = ROOT / src_rel
+            if not src.exists():
+                if required:
+                    missing_required.append(src_rel)
+                continue
+            zf.write(src, arc)
+        # 3. Source dirs (src/ — so uv run can resolve td_mcp).
+        for src_rel, arc_root in PLUGIN_DIRS:
+            src = ROOT / src_rel
+            if not src.is_dir():
+                missing_required.append(src_rel + "/")
+                continue
+            _walk_dir_into_zip(zf, src, arc_root)
 
     if missing_required:
         output.unlink(missing_ok=True)
