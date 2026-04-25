@@ -71,8 +71,15 @@ tdpilot.mcpb
 # that must NEVER end up in the public repo. Defense-in-depth even though
 # nothing should ``git add`` them — keeps a stray ``git add -A`` in the
 # install dir from accidentally staging private notes for a push.
-memory/
-knowledge/
+#
+# IMPORTANT: leading slash is REQUIRED. Without it, ``memory/`` matches
+# ANY directory named "memory" anywhere in the tree — including the
+# source code's ``src/td_mcp/memory/``, silently swallowing new files
+# added there. Anchoring with ``/memory/`` scopes the rule to repo-root
+# only, which is exactly where the user-data dirs live in an
+# ``~/.tdpilot/`` install.
+/memory/
+/knowledge/
 
 # Dev tooling scratch
 .playwright-mcp/
