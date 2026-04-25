@@ -88,16 +88,14 @@ async def test_validate_recipe_inline_dict_nodes():
     ctx = _make_ctx(card_index=idx)
 
     result = await registry.td_validate_recipe(
-        ValidateRecipeInput(
-            recipe={
-                "name": "test-recipe",
-                "nodes": {
-                    "/noise1": {"name": "noise1", "type": "noiseTOP"},
-                    "/out1": {"name": "out1", "type": "nullTOP"},
-                },
-            }
-        ),
         ctx,
+        recipe={
+            "name": "test-recipe",
+            "nodes": {
+                "/noise1": {"name": "noise1", "type": "noiseTOP"},
+                "/out1": {"name": "out1", "type": "nullTOP"},
+            },
+        },
     )
     assert result["success"] is True
     assert result["valid"] is True
@@ -112,15 +110,13 @@ async def test_validate_recipe_inline_list_nodes():
     ctx = _make_ctx(card_index=idx)
 
     result = await registry.td_validate_recipe(
-        ValidateRecipeInput(
-            recipe={
-                "name": "list-recipe",
-                "nodes": [
-                    {"name": "noise1", "type": "noiseTOP"},
-                ],
-            }
-        ),
         ctx,
+        recipe={
+            "name": "list-recipe",
+            "nodes": [
+                {"name": "noise1", "type": "noiseTOP"},
+            ],
+        },
     )
     assert result["success"] is True
     assert result["valid"] is True
@@ -134,16 +130,14 @@ async def test_validate_recipe_unknown_op_types():
     ctx = _make_ctx(card_index=idx)
 
     result = await registry.td_validate_recipe(
-        ValidateRecipeInput(
-            recipe={
-                "name": "unknown-ops",
-                "nodes": {
-                    "/n1": {"name": "n1", "type": "noiseTOP"},
-                    "/n2": {"name": "n2", "type": "magicSuperTOP"},
-                },
-            }
-        ),
         ctx,
+        recipe={
+            "name": "unknown-ops",
+            "nodes": {
+                "/n1": {"name": "n1", "type": "noiseTOP"},
+                "/n2": {"name": "n2", "type": "magicSuperTOP"},
+            },
+        },
     )
     assert result["success"] is True
     assert result["valid"] is True  # unknown ops are warnings, not errors
@@ -158,13 +152,11 @@ async def test_validate_recipe_compat_issues():
     ctx = _make_ctx(card_index=idx, td_build="2025.32460")
 
     result = await registry.td_validate_recipe(
-        ValidateRecipeInput(
-            recipe={
-                "name": "compat-test",
-                "nodes": {"/n1": {"name": "n1", "type": "noiseTOP"}},
-            }
-        ),
         ctx,
+        recipe={
+            "name": "compat-test",
+            "nodes": {"/n1": {"name": "n1", "type": "noiseTOP"}},
+        },
     )
     assert result["success"] is True
     assert len(result["compat_issues"]) == 1
@@ -189,8 +181,9 @@ async def test_validate_recipe_stored_entry_unwrap(tmp_path):
     ctx = _make_ctx(store=store)
 
     result = await registry.td_validate_recipe(
-        ValidateRecipeInput(recipe_id=tid, scope="project"),
         ctx,
+        recipe_id=tid,
+        scope="project",
     )
     assert result["success"] is True
     assert result["recipe_name"] == "stored-recipe"
@@ -201,10 +194,7 @@ async def test_validate_recipe_stored_entry_unwrap(tmp_path):
 async def test_validate_recipe_no_input():
     """Missing both recipe and recipe_id returns error."""
     ctx = _make_ctx()
-    result = await registry.td_validate_recipe(
-        ValidateRecipeInput(),
-        ctx,
-    )
+    result = await registry.td_validate_recipe(ctx)
     assert "error" in result
 
 
@@ -213,8 +203,8 @@ async def test_validate_recipe_missing_fields():
     """Recipe missing 'name' or 'nodes' gets warnings."""
     ctx = _make_ctx()
     result = await registry.td_validate_recipe(
-        ValidateRecipeInput(recipe={"description": "no name or nodes"}),
         ctx,
+        recipe={"description": "no name or nodes"},
     )
     assert result["success"] is True
     warning_text = " ".join(result["warnings"])
@@ -241,8 +231,8 @@ async def test_audit_project_shallow_tree(monkeypatch):
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
 
     result = await registry.td_audit_project(
-        AuditProjectInput(root_path="/project1"),
         ctx,
+        root_path="/project1",
     )
     assert result["success"] is True
     assert result["total_nodes"] == 3
@@ -276,8 +266,8 @@ async def test_audit_project_recursive_into_comps(monkeypatch):
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
 
     result = await registry.td_audit_project(
-        AuditProjectInput(root_path="/project1"),
         ctx,
+        root_path="/project1",
     )
     assert result["success"] is True
     assert result["total_nodes"] == 4  # comp1 + noise1 + inner1 + inner2
@@ -317,8 +307,8 @@ async def test_audit_project_deep_nesting(monkeypatch):
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
 
     result = await registry.td_audit_project(
-        AuditProjectInput(root_path="/root"),
         ctx,
+        root_path="/root",
     )
     assert result["success"] is True
     assert result["total_nodes"] == 3  # level1 + level2 + leaf
@@ -381,8 +371,8 @@ async def test_audit_project_palette_components_excludes_stock_ops(monkeypatch):
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
 
     result = await registry.td_audit_project(
-        AuditProjectInput(root_path="/project1"),
         ctx,
+        root_path="/project1",
     )
     assert result["success"] is True
     palette_names = {p["name"] for p in result["palette_components"]}
@@ -411,8 +401,8 @@ async def test_audit_project_unknown_ops_detected(monkeypatch):
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
 
     result = await registry.td_audit_project(
-        AuditProjectInput(root_path="/project1"),
         ctx,
+        root_path="/project1",
     )
     assert result["success"] is True
     assert "magicSuperTOP" in result["unknown_op_types"]

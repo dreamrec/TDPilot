@@ -73,8 +73,9 @@ async def test_standardize_audit_clean_comp(monkeypatch):
     ctx = _make_ctx(client=client)
 
     result = await registry.td_component_standardize(
-        ComponentStandardizeInput(path="/project1/MyComp", fix=False),
         ctx,
+        path="/project1/MyComp",
+        fix=False,
     )
     assert result["issue_count"] == 0
     assert result["has_extension"] is True
@@ -106,8 +107,9 @@ async def test_standardize_audit_missing_params(monkeypatch):
     ctx = _make_ctx(client=client)
 
     result = await registry.td_component_standardize(
-        ComponentStandardizeInput(path="/project1/mycomp", fix=False),
         ctx,
+        path="/project1/mycomp",
+        fix=False,
     )
     assert result["issue_count"] == 3
     assert "Version" in result["issues"][0]
@@ -132,8 +134,9 @@ async def test_standardize_fix_uses_undo_block(monkeypatch):
     ctx = _make_ctx(client=client)
 
     result = await registry.td_component_standardize(
-        ComponentStandardizeInput(path="/project1/mycomp", fix=True),
         ctx,
+        path="/project1/mycomp",
+        fix=True,
     )
     assert len(result["fixed"]) == 3
     # Should have start_undo_block and end_undo_block calls
@@ -152,8 +155,9 @@ async def test_standardize_exec_off_returns_error(monkeypatch):
     ctx = _make_ctx(client=client)
 
     result = await registry.td_component_standardize(
-        ComponentStandardizeInput(path="/project1/comp1", fix=False),
         ctx,
+        path="/project1/comp1",
+        fix=False,
     )
     assert "error" in result
     assert "disabled" in result["error"].lower() or "off" in result["error"].lower()
@@ -170,8 +174,9 @@ async def test_standardize_generated_code_contains_path(monkeypatch):
     ctx = _make_ctx(client=client)
 
     await registry.td_component_standardize(
-        ComponentStandardizeInput(path="/project1/comp1", fix=False),
         ctx,
+        path="/project1/comp1",
+        fix=False,
     )
     assert client.last_code is not None
     assert "/project1/comp1" in client.last_code
@@ -186,8 +191,9 @@ async def test_standardize_fix_code_has_append_custom_page(monkeypatch):
     ctx = _make_ctx(client=client)
 
     await registry.td_component_standardize(
-        ComponentStandardizeInput(path="/comp", fix=True),
         ctx,
+        path="/comp",
+        fix=True,
     )
     code = client.last_code
     assert "appendCustomPage" in code
@@ -214,7 +220,7 @@ async def test_color_pipeline_returns_expected_keys(monkeypatch):
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
     ctx = _make_ctx(client=client)
 
-    result = await registry.td_color_pipeline(ColorPipelineInput(), ctx)
+    result = await registry.td_color_pipeline(ctx)
     for key in expected:
         assert key in result
         assert result[key] == expected[key]
@@ -228,7 +234,7 @@ async def test_color_pipeline_exec_off_returns_error(monkeypatch):
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
     ctx = _make_ctx(client=client)
 
-    result = await registry.td_color_pipeline(ColorPipelineInput(), ctx)
+    result = await registry.td_color_pipeline(ctx)
     assert "error" in result
     assert len(client.calls) == 0
 
@@ -241,7 +247,7 @@ async def test_color_pipeline_uses_exec_endpoint(monkeypatch):
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
     ctx = _make_ctx(client=client)
 
-    await registry.td_color_pipeline(ColorPipelineInput(), ctx)
+    await registry.td_color_pipeline(ctx)
     exec_calls = [c for c in client.calls if c[0] == "exec"]
     assert len(exec_calls) == 1
     assert "exec_mode" in exec_calls[0][1]
@@ -266,6 +272,6 @@ async def test_color_pipeline_handles_malformed_response(monkeypatch):
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
     ctx = _make_ctx(client=client)
 
-    result = await registry.td_color_pipeline(ColorPipelineInput(), ctx)
+    result = await registry.td_color_pipeline(ctx)
     # Should return raw content rather than crash
     assert "raw" in result

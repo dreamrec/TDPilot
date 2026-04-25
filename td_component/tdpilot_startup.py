@@ -16,6 +16,7 @@ import os
 
 _CONFIG_FILE = os.path.join(os.path.expanduser("~"), ".tdpilot_path")
 _ENV_FILE_NAME = ".tdpilot.env"
+_HOME_ENV_FILE = os.path.join(os.path.expanduser("~"), ".tdpilot", ".tdpilot.env")
 _TOX_RELATIVE = os.path.join("td_component", "tdpilot.tox")
 _BUILD_SCRIPT_RELATIVE = os.path.join("td_component", "build_export_mcp_tox.py")
 _COMP_NAME = "mcp_server"
@@ -43,27 +44,38 @@ def _read_config():
 
 
 def _load_env_file(repo_root):
-    """Load KEY=VALUE pairs from <repo_root>/.tdpilot.env into os.environ.
+    """Load KEY=VALUE pairs from .tdpilot.env into os.environ.
 
-    Written by the installer; carries the shared secret and auth policy into
-    the TD process without hardcoding it in the .toe file.
+    Loads from two locations in priority order (first one wins per key):
+      1. <repo_root>/.tdpilot.env         — installer-written, repo-local
+      2. ~/.tdpilot/.tdpilot.env          — canonical Python-server path
+                                            (auth_bootstrap.maybe_generate_secret
+                                            writes here when TD_MCP_AUTOGENERATE_SECRET=1)
+
+    Carries the shared secret and auth policy into the TD process without
+    hardcoding them in the .toe file. The two-file scan keeps TD-side and
+    Python-side auth in sync so the dragged-in / auto-rebuilt .tox sees
+    the same secret the Python MCP server generated.
+
+    Existing os.environ keys are NEVER overwritten — process-supplied env
+    wins, matching auth_bootstrap.load_env_file's contract.
     """
-    env_path = os.path.join(repo_root, _ENV_FILE_NAME)
-    if not os.path.isfile(env_path):
-        return
-    try:
-        with open(env_path, encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith("#") or "=" not in line:
-                    continue
-                key, _, value = line.partition("=")
-                key = key.strip()
-                value = value.strip().strip('"').strip("'")
-                if key and key not in os.environ:
-                    os.environ[key] = value
-    except OSError as exc:
-        print(f"[TDPilot] Could not read {env_path}: {exc}")
+    for env_path in (os.path.join(repo_root, _ENV_FILE_NAME), _HOME_ENV_FILE):
+        if not os.path.isfile(env_path):
+            continue
+        try:
+            with open(env_path, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+                    key, _, value = line.partition("=")
+                    key = key.strip()
+                    value = value.strip().strip('"').strip("'")
+                    if key and key not in os.environ:
+                        os.environ[key] = value
+        except OSError as exc:
+            print(f"[TDPilot] Could not read {env_path}: {exc}")
 
 
 def _validate_repo(repo_root):

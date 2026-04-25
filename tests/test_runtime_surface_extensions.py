@@ -7,10 +7,7 @@ import pytest
 
 import td_mcp.tool_registry as registry
 from td_mcp.models import (
-    CustomParametersInput,
     CustomParameterSpec,
-    POPInspectInput,
-    ProjectLifecycleInput,
 )
 
 
@@ -40,21 +37,24 @@ async def test_new_surface_tools_forward_to_expected_endpoints(monkeypatch):
     ctx = _make_ctx()
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
 
+    # Post-Bug-A (v1.5.0 batch 7) signature: ctx first, then explicit args.
     custom_payload = await registry.td_custom_parameters(
-        CustomParametersInput(
-            path="/project1/base1",
-            page="Controls",
-            params=[CustomParameterSpec(kind="float", name="gain", default=0.5)],
-        ),
         ctx,
+        path="/project1/base1",
+        page="Controls",
+        params=[CustomParameterSpec(kind="float", name="gain", default=0.5)],
     )
+    # Post-Bug-A (v1.5.0 batch 3) signature: ctx first, then explicit args.
     pop_payload = await registry.td_pop_inspect(
-        POPInspectInput(path="/project1/particles1", point_attributes=["P"], count=8),
         ctx,
+        path="/project1/particles1",
+        point_attributes=["P"],
+        count=8,
     )
+    # Post-Bug-A (v1.5.0 batch 2) signature: ctx first, then explicit action arg.
     project_payload = await registry.td_project_lifecycle(
-        ProjectLifecycleInput(action="status"),
         ctx,
+        action="status",
     )
 
     assert json.loads(custom_payload)["endpoint"] == "custom-parameters"

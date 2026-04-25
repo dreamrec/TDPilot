@@ -100,26 +100,36 @@ def verify_auth_config() -> None:
 
 
 def _tool_count_drift_check(repo_root: Path | None) -> tuple[str, str]:
-    """Compare `@mcp.tool(` count in tool_registry.py against manifest's
-    `surface.tool_count`. Returns (status, detail).
+    """Compare `@mcp.tool(` count across tool_registry.py + registry/*.py
+    submodules against manifest's ``surface.tool_count``. Returns (status, detail).
 
-    Skip (not fail) when either file is missing — the check is a developer
-    convenience, not a hard release gate (CI runs check_versions.py for that).
+    v1.5.0 Phase 2 module split: tools are being moved from the monolithic
+    ``tool_registry.py`` into themed submodules under ``src/td_mcp/registry/``.
+    This check now sums decorator counts across ALL of those files so the
+    drift signal stays accurate throughout the split.
+
+    Skip (not fail) when required files are missing — the check is a
+    developer convenience, not a hard release gate (CI runs
+    ``check_versions.py`` for that).
     """
     if repo_root is None:
         return "skip", "repo root not found"
     registry_path = repo_root / "src" / "td_mcp" / "tool_registry.py"
+    registry_pkg = repo_root / "src" / "td_mcp" / "registry"
     manifest_path = repo_root / "mcp" / "manifest.json"
     if not registry_path.is_file() or not manifest_path.is_file():
         return "skip", "tool_registry.py or mcp/manifest.json missing"
 
     try:
-        source = registry_path.read_text(encoding="utf-8")
         import json as _json
         import re as _re
 
+        source_count = len(_re.findall(r"@mcp\.tool\(", registry_path.read_text(encoding="utf-8")))
+        if registry_pkg.is_dir():
+            for submodule in sorted(registry_pkg.glob("tools_*.py")):
+                source_count += len(_re.findall(r"@mcp\.tool\(", submodule.read_text(encoding="utf-8")))
+
         manifest = _json.loads(manifest_path.read_text(encoding="utf-8"))
-        source_count = len(_re.findall(r"@mcp\.tool\(", source))
         manifest_count = int(manifest.get("surface", {}).get("tool_count", -1))
     except Exception as exc:  # pragma: no cover - defensive
         return "skip", f"could not read counts: {exc}"

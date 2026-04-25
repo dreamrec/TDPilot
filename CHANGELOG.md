@@ -1,5 +1,30 @@
 # Changelog
 
+## [Unreleased] — v1.5.0 Phase 3
+
+### Added
+- **Patch Session MVP (5 new MCP tools):**
+  - `td_patch_plan` — build typed PatchPlan from intent/recipe/operations.
+  - `td_patch_preview` — summarize changes + live_risk_flags, no mutation.
+  - `td_patch_apply` — execute in one undo block; structured PatchResult.
+  - `td_patch_validate` — composite errors + cook stats + frame capture.
+  - `td_patch_variations` — N variants from a base plan (param_jitter).
+- 7 new Pydantic models: PatchOperation, ValidationPlan, PatchPlan, PatchPreview, ValidationReport, PatchResult, PatchVariant.
+- New `src/td_mcp/patch/` package with MCP-free business logic (planner, applier, validator, variants, undo_sentinel).
+- ~63 new tests across three layers.
+
+### Changed
+- `td_plan_patch` internally now delegates to `patch.build_plan`; external dict shape unchanged (byte-for-byte compat).
+- Tool count: 92 → 97.
+- User-facing docs (README, npm/README, plugin_README, docs/, skills/) updated to reflect 97-tool surface.
+
+### Deferred to v1.5.1
+- Destructive op kinds: delete, disconnect, set_content, exec_python.
+- TD-callback `project/lifecycle action=undo_block_status` endpoint.
+- Variant strategies: `operator_substitute`, `topology_perturb`.
+- Auto-snapshot on apply.
+- `td_preflight_patch` delegation to `patch.preview_plan`.
+
 ## 1.4.7 - 2026-04-24
 
 Live-validation release. Thirteen behavioral bugs surfaced during a

@@ -791,8 +791,10 @@ async def test_memory_replay_default_skips_root_comp_as_before(tmp_path, monkeyp
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
 
     result = await registry.td_memory_replay(
-        MemoryReplayInput(technique_id=tid, parent_path="/project1", scope="project"),
         ctx,
+        technique_id=tid,
+        parent_path="/project1",
+        scope="project",
     )
     assert result.get("nodes_created") == 2, (
         f"default replay must create only the 2 children (not the root); got {result}"
@@ -821,14 +823,12 @@ async def test_memory_replay_recreate_root_true_builds_root_comp(tmp_path, monke
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
 
     result = await registry.td_memory_replay(
-        MemoryReplayInput(
-            technique_id=tid,
-            parent_path="/project1",
-            name_prefix="rp_",
-            scope="project",
-            recreate_root=True,
-        ),
         ctx,
+        technique_id=tid,
+        parent_path="/project1",
+        name_prefix="rp_",
+        scope="project",
+        recreate_root=True,
     )
     assert result.get("nodes_created") == 3, (
         f"recreate_root=True must build 3 nodes (root COMP + 2 children); got {result}"
@@ -875,13 +875,11 @@ async def test_memory_replay_recreate_root_true_no_root_comp_is_safe(tmp_path, m
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
 
     result = await registry.td_memory_replay(
-        MemoryReplayInput(
-            technique_id=tid,
-            parent_path="/project1",
-            scope="project",
-            recreate_root=True,  # but no "/" COMP in the recipe
-        ),
         ctx,
+        technique_id=tid,
+        parent_path="/project1",
+        scope="project",
+        recreate_root=True,  # but no "/" COMP in the recipe,
     )
     # Safe no-op: 2 children created as usual, no error.
     assert result.get("nodes_created") == 2
@@ -1060,18 +1058,16 @@ async def test_wire_walked_recipe_replays_under_new_parent(tmp_path, monkeypatch
     monkeypatch.setattr(registry, "_get_client", lambda _ctx: replay_client)
 
     result = await registry.td_memory_replay(
-        MemoryReplayInput(
-            technique_id=tid,
-            parent_path="/new_parent",
-            name_prefix="wr_",
-            scope="project",
-            # Fixture op_types use test-suffixed names ('noiseTOP') which
-            # don't match what real TD `families` returns (short forms).
-            # Skip the prerequisite check — the test's goal is proving
-            # sibling paths resolve on replay, not the families gate.
-            force=True,
-        ),
         ctx,
+        technique_id=tid,
+        parent_path="/new_parent",
+        name_prefix="wr_",
+        scope="project",
+        # Fixture op_types use test-suffixed names ('noiseTOP') which
+        # don't match what real TD `families` returns (short forms).
+        # Skip the prerequisite check — the test's goal is proving
+        # sibling paths resolve on replay, not the families gate.
+        force=True,
     )
     assert result.get("nodes_created") == 3, (
         f"wire-walked replay to /new_parent must create all 3 nodes; got {result}"
