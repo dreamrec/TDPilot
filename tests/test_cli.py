@@ -147,7 +147,7 @@ def test_doctor_tool_count_drift_passes_on_sync():
     """When manifest and registry agree, the drift check emits pass."""
     report = server._collect_doctor_report(timeout=0.2, skip_td_check=True, strict=False)
     drift = next(item for item in report["checks"] if item["name"] == "tool_count_drift")
-    # Current repo: manifest and registry match at 99 tools.
+    # Current repo: manifest and registry match at 101 tools.
     assert drift["status"] == "pass", f"detail: {drift['detail']}"
     # Detail should include both counts so developers can see what's compared.
     assert "registry=" in drift["detail"] or "source=" in drift["detail"]

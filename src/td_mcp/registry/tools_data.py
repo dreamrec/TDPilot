@@ -273,6 +273,116 @@ async def td_cooking_info(
     )
 
 
+_DAT_TEXT_SCOPE_CODE_TEMPLATE = """
+def _safe(fn, d=None):
+    try:
+        return fn()
+    except Exception:
+        return d
+
+query_lower = {query!r}.lower()
+limit = {limit}
+root_path = {path!r}
+root = _safe(lambda: op(root_path))
+results = []
+truncated = False
+if root is not None and _safe(lambda: root.valid, False):
+    children = _safe(lambda: list(root.findChildren(maxDepth=999)), [])
+    candidates = list(children)
+    if root not in candidates:
+        candidates.append(root)
+    for n in candidates[:5000]:
+        try:
+            fam = _safe(lambda n=n: n.family)
+            if fam != 'DAT':
+                continue
+            text = _safe(lambda n=n: n.text)
+            if not isinstance(text, str):
+                continue
+            text_l = text.lower()
+            if query_lower in text_l:
+                idx = text_l.find(query_lower)
+                start = max(0, idx - 40)
+                end = min(len(text), idx + len(query_lower) + 40)
+                snippet = text[start:end].replace('\\n', ' ')
+                results.append({{
+                    "path": _safe(lambda n=n: n.path),
+                    "type": _safe(lambda n=n: n.OPType),
+                    "scope": "dat_text",
+                    "match_field": "content",
+                    "snippet": snippet,
+                }})
+                if len(results) >= limit:
+                    truncated = True
+                    break
+        except Exception:
+            pass
+__result__ = {{"results": results, "truncated": truncated}}
+"""
+
+
+_PARAM_EXPRS_SCOPE_CODE_TEMPLATE = """
+def _safe(fn, d=None):
+    try:
+        return fn()
+    except Exception:
+        return d
+
+query_lower = {query!r}.lower()
+limit = {limit}
+root_path = {path!r}
+root = _safe(lambda: op(root_path))
+results = []
+truncated = False
+if root is not None and _safe(lambda: root.valid, False):
+    children = _safe(lambda: list(root.findChildren(maxDepth=999)), [])
+    candidates = list(children)
+    if root not in candidates:
+        candidates.append(root)
+    for n in candidates[:5000]:
+        try:
+            pars = _safe(lambda n=n: list(n.pars()), [])
+            for p in pars:
+                expr = _safe(lambda p=p: p.expr if p.mode.name == 'EXPRESSION' else None)
+                if isinstance(expr, str) and expr and query_lower in expr.lower():
+                    results.append({{
+                        "path": _safe(lambda n=n: n.path),
+                        "type": _safe(lambda n=n: n.OPType),
+                        "scope": "param_exprs",
+                        "match_field": _safe(lambda p=p: p.name),
+                        "snippet": expr[:200],
+                    }})
+                    if len(results) >= limit:
+                        truncated = True
+                        break
+            if truncated:
+                break
+        except Exception:
+            pass
+__result__ = {{"results": results, "truncated": truncated}}
+"""
+
+
+async def _exec_dat_text_scope(ctx: Context, query: str, path: str, limit: int) -> dict[str, Any]:
+    code = _DAT_TEXT_SCOPE_CODE_TEMPLATE.format(query=query, limit=limit, path=path)
+    body = {"code": code, "exec_mode": _tr._current_exec_mode()}
+    data = await _tr._get_client(ctx).request("exec", body)
+    if not isinstance(data, dict) or not data.get("success"):
+        return {"results": [], "error": (data or {}).get("error", "exec failed")}
+    return data.get("result") or {"results": []}
+
+
+async def _exec_param_exprs_scope(
+    ctx: Context, query: str, path: str, limit: int
+) -> dict[str, Any]:
+    code = _PARAM_EXPRS_SCOPE_CODE_TEMPLATE.format(query=query, limit=limit, path=path)
+    body = {"code": code, "exec_mode": _tr._current_exec_mode()}
+    data = await _tr._get_client(ctx).request("exec", body)
+    if not isinstance(data, dict) or not data.get("success"):
+        return {"results": [], "error": (data or {}).get("error", "exec failed")}
+    return data.get("result") or {"results": []}
+
+
 @mcp.tool(name="td_search_nodes")
 async def td_search_nodes(
     ctx: Context,
@@ -285,22 +395,130 @@ async def td_search_nodes(
         Field(default="/", description="Root path to search from"),
     ] = "/",
     search_type: Annotated[
-        str,
+        str | None,
         Field(
-            default="all",
-            description="What to search: 'name', 'type', 'family', or 'all'",
+            default=None,
+            description=(
+                "DEPRECATED — prefer ``scopes``. One of 'name', 'type', 'family', 'all'. "
+                "When both are set, ``scopes`` wins."
+            ),
         ),
-    ] = "all",
+    ] = None,
+    scopes: Annotated[
+        list[str] | None,
+        Field(
+            default=None,
+            description=(
+                "Search scopes (v1.6.0+). Any of: 'name', 'type', 'family', 'all', "
+                "'dat_text' (search DAT text contents), 'param_exprs' (search "
+                "parameter expressions). Multiple scopes merge. Defaults to ['all']."
+            ),
+        ),
+    ] = None,
     limit: Annotated[
         int,
         Field(default=50, ge=1, le=200, description="Max results"),
     ] = 50,
 ) -> str:
-    """Search nodes by name/type/family across a subtree."""
-    # Re-instantiate so the SearchNodesInput custom @field_validator on
-    # ``search_type`` (must be 'name', 'type', 'family', or 'all') still runs.
-    validated = SearchNodesInput(query=query, path=path, search_type=search_type, limit=limit)
-    return await _tr._forward(ctx, "td_search_nodes", "search", validated.model_dump())
+    """Search nodes across a subtree.
+
+    Legacy scopes ('name'/'type'/'family'/'all') hit the existing TD-side
+    ``/api/search`` endpoint. New v1.6.0 scopes ('dat_text', 'param_exprs')
+    iterate via the ``/api/exec`` endpoint — no ``.tox`` rebuild required.
+    """
+    finish = _tr._start_tool(ctx, "td_search_nodes")
+    try:
+        validated = SearchNodesInput(
+            query=query,
+            path=path,
+            search_type=search_type,
+            scopes=scopes,
+            limit=limit,
+        )
+        effective = validated.effective_scopes()
+
+        legacy_scopes = [s for s in effective if s in SearchNodesInput.LEGACY_SCOPES]
+        new_scopes = [s for s in effective if s in SearchNodesInput.NEW_SCOPES]
+
+        merged_results: list[dict[str, Any]] = []
+        scopes_searched: list[str] = []
+        scopes_with_errors: dict[str, str] = {}
+        truncated_any = False
+
+        # Legacy: forward to the existing TD-side search endpoint.
+        # If the caller asked for multiple legacy scopes (eg. ['name', 'type']),
+        # collapse to a single forward call with search_type='all' since the
+        # TD endpoint only accepts a single type. Then tag results with the
+        # actual matched scope (best-effort 'all').
+        if legacy_scopes:
+            collapsed = "all" if len(legacy_scopes) > 1 else legacy_scopes[0]
+            payload = {
+                "query": validated.query,
+                "path": validated.path,
+                "search_type": collapsed,
+                "limit": validated.limit,
+            }
+            try:
+                data = await _tr._get_client(ctx).request("search", payload)
+                if isinstance(data, dict):
+                    rows = data.get("results") or data.get("matches") or []
+                    if isinstance(rows, list):
+                        for row in rows[: validated.limit]:
+                            if not isinstance(row, dict):
+                                continue
+                            entry = dict(row)
+                            entry.setdefault("scope", collapsed)
+                            merged_results.append(entry)
+                    if data.get("truncated"):
+                        truncated_any = True
+                scopes_searched.extend(legacy_scopes)
+            except Exception as exc:
+                for s in legacy_scopes:
+                    scopes_with_errors[s] = str(exc)
+
+        # New scopes — host-side dispatch via /api/exec
+        scope_handlers = {
+            "dat_text": _exec_dat_text_scope,
+            "param_exprs": _exec_param_exprs_scope,
+        }
+        per_scope_remaining = max(1, validated.limit - len(merged_results))
+        for s in new_scopes:
+            handler = scope_handlers.get(s)
+            if handler is None:
+                scopes_with_errors[s] = f"scope '{s}' is not supported in this build"
+                continue
+            try:
+                outcome = await handler(ctx, validated.query, validated.path, per_scope_remaining)
+                rows = outcome.get("results", []) if isinstance(outcome, dict) else []
+                if outcome.get("error"):
+                    scopes_with_errors[s] = str(outcome["error"])
+                else:
+                    scopes_searched.append(s)
+                if isinstance(rows, list):
+                    merged_results.extend(rows[:per_scope_remaining])
+                if outcome.get("truncated"):
+                    truncated_any = True
+                per_scope_remaining = max(0, validated.limit - len(merged_results))
+                if per_scope_remaining == 0:
+                    truncated_any = True
+                    break
+            except Exception as exc:
+                scopes_with_errors[s] = str(exc)
+
+        return _tr._as_json_output(
+            {
+                "results": merged_results[: validated.limit],
+                "total": len(merged_results),
+                "scopes_searched": scopes_searched,
+                "scopes_with_errors": scopes_with_errors,
+                "truncated": truncated_any,
+            }
+        )
+    except Exception as exc:
+        _tr._record_tool_error(ctx, "td_search_nodes")
+        return format_tool_error(exc)
+    finally:
+        finish()
 
 
 @mcp.tool(name="td_get_errors")

@@ -2024,8 +2024,10 @@ from td_mcp.registry.tools_snapshots import (  # noqa: E402
     td_snapshot_scene,
 )
 from td_mcp.registry.tools_state import (  # noqa: E402
+    td_get_focus,
     td_get_state_vector,
     td_get_timescale_state,
+    td_locations,
 )
 from td_mcp.registry.tools_streaming import (  # noqa: E402
     td_capture_and_analyze,

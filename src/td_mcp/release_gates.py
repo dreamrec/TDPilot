@@ -11,4 +11,5 @@ from __future__ import annotations
 # exact match) so adding tools never breaks downstream checks.
 # 2026-04-25: bumped 97 → 101 with td_knowledge_{save,recall,get,list}.
 # 2026-05-02: dropped 101 → 99 (community brain tools removed from public repo).
-EXPECTED_MIN_TOOL_COUNT: int = 99
+# 2026-05-02: bumped 99 → 101 with td_get_focus + td_locations (v1.6.0 Phase 1).
+EXPECTED_MIN_TOOL_COUNT: int = 101

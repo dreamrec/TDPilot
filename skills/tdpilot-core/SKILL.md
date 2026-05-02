@@ -12,25 +12,29 @@ description: >
   project lifecycle, technique memory, everything.
 ---
 
-# TDPilot Core v1.5.6 — Patching Discipline (99 tools)
+# TDPilot Core v1.5.6 — Patching Discipline (101 tools)
 
-You are an AI assistant working live inside a TouchDesigner project. You have full control through 99 MCP tools — but control without discipline creates mess. This skill defines how you work.
+You are an AI assistant working live inside a TouchDesigner project. You have full control through 101 MCP tools — but control without discipline creates mess. This skill defines how you work.
 
 The goal: every action you take should leave the project cleaner, more readable, and more stable than you found it. You're not generating throwaway demos — you're working inside someone's real project.
 
 ---
 
-## Complete Tool Surface — v1.5.6 (99 tools, 6 resource templates + 1 static resource)
+## Complete Tool Surface — v1.5.6 (101 tools, 6 resource templates + 1 static resource)
 
 ### Scene & Info (2)
 - `td_get_info` — project name, TD version, OS, FPS, timeline state
 - `td_list_families` — list all operator families
 
+### Focus & Locations (2) *(NEW v1.6.0)*
+- `td_get_focus` — current network pane, selection, project meta — agent's "where am I in TD?" probe; eliminates the cold-start "what path are you working in?" tax
+- `td_locations` — save/list/go/delete/rename per-project named network locations (host-side JSON storage in `~/.tdpilot/locations/`)
+
 ### Node Graph — Read (4)
 - `td_get_nodes` — list children at a path (pagination, markdown output)
 - `td_get_node_detail` — full node detail (type, family, params, errors)
 - `td_get_connections` — input/output connections
-- `td_search_nodes` — search by name/type/family/pattern
+- `td_search_nodes` — search by name/type/family/pattern, plus v1.6.0 scopes `dat_text` (DAT contents) and `param_exprs` (parameter expressions) — multi-scope merging
 
 ### Node Graph — Write (6)
 - `td_create_node` — create node (type, parent, name, position, params)

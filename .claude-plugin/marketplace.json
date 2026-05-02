@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "dreamrec-TDPilot",
-  "description": "AI copilot for TouchDesigner — 99 MCP tools for live node graph control, parameter management, diagnostics, safety, streaming, technique memory, knowledge corpus, and typed patch sessions.",
+  "description": "AI copilot for TouchDesigner — 101 MCP tools for live node graph control, parameter management, diagnostics, safety, streaming, technique memory, knowledge corpus, focus + locations, and typed patch sessions.",
   "owner": {
     "name": "dreamrec",
     "email": "dreamrec@users.noreply.github.com"
@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "tdpilot",
-      "description": "AI copilot for TouchDesigner with live MCP control — 99 tools, POPx inspection, knowledge corpus, project lifecycle, custom parameter authoring, snapshots, undo-block safety, and typed patch sessions. Works with Claude Desktop, Claude Code, and any MCP-compatible client.",
+      "description": "AI copilot for TouchDesigner with live MCP control — 101 tools, focus + locations, POPx inspection, knowledge corpus, project lifecycle, custom parameter authoring, snapshots, undo-block safety, and typed patch sessions. Works with Claude Desktop, Claude Code, and any MCP-compatible client.",
       "version": "1.5.6",
       "author": {
         "name": "silviu"

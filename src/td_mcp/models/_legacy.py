@@ -409,21 +409,88 @@ class CookingInfoInput(BaseModel):
 
 
 class SearchNodesInput(BaseModel):
-    """Input for searching nodes."""
+    """Input for searching nodes.
+
+    v1.6.0 added ``scopes`` as a list-shaped superset of ``search_type``.
+    When ``scopes`` is provided it wins; otherwise ``search_type`` is mapped
+    to a single-element scope list for backward compat. The legacy scopes
+    (``name``/``type``/``family``/``all``) forward to the existing TD-side
+    ``/api/search`` endpoint. New scopes (``dat_text``, ``param_exprs``) are
+    served host-side via the existing ``/api/exec`` endpoint, so they ship
+    without a ``.tox`` rebuild requirement.
+    """
 
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     query: str = Field(..., description="Search string (case-insensitive)", min_length=1)
     path: str = Field(default="/", description="Root path to search from")
-    search_type: str = Field(default="all", description="What to search: 'name', 'type', 'family', or 'all'")
+    search_type: str | None = Field(
+        default=None,
+        description=(
+            "DEPRECATED — prefer ``scopes``. One of 'name', 'type', 'family', 'all'. "
+            "When omitted, defaults to 'all' (or whatever ``scopes`` requests)."
+        ),
+    )
+    scopes: list[str] | None = Field(
+        default=None,
+        description=(
+            "Search scopes (v1.6.0+). Any of: 'name', 'type', 'family', 'all', "
+            "'dat_text', 'param_exprs'. Multiple scopes are merged. Defaults to "
+            "['all'] when neither scopes nor search_type is set."
+        ),
+    )
     limit: int = Field(default=50, ge=1, le=200, description="Max results")
+
+    LEGACY_SCOPES: tuple[str, ...] = ("name", "type", "family", "all")
+    NEW_SCOPES: tuple[str, ...] = ("dat_text", "param_exprs")
 
     @field_validator("search_type")
     @classmethod
-    def validate_search_type(cls, v: str) -> str:
+    def validate_search_type(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
         if v not in ("name", "type", "family", "all"):
             raise ValueError("search_type must be 'name', 'type', 'family', or 'all'")
         return v
+
+    @field_validator("scopes")
+    @classmethod
+    def validate_scopes(cls, v: list[str] | None) -> list[str] | None:
+        if v is None:
+            return v
+        allowed = set(cls.LEGACY_SCOPES) | set(cls.NEW_SCOPES)
+        bad = [s for s in v if s not in allowed]
+        if bad:
+            raise ValueError(
+                f"Unknown scope(s) {bad}; allowed: {sorted(allowed)}"
+            )
+        if not v:
+            raise ValueError("scopes must contain at least one entry")
+        return v
+
+    def effective_scopes(self) -> list[str]:
+        """Resolve the actual scope list to honor.
+
+        Precedence: explicit ``scopes`` > ``search_type`` > default ``["all"]``.
+        ``"all"`` is shorthand for the three legacy scopes.
+        """
+        if self.scopes:
+            scopes = list(self.scopes)
+        elif self.search_type:
+            scopes = [self.search_type]
+        else:
+            scopes = ["all"]
+        if "all" in scopes:
+            expanded = ["name", "type", "family"]
+            scopes = [s for s in scopes if s != "all"] + expanded
+        # Stable de-dup
+        seen: set[str] = set()
+        result: list[str] = []
+        for s in scopes:
+            if s not in seen:
+                result.append(s)
+                seen.add(s)
+        return result
 
 
 # ─────────────────────────────────────────────────────────────

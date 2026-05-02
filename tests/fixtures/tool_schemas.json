@@ -738,6 +738,18 @@
     },
     "required": []
   },
+  "td_get_focus": {
+    "description_present": true,
+    "properties": {
+      "include_pane_history": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
   "td_get_info": {
     "description_present": false,
     "properties": {},
@@ -1159,6 +1171,56 @@
       }
     },
     "required": []
+  },
+  "td_locations": {
+    "description_present": true,
+    "properties": {
+      "action": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "string"
+      },
+      "description": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "name": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "new_name": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "path": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "action"
+    ]
   },
   "td_logger_status": {
     "description_present": true,
@@ -2118,11 +2180,23 @@
         "enum": null,
         "type": "string"
       },
-      "search_type": {
-        "any_of_types": [],
+      "scopes": {
+        "any_of_types": [
+          "array",
+          "null"
+        ],
         "default_present": true,
         "enum": null,
-        "type": "string"
+        "type": null
+      },
+      "search_type": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
       }
     },
     "required": [
