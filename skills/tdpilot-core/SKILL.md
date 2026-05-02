@@ -12,15 +12,15 @@ description: >
   project lifecycle, technique memory, everything.
 ---
 
-# TDPilot Core v1.5.6 — Patching Discipline (101 tools)
+# TDPilot Core v1.5.6 — Patching Discipline (99 tools)
 
-You are an AI assistant working live inside a TouchDesigner project. You have full control through 101 MCP tools — but control without discipline creates mess. This skill defines how you work.
+You are an AI assistant working live inside a TouchDesigner project. You have full control through 99 MCP tools — but control without discipline creates mess. This skill defines how you work.
 
 The goal: every action you take should leave the project cleaner, more readable, and more stable than you found it. You're not generating throwaway demos — you're working inside someone's real project.
 
 ---
 
-## Complete Tool Surface — v1.5.3 (101 tools, 6 resource templates + 1 static resource)
+## Complete Tool Surface — v1.5.6 (99 tools, 6 resource templates + 1 static resource)
 
 ### Scene & Info (2)
 - `td_get_info` — project name, TD version, OS, FPS, timeline state
@@ -319,6 +319,74 @@ Critical details: `src` is a **trifurcation** (feedback seed + over BG + dry pat
 ## 12. Communication Style
 
 Be direct. Say what you did, what you found, what you changed. If something broke, say it and explain how you're fixing it. Include node paths and actual error messages.
+
+---
+
+## 13. Feature Adoption Rules — v1.6 and Beyond
+
+These rules govern when a new MCP tool, capability, or surface is added to TDPilot. They came out of the 2026-05-02 TwoZero competitive review and exist so future sessions don't relitigate the same parity vs differentiation argument every time a competitor ships a new feature.
+
+**Default answer to "competitor X just shipped Y, should we add Y?" is NO** unless one of Rules 1–3 says yes. Refusing parity work is a feature.
+
+### Rule 1 — Adopt features that COMPOUND with rigor
+
+A feature compounds with rigor when it makes the audit/snapshot/memory/optimizer/knowledge-store machinery **more usable, more visible, or harder to forget**. These get a fast-track.
+
+**Why:** TDPilot's positioning is *rigor + auditability + open core*. Features that strengthen this stack make the differentiator sharper. Features that don't either dilute the positioning or compete with the user's existing cockpit (Claude Code / Cursor / Codex).
+
+**How to apply:**
+- Before designing a tool, name the existing rigor surface it strengthens (snapshots? audit? memory? optimizer? knowledge_store? safety bounds?). If you can't, it's probably not Rule 1.
+- Prefer **extensions to existing tools** over new tools. New params, new scopes, new actions on a dispatcher — all cheaper than a new `@mcp.tool` decorator. See §10 of the v1.6.0 plan for the documentation tax (12 sites per new tool).
+- Hint injection on `td_create_node` / `td_set_params` / `td_exec_python` / `td_get_errors` is the canonical Rule 1 example: makes the existing tdpilot-core pitfalls (this skill's §11) impossible to forget at the moment of risk.
+
+**Good examples (passed Rule 1, shipping in v1.6):** `td_get_focus`, `td_get_hints` + auto-injection, `td_locations`, `td_search_nodes(scopes=...)`, `td_component_notes`.
+
+### Rule 2 — Reject features that are PURE PARITY
+
+A feature is parity when its only justification is "competitor X has it." These get rejected unless **concrete user demand** (named users, specific workflows) emerges.
+
+**Why:** Parity competition turns the roadmap into a feature-shopping list, not a product. Competitors ship constantly; chasing them all means never deepening our own moat. And every parity tool we add multiplies the documentation tax (12 sites) and the version-drift surface (7 manifests + tool-count gates).
+
+**How to apply:**
+When evaluating a feature pitched on parity grounds, ask three questions in order:
+1. Does it compound with rigor? (See Rule 1.) If yes — evaluate.
+2. Does it reduce friction in *using* our existing rigor? If yes — evaluate.
+3. Is it just parity? If yes — **refuse unless user demand is concrete and large** (≥3 named users with specific workflow descriptions, not anticipated demand).
+
+**Bad examples (failed Rule 2, deferred — see local memory `roadmap-future.md`):**
+- `td_library_*` — `td_memory_*` already covers it
+- `td_ai_*` adapters — the agent IS the adapter
+- Native TD command palette — Claude Code IS the cockpit
+- `td_vst_*` — niche, no compounding
+- Cloud library sync — see Rule 3
+
+**The discipline:** When you hear "but TwoZero / X / Y has this", your first move is to look at our existing tool surface (23 registry files in `src/td_mcp/registry/`) and ask "does this duplicate something we already have under a different name?" Often the answer is yes.
+
+### Rule 3 — Open core stays open
+
+Cloud / hosted / account-gated features ship as a **separate product** with their own version cadence, distribution, and CHANGELOG — never blended into the MCP tool surface. The open core MUST NOT depend on hosted services.
+
+**Why:** TDPilot's "no signup, no key, `npx tdpilot` and you're done" property is one of its strongest differentiators against TwoZero (who require account + credits + cloud-coupled Hub). Adding cloud-gated tools to the open MCP surface trades this away. Once a single tool requires authentication, the entire surface is no longer trust-by-inspection.
+
+**How to apply:**
+- No `@mcp.tool` may require external authentication, account state, paid credits, or remote API keys to function. Local model adapters (user provides their own OpenAI/Anthropic key in env) are NOT cloud features in this sense — those keys are user-owned, host-side.
+- If a cloud-coupled feature is genuinely valuable, it ships under a **different name and repo** with its own install path. The open `tdpilot` MCP server must continue to work fully without it.
+- Reject any roadmap proposal that introduces account state, hosted gateways, or license/entitlement infrastructure into the open core. Move it to `roadmap-future.md`.
+
+**Bad examples (failed Rule 3):** Library cloud sync, TDPilot Hub, hosted AI gateway, premium DOP packs gated by license.
+
+### When the rules conflict
+
+If a feature passes Rule 1 (compounds with rigor) but introduces optional cloud (touches Rule 3), the cloud part gets stripped before adoption. Ship the rigor-compounding part as open core; defer or separate-repo the cloud part.
+
+If you're unsure whether a feature passes Rules 1–3, **default to NO and surface the question to the user**. The cost of saying no to a marginal feature is small; the cost of accumulating parity debt is compounding.
+
+### How to update these rules
+
+These rules are not immutable, but they're load-bearing. To change them:
+1. Surface the proposed change to the user explicitly with a named scenario the current rules handle wrong
+2. Get explicit user approval on the new rule wording
+3. Update this section + add a brief change-log entry
 
 ---
 

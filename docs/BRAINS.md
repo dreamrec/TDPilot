@@ -181,15 +181,15 @@ The brain is automatically discovered on next TDPilot startup if its config exis
 Here's a template for building a brain from a community tutorial source:
 
 ```yaml
-# data/brains/paketa.yaml
-name: paketa
-display_name: "Paketa12 Tutorials"
+# data/brains/community_brain.yaml
+name: community_brain
+display_name: "Community Tutorials"
 trust_tier: community
 version: "1.0"
-source_url: "https://www.youtube.com/@paketa12"
-description: "TouchDesigner tutorials by Paketa — creative coding, generative art, audio-reactive visuals"
+source_url: "https://example.com/your-source"
+description: "TouchDesigner tutorials — creative coding, generative art, audio-reactive visuals"
 
-scrape_path: "~/Desktop/paketa_tutorials/"
+scrape_path: "~/Desktop/your_tutorials/"
 
 # For YouTube transcript scrapes or blog posts, the selectors will differ
 content_selector: "body"           # or ".post-content", ".article-body", etc.
@@ -210,7 +210,7 @@ skip_patterns:
   - "*.png"
   - "*.jpg"
 
-url_template: "https://paketa12.com/{page_name}"
+url_template: "https://example.com/{page_name}"
 
 special_parsers:
   release_notes: false
@@ -233,20 +233,20 @@ special_parsers:
 ```
 data/brains/
     derivative.yaml      # official — ground truth
-    paketa.yaml          # community — creative techniques
+    community.yaml       # community — creative techniques
     elekktronaut.yaml    # community — instancing, particles
     my_notes.yaml        # personal — workshop notes
 
 data/normalized/
     derivative/          # ~3,369 pages, official tier
-    paketa/              # ~200 tutorials, community tier
+    community/           # ~200 tutorials, community tier
     elekktronaut/        # ~150 tutorials, community tier
     my_notes/            # ~50 notes, personal tier
 ```
 
 When you ask: "How do I create an audio-reactive particle system?"
 1. **derivative** brain returns: Particle POP docs, Audio Spectrum CHOP docs, relevant parameters
-2. **paketa** brain returns: Tutorial on audio-reactive setups with specific node chains
+2. **community** brain returns: Tutorial on audio-reactive setups with specific node chains
 3. **elekktronaut** brain returns: Advanced instancing tutorial with audio input
 4. Results are presented with clear source attribution and tier ordering
 

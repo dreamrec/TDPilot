@@ -60,7 +60,7 @@ async def td_knowledge_save(
             default="",
             description=(
                 "Optional attribution — where this technique came from "
-                "(e.g. 'paketa12 MBGA tutorial 2025-03-01')."
+                "(e.g. 'youtube tutorial 2025-03-01', 'forum post')."
             ),
         ),
     ] = "",

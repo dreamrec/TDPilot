@@ -43,7 +43,7 @@ class KnowledgeStore:
         name: short title
         description: one-line summary
         tags: lowercase strings
-        source: optional attribution (e.g. "paketa12 MBGA tutorial")
+        source: optional attribution (e.g. "youtube tutorial", "blog post")
         notes: free-form
         created_at, updated_at: ISO timestamps
         favorite: bool

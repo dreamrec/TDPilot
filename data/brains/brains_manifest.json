@@ -52,16 +52,6 @@
           "size_mb": 0.001
         }
       ]
-    },
-    "paketa12": {
-      "display_name": "paketa12 Tutorials",
-      "description": "177 TouchDesigner tutorials by paketa12 — GPU-texture-as-compute, UV math, from-scratch simulations, Voronoi/packing, GLSL, feedback loops. No remote DB yet — build locally with scripts/build_tutorial_brain.py.",
-      "trust_tier": "community",
-      "source_url": "https://www.youtube.com/@paketa12",
-      "install_mode": "local_build",
-      "runtime_db": "data/normalized/paketa12/paketa12brain.db",
-      "files": [],
-      "install_notes": "Local-build brain. Clone transcripts with yt-dlp, then run `uv run python scripts/build_tutorial_brain.py --config data/brains/paketa12.yaml`. `npx tdpilot brains add paketa12` will refuse to activate until `runtime_db` exists on disk."
     }
   }
 }

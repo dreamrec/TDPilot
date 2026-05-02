@@ -1,6 +1,6 @@
 # Community Brain Template
 # Copy this file and customize for your source
-# Rename to: <source_name>.yaml (e.g., paketa.yaml)
+# Rename to: <source_name>.yaml (e.g., my_tutorials.yaml)
 
 name: my_source                          # lowercase, no spaces
 display_name: "My Tutorial Source"       # human-readable name

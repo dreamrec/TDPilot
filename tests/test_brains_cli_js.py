@@ -7,10 +7,14 @@ real `~/.tdpilot/` is never touched. The bundled manifest is staged at
 Pins the regressions the reviewer identified in v1.4.4:
 
   - `brains add <unknown>` silently marked the id installed.
-  - `brains add paketa12` (local_build, no files) succeeded with zero
+  - `brains add <local_build_id>` (no files) succeeded with zero
     downloads, polluting active.json without a usable DB.
   - Any typo in active.json disables all known brains at next startup
     (because active.json is an allow-list).
+
+Note: As of v1.6 the shipping manifest contains no `local_build` brains,
+so the local-build-specific regression tests have been retired. They
+should be re-introduced if a future shipping brain re-uses that mode.
 """
 
 from __future__ import annotations
@@ -75,10 +79,10 @@ pytestmark = pytest.mark.skipif(not _has_node(), reason="node not on PATH; skip 
 def test_list_shows_install_mode(isolated_home: Path):
     proc = _node(isolated_home, ["list"])
     assert proc.returncode == 0, proc.stderr
-    # paketa12 is local-build, must be tagged as such
+    # derivative is download-mode, must be tagged as such
     combined = proc.stdout + proc.stderr
-    assert "paketa12" in combined
-    assert "local_build" in combined or "local-build" in combined.lower()
+    assert "derivative" in combined
+    assert "download" in combined.lower()
 
 
 def test_add_unknown_id_rejects_with_non_zero_exit(isolated_home: Path):
@@ -92,37 +96,6 @@ def test_add_unknown_id_rejects_with_non_zero_exit(isolated_home: Path):
     assert "unknown" in combined.lower() or "valid ids" in combined.lower()
     # Critical: active.json untouched
     assert not active.exists(), "active.json was created despite unknown id — regression"
-
-
-def test_add_local_build_brain_without_runtime_db_rejects(isolated_home: Path):
-    """paketa12 is local_build + no files. If the runtime DB isn't on disk,
-    activation must refuse — NOT silently mark installed."""
-    active = isolated_home / ".tdpilot" / "data" / "brains" / "active.json"
-
-    proc = _node(isolated_home, ["add", "paketa12"])
-    assert proc.returncode != 0, f"expected non-zero; got 0.\nstderr: {proc.stderr}"
-    combined = proc.stdout + proc.stderr
-    assert "local" in combined.lower() and ("build" in combined.lower() or "runtime" in combined.lower())
-    # active.json must not list paketa12
-    if active.exists():
-        data = json.loads(active.read_text())
-        assert "paketa12" not in data.get("installed_brains", [])
-
-
-def test_add_local_build_brain_with_runtime_db_present_activates(isolated_home: Path):
-    """If the user HAS built paketa12 locally (runtime_db exists), activation
-    should succeed and update active.json."""
-    active = isolated_home / ".tdpilot" / "data" / "brains" / "active.json"
-    # Simulate local build completion by creating the runtime DB file
-    db_path = isolated_home / ".tdpilot" / "data" / "normalized" / "paketa12" / "paketa12brain.db"
-    db_path.parent.mkdir(parents=True)
-    db_path.write_bytes(b"SQLite-format-placeholder")
-
-    proc = _node(isolated_home, ["add", "paketa12"])
-    assert proc.returncode == 0, f"stderr:\n{proc.stderr}"
-    assert active.exists()
-    data = json.loads(active.read_text())
-    assert "paketa12" in data["installed_brains"]
 
 
 def test_showInstalled_with_no_active_is_clean(isolated_home: Path):

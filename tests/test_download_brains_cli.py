@@ -15,6 +15,10 @@ v1.4.5 changes:
   - Manifest entries with `install_mode: "local_build"` are skipped by the
     downloader (can't be downloaded), but signaled to callers via a
     machine-parseable result summary.
+
+Note: As of v1.6 the shipping manifest contains no `local_build` brains,
+so the local-build-only test has been retired. It should be re-introduced
+if a future shipping brain re-uses that mode.
 """
 
 from __future__ import annotations
@@ -81,21 +85,6 @@ def test_empty_brains_file_exits_non_zero(tmp_path):
     assert proc.returncode != 0
 
 
-def test_local_build_brain_alone_exits_non_zero(tmp_path):
-    """paketa12 has install_mode: local_build with no files. The downloader
-    must refuse to silently succeed (the user needs to know they have to
-    run the local builder)."""
-    sel = _write_selection(tmp_path, ["paketa12"])
-    proc = _run(
-        ["--manifest", str(REPO / "data" / "brains" / "brains_manifest.json"), "--brains-file", str(sel)]
-    )
-    assert proc.returncode != 0
-    combined = proc.stdout + proc.stderr
-    assert "local" in combined.lower() or "build" in combined.lower(), (
-        f"expected local-build hint in output; got:\n{combined}"
-    )
-
-
 def test_mixed_unknown_and_known_ids_exits_non_zero(tmp_path):
     """If any id is unknown, fail the whole run so the user catches the typo."""
     sel = _write_selection(tmp_path, ["derivative", "typox"])
@@ -111,6 +100,6 @@ def test_list_command_shows_install_mode(tmp_path):
     proc = _run(["--list", "--manifest", str(REPO / "data" / "brains" / "brains_manifest.json")])
     assert proc.returncode == 0
     combined = proc.stdout + proc.stderr
-    # Either "local_build" or "local build" appears near paketa12
-    assert "paketa12" in combined
-    assert "local" in combined.lower()
+    # Either "download" appears near derivative
+    assert "derivative" in combined
+    assert "download" in combined.lower()

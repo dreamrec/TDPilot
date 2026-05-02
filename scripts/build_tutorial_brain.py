@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Tutorial brain builder for TDPilot.
 
-Builds an FTS5 brain from video tutorial corpora (e.g. paketa12).
+Builds an FTS5 brain from video tutorial corpora.
 Unlike build_brain.py (HTML-based), this processes:
   - Transcript files (.en.txt)
   - SRT subtitles (.en.srt) for timestamp-based chunking
   - TOE/TOX project files via toeexpand for node graphs, params, GLSL/Python code
 
 Usage:
-    python scripts/build_tutorial_brain.py --config data/brains/paketa12.yaml \
-        --source /path/to/paketa12/
+    python scripts/build_tutorial_brain.py --config data/brains/<brain_name>.yaml \
+        --source /path/to/transcripts/
 """
 
 from __future__ import annotations
@@ -272,14 +272,6 @@ TD_ASR_CORRECTIONS: list[tuple[str, str]] = [
     (r"\btops?\b(?=\s+(?:network|operator|node|input|output|family))", "TOP"),
     (r"\bdats?\b(?=\s+(?:operator|node|table|text))", "DAT"),
     (r"\bcomps?\b(?=\s+(?:operator|node|component|editor))", "COMP"),
-    # paketa12 name variations
-    (r"\bpocket\s*a\s*12\b", "paketa12"),
-    (r"\bpaka\s*12\b", "paketa12"),
-    (r"\bpagra\s*12\b", "paketa12"),
-    (r"\bpakata\s*12\b", "paketa12"),
-    (r"\bbagging\s*a\s*12\b", "paketa12"),
-    (r"\bpucara\s*12\b", "paketa12"),
-    (r"\bpak eta\s*12\b", "paketa12"),
     # Common TD terms
     (r"\btouch\s+designer\b", "TouchDesigner"),
     (r"\bG L S L\b", "GLSL"),

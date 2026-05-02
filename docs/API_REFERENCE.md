@@ -1,6 +1,6 @@
 # TDPilot API Reference
 
-> Auto-generated from TDPilot v1.5.6 | 101 tools | Source: `src/td_mcp/tool_registry.py`
+> Auto-generated from TDPilot v1.5.6 | 99 tools | Source: `src/td_mcp/tool_registry.py`
 
 ---
 
@@ -152,7 +152,7 @@ For prose-with-math reference content (BZ reaction equations, feedback recipes, 
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_knowledge_save` | Persist a free-form markdown knowledge entry. Body stored at `entries/<id>.md`, metadata in `index.json`. Local-only, never pushed. | `body` (str, **required**, min 1 char, max 200 KB UTF-8): Markdown body. `name` (str, opt): Short title. `description` (str, opt): One-line summary used in search results. `tags` (list[str], opt): Lowercase, e.g. `['feedback', 'reaction-diffusion']`. `source` (str, opt): Attribution (e.g. "paketa12 MBGA tutorial"). `notes` (str, opt). `scope` (str, opt, default `"project"`): `project` or `global`. Project requires `TDPILOT_PROJECT_NAME`. | JSON with `success`, `id`, `scope`, `stats`. |
+| `td_knowledge_save` | Persist a free-form markdown knowledge entry. Body stored at `entries/<id>.md`, metadata in `index.json`. Local-only, never pushed. | `body` (str, **required**, min 1 char, max 200 KB UTF-8): Markdown body. `name` (str, opt): Short title. `description` (str, opt): One-line summary used in search results. `tags` (list[str], opt): Lowercase, e.g. `['feedback', 'reaction-diffusion']`. `source` (str, opt): Attribution (e.g. "youtube tutorial", "blog post"). `notes` (str, opt). `scope` (str, opt, default `"project"`): `project` or `global`. Project requires `TDPILOT_PROJECT_NAME`. | JSON with `success`, `id`, `scope`, `stats`. |
 | `td_knowledge_recall` | Search knowledge entries by query and/or tags. Returns summaries (no bodies — use `td_knowledge_get` to fetch a body). | `query` (str, opt): Free-text across name/description/tags/source/notes. `tags` (list[str], opt): At-least-one-match. `scope` (str, opt, default `"all"`): `project`, `global`, or `all`. `limit` (int, opt, default `20`, 1-100). `full_text` (bool, opt, default `false`): If true, also reads each body file (slower but more thorough). | JSON with `success`, `count`, `results` array of summaries. |
 | `td_knowledge_get` | Fetch the full markdown body + metadata for one entry. | `entry_id` (str, **required**, min 1 char): Entry id from `td_knowledge_recall`. `scope` (str, opt, default `"project"`): `project` or `global`. | JSON with `success`, `entry` (full record + `body` field). Returns `success=False` with error if not found. |
 | `td_knowledge_list` | List entry summaries newest-first with optional filtering. | `scope` (str, opt, default `"all"`): `project`, `global`, or `all`. `tags` (list[str], opt): At-least-one-match filter. `favorites_only` (bool, opt, default `false`). `limit` (int, opt, default `50`, 1-200). | JSON with `success`, `count`, `results` array, `stats` dict. |

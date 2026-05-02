@@ -755,8 +755,8 @@ no `.tox` rebuild required. Tool count unchanged at 92. Tests: 509 → 551
     but never invoked it when run directly (no `require.main === module`
     dispatch) — invocations actually run now.
   - `data/brains/brains_manifest.json` bumped to manifest_version 2
-    with per-brain `install_mode` and `runtime_db`. `paketa12` correctly
-    tagged as local-build.
+    with per-brain `install_mode` and `runtime_db`. Community-tier
+    local-build brains correctly tagged.
 
 - **DocsBrain parameter help no longer hollow:** `td_get_param_help`
   read `card.get("key_params", [])`, but DocsBrain's `get_operator()`
@@ -834,11 +834,10 @@ doc sharpening. No TD-side protocol changes — API_VERSION stays at
 - **Brain installer placeholder:** `npm/brains.js` had a literal
   `MANIFEST_DRIVE_ID = "MANIFEST_FILE_ID"` string and no
   `brains_manifest.json` was shipped anywhere. `npx tdpilot brains list`
-  printed "No manifest found"; `paketa12` (defined in
-  `data/brains/paketa12.yaml`) was invisible to the installer. Ship
-  `data/brains/brains_manifest.json` listing derivative + popx (with
-  real Drive IDs) and paketa12 (local-build brain pointing users at
-  `scripts/build_tutorial_brain.py`).
+  printed "No manifest found"; community brains were invisible to the
+  installer. Ship `data/brains/brains_manifest.json` listing derivative
+  + popx (with real Drive IDs) and any local-build brains pointing
+  users at `scripts/build_tutorial_brain.py`.
 
 - **Security-doc sharpening:** `docs/SECURITY.md`'s exec-modes table
   previously claimed restricted mode has "TD API: read-only", which
@@ -1125,13 +1124,13 @@ pulling this release. All other fixes take effect on MCP server restart.
 
 ### Known issues still to triage
 
-- **Parameter-passing convention is inconsistent across tools.** About 11
+- **Parameter-passing convention is inconsistent across tools.** About 9
   tools (`td_search_official_docs`, `td_get_operator_doc`, `td_get_param_help`,
   `td_lookup_snippets`, `td_lookup_palette_component`, `td_get_release_delta`,
-  `td_get_build_compatibility`, `td_search_popx_docs`, `td_get_popx_operator`,
-  `td_search_paketa12`, `td_get_paketa12_tutorial`) take arguments at the
-  top level of the tool call, while ~70 others wrap them under `params:{}`.
-  Normalizing will be a breaking schema change tracked for v2.0.
+  `td_get_build_compatibility`, `td_search_popx_docs`, `td_get_popx_operator`)
+  take arguments at the top level of the tool call, while ~70 others wrap
+  them under `params:{}`. Normalizing will be a breaking schema change
+  tracked for v2.0.
 
 ### Verification
 

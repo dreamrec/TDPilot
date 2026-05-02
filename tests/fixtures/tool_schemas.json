@@ -861,20 +861,6 @@
     },
     "required": []
   },
-  "td_get_paketa12_tutorial": {
-    "description_present": true,
-    "properties": {
-      "topic": {
-        "any_of_types": [],
-        "default_present": false,
-        "enum": null,
-        "type": "string"
-      }
-    },
-    "required": [
-      "topic"
-    ]
-  },
   "td_get_param_help": {
     "description_present": true,
     "properties": {
@@ -2164,26 +2150,6 @@
         "enum": null,
         "type": null
       },
-      "limit": {
-        "any_of_types": [],
-        "default_present": true,
-        "enum": null,
-        "type": "integer"
-      },
-      "query": {
-        "any_of_types": [],
-        "default_present": false,
-        "enum": null,
-        "type": "string"
-      }
-    },
-    "required": [
-      "query"
-    ]
-  },
-  "td_search_paketa12": {
-    "description_present": true,
-    "properties": {
       "limit": {
         "any_of_types": [],
         "default_present": true,

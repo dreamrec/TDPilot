@@ -1,4 +1,4 @@
-"""Knowledge tools — TD docs, palette, snippets, POPx brain, paketa12 brain.
+"""Knowledge tools — TD docs, palette, snippets, POPx brain.
 
 Part of the v1.5.0 Phase 2 module split. See
 ``src/td_mcp/registry/__init__.py`` for the package-level explanation of
@@ -15,13 +15,10 @@ Tools in this module:
     td_describe_surface
     td_search_popx_docs
     td_get_popx_operator
-    td_search_paketa12
-    td_get_paketa12_tutorial
 
 Knowledge-specific helpers also live here:
     _tr._get_card_index(ctx)           — per-ctx CardIndex accessor
     _get_popx_brain(ctx)           — per-ctx POPx Brain accessor
-    _get_paketa12_brain(ctx)       — per-ctx paketa12 Brain accessor
 """
 
 from __future__ import annotations
@@ -309,59 +306,6 @@ async def td_get_popx_operator(
     if op_results:
         return {"operator": op_results[0], "related": op_results[1:], "provenance": provenance.to_dict()}
     return {"error": f"No POPx operator found for '{operator_name}'", "provenance": provenance.to_dict()}
-
-
-# ── paketa12 Tutorial Brain Tools ────────────────────────────────────
-
-
-def _get_paketa12_brain(ctx: Context):
-    svc = _tr._get_services(ctx)
-    return getattr(svc, "paketa12_brain", None)
-
-
-@mcp.tool(name="td_search_paketa12")
-async def td_search_paketa12(
-    ctx: Context,
-    query: str,
-    limit: int = 10,
-) -> dict[str, Any]:
-    """Search paketa12 tutorial knowledge — GPU-texture-as-compute, UV math, simulations, GLSL techniques, feedback loops, algorithmic art in TouchDesigner."""
-    brain = _get_paketa12_brain(ctx)
-    if brain is None:
-        return {
-            "error": "paketa12 brain not installed. Run 'npx tdpilot brains add paketa12' to enable.",
-            "results": [],
-            "count": 0,
-        }
-    results = brain.search(query, limit=limit)
-    svc = _tr._get_services(ctx)
-    provenance = Provenance(source="paketa12_brain", td_build=svc.td_build)
-    return {"results": results, "count": len(results), "provenance": provenance.to_dict()}
-
-
-@mcp.tool(name="td_get_paketa12_tutorial")
-async def td_get_paketa12_tutorial(
-    ctx: Context,
-    topic: str,
-) -> dict[str, Any]:
-    """Get tutorial chunks for a paketa12 topic (e.g. 'Physarum simulation', 'Verlet integration', 'UV shredder', 'circle packing')."""
-    brain = _get_paketa12_brain(ctx)
-    if brain is None:
-        return {"error": "paketa12 brain not installed. Run 'npx tdpilot brains add paketa12' to enable."}
-    results = brain.search(topic, limit=10)
-    # Group by tutorial (page_id)
-    tutorials: dict[str, list] = {}
-    for r in results:
-        pid = r.get("page_id", "unknown")
-        tutorials.setdefault(pid, []).append(r)
-    svc = _tr._get_services(ctx)
-    provenance = Provenance(source="paketa12_brain", td_build=svc.td_build)
-    return {
-        "topic": topic,
-        "tutorials_found": len(tutorials),
-        "chunks": results,
-        "provenance": provenance.to_dict(),
-    }
 
 
 @mcp.tool(name="td_describe_surface")

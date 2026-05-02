@@ -241,7 +241,7 @@ Prompt:
 
 ## Your "Good Enough" TDPilot Starter Stack
 
-If you do not want to learn all 101 tools, focus on this stack:
+If you do not want to learn all 99 tools, focus on this stack:
 
 - inspect:
   `td_get_info`, `td_get_nodes`, `td_get_node_detail`, `td_get_params`

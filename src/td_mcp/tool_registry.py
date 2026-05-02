@@ -376,24 +376,6 @@ async def server_lifespan(app: FastMCP):
         except Exception as exc:
             logger.debug("POPx brain not available: %s", exc)
 
-    # paketa12 tutorial brain — loaded only if active
-    paketa12_brain = None
-    if brain_is_active(active_brains, "paketa12"):
-        try:
-            from td_mcp.knowledge.docsbrain import DocsBrain as _Paketa12Brain
-
-            p12_dir = Path(__file__).resolve().parent.parent.parent / "data" / "normalized" / "paketa12"
-            p12_db = p12_dir / "paketa12brain.db"
-            if p12_db.exists():
-                paketa12_brain = _Paketa12Brain(
-                    db_path=p12_db,
-                    changelog_path=p12_dir / "operator_changelog.json",
-                    manifest_path=p12_dir / "build_manifest.json",
-                )
-                logger.info("paketa12 brain loaded (%d chunks)", paketa12_brain.count())
-        except Exception as exc:
-            logger.debug("paketa12 brain not available: %s", exc)
-
     services = ServiceContainer(
         td_client=td_client,
         macro_engine=macro_engine,
@@ -410,7 +392,6 @@ async def server_lifespan(app: FastMCP):
         audit=audit,
         card_index=card_index,
         popx_brain=popx_brain,
-        paketa12_brain=paketa12_brain,
         td_build=td_build,
     )
 
@@ -1975,14 +1956,12 @@ from td_mcp.registry.tools_knowledge import (  # noqa: E402
     td_describe_surface,
     td_get_build_compatibility,
     td_get_operator_doc,
-    td_get_paketa12_tutorial,
     td_get_param_help,
     td_get_popx_operator,
     td_get_release_delta,
     td_lookup_palette_component,
     td_lookup_snippets,
     td_search_official_docs,
-    td_search_paketa12,
     td_search_popx_docs,
 )
 from td_mcp.registry.tools_knowledge_store import (  # noqa: E402

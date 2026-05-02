@@ -42,5 +42,4 @@ class ServiceContainer:
     audit: AuditLogger | None = None
     card_index: CardIndex | None = None
     popx_brain: DocsBrain | None = None
-    paketa12_brain: DocsBrain | None = None
     td_build: str = ""

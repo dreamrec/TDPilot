@@ -10,4 +10,5 @@ from __future__ import annotations
 # the full e2e suite, and the runtime stress matrix. Kept as a floor (not an
 # exact match) so adding tools never breaks downstream checks.
 # 2026-04-25: bumped 97 → 101 with td_knowledge_{save,recall,get,list}.
-EXPECTED_MIN_TOOL_COUNT: int = 101
+# 2026-05-02: dropped 101 → 99 (community brain tools removed from public repo).
+EXPECTED_MIN_TOOL_COUNT: int = 99
