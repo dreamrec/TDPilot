@@ -324,7 +324,7 @@ Be direct. Say what you did, what you found, what you changed. If something brok
 
 ## 13. Feature Adoption Rules — v1.6 and Beyond
 
-These rules govern when a new MCP tool, capability, or surface is added to TDPilot. They came out of the 2026-05-02 TwoZero competitive review and exist so future sessions don't relitigate the same parity vs differentiation argument every time a competitor ships a new feature.
+These rules govern when a new MCP tool, capability, or surface is added to TDPilot. They came out of a 2026-05-02 competitive review and exist so future sessions don't relitigate the same parity vs differentiation argument every time a competitor ships a new feature.
 
 **Default answer to "competitor X just shipped Y, should we add Y?" is NO** unless one of Rules 1–3 says yes. Refusing parity work is a feature.
 
@@ -360,13 +360,13 @@ When evaluating a feature pitched on parity grounds, ask three questions in orde
 - `td_vst_*` — niche, no compounding
 - Cloud library sync — see Rule 3
 
-**The discipline:** When you hear "but TwoZero / X / Y has this", your first move is to look at our existing tool surface (23 registry files in `src/td_mcp/registry/`) and ask "does this duplicate something we already have under a different name?" Often the answer is yes.
+**The discipline:** When you hear "but [competitor] has this", your first move is to look at our existing tool surface (23 registry files in `src/td_mcp/registry/`) and ask "does this duplicate something we already have under a different name?" Often the answer is yes.
 
 ### Rule 3 — Open core stays open
 
 Cloud / hosted / account-gated features ship as a **separate product** with their own version cadence, distribution, and CHANGELOG — never blended into the MCP tool surface. The open core MUST NOT depend on hosted services.
 
-**Why:** TDPilot's "no signup, no key, `npx tdpilot` and you're done" property is one of its strongest differentiators against TwoZero (who require account + credits + cloud-coupled Hub). Adding cloud-gated tools to the open MCP surface trades this away. Once a single tool requires authentication, the entire surface is no longer trust-by-inspection.
+**Why:** TDPilot's "no signup, no key, `npx tdpilot` and you're done" property is one of its strongest differentiators against competitors that require account + credits + cloud-coupled hubs. Adding cloud-gated tools to the open MCP surface trades this away. Once a single tool requires authentication, the entire surface is no longer trust-by-inspection.
 
 **How to apply:**
 - No `@mcp.tool` may require external authentication, account state, paid credits, or remote API keys to function. Local model adapters (user provides their own OpenAI/Anthropic key in env) are NOT cloud features in this sense — those keys are user-owned, host-side.
