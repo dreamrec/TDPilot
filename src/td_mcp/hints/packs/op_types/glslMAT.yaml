@@ -1,0 +1,73 @@
+schema_version: 1
+op_types: [glslMAT]
+hints:
+  - id: glslmat_is_full_pipeline_not_fragment_only
+    priority: critical
+    rule: |
+      `glslMAT` is architecturally different from `glslTOP`. glslTOP runs
+      a fragment shader on a fullscreen quad with auto-supplied `vUV`.
+      glslMAT is a real material applied to SOP/POP geometry and accepts
+      three shader stages: `vdat` (vertex), `pdat` (pixel), and optional
+      `gdat` (geometry). The vertex shader MUST output a transformed
+      position via:
+        gl_Position = TDWorldToProj(TDDeform(TDPos()));
+      Skip this and multi-camera / picking / shadow projection breaks
+      silently. Source: derivative.ca/GLSL_MAT and
+      derivative.ca/Write_a_GLSL_Material.
+    source: derivative.ca/Write_a_GLSL_Material
+    source_kind: official_doc
+    when:
+      op_type: glslMAT
+      intent_match: "vertex.?shader|custom.?material|deform"
+
+  - id: glslmat_use_td_attribute_accessors
+    priority: critical
+    rule: |
+      Don't write `in vec3 P;` to grab vertex position — TD's POP/SOP path
+      requires accessor functions:
+        TDPos(), TDNormal(), TDTexCoord(uint layer), TDPointColor()
+      For custom attributes, declare them on the **Attributes** page of
+      the GLSL MAT parameter editor and access via:
+        TDAttrib_<AttribName>() or TDTexAttrib_<AttribName>(uint layer)
+      Quoting the wiki: "In the past these would be manually declared
+      inside the shader, but to add support for POP based workflows, they
+      need to be setup via these parameters instead." Raw `in`
+      declarations cause silent black geometry.
+    source: derivative.ca/GLSL_MAT
+    source_kind: official_doc
+    when:
+      op_type: glslMAT
+      intent_match: "attribute|in.?vec|black.?geometry|silent"
+
+  - id: glslmat_swizzle_color_output
+    priority: critical
+    rule: |
+      Wrap every fragment color write in `TDOutputSwizzle()`:
+        layout(location = 0) out vec4 fragColor;
+        ...
+        fragColor = TDOutputSwizzle(myColor);
+      Handles hardware-specific channel mappings (e.g. alpha-only textures
+      stored as red on some GPUs). Skip it and channels go to wrong
+      destinations on certain hardware — common symptom: correct on dev
+      machine, broken on deployment hardware.
+    source: derivative.ca/Write_a_GLSL_Material
+    source_kind: official_doc
+    when:
+      op_type: glslMAT
+      intent_match: "output|swizzle|wrong.?color|alpha"
+
+  - id: glslmat_compile_error_checkerboard
+    priority: useful
+    rule: |
+      When there are compile errors in a glslMAT shader, geometry renders
+      as a red/blue CHECKERBOARD (NOT a console error). The checkerboard
+      alone tells you nothing about which line failed — open the
+      operator's Errors / Info popup for the actual GLSL compiler message.
+      Pair with `td_get_errors` on the glslMAT to surface the message
+      programmatically.
+    source: derivative.ca/GLSL_MAT
+    source_kind: official_doc
+    when:
+      op_type: glslMAT
+      error_match: "checkerboard|red.?blue|compile"
+next_tools: [td_get_hints, td_get_param_help, td_get_content, td_get_errors]

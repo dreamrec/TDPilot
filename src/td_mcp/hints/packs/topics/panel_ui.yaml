@@ -1,0 +1,81 @@
+schema_version: 1
+topic: panel_ui
+op_types: [panelCOMP, containerCOMP]
+hints:
+  - id: panel_chop_execute_lselect
+    priority: useful
+    rule: |
+      Custom UI widgets are built from a containerCOMP/panelCOMP with a Panel
+      CHOP Execute DAT handling mouse events. The DAT fires on EVERY panel
+      event (hover, move, click) — guard with `panelValue.name`:
+        def onPanelEvent(panelValue):
+            if panelValue.name == 'lselect' and panelValue.val:
+                parent().store('dragging', True)
+            ...
+      Without the `lselect` guard you get callback spam on every mouse move.
+    source: preset-systems-and-ui §7
+    source_kind: skill_pitfall
+    when:
+      op_type: panelCOMP
+      intent_match: "click|drag|button|widget|interact"
+
+  - id: slider_drag_uvalue_mapping
+    priority: useful
+    rule: |
+      Slider drag pattern: track drag state via `parent().store('dragging', True)`
+      on `lselect` true, clear it on `lselect` false. While dragging, read
+      normalized mouse position from `parent().panel.u.val` (0..1) and remap
+      into the param range:
+        u = parent().panel.u.val
+        ext = parent().ext.SliderWidget
+        ext.Value = ext.Range[0] + u * (ext.Range[1] - ext.Range[0])
+    source: preset-systems-and-ui §7
+    source_kind: skill_pitfall
+    when:
+      intent_match: "slider|drag|fader|knob"
+
+  - id: preset_button_modifier_clicks
+    priority: context
+    rule: |
+      Preset button slot convention (compact, modifier-driven):
+        Click            → recall (morph to preset)
+        Ctrl+Click       → jump (instant, no interpolation)
+        Shift+Click      → store current state into slot
+        Shift+Right      → clear slot
+        Shift+Middle     → freeze (lock from edits)
+      Color-code slot state: green=active, light=stored, dark=empty.
+    source: preset-systems-and-ui §8
+    source_kind: skill_pitfall
+    when:
+      intent_match: "preset|slot|button|recall"
+
+  - id: perform_mode_strip_ui_overhead
+    priority: useful
+    rule: |
+      Before going live, strip UI cooking cost:
+        - `uiContainer.allowCooking = False` on COMPs that don't need to redraw
+        - collapse panel viewers
+        - swap Python parameter writes for CHOP exports on hot paths (morph
+          targets driven every frame)
+      CHOP exports beat per-frame `par.val = ...` Python writes for high-rate
+      updates.
+    source: preset-systems-and-ui §12
+    source_kind: skill_pitfall
+    when:
+      intent_match: "perform|live|optimize|fps|performance"
+
+  - id: dynamic_layout_explicit_dims
+    priority: context
+    rule: |
+      Dynamic stack layout requires setting `y`, `h`, and `w` explicitly per
+      element — they don't auto-flow:
+        y = 0
+        for elem in elements:
+            elem.par.y = y
+            elem.par.h = elementHeight
+            elem.par.w = container.par.w
+            y += elementHeight + spacing
+        container.par.h = y
+    source: preset-systems-and-ui §7
+    source_kind: skill_pitfall
+next_tools: [td_custom_parameters, td_get_param_help, td_search_official_docs]

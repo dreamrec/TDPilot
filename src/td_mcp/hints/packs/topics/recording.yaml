@@ -1,0 +1,55 @@
+schema_version: 1
+topic: recording
+op_types: [moviefileoutTOP, audiofileoutCHOP]
+hints:
+  - id: realtime_drops_frames_at_low_cookrate
+    priority: critical
+    rule: |
+      Real-time recording with `moviefileoutTOP` is bound to TouchDesigner's
+      cook rate. If the project drops below the target FPS, the operator
+      either repeats video frames to keep audio in sync or drops them —
+      producing stuttery output. For frame-perfect archival render, disable
+      the global Realtime flag in the UI top bar (or use File → Export
+      Movie); TD will then cook each frame to completion regardless of
+      wall-clock pace. Source: derivative.ca/Movie_File_Out_TOP and
+      derivative.ca/Recording_Movies_with_Audio.
+    source: derivative.ca/Recording_Movies_with_Audio
+    source_kind: official_doc
+    when:
+      intent_match: "record|export|render|frame.?perfect|offline"
+
+  - id: audio_requires_explicit_chop_wire
+    priority: critical
+    rule: |
+      `moviefileoutTOP` does not capture audio on its own. It records audio
+      only when you connect a CHOP (live time-sliced or static-clip) to its
+      `Audio CHOP` parameter. The Derivative wiki: "to record movies with
+      audio using the Movie File Out TOP, a Time Sliced CHOP with mono or
+      stereo channels of audio is required." Audio and video paths have
+      different latencies — expect to compensate with a `trimCHOP` /
+      `delayCHOP` to keep them aligned.
+    source: derivative.ca/Recording_Movies_with_Audio
+    source_kind: official_doc
+    when:
+      op_type: moviefileoutTOP
+      intent_match: "audio|sound|sync"
+
+  - id: codec_choice_by_intent
+    priority: useful
+    rule: |
+      Pick codec by use case (derivative.ca/Movie_File_Out_TOP):
+        - Real-time recording, low CPU/GPU cost: Hap / Hap Q / NotchLC
+          (GPU-accelerated, fast playback, large files)
+        - Distribution / web: H.264 or H.265 (best compression; needs
+          Commercial/Pro license + NVIDIA hardware on Windows; native on macOS)
+        - Lossless intermediate WITH alpha: Apple ProRes 4444 or Animation (RLE)
+        - Frame-precise editorial: PNG / TIFF / EXR image sequence
+          (`Type: Image Sequence`)
+      H.264 does NOT support alpha — pick a `Movie Pixel Format` that
+      includes alpha only when your codec supports it.
+    source: derivative.ca/Movie_File_Out_TOP
+    source_kind: official_doc
+    when:
+      op_type: moviefileoutTOP
+      intent_match: "codec|format|alpha|prores|h264|hap|notchlc"
+next_tools: [td_get_hints, td_get_param_help, td_screenshot, td_get_errors]

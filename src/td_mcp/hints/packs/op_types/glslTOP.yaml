@@ -1,0 +1,52 @@
+schema_version: 1
+op_types: [glslTOP]
+hints:
+  - id: glsltop_quickstart
+    priority: useful
+    rule: |
+      Quick recipe for a working glslTOP:
+        1. Create the op (`td_create_node` argument is `"glsl"`, NOT
+           `"glslTOP"` — the long form is what `node/info` returns, not
+           what create takes).
+        2. Declare every uniform on the op's Vectors / Floats / Samplers
+           pages BEFORE writing the shader (Vectors 1, Vectors 2, …,
+           Sampler 1, …).
+        3. End fragment shader with `fragColor = TDOutputSwizzle(vec4(...));`.
+      For deeper pitfalls (compile errors, uniform binding, swizzle), see
+      ``td_get_hints(topic="glsl")``.
+    source: hint_pack
+    source_kind: hint_pack
+    when:
+      op_type: glslTOP
+
+  - id: glsltop_silent_zero_uniform
+    priority: critical
+    rule: |
+      A uniform declared in the shader source but NOT also declared on
+      the glslTOP's Vectors / Floats / Samplers page silently reads ZERO.
+      The shader compiles cleanly, the Info DAT shows no error — the
+      output is just wrong (often black, or "the effect doesn't seem to
+      do anything"). Always cross-check shader uniforms against the op's
+      Vectors / Floats / Samplers page entries one-for-one. If you're
+      driving values from CHOPs and the result looks dead, this is
+      almost always why.
+    source: hint_pack
+    source_kind: hint_pack
+    when:
+      op_type: glslTOP
+      intent_match: "uniform|input|debug|black|zero|dead"
+
+  - id: glsltop_create_short_form
+    priority: useful
+    rule: |
+      The `td_create_node` `op_type` argument for a GLSL TOP is the short
+      form `"glsl"`. TD's underlying `node/create` takes the family-less
+      name; only `node/info` (and downstream `td_get_node_detail` /
+      `td_get_nodes`) returns the long form `"glslTOP"`. Passing
+      `"glslTOP"` to create will fail with "type not found". Same
+      convention for `glslmultiTOP` ↔ `"glslmulti"`.
+    source: hint_pack
+    source_kind: hint_pack
+    when:
+      op_type: glslTOP
+next_tools: [td_get_hints, td_get_param_help, td_get_content, td_screenshot]

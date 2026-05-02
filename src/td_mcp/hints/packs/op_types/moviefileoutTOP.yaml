@@ -1,0 +1,62 @@
+schema_version: 1
+op_types: [moviefileoutTOP]
+hints:
+  - id: record_is_a_toggle_not_a_pulse
+    priority: critical
+    rule: |
+      The `Record` parameter is a binary on/off TOGGLE, not a pulse: "When
+      this parameter is set to 1, the movie will be recording." Recording
+      continues until you set it back to 0. There is a separate `Pause`
+      parameter for momentary stops without closing the file. Do NOT call
+      `td_pulse_param` on `record` — set it to 1, then back to 0 from
+      Python, or toggle in the UI. Setting record=1 a second time without
+      first setting it to 0 won't restart the file.
+    source: derivative.ca/Movie_File_Out_TOP
+    source_kind: official_doc
+    when:
+      op_type: moviefileoutTOP
+      intent_match: "start.?record|pulse.?record|stop.?record"
+
+  - id: verify_with_info_chop
+    priority: critical
+    rule: |
+      The TOP exposes telemetry via Info CHOP: `total_frames_written`,
+      `total_frames_dropped`, `errors`, `warnings`. After starting record,
+      attach an `infoCHOP` and confirm `total_frames_written` is
+      incrementing — a 0-byte file or a stuck counter means the codec is
+      missing, the file path is locked by another process, or the
+      `Movie Pixel Format` is incompatible with the chosen codec. The wiki
+      does NOT promise an explicit popup error for these failures; the Info
+      CHOP is your only ground-truth signal.
+    source: derivative.ca/Movie_File_Out_TOP
+    source_kind: official_doc
+    when:
+      op_type: moviefileoutTOP
+      intent_match: "verify|check|0.?byte|empty|nothing.?recorded|silent.?fail"
+
+  - id: stall_for_file_open_first_frame
+    priority: useful
+    rule: |
+      When recording starts, the file open is async by default and the
+      first frame may be lost. Toggle `Stall for File Open` ON so playback
+      stalls until the file is ready to receive frames — guarantees the
+      first frame is captured. Leave it OFF if you can tolerate skipped
+      initial frames in exchange for never-stalling real-time playback.
+      Critical when recording short bursts (<1 sec) where losing the first
+      frame is a measurable percentage of the clip.
+    source: derivative.ca/Movie_File_Out_TOP
+    source_kind: official_doc
+    when:
+      op_type: moviefileoutTOP
+      intent_match: "first.?frame|missing.?frame|short.?clip|stall"
+
+  - id: see_recording_topic
+    priority: context
+    rule: |
+      For codec selection, audio routing, and real-time vs. archival render
+      decisions, see ``td_get_hints(topic="recording")``.
+    source: hint_pack
+    source_kind: hint_pack
+    when:
+      op_type: moviefileoutTOP
+next_tools: [td_get_hints, td_get_param_help, td_chop_data, td_get_errors]

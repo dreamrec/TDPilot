@@ -1,0 +1,75 @@
+schema_version: 1
+topic: macros
+hints:
+  - id: macro_types_call_list
+    priority: useful
+    rule: |
+      Built-in macro types (templates shipped in
+      `src/td_mcp/macros/templates.py`):
+        - `feedback_loop`         — feedback → level decay → composite → out
+        - `post_processing`       — level → blur → out
+        - `audio_reactive`        — audiodevicein → analyze → math → null
+        - `particle_gpu`          — particlePOP → noisePOP → renderPOP → null
+        - `feedback_displacement` — noise → feedback/decay → displace → merge → out
+      Always call `td_list_macros` at runtime to confirm — types may be
+      added or removed across versions.
+    source: macros/templates.py
+    source_kind: skill_pitfall
+    when:
+      intent_match: "macro|template"
+
+  - id: macro_feedback_loop_topology
+    priority: useful
+    rule: |
+      `feedback_loop` topology:
+        feedback ──► decay (levelTOP, opacity=0.95)
+                       ──► merge (compositeTOP, operand=over)
+                              ──► out (nullTOP)
+        feedback.par.top = out
+      Entry node is `merge` (attach your source here, into input 0); exit
+      node is `out`. Trail decay lives on `decay.opacity` (NOT
+      brightness1) — matches the canonical feedbackTOP recipe.
+    source: macros/templates.py feedback_loop
+    source_kind: skill_pitfall
+    when:
+      intent_match: "feedback|trail"
+
+  - id: macro_feedback_displacement_chain
+    priority: context
+    rule: |
+      `feedback_displacement` chain:
+        source (noiseTOP, type=simplex3d)
+          ──► feedback ──► decay (opacity=0.95) ──► displace (weightx/weighty=0.05)
+          ──► merge (operand=over) ──► out (nullTOP)
+      Animated by an expression: `source.tz = absTime.seconds * 0.3`.
+      `feedback.par.top = out` is wired automatically. Entry node is
+      `source`, exit node is `out`.
+    source: macros/templates.py feedback_displacement
+    source_kind: skill_pitfall
+
+  - id: macro_overrides_validated
+    priority: useful
+    rule: |
+      `td_create_macro` raises `ValueError("Unknown macro params for
+      '<type>': ...")` on any override key that is NOT declared in the
+      template's `param_schema`. Always call
+      `td_get_macro_params(macro_type)` FIRST to see the accepted schema
+      (param names, types, min/max defaults) before passing `overrides`.
+    source: macros/engine.py validation
+    source_kind: skill_pitfall
+
+  - id: macro_wrap_in_undo_block
+    priority: useful
+    rule: |
+      Wrap `td_create_macro` in `td_project_lifecycle` undo block so the
+      whole instantiation collapses to one Ctrl+Z:
+        td_project_lifecycle({ action: "start_undo_block", name: "Add feedback macro" })
+        td_create_macro({ macro_type: "feedback_loop", parent_path: "/project1" })
+        td_project_lifecycle({ action: "end_undo_block" })
+      For destructive changes, also `td_snapshot_scene` as a deeper
+      rollback point.
+    source: tdpilot-core §4
+    source_kind: skill_pitfall
+    when:
+      intent_match: "undo|safe|reversible"
+next_tools: [td_list_macros, td_get_macro_params, td_create_macro, td_project_lifecycle]

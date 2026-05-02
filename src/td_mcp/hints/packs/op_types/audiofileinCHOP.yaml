@@ -1,0 +1,47 @@
+schema_version: 1
+op_types: [audiofileinCHOP]
+hints:
+  - id: audiofilein_device_choice_routing
+    priority: critical
+    rule: |
+      `audiofileinCHOP` plays back an audio FILE from disk. It is NOT
+      interchangeable with the other audio-input CHOPs:
+        - Live mic / interface input → `audiodeviceinCHOP`
+        - DAW pre-bus / virtual cable / NDI capture → `audiostreaminCHOP`
+        - File on disk → `audiofileinCHOP` (this op)
+      Sample rate, channel count, latency, and reactivity differ across
+      the three. Picking the wrong one is the #1 cause of "audio
+      reactive isn't reacting" tickets.
+    source: hint_pack
+    source_kind: hint_pack
+    when:
+      op_type: audiofileinCHOP
+
+  - id: audiofilein_cuepoint_for_loop_sync
+    priority: useful
+    rule: |
+      For tight beat-synced or loop-region playback, use the Cue page on
+      `audiofileinCHOP`: Cue Point In / Cue Point Out are in sample
+      frames, and `cuepoint` (toggle) jumps playback to Cue Point In. Do
+      NOT scrub with start/stop or `play` toggling — those introduce
+      per-frame jitter and don't sample-align. The cue mechanism is
+      sample-accurate and is the parameter set you want for beat-synced
+      FX, jingle triggers, or tight loop regions.
+    source: hint_pack
+    source_kind: hint_pack
+    when:
+      op_type: audiofileinCHOP
+      intent_match: "loop|cue|sync|beat|trigger|jingle|region"
+
+  - id: audiofilein_quickstart_routing
+    priority: context
+    rule: |
+      For analyzer-chain wiring (audiofileinCHOP → audiospectrumCHOP at
+      pow2 size, audiofilterCHOP rename in TD 2025+, etc.), see
+      ``td_get_hints(topic="audio_reactive")``. This op_type pack only
+      covers file-playback specifics (device choice, cue points).
+    source: hint_pack
+    source_kind: hint_pack
+    when:
+      op_type: audiofileinCHOP
+next_tools: [td_get_hints, td_get_param_help, td_chop_data, td_screenshot]

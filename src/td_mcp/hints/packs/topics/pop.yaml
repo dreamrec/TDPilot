@@ -1,0 +1,48 @@
+schema_version: 1
+topic: pop
+op_types: [particlePOP, noisePOP, renderPOP, geometryCOMP]
+hints:
+  - id: pop_use_pop_inspect
+    priority: critical
+    rule: |
+      Use `td_pop_inspect` (NOT `td_exec_python`) for reading POP attribute
+      data. It's the safe, structured path: bounds + dimension metadata,
+      point/prim/vert attribute lists with types, configurable sampling
+      (P, PartVel, PartAge, Noise, PartForce), adjustable sample range
+      (start, count up to 2048), and optional delayed GPU readback.
+      `td_exec_python` hacks force unsafe GPU readback and bypass the
+      cooked-frame guard — use `td_pop_inspect` instead.
+    source: tdpilot-core §6
+    source_kind: skill_pitfall
+    when:
+      intent_match: "pop|particle|attribute"
+
+  - id: geo_default_is_pop_torus
+    priority: critical
+    rule: |
+      In TD 2025+, a fresh `geometryCOMP` auto-populates with a POP-family
+      `torus1` inside — NOT the legacy SOP torus. SOP-instancing patterns
+      (`geo.par.instanceop = '<sop_path>'`) silently produce no visible
+      geometry against a POP-family child. Fix: delete the default POP
+      torus and create a SOP shape inside the COMP (sphereSOP, boxSOP,
+      low-poly) with `display=True` and `render=True` flags before wiring
+      instanceop.
+    source: tdpilot-core §11
+    source_kind: skill_pitfall
+    when:
+      op_type: geometryCOMP
+
+  - id: pop_minimal_chain_pattern
+    priority: useful
+    rule: |
+      Minimal POP chain (from the `particle_gpu` macro template):
+        particlePOP "particles" → noisePOP "noise" → renderPOP "render" → nullTOP "out"
+      The `renderPOP` is what emits a TOP — without it, no visual output.
+      Wire the `nullTOP` after `renderPOP` for a stable downstream tap.
+      For ready-to-instantiate scaffolding use
+      `td_create_macro({ macro_type: "particle_gpu" })`.
+    source: macros/templates.py particle_gpu
+    source_kind: skill_pitfall
+    when:
+      intent_match: "pop|particle|gpu particle"
+next_tools: [td_pop_inspect, td_get_node_detail, td_screenshot, td_get_hints]

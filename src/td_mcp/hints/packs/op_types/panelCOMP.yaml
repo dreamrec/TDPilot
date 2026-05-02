@@ -1,0 +1,36 @@
+schema_version: 1
+op_types: [panelCOMP]
+hints:
+  - id: panel_event_name_decoding
+    priority: useful
+    rule: |
+      Inside a Panel CHOP Execute DAT, identify what fired via
+      `panelValue.name`:
+        'lselect'  → left-click (val=1 down, val=0 up)
+        'u' / 'v'  → normalized mouse position within the panel (0..1)
+        'inside'   → cursor enter/leave
+      Read normalized mouse pos from `parent().panel.u.val` /
+      `parent().panel.v.val` while dragging.
+    source: preset-systems-and-ui §7
+    source_kind: skill_pitfall
+
+  - id: guard_against_event_spam
+    priority: useful
+    rule: |
+      Panel CHOP Execute fires on EVERY panel event including hover and
+      mouse-move — without an `if panelValue.name == 'lselect'` guard, your
+      click-handler runs hundreds of times per second while the cursor sits
+      over the panel. Always branch on `panelValue.name` first, then on
+      `panelValue.val` for press-vs-release.
+    source: preset-systems-and-ui §7
+    source_kind: skill_pitfall
+
+  - id: see_panel_ui_topic
+    priority: context
+    rule: |
+      For the full UI-widget recipe (slider drag mapping, preset-button
+      modifiers, dynamic layout, perform-mode optimization) call
+      `td_get_hints(topic="panel_ui")`.
+    source: hint_pack
+    source_kind: hint_pack
+next_tools: [td_get_hints, td_custom_parameters, td_search_official_docs]

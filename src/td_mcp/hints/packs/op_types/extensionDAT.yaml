@@ -1,0 +1,66 @@
+schema_version: 1
+op_types: [extensionDAT]
+hints:
+  - id: extension_persistent_state_storagemanager
+    priority: critical
+    rule: |
+      Extensions that need state across project save/load MUST use
+      `TDStoreTools.StorageManager` — plain `self.foo = {}` is wiped on
+      reload. Pattern (in `__init__`):
+        from TDStoreTools import StorageManager
+        storedItems = [
+            {'name': 'Presets', 'default': {}, 'dependable': True},
+            {'name': 'MorphTime', 'default': 2.0, 'dependable': True},
+        ]
+        self.stored = StorageManager(self, ownerComp, storedItems)
+      `dependable=True` makes any DAT/expression watching the dict
+      auto-cook when it changes. Data lives in the `.toe` itself — no
+      external file.
+    source: preset-systems-and-ui §2
+    source_kind: skill_pitfall
+    when:
+      op_type: extensionDAT
+      intent_match: "state|persist|store|reload|preset|save"
+
+  - id: extension_storagemanager_json_serialize
+    priority: useful
+    rule: |
+      A `StorageManager` item is a `DependableDict` wrapper, NOT a plain
+      dict — `json.dumps(self.stored['Presets'])` raises TypeError. Call
+      `.getRaw()` first to get the underlying dict:
+        json.dumps(self.stored['Presets'].getRaw(), indent=2)
+      Same trick for retrieving values without re-triggering dependable
+      cooks.
+    source: preset-systems-and-ui §2
+    source_kind: skill_pitfall
+    when:
+      op_type: extensionDAT
+      intent_match: "json|serialize|export|getRaw|dumps"
+
+  - id: extension_path_resolution_relative
+    priority: useful
+    rule: |
+      Inside an extension method, bare `op('foo')` resolves relative to
+      the PROJECT root (`/foo`), NOT relative to the extension DAT's
+      parent COMP. For COMP-relative lookups use
+      `self.ownerComp.op('foo')` (or `parent().op(...)` from a child).
+      This bites hardest when extensions are dropped into nested COMPs
+      and "suddenly stop finding" their siblings.
+    source: preset-systems-and-ui §3
+    source_kind: skill_pitfall
+    when:
+      op_type: extensionDAT
+      intent_match: "path|relative|ownerComp|find"
+
+  - id: extension_quickstart_routing
+    priority: context
+    rule: |
+      For class-naming rules, `ext.<DAT_name>(me)` wiring on the COMP,
+      and "Extension failed to load" diagnostics, see
+      ``td_get_hints(topic="extensions")``. This op_type pack only covers
+      state persistence and path-resolution gotchas.
+    source: hint_pack
+    source_kind: hint_pack
+    when:
+      op_type: extensionDAT
+next_tools: [td_get_hints, td_get_content, td_python_help]

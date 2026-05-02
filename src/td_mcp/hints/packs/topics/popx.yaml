@@ -1,0 +1,65 @@
+schema_version: 1
+topic: popx
+hints:
+  - id: popx_brain_install_first
+    priority: critical
+    rule: |
+      POPx is a paid plugin — its references are licensed and NOT shipped
+      with TDPilot. If `td_search_popx_docs` returns "brain not installed"
+      (or no results), the popx brain has not been downloaded yet. Run:
+        npx tdpilot brains add popx
+      to fetch the popxbrain.db (1.3 MB, 480 chunks, 59 operators) into
+      `data/normalized/popx/`. Until then, fall back to local references in
+      `skills/popx-touchdesigner/references/` (which the user must build
+      from their licensed copy — see `references/BUILD.md`).
+    source: skills/popx-touchdesigner/SKILL.md + brains_manifest.json
+    source_kind: skill_pitfall
+    when:
+      error_match: "brain not installed|popx"
+
+  - id: popx_mental_model
+    priority: useful
+    rule: |
+      Surface the POPx mental model BEFORE any build — every chain follows
+      a fixed family order:
+        Generator → Falloff → Modifier → Tool → Simulation
+      Each layer is optional, but the order is fixed. Generators create or
+      convert geometry; Falloffs define influence; Modifiers transform or
+      color based on attributes/falloffs; Tools render/extract/convert;
+      Simulations solve time-based behavior.
+    source: skills/popx-touchdesigner/SKILL.md "Default mental model"
+    source_kind: skill_pitfall
+    when:
+      intent_match: "popx"
+
+  - id: popx_example_is_source_of_truth
+    priority: critical
+    rule: |
+      When POPx docs and a live shipped example disagree on parameter
+      values, the EXAMPLE is the source of truth — load it via the live
+      `/EXAMPLE_LOADER` mechanism in TouchDesigner:
+        1. Set `/EXAMPLE_LOADER` parameter `Example` to the desired entry.
+        2. Pulse `/EXAMPLE_LOADER/example` parameter
+           `enableexternaltoxpulse` (or pulse the loader `Reload`).
+        3. Inspect `/EXAMPLE_LOADER/example` with td_get_nodes /
+           td_get_params / td_get_connections / td_get_errors.
+      Never assume example values from training memory — always inspect.
+    source: skills/popx-touchdesigner/SKILL.md "Example Workflow"
+    source_kind: skill_pitfall
+    when:
+      intent_match: "popx|example|builder"
+
+  - id: popx_brain_facts
+    priority: context
+    rule: |
+      When the popx brain is installed
+      (`data/normalized/popx/popxbrain.db`, 1.3 MB, 480 chunks, 59
+      operators):
+        - `td_search_popx_docs` for free-text queries
+        - `td_get_popx_operator` for a specific operator page
+      When absent, fall back to the local catalog under
+      `skills/popx-touchdesigner/references/` and use
+      `python3 scripts/search_popx_refs.py "<query>"`.
+    source: data/brains/brains_manifest.json popx entry
+    source_kind: skill_pitfall
+next_tools: [td_search_popx_docs, td_get_popx_operator, td_screenshot]

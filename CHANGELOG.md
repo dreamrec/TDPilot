@@ -1,5 +1,78 @@
 # Changelog
 
+## 1.6.1 - 2026-05-02
+
+Hint pack corpus expansion. **No new MCP tools, no schema changes** —
+just much more contextual coverage. Tool count stays at 103. Pure
+host-side YAML; **no `.tox` rebuild required**.
+
+### Hint corpus 7 → 19 packs / 17 → 63 hints
+
+Added 6 new topic packs and 6 new op_type packs to round out the
+coverage the original v1.6.0 spec called for. Every hint cites a
+verifiable source (TDPilot skill section, Derivative wiki page,
+templates module, or the Anthropic-style `hint_pack` self-summary).
+
+**New topic packs** (11 total now):
+- `panel_ui` — Panel CHOP Execute idioms, slider drag mapping, preset
+  button modifier-click convention, perform-mode optimization, dynamic
+  layout
+- `custom_parameters` — `td_custom_parameters` declarative authoring,
+  master control COMP pattern, reset pulse per page, state-capture skip
+  rules, expression-mode requirement
+- `pop` — `td_pop_inspect` over `td_exec_python`, geometryCOMP POP-torus
+  default trap, minimal POP chain pattern
+- `popx` — paid-plugin install gate, mental model
+  (Generator → Falloff → Modifier → Tool → Simulation), example as
+  source-of-truth, brain availability facts
+- `macros` — built-in template inventory, feedback_loop topology,
+  feedback_displacement chain, override validation, undo-block wrapping
+- `recording` — real-time vs archival render, audio-CHOP wiring
+  requirement, codec choice by intent (Hap/H.264/ProRes/PNG-seq)
+
+**New op_type packs** (8 total now):
+- `glslTOP` — quickstart routing, silent-zero-uniform critical pitfall,
+  short-form vs long-form name for `td_create_node`
+- `glslMAT` — full-pipeline architecture (vertex+pixel+optional
+  geometry), TD attribute accessors (TDPos, TDNormal, TDTexCoord),
+  TDOutputSwizzle requirement, compile-error checkerboard
+- `moviefileoutTOP` — Record is a toggle (not a pulse), Info CHOP
+  verification, Stall for File Open for first-frame fidelity
+- `extensionDAT` — TDStoreTools.StorageManager for persistence,
+  `.getRaw()` for JSON serialization, `op()` path resolution gotcha
+- `panelCOMP` — `panelValue.name` event decoding, event-spam guard
+- `audiofileinCHOP` — device choice routing
+  (audiofilein vs audiodevicein vs audiostreamin), Cue page for
+  beat-synced playback
+
+### Schema unchanged
+
+The pack YAML schema (`schema_version: 1`, `id` / `priority` / `rule` /
+`source` / `source_kind` / `when`) and the auto-injection rule table in
+`src/td_mcp/hints/orchestrator.py` are unchanged. New packs drop in,
+get loaded by `default_registry()` at server startup, and become
+queryable via `td_get_hints` and discoverable via the
+`available_topics` / `available_op_types` fields in every hints
+response.
+
+### Where hints come from
+
+Every hint in the corpus cites one of:
+- `tdpilot-core §X` — section reference into
+  `skills/tdpilot-core/SKILL.md`
+- `preset-systems-and-ui §X` — section into
+  `skills/tdpilot-core/references/preset-systems-and-ui.md`
+- `macros/templates.py <macro_name>` — built-in macro template
+- `derivative.ca/<page>` — official Derivative wiki page (URL stub)
+- `hint_pack` — self-summary / routing hints that point to richer
+  topic packs
+
+### Tests
+
+- 726/726 tests pass (no new tests for content-only release)
+- All 4 CI gates green: ruff check, ruff format --check,
+  check_versions, check_tox_freshness
+
 ## 1.6.0 - 2026-05-02
 
 Cockpit ergonomics release. Adds four new MCP tools and one tool

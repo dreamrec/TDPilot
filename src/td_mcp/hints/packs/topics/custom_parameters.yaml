@@ -1,0 +1,74 @@
+schema_version: 1
+topic: custom_parameters
+hints:
+  - id: prefer_td_custom_parameters
+    priority: critical
+    rule: |
+      Use `td_custom_parameters` (declarative) instead of `td_exec_python` for
+      authoring custom param pages on COMPs:
+        td_custom_parameters({
+          path: "/project1/master_ctrl",
+          page: "Terrain",
+          params: [
+            { name: "speed", type: "float", default: 0.3, min: 0.0, max: 2.0 },
+            { name: "reset", type: "pulse", label: "Reset Terrain" }
+          ]
+        })
+      Cleaner, more reliable, and survives undo/redo correctly.
+    source: tdpilot-core §5
+    source_kind: skill_pitfall
+
+  - id: master_control_comp_pattern
+    priority: useful
+    rule: |
+      Centralize project controls in a single baseCOMP with named pages
+      (Global, Terrain, Feedback, Render…). Downstream ops reference via
+      absolute-path expressions:
+        op('noise1').par.amp.expr = "op('/project1/controls').par.Amp"
+      One place to drive the whole project; trivial to snapshot, automate,
+      and bind to MIDI/OSC later.
+    source: preset-systems-and-ui §13
+    source_kind: skill_pitfall
+
+  - id: reset_pulse_per_page
+    priority: useful
+    rule: |
+      Add a `Reset<PageName>` pulse parameter on each control page that walks
+      the page and restores defaults:
+        def onPulse(par):
+            if par.name.startswith('Reset'):
+                for p in par.page.pars:
+                    if p.name != par.name and p.default is not None:
+                        p.val = p.default
+      Cheap, project-wide bail-out during live work.
+    source: preset-systems-and-ui §13
+    source_kind: skill_pitfall
+    when:
+      intent_match: "reset|recover|live|panic"
+
+  - id: state_capture_skip_unsaveable
+    priority: useful
+    rule: |
+      State-snapshot loops MUST skip params that aren't real state — otherwise
+      preset restore corrupts the project. Walk `target.pars()`, skip any
+      param where `readOnly` or `not saveable` or `isPulse` is true, and
+      capture the rest with `p.eval()`. `readOnly`, `not p.saveable`, and
+      `isPulse` together cover header, derived, and trigger params.
+    source: preset-systems-and-ui §3
+    source_kind: skill_pitfall
+    when:
+      intent_match: "snapshot|preset|capture|store|state"
+
+  - id: expr_mode_must_be_set
+    priority: critical
+    rule: |
+      When assigning `.expr`, you MUST also flip the param to expression mode,
+      otherwise the value stays constant:
+        par.expr = "op('/project1/controls').par.Amp"
+        par.mode = ParMode.EXPRESSION
+      Also: expressions inside a COMP cannot reach outside with `op('name')` —
+      use absolute paths like `op('/project1/name')`. This is the #1 source of
+      silent expression failures.
+    source: tdpilot-core §9
+    source_kind: skill_pitfall
+next_tools: [td_custom_parameters, td_set_params, td_get_param_help]
