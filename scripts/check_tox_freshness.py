@@ -27,6 +27,11 @@ SOURCE_FILES = (
     "td_component/event_emitter.py",
     "td_component/ws_callbacks.py",
     "td_component/tdpilot_startup.py",
+    # v1.5.6 — installer + panel scaffolding (parent tdpilot COMP children).
+    "td_component/installer.py",
+    "td_component/installer_exec.py",
+    "td_component/autostart.py",
+    "td_component/renderer.py",
 )
 HASH_FILE = ROOT / "td_component" / ".tox-source-hash.json"
 TOX_FILE = ROOT / "td_component" / "tdpilot.tox"
