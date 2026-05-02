@@ -95,7 +95,37 @@ jobs:
             exit 1
           fi
 
+      - name: Skip if version already on npm
+        # Re-tagging the same vX.Y.Z (post-release rebuild, doc fixup,
+        # whatever) re-fires this workflow. npm rejects re-publishing
+        # the same version with "You cannot publish over the previously
+        # published versions: X.Y.Z" — the publish would fail and the
+        # run would show red even though the registry already has the
+        # right bytes (the npm tarball only contains JS wrappers, not
+        # the .tox or skill content, so re-tagging rarely changes what
+        # would land on npm).
+        # Detect the case via `npm view` and short-circuit cleanly. A
+        # genuine bump to a new version lands here as "not-on-registry"
+        # and proceeds to the Publish step.
+        id: registry_check
+        env:
+          REF: ${{ steps.resolve.outputs.ref }}
+        run: |
+          tag_version="${REF#v}"
+          if npm view "tdpilot@${tag_version}" version >/tmp/npm-view-out.txt 2>/tmp/npm-view-err.log; then
+            on_registry="yes"
+          else
+            on_registry="no"
+          fi
+          echo "on_registry=$on_registry" >> "$GITHUB_OUTPUT"
+          if [ "$on_registry" = "yes" ]; then
+            echo "::notice::tdpilot@${tag_version} is already on the npm registry — skipping publish (likely a re-tag)."
+          else
+            echo "tdpilot@${tag_version} not on registry — will publish."
+          fi
+
       - name: Publish
+        if: steps.registry_check.outputs.on_registry != 'yes'
         working-directory: npm
         # Auth model: this workflow is registered as a Trusted Publisher on
         # the `tdpilot` npm package (npmjs.com -> Settings -> Trusted Publisher
