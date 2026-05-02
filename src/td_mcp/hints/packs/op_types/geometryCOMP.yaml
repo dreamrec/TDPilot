@@ -1,0 +1,17 @@
+schema_version: 1
+op_types: [geometryCOMP]
+hints:
+  - id: geo_quickstart
+    priority: useful
+    rule: |
+      Quick recipe for a working geometryCOMP in TD 2025+:
+        1. Create geometryCOMP
+        2. Delete the default torus1 inside (POP family by default in 2025+)
+        3. Create a SOP shape inside (sphereSOP/boxSOP), display=True, render=True
+        4. If instancing: set `geo.par.instanceop = op('<sop_outside>')`
+           via td_exec_python (string assignment fails silently)
+        5. Set viewer=True on the geo COMP for debugging
+      See ``td_get_hints(topic="render_pipeline")`` for the full pitfalls list.
+    source: hint_pack
+    source_kind: hint_pack
+next_tools: [td_get_hints, td_screenshot, td_get_errors]

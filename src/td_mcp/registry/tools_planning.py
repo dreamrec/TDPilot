@@ -125,6 +125,17 @@ async def td_plan_patch(
             description="Optional recipe ID to base plan on",
         ),
     ] = None,
+    include_hints: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=(
+                "If True, attach a ``hints`` block via td_get_hints. "
+                "Auto-injection still fires when the plan touches feedback, "
+                "GLSL, or audio-reactive territory."
+            ),
+        ),
+    ] = False,
 ) -> dict[str, Any]:
     """Generate a structured patch plan for an intent without mutating the project.
 
@@ -169,7 +180,13 @@ async def td_plan_patch(
             existing_names=existing_names,
         )
         _tr._audit_log(ctx, "td_plan_patch", {"intent": intent, "target_path": target_path})
-        return {"success": True, "plan": legacy_dict}
+        result = {"success": True, "plan": legacy_dict}
+        return _tr._attach_hints(
+            result,
+            tool_name="td_plan_patch",
+            payload={"intent": intent, "target_path": target_path, "recipe_id": recipe_id},
+            force_query={"intent": intent} if include_hints else None,
+        )
     except Exception as exc:  # noqa: BLE001
         _tr._record_tool_error(ctx, "td_plan_patch")
         return {"error": str(exc)}

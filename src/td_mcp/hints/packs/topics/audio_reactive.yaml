@@ -1,0 +1,33 @@
+schema_version: 1
+topic: audio_reactive
+op_types: [audiofileinCHOP, audiofilterCHOP, audiospectrumCHOP]
+hints:
+  - id: audiofilter_renamed_2025
+    priority: critical
+    rule: |
+      In TD 2025+, the operator type is `audiofilterCHOP` (NOT
+      `audiofiltCHOP` which existed pre-2025). Verify the type with
+      `td_search_official_docs` if creation fails with "type not found".
+    source: tdpilot-core §11
+    source_kind: skill_pitfall
+    when:
+      intent_match: "audiofilt|audio.?filter"
+
+  - id: audio_input_devices
+    priority: useful
+    rule: |
+      `audiodeviceinCHOP` is the live input. `audiofileinCHOP` plays a file.
+      For DAW pre-bus capture use `audiostreaminCHOP` (NDI / virtual cable).
+      Don't conflate these — settings differ (sample rate, channels, latency).
+    source: tdpilot-core §11
+    source_kind: skill_pitfall
+
+  - id: spectrum_resolution_pow2
+    priority: useful
+    rule: |
+      `audiospectrumCHOP` size MUST be a power of two (256, 512, 1024, 2048).
+      Non-pow2 sizes silently produce empty output. 1024 is the typical
+      default; bump to 2048 if you need finer low-frequency resolution.
+    source: tdpilot-core §11
+    source_kind: skill_pitfall
+next_tools: [td_chop_data, td_get_param_help]

@@ -1,0 +1,52 @@
+schema_version: 1
+topic: render_pipeline
+op_types: [geometryCOMP, renderTOP, cameraCOMP, lightCOMP]
+hints:
+  - id: geo_default_pop_torus
+    priority: critical
+    rule: |
+      In TD 2025+, a fresh `geometryCOMP` auto-populates with a POP-family
+      `torus1` inside (NOT the legacy SOP torus). This breaks SOP-based
+      instancing patterns: setting `geo.par.instanceop = "<sop_path>"` on
+      a geometryCOMP with the default POP torus inside DOES NOT produce
+      visible geometry. Fix: delete the default POP torus and create a SOP
+      shape (sphereSOP, boxSOP) inside the COMP with render=True and
+      display=True flags.
+    source: tdpilot-core §11
+    source_kind: skill_pitfall
+    when:
+      op_type: geometryCOMP
+
+  - id: reference_params_need_op_refs
+    priority: critical
+    rule: |
+      Reference-style params (`instanceop`, `material`, `camera`, `lights`,
+      `geometry`, plural list styles like cameras/geometries) must be set
+      with REAL OP references, not strings. `td_set_params({'instanceop':
+      '../noise'})` returns success=False with "did not resolve". Use
+      `td_exec_python` with `op(target).par.instanceop = op(source)` for
+      reliable assignment.
+    source: tdpilot-core §11
+    source_kind: skill_pitfall
+
+  - id: viewer_flag_required
+    priority: useful
+    rule: |
+      Always set viewer=True on test/debug COMPs. Without the viewer flag,
+      red-bordered TD errors aren't visible in the network editor and
+      `td_get_errors == 0` becomes a false greenlight.
+    source: tdpilot-core §11
+    source_kind: skill_pitfall
+
+  - id: zero_errors_not_render_success
+    priority: critical
+    rule: |
+      `td_get_errors == 0` is NOT a render-success signal. It only catches
+      engine-level errors. It does NOT catch: empty geometry inside a geo
+      COMP, scale=0, camera frustum miss, unrendered SOPs, broken material
+      assignment, instances at NaN positions. After EVERY render-chain
+      build, `td_screenshot` the output and visually verify it isn't
+      black/uniform before claiming the test works.
+    source: tdpilot-core §11
+    source_kind: skill_pitfall
+next_tools: [td_screenshot, td_get_errors, td_get_param_help]

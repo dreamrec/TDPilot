@@ -88,6 +88,17 @@ async def td_patch_preview(
         dict[str, Any],
         Field(description="PatchPlan dict (from td_patch_plan)"),
     ],
+    include_hints: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=(
+                "If True, attach a ``hints`` block via td_get_hints. "
+                "Auto-injection still fires when the plan touches feedback, "
+                "GLSL, or audio-reactive territory."
+            ),
+        ),
+    ] = False,
 ) -> dict[str, Any]:
     """Preview what a patch will change. Checks live state; does not mutate."""
     finish = _tr._start_tool(ctx, "td_patch_preview")
@@ -100,7 +111,13 @@ async def td_patch_preview(
         preview_dict = await patch.preview_plan(client, parsed)
         preview = PatchPreview(**preview_dict)
         _tr._audit_log(ctx, "td_patch_preview", {"plan_id": parsed.id})
-        return {"success": True, "preview": preview.model_dump(mode="json")}
+        result = {"success": True, "preview": preview.model_dump(mode="json")}
+        return _tr._attach_hints(
+            result,
+            tool_name="td_patch_preview",
+            payload={"plan": plan},
+            force_query={"intent": "patch preview"} if include_hints else None,
+        )
     except Exception as exc:  # noqa: BLE001
         _tr._record_tool_error(ctx, "td_patch_preview")
         return format_tool_error(exc)

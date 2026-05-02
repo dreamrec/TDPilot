@@ -541,11 +541,30 @@ async def td_get_errors(
             description="Max recursion depth (prevents runaway on huge projects)",
         ),
     ] = 10,
+    include_hints: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=(
+                "If True, attach a ``hints`` block via td_get_hints. "
+                "Auto-injection still fires when the response contains "
+                "known error patterns (eg. 'Not enough sources', "
+                "'extension', 'missing input')."
+            ),
+        ),
+    ] = False,
 ) -> str:
     """Get errors + warnings for a node (optionally recursive)."""
-    return await _tr._forward(
+    payload = {"path": path, "recurse": recurse, "max_depth": max_depth}
+    raw = await _tr._forward(
         ctx,
         "td_get_errors",
         "node/errors",
-        {"path": path, "recurse": recurse, "max_depth": max_depth},
+        payload,
+    )
+    return _tr._attach_hints(
+        raw,
+        tool_name="td_get_errors",
+        payload=payload,
+        force_query={"topic": "render_pipeline"} if include_hints else None,
     )

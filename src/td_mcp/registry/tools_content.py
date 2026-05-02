@@ -139,6 +139,17 @@ async def td_exec_python(
             le=60000,
         ),
     ] = None,
+    include_hints: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=(
+                "If True, attach a ``hints`` block via td_get_hints. "
+                "Auto-injection still fires when the code touches restricted "
+                "patterns (.text=, .par.file=, imports, OS escapes)."
+            ),
+        ),
+    ] = False,
 ) -> str:
     """Execute Python code inside TouchDesigner."""
     finish = _tr._start_tool(ctx, "td_exec_python")
@@ -163,7 +174,12 @@ async def td_exec_python(
                 "timeout_ms": timeout_ms,
             },
         )
-        return _tr._as_json_output(data)
+        return _tr._attach_hints(
+            _tr._as_json_output(data),
+            tool_name="td_exec_python",
+            payload=body,
+            force_query={"topic": "render_pipeline"} if include_hints else None,
+        )
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_exec_python")
         return format_tool_error(exc)

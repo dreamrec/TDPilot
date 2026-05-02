@@ -1,0 +1,16 @@
+schema_version: 1
+op_types: [feedbackTOP]
+hints:
+  - id: feedback_top_quickstart
+    priority: useful
+    rule: |
+      Quick recipe (matches the feedback topic pack's canonical chain):
+        1. Create: src (TOP source), feedback1, level1, over1, out1
+        2. Wire: src → feedback1 (in 0); src → over1 (in 0 BG);
+                 feedback1 → level1 → over1 (in 1 OVERLAY) → out1
+        3. feedback1.par.top = over1
+        4. level1.opacity (Post page) = 0.9
+      See ``td_get_hints(topic="feedback")`` for the full pitfalls list.
+    source: hint_pack
+    source_kind: hint_pack
+next_tools: [td_get_hints, td_screenshot]

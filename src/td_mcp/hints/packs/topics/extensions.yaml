@@ -1,0 +1,30 @@
+schema_version: 1
+topic: extensions
+op_types: [extensionDAT, baseCOMP, containerCOMP]
+hints:
+  - id: extension_class_naming
+    priority: critical
+    rule: |
+      An extensionDAT must define exactly one class whose name matches the
+      DAT name pattern. Promote to a COMP via the Common page → Extensions
+      → Object: ext.<DAT_name>(me). The constructor's `me` parameter is
+      the OWNER COMP, not the extension DAT. Reference instance attributes
+      with `parent().<attr>`, NOT `op('extension').<attr>`.
+    source: tdpilot-core §11
+    source_kind: skill_pitfall
+    when:
+      op_type: extensionDAT
+
+  - id: extension_load_failure_diagnosis
+    priority: critical
+    rule: |
+      "Extension failed to load" usually means: (1) class name mismatch
+      with the DAT, (2) syntax error inside the extension DAT (check Info
+      DAT), (3) DAT language not set to Python (Common page), or (4) the
+      Object field on the COMP doesn't reference `ext.<DAT_name>(me)`.
+      Open `ext0object` on the COMP to see the actual import.
+    source: tdpilot-core §11
+    source_kind: skill_pitfall
+    when:
+      error_match: "extension"
+next_tools: [td_get_content, td_get_node_detail, td_python_help]

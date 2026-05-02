@@ -712,6 +712,76 @@ def _as_json_output(value: Any) -> str:
     return json.dumps(value, indent=2, default=str)
 
 
+def _attach_hints(
+    output: Any,
+    *,
+    tool_name: str,
+    payload: dict[str, Any] | None,
+    force_query: dict[str, Any] | None = None,
+    auto_max_hints: int = 4,
+    force_max_hints: int = 6,
+) -> Any:
+    """Optionally splice a ``hints`` block into a tool's response.
+
+    Polymorphic: when ``output`` is a JSON string, returns a JSON string;
+    when ``output`` is a dict, returns a dict (with ``hints`` merged in).
+
+    Used by the v1.6.0 high-risk-tool wrappers to surface hints either
+    automatically (when an injection rule matches) or on explicit caller
+    opt-in (``include_hints=True``).
+
+    Defensive by design: any failure inside the hint pipeline is swallowed
+    silently so a malformed pack can never break a tool call.
+    """
+    try:
+        from td_mcp.hints import auto_inject_hints, query_hints
+    except Exception:
+        return output
+
+    is_str_input = isinstance(output, str)
+    if is_str_input:
+        try:
+            data = json.loads(output)
+        except Exception:
+            return output
+    elif isinstance(output, dict):
+        data = output
+    else:
+        return output
+
+    if not isinstance(data, dict):
+        return output
+
+    hints_block: dict[str, Any] | None = None
+
+    if force_query:
+        try:
+            queried = query_hints(max_hints=force_max_hints, **force_query)
+            if queried.get("hints"):
+                hints_block = {
+                    "auto_triggered": False,
+                    "trigger_reason": "include_hints=True",
+                    "items": queried["hints"],
+                    "next_tools": queried.get("next_tools", []),
+                    "hint_pack_version": queried.get("hint_pack_version"),
+                }
+        except Exception:
+            hints_block = None
+
+    if hints_block is None:
+        try:
+            hints_block = auto_inject_hints(
+                tool_name, payload, data, max_hints=auto_max_hints
+            )
+        except Exception:
+            hints_block = None
+
+    if hints_block:
+        data["hints"] = hints_block
+
+    return _as_json_output(data) if is_str_input else data
+
+
 def _vision_token_notice(include_image: bool) -> dict[str, Any]:
     if include_image:
         return {
@@ -1951,6 +2021,9 @@ from td_mcp.registry.tools_info import (  # noqa: E402
     td_get_info,
     td_get_server_metrics,
     td_list_families,
+)
+from td_mcp.registry.tools_hints import (  # noqa: E402
+    td_get_hints,
 )
 from td_mcp.registry.tools_knowledge import (  # noqa: E402
     td_describe_surface,

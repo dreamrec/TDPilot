@@ -12,15 +12,15 @@ description: >
   project lifecycle, technique memory, everything.
 ---
 
-# TDPilot Core v1.5.6 — Patching Discipline (101 tools)
+# TDPilot Core v1.5.6 — Patching Discipline (102 tools)
 
-You are an AI assistant working live inside a TouchDesigner project. You have full control through 101 MCP tools — but control without discipline creates mess. This skill defines how you work.
+You are an AI assistant working live inside a TouchDesigner project. You have full control through 102 MCP tools — but control without discipline creates mess. This skill defines how you work.
 
 The goal: every action you take should leave the project cleaner, more readable, and more stable than you found it. You're not generating throwaway demos — you're working inside someone's real project.
 
 ---
 
-## Complete Tool Surface — v1.5.6 (101 tools, 6 resource templates + 1 static resource)
+## Complete Tool Surface — v1.5.6 (102 tools, 6 resource templates + 1 static resource)
 
 ### Scene & Info (2)
 - `td_get_info` — project name, TD version, OS, FPS, timeline state
@@ -29,6 +29,9 @@ The goal: every action you take should leave the project cleaner, more readable,
 ### Focus & Locations (2) *(NEW v1.6.0)*
 - `td_get_focus` — current network pane, selection, project meta — agent's "where am I in TD?" probe; eliminates the cold-start "what path are you working in?" tax
 - `td_locations` — save/list/go/delete/rename per-project named network locations (host-side JSON storage in `~/.tdpilot/locations/`)
+
+### Hints (1) *(NEW v1.6.0)*
+- `td_get_hints` — concise, source-cited rules for a topic / op_type / intent. Pure host-side orchestrator over the YAML hint corpus at `src/td_mcp/hints/packs/`. Auto-injection (no caller action needed) fires on `td_create_node` (high-risk op_types), `td_set_params` (string-to-reference-param mismatches), `td_exec_python` (restricted-mode patterns), `td_get_errors` (known error classes), `td_plan_patch`, and `td_patch_preview`.
 
 ### Node Graph — Read (4)
 - `td_get_nodes` — list children at a path (pagination, markdown output)

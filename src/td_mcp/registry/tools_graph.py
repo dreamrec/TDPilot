@@ -234,6 +234,18 @@ async def td_set_params(
             min_length=1,
         ),
     ],
+    include_hints: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=(
+                "If True, attach a ``hints`` block via td_get_hints. "
+                "Auto-injection still fires when the params dict assigns "
+                "a string to a reference-style parameter "
+                "(instanceop/material/camera/lights/geometry/top/chop/sop/dat/comp)."
+            ),
+        ),
+    ] = False,
 ) -> str:
     """Set node parameters (static values or live expressions)."""
     finish = _tr._start_tool(ctx, "td_set_params")
@@ -258,7 +270,12 @@ async def td_set_params(
                 "warnings": warnings,
             },
         )
-        return _tr._as_json_output(data)
+        return _tr._attach_hints(
+            _tr._as_json_output(data),
+            tool_name="td_set_params",
+            payload=body,
+            force_query={"topic": "render_pipeline"} if include_hints else None,
+        )
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_set_params")
         return format_tool_error(exc)
@@ -323,6 +340,18 @@ async def td_create_node(
             ),
         ),
     ] = None,
+    include_hints: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=(
+                "If True, attach a ``hints`` block sourced from td_get_hints "
+                "for the chosen op_type. Auto-injection still fires for "
+                "high-risk op_types (feedbackTOP, glslTOP, geometryCOMP, …) "
+                "regardless of this flag."
+            ),
+        ),
+    ] = False,
 ) -> str:
     """Create a new TouchDesigner operator."""
     # Re-instantiate so the CreateNodeInput custom @field_validator on
@@ -336,12 +365,19 @@ async def td_create_node(
         nodeX=nodeX,
         nodeY=nodeY,
     )
-    return await _tr._forward(
+    payload = validated.model_dump(exclude_none=True)
+    raw = await _tr._forward(
         ctx,
         "td_create_node",
         "node/create",
-        validated.model_dump(exclude_none=True),
+        payload,
         audit_event="td_create_node",
+    )
+    return _tr._attach_hints(
+        raw,
+        tool_name="td_create_node",
+        payload=payload,
+        force_query={"op_type": node_type} if include_hints else None,
     )
 
 

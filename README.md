@@ -14,7 +14,7 @@
 [![downloads](https://img.shields.io/npm/dm/tdpilot?label=downloads)](https://www.npmjs.com/package/tdpilot)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![python](https://img.shields.io/badge/python-3.10%2B-blue)](./pyproject.toml)
-[![MCP tools](https://img.shields.io/badge/MCP%20tools-101-blueviolet)](./docs/API_REFERENCE.md)
+[![MCP tools](https://img.shields.io/badge/MCP%20tools-102-blueviolet)](./docs/API_REFERENCE.md)
 [![TouchDesigner](https://img.shields.io/badge/TouchDesigner-2025.30000%2B-ff6200)](https://derivative.ca)
 
 **TDPilot Runtime** is an MCP server for TouchDesigner.
@@ -31,7 +31,7 @@ It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networ
 /plugin install tdpilot@dreamrec-TDPilot
 ```
 
-That installs all **101 MCP tools**, 3 skills (`tdpilot-core`, `tdpilot-production`, `popx-touchdesigner`), 2 slash commands (`/td-check`, `/td-snapshot`), and the TD-side `.tox` component — one command, no Python setup required.
+That installs all **102 MCP tools**, 3 skills (`tdpilot-core`, `tdpilot-production`, `popx-touchdesigner`), 2 slash commands (`/td-check`, `/td-snapshot`), and the TD-side `.tox` component — one command, no Python setup required.
 
 **Shell one-liner alternative:**
 
@@ -70,11 +70,11 @@ Using Claude Desktop instead of Claude Code? See [`docs/INSTALL_CLAUDE_PLUGIN.md
 - A structured toolset for scene edits, diagnostics, event monitoring, and recovery.
 - A workflow-oriented MCP built for iterative patch development, not one-shot guessing.
 - A technique memory system that learns from your projects and builds a reusable library.
-- 101-tool runtime surface with focus + locations, knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, custom parameter authoring, and typed patch sessions.
+- 102-tool runtime surface with focus + locations, hint injection, knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, custom parameter authoring, and typed patch sessions.
 
 ## Start Here: Core Workflow
 
-You don't need all 101 tools. Start with these and expand as needed:
+You don't need all 102 tools. Start with these and expand as needed:
 
 | Step | Tools | What You're Doing |
 |------|-------|-------------------|
@@ -178,7 +178,7 @@ Use this loop for every non-trivial task:
 
 6. **Control token cost** — Prefer metadata checks over continuous image payloads. Ask the user before enabling high-token frame streaming.
 
-## Tool Map (101 Tools)
+## Tool Map (102 Tools)
 
 ### 1) Scene + Timeline + Project Lifecycle
 Use for global context, playback control, save/load, and undo operations.

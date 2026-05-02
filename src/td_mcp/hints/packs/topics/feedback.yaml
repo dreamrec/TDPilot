@@ -1,0 +1,50 @@
+schema_version: 1
+topic: feedback
+op_types: [feedbackTOP, feedbackEdgeTOP]
+hints:
+  - id: feedback_canonical_chain
+    priority: critical
+    rule: |
+      Canonical feedbackTOP chain (verified against Derivative's reference demo):
+        src ──┬──► fb (in 0)              [seed]
+              ├──► over (in 0 = BG)       [fresh frame, NOT feedback's output]
+              └──► dryWetMix (in 0 = dry) [optional dry-path crossfade]
+        fb → level → over (in 1 = OVERLAY) → dryWetMix (in 1 = wet) → out
+
+      Critical wiring details:
+        fb.par.top      = over            ← mid-chain compositor, NOT final out
+        level.opacity   = 0.9 (Post page) ← THIS is the trail decay, NOT brightness1
+        level.brightness1 = 1.0
+        over.size       = "input1"
+    source: tdpilot-core §11
+    source_kind: skill_pitfall
+    when:
+      op_type: feedbackTOP
+
+  - id: feedback_static_analyzer_warning
+    priority: critical
+    rule: |
+      "Not enough sources specified" is a TD STATIC-ANALYSIS warning about an
+      unresolved cyclic dependency — it is NOT necessarily a runtime error.
+      TD's runtime cycle resolver typically handles the chain fine. SCREENSHOT
+      the output before assuming the error means the render is broken. A
+      1280×720 chain that "errors" but produces a 25+ KB JPEG with real
+      variation IS rendering correctly.
+    source: tdpilot-core §11
+    source_kind: skill_pitfall
+    when:
+      op_type: feedbackTOP
+      error_match: "Not enough sources"
+
+  - id: feedback_trail_decay_param
+    priority: useful
+    rule: |
+      Trail decay is set on level1 via the Post page's `opacity` param (NOT
+      brightness1). 0.9 ≈ 10% decay per frame; 0.95 ≈ 5%. brightness1 is
+      legacy and does not produce the documented decay behavior.
+    source: tdpilot-core §11
+    source_kind: skill_pitfall
+    when:
+      op_type: feedbackTOP
+      intent_match: "decay|trail|fade|persist"
+next_tools: [td_get_param_help, td_screenshot, td_get_errors]

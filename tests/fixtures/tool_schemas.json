@@ -348,6 +348,12 @@
   "td_create_node": {
     "description_present": true,
     "properties": {
+      "include_hints": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
       "name": {
         "any_of_types": [
           "null",
@@ -545,6 +551,12 @@
         "enum": null,
         "type": "string"
       },
+      "include_hints": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
       "timeout_ms": {
         "any_of_types": [
           "integer",
@@ -696,6 +708,12 @@
   "td_get_errors": {
     "description_present": true,
     "properties": {
+      "include_hints": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
       "max_depth": {
         "any_of_types": [],
         "default_present": true,
@@ -746,6 +764,63 @@
         "default_present": true,
         "enum": null,
         "type": "boolean"
+      }
+    },
+    "required": []
+  },
+  "td_get_hints": {
+    "description_present": true,
+    "properties": {
+      "error_text": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "intent": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "max_hints": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "integer"
+      },
+      "node_path": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "op_type": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "topic": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
       }
     },
     "required": []
@@ -1800,6 +1875,12 @@
   "td_patch_preview": {
     "description_present": true,
     "properties": {
+      "include_hints": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
       "plan": {
         "any_of_types": [],
         "default_present": false,
@@ -1875,6 +1956,12 @@
   "td_plan_patch": {
     "description_present": true,
     "properties": {
+      "include_hints": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
       "intent": {
         "any_of_types": [],
         "default_present": false,
@@ -2316,6 +2403,12 @@
   "td_set_params": {
     "description_present": true,
     "properties": {
+      "include_hints": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
       "params": {
         "any_of_types": [],
         "default_present": false,

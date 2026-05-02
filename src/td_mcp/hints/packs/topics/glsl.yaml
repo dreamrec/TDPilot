@@ -1,0 +1,38 @@
+schema_version: 1
+topic: glsl
+op_types: [glslTOP, glslMAT]
+hints:
+  - id: glsl_output_swizzle
+    priority: critical
+    rule: |
+      glslTOP fragment shaders MUST end with `TDOutputSwizzle(<color>);` —
+      otherwise output is uninitialized garbage / black on some platforms.
+      Idiom:  fragColor = TDOutputSwizzle(vec4(my_rgb, 1.0));
+    source: tdpilot-core §11
+    source_kind: skill_pitfall
+    when:
+      op_type: glslTOP
+
+  - id: glsl_uniform_setup
+    priority: useful
+    rule: |
+      Don't hardcode uniforms in the shader — declare them on the glslTOP's
+      Vectors / Floats / Samplers pages (Vectors 1, Vectors 2, … Sampler 1
+      etc.) so they bind at compile time. Driving them from CHOPs/expressions
+      then "just works" without recompiles.
+    source: tdpilot-core §11
+    source_kind: skill_pitfall
+    when:
+      op_type: glslTOP
+
+  - id: glsl_compile_errors_in_info
+    priority: useful
+    rule: |
+      glslTOP compile errors do NOT show in `td_get_errors` reliably — they
+      live on the OP's "Info" output. Inspect the Common page or right-click
+      → Open Info DAT to see line:column shader errors.
+    source: tdpilot-core §11
+    source_kind: skill_pitfall
+    when:
+      op_type: glslTOP
+next_tools: [td_get_param_help, td_screenshot]
