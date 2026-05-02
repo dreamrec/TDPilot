@@ -79,18 +79,32 @@ def _propagate_td_globals():
     raise ``NameError: name 'op' is not defined`` because _legacy's own
     __dict__ doesn't have ``op``.
 
-    Idempotent — only sets names that aren't already present on _legacy
-    and that ARE present in our globals.
+    The names live in the textport's __builtins__ (not in the named globals
+    dict), so we resolve them by direct name reference — which falls through
+    locals → globals → builtins — rather than dict.get() which misses the
+    builtins fallback. Each name is wrapped in its own try/except so a
+    missing TD version-specific name doesn't break the propagation chain.
     """
-    caller_globals = globals()
-    for name in (
-        "op", "ops",
-        "parent", "iop", "ipar",
-        "me", "project", "app", "root",
-        "tdu", "absTime", "ui",
-    ):
-        if name in caller_globals and not hasattr(_legacy, name):
-            setattr(_legacy, name, caller_globals[name])
+    def _try_set(name, value_thunk):
+        try:
+            value = value_thunk()
+        except NameError:
+            return
+        if value is not None and not hasattr(_legacy, name):
+            setattr(_legacy, name, value)
+
+    _try_set("op",       lambda: op)        # noqa: F821
+    _try_set("ops",      lambda: ops)       # noqa: F821
+    _try_set("parent",   lambda: parent)    # noqa: F821
+    _try_set("iop",      lambda: iop)       # noqa: F821
+    _try_set("ipar",     lambda: ipar)      # noqa: F821
+    _try_set("me",       lambda: me)        # noqa: F821
+    _try_set("project",  lambda: project)   # noqa: F821
+    _try_set("app",      lambda: app)       # noqa: F821
+    _try_set("root",     lambda: root)      # noqa: F821
+    _try_set("tdu",      lambda: tdu)       # noqa: F821
+    _try_set("absTime",  lambda: absTime)   # noqa: F821
+    _try_set("ui",       lambda: ui)        # noqa: F821
 
 
 _propagate_td_globals()
