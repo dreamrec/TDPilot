@@ -7,14 +7,14 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v1.5.6
+# TDPilot Runtime v1.6.0
 
 [![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
 [![downloads](https://img.shields.io/npm/dm/tdpilot?label=downloads)](https://www.npmjs.com/package/tdpilot)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![python](https://img.shields.io/badge/python-3.10%2B-blue)](./pyproject.toml)
-[![MCP tools](https://img.shields.io/badge/MCP%20tools-102-blueviolet)](./docs/API_REFERENCE.md)
+[![MCP tools](https://img.shields.io/badge/MCP%20tools-103-blueviolet)](./docs/API_REFERENCE.md)
 [![TouchDesigner](https://img.shields.io/badge/TouchDesigner-2025.30000%2B-ff6200)](https://derivative.ca)
 
 **TDPilot Runtime** is an MCP server for TouchDesigner.
@@ -31,7 +31,7 @@ It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networ
 /plugin install tdpilot@dreamrec-TDPilot
 ```
 
-That installs all **102 MCP tools**, 3 skills (`tdpilot-core`, `tdpilot-production`, `popx-touchdesigner`), 2 slash commands (`/td-check`, `/td-snapshot`), and the TD-side `.tox` component — one command, no Python setup required.
+That installs all **103 MCP tools**, 3 skills (`tdpilot-core`, `tdpilot-production`, `popx-touchdesigner`), 2 slash commands (`/td-check`, `/td-snapshot`), and the TD-side `.tox` component — one command, no Python setup required.
 
 **Shell one-liner alternative:**
 
@@ -70,11 +70,11 @@ Using Claude Desktop instead of Claude Code? See [`docs/INSTALL_CLAUDE_PLUGIN.md
 - A structured toolset for scene edits, diagnostics, event monitoring, and recovery.
 - A workflow-oriented MCP built for iterative patch development, not one-shot guessing.
 - A technique memory system that learns from your projects and builds a reusable library.
-- 102-tool runtime surface with focus + locations, hint injection, knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, custom parameter authoring, and typed patch sessions.
+- 103-tool runtime surface with focus + locations, hint injection, component notes, knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, custom parameter authoring, and typed patch sessions.
 
 ## Start Here: Core Workflow
 
-You don't need all 102 tools. Start with these and expand as needed:
+You don't need all 103 tools. Start with these and expand as needed:
 
 | Step | Tools | What You're Doing |
 |------|-------|-------------------|
@@ -88,6 +88,19 @@ You don't need all 102 tools. Start with these and expand as needed:
 **The loop:** Inspect -> Build -> Verify -> Snapshot -> Repeat.
 
 Everything else (vision, streaming, optimization, planning, TD2025 inspection) builds on top of this core.
+
+## What's New In 1.6.0
+
+Cockpit ergonomics release — the agent now feels TD-native without anyone building a new in-TD UI panel. Tool count 99 → 103. Pure host-side; **no `.tox` rebuild required**.
+
+- **`td_get_focus`** — returns current network pane, selection, and project meta. Eliminates the cold-start "what path are you working in?" tax that the agent paid before every patch.
+- **`td_locations(action=save|list|go|delete|rename)`** — per-project named network locations stored at `~/.tdpilot/locations/<project_hash>.json`. Survives session restarts and follows the `.toe` across machines.
+- **`td_get_hints(topic, op_type, intent, error_text)`** — concise, source-cited rules for a topic, op type, or intent. Pure host-side orchestrator over the YAML hint corpus at `src/td_mcp/hints/packs/`. Ships with 7 packs (17 hints): feedback, glsl, render_pipeline, audio_reactive, extensions, feedbackTOP, geometryCOMP.
+- **Auto-hint injection** on 6 high-risk tools — `td_create_node`, `td_set_params`, `td_exec_python`, `td_get_errors`, `td_plan_patch`, `td_patch_preview` automatically attach a `hints` block when an injection rule matches (creating a `feedbackTOP`, assigning a string to a reference param, etc.). All 6 also accept `include_hints=False` for forced opt-in.
+- **`td_component_notes(action=…)`** — per-COMP markdown notes addressable by path. Default external storage (no `.toe` bloat); `embed=True` mirrors into a hidden Text DAT inside the COMP for portability. Pairs with the new `td_get_node_detail(include_notes=True)`.
+- **`td_search_nodes` scopes** — `scopes=["dat_text", "param_exprs"]` extends the existing search to DAT text contents and parameter expressions. Backward-compatible with the legacy `search_type` argument.
+
+The deferred-features list (library, AI adapters, VST, native TD shell, cloud, etc.) lives in local `roadmap-future.md` per the §13 adoption rules — refusing parity work is a feature.
 
 ## What's New In 1.5.6
 
@@ -178,7 +191,7 @@ Use this loop for every non-trivial task:
 
 6. **Control token cost** — Prefer metadata checks over continuous image payloads. Ask the user before enabling high-token frame streaming.
 
-## Tool Map (102 Tools)
+## Tool Map (103 Tools)
 
 ### 1) Scene + Timeline + Project Lifecycle
 Use for global context, playback control, save/load, and undo operations.

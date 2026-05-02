@@ -180,6 +180,53 @@
     "properties": {},
     "required": []
   },
+  "td_component_notes": {
+    "description_present": true,
+    "properties": {
+      "action": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "string"
+      },
+      "body": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "embed": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "path": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "tags": {
+        "any_of_types": [
+          "array",
+          "null"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": [
+      "action"
+    ]
+  },
   "td_component_standardize": {
     "description_present": true,
     "properties": {
@@ -847,6 +894,12 @@
   "td_get_node_detail": {
     "description_present": true,
     "properties": {
+      "include_notes": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
       "param_limit": {
         "any_of_types": [],
         "default_present": true,

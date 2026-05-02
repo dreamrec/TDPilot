@@ -13,4 +13,5 @@ from __future__ import annotations
 # 2026-05-02: dropped 101 → 99 (community brain tools removed from public repo).
 # 2026-05-02: bumped 99 → 101 with td_get_focus + td_locations (v1.6.0 Phase 1).
 # 2026-05-02: bumped 101 → 102 with td_get_hints (v1.6.0 Phase 2).
-EXPECTED_MIN_TOOL_COUNT: int = 102
+# 2026-05-02: bumped 102 → 103 with td_component_notes (v1.6.0 Phase 3).
+EXPECTED_MIN_TOOL_COUNT: int = 103

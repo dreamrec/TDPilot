@@ -87,10 +87,10 @@ def _build_manifest(version: str) -> dict:
         "name": "tdpilot",
         "display_name": "TDPilot",
         "version": version,
-        "description": "AI copilot for TouchDesigner — 102 MCP tools for live node graph control, parameter management, diagnostics, safety, streaming, technique memory, knowledge corpus, focus + locations, hint injection, and typed patch sessions.",
+        "description": "AI copilot for TouchDesigner — 103 MCP tools for live node graph control, parameter management, diagnostics, safety, streaming, technique memory, knowledge corpus, focus + locations, hint injection, component notes, and typed patch sessions.",
         "long_description": (
             "TDPilot is a production-grade MCP server for TouchDesigner. "
-            "It exposes 102 tools that let an AI agent inspect, build, wire, "
+            "It exposes 103 tools that let an AI agent inspect, build, wire, "
             "optimize, and stabilize live TD networks via real tool calls. "
             "Includes a typed patch-session API (plan/preview/apply/validate/"
             "variations) with sentinel-guarded undo blocks, knowledge-corpus "

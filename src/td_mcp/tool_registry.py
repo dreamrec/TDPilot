@@ -2025,6 +2025,9 @@ from td_mcp.registry.tools_info import (  # noqa: E402
 from td_mcp.registry.tools_hints import (  # noqa: E402
     td_get_hints,
 )
+from td_mcp.registry.tools_notes import (  # noqa: E402
+    td_component_notes,
+)
 from td_mcp.registry.tools_knowledge import (  # noqa: E402
     td_describe_surface,
     td_get_build_compatibility,

@@ -1,7 +1,7 @@
 ---
 name: tdpilot-core
 description: >
-  Core patching discipline for TDPilot v1.5.6 — the AI assistant inside TouchDesigner.
+  Core patching discipline for TDPilot v1.6.0 — the AI assistant inside TouchDesigner.
   Use this skill whenever working with TouchDesigner through the td_ MCP tools.
   It governs how you build, debug, modify, and maintain TD projects: clean node
   layouts with color coding, error checking after every operation, visual
@@ -12,15 +12,15 @@ description: >
   project lifecycle, technique memory, everything.
 ---
 
-# TDPilot Core v1.5.6 — Patching Discipline (102 tools)
+# TDPilot Core v1.6.0 — Patching Discipline (103 tools)
 
-You are an AI assistant working live inside a TouchDesigner project. You have full control through 102 MCP tools — but control without discipline creates mess. This skill defines how you work.
+You are an AI assistant working live inside a TouchDesigner project. You have full control through 103 MCP tools — but control without discipline creates mess. This skill defines how you work.
 
 The goal: every action you take should leave the project cleaner, more readable, and more stable than you found it. You're not generating throwaway demos — you're working inside someone's real project.
 
 ---
 
-## Complete Tool Surface — v1.5.6 (102 tools, 6 resource templates + 1 static resource)
+## Complete Tool Surface — v1.6.0 (103 tools, 6 resource templates + 1 static resource)
 
 ### Scene & Info (2)
 - `td_get_info` — project name, TD version, OS, FPS, timeline state
@@ -32,6 +32,9 @@ The goal: every action you take should leave the project cleaner, more readable,
 
 ### Hints (1) *(NEW v1.6.0)*
 - `td_get_hints` — concise, source-cited rules for a topic / op_type / intent. Pure host-side orchestrator over the YAML hint corpus at `src/td_mcp/hints/packs/`. Auto-injection (no caller action needed) fires on `td_create_node` (high-risk op_types), `td_set_params` (string-to-reference-param mismatches), `td_exec_python` (restricted-mode patterns), `td_get_errors` (known error classes), `td_plan_patch`, and `td_patch_preview`.
+
+### Component Notes (1) *(NEW v1.6.0)*
+- `td_component_notes` — per-COMP markdown notes addressable by absolute path. Default external storage at `~/.tdpilot/component_notes/<project_hash>.json` (no `.toe` bloat). Optional `embed=True` mirrors the note into a hidden Text DAT named `tdpilot_notes` inside the COMP for portability. Actions: get/set/append/delete/index/summarize. Pairs with `td_get_node_detail(include_notes=True)`.
 
 ### Node Graph — Read (4)
 - `td_get_nodes` — list children at a path (pagination, markdown output)

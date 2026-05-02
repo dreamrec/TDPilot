@@ -137,12 +137,26 @@ async def td_get_node_detail(
             ),
         ),
     ] = 50,
+    include_notes: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=(
+                "If True, look up any per-COMP note saved via td_component_notes "
+                "for this path and surface it as ``note`` in the response. "
+                "Default False to keep response sizes stable."
+            ),
+        ),
+    ] = False,
 ) -> str:
     """Get detailed info about a node (type, errors, warnings, parameters).
 
     The parameters dict is capped at param_limit entries (default 50, hard
     ceiling 200) — full COMP serialization can blow past 80 KB. Use
     td_get_params with name/page filters when you need the rest.
+
+    When ``include_notes=True``, any markdown note saved via
+    ``td_component_notes`` for this path is attached as a ``note`` field.
     """
     finish = _tr._start_tool(ctx, "td_get_node_detail")
     try:
@@ -150,6 +164,23 @@ async def td_get_node_detail(
             "node/detail",
             {"path": path, "param_limit": param_limit},
         )
+        if include_notes and isinstance(data, dict):
+            try:
+                from td_mcp import component_notes_store, locations_store
+
+                project_name = (
+                    data.get("project_name")
+                    or data.get("project")
+                    or None
+                )
+                project_hash, _ = locations_store.derive_project_id(project_name)
+                store = component_notes_store.ComponentNotesStore()
+                note = store.get(project_hash, path)
+                if note:
+                    data["note"] = note
+            except Exception:
+                # Notes lookup is best-effort; never break detail fetches.
+                pass
         if response_format == ResponseFormat.MARKDOWN:
             lines = [f"## {data.get('name', '?')} (`{data.get('path', '?')}`)"]
             lines.append(f"- Type: {data.get('type', '?')} ({data.get('family', '?')})")
@@ -157,6 +188,11 @@ async def td_get_node_detail(
                 lines.append(f"- Errors: {data['errors']}")
             if data.get("warnings"):
                 lines.append(f"- Warnings: {data['warnings']}")
+            if data.get("note"):
+                note = data["note"]
+                if isinstance(note, dict):
+                    lines.append("\n### Note")
+                    lines.append((note.get("body") or "").strip())
             if data.get("parameters"):
                 lines.append(_tr._format_params_markdown(data["parameters"], path))
             return "\n".join(lines)

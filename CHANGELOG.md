@@ -1,5 +1,118 @@
 # Changelog
 
+## 1.6.0 - 2026-05-02
+
+Cockpit ergonomics release. Adds four new MCP tools and one tool
+extension that make the agent feel TD-native — focus-aware, hint-injected,
+scoped-search, per-COMP notes — without building a parallel UI cockpit
+and without trading away the open-core differentiator. Tool count
+99 → 103 (the 99 baseline was 101 before paketa12 removal earlier on
+the same day).
+
+All four new tools ship purely host-side: they use the existing
+`/api/exec` endpoint that already lives inside any v1.4+ `.tox`. **No
+`.tox` rebuild is required for v1.6.0.** `API_VERSION` stays at `1.5.3`
+(HTTP protocol surface unchanged).
+
+### New tools (4)
+
+- `td_get_focus` — returns current network pane, selection, project
+  meta, timeline state. Eliminates the "what path are you working in?"
+  cold-start tax that the agent paid before every patch. Built on a
+  read-only Python probe through `/api/exec`.
+
+- `td_locations(action=save|list|go|delete|rename)` — per-project
+  named network locations stored at
+  `~/.tdpilot/locations/<project_hash>.json`. Survives session
+  restarts; project_hash derived from `project.name` so locations
+  follow the `.toe` across machines. Action dispatcher pattern keeps
+  this to one tool instead of five.
+
+- `td_get_hints(topic, op_type, intent, error_text, max_hints)` —
+  concise, source-cited rules for a topic, op type, or intent. Pure
+  host-side orchestrator over the YAML hint corpus at
+  `src/td_mcp/hints/packs/`. Ships with 7 packs (5 topic + 2 op_type,
+  17 hints): feedback, glsl, render_pipeline, audio_reactive,
+  extensions, feedbackTOP, geometryCOMP. Hint pack schema versioned
+  for future expansion.
+
+- `td_component_notes(action=get|set|append|delete|index|summarize)` —
+  per-COMP markdown notes addressable by path. Default external
+  storage at `~/.tdpilot/component_notes/<project_hash>.json` (no
+  `.toe` bloat); `embed=True` mirrors into a hidden Text DAT inside
+  the COMP for portability. Pairs with the new
+  `td_get_node_detail(include_notes=True)` parameter.
+
+### Extended tools
+
+- `td_search_nodes` — gains `scopes=[…]` parameter (backward-compatible
+  superset of `search_type`). Two new scopes ship in v1.6.0:
+    * `dat_text` — search DAT text contents
+    * `param_exprs` — search parameter expressions
+  Legacy scopes (`name`/`type`/`family`/`all`) keep using the existing
+  TD-side `/api/search` endpoint; new scopes dispatch via `/api/exec`
+  with safe iterators.
+
+- `td_get_node_detail` — gains `include_notes=False` parameter that
+  surfaces any per-COMP note for the requested path.
+
+### Hint injection on 6 high-risk tools
+
+Auto-injection fires without the caller asking — the response gains a
+`hints` block when an injection rule matches. All 6 tools also accept
+an explicit `include_hints=False` parameter for forced opt-in.
+
+| Tool | Auto-trigger pattern |
+|---|---|
+| `td_create_node` | High-risk op_types (feedbackTOP, glslTOP, geometryCOMP, moviefileoutTOP, extensionDAT, panelCOMP, audiofileinCHOP) |
+| `td_set_params` | String value assigned to a reference-style parameter (instanceop, material, camera, lights, geometry, top/chop/sop/dat/comp) |
+| `td_exec_python` | Code contains restricted-mode patterns (.text=, .par.file=, imports, OS escapes, subprocess/socket) |
+| `td_get_errors` | Response contains known error classes ("Not enough sources", "extension", "missing input") |
+| `td_plan_patch` / `td_patch_preview` | Plan blob mentions feedback, GLSL, or audio-reactive territory |
+
+### New skill content
+
+- `skills/tdpilot-core/SKILL.md` §13 (added 2026-05-02): Feature
+  Adoption Rules — Rule 1 "compound with rigor", Rule 2 "reject pure
+  parity", Rule 3 "open core stays open". Output of the same
+  competitive-review session that scoped v1.6.0; lives in the public
+  skill so future sessions don't relitigate the parity-vs-rigor
+  argument every time a competitor ships a new feature.
+- `skills/tdpilot-core/SKILL.md` surface listing — new sections for
+  "Focus & Locations", "Hints", "Component Notes".
+
+### Tests
+
+- `tests/test_locations_store.py` — 16 tests for the locations storage
+  layer (CRUD, persistence, corrupt-file recovery, file layout).
+- `tests/test_hints.py` — 20 tests for hint pack loader, schema
+  validation, query API, and auto-injection rules.
+- `tests/test_component_notes_store.py` — 15 tests for the notes
+  storage layer (CRUD, append-with-divider, scope-filtered summarize,
+  persistence, corrupt-file recovery).
+- `tests/fixtures/tool_schemas.json` — snapshot regenerated for the
+  4 new tools and the extended `td_search_nodes` / `td_get_node_detail`.
+
+### Version + manifest cascade
+
+| File | 1.5.6 → 1.6.0 |
+|---|---|
+| `pyproject.toml` | ✓ |
+| `src/td_mcp/__init__.py` | ✓ |
+| `.claude-plugin/plugin.json` | ✓ |
+| `.claude-plugin/marketplace.json` (plugins[0].version drives the Update button) | ✓ |
+| `npm/package.json` | ✓ |
+| `mcp/manifest.json` | ✓ (also tool_count 99 → 103) |
+| `td_component/mcp_webserver_callbacks.py` API_VERSION | UNCHANGED at 1.5.3 (HTTP surface stable) |
+
+### Out of scope (deferred — see local `roadmap-future.md`)
+
+The v1.6.0 review explicitly deferred 8 items: library system,
+in-TD AI adapters, VST workflow, native TD shell UI, batch
+screenshots beyond `td_capture_frame`, cloud/hosted layer, recent
+projects, fine-grained permission tiers. Each has an explicit
+"unblock when …" gate. Refusing parity work is a feature.
+
 ## 1.5.6 - 2026-05-02
 
 One-button installer release. The shipped `tdpilot.tox` is now a

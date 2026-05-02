@@ -153,7 +153,7 @@ This is how you keep the patch understandable.
 
 ## The Small Set Of Tools That Matter Most
 
-You do not need to learn all 102 tools to get real value.
+You do not need to learn all 103 tools to get real value.
 
 If you are new, focus on these:
 

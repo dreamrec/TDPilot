@@ -1,12 +1,12 @@
-# TDPilot v1.5.6
+# TDPilot v1.6.0
 
 [![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
 [![downloads](https://img.shields.io/npm/dm/tdpilot?label=downloads)](https://www.npmjs.com/package/tdpilot)
 [![license](https://img.shields.io/badge/license-MIT-blue)](https://github.com/dreamrec/TDPilot/blob/main/LICENSE)
-[![MCP tools](https://img.shields.io/badge/MCP%20tools-102-blueviolet)](https://github.com/dreamrec/TDPilot/blob/main/docs/API_REFERENCE.md)
+[![MCP tools](https://img.shields.io/badge/MCP%20tools-103-blueviolet)](https://github.com/dreamrec/TDPilot/blob/main/docs/API_REFERENCE.md)
 
-AI copilot for TouchDesigner — 102 tools for full live control via MCP, with technique memory, knowledge corpus, POPx inspection, project lifecycle control, focus + locations, hint injection, and custom parameter authoring.
+AI copilot for TouchDesigner — 103 tools for full live control via MCP, with technique memory, knowledge corpus, POPx inspection, project lifecycle control, focus + locations, hint injection, component notes, and custom parameter authoring.
 
 ## Quick start
 
