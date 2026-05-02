@@ -92,7 +92,8 @@ tdpilot.mcpb
 data/brains/active.json
 data/normalized/
 
-# Superpowers planning docs — kept locally but not published. Historical
-# planning records tend to carry filesystem paths and internal workflow
-# detail; they aren't load-bearing for plugin consumers.
-docs/archive/superpowers/
+# Archived docs — plans, version-specific implementation notes, runtime
+# strategy/roadmap drafts, retired session reports. Kept locally but not
+# published. The public docs/ tree contains only current-state user-facing
+# documentation; anything that drifts off-purpose ends up here.
+docs/archive/
