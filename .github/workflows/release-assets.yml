@@ -1,0 +1,98 @@
+name: Build & upload release assets
+
+# Auto-builds tdpilot.plugin (Claude Code plugin ZIP) and tdpilot.mcpb
+# (Claude Desktop one-click bundle) on every release, then attaches them
+# to the GitHub Release. Without this, Anthropic's plugin Directory and
+# Claude Desktop's one-click installer index from whichever release last
+# happened to have the .mcpb attached — which is how v1.5.6 went out
+# without these assets and the Directory ended up pinned at v1.5.0
+# metadata for months.
+#
+# Trigger pattern:
+#   - release.published — fires when you create the release (manually or
+#     via `gh release create`). Builds + uploads in one shot.
+#   - workflow_dispatch — manually re-run for an existing tag (useful for
+#     backfilling old releases).
+#
+# .tox is intentionally NOT auto-built here — it has to be rebuilt inside
+# a running TouchDesigner instance (see CLAUDE.md: _TOX_SOURCE_FILES).
+# The .tox is uploaded manually as part of the release creation step.
+#
+# Security note: untrusted release/dispatch inputs are captured via env:
+# blocks and referenced as shell variables (per
+# github.blog/security/vulnerability-research/how-to-catch-github-actions-workflow-injections-before-attackers-do/).
+
+on:
+  release:
+    types: [published, edited]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build assets for (e.g. v1.6.0). Required for manual runs."
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  build-and-upload:
+    name: Build .plugin + .mcpb and attach to release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve target tag
+        id: resolve
+        env:
+          DISPATCH_TAG: ${{ inputs.tag }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          if [ -n "$DISPATCH_TAG" ]; then
+            TAG="$DISPATCH_TAG"
+          else
+            TAG="$RELEASE_TAG"
+          fi
+          if [ -z "$TAG" ]; then
+            echo "::error::could not resolve a tag from event payload or input"
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.resolve.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Build tdpilot.plugin
+        run: uv run python scripts/build_plugin_zip.py
+
+      - name: Build tdpilot.mcpb
+        run: uv run python scripts/build_mcpb.py
+
+      - name: Verify built artifacts exist
+        run: |
+          test -f tdpilot.plugin || { echo "::error::tdpilot.plugin not produced"; exit 1; }
+          test -f tdpilot.mcpb   || { echo "::error::tdpilot.mcpb not produced"; exit 1; }
+          ls -lh tdpilot.plugin tdpilot.mcpb
+
+      - name: Upload assets to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.resolve.outputs.tag }}
+        run: |
+          gh release upload "$TAG" tdpilot.plugin tdpilot.mcpb --clobber
+          echo "Uploaded tdpilot.plugin + tdpilot.mcpb to release $TAG"
