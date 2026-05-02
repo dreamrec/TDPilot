@@ -43,23 +43,31 @@ import sys
 from datetime import datetime, timezone
 
 # Reuse helpers from the existing builder so we don't duplicate logic.
-# Derive the td_component dir from one of three sources, in order:
-#   1. __file__       — set when imported as a module
-#   2. TD_MCP_REPO_ROOT environment variable — set by the textport caller
-#   3. caller's globals (for the exec(open(...).read(), globals()) idiom)
-# Without this, exec'ing the script via the canonical TD textport pattern
-# would leave __file__ undefined and the sibling-module import would fail.
+# Resolve the td_component dir using TD_MCP_REPO_ROOT FIRST (always set
+# explicitly by the textport caller), then __file__ (only set when this
+# script is imported as a normal module).
+#
+# Priority order matters: when this script is exec'd from the textport,
+# __file__ in the exec'd source resolves to TD's textport file path —
+# something like ``/Applications/TouchDesigner.app/Contents/Resources/tfs``
+# — NOT to our build_tdpilot_tox.py. Trusting __file__ first sends us to
+# TD's app bundle, where build_export_mcp_tox.py doesn't exist.
 def _resolve_this_dir():
+    repo_root = os.environ.get("TD_MCP_REPO_ROOT")
+    if repo_root:
+        candidate = os.path.join(repo_root, "td_component")
+        if os.path.isfile(os.path.join(candidate, "build_export_mcp_tox.py")):
+            return candidate
     try:
-        return os.path.dirname(os.path.abspath(__file__))
+        candidate = os.path.dirname(os.path.abspath(__file__))
+        if os.path.isfile(os.path.join(candidate, "build_export_mcp_tox.py")):
+            return candidate
     except NameError:
         pass
-    repo_root = os.environ.get("TD_MCP_REPO_ROOT")
-    if repo_root and os.path.isdir(os.path.join(repo_root, "td_component")):
-        return os.path.join(repo_root, "td_component")
     raise RuntimeError(
-        "Could not locate td_component/. Set TD_MCP_REPO_ROOT before "
-        "exec'ing build_tdpilot_tox.py from Textport."
+        "Could not locate td_component/. Set TD_MCP_REPO_ROOT to the "
+        "TDPilot repo root before exec'ing build_tdpilot_tox.py from Textport, "
+        "and make sure td_component/build_export_mcp_tox.py exists there."
     )
 
 
