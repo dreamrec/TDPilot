@@ -1,6 +1,6 @@
 # TDPilot API Reference
 
-> Auto-generated from TDPilot v1.5.3 | 101 tools | Source: `src/td_mcp/tool_registry.py`
+> Auto-generated from TDPilot v1.5.6 | 101 tools | Source: `src/td_mcp/tool_registry.py`
 
 ---
 

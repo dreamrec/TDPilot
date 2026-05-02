@@ -53,7 +53,9 @@ def compute_current_hash() -> str:
 def main() -> int:
     if not TOX_FILE.exists():
         print("ERROR: " + str(TOX_FILE.relative_to(ROOT)) + " is missing.")
-        print("       Rebuild it inside TouchDesigner via setup_mcp_in_td.py in the Textport.")
+        print("       Rebuild it inside TouchDesigner via")
+        print("       td_component/build_tdpilot_tox.py in the Textport (v1.5.6+),")
+        print("       or setup_mcp_in_td.py for legacy mcp-server-only builds.")
         return 1
 
     if not HASH_FILE.exists():
@@ -71,9 +73,10 @@ def main() -> int:
         print("  current hash: " + current_hash)
         print("  built at:     " + str(stored.get("built_at")))
         print("")
-        print("Rebuild the .tox in TouchDesigner before pushing:")
+        print("Rebuild the .tox in TouchDesigner before pushing (v1.5.6+):")
         print("  1. Open TD")
-        print("  2. In Textport run setup_mcp_in_td.py")
+        print("  2. In Textport, run td_component/build_tdpilot_tox.py")
+        print("     (open the file, read its source, compile + exec it).")
         print("  3. git add td_component/tdpilot.tox td_component/.tox-source-hash.json")
         return 1
 

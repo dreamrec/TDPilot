@@ -1,6 +1,6 @@
 {
   "name": "tdpilot",
-  "version": "1.5.3",
+  "version": "1.5.6",
   "description": "TDPilot — AI copilot for TouchDesigner. 101 MCP tools for live node graph control, parameter management, diagnostics, safety, streaming, knowledge corpus, technique memory, and typed patch sessions.",
   "author": {
     "name": "silviu"

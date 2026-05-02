@@ -7,7 +7,7 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v1.5.3
+# TDPilot Runtime v1.5.6
 
 [![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
@@ -88,6 +88,17 @@ You don't need all 101 tools. Start with these and expand as needed:
 **The loop:** Inspect -> Build -> Verify -> Snapshot -> Repeat.
 
 Everything else (vision, streaming, optimization, planning, TD2025 inspection) builds on top of this core.
+
+## What's New In 1.5.6
+
+One-button installer release. The shipped `tdpilot.tox` is now a self-installing component with an Install panel + Update panel inside the .tox itself. Drag the `.tox` into any TD project, click **"Bootstrap All"**, and the installer clones the repo into `~/.tdpilot/`, runs `uv sync`, registers the Claude plugin (or skips gracefully if `claude` CLI is missing), writes the TD prefs to autoload TDPilot on next launch, and saves the autoload `.toe`. No Textport, no shell scripts, no manual `.tox` drag into `/local`.
+
+- **Install panel** (custom params on the parent COMP) — `Detect State`, `Bootstrap All`, individual `Install Python Wrapper / Register Claude Plugin / Set TD Autoload`, `Uninstall Everything`, plus `Repo URL` / `Pin to latest tag` / `Disable MCP auth` configuration toggles. Live progress streams into the on-screen status panel as each stage runs.
+- **Update panel** — `Check for Updates Now` (24h-cached GitHub Releases query via `curl` for system-trust-store TLS; falls back gracefully when offline), `Update Now` (smart backup that excludes `.venv`/`knowledge`/`memory`/`*.db` → `git fetch --tags && checkout <latest>` → `uv sync` → re-save autoload `.toe`), `Rollback to Previous Backup` (newest-first restore with aside-swap-on-failure safety), `Auto-check on project load` toggle.
+- **Threading model** — long ops run on a daemon thread sharing one lock-protected job state. The bg thread never touches TD ops directly; instead it requests main-thread actions like `project.save()` via a `pending_action` flag that `autostart.onFrameStart` consumes on the next cook tick. Solves TD's "ops aren't thread-safe outside the cook thread" rule cleanly.
+- **`.mcpb`-aware plugin detection** — `install_claude_plugin` recognizes both `tdpilot@dreamrec-TDPilot` (Claude Code CLI marketplace) and `tdpilot@local-desktop-app-uploads` (Claude Desktop drag-drop) registration keys, so users who already have the plugin via either flow get a clean "already installed" path without needing the `claude` CLI on PATH.
+- **`build_tdpilot_tox.py`** — new container-COMP builder that constructs the parent `tdpilot` COMP with custom param pages, four installer DATs (`installer`/`installer_exec`/`autostart`/`renderer`), the status_text TOP (Courier New 14pt panel), and the nested `mcp_server` sub-COMP via the legacy `_populate_component`. Reuses the proven legacy helpers — the v1.5.6 `.tox` inherits every MCP-server fix the legacy script accumulated.
+- Tool count unchanged at 101 (the installer is COMP-side Python, not new MCP tools). `API_VERSION` stays at `1.5.3` (HTTP protocol unchanged). `.tox` rebuilt with the four new source files tracked by CI's freshness gate.
 
 ## What's New In 1.5.3
 

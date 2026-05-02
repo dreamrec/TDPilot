@@ -67,15 +67,34 @@ Identical result. Use this if you want to see each step explicitly.
 ## TouchDesigner-side setup (once)
 
 After installing the plugin, the MCP server can run but TouchDesigner doesn't
-yet have the `.tox` component loaded. Two options:
+yet have the `.tox` component loaded.
 
-**Drag-drop (easiest):**
+**v1.5.6+ — Drag-drop the self-installing `.tox` (recommended):**
+
 1. Open Finder to
    `~/.claude/plugins/cache/dreamrec-TDPilot/tdpilot/<version>/td_component/`
-2. Drag `tdpilot.tox` into your TD `/local` container.
+2. Drag `tdpilot.tox` into your TD project (anywhere — `/local` or
+   `/project1` both work; the COMP carries its own panel and does not need
+   any specific parent).
+3. Click anywhere on the dragged-in **TDPilot** panel. Use the Install page
+   custom param row: click **"Detect State"** to see what's missing, then
+   **"Bootstrap All"** to clone the repo into `~/.tdpilot/`, run `uv sync`,
+   register the Claude plugin (skipped gracefully if you installed via
+   `.mcpb`), and configure TD's autoload prefs. Live progress streams onto
+   the on-screen status panel.
+4. Restart TD once. From the next launch on, TDPilot autoloads —
+   `/project1/tdpilot/mcp_server` listens on port 9981 with no further
+   action required.
 
-**Or via TD Textport** — run `setup_mcp_in_td.py` from the plugin cache. Paste
-this block into the Textport (it auto-detects the latest installed version):
+**Updates** are equally one-button: open the `.tox`'s **Update** custom
+page, click **"Check for Updates Now"** (24h-cached against GitHub
+Releases), then **"Update Now"** — it snapshots the current install,
+pulls the latest tag, runs `uv sync`, and re-saves the autoload `.toe`.
+**"Rollback to Previous Backup"** restores the last snapshot if anything
+goes wrong.
+
+**Legacy Textport path** (only needed for development branches without
+the v1.5.6 panel):
 
 ```python
 import os

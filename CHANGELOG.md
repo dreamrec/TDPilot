@@ -1,5 +1,138 @@
 # Changelog
 
+## 1.5.6 - 2026-05-02
+
+One-button installer release. The shipped `tdpilot.tox` is now a
+self-installing container COMP — drag it into any TD project and the
+Install + Update panels do the rest. No Textport gymnastics, no manual
+`.tox` drag into `/local`, no shell scripts.
+
+Tool count unchanged at 101 (the installer is COMP-side Python, not new
+MCP tools). `API_VERSION` stays at `1.5.3` (HTTP protocol unchanged).
+The `.tox` itself is meaningfully different: it now embeds four new
+source files (`installer.py`, `installer_exec.py`, `autostart.py`,
+`renderer.py`) that the freshness gate tracks via SHA-256.
+
+The work was split into four commit-sized phases on
+`feat/v1.5.6-installer`, all merged for this release:
+
+### Phase A — Detection scaffold + plan doc
+- `docs/v1.5.6/INSTALLER_PLAN.md` — 11-section plan covering goals, the
+  three install paths drift problem, restart-TD update pattern, the
+  `enableexternaltox=True` architecture decision, the auth-bypass
+  conflict resolution, and risks requiring sign-off.
+- `installer.detect_state()` — pure read, never mutates: probes uv,
+  git, `claude` CLI, `~/.tdpilot/pyproject.toml`, TD prefs autoload
+  state, `installed_plugins.json`, `.tdpilot.env` secret presence,
+  `~/.tdpilot_path` contents.
+- `installer.refresh_status_params()` — writes the live status into the
+  parent COMP's custom params (`Installstatus`, `Updatestatus`,
+  `Installedversion`).
+
+### Phase B — Threading + install primitives
+- Lock-protected `_job_state` dict shared between the bg daemon thread
+  and TD's main cook thread. Bg threads are forbidden from touching
+  TD ops directly; they raise `pending_action` flags and wait for the
+  main thread to consume.
+- `_wait_for_main_thread_action("save_toe", timeout=30)` — the
+  main-thread bridge for `project.save()`. Polls every 50ms with the
+  lock held briefly enough not to stall the cook.
+- Late-binding paths: `install_dir()`, `config_file()`, `env_file()`,
+  `autoload_toe()`, `pyproject()`, `prefs_path()` are now functions
+  that re-read `TDPILOT_INSTALL_DIR` / `TDPILOT_CONFIG_FILE` per call.
+  Enables sandbox redirection mid-session without module reload.
+- `install_python_wrapper()` — probe uv → install uv (`curl … | sh`)
+  → git clone (or zip fallback) → pin to latest release tag → `uv
+  sync` → write `.tdpilot.env` with `TD_MCP_REQUIRE_AUTH=0`. Verified
+  end-to-end in `/tmp` sandbox: clean v1.5.3 install in 12.7 seconds.
+- `set_td_autoload()` — write `~/.tdpilot_path`, update `pref.txt`
+  (`general.startupfilemode=2` + `startupfilename`), then bridge to
+  the main thread via `save_toe`.
+- `uninstall_all()` — revert prefs, remove config + autoload toe +
+  install dir. `TDPILOT_KEEP_INSTALL_DIR=1` escape hatch for testing.
+- Critical bug-fix during testing: `autostart.py` now calls
+  `installer.module.autoload_toe()` (the function) not
+  `installer.module.AUTOLOAD_TOE` (the module-eval-time constant).
+  The constant didn't follow `TDPILOT_INSTALL_DIR` overrides set
+  later in the session, so a sandbox test clobbered the user's real
+  `~/.tdpilot/tdpilot_default.toe`. Function call re-reads env on
+  every call.
+
+### Phase C — Claude plugin install + bootstrap orchestrator
+- `install_claude_plugin()` — checks `installed_plugins.json` FIRST
+  so users who already have the plugin via `.mcpb` drag-drop into
+  Claude Desktop get a clean "already installed" path without needing
+  the `claude` CLI on PATH. Recognizes both registration keys
+  (`tdpilot@dreamrec-TDPilot` from Claude Code CLI marketplace,
+  `tdpilot@local-desktop-app-uploads` from `.mcpb` drop). Only when
+  the plugin is missing AND the CLI is missing do we raise the
+  "install Claude Code first" actionable error with the manual
+  fallback command.
+- `bootstrap_all()` — single-job orchestrator that calls the
+  underscored `_do_*` helpers directly inside one bg thread sharing
+  one progress callback, so the panel sees one progress stream
+  instead of three Phase-B job lifecycles colliding. Claude plugin
+  step is non-fatal: if `claude` CLI is missing AND plugin install
+  not detected, the user still gets a working Python wrapper +
+  autoload (they can install plugin separately later). Wrapper or
+  autoload failures abort the whole job.
+
+### Phase D — Update + rollback with 24h cache
+- `check_for_updates(force=False)` — synchronous (no bg job) single
+  `curl` GET against `api.github.com/repos/dreamrec/TDPilot/releases/latest`
+  with 5s timeout. Why curl, not `urllib`: TD's bundled Python doesn't
+  ship a CA bundle, so `urllib.request.urlopen` on `https://` fails
+  with `CERTIFICATE_VERIFY_FAILED`. `/usr/bin/curl` uses the system
+  trust store and Just Works on macOS/Linux. 24h cache at
+  `~/.tdpilot/last_check.json`. Cache hit returns in ~0.4ms (vs ~300ms
+  network); refreshed installed-version is recomputed every call so
+  semver compare stays accurate even on cache hit. Failures are NOT
+  cached so the next call retries. Verified live: installed=1.5.2,
+  latest=1.5.3, update_available=True, release_url + first 80 chars
+  of notes returned correctly.
+- `_semver_tuple` — tolerant parser. `"1.5.6"`, `"v1.5.6"`,
+  `"1.5.6-rc1"`, `"1"` all parse to 3-tuples; failures return
+  `(0,0,0)` so an unreadable installed version compares as "anything
+  > 0.0.0 = update available".
+- `update_now()` — bg job, ~30s wall-clock. (1) `_smart_copytree`
+  snapshot to `backups/<ts>/` excluding `.venv`, `.git`, `knowledge/`,
+  `memory/`, `*.db/sqlite`, `__pycache__`, `*_cache/`, `node_modules`.
+  Backups exist to recover code+config; `.venv` rebuilds from
+  `uv.lock` and brain DBs are regenerable, so excluding them keeps
+  backups light (single-digit MB instead of hundreds). (2) `git fetch
+  --tags && checkout <latest tag>` (zip fallback if `.git` is
+  missing — backup is the safety net). (3) `uv sync`. (4)
+  `_wait_for_main_thread_action("save_toe")` — re-saves autoload
+  `.toe` so the externaltox link points at fresh content on next TD
+  launch.
+- `rollback()` — find newest `~/.tdpilot/backups/<ts>/`, move current
+  install to `target.rollback-aside-<ts>`, copytree the backup back.
+  If copy fails, swap the aside copy back so the user is never left
+  empty-handed. Cleanup aside on success. Re-run `uv sync` after
+  restore (backup didn't include `.venv`).
+
+### Build pipeline
+- `td_component/build_tdpilot_tox.py` — the v1.5.6 successor to
+  `build_export_mcp_tox.py`. Constructs the full parent `tdpilot`
+  containerCOMP with custom param pages (Install + Update, 23 params
+  total), four installer DATs (`installer` textDAT,
+  `installer_exec` parameterexecuteDAT with `fromop=parent()`
+  expression, `autostart` executeDAT, `renderer` textDAT), the
+  `status_text` textTOP (Courier New 14pt left-top aligned, 16px
+  inset, 4px line-spacing, 55% white — matches the live design), and
+  the nested `mcp_server` sub-COMP delegated to the legacy
+  `_populate_component` so the v1.5.6 `.tox` inherits every
+  MCP-server fix the legacy script accumulated. Reuses
+  `_guess_repo_root`, `_read_repo_file`, `_set_first_par`,
+  `_create_with_fallback`, `_resolve_export_host`,
+  `_reset_or_create_comp`, and `_write_tox_source_hash` from the
+  legacy script via direct import.
+- `_TOX_SOURCE_FILES` and `SOURCE_FILES` extended in
+  `build_export_mcp_tox.py` and `scripts/check_tox_freshness.py` to
+  hash the four new installer source files. CI's freshness gate now
+  fails when any of them change without a corresponding `.tox`
+  rebuild, same as for the existing four mcp_server sources.
+
 ## 1.5.3 - 2026-04-25
 
 Knowledge corpus + MCP source-fix release. v1.5.3 adds a free-form
