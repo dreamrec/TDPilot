@@ -770,9 +770,7 @@ def _attach_hints(
 
     if hints_block is None:
         try:
-            hints_block = auto_inject_hints(
-                tool_name, payload, data, max_hints=auto_max_hints
-            )
+            hints_block = auto_inject_hints(tool_name, payload, data, max_hints=auto_max_hints)
         except Exception:
             hints_block = None
 
@@ -2016,17 +2014,14 @@ from td_mcp.registry.tools_graph import (  # noqa: E402
     td_rename_node,
     td_set_params,
 )
+from td_mcp.registry.tools_hints import (  # noqa: E402
+    td_get_hints,
+)
 from td_mcp.registry.tools_info import (  # noqa: E402
     td_get_capabilities,
     td_get_info,
     td_get_server_metrics,
     td_list_families,
-)
-from td_mcp.registry.tools_hints import (  # noqa: E402
-    td_get_hints,
-)
-from td_mcp.registry.tools_notes import (  # noqa: E402
-    td_component_notes,
 )
 from td_mcp.registry.tools_knowledge import (  # noqa: E402
     td_describe_surface,
@@ -2062,6 +2057,9 @@ from td_mcp.registry.tools_memory import (  # noqa: E402
     td_memory_recall,
     td_memory_replay,
     td_memory_save,
+)
+from td_mcp.registry.tools_notes import (  # noqa: E402
+    td_component_notes,
 )
 from td_mcp.registry.tools_optimizer import (  # noqa: E402
     td_describe_dynamics,

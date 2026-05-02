@@ -37,7 +37,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 SCHEMA_VERSION = 1
 
 
@@ -220,7 +219,9 @@ class ComponentNotesStore:
         for comp_path, entry in doc["notes"].items():
             if not isinstance(entry, dict):
                 continue
-            if scope_path and not (comp_path == scope_path or comp_path.startswith(scope_path.rstrip("/") + "/")):
+            if scope_path and not (
+                comp_path == scope_path or comp_path.startswith(scope_path.rstrip("/") + "/")
+            ):
                 continue
             entries.append((comp_path, entry))
         if not entries:

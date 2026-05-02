@@ -130,15 +130,11 @@ def _parse_pack(path: Path, pack_kind: str) -> HintPack:
     for entry in raw_hints:
         validated = _validate_hint_dict(entry, pack_id)
         if validated["id"] in seen_ids:
-            raise ValueError(
-                f"pack {pack_id!r} contains duplicate hint id {validated['id']!r}"
-            )
+            raise ValueError(f"pack {pack_id!r} contains duplicate hint id {validated['id']!r}")
         seen_ids.add(validated["id"])
         when = validated.get("when") or {}
         if when and not isinstance(when, dict):
-            raise ValueError(
-                f"hint {validated['id']!r} in pack {pack_id!r} has non-mapping 'when'"
-            )
+            raise ValueError(f"hint {validated['id']!r} in pack {pack_id!r} has non-mapping 'when'")
         next_tools = _coerce_str_list(validated.get("next_tools"))
         hints.append(
             Hint(
@@ -202,7 +198,7 @@ class HintRegistry:
     def packs_root(self) -> Path:
         return self._packs_root
 
-    def reload(self) -> "HintRegistry":
+    def reload(self) -> HintRegistry:
         self._topic_packs = _scan_dir(self._packs_root, "topic")
         self._op_type_packs = _scan_dir(self._packs_root, "op_type")
         self._all_hints = []
@@ -314,9 +310,7 @@ class HintRegistry:
                     continue
                 if (hint.pack_id, hint.id) in existing_ids:
                     continue
-                matches.append(
-                    HintMatch(hint=hint, score=0.5, reasons=("pack_mate",))
-                )
+                matches.append(HintMatch(hint=hint, score=0.5, reasons=("pack_mate",)))
 
         matches.sort(
             key=lambda m: (

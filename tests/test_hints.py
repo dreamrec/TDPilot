@@ -306,11 +306,7 @@ def test_auto_inject_get_errors_with_known_pattern():
     result = auto_inject_hints(
         "td_get_errors",
         {"path": "/"},
-        {
-            "errors": [
-                {"path": "/project1/feedback1", "message": "Not enough sources specified"}
-            ]
-        },
+        {"errors": [{"path": "/project1/feedback1", "message": "Not enough sources specified"}]},
     )
     assert result is not None
     assert "Not enough sources" in result["trigger_reason"]

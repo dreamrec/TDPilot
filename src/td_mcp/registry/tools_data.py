@@ -26,6 +26,7 @@ from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
 from td_mcp import tool_registry as _tr  # noqa: E402
+from td_mcp.errors import format_tool_error
 from td_mcp.models import SearchNodesInput
 from td_mcp.tool_registry import mcp  # noqa: E402
 
@@ -372,9 +373,7 @@ async def _exec_dat_text_scope(ctx: Context, query: str, path: str, limit: int) 
     return data.get("result") or {"results": []}
 
 
-async def _exec_param_exprs_scope(
-    ctx: Context, query: str, path: str, limit: int
-) -> dict[str, Any]:
+async def _exec_param_exprs_scope(ctx: Context, query: str, path: str, limit: int) -> dict[str, Any]:
     code = _PARAM_EXPRS_SCOPE_CODE_TEMPLATE.format(query=query, limit=limit, path=path)
     body = {"code": code, "exec_mode": _tr._current_exec_mode()}
     data = await _tr._get_client(ctx).request("exec", body)

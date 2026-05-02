@@ -32,12 +32,7 @@ class _AutoTrigger:
 
 
 def _trigger_create_node(payload: dict[str, Any], response: dict[str, Any]) -> dict[str, Any] | None:
-    op_type = (
-        payload.get("type")
-        or payload.get("op_type")
-        or payload.get("node_type")
-        or ""
-    ).strip()
+    op_type = (payload.get("type") or payload.get("op_type") or payload.get("node_type") or "").strip()
     if not op_type:
         return None
     risky = {

@@ -19,9 +19,9 @@ from td_mcp.hints.loader import (
     default_registry,
 )
 from td_mcp.hints.orchestrator import (
-    query_hints,
-    auto_inject_hints,
     AUTO_INJECT_RULES,
+    auto_inject_hints,
+    query_hints,
 )
 
 __all__ = [

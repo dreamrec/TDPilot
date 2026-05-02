@@ -17,7 +17,8 @@ from typing import Annotated, Any
 from mcp.server.fastmcp import Context
 from pydantic import Field
 
-from td_mcp import component_notes_store, locations_store, tool_registry as _tr  # noqa: E402
+from td_mcp import component_notes_store, locations_store  # noqa: E402
+from td_mcp import tool_registry as _tr
 from td_mcp.errors import format_tool_error
 from td_mcp.tool_registry import mcp  # noqa: E402
 
@@ -221,9 +222,7 @@ async def td_component_notes(
 
         # set / append require body
         if not body or not body.strip():
-            return _tr._as_json_output(
-                {"success": False, "error": "body is required for set/append"}
-            )
+            return _tr._as_json_output({"success": False, "error": "body is required for set/append"})
         body_norm = body
 
         if action_norm == "set":

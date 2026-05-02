@@ -40,7 +40,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 SCHEMA_VERSION = 1
 
 
@@ -161,9 +160,7 @@ class LocationsStore:
         )
         if existing:
             existing["path"] = path
-            existing["description"] = description if description is not None else existing.get(
-                "description"
-            )
+            existing["description"] = description if description is not None else existing.get("description")
             existing["updated_at"] = now
             entry = existing
         else:

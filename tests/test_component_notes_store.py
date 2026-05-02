@@ -119,6 +119,7 @@ def test_index_orders_by_updated_at_desc(tmp_store):
     tmp_store.set(project_hash="abc", project_label="lab", comp_path="/older", body="a")
     # Bump /newer with a later updated_at by appending
     import time
+
     time.sleep(0.01)
     tmp_store.set(project_hash="abc", project_label="lab", comp_path="/newer", body="b")
     idx = tmp_store.index("abc")

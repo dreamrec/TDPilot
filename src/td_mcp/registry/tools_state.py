@@ -29,7 +29,8 @@ from mcp.server.fastmcp import Context
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
-from td_mcp import locations_store, tool_registry as _tr  # noqa: E402
+from td_mcp import locations_store  # noqa: E402
+from td_mcp import tool_registry as _tr
 from td_mcp.errors import format_tool_error
 from td_mcp.tool_registry import mcp  # noqa: E402
 
@@ -289,9 +290,7 @@ async def td_locations(
         str | None,
         Field(
             default=None,
-            description=(
-                "Override path for the save action. Defaults to td_get_focus.active_pane_path."
-            ),
+            description=("Override path for the save action. Defaults to td_get_focus.active_pane_path."),
         ),
     ] = None,
     description: Annotated[
@@ -384,9 +383,7 @@ async def td_locations(
 
         if action_norm == "rename":
             if not new_name or not new_name.strip():
-                return _tr._as_json_output(
-                    {"success": False, "error": "new_name is required for rename"}
-                )
+                return _tr._as_json_output({"success": False, "error": "new_name is required for rename"})
             renamed = store.rename(project_hash, name_norm, new_name.strip())
             return _tr._as_json_output(
                 {

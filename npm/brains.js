@@ -114,7 +114,7 @@ function showAvailable() {
     const status = installed.has(id) ? " [installed]" : "";
     const totalMb = (brain.files || []).reduce((s, f) => s + (f.size_mb || 0), 0);
     const mode = brain.install_mode || "download";
-    const modeTag = mode === "local_build" ? " [local_build]" : "";
+    const modeTag = ` [${mode}]`;
     console.log(`  ${id}: ${brain.display_name}${status}${modeTag}`);
     console.log(`    ${brain.description} (~${Math.round(totalMb)}MB)`);
     if (mode === "local_build" && brain.install_notes) {

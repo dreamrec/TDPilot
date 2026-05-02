@@ -168,11 +168,7 @@ async def td_get_node_detail(
             try:
                 from td_mcp import component_notes_store, locations_store
 
-                project_name = (
-                    data.get("project_name")
-                    or data.get("project")
-                    or None
-                )
+                project_name = data.get("project_name") or data.get("project") or None
                 project_hash, _ = locations_store.derive_project_id(project_name)
                 store = component_notes_store.ComponentNotesStore()
                 note = store.get(project_hash, path)

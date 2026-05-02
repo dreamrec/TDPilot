@@ -461,9 +461,7 @@ class SearchNodesInput(BaseModel):
         allowed = set(cls.LEGACY_SCOPES) | set(cls.NEW_SCOPES)
         bad = [s for s in v if s not in allowed]
         if bad:
-            raise ValueError(
-                f"Unknown scope(s) {bad}; allowed: {sorted(allowed)}"
-            )
+            raise ValueError(f"Unknown scope(s) {bad}; allowed: {sorted(allowed)}")
         if not v:
             raise ValueError("scopes must contain at least one entry")
         return v
