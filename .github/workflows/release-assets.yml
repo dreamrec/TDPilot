@@ -74,6 +74,16 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Anthropic mcpb CLI
+        # build_mcpb.py shells out to the `mcpb` CLI for the final pack step.
+        # Install it globally so it lands on PATH for the next step.
+        run: npm install -g @anthropic-ai/mcpb
+
       - name: Install dependencies
         run: uv sync --all-extras
 
