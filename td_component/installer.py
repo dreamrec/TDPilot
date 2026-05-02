@@ -276,6 +276,16 @@ def _read_td_prefs():
     return prefs
 
 
+# Plugin key suffixes Claude Code/Desktop uses to register tdpilot.
+# - dreamrec-TDPilot: Claude Code CLI marketplace install
+# - local-desktop-app-uploads: .mcpb drag-drop into Claude Desktop
+# Either presence means the plugin is registered.
+_TDPILOT_PLUGIN_KEYS = (
+    "tdpilot@dreamrec-TDPilot",
+    "tdpilot@local-desktop-app-uploads",
+)
+
+
 def _is_claude_plugin_installed():
     if not os.path.isfile(CLAUDE_INSTALLED_PLUGINS):
         return False
@@ -285,7 +295,7 @@ def _is_claude_plugin_installed():
     except (OSError, ValueError):
         return False
     plugins = data.get("plugins", {}) if isinstance(data, dict) else {}
-    return "tdpilot@dreamrec-TDPilot" in plugins
+    return any(k in plugins for k in _TDPILOT_PLUGIN_KEYS)
 
 
 def _has_secret_in_env_file():
@@ -635,16 +645,113 @@ def _do_uninstall_all(progress_cb):
 
 
 # ---------------------------------------------------------------------------
-# Phase C / D stubs
+# Action: install_claude_plugin
 # ---------------------------------------------------------------------------
+
+CLAUDE_MARKETPLACE = "dreamrec/TDPilot"
+CLAUDE_PLUGIN_NAME = "tdpilot@dreamrec-TDPilot"
 
 
 def install_claude_plugin(progress_cb=None):
-    raise NotImplementedError("Phase C")
+    return _start_job("install_claude_plugin", _do_install_claude_plugin)
+
+
+def _do_install_claude_plugin(progress_cb):
+    # Check installed_plugins.json first — plugin may already be present
+    # via .mcpb drag-drop into Claude Desktop, in which case the claude CLI
+    # is not required. Only when the plugin is missing AND the CLI is
+    # missing do we raise the "install Claude Code first" error.
+    progress_cb("checking_plugin", "Checking installed_plugins.json...")
+    if _is_claude_plugin_installed():
+        progress_cb("done", "Claude plugin already installed.")
+        return
+
+    progress_cb("checking_claude", "Plugin missing — checking for claude CLI...")
+    claude = _which("claude")
+    if claude is None:
+        raise RuntimeError(
+            "Claude Code CLI not found and plugin not installed. Either "
+            "drag the tdpilot.mcpb into Claude Desktop, OR install Claude "
+            "Code and run: "
+            "claude plugin marketplace add " + CLAUDE_MARKETPLACE + " && "
+            "claude plugin install " + CLAUDE_PLUGIN_NAME
+        )
+
+    progress_cb("marketplace_add",
+                "Adding marketplace " + CLAUDE_MARKETPLACE + "...")
+    result = _run(
+        [claude, "plugin", "marketplace", "add", CLAUDE_MARKETPLACE],
+        timeout=60,
+    )
+    if result.returncode != 0:
+        # Marketplace may already be registered — only fatal if not "already".
+        err = (result.stderr or result.stdout)[:300]
+        if "already" not in err.lower():
+            raise RuntimeError("marketplace add failed: " + err)
+        progress_cb("marketplace_add", "Marketplace already registered.")
+
+    progress_cb("plugin_install",
+                "Installing plugin " + CLAUDE_PLUGIN_NAME + "...")
+    result = _run(
+        [claude, "plugin", "install", CLAUDE_PLUGIN_NAME],
+        timeout=120,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            "plugin install failed: " + (result.stderr or result.stdout)[:300]
+        )
+
+    progress_cb("done",
+                "Claude plugin installed. Restart Claude Code to pick it up.")
+
+
+# ---------------------------------------------------------------------------
+# Action: bootstrap_all (the one-button orchestrator)
+# ---------------------------------------------------------------------------
 
 
 def bootstrap_all(progress_cb=None):
-    raise NotImplementedError("Phase C")
+    return _start_job("bootstrap_all", _do_bootstrap_all)
+
+
+def _do_bootstrap_all(progress_cb):
+    """Run all three install steps inside one job/thread.
+
+    Calls the underscored _do_* helpers directly — NOT the public functions
+    — because the public functions each call _start_job which would refuse
+    nested calls ("Job already running"). One job, one progress stream.
+
+    Claude plugin install is non-fatal: if claude CLI is missing, the
+    Python wrapper + autoload are still useful (user can install plugin
+    later). Wrapper + autoload failures abort.
+    """
+    progress_cb("bootstrap_python", "[1/3] Installing Python wrapper...")
+    _do_install_python_wrapper(progress_cb)
+
+    progress_cb("bootstrap_claude", "[2/3] Installing Claude plugin...")
+    try:
+        _do_install_claude_plugin(progress_cb)
+    except RuntimeError as exc:
+        # Non-fatal — print and continue. Wrapper + autoload still give
+        # the user a working TDPilot when they restart TD; they can
+        # install the plugin separately later.
+        progress_cb(
+            "bootstrap_claude",
+            "Skipped (non-fatal): " + str(exc)[:200],
+        )
+
+    progress_cb("bootstrap_autoload", "[3/3] Configuring TD autoload...")
+    _do_set_td_autoload(progress_cb)
+
+    progress_cb(
+        "done",
+        "Bootstrap complete. Restart TD, then restart Claude Code.",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase D stubs
+# ---------------------------------------------------------------------------
 
 
 def check_for_updates():
