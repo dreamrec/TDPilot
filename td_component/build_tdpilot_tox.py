@@ -42,6 +42,7 @@ import os
 import sys
 from datetime import datetime, timezone
 
+
 # Reuse helpers from the existing builder so we don't duplicate logic.
 # Resolve the td_component dir using TD_MCP_REPO_ROOT FIRST (always set
 # explicitly by the textport caller), then __file__ (only set when this
@@ -102,10 +103,7 @@ def _load_legacy_module():
 
     legacy_path = os.path.join(_THIS_DIR, "build_export_mcp_tox.py")
     if not os.path.isfile(legacy_path):
-        raise RuntimeError(
-            "build_export_mcp_tox.py not found alongside build_tdpilot_tox.py at "
-            + _THIS_DIR
-        )
+        raise RuntimeError("build_export_mcp_tox.py not found alongside build_tdpilot_tox.py at " + _THIS_DIR)
     with open(legacy_path) as f:
         legacy_src = f.read()
     # Strip the trailing module-level call so we don't auto-build legacy.
@@ -130,9 +128,7 @@ _legacy = _load_legacy_module()
 # ---------------------------------------------------------------------------
 
 _env_parent = os.environ.get("TD_MCP_PARENT_PATH")
-INSTALL_PARENT_PATH = (
-    _env_parent.strip() if _env_parent is not None else "/local"
-)
+INSTALL_PARENT_PATH = _env_parent.strip() if _env_parent is not None else "/local"
 TDPILOT_COMP_NAME = "tdpilot"
 TEMP_CONTAINER_NAME = "__tdpilot_tox_export__"
 EXPORT_TOX_PATH = ""  # empty = repo_root/td_component/tdpilot.tox
@@ -152,46 +148,42 @@ PANEL_H = 320
 # kind in {"Header", "Str", "Pulse", "Toggle"}.
 # Order matters - TD respects insertion order on the page.
 _INSTALL_PAGE = [
-    ("Installhdr",       "Header", "TDPilot Installer",            None),
-    ("Installstatus",    "Str",    "Status",                       "Not detected"),
-    ("Detectstate",      "Pulse",  "Detect State",                 None),
-    ("Actionshdr",       "Header", "Actions",                      None),
-    ("Bootstrapall",     "Pulse",
-     "Bootstrap All (clone + plugin + autoload)", None),
-    ("Installpython",    "Pulse",  "Install Python Wrapper Only",  None),
-    ("Installclaude",    "Pulse",  "Register Claude Code Plugin Only", None),
-    ("Settdautoload",    "Pulse",  "Set TD Autoload Only",         None),
-    ("Uninstallall",     "Pulse",  "Uninstall Everything",         None),
-    ("Configurationhdr", "Header", "Configuration",                None),
-    ("Repourl",          "Str",    "Repo URL",
-     "https://github.com/dreamrec/TDPilot.git"),
-    ("Pintotag",         "Toggle", "Pin to latest tag (else stay on main)", True),
-    ("Disableauth",      "Toggle",
-     "Disable MCP auth (single-user local mode)", True),
+    ("Installhdr", "Header", "TDPilot Installer", None),
+    ("Installstatus", "Str", "Status", "Not detected"),
+    ("Detectstate", "Pulse", "Detect State", None),
+    ("Actionshdr", "Header", "Actions", None),
+    ("Bootstrapall", "Pulse", "Bootstrap All (clone + plugin + autoload)", None),
+    ("Installpython", "Pulse", "Install Python Wrapper Only", None),
+    ("Installclaude", "Pulse", "Register Claude Code Plugin Only", None),
+    ("Settdautoload", "Pulse", "Set TD Autoload Only", None),
+    ("Uninstallall", "Pulse", "Uninstall Everything", None),
+    ("Configurationhdr", "Header", "Configuration", None),
+    ("Repourl", "Str", "Repo URL", "https://github.com/dreamrec/TDPilot.git"),
+    ("Pintotag", "Toggle", "Pin to latest tag (else stay on main)", True),
+    ("Disableauth", "Toggle", "Disable MCP auth (single-user local mode)", True),
 ]
 
 _UPDATE_PAGE = [
-    ("Updatehdr",        "Header", "Update",                       None),
-    ("Installedversion", "Str",    "Installed",                    "--"),
-    ("Latestversion",    "Str",    "Latest",                       "--"),
-    ("Updatestatus",     "Str",    "Status",
-     "Click 'Detect State' to refresh"),
-    ("Checkforupdates",  "Pulse",  "Check for Updates Now",        None),
-    ("Updatenow",        "Pulse",  "Update Now",                   None),
-    ("Rollback",         "Pulse",  "Rollback to Previous Backup",  None),
-    ("Updateconfighdr",  "Header", "Configuration",                None),
-    ("Autocheckonload",  "Toggle", "Auto-check on project load",   True),
-    ("Backupdir",        "Str",    "Last Backup",                  "(none)"),
+    ("Updatehdr", "Header", "Update", None),
+    ("Installedversion", "Str", "Installed", "--"),
+    ("Latestversion", "Str", "Latest", "--"),
+    ("Updatestatus", "Str", "Status", "Click 'Detect State' to refresh"),
+    ("Checkforupdates", "Pulse", "Check for Updates Now", None),
+    ("Updatenow", "Pulse", "Update Now", None),
+    ("Rollback", "Pulse", "Rollback to Previous Backup", None),
+    ("Updateconfighdr", "Header", "Configuration", None),
+    ("Autocheckonload", "Toggle", "Auto-check on project load", True),
+    ("Backupdir", "Str", "Last Backup", "(none)"),
 ]
 
 # Source files for the four installer DATs. Each tuple:
 #   (DAT name, DAT op-type, source-path-relative-to-repo-root)
 _INSTALLER_DATS = (
-    ("installer",      "textDAT",              "td_component/installer.py"),
-    ("renderer",       "textDAT",              "td_component/renderer.py"),
-    ("autostart",      "executeDAT",           "td_component/autostart.py"),
+    ("installer", "textDAT", "td_component/installer.py"),
+    ("renderer", "textDAT", "td_component/renderer.py"),
+    ("autostart", "executeDAT", "td_component/autostart.py"),
     # parameterexecuteDAT in TD 2025+; some older builds used the old name.
-    ("installer_exec", "parameterexecuteDAT",  "td_component/installer_exec.py"),
+    ("installer_exec", "parameterexecuteDAT", "td_component/installer_exec.py"),
 )
 
 
@@ -241,9 +233,9 @@ def _build_custom_params(comp):
 
     Idempotent in spirit, but expects a freshly-constructed (or wiped) COMP.
     """
-    for (name, kind, label, default) in _INSTALL_PAGE:
+    for name, kind, label, default in _INSTALL_PAGE:
         _append_custom_param(comp, "Install", name, kind, label, default)
-    for (name, kind, label, default) in _UPDATE_PAGE:
+    for name, kind, label, default in _UPDATE_PAGE:
         _append_custom_param(comp, "Update", name, kind, label, default)
 
 
@@ -342,9 +334,12 @@ def _wire_installer_exec(parexec_dat, parent_comp):
     _legacy._set_first_par(parexec_dat, ("custom",), 1)
     _legacy._set_first_par(parexec_dat, ("builtin",), 0)
     for off_par in (
-        "valuechange", "valueschanged",
-        "expressionchange", "exportchange",
-        "enablechange", "modechange",
+        "valuechange",
+        "valueschanged",
+        "expressionchange",
+        "exportchange",
+        "enablechange",
+        "modechange",
     ):
         _legacy._set_first_par(parexec_dat, (off_par,), 0)
     _legacy._set_first_par(parexec_dat, ("active",), 1)
@@ -378,12 +373,10 @@ def _populate_tdpilot_comp(comp, repo_root, info_text):
 
     # Installer source DATs
     created_dats = {}
-    layout_x = {"installer": 200, "renderer": 400, "installer_exec": 400,
-                "autostart": 600}
-    layout_y = {"installer": 200, "renderer": 200, "installer_exec": 200,
-                "autostart": 200}
+    layout_x = {"installer": 200, "renderer": 400, "installer_exec": 400, "autostart": 600}
+    layout_y = {"installer": 200, "renderer": 200, "installer_exec": 200, "autostart": 200}
 
-    for (name, op_type, rel_path) in _INSTALLER_DATS:
+    for name, op_type, rel_path in _INSTALLER_DATS:
         source = _legacy._read_repo_file(repo_root, rel_path)
         dat = _create_text_dat_with_source(comp, name, op_type, source)
         created_dats[name] = dat
@@ -399,15 +392,9 @@ def _populate_tdpilot_comp(comp, repo_root, info_text):
 
     # Nested mcp_server child (built by the legacy populator)
     mcp_comp = _legacy._reset_or_create_comp(comp, "mcp_server")
-    callbacks_code = _legacy._read_repo_file(
-        repo_root, "td_component/mcp_webserver_callbacks.py"
-    )
-    event_emitter_code = _legacy._read_repo_file(
-        repo_root, "td_component/event_emitter.py"
-    )
-    ws_callbacks_code = _legacy._read_repo_file(
-        repo_root, "td_component/ws_callbacks.py"
-    )
+    callbacks_code = _legacy._read_repo_file(repo_root, "td_component/mcp_webserver_callbacks.py")
+    event_emitter_code = _legacy._read_repo_file(repo_root, "td_component/event_emitter.py")
+    ws_callbacks_code = _legacy._read_repo_file(repo_root, "td_component/ws_callbacks.py")
     _legacy._populate_component(
         mcp_comp,
         callbacks_code,
@@ -439,10 +426,7 @@ def _resolve_export_path(repo_root):
 
 def _build_info_text_v156(repo_root, export_path):
     timestamp = datetime.now(timezone.utc).isoformat()
-    repo_label = (
-        os.path.basename(os.path.abspath(repo_root.rstrip(os.sep)))
-        or "TDPilot"
-    )
+    repo_label = os.path.basename(os.path.abspath(repo_root.rstrip(os.sep))) or "TDPilot"
     tox_name = os.path.basename(export_path)
     return (
         "TDPilot v1.5.6 installer + MCP server\n"
@@ -511,10 +495,7 @@ def build_and_export():
     print("[TDPilot] Exported TOX: " + export_path)
     if install_parent is None:
         print("[TDPilot] No live install requested (TD_MCP_PARENT_PATH='').")
-        print(
-            "[TDPilot] Drag " + export_path
-            + " into a TD project to install."
-        )
+        print("[TDPilot] Drag " + export_path + " into a TD project to install.")
     return export_path
 
 

@@ -75,13 +75,8 @@ def backups_dir():
 
 def prefs_path():
     if os.name == "nt":
-        return os.path.join(
-            HOME, "AppData", "Roaming", "Derivative", "TouchDesigner099", "pref.txt"
-        )
-    return os.path.join(
-        HOME, "Library", "Application Support", "Derivative",
-        "TouchDesigner099", "pref.txt"
-    )
+        return os.path.join(HOME, "AppData", "Roaming", "Derivative", "TouchDesigner099", "pref.txt")
+    return os.path.join(HOME, "Library", "Application Support", "Derivative", "TouchDesigner099", "pref.txt")
 
 
 CLAUDE_PLUGINS_DIR = os.path.join(HOME, ".claude", "plugins")
@@ -220,7 +215,9 @@ def _which(cmd):
         result = subprocess.run(
             [finder, cmd],
             env={**os.environ, "PATH": _augmented_path()},
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         if result.returncode == 0:
             return result.stdout.strip().splitlines()[0] or None
@@ -233,8 +230,7 @@ def _run(cmd, **kwargs):
     env = kwargs.pop("env", None) or os.environ.copy()
     env["PATH"] = _augmented_path()
     return subprocess.run(
-        cmd, env=env, capture_output=True, text=True,
-        timeout=kwargs.pop("timeout", 300), **kwargs
+        cmd, env=env, capture_output=True, text=True, timeout=kwargs.pop("timeout", 300), **kwargs
     )
 
 
@@ -334,10 +330,7 @@ def detect_state():
         "claude_cli": _which("claude"),
         "repo_at_home": os.path.isfile(pyproject()),
         "repo_version": _read_repo_version(),
-        "td_prefs_set": (
-            prefs.get("general.startupfilemode") == "2"
-            and autoload_target == autoload_toe()
-        ),
+        "td_prefs_set": (prefs.get("general.startupfilemode") == "2" and autoload_target == autoload_toe()),
         "autoload_toe_exists": os.path.isfile(autoload_toe()),
         "autoload_target": autoload_target or None,
         "claude_plugin_installed": _is_claude_plugin_installed(),
@@ -382,10 +375,7 @@ def refresh_status_params():
     state = detect_state()
     try:
         with _job_lock:
-            job_running = (
-                _job_state["name"] is not None
-                and not _job_state["done"]
-            )
+            job_running = _job_state["name"] is not None and not _job_state["done"]
             job_message = _job_state["message"] if job_running else None
         if job_message:
             tp.par.Installstatus = job_message
@@ -405,15 +395,12 @@ def refresh_status_params():
 
 def _install_uv():
     if os.name == "nt":
-        cmd = ["powershell", "-ExecutionPolicy", "ByPass", "-c",
-               "irm https://astral.sh/uv/install.ps1 | iex"]
+        cmd = ["powershell", "-ExecutionPolicy", "ByPass", "-c", "irm https://astral.sh/uv/install.ps1 | iex"]
     else:
         cmd = ["sh", "-c", "curl -LsSf https://astral.sh/uv/install.sh | sh"]
     result = _run(cmd, timeout=180)
     if result.returncode != 0:
-        raise RuntimeError(
-            "uv install failed: " + (result.stderr or result.stdout)[:300]
-        )
+        raise RuntimeError("uv install failed: " + (result.stderr or result.stdout)[:300])
 
 
 def _git_clone(target_dir):
@@ -422,9 +409,7 @@ def _git_clone(target_dir):
         return False
     result = _run([git, "clone", REPO_URL, target_dir], timeout=180)
     if result.returncode != 0:
-        raise RuntimeError(
-            "git clone failed: " + (result.stderr or result.stdout)[:300]
-        )
+        raise RuntimeError("git clone failed: " + (result.stderr or result.stdout)[:300])
     return True
 
 
@@ -435,7 +420,8 @@ def _git_pin_to_latest_tag(target_dir):
     try:
         tag = _run(
             [git, "describe", "--tags", "--abbrev=0"],
-            cwd=target_dir, timeout=10,
+            cwd=target_dir,
+            timeout=10,
         ).stdout.strip()
         if tag:
             _run([git, "checkout", tag], cwd=target_dir, timeout=10)
@@ -446,9 +432,10 @@ def _git_pin_to_latest_tag(target_dir):
 
 
 def _zip_download(target_dir):
+    import tempfile
     import urllib.request
     import zipfile
-    import tempfile
+
     fd, zip_path = tempfile.mkstemp(suffix=".zip")
     os.close(fd)
     try:
@@ -478,9 +465,7 @@ def _uv_sync(repo_dir):
         timeout=600,
     )
     if result.returncode != 0:
-        raise RuntimeError(
-            "uv sync failed: " + (result.stderr or result.stdout)[:500]
-        )
+        raise RuntimeError("uv sync failed: " + (result.stderr or result.stdout)[:500])
 
 
 def _write_env_file_if_missing():
@@ -528,8 +513,7 @@ def _revert_td_prefs():
         return
     prefs = _read_td_prefs()
     target = autoload_toe()
-    if (prefs.get("general.startupfilemode") == "2"
-            and prefs.get("general.startupfilename") == target):
+    if prefs.get("general.startupfilemode") == "2" and prefs.get("general.startupfilename") == target:
         prefs.pop("general.startupfilemode", None)
         prefs.pop("general.startupfilename", None)
         lines = [k + "\t" + v for k, v in prefs.items()]
@@ -632,16 +616,13 @@ def _do_uninstall_all(progress_cb):
         os.unlink(at)
 
     if os.environ.get("TDPILOT_KEEP_INSTALL_DIR") == "1":
-        progress_cb("install_dir",
-                    "Skipping " + target + " removal "
-                    "(TDPILOT_KEEP_INSTALL_DIR=1)")
+        progress_cb("install_dir", "Skipping " + target + " removal (TDPILOT_KEEP_INSTALL_DIR=1)")
     else:
         progress_cb("install_dir", "Removing " + target + "...")
         if os.path.isdir(target):
             shutil.rmtree(target, ignore_errors=False)
 
-    progress_cb("done",
-                "Uninstalled. TDPilot will not auto-load on next TD launch.")
+    progress_cb("done", "Uninstalled. TDPilot will not auto-load on next TD launch.")
 
 
 # ---------------------------------------------------------------------------
@@ -677,8 +658,7 @@ def _do_install_claude_plugin(progress_cb):
             "claude plugin install " + CLAUDE_PLUGIN_NAME
         )
 
-    progress_cb("marketplace_add",
-                "Adding marketplace " + CLAUDE_MARKETPLACE + "...")
+    progress_cb("marketplace_add", "Adding marketplace " + CLAUDE_MARKETPLACE + "...")
     result = _run(
         [claude, "plugin", "marketplace", "add", CLAUDE_MARKETPLACE],
         timeout=60,
@@ -690,19 +670,15 @@ def _do_install_claude_plugin(progress_cb):
             raise RuntimeError("marketplace add failed: " + err)
         progress_cb("marketplace_add", "Marketplace already registered.")
 
-    progress_cb("plugin_install",
-                "Installing plugin " + CLAUDE_PLUGIN_NAME + "...")
+    progress_cb("plugin_install", "Installing plugin " + CLAUDE_PLUGIN_NAME + "...")
     result = _run(
         [claude, "plugin", "install", CLAUDE_PLUGIN_NAME],
         timeout=120,
     )
     if result.returncode != 0:
-        raise RuntimeError(
-            "plugin install failed: " + (result.stderr or result.stdout)[:300]
-        )
+        raise RuntimeError("plugin install failed: " + (result.stderr or result.stdout)[:300])
 
-    progress_cb("done",
-                "Claude plugin installed. Restart Claude Code to pick it up.")
+    progress_cb("done", "Claude plugin installed. Restart Claude Code to pick it up.")
 
 
 # ---------------------------------------------------------------------------
@@ -753,9 +729,7 @@ def _do_bootstrap_all(progress_cb):
 # Phase D — Updates
 # ---------------------------------------------------------------------------
 
-GITHUB_RELEASES_URL = (
-    "https://api.github.com/repos/dreamrec/TDPilot/releases/latest"
-)
+GITHUB_RELEASES_URL = "https://api.github.com/repos/dreamrec/TDPilot/releases/latest"
 CACHE_TTL_SECONDS = 24 * 60 * 60  # one day
 
 
@@ -861,9 +835,7 @@ def check_for_updates(force=False):
             # Refresh installed in case it changed since last check; cache
             # still valid for the network-side fields (latest, url, notes).
             cached["installed"] = installed
-            cached["update_available"] = (
-                _semver_tuple(cached.get("latest")) > _semver_tuple(installed)
-            )
+            cached["update_available"] = _semver_tuple(cached.get("latest")) > _semver_tuple(installed)
             return cached
 
     # Use curl rather than urllib because TD's bundled Python doesn't
@@ -874,18 +846,21 @@ def check_for_updates(force=False):
     try:
         result = _run(
             [
-                curl, "-fsSL",
-                "-H", "User-Agent: TDPilot-Installer/1.5.6",
-                "-H", "Accept: application/vnd.github+json",
-                "--max-time", "5",
+                curl,
+                "-fsSL",
+                "-H",
+                "User-Agent: TDPilot-Installer/1.5.6",
+                "-H",
+                "Accept: application/vnd.github+json",
+                "--max-time",
+                "5",
                 GITHUB_RELEASES_URL,
             ],
             timeout=10,
         )
         if result.returncode != 0:
             raise RuntimeError(
-                "curl exited " + str(result.returncode) + ": "
-                + (result.stderr or result.stdout)[:200]
+                "curl exited " + str(result.returncode) + ": " + (result.stderr or result.stdout)[:200]
             )
         data = json.loads(result.stdout)
     except (RuntimeError, ValueError, OSError, subprocess.TimeoutExpired) as exc:
@@ -924,18 +899,20 @@ def check_for_updates(force=False):
 # ---------------------------------------------------------------------------
 
 # Skip these directory NAMES anywhere in the tree (matched by basename).
-_BACKUP_SKIP_DIRS = frozenset({
-    ".venv",
-    ".git",
-    "__pycache__",
-    "node_modules",
-    "knowledge",  # ~/.tdpilot/knowledge/ — user knowledge corpus, can be huge
-    "memory",     # ~/.tdpilot/memory/ — session memory, regenerable
-    "backups",    # don't backup the backups dir
-    ".pytest_cache",
-    ".mypy_cache",
-    ".ruff_cache",
-})
+_BACKUP_SKIP_DIRS = frozenset(
+    {
+        ".venv",
+        ".git",
+        "__pycache__",
+        "node_modules",
+        "knowledge",  # ~/.tdpilot/knowledge/ — user knowledge corpus, can be huge
+        "memory",  # ~/.tdpilot/memory/ — session memory, regenerable
+        "backups",  # don't backup the backups dir
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+    }
+)
 _BACKUP_SKIP_SUFFIXES = (".db", ".sqlite", ".sqlite3", ".pyc")
 
 
@@ -945,13 +922,12 @@ def _smart_copytree(src, dst):
     See _BACKUP_SKIP_DIRS for the list. Backups exist to recover code +
     config; .venv is rebuilt by uv sync, and brain DBs are regenerable.
     """
+
     def ignore(directory, names):
         skipped = []
         for n in names:
             full = os.path.join(directory, n)
-            if os.path.isdir(full) and n in _BACKUP_SKIP_DIRS:
-                skipped.append(n)
-            elif n.endswith(_BACKUP_SKIP_SUFFIXES):
+            if os.path.isdir(full) and n in _BACKUP_SKIP_DIRS or n.endswith(_BACKUP_SKIP_SUFFIXES):
                 skipped.append(n)
         return skipped
 
@@ -985,9 +961,7 @@ def _do_update_now(progress_cb):
         progress_cb("fetch", "Fetching latest tags from GitHub...")
         result = _run([git, "fetch", "--tags"], cwd=target, timeout=60)
         if result.returncode != 0:
-            raise RuntimeError(
-                "git fetch failed: " + (result.stderr or result.stdout)[:300]
-            )
+            raise RuntimeError("git fetch failed: " + (result.stderr or result.stdout)[:300])
         new_tag = _git_pin_to_latest_tag(target)
         if new_tag:
             progress_cb("checkout", "Checked out " + new_tag)

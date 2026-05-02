@@ -17,7 +17,7 @@ onFrameStart()  refreshes the panel once per second, polls the
 
 import os
 
-PANEL_TICK_EVERY_N_FRAMES = 60        # 1Hz at 60fps for cheap renders
+PANEL_TICK_EVERY_N_FRAMES = 60  # 1Hz at 60fps for cheap renders
 INSTALLER_REFRESH_EVERY_N_FRAMES = 60 * 60  # 1×/min — installer state changes rarely
 INSTALLER_PROGRESS_EVERY_N_FRAMES = 6  # 10Hz — show live progress during a job
 
@@ -70,9 +70,7 @@ def _poll_installer_progress():
         return
     if not state.get("done"):
         try:
-            parent().par.Installstatus = (
-                state.get("message") or state.get("stage") or "Working..."
-            )
+            parent().par.Installstatus = state.get("message") or state.get("stage") or "Working..."
         except Exception:
             pass
     else:
@@ -119,17 +117,13 @@ def _execute_pending_main_thread_action():
         except Exception as exc:
             print("[TDPilot autostart] save_toe failed:", exc)
             try:
-                installer.module.mark_pending_action_done(
-                    success=False, error=str(exc)
-                )
+                installer.module.mark_pending_action_done(success=False, error=str(exc))
             except Exception:
                 pass
     else:
         print("[TDPilot autostart] unknown pending action:", action)
         try:
-            installer.module.mark_pending_action_done(
-                success=False, error="unknown action: " + str(action)
-            )
+            installer.module.mark_pending_action_done(success=False, error="unknown action: " + str(action))
         except Exception:
             pass
 
@@ -142,8 +136,12 @@ def onStart():
     return
 
 
-def onCreate(): return
-def onExit(): return
+def onCreate():
+    return
+
+
+def onExit():
+    return
 
 
 def onFrameStart(frame):
@@ -158,8 +156,21 @@ def onFrameStart(frame):
     return
 
 
-def onFrameEnd(frame): return
-def onPlayStateChange(state): return
-def onDeviceChange(): return
-def onProjectPreSave(): return
-def onProjectPostSave(): return
+def onFrameEnd(frame):
+    return
+
+
+def onPlayStateChange(state):
+    return
+
+
+def onDeviceChange():
+    return
+
+
+def onProjectPreSave():
+    return
+
+
+def onProjectPostSave():
+    return

@@ -27,7 +27,7 @@ def _state():
 def _fmt_latency(value):
     if not isinstance(value, (int, float)):
         return "-- ms"
-    return "{:.0f} ms".format(value)
+    return f"{value:.0f} ms"
 
 
 def _fmt_int(value):
@@ -123,8 +123,8 @@ def render():
         ("Build", build),
         ("Last call", str(s.get("last_call") or "--")),
     ]
-    body = "\n".join("{:<11} {}".format(k, v) for k, v in rows)
-    out = "TDPilot {}\n{}\n{}".format(version, _DASH, body)
+    body = "\n".join(f"{k:<11} {v}" for k, v in rows)
+    out = f"TDPilot {version}\n{_DASH}\n{body}"
 
     # Append the install + update rows (Phase A: panel awareness of installer)
     install_row = _read_install_row()

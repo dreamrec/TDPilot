@@ -64,12 +64,26 @@ def onPulse(par):
     return
 
 
-def onValueChange(par, prev): return
-def onValuesChanged(changes): return
+def onValueChange(par, prev):
+    return
+
+
+def onValuesChanged(changes):
+    return
 
 
 # Standard parexec callbacks we don't use:
-def onExpressionChange(par, val, prev): return
-def onExportChange(par, val, prev): return
-def onEnableChange(par, val, prev): return
-def onModeChange(par, val, prev): return
+def onExpressionChange(par, val, prev):
+    return
+
+
+def onExportChange(par, val, prev):
+    return
+
+
+def onEnableChange(par, val, prev):
+    return
+
+
+def onModeChange(par, val, prev):
+    return
