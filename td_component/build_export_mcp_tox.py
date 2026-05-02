@@ -25,11 +25,20 @@ from urllib.parse import urlparse
 
 # Files whose content is baked into the .tox and therefore determines its
 # "fresh enough" status. Kept in sync with scripts/check_tox_freshness.py.
+#
+# v1.5.6 added the four installer-pane source files (installer, installer_exec,
+# autostart, renderer). They live as Text DATs inside the tdpilot COMP — the
+# parent COMP that the v1.5.6 .tox now exports. CI hash-tracks them so a
+# committed .tox stays in sync with the source on disk.
 _TOX_SOURCE_FILES = (
     "td_component/mcp_webserver_callbacks.py",
     "td_component/event_emitter.py",
     "td_component/ws_callbacks.py",
     "td_component/tdpilot_startup.py",
+    "td_component/installer.py",
+    "td_component/installer_exec.py",
+    "td_component/autostart.py",
+    "td_component/renderer.py",
 )
 
 
