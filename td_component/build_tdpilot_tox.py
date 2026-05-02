@@ -43,7 +43,27 @@ import sys
 from datetime import datetime, timezone
 
 # Reuse helpers from the existing builder so we don't duplicate logic.
-_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+# Derive the td_component dir from one of three sources, in order:
+#   1. __file__       — set when imported as a module
+#   2. TD_MCP_REPO_ROOT environment variable — set by the textport caller
+#   3. caller's globals (for the exec(open(...).read(), globals()) idiom)
+# Without this, exec'ing the script via the canonical TD textport pattern
+# would leave __file__ undefined and the sibling-module import would fail.
+def _resolve_this_dir():
+    try:
+        return os.path.dirname(os.path.abspath(__file__))
+    except NameError:
+        pass
+    repo_root = os.environ.get("TD_MCP_REPO_ROOT")
+    if repo_root and os.path.isdir(os.path.join(repo_root, "td_component")):
+        return os.path.join(repo_root, "td_component")
+    raise RuntimeError(
+        "Could not locate td_component/. Set TD_MCP_REPO_ROOT before "
+        "exec'ing build_tdpilot_tox.py from Textport."
+    )
+
+
+_THIS_DIR = _resolve_this_dir()
 if _THIS_DIR not in sys.path:
     sys.path.insert(0, _THIS_DIR)
 import build_export_mcp_tox as _legacy  # noqa: E402
