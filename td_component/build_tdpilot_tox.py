@@ -66,48 +66,55 @@ def _resolve_this_dir():
 _THIS_DIR = _resolve_this_dir()
 if _THIS_DIR not in sys.path:
     sys.path.insert(0, _THIS_DIR)
-import build_export_mcp_tox as _legacy  # noqa: E402
 
 
-def _propagate_td_globals():
-    """Forward TD's textport-only globals (op, parent, project, etc.) into
-    the imported _legacy module's namespace.
+def _load_legacy_module():
+    """Load build_export_mcp_tox.py as a synthetic module that inherits
+    the caller's __builtins__.
 
-    TD injects these names into the textport interactive namespace and into
-    DAT module namespaces, but NOT into arbitrary Python module imports.
-    Without this forwarding, calling _legacy._resolve_export_host() would
-    raise ``NameError: name 'op' is not defined`` because _legacy's own
-    __dict__ doesn't have ``op``.
+    Why this dance instead of ``import build_export_mcp_tox``?
+    ``import`` goes through Python's standard machinery, which creates a
+    fresh module whose __builtins__ is the standard ``builtins`` module —
+    NOT TD's enhanced builtins (where ``op``/``parent``/``me``/etc.
+    actually live). When the imported module's helpers later call ``op()``,
+    name lookup falls through to standard builtins, which doesn't have it,
+    and we get ``NameError: name 'op' is not defined``.
 
-    The names live in the textport's __builtins__ (not in the named globals
-    dict), so we resolve them by direct name reference — which falls through
-    locals → globals → builtins — rather than dict.get() which misses the
-    builtins fallback. Each name is wrapped in its own try/except so a
-    missing TD version-specific name doesn't break the propagation chain.
+    By using ``types.ModuleType`` + ``exec`` we control the namespace
+    explicitly: we install the textport's enhanced ``__builtins__`` into
+    the new module's __dict__, so name lookups inside legacy helpers
+    correctly resolve TD's injected names.
+
+    Also strips the trailing ``build_and_export()`` auto-run line so we
+    only load the helper functions — our own ``build_and_export()`` is
+    the entry point.
     """
-    def _try_set(name, value_thunk):
-        try:
-            value = value_thunk()
-        except NameError:
-            return
-        if value is not None and not hasattr(_legacy, name):
-            setattr(_legacy, name, value)
+    import re as _re
+    import types as _types
 
-    _try_set("op",       lambda: op)        # noqa: F821
-    _try_set("ops",      lambda: ops)       # noqa: F821
-    _try_set("parent",   lambda: parent)    # noqa: F821
-    _try_set("iop",      lambda: iop)       # noqa: F821
-    _try_set("ipar",     lambda: ipar)      # noqa: F821
-    _try_set("me",       lambda: me)        # noqa: F821
-    _try_set("project",  lambda: project)   # noqa: F821
-    _try_set("app",      lambda: app)       # noqa: F821
-    _try_set("root",     lambda: root)      # noqa: F821
-    _try_set("tdu",      lambda: tdu)       # noqa: F821
-    _try_set("absTime",  lambda: absTime)   # noqa: F821
-    _try_set("ui",       lambda: ui)        # noqa: F821
+    legacy_path = os.path.join(_THIS_DIR, "build_export_mcp_tox.py")
+    if not os.path.isfile(legacy_path):
+        raise RuntimeError(
+            "build_export_mcp_tox.py not found alongside build_tdpilot_tox.py at "
+            + _THIS_DIR
+        )
+    with open(legacy_path) as f:
+        legacy_src = f.read()
+    # Strip the trailing module-level call so we don't auto-build legacy.
+    legacy_src = _re.sub(r"\nbuild_and_export\(\)\s*$", "\n", legacy_src)
+
+    legacy_module = _types.ModuleType("build_export_mcp_tox")
+    legacy_module.__file__ = legacy_path
+    # The critical line: inherit the caller's __builtins__ so that op,
+    # parent, me, project, etc. resolve from inside the legacy helpers.
+    caller_globals = globals()
+    if "__builtins__" in caller_globals:
+        legacy_module.__dict__["__builtins__"] = caller_globals["__builtins__"]
+    exec(compile(legacy_src, legacy_path, "exec"), legacy_module.__dict__)
+    return legacy_module
 
 
-_propagate_td_globals()
+_legacy = _load_legacy_module()
 
 
 # ---------------------------------------------------------------------------
