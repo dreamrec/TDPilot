@@ -1,4 +1,4 @@
-schema_version: 1
+schema_version: 2
 topic: glsl
 op_types: [glslTOP, glslMAT]
 hints:
@@ -12,6 +12,7 @@ hints:
     source_kind: skill_pitfall
     when:
       op_type: glslTOP
+      surface: [create_node, exec, plan]
 
   - id: glsl_uniform_setup
     priority: useful

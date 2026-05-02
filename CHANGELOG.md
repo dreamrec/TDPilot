@@ -1,5 +1,106 @@
 # Changelog
 
+## 1.6.2 - 2026-05-02
+
+Surface routing release. Adds the **2-axis topic × response-surface model**
+for hints — each hint can now declare which tool-response-surfaces it
+should fire from, eliminating noise where hints surface in the wrong
+context. Tool count unchanged at 103. **No `.tox` rebuild required**;
+`API_VERSION` stays at `1.5.3`.
+
+The design directly addresses the gap surfaced by the v1.6.0 competitive
+review (their changelog mentions distinct hints keys for separate
+response surfaces — same idea, we caught up).
+
+### Schema bump: v1 → v2 (backward compatible)
+
+Hint pack YAML now accepts an optional `when.surface` clause:
+
+```yaml
+schema_version: 2          # was 1; both still load
+hints:
+  - id: feedback_static_analyzer_warning
+    priority: critical
+    rule: |
+      "Not enough sources" is a static-analyzer warning, not a runtime error...
+    when:
+      op_type: feedbackTOP
+      error_match: "Not enough sources"
+      surface: [errors]    # NEW v2 — only fires when surfacing from td_get_errors
+```
+
+Surface allowlist (9 surfaces): `create_node`, `set_params`, `exec`,
+`errors`, `plan`, `preview`, `query`, `inspect`, `screenshot`. Unknown
+surface names reject the entire pack (defense-in-depth: malformed YAML
+can't silently make a hint surface-restricted to nothing).
+
+v1 packs continue to load unchanged. Hints without `when.surface` fire
+from any surface (the original behavior).
+
+### Tool surface map
+
+`src/td_mcp/hints/orchestrator.py:TOOL_SURFACES` is the single source of
+truth for the tool→surface mapping that drives auto-injection:
+
+| Tool | Surface |
+|---|---|
+| `td_create_node` | `create_node` |
+| `td_set_params` | `set_params` |
+| `td_exec_python` | `exec` |
+| `td_get_errors` | `errors` |
+| `td_plan_patch` | `plan` |
+| `td_patch_preview` | `preview` |
+| `td_get_hints` | `query` |
+| `td_get_node_detail` | `inspect` *(NEW wiring v1.6.2)* |
+| `td_screenshot`, `td_capture_frame`, `td_capture_and_analyze` | `screenshot` *(reserved; not yet wired)* |
+
+### `td_get_hints` and `td_get_node_detail` extensions
+
+- `td_get_hints` gains `surface=` parameter for explicit narrowing (e.g.
+  `td_get_hints(topic="feedback", surface="create_node")`).
+- `td_get_node_detail` gains `include_hints=False` parameter — when True,
+  attaches a `hints` block scoped to the inspected node's op_type with
+  surface=inspect.
+- `query_hints()` response now includes `surface` and `available_surfaces`
+  fields for client introspection.
+
+### Hint corpus re-annotation
+
+8 existing hints across 6 packs gained surface restrictions where the
+auto-injection target was clear. Examples:
+
+| Hint | Surface restriction |
+|---|---|
+| `feedback_canonical_chain` | `[create_node, plan, preview]` |
+| `feedback_static_analyzer_warning` | `[errors]` |
+| `glsl_output_swizzle` | `[create_node, exec, plan]` |
+| `glsltop_silent_zero_uniform` | `[set_params, exec, screenshot, errors]` |
+| `extension_load_failure_diagnosis` | `[errors]` |
+| `record_is_a_toggle_not_a_pulse` | `[set_params, exec]` |
+| `verify_with_info_chop` | `[screenshot, set_params, errors]` |
+| `glslmat_compile_error_checkerboard` | `[errors, screenshot]` |
+
+The other ~55 hints stayed unrestricted (the right default — narrowing
+prematurely makes them unfindable).
+
+### Tests
+
+- 14 new tests in `tests/test_hints.py` covering schema_version 2
+  acceptance, unknown-surface rejection, string-to-list normalization,
+  type-checked surface lists, find() filter behavior, query_hints surface
+  fields, auto_inject_hints tool→surface routing, and TOOL_SURFACES sanity
+- **740/740 tests pass** (up from 726 in v1.6.1)
+- All 4 CI gates green
+
+### Cascade
+
+- All 6 version manifests bumped 1.6.1 → 1.6.2
+- README/SKILL/MANUAL/INSTALL headers updated
+- skills/tdpilot-core/SKILL.md Hints section now describes surface
+  routing + lists `TOOL_SURFACES`
+- tests/fixtures/tool_schemas.json snapshot regenerated for the new
+  `surface=` and `include_hints=` parameters
+
 ## 1.6.1 - 2026-05-02
 
 Hint pack corpus expansion. **No new MCP tools, no schema changes** —

@@ -1,4 +1,4 @@
-schema_version: 1
+schema_version: 2
 op_types: [moviefileoutTOP]
 hints:
   - id: record_is_a_toggle_not_a_pulse
@@ -16,6 +16,7 @@ hints:
     when:
       op_type: moviefileoutTOP
       intent_match: "start.?record|pulse.?record|stop.?record"
+      surface: [set_params, exec]
 
   - id: verify_with_info_chop
     priority: critical
@@ -33,6 +34,7 @@ hints:
     when:
       op_type: moviefileoutTOP
       intent_match: "verify|check|0.?byte|empty|nothing.?recorded|silent.?fail"
+      surface: [screenshot, set_params, errors]
 
   - id: stall_for_file_open_first_frame
     priority: useful

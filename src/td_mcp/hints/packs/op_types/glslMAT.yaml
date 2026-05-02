@@ -1,4 +1,4 @@
-schema_version: 1
+schema_version: 2
 op_types: [glslMAT]
 hints:
   - id: glslmat_is_full_pipeline_not_fragment_only
@@ -70,4 +70,5 @@ hints:
     when:
       op_type: glslMAT
       error_match: "checkerboard|red.?blue|compile"
+      surface: [errors, screenshot]
 next_tools: [td_get_hints, td_get_param_help, td_get_content, td_get_errors]

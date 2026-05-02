@@ -2,7 +2,7 @@
 
 Pack schema (YAML):
 
-    schema_version: 1                # int, required
+    schema_version: 2                # int, required (1 and 2 both accepted)
     topic: feedback                  # str, required for topic packs
     op_types: [feedbackTOP]          # list[str], optional
     hints:                            # list, required
@@ -16,10 +16,21 @@ Pack schema (YAML):
           op_type: feedbackTOP
           error_match: "Not enough sources"
           intent_match: "decay|trail|fade"
+          surface: ["create_node", "plan"]   # NEW v2 — restrict to these surfaces
     next_tools: [td_get_param_help]  # list[str], optional
 
 Source kinds recognized today: skill_pitfall, user_essay, official_doc,
 hint_pack. Unknown values are accepted and surfaced verbatim in responses.
+
+Schema versions:
+- v1 (legacy): no surface field. Hints fire from any surface (the original behavior).
+- v2 (current): adds optional ``when.surface`` for response-surface gating.
+  v1 packs continue to load unchanged; v2 lets specific hints opt into
+  firing only on listed response-surfaces.
+
+Allowed surface names match real injection points in the runtime; see
+``ALLOWED_SURFACES`` for the canonical list and ``orchestrator.py``
+``TOOL_SURFACES`` for the tool→surface map that drives auto-injection.
 """
 
 from __future__ import annotations
@@ -37,7 +48,25 @@ logger = logging.getLogger(__name__)
 
 PRIORITY_RANK = {"critical": 0, "useful": 1, "context": 2}
 VALID_PRIORITIES = frozenset(PRIORITY_RANK.keys())
-PACK_SCHEMA_VERSION = 1
+PACK_SCHEMA_VERSION = 2
+SUPPORTED_SCHEMA_VERSIONS = frozenset({1, 2})
+
+# Canonical surface names — match real response injection points in the runtime.
+# Adding a surface = add it here AND update ``orchestrator.TOOL_SURFACES`` (for
+# auto-injection) AND wire ``_attach_hints`` into the corresponding tool.
+ALLOWED_SURFACES = frozenset(
+    {
+        "create_node",  # td_create_node response
+        "set_params",  # td_set_params response
+        "exec",  # td_exec_python response
+        "errors",  # td_get_errors response
+        "plan",  # td_plan_patch response
+        "preview",  # td_patch_preview response
+        "query",  # explicit td_get_hints query (caller-driven)
+        "inspect",  # td_get_node_detail response
+        "screenshot",  # td_screenshot / td_capture_frame / td_capture_and_analyze
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -103,6 +132,30 @@ def _validate_hint_dict(raw: Any, pack_id: str) -> dict[str, Any]:
             f"hint {raw['id']!r} in pack {pack_id!r} has invalid priority "
             f"{raw['priority']!r}; allowed: {sorted(VALID_PRIORITIES)}"
         )
+
+    # v2 surface gating (optional): when.surface must be a list of strings,
+    # each in ALLOWED_SURFACES. Reject the whole pack on bad surface names so
+    # malformed YAML can't silently make a hint surface-restricted to nothing.
+    when = raw.get("when") or {}
+    if isinstance(when, dict):
+        surface = when.get("surface")
+        if surface is not None:
+            if isinstance(surface, str):
+                surface = [surface]
+            if not isinstance(surface, list) or not all(isinstance(s, str) for s in surface):
+                raise ValueError(
+                    f"hint {raw['id']!r} in pack {pack_id!r} has invalid 'when.surface' "
+                    f"— must be a string or list of strings"
+                )
+            bad = [s for s in surface if s not in ALLOWED_SURFACES]
+            if bad:
+                raise ValueError(
+                    f"hint {raw['id']!r} in pack {pack_id!r} has unknown surface(s) {bad}; "
+                    f"allowed: {sorted(ALLOWED_SURFACES)}"
+                )
+            # Normalize back into the dict so downstream code sees a list
+            when["surface"] = list(surface)
+            raw["when"] = when
     return raw
 
 
@@ -112,9 +165,10 @@ def _parse_pack(path: Path, pack_kind: str) -> HintPack:
     if not isinstance(raw, dict):
         raise ValueError(f"pack {path.name!r} is not a YAML mapping")
     schema_version = int(raw.get("schema_version", 0))
-    if schema_version != PACK_SCHEMA_VERSION:
+    if schema_version not in SUPPORTED_SCHEMA_VERSIONS:
         raise ValueError(
-            f"pack {path.name!r} schema_version={schema_version} (expected {PACK_SCHEMA_VERSION})"
+            f"pack {path.name!r} schema_version={schema_version} "
+            f"(supported: {sorted(SUPPORTED_SCHEMA_VERSIONS)})"
         )
 
     pack_id = path.stem
@@ -192,7 +246,7 @@ class HintRegistry:
         self._op_type_packs: list[HintPack] = []
         self._all_hints: list[Hint] = []
         self._loaded = False
-        self.pack_version = "v1.6.0-1"
+        self.pack_version = "v1.6.2-1"
 
     @property
     def packs_root(self) -> Path:
@@ -235,6 +289,7 @@ class HintRegistry:
         intent: str | None = None,
         error_text: str | None = None,
         node_path: str | None = None,
+        surface: str | None = None,
     ) -> list[HintMatch]:
         """Score every hint and return matches sorted by priority then score.
 
@@ -248,15 +303,27 @@ class HintRegistry:
         Hints with no positive signal are filtered out unless they're in
         the same pack as a matched hint AND topic/op_type was requested
         (covers the "give me the feedback pack" intent without spam).
+
+        ``surface`` is a HARD FILTER (not a score boost): if a hint declares
+        ``when.surface`` and the requested surface isn't in that list, the
+        hint is excluded. Hints without ``when.surface`` fire from any
+        surface (backward-compatible with v1 packs).
         """
         self._ensure_loaded()
         topic_l = topic.strip().lower() if topic else None
         op_type_l = op_type.strip() if op_type else None
         intent_l = intent.strip().lower() if intent else None
         error_l = error_text.strip().lower() if error_text else None
+        surface_l = surface.strip() if surface else None
 
         matches: list[HintMatch] = []
         for hint in self._all_hints:
+            # Surface gating: hard filter on ``when.surface``.
+            when_surface = hint.when.get("surface") if isinstance(hint.when, dict) else None
+            if when_surface:
+                if surface_l is None or surface_l not in when_surface:
+                    continue  # surface-restricted hint, requested surface not in allowlist
+
             score = 0.0
             reasons: list[str] = []
 
@@ -301,7 +368,9 @@ class HintRegistry:
 
         # Bring in pack-mates of strongly-matched topic/op_type hints with a small
         # baseline score so a "give me the feedback pack" query returns the
-        # whole pack rather than only the strict-matched rules.
+        # whole pack rather than only the strict-matched rules. Surface gating
+        # still applies — a pack-mate restricted to surfaces that don't include
+        # the requested one stays excluded.
         if topic_l or op_type_l:
             matched_pack_ids = {m.hint.pack_id for m in matches}
             existing_ids = {(m.hint.pack_id, m.hint.id) for m in matches}
@@ -310,6 +379,10 @@ class HintRegistry:
                     continue
                 if (hint.pack_id, hint.id) in existing_ids:
                     continue
+                when_surface = hint.when.get("surface") if isinstance(hint.when, dict) else None
+                if when_surface:
+                    if surface_l is None or surface_l not in when_surface:
+                        continue
                 matches.append(HintMatch(hint=hint, score=0.5, reasons=("pack_mate",)))
 
         matches.sort(

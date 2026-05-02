@@ -860,6 +860,15 @@
         "enum": null,
         "type": null
       },
+      "surface": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
       "topic": {
         "any_of_types": [
           "null",
@@ -894,6 +903,12 @@
   "td_get_node_detail": {
     "description_present": true,
     "properties": {
+      "include_hints": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
       "include_notes": {
         "any_of_types": [],
         "default_present": true,

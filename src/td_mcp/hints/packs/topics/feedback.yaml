@@ -1,4 +1,4 @@
-schema_version: 1
+schema_version: 2
 topic: feedback
 op_types: [feedbackTOP, feedbackEdgeTOP]
 hints:
@@ -20,6 +20,7 @@ hints:
     source_kind: skill_pitfall
     when:
       op_type: feedbackTOP
+      surface: [create_node, plan, preview]
 
   - id: feedback_static_analyzer_warning
     priority: critical
@@ -35,6 +36,7 @@ hints:
     when:
       op_type: feedbackTOP
       error_match: "Not enough sources"
+      surface: [errors]
 
   - id: feedback_trail_decay_param
     priority: useful

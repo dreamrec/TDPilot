@@ -1,4 +1,4 @@
-schema_version: 1
+schema_version: 2
 topic: extensions
 op_types: [extensionDAT, baseCOMP, containerCOMP]
 hints:
@@ -27,4 +27,5 @@ hints:
     source_kind: skill_pitfall
     when:
       error_match: "extension"
+      surface: [errors]
 next_tools: [td_get_content, td_get_node_detail, td_python_help]

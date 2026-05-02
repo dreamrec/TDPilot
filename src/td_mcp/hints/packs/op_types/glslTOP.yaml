@@ -1,4 +1,4 @@
-schema_version: 1
+schema_version: 2
 op_types: [glslTOP]
 hints:
   - id: glsltop_quickstart
@@ -35,6 +35,7 @@ hints:
     when:
       op_type: glslTOP
       intent_match: "uniform|input|debug|black|zero|dead"
+      surface: [set_params, exec, screenshot, errors]
 
   - id: glsltop_create_short_form
     priority: useful

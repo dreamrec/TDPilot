@@ -7,6 +7,12 @@ This module is the *only* public surface most callers should touch:
 ``query_hints`` is what ``td_get_hints`` is built on top of. ``auto_inject_hints``
 is what the high-risk-tool wrappers call to decide whether to attach hints to
 a tool response without the caller asking for them.
+
+v1.6.2 added **response-surface routing** (the 2-axis topic × surface model).
+Each tool's auto-injection passes a ``surface`` value derived from
+``TOOL_SURFACES`` below; ``query_hints(surface=...)`` filters out hints whose
+``when.surface`` clause excludes that surface. Hints without a surface clause
+fire from any surface (backward compatible with v1 packs).
 """
 
 from __future__ import annotations
@@ -16,6 +22,25 @@ from dataclasses import dataclass
 from typing import Any
 
 from td_mcp.hints.loader import HintMatch, default_registry
+
+# Tool name → response-surface name. Single source of truth for what surface
+# auto-injection passes when each tool's response is wrapped by `_attach_hints`.
+# Keep in sync with ``loader.ALLOWED_SURFACES``. Adding a tool here does NOT
+# automatically wire injection — the tool's wrapper still needs to call
+# ``_attach_hints`` for hints to surface at all.
+TOOL_SURFACES: dict[str, str] = {
+    "td_create_node": "create_node",
+    "td_set_params": "set_params",
+    "td_exec_python": "exec",
+    "td_get_errors": "errors",
+    "td_plan_patch": "plan",
+    "td_patch_preview": "preview",
+    "td_get_hints": "query",
+    "td_get_node_detail": "inspect",
+    "td_screenshot": "screenshot",
+    "td_capture_frame": "screenshot",
+    "td_capture_and_analyze": "screenshot",
+}
 
 
 # Auto-injection rules, keyed by tool name. Each rule is a callable that
@@ -181,9 +206,17 @@ def query_hints(
     intent: str | None = None,
     node_path: str | None = None,
     error_text: str | None = None,
+    surface: str | None = None,
     max_hints: int = 8,
 ) -> dict[str, Any]:
-    """Return hints + metadata in the shape ``td_get_hints`` exposes."""
+    """Return hints + metadata in the shape ``td_get_hints`` exposes.
+
+    ``surface`` (v1.6.2) gates which surface-restricted hints can fire:
+    a hint that declares ``when.surface=["errors"]`` only fires when
+    ``surface="errors"`` is passed here. Hints without ``when.surface``
+    fire regardless. ``surface=None`` means surface-restricted hints
+    are excluded — passing ``surface`` is opt-in.
+    """
     registry = default_registry()
     matches: list[HintMatch] = registry.find(
         topic=topic,
@@ -191,6 +224,7 @@ def query_hints(
         intent=intent,
         error_text=error_text,
         node_path=node_path,
+        surface=surface,
     )
     selected = matches[: max(1, min(max_hints, 20))] if matches else []
     response_hints = []
@@ -207,12 +241,14 @@ def query_hints(
     return {
         "topic": topic,
         "op_type": op_type,
+        "surface": surface,
         "confidence": round(confidence, 2),
         "hints": response_hints,
         "next_tools": next_tools,
         "hint_pack_version": registry.pack_version,
         "available_topics": registry.topics(),
         "available_op_types": registry.op_types(),
+        "available_surfaces": sorted(set(TOOL_SURFACES.values())),
     }
 
 
@@ -241,12 +277,14 @@ def auto_inject_hints(
         return None
     if not signal:
         return None
+    surface = TOOL_SURFACES.get(tool_name)
     try:
         result = query_hints(
             topic=signal.get("topic"),
             op_type=signal.get("op_type"),
             intent=signal.get("intent"),
             error_text=signal.get("error_text"),
+            surface=surface,
             max_hints=max_hints,
         )
     except Exception:

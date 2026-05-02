@@ -12,6 +12,9 @@ loaded once at server startup.
 """
 
 from td_mcp.hints.loader import (
+    ALLOWED_SURFACES,
+    PACK_SCHEMA_VERSION,
+    SUPPORTED_SCHEMA_VERSIONS,
     Hint,
     HintMatch,
     HintPack,
@@ -20,17 +23,22 @@ from td_mcp.hints.loader import (
 )
 from td_mcp.hints.orchestrator import (
     AUTO_INJECT_RULES,
+    TOOL_SURFACES,
     auto_inject_hints,
     query_hints,
 )
 
 __all__ = [
+    "ALLOWED_SURFACES",
+    "AUTO_INJECT_RULES",
     "Hint",
     "HintMatch",
     "HintPack",
     "HintRegistry",
+    "PACK_SCHEMA_VERSION",
+    "SUPPORTED_SCHEMA_VERSIONS",
+    "TOOL_SURFACES",
+    "auto_inject_hints",
     "default_registry",
     "query_hints",
-    "auto_inject_hints",
-    "AUTO_INJECT_RULES",
 ]

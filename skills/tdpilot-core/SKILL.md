@@ -1,7 +1,7 @@
 ---
 name: tdpilot-core
 description: >
-  Core patching discipline for TDPilot v1.6.1 — the AI assistant inside TouchDesigner.
+  Core patching discipline for TDPilot v1.6.2 — the AI assistant inside TouchDesigner.
   Use this skill whenever working with TouchDesigner through the td_ MCP tools.
   It governs how you build, debug, modify, and maintain TD projects: clean node
   layouts with color coding, error checking after every operation, visual
@@ -12,7 +12,7 @@ description: >
   project lifecycle, technique memory, everything.
 ---
 
-# TDPilot Core v1.6.1 — Patching Discipline (103 tools)
+# TDPilot Core v1.6.2 — Patching Discipline (103 tools)
 
 You are an AI assistant working live inside a TouchDesigner project. You have full control through 103 MCP tools — but control without discipline creates mess. This skill defines how you work.
 
@@ -20,7 +20,7 @@ The goal: every action you take should leave the project cleaner, more readable,
 
 ---
 
-## Complete Tool Surface — v1.6.1 (103 tools, 6 resource templates + 1 static resource)
+## Complete Tool Surface — v1.6.2 (103 tools, 6 resource templates + 1 static resource)
 
 ### Scene & Info (2)
 - `td_get_info` — project name, TD version, OS, FPS, timeline state
@@ -30,8 +30,12 @@ The goal: every action you take should leave the project cleaner, more readable,
 - `td_get_focus` — current network pane, selection, project meta — agent's "where am I in TD?" probe; eliminates the cold-start "what path are you working in?" tax
 - `td_locations` — save/list/go/delete/rename per-project named network locations (host-side JSON storage in `~/.tdpilot/locations/`)
 
-### Hints (1) *(NEW v1.6.0, corpus expanded v1.6.1)*
-- `td_get_hints` — concise, source-cited rules for a topic / op_type / intent. Pure host-side orchestrator over the YAML hint corpus at `src/td_mcp/hints/packs/`. As of v1.6.1: **19 packs / 63 hints** covering 11 topics (audio_reactive, custom_parameters, extensions, feedback, glsl, macros, panel_ui, pop, popx, recording, render_pipeline) and 8 op_types (audiofileinCHOP, extensionDAT, feedbackTOP, geometryCOMP, glslMAT, glslTOP, moviefileoutTOP, panelCOMP). Auto-injection (no caller action needed) fires on `td_create_node` (high-risk op_types), `td_set_params` (string-to-reference-param mismatches), `td_exec_python` (restricted-mode patterns), `td_get_errors` (known error classes), `td_plan_patch`, and `td_patch_preview`.
+### Hints (1) *(NEW v1.6.0, corpus expanded v1.6.1, surface routing v1.6.2)*
+- `td_get_hints` — concise, source-cited rules for a topic / op_type / intent / **surface**. Pure host-side orchestrator over the YAML hint corpus at `src/td_mcp/hints/packs/`. As of v1.6.1: **19 packs / 63 hints** covering 11 topics (audio_reactive, custom_parameters, extensions, feedback, glsl, macros, panel_ui, pop, popx, recording, render_pipeline) and 8 op_types (audiofileinCHOP, extensionDAT, feedbackTOP, geometryCOMP, glslMAT, glslTOP, moviefileoutTOP, panelCOMP).
+
+  **v1.6.2 surface routing** — schema v2 adds optional `when.surface` per hint: a list of response-surfaces from `{create_node, set_params, exec, errors, plan, preview, query, inspect, screenshot}`. Surface-restricted hints fire only when the matching surface is in scope; unrestricted hints fire from any surface. Each tool's auto-injection passes its natural surface automatically (see `TOOL_SURFACES` in `src/td_mcp/hints/orchestrator.py`); explicit `td_get_hints` callers can pass `surface=...` to narrow.
+
+  Auto-injection (no caller action needed) fires on: `td_create_node` (create_node surface, high-risk op_types), `td_set_params` (set_params, string-to-reference-param mismatches), `td_exec_python` (exec, restricted-mode patterns), `td_get_errors` (errors, known error classes), `td_plan_patch` (plan), `td_patch_preview` (preview), and `td_get_node_detail` (inspect, op_type-keyed when `include_hints=True`).
 
 ### Component Notes (1) *(NEW v1.6.0)*
 - `td_component_notes` — per-COMP markdown notes addressable by absolute path. Default external storage at `~/.tdpilot/component_notes/<project_hash>.json` (no `.toe` bloat). Optional `embed=True` mirrors the note into a hidden Text DAT named `tdpilot_notes` inside the COMP for portability. Actions: get/set/append/delete/index/summarize. Pairs with `td_get_node_detail(include_notes=True)`.

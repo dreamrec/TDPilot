@@ -82,6 +82,22 @@ async def td_get_hints(
             ),
         ),
     ] = None,
+    surface: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description=(
+                "Optional response-surface filter (v1.6.2). Allowed values: "
+                "'create_node', 'set_params', 'exec', 'errors', 'plan', "
+                "'preview', 'query', 'inspect', 'screenshot'. Surface-restricted "
+                "hints (those declaring ``when.surface``) only fire when the "
+                "requested surface matches; hints without a surface clause "
+                "fire from any surface. Auto-injection from each tool wrapper "
+                "passes the tool's natural surface automatically; explicit "
+                "callers pass it here to narrow results."
+            ),
+        ),
+    ] = None,
     max_hints: Annotated[
         int,
         Field(
@@ -123,6 +139,7 @@ async def td_get_hints(
             intent=intent,
             node_path=node_path,
             error_text=error_text,
+            surface=surface,
             max_hints=max_hints,
         )
         return _tr._as_json_output(result)

@@ -148,6 +148,18 @@ async def td_get_node_detail(
             ),
         ),
     ] = False,
+    include_hints: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=(
+                "If True, attach a ``hints`` block via td_get_hints scoped to "
+                "the inspected node's op_type and the 'inspect' response "
+                "surface. Auto-injection still fires when surface-restricted "
+                "hints exist for this op_type."
+            ),
+        ),
+    ] = False,
 ) -> str:
     """Get detailed info about a node (type, errors, warnings, parameters).
 
@@ -191,8 +203,23 @@ async def td_get_node_detail(
                     lines.append((note.get("body") or "").strip())
             if data.get("parameters"):
                 lines.append(_tr._format_params_markdown(data["parameters"], path))
-            return "\n".join(lines)
-        return _tr._as_json_output(data)
+            md_output = "\n".join(lines)
+            return _tr._attach_hints(
+                md_output,
+                tool_name="td_get_node_detail",
+                payload={"path": path, "op_type": data.get("type") if isinstance(data, dict) else None},
+                force_query={"op_type": data.get("type")}
+                if include_hints and isinstance(data, dict) and data.get("type")
+                else None,
+            )
+        return _tr._attach_hints(
+            _tr._as_json_output(data),
+            tool_name="td_get_node_detail",
+            payload={"path": path, "op_type": data.get("type") if isinstance(data, dict) else None},
+            force_query={"op_type": data.get("type")}
+            if include_hints and isinstance(data, dict) and data.get("type")
+            else None,
+        )
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_get_node_detail")
         return format_tool_error(exc)

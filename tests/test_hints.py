@@ -8,6 +8,9 @@ from textwrap import dedent
 import pytest
 
 from td_mcp.hints import (
+    ALLOWED_SURFACES,
+    SUPPORTED_SCHEMA_VERSIONS,
+    TOOL_SURFACES,
     HintRegistry,
     auto_inject_hints,
     default_registry,
@@ -347,3 +350,347 @@ def test_query_hints_invalid_max_hints_clamped_to_safe_range():
     high = query_hints(topic="feedback", max_hints=999)
     assert len(low["hints"]) >= 1 or low["hints"] == []
     assert len(high["hints"]) <= 20
+
+
+# ── v1.6.2: surface routing ──────────────────────────────────────
+
+
+def test_loader_accepts_schema_version_2(tmp_path: Path):
+    reg = _registry_with_pack(
+        tmp_path,
+        "topic",
+        "feedback",
+        """
+        schema_version: 2
+        topic: feedback
+        hints:
+          - id: v2_hint
+            priority: useful
+            rule: only on create_node
+            source: src
+            source_kind: skill_pitfall
+            when:
+              surface: ["create_node"]
+        """,
+    )
+    hints = reg.all_hints()
+    assert len(hints) == 1
+    assert hints[0].id == "v2_hint"
+    assert hints[0].when.get("surface") == ["create_node"]
+
+
+def test_loader_rejects_schema_version_3(tmp_path: Path):
+    """schema_version=3 isn't in SUPPORTED_SCHEMA_VERSIONS — pack silently skipped."""
+    _write_pack(
+        tmp_path,
+        "topic",
+        "future",
+        """
+        schema_version: 3
+        topic: future
+        hints:
+          - id: f1
+            priority: useful
+            rule: ...
+            source: ...
+            source_kind: ...
+        """,
+    )
+    reg = HintRegistry(packs_root=tmp_path).reload()
+    assert reg.topics() == []
+    assert reg.all_hints() == []
+
+
+def test_loader_rejects_unknown_surface_name(tmp_path: Path):
+    """A bad surface name in when.surface rejects the entire pack."""
+    _write_pack(
+        tmp_path,
+        "topic",
+        "bad_surface",
+        """
+        schema_version: 2
+        topic: bad_surface
+        hints:
+          - id: f1
+            priority: useful
+            rule: ...
+            source: ...
+            source_kind: ...
+            when:
+              surface: ["foo"]
+        """,
+    )
+    reg = HintRegistry(packs_root=tmp_path).reload()
+    assert reg.all_hints() == []
+
+
+def test_loader_normalizes_string_surface_to_list(tmp_path: Path):
+    """A bare string in when.surface should be normalized to a single-item list."""
+    reg = _registry_with_pack(
+        tmp_path,
+        "topic",
+        "feedback",
+        """
+        schema_version: 2
+        topic: feedback
+        hints:
+          - id: str_surface
+            priority: useful
+            rule: ...
+            source: ...
+            source_kind: skill_pitfall
+            when:
+              surface: create_node
+        """,
+    )
+    hints = reg.all_hints()
+    assert len(hints) == 1
+    assert hints[0].when.get("surface") == ["create_node"]
+
+
+def test_loader_rejects_non_string_in_surface_list(tmp_path: Path):
+    """A list with non-string entries in when.surface rejects the pack."""
+    _write_pack(
+        tmp_path,
+        "topic",
+        "mixed_types",
+        """
+        schema_version: 2
+        topic: mixed_types
+        hints:
+          - id: f1
+            priority: useful
+            rule: ...
+            source: ...
+            source_kind: skill_pitfall
+            when:
+              surface: [123, "create_node"]
+        """,
+    )
+    reg = HintRegistry(packs_root=tmp_path).reload()
+    assert reg.all_hints() == []
+
+
+def test_find_with_no_surface_excludes_surface_restricted_hints(tmp_path: Path):
+    """Calling find() without surface= excludes hints declaring when.surface."""
+    reg = _registry_with_pack(
+        tmp_path,
+        "topic",
+        "feedback",
+        """
+        schema_version: 2
+        topic: feedback
+        hints:
+          - id: open_hint
+            priority: useful
+            rule: any surface
+            source: src
+            source_kind: skill_pitfall
+          - id: gated_hint
+            priority: useful
+            rule: only create_node
+            source: src
+            source_kind: skill_pitfall
+            when:
+              surface: ["create_node"]
+        """,
+    )
+    matches = reg.find(topic="feedback")
+    ids = {m.hint.id for m in matches}
+    assert "open_hint" in ids
+    assert "gated_hint" not in ids
+
+
+def test_find_with_matching_surface_includes_restricted_hint(tmp_path: Path):
+    reg = _registry_with_pack(
+        tmp_path,
+        "topic",
+        "feedback",
+        """
+        schema_version: 2
+        topic: feedback
+        hints:
+          - id: gated_hint
+            priority: useful
+            rule: only create_node
+            source: src
+            source_kind: skill_pitfall
+            when:
+              surface: ["create_node"]
+        """,
+    )
+    matches = reg.find(topic="feedback", surface="create_node")
+    ids = {m.hint.id for m in matches}
+    assert "gated_hint" in ids
+
+
+def test_find_with_non_matching_surface_excludes_restricted_hint(tmp_path: Path):
+    reg = _registry_with_pack(
+        tmp_path,
+        "topic",
+        "feedback",
+        """
+        schema_version: 2
+        topic: feedback
+        hints:
+          - id: gated_hint
+            priority: useful
+            rule: only create_node
+            source: src
+            source_kind: skill_pitfall
+            when:
+              surface: ["create_node"]
+        """,
+    )
+    matches = reg.find(topic="feedback", surface="screenshot")
+    ids = {m.hint.id for m in matches}
+    assert "gated_hint" not in ids
+
+
+def test_find_surface_filter_applies_to_pack_mate_baseline(tmp_path: Path):
+    """Pack-mate hints (score=0.5 baseline) still get filtered by surface."""
+    reg = _registry_with_pack(
+        tmp_path,
+        "topic",
+        "feedback",
+        """
+        schema_version: 2
+        topic: feedback
+        hints:
+          - id: anchor_hint
+            priority: useful
+            rule: anchors the pack to topic=feedback
+            source: src
+            source_kind: skill_pitfall
+          - id: gated_pack_mate
+            priority: useful
+            rule: only fires on create_node
+            source: src
+            source_kind: skill_pitfall
+            when:
+              surface: ["create_node"]
+        """,
+    )
+    matches = reg.find(topic="feedback")
+    ids = {m.hint.id for m in matches}
+    assert "anchor_hint" in ids
+    assert "gated_pack_mate" not in ids
+    matches_with = reg.find(topic="feedback", surface="create_node")
+    ids_with = {m.hint.id for m in matches_with}
+    assert "gated_pack_mate" in ids_with
+
+
+def test_query_hints_response_includes_available_surfaces():
+    result = query_hints(topic="feedback", max_hints=1)
+    assert "available_surfaces" in result
+    assert set(result["available_surfaces"]) == set(TOOL_SURFACES.values())
+    for expected in ("create_node", "set_params", "exec", "errors", "screenshot"):
+        assert expected in result["available_surfaces"]
+
+
+def test_query_hints_response_includes_surface_field():
+    with_surface = query_hints(topic="feedback", surface="create_node", max_hints=1)
+    assert with_surface["surface"] == "create_node"
+    without_surface = query_hints(topic="feedback", max_hints=1)
+    assert without_surface["surface"] is None
+
+
+def test_auto_inject_passes_create_node_surface(tmp_path: Path, monkeypatch):
+    assert TOOL_SURFACES["td_create_node"] == "create_node"
+    _write_pack(
+        tmp_path,
+        "topic",
+        "feedback",
+        """
+        schema_version: 2
+        topic: feedback
+        op_types: [feedbackTOP]
+        hints:
+          - id: create_node_only
+            priority: critical
+            rule: gated to create_node surface
+            source: src
+            source_kind: skill_pitfall
+            when:
+              op_type: feedbackTOP
+              surface: ["create_node"]
+          - id: errors_only
+            priority: critical
+            rule: gated to errors surface
+            source: src
+            source_kind: skill_pitfall
+            when:
+              op_type: feedbackTOP
+              surface: ["errors"]
+        """,
+    )
+    test_registry = HintRegistry(packs_root=tmp_path).reload()
+    monkeypatch.setattr(
+        "td_mcp.hints.orchestrator.default_registry",
+        lambda: test_registry,
+    )
+    result = auto_inject_hints(
+        "td_create_node",
+        {"node_type": "feedbackTOP", "parent_path": "/project1"},
+        {"success": True},
+    )
+    assert result is not None
+    item_ids = {item["id"] for item in result["items"]}
+    assert "create_node_only" in item_ids
+    assert "errors_only" not in item_ids
+
+
+def test_auto_inject_passes_errors_surface(tmp_path: Path, monkeypatch):
+    assert TOOL_SURFACES["td_get_errors"] == "errors"
+    _write_pack(
+        tmp_path,
+        "topic",
+        "feedback",
+        """
+        schema_version: 2
+        topic: feedback
+        op_types: [feedbackTOP]
+        hints:
+          - id: create_node_only
+            priority: critical
+            rule: gated to create_node
+            source: src
+            source_kind: skill_pitfall
+            when:
+              error_match: "Not enough sources"
+              surface: ["create_node"]
+          - id: errors_only
+            priority: critical
+            rule: gated to errors
+            source: src
+            source_kind: skill_pitfall
+            when:
+              error_match: "Not enough sources"
+              surface: ["errors"]
+        """,
+    )
+    test_registry = HintRegistry(packs_root=tmp_path).reload()
+    monkeypatch.setattr(
+        "td_mcp.hints.orchestrator.default_registry",
+        lambda: test_registry,
+    )
+    result = auto_inject_hints(
+        "td_get_errors",
+        {"path": "/"},
+        {"errors": [{"path": "/project1/feedback1", "message": "Not enough sources specified"}]},
+    )
+    assert result is not None
+    item_ids = {item["id"] for item in result["items"]}
+    assert "errors_only" in item_ids
+    assert "create_node_only" not in item_ids
+
+
+def test_tool_surfaces_keys_are_all_known_tools():
+    """Every TOOL_SURFACES key is a td_* tool, every value is in ALLOWED_SURFACES."""
+    for tool_name, surface in TOOL_SURFACES.items():
+        assert tool_name.startswith("td_"), f"{tool_name!r} is not a td_* tool name"
+        assert surface in ALLOWED_SURFACES, (
+            f"surface {surface!r} (for tool {tool_name!r}) is not in ALLOWED_SURFACES"
+        )
+    assert 1 in SUPPORTED_SCHEMA_VERSIONS
+    assert 2 in SUPPORTED_SCHEMA_VERSIONS
