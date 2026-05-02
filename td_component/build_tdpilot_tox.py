@@ -69,6 +69,33 @@ if _THIS_DIR not in sys.path:
 import build_export_mcp_tox as _legacy  # noqa: E402
 
 
+def _propagate_td_globals():
+    """Forward TD's textport-only globals (op, parent, project, etc.) into
+    the imported _legacy module's namespace.
+
+    TD injects these names into the textport interactive namespace and into
+    DAT module namespaces, but NOT into arbitrary Python module imports.
+    Without this forwarding, calling _legacy._resolve_export_host() would
+    raise ``NameError: name 'op' is not defined`` because _legacy's own
+    __dict__ doesn't have ``op``.
+
+    Idempotent — only sets names that aren't already present on _legacy
+    and that ARE present in our globals.
+    """
+    caller_globals = globals()
+    for name in (
+        "op", "ops",
+        "parent", "iop", "ipar",
+        "me", "project", "app", "root",
+        "tdu", "absTime", "ui",
+    ):
+        if name in caller_globals and not hasattr(_legacy, name):
+            setattr(_legacy, name, caller_globals[name])
+
+
+_propagate_td_globals()
+
+
 # ---------------------------------------------------------------------------
 # Configuration (mirrors build_export_mcp_tox.py for consistency)
 # ---------------------------------------------------------------------------
