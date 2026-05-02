@@ -750,17 +750,322 @@ def _do_bootstrap_all(progress_cb):
 
 
 # ---------------------------------------------------------------------------
-# Phase D stubs
+# Phase D — Updates
+# ---------------------------------------------------------------------------
+
+GITHUB_RELEASES_URL = (
+    "https://api.github.com/repos/dreamrec/TDPilot/releases/latest"
+)
+CACHE_TTL_SECONDS = 24 * 60 * 60  # one day
+
+
+def last_check_path():
+    return os.path.join(install_dir(), "last_check.json")
+
+
+def _semver_tuple(v):
+    """Parse "1.5.6" or "v1.5.6" -> (1, 5, 6). (0,0,0) on parse failure.
+
+    Tolerates trailing non-digit suffixes like "1.5.6-rc1" -> (1, 5, 6).
+    """
+    if not v:
+        return (0, 0, 0)
+    s = v.strip().lstrip("v")
+    parts = s.split(".")
+    out = []
+    for p in parts[:3]:
+        digits = ""
+        for ch in p:
+            if ch.isdigit():
+                digits += ch
+            else:
+                break
+        out.append(int(digits) if digits else 0)
+    while len(out) < 3:
+        out.append(0)
+    return tuple(out)
+
+
+def _read_cached_check():
+    """Return cached check_for_updates result if fresh, else None."""
+    p = last_check_path()
+    if not os.path.isfile(p):
+        return None
+    try:
+        with open(p, encoding="utf-8") as f:
+            data = json.load(f)
+        if time.time() - data.get("checked_at", 0) < CACHE_TTL_SECONDS:
+            return data
+    except (OSError, ValueError):
+        pass
+    return None
+
+
+def _write_cached_check(data):
+    p = last_check_path()
+    parent_dir = os.path.dirname(p)
+    if parent_dir:
+        os.makedirs(parent_dir, exist_ok=True)
+    payload = dict(data)
+    payload["checked_at"] = time.time()
+    try:
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(payload, f)
+    except OSError:
+        pass
+
+
+def _push_update_status_to_panel(installed, tag, available):
+    """Best-effort: write Latestversion + Updatestatus on the parent COMP.
+
+    Skip silently if the params don't exist or we're outside TD's main
+    thread (parent() may not work reliably from bg threads).
+    """
+    try:
+        tp = parent()
+        if tp is None:
+            return
+        if tag:
+            tp.par.Latestversion = tag
+        if available:
+            tp.par.Updatestatus = "Update available: " + (tag or "?")
+        else:
+            tp.par.Updatestatus = "Up to date " + installed
+    except Exception:
+        pass
+
+
+def check_for_updates(force=False):
+    """Query GitHub releases for the latest tag. Returns a dict.
+
+    Synchronous (single 5-second HTTPS GET, no bg job needed). Result is
+    cached for 24h at ~/.tdpilot/last_check.json. Pass force=True to
+    bypass the cache.
+
+    Returns:
+        {
+            "installed": "1.5.6",
+            "latest": "1.5.7" or None,
+            "update_available": True/False,
+            "release_url": "https://github.com/...",
+            "release_notes": "...first 500 chars...",
+            "checked_at": <unix-ts>,
+            "error": None or "GitHub unreachable: ..."
+        }
+    """
+    installed = _read_repo_version() or "0.0.0"
+
+    if not force:
+        cached = _read_cached_check()
+        if cached is not None:
+            # Refresh installed in case it changed since last check; cache
+            # still valid for the network-side fields (latest, url, notes).
+            cached["installed"] = installed
+            cached["update_available"] = (
+                _semver_tuple(cached.get("latest")) > _semver_tuple(installed)
+            )
+            return cached
+
+    # Use curl rather than urllib because TD's bundled Python doesn't
+    # ship a CA bundle — urllib.request.urlopen on https:// fails with
+    # CERTIFICATE_VERIFY_FAILED inside TD. /usr/bin/curl on macOS / Linux
+    # uses the system trust store and Just Works.
+    curl = _which("curl") or "/usr/bin/curl"
+    try:
+        result = _run(
+            [
+                curl, "-fsSL",
+                "-H", "User-Agent: TDPilot-Installer/1.5.6",
+                "-H", "Accept: application/vnd.github+json",
+                "--max-time", "5",
+                GITHUB_RELEASES_URL,
+            ],
+            timeout=10,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(
+                "curl exited " + str(result.returncode) + ": "
+                + (result.stderr or result.stdout)[:200]
+            )
+        data = json.loads(result.stdout)
+    except (RuntimeError, ValueError, OSError, subprocess.TimeoutExpired) as exc:
+        # Don't cache failures — next call will retry the network.
+        return {
+            "installed": installed,
+            "latest": None,
+            "update_available": False,
+            "release_url": None,
+            "release_notes": None,
+            "checked_at": time.time(),
+            "error": "GitHub unreachable: " + str(exc)[:120],
+        }
+
+    tag = (data.get("tag_name") or "").lstrip("v") or None
+    body = (data.get("body") or "")[:500] or None
+    url = data.get("html_url")
+    available = _semver_tuple(tag) > _semver_tuple(installed)
+
+    result = {
+        "installed": installed,
+        "latest": tag,
+        "update_available": available,
+        "release_url": url,
+        "release_notes": body,
+        "checked_at": time.time(),
+        "error": None,
+    }
+    _write_cached_check(result)
+    _push_update_status_to_panel(installed, tag, available)
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Smart copytree — backup that excludes regenerable / huge state
+# ---------------------------------------------------------------------------
+
+# Skip these directory NAMES anywhere in the tree (matched by basename).
+_BACKUP_SKIP_DIRS = frozenset({
+    ".venv",
+    ".git",
+    "__pycache__",
+    "node_modules",
+    "knowledge",  # ~/.tdpilot/knowledge/ — user knowledge corpus, can be huge
+    "memory",     # ~/.tdpilot/memory/ — session memory, regenerable
+    "backups",    # don't backup the backups dir
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+})
+_BACKUP_SKIP_SUFFIXES = (".db", ".sqlite", ".sqlite3", ".pyc")
+
+
+def _smart_copytree(src, dst):
+    """Copy src -> dst skipping dirs/files that aren't worth backing up.
+
+    See _BACKUP_SKIP_DIRS for the list. Backups exist to recover code +
+    config; .venv is rebuilt by uv sync, and brain DBs are regenerable.
+    """
+    def ignore(directory, names):
+        skipped = []
+        for n in names:
+            full = os.path.join(directory, n)
+            if os.path.isdir(full) and n in _BACKUP_SKIP_DIRS:
+                skipped.append(n)
+            elif n.endswith(_BACKUP_SKIP_SUFFIXES):
+                skipped.append(n)
+        return skipped
+
+    shutil.copytree(src, dst, ignore=ignore, dirs_exist_ok=False)
+
+
+# ---------------------------------------------------------------------------
+# Action: update_now
 # ---------------------------------------------------------------------------
 
 
-def check_for_updates():
-    raise NotImplementedError("Phase D")
-
-
 def update_now(progress_cb=None):
-    raise NotImplementedError("Phase D")
+    return _start_job("update_now", _do_update_now)
+
+
+def _do_update_now(progress_cb):
+    target = install_dir()
+    if not os.path.isfile(pyproject()):
+        raise RuntimeError("Nothing to update — TDPilot not installed yet")
+
+    # ── Step 1: snapshot backup (smart — exclude .venv/knowledge/etc.) ───
+    progress_cb("backup", "Snapshotting current install...")
+    ts = time.strftime("%Y%m%d-%H%M%S")
+    backup = os.path.join(backups_dir(), ts)
+    os.makedirs(backups_dir(), exist_ok=True)
+    _smart_copytree(target, backup)
+
+    # ── Step 2: fetch latest source (git + checkout tag, or zip fallback) ─
+    git = _which("git")
+    if git is not None and os.path.isdir(os.path.join(target, ".git")):
+        progress_cb("fetch", "Fetching latest tags from GitHub...")
+        result = _run([git, "fetch", "--tags"], cwd=target, timeout=60)
+        if result.returncode != 0:
+            raise RuntimeError(
+                "git fetch failed: " + (result.stderr or result.stdout)[:300]
+            )
+        new_tag = _git_pin_to_latest_tag(target)
+        if new_tag:
+            progress_cb("checkout", "Checked out " + new_tag)
+        else:
+            progress_cb("checkout", "Already on latest tag")
+    else:
+        # Zip fallback: rmtree the install dir and re-extract. Backup is
+        # our safety net if this fails partway.
+        progress_cb("zip", "git missing — re-downloading via zip...")
+        shutil.rmtree(target, ignore_errors=True)
+        _zip_download(target)
+
+    # ── Step 3: resync Python deps (handles new requirements) ────────────
+    progress_cb("uv_sync", "Resyncing Python deps...")
+    _uv_sync(target)
+
+    # ── Step 4: re-save autoload .toe so externaltox picks up new content ─
+    progress_cb("save_toe", "Re-saving autoload .toe (main-thread)...")
+    _wait_for_main_thread_action("save_toe", timeout=30)
+
+    new_version = _read_repo_version() or "?"
+    progress_cb(
+        "done",
+        "Updated to " + new_version + ". Restart TD, then restart Claude Code.",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Action: rollback
+# ---------------------------------------------------------------------------
 
 
 def rollback(progress_cb=None):
-    raise NotImplementedError("Phase D")
+    return _start_job("rollback", _do_rollback)
+
+
+def _do_rollback(progress_cb):
+    bdir = backups_dir()
+    if not os.path.isdir(bdir):
+        raise RuntimeError("No backups directory found at " + bdir)
+
+    backups = sorted(
+        [d for d in os.listdir(bdir) if os.path.isdir(os.path.join(bdir, d))],
+        reverse=True,  # newest first (timestamps sort naturally)
+    )
+    if not backups:
+        raise RuntimeError("No backups found in " + bdir)
+
+    latest_backup = os.path.join(bdir, backups[0])
+    target = install_dir()
+
+    progress_cb("restore", "Restoring from backup " + backups[0] + "...")
+
+    # Move current install aside first so we can restore safely. If
+    # restore fails, swap back. If restore succeeds, drop the aside copy.
+    aside = target + ".rollback-aside-" + time.strftime("%Y%m%d-%H%M%S")
+    shutil.move(target, aside)
+    try:
+        shutil.copytree(latest_backup, target)
+    except Exception:
+        # Restore failed — undo the move so the user isn't left empty-handed.
+        if os.path.isdir(target):
+            shutil.rmtree(target, ignore_errors=True)
+        shutil.move(aside, target)
+        raise
+
+    shutil.rmtree(aside, ignore_errors=True)
+
+    # Re-run uv sync against the restored tree so .venv matches the
+    # restored uv.lock (the backup didn't include .venv).
+    progress_cb("uv_sync", "Resyncing Python deps for restored tree...")
+    _uv_sync(target)
+
+    progress_cb("save_toe", "Re-saving autoload .toe (main-thread)...")
+    _wait_for_main_thread_action("save_toe", timeout=30)
+
+    restored_version = _read_repo_version() or "?"
+    progress_cb(
+        "done",
+        "Rolled back to " + restored_version + ". Restart TD, then restart Claude Code.",
+    )
