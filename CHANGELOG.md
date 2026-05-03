@@ -1,5 +1,102 @@
 # Changelog
 
+## 1.6.6 - 2026-05-03
+
+Closes the "panel says X but disk has Y" drift class permanently via the
+`externaltox` mechanism. v1.6.5's Startup-script sweep was the wrong
+abstraction (TD scans Startup-folder scripts BEFORE opening the default
+project file, so the sweep can never see /project1 — its loadTox into
+/local gets wiped a moment later by the .toe restore that follows).
+v1.6.6's approach is stateless and architectural: the autostart's
+`save_toe` handler sets `externaltox` on the COMP before saving, so the
+.toe stores only a thin path reference instead of an embedded snapshot.
+Every future TD launch reads the latest .tox content fresh from disk.
+
+Tool count unchanged at 103.
+
+### The bug class
+
+Pre-v1.6.6, `project.save` baked the entire current `/project1/tdpilot`
+COMP (with whatever `API_VERSION` was current at save time) into the
+.toe file. Future TD launches restored the frozen content forever.
+Updating `~/.tdpilot/td_component/tdpilot.tox` on disk had no effect
+because the .toe restore overwrote anything the Startup script tried
+to load.
+
+The user reporting "panel still says 1.5.3 after restart" hit this
+exact failure mode. Their `~/.tdpilot/tdpilot_default.toe` had the
+v1.5.3-era COMP fully embedded; nothing the v1.6.5 Startup-script
+sweep did could displace it (Startup scripts run before /project1
+exists, so the sweep loaded fresh into /local — then the .toe wiped
+/local restoring the user's saved state, no tdpilot in /local, leaving
+only the stale /project1/tdpilot v1.5.3 COMP serving port 9981).
+
+### The fix
+
+`td_component/autostart.py:_save_toe_with_externaltox` (new function,
+called from the existing `save_toe` main-thread action handler):
+
+  1. Find this COMP via `parent()`
+  2. Read the canonical .tox path from `installer.module.install_dir()`
+  3. If the COMP has an `externaltox` parameter (containerCOMP does;
+     baseCOMP doesn't): set it to the .tox path, also enable
+     `reloadtoxonstart` so TD re-reads on every project open
+  4. `project.save(target, saveExternalToxs=False)` so the COMP body
+     is referenced (not embedded) in the .toe
+  5. Catch TypeError on the saveExternalToxs kwarg as a fallback for
+     older TD builds that don't support it
+
+After one round-trip through "Update Now" (which triggers `save_toe`),
+the user's .toe is permanently externaltox-wired. From that point
+forward, `npx tdpilot@latest` + restart-TD = panel updates
+automatically. No manual sweeps, no Textport gymnastics, no ordering
+races.
+
+### Why not just a Startup-script sweep (v1.6.5's approach)
+
+TD scans `~/Documents/Derivative/Startup/` BEFORE opening the default
+project file. Order on every TD launch:
+
+  1. TD initializes Python interpreter
+  2. TD execs every `.py` in `~/Documents/Derivative/Startup/`
+     ← `tdpilot_startup.py` runs here. /project1 doesn't exist yet.
+       Sweep finds nothing. loadTox into /local succeeds.
+  3. TD opens default project file (`general.startupfilename`)
+     ← .toe restore wipes /local with whatever the .toe saved
+       (no tdpilot in /local for users who installed at /project1).
+       /project1/tdpilot restored from the .toe — frozen content.
+  4. TD's main event loop starts
+
+The Startup-script sweep is best-effort only — it catches the simple
+cases (/local-only installs with no .toe-baked /project1 COMP) but
+cannot defeat the .toe restore that follows. The externaltox approach
+is stateless: it doesn't fight TD's project loader; it works WITH it.
+
+The v1.6.5 sweep code is kept in place as belt-and-suspenders defense
+for users whose .toe somehow gets out of sync. Documented as such in
+`tdpilot_startup.py`'s module docstring (new 30-line block in v1.6.6).
+
+### Tests
+
+- `tests/test_externaltox_save.py` — **+6 new tests** covering:
+  - Happy path: .tox exists + COMP has externaltox param → set + save
+    with `saveExternalToxs=False`
+  - Fallback: .tox missing on disk → don't set externaltox, plain save
+  - Fallback: COMP has no externaltox param (baseCOMP-style) → skip set
+  - Fallback: `installer.install_dir()` raises → plain save
+  - Fallback: older TD raises TypeError on `saveExternalToxs` kwarg →
+    catch + retry without kwargs
+  - Fallback: `parent()` returns None → plain save (defensive guard)
+- 785 → 791 total tests, all green.
+- All 5 CI gates green: pytest, ruff check, ruff format, check_versions
+  (now lockstep-gating API_VERSION since v1.6.5), check_tox_freshness.
+
+### Cascade
+
+7 version manifests bumped 1.6.5 → 1.6.6. `API_VERSION` 1.6.5 → 1.6.6
+(lockstep — gate enforces). `.tox` rebuilt. 6 doc/skill headers
+updated. `uv.lock` re-resolved.
+
 ## 1.6.5 - 2026-05-03
 
 Fixes the "panel still says 1.5.3 after restart" bug class — both the

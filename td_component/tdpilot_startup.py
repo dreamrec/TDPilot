@@ -9,6 +9,36 @@ Reads ~/.tdpilot_path to find the TDPilot repo root, then either:
   2. Rebuilds from source if the TOX is missing or stale (fallback)
 
 Never crashes TD startup — all errors are caught and printed to Textport.
+
+────────────────────────────────────────────────────────────────────────
+TD startup ordering — IMPORTANT (don't relearn the v1.6.5 lesson)
+────────────────────────────────────────────────────────────────────────
+
+TD scans ~/Documents/Derivative/Startup/ scripts BEFORE opening the
+default project file. So when this module runs:
+  - /project1 does NOT exist yet (the .toe hasn't loaded)
+  - /local exists but contains nothing the .toe will restore
+  - Anything we loadTox into /local gets WIPED a moment later when the
+    .toe restore pass overwrites /local with whatever was saved
+  - The .toe-restored /project1/tdpilot then binds port 9981, becoming
+    the de-facto live MCP bridge — even though we tried to load a fresh
+    one earlier in /local
+
+What this means for fixes:
+  - The v1.6.5 _find_existing_tdpilot_comps() / _load_tox_fast() sweep
+    is BEST-EFFORT only. It catches the simple cases (/local installs,
+    no .toe-baked /project1 COMP) but cannot defeat the .toe restore
+    that happens AFTER this script runs.
+  - The CANONICAL fix shipped in v1.6.6 is for the autostart's save_toe
+    handler to set ``externaltox`` on the COMP before saving. That makes
+    every future TD launch read the latest .tox content from disk
+    instead of restoring a frozen embedded copy. See
+    ``td_component/autostart.py:_save_toe_with_externaltox``.
+  - If you ever need a Startup-script sweep that runs AFTER the .toe
+    loads, use td.run() to defer to a later frame. But prefer the
+    externaltox approach — it's stateless and doesn't fight TD's
+    project loader.
+────────────────────────────────────────────────────────────────────────
 """
 
 import glob
