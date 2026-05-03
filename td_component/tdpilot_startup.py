@@ -19,7 +19,22 @@ _ENV_FILE_NAME = ".tdpilot.env"
 _HOME_ENV_FILE = os.path.join(os.path.expanduser("~"), ".tdpilot", ".tdpilot.env")
 _TOX_RELATIVE = os.path.join("td_component", "tdpilot.tox")
 _BUILD_SCRIPT_RELATIVE = os.path.join("td_component", "build_export_mcp_tox.py")
-_COMP_NAME = "mcp_server"
+# v1.6.5: handle both COMP names a tdpilot install might have.
+# Pre-v1.5.6 the build script saved a baseCOMP named "mcp_server"; v1.5.6+
+# saves a containerCOMP named "tdpilot" (the panel UI lives at this level).
+# Listed newest-first so log messages reference the canonical current name
+# when both are present.
+_COMP_NAMES: tuple[str, ...] = ("tdpilot", "mcp_server")
+_COMP_NAME = _COMP_NAMES[0]  # backward-compat alias for any external callers
+
+# v1.6.5: where to look for existing tdpilot installs. /local is the
+# canonical Startup-script-managed location; /project1 catches the very
+# common case where a user dragged the .tox into the visible network and
+# then project.save'd a .toe with the COMP baked in (which is what
+# happened to the user reporting "panel says 1.5.3 after restart" —
+# /project1/tdpilot was binding port 9981 first on every launch and the
+# fresh /local/tdpilot couldn't displace it).
+_SCAN_PARENTS: tuple[str, ...] = ("/local", "/project1")
 
 # Repo root validation markers (same as build_export_mcp_tox.py _is_repo_root)
 _MARKER_FILES = [
@@ -103,60 +118,87 @@ def _is_tox_stale(repo_root, tox_path):
     return False
 
 
-def _destroy_zombie_mcp_servers(exclude_path):
-    """Destroy any mcp_server COMPs OUTSIDE exclude_path.
+def _find_existing_tdpilot_comps():
+    """Return ``[(parent_path, comp_path), ...]`` for every tdpilot/mcp_server
+    COMP we find under the canonical scan parents (``/local``, ``/project1``).
 
-    If a user re-saves the default .toe with /local/mcp_server loaded, TD
-    bakes a COPY at /project1/mcp_server. Next TD launch opens BOTH — the
-    /project1 copy binds to port 9981 first with its stale callbacks and
-    shadows the fresh /local one. We hit this during v1.3.4 debugging and
-    it's easy to re-trigger. This routine scans the whole project at
-    startup and destroys any non-/local mcp_server we find. See audit D-1.
+    v1.6.5: this is the sweep that fixes the "panel says 1.5.3 after restart"
+    class of bug. The pre-v1.6.5 ``_destroy_zombie_mcp_servers`` only looked
+    for the legacy name "mcp_server"; the current build script saves the
+    COMP as "tdpilot", so the scan never matched the user's actual stale
+    install and the fresh load got shadowed forever.
     """
-    try:
-        root = op("/")
-        if root is None or not hasattr(root, "findChildren"):
-            return
-        # Look only at known hostnames to avoid walking the whole project graph.
-        for parent_path in ("/project1", "/"):
-            parent = op(parent_path)
-            if parent is None:
-                continue
-            cand = parent.op(_COMP_NAME) if hasattr(parent, "op") else None
-            if cand is None:
-                continue
-            if cand.path == exclude_path:
-                continue
-            print(f"[TDPilot] destroying zombie {cand.path} (not at {exclude_path})")
-            try:
-                cand.destroy()
-            except Exception as e:
-                print(f"[TDPilot] failed to destroy zombie {cand.path}: {e}")
-    except Exception as e:
-        print(f"[TDPilot] zombie scan error: {e}")
+    found: list[tuple[str, str]] = []
+    for parent_path in _SCAN_PARENTS:
+        parent = op(parent_path)
+        if parent is None or not hasattr(parent, "op"):
+            continue
+        for name in _COMP_NAMES:
+            cand = parent.op(name)
+            if cand is not None and getattr(cand, "isCOMP", False):
+                found.append((parent_path, cand.path))
+    return found
+
+
+def _destroy_zombie_mcp_servers(exclude_path):
+    """Backward-compat shim — pre-v1.6.5 callers used this name.
+
+    Now delegates to the comprehensive sweep used by ``_load_tox_fast``.
+    Kept as a no-arg-changing wrapper so any third-party scripts that
+    `import tdpilot_startup` and call this directly keep working.
+    """
+    for _parent_path, comp_path in _find_existing_tdpilot_comps():
+        if comp_path == exclude_path:
+            continue
+        try:
+            print(f"[TDPilot] destroying zombie {comp_path} (not at {exclude_path})")
+            op(comp_path).destroy()
+        except Exception as e:
+            print(f"[TDPilot] failed to destroy zombie {comp_path}: {e}")
 
 
 def _load_tox_fast(tox_path):
-    """Load pre-built TOX into /local. Returns True on success."""
-    local = op("/local")
-    if local is None or not getattr(local, "isCOMP", False):
-        print("[TDPilot] ERROR: /local container not found")
+    """Load pre-built TOX. Returns True on success.
+
+    v1.6.5 changes:
+      - Sweeps BOTH `/local` AND `/project1` for tdpilot/mcp_server COMPs.
+        Pre-v1.6.5 we only managed `/local/mcp_server`, leaving any
+        `/project1/tdpilot` (the result of dragging the .tox into the
+        visible network at some past point) baked into the user's .toe
+        and silently shadowing every fresh load via port-9981 collision.
+      - Loads the new COMP into the SAME parent the previous one was at.
+        If the user had `/project1/tdpilot`, the fresh load goes to
+        `/project1/tdpilot` so their UI position is preserved. Falls
+        back to `/local` when nothing was found.
+    """
+    existing = _find_existing_tdpilot_comps()
+
+    # Pick where to load: preserve the user's existing parent if any,
+    # otherwise default to /local. We pick the FIRST hit because
+    # _find_existing_tdpilot_comps returns scan-parent order with /local
+    # listed first — meaning if a /local install exists we keep it there,
+    # and only fall back to /project1 if /local was empty.
+    target_parent_path = existing[0][0] if existing else "/local"
+
+    target_parent = op(target_parent_path)
+    if target_parent is None or not getattr(target_parent, "isCOMP", False):
+        print(f"[TDPilot] ERROR: target parent {target_parent_path} not found")
         return False
 
-    # Destroy existing mcp_server if present
-    existing = local.op(_COMP_NAME)
-    if existing is not None:
-        existing.destroy()
-
-    # Also destroy any stray mcp_server elsewhere (e.g. /project1/mcp_server
-    # baked into an auto-saved .toe) — see audit D-1.
-    _destroy_zombie_mcp_servers(exclude_path="/local/" + _COMP_NAME)
+    # Destroy ALL existing tdpilot/mcp_server COMPs to avoid name
+    # collisions on loadTox AND port-9981 binding races on the WS DAT.
+    for _parent_path, comp_path in existing:
+        try:
+            print(f"[TDPilot] destroying stale {comp_path}")
+            op(comp_path).destroy()
+        except Exception as e:
+            print(f"[TDPilot] failed to destroy {comp_path}: {e}")
 
     try:
         # loadTox on a COMP in TD 2025+ loads as a child and returns the new COMP
-        loaded = local.loadTox(tox_path)
+        loaded = target_parent.loadTox(tox_path)
         if loaded is not None:
-            print(f"[TDPilot] v{_read_api_version(tox_path)} loaded from {tox_path}")
+            print(f"[TDPilot] v{_read_api_version(tox_path)} loaded into {loaded.path}")
             return True
     except Exception as e:
         print(f"[TDPilot] loadTox failed ({e}), falling back to rebuild")

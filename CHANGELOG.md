@@ -1,5 +1,99 @@
 # Changelog
 
+## 1.6.5 - 2026-05-03
+
+Fixes the "panel still says 1.5.3 after restart" bug class — both the
+underlying architectural cause AND the v1.6.4 release-process bug that
+allowed it to ship in the first place. Tool count unchanged at 103.
+
+### Bug 1 — `tdpilot_startup.py` only managed `/local/mcp_server`
+
+When users dragged the `.tox` into the visible network panel, it landed
+at `/project1/tdpilot` (containerCOMP, panel UI). `project.save` then
+baked that COMP into the autoload `.toe` with all v1.5.3-era content
+embedded. Every TD launch:
+
+  1. `.toe` restored `/project1/tdpilot` (frozen v1.5.3 COMP, full content
+     embedded — no `externaltox` indirection, so disk `.tox` updates
+     never reached it).
+  2. The COMP's WS DAT bound port 9981 immediately.
+  3. `~/Documents/Derivative/Startup/tdpilot_startup.py` ran, looked for
+     `/local/mcp_server` (the legacy v1.3-era name — never matched
+     because the user's COMP was named `tdpilot`), called `loadTox` into
+     `/local`. The new instance's WS DAT couldn't bind 9981 (already
+     taken by `/project1/tdpilot`) → silent failure.
+  4. `/project1/tdpilot` kept serving its baked v1.5.3 forever.
+
+`td_get_capabilities` confirmed live: `component_version: "1.5.3"` even
+after `~/.tdpilot/td_component/tdpilot.tox` was sha256-verified to be the
+v1.6.4 binary. The Startup script was loading the right file, just into
+the wrong location, behind the wrong COMP.
+
+#### Fix
+
+`td_component/tdpilot_startup.py:_find_existing_tdpilot_comps()` now
+sweeps both `/local` AND `/project1` for BOTH names (`tdpilot` and the
+legacy `mcp_server`). `_load_tox_fast()` destroys every match found,
+then loads the fresh `.tox` into the SAME parent the previous COMP lived
+at — preserving the user's UI position. Defaults to `/local` when no
+existing install is found (fresh-install case).
+
+So for the affected user setup, every TD launch from v1.6.5 onward:
+
+  1. `.toe` restores stale `/project1/tdpilot` (v1.5.3 — historical baggage).
+  2. Startup script's sweep finds it, destroys it, calls `loadTox` into
+     `/project1` — UI stays at the same path.
+  3. Fresh v1.6.5 COMP at `/project1/tdpilot`, port 9981 bound by it,
+     panel shows "TDPilot 1.6.5 / Tools 103".
+
+No `project.save` required from the user — every launch self-heals.
+
+### Bug 2 — v1.6.4 silently shipped without bumping `API_VERSION`
+
+The `Edit` for `td_component/mcp_webserver_callbacks.py` got lost in a
+parallel edit batch during the v1.6.4 release. `git show
+v1.6.4:td_component/mcp_webserver_callbacks.py` confirmed the published
+`.tox` baked `API_VERSION = "1.6.3"` despite shipping as v1.6.4. Nothing
+caught it because `scripts/check_versions.py` had an explicit "do not
+gate API_VERSION" comment dating back to a since-abandoned attempt at
+decoupling the TD HTTP protocol version from the package version.
+
+#### Fix
+
+`scripts/check_versions.py` now gates `API_VERSION` against `__version__`
+(removed the decoupling comment, replaced with one explaining the new
+lockstep policy). A new test in `tests/test_startup_sweep.py`
+(`TestAPIVersionLockstep`) asserts the same invariant at pytest time so
+both layers (CI script + pytest) catch any future drift independently.
+
+If a legitimate need for distinct TD-protocol vs package versions ever
+arises, the right move is to introduce a separate `TD_PROTOCOL_VERSION`
+constant rather than re-decoupling `API_VERSION` from `__version__`.
+
+### Tests
+
+- `tests/test_startup_sweep.py` — **+16 tests** for the v1.6.5 changes:
+  - 6 tests for `_find_existing_tdpilot_comps` (empty world, /local-only,
+    /project1-only, legacy mcp_server name, multiple parents, both names
+    at one parent).
+  - 8 tests for `_load_tox_fast` (empty + load to /local, stale at
+    /local destroyed + reload at /local, **stale at /project1 destroyed
+    + reload at /project1 — the actual bug case**, both locations
+    destroyed + /local wins, legacy /project1/mcp_server destroyed,
+    loadTox returns None → False, loadTox raises → False, destroy raises
+    → load still attempted).
+  - 1 test for the backward-compat `_destroy_zombie_mcp_servers` shim.
+  - 1 test asserting `API_VERSION == __version__`.
+- 769 → 785 total tests, all green.
+- All 5 CI gates green: pytest, ruff check, ruff format, check_versions
+  (now including API_VERSION), check_tox_freshness.
+
+### Cascade
+
+- 7 version manifests bumped 1.6.4 → 1.6.5. `API_VERSION` 1.6.3 → 1.6.5
+  (catching up the lost v1.6.4 edit and aligning to package). `.tox`
+  rebuilt. 6 doc/skill headers updated. `uv.lock` re-resolved.
+
 ## 1.6.4 - 2026-05-03
 
 Auto-pin to latest released tag at TD launch. Solves the failure mode

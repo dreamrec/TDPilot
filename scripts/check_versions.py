@@ -71,11 +71,25 @@ def main() -> int:
             expected,
             ".claude-plugin/marketplace.json tdpilot plugin",
         ),
-        # NOTE: td_component/mcp_webserver_callbacks.py API_VERSION intentionally does
-        # NOT track __version__. It represents the TD-side HTTP protocol version and
-        # only bumps when an endpoint / response shape changes. Decoupling lets the
-        # Python/npm package bump (e.g. 1.3.4 → 1.4.0) without forcing a .tox rebuild
-        # when the TD protocol is unchanged.
+        # v1.6.5: API_VERSION is now lockstep with __version__.
+        # Pre-v1.6.5 history: this constant was deliberately decoupled from the
+        # package version, on the theory that the TD-side HTTP protocol version
+        # only needs bumping when route shapes change. In practice the
+        # decoupling caused two user-visible drift bugs (v1.6.3 panel showing
+        # "TDPilot 1.5.3" because nobody had bumped API_VERSION across the v1.6
+        # line; v1.6.4 silently shipped with API_VERSION still at "1.6.3"
+        # because no CI gate caught a missing Edit). The panel renderer reads
+        # API_VERSION directly, so users expect it to match the package version.
+        # We choose the simpler invariant: API_VERSION == __version__ on every
+        # release. If you legitimately need a TD-side protocol version distinct
+        # from the package version, introduce a separate TD_PROTOCOL_VERSION
+        # constant rather than re-decoupling this one.
+        check_line(
+            ROOT / "td_component" / "mcp_webserver_callbacks.py",
+            r'API_VERSION\s*=\s*"([^"]+)"',
+            expected,
+            "td_component/mcp_webserver_callbacks.py API_VERSION",
+        ),
         check_line(
             ROOT / "plugin_README.md",
             r"TDPilot v([0-9]+\.[0-9]+\.[0-9]+)",

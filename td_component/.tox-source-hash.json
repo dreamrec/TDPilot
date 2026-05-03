@@ -1,6 +1,6 @@
 {
-  "tox_source_hash": "e768cb915e6b9492c591d29f56ef6c994ce7bcf4a8f1912aa09454680e25eca5",
-  "built_at": "2026-05-03T08:16:24.154383+00:00",
+  "tox_source_hash": "b214f36df2c337b3f2e8f1a366026b13a65c30e663fab57658f9c2ec26e973cd",
+  "built_at": "2026-05-03T08:39:03.912169+00:00",
   "source_files": [
     "td_component/mcp_webserver_callbacks.py",
     "td_component/event_emitter.py",
