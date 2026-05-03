@@ -418,9 +418,23 @@ def _populate_tdpilot_comp(comp, repo_root, info_text):
     _build_custom_params(comp)
 
     # Status panel TOP
+    #
+    # v1.6.8 fix: nodeX/nodeY MUST be inside the panel viewport (0..PANEL_W,
+    # 0..PANEL_H). TD's containerCOMP panel composition uses each child's
+    # network nodeX/nodeY as its position in the panel surface. A child
+    # placed outside the viewport (like the v1.6.7 build's `(600, 0)`,
+    # which is past PANEL_W=520 horizontally) renders correctly as a TOP
+    # but never appears in the panel — the user sees a black panel even
+    # though `status_text.par.text` has correct content.
+    #
+    # Place at (0, 0) — bottom-left of the panel (TD panel-coord Y goes up,
+    # so nodeY=0 = panel-bottom). The textTOP's internal `positiony=-16`
+    # offsets the rendered text inside the 256×256 surface, giving the
+    # familiar "padded from top-left" look while the TOP itself sits flush
+    # with the panel's bottom-left.
     status_text = _create_status_text_top(comp, "status_text")
     try:
-        status_text.nodeX, status_text.nodeY = 600, 0
+        status_text.nodeX, status_text.nodeY = 0, 0
     except Exception:
         pass
 

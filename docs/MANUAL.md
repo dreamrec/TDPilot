@@ -1,4 +1,4 @@
-# TDPilot v1.6.7 Production Manual
+# TDPilot v1.6.8 Production Manual
 
 This manual is for people who need real output in TouchDesigner, not theory. It explains what TDPilot does well, what it does not do, and how to run it with repeatable production discipline.
 

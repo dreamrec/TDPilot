@@ -1,5 +1,80 @@
 # Changelog
 
+## 1.6.8 - 2026-05-03
+
+Sixth release on the same user complaint, but this time with verified
+visual confirmation: panel renders correctly inside the COMP icon at
+the network-editor level, not just inside-the-COMP. Tool count unchanged
+at 103.
+
+### The bug
+
+After v1.6.7's three build-script fixes (state_cache + autostart triggers
++ display flag) the user reported: "the UI is only visible inside the
+comp" — i.e. when you double-click into `/project1/tdpilot`, the panel
+text renders correctly, but viewing the COMP from `/project1` shows a
+black panel with side-icon decorations only.
+
+Probe revealed `status_text.nodeX = 600`, but the panel viewport is
+`comp.par.w = 520`. **TD's containerCOMP composes its panel from
+children whose nodeX/nodeY land inside `[0, w) × [0, h)`.** A child
+positioned outside the viewport renders correctly as a standalone TOP
+(its `td_screenshot` returns valid pixels) but is silently skipped by
+the panel composer.
+
+The user could see the text content when INSIDE the COMP because the
+network editor's viewer-mode background shows ALL operators scaled to
+the network view, regardless of viewport. From OUTSIDE, only viewport-
+bounded children appear.
+
+This was the v1.5.6 build's positioning regression — earlier (v1.5.x)
+builds placed status_text inside the viewport. v1.5.6's containerCOMP
+refactor moved it to `(600, 0)` likely treating that as a "node
+organization" position without realizing that for containerCOMP children
+the network position IS the panel position.
+
+### Fix
+
+`td_component/build_tdpilot_tox.py` (`_populate_tdpilot_comp`):
+
+```python
+status_text.nodeX, status_text.nodeY = 0, 0  # was: 600, 0
+```
+
+Plus a multi-line comment explaining why.
+
+### Tests
+
+- `tests/test_build_script_panel_fixes.py` — **+1 new regression test**
+  (`TestStatusTextInsideViewport.test_status_text_nodeX_inside_panel_width`)
+  that parses the build-script line and asserts `0 ≤ nodeX < PANEL_W`
+  and `0 ≤ nodeY < PANEL_H`. CI fails if anyone moves the textTOP outside
+  the viewport again.
+- 800 → 801 tests, all green.
+- All 5 CI gates green: pytest, ruff check, ruff format, check_versions
+  (lockstep API_VERSION), check_tox_freshness.
+
+### Documentation
+
+- `docs/TD_INTRICACIES_AND_PATTERNS.md` (local-only — gitignored after
+  this release per user request) gained a new **Section 14
+  "containerCOMP panel viewport — children must be inside it"** with
+  the bug pattern diagram, the regression history, and the
+  generalizable rule for future debugging.
+- The doc's intro now carries a **binding rule for future Claude
+  sessions**: "Whenever you discover a new TD intricacy, fix a class
+  of bug, learn a non-obvious behavior, or find a parameter / API
+  quirk, append it to this document." This is the antidote to the
+  v1.6.3-v1.6.8 saga where 6 wrong-layer (and finally one right-layer)
+  releases happened because nobody had documented the build-script's
+  actual behavior.
+
+### Cascade
+
+7 version manifests bumped 1.6.7 → 1.6.8. `API_VERSION` 1.6.7 → 1.6.8
+(lockstep). `.tox` rebuilt with the new positioning. 6 doc/skill
+headers updated. `uv.lock` re-resolved.
+
 ## 1.6.7 - 2026-05-03
 
 Fixes three build-script regressions that have been present since v1.5.6

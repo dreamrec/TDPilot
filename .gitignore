@@ -97,3 +97,8 @@ data/normalized/
 # published. The public docs/ tree contains only current-state user-facing
 # documentation; anything that drifts off-purpose ends up here.
 docs/archive/
+
+# v1.6.8: keep this reference doc local-only (it captures discoveries
+# from session learnings; not for the public repo). Stays on disk for
+# Claude sessions in this dev clone but is excluded from git.
+docs/TD_INTRICACIES_AND_PATTERNS.md

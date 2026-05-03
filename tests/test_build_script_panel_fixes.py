@@ -143,6 +143,46 @@ class TestStatusTextDisplayEnabled:
         )
 
 
+class TestStatusTextInsideViewport:
+    """v1.6.8: status_text.nodeX/nodeY MUST be inside the panel viewport
+    (0..PANEL_W, 0..PANEL_H = 0..520, 0..320). TD's containerCOMP panel
+    composition uses each child's network nodeX/nodeY as its position in
+    the panel surface. v1.6.7 placed status_text at (600, 0) which is
+    past PANEL_W=520 horizontally — so the TOP rendered correctly as a
+    standalone TOP but never appeared in the panel. User saw a black
+    panel even though status_text.par.text contained correct content.
+
+    The earliest (v1.5.x) build placed it inside the viewport. v1.6.7
+    regressed; v1.6.8 restores."""
+
+    def test_status_text_nodeX_inside_panel_width(self):
+        """status_text.nodeX must be < PANEL_W (520) so the TOP composites
+        into the panel viewport."""
+        text = BUILD_TDPILOT.read_text(encoding="utf-8")
+
+        # The build script places status_text at "status_text.nodeX, status_text.nodeY = X, Y"
+        # We need to assert X is inside [0, 520) — anything else is offscreen.
+        import re
+
+        match = re.search(
+            r"status_text\.nodeX,\s*status_text\.nodeY\s*=\s*(-?\d+),\s*(-?\d+)",
+            text,
+        )
+        assert match is not None, (
+            "Could not find status_text positioning line in build_tdpilot_tox.py — "
+            "the TOP must be positioned via `status_text.nodeX, status_text.nodeY = X, Y`"
+        )
+        x, y = int(match.group(1)), int(match.group(2))
+        assert 0 <= x < 520, (
+            f"status_text.nodeX={x} is OUTSIDE the panel viewport (PANEL_W=520). "
+            f"The textTOP would render correctly but never composite into the panel "
+            f"surface. Place at (0, 0) or another in-viewport position. See v1.6.8 CHANGELOG."
+        )
+        assert 0 <= y < 320, (
+            f"status_text.nodeY={y} is OUTSIDE the panel viewport (PANEL_H=320)."
+        )
+
+
 class TestOuterCompViewerEnabled:
     """v1.6.8 defense-in-depth: outer tdpilot containerCOMP must have
     ``viewer = True`` explicitly set. TD's default is True (as of TD
