@@ -141,3 +141,22 @@ class TestStatusTextDisplayEnabled:
         assert "top.viewer = True" in text, (
             "_create_status_text_top should also set top.viewer = True for the viewer flag (helps debugging)"
         )
+
+
+class TestOuterCompViewerEnabled:
+    """v1.6.8 defense-in-depth: outer tdpilot containerCOMP must have
+    ``viewer = True`` explicitly set. TD's default is True (as of TD
+    2025.32460), but a future TD release flipping the default would cause
+    the panel to show "Ctn" placeholder in the network editor. Explicit >
+    implicit."""
+
+    def test_populate_tdpilot_comp_sets_outer_viewer_True(self):
+        """``_populate_tdpilot_comp`` must explicitly set ``comp.viewer = True``
+        on the outer containerCOMP so the panel surface renders inside the
+        COMP node in the network editor (vs showing the default "Ctn")."""
+        text = BUILD_TDPILOT.read_text(encoding="utf-8")
+        assert "comp.viewer = True" in text, (
+            "_populate_tdpilot_comp must explicitly set comp.viewer = True on "
+            "the outer containerCOMP — required for the panel to render in "
+            "the network editor without depending on TD's default"
+        )

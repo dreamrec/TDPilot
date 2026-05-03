@@ -398,6 +398,18 @@ def _populate_tdpilot_comp(comp, repo_root, info_text):
     _legacy._set_first_par(comp, ("w",), PANEL_W)
     _legacy._set_first_par(comp, ("h",), PANEL_H)
 
+    # v1.6.8 (defense-in-depth): explicitly set viewer=True on the outer
+    # containerCOMP so the panel surface renders inside the COMP node in
+    # the network editor (vs showing TD's default "Ctn" placeholder). TD's
+    # default is True empirically as of TD 2025.32460, but explicit > implicit
+    # — this guards against a future TD release flipping the default. Paired
+    # with `_create_status_text_top` setting `top.display = True` so the
+    # textTOP actually surfaces in the panel.
+    try:
+        comp.viewer = True
+    except Exception:
+        pass
+
     # Wipe before populating so reruns land in a clean state.
     for child in list(comp.children):
         child.destroy()
