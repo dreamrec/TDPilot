@@ -95,6 +95,11 @@ def _execute_pending_main_thread_action():
                    externaltox step (see _save_toe_with_externaltox docstring
                    for the architecture rationale — closes the "panel still
                    says 1.5.3 after restart" bug class permanently).
+      "save_toe_pin_current" (v1.6.10) — same recipe as save_toe, but the
+                   target is the CURRENTLY-OPEN .toe (project.folder +
+                   project.name), not the canonical autoload. Generalizes
+                   v1.6.6's protection to arbitrary user projects (closes
+                   the "panel stuck on old version in user .toe" gap).
 
     IMPORTANT: we call installer.module.autoload_toe() (the FUNCTION) not
     installer.module.AUTOLOAD_TOE (the constant). The constant is captured
@@ -124,6 +129,30 @@ def _execute_pending_main_thread_action():
             installer.module.mark_pending_action_done(success=True)
         except Exception as exc:
             print("[TDPilot autostart] save_toe failed:", exc)
+            try:
+                installer.module.mark_pending_action_done(success=False, error=str(exc))
+            except Exception:
+                pass
+    elif action == "save_toe_pin_current":
+        # v1.6.10: pin THIS open project (not the canonical autoload).
+        # Refuses to save if the project hasn't been saved yet (project.name
+        # would be the unsaved-default like "untitled.toe") — reopening an
+        # unsaved file isn't meaningful.
+        try:
+            current_path = os.path.join(project.folder, project.name)
+            if not os.path.isfile(current_path):
+                raise RuntimeError(
+                    "Cannot pin unsaved project. File > Save the .toe first, then click 'Pin this project'."
+                )
+            externaltox_set = _save_toe_with_externaltox(installer, current_path)
+            print(
+                "[TDPilot autostart] pinned current project at "
+                + str(current_path)
+                + (" (externaltox set)" if externaltox_set else " (externaltox skipped — .tox missing?)")
+            )
+            installer.module.mark_pending_action_done(success=True)
+        except Exception as exc:
+            print("[TDPilot autostart] save_toe_pin_current failed:", exc)
             try:
                 installer.module.mark_pending_action_done(success=False, error=str(exc))
             except Exception:

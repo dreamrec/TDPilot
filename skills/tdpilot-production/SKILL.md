@@ -8,7 +8,7 @@ description: >
   param authoring), and td_pop_inspect (POP-native data inspection).
 ---
 
-# TDPilot Production v1.6.9
+# TDPilot Production v1.6.10
 
 ## Use This Skill When
 - The user asks for reliable, production-safe network edits.

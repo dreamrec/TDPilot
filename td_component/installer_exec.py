@@ -22,6 +22,9 @@ _PULSE_DISPATCH = {
     "Checkforupdates": "check_for_updates",
     "Updatenow": "update_now",
     "Rollback": "rollback",
+    # v1.6.10: per-project pin to disk .tox. Generalizes v1.6.6's
+    # canonical-autoload externaltox attach to any open .toe.
+    "Pinthisproject": "pin_current_project",
 }
 
 

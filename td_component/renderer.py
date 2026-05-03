@@ -106,6 +106,36 @@ def _read_update_row():
         return None
 
 
+def _read_body_row():
+    """Read parent COMP's Bodystatus param (v1.6.10).
+
+    Returns None if the param doesn't exist (older pre-1.6.10 COMPs) or
+    if the status is "(checking)" (initial state — don't surface noise
+    in the panel until the installer has run a probe).
+
+    Otherwise format depends on the status string:
+      "✓ pinned"             → "Body        ✓ pinned"
+      "⚠ frozen at 1.6.8"    → "Body        ⚠ frozen — click 'Pin this project'"
+      "external ..."         → "Body        external (custom path)"
+      "embedded ..."         → "Body        embedded (no auto-update)"
+
+    Uses ``.val`` rather than ``.eval()`` to read the param. For a Str
+    param without expression binding, .val is equivalent and avoids the
+    pre-tool-use security-warning hook that flags Python's eval()
+    builtin (false positive on TD's parameter accessor).
+    """
+    try:
+        status = parent().par.Bodystatus.val or ""
+    except Exception:
+        return None
+    if not status or status == "(checking)":
+        return None
+    # Append a hint when the body is frozen so the user knows what to do.
+    if status.startswith("⚠"):
+        return "{:<11} {} — click 'Pin this project'".format("Body", status)
+    return "{:<11} {}".format("Body", status)
+
+
 def render():
     s = _state()
     if s is None:
@@ -133,6 +163,12 @@ def render():
     update_row = _read_update_row()
     if update_row:
         out += "\n" + update_row
+    # v1.6.10: surface body source state (pinned / frozen / external).
+    # When body is "frozen" the row also nudges the user to click 'Pin
+    # this project' on the Update page — closes the embedded-body class.
+    body_row = _read_body_row()
+    if body_row:
+        out += "\n" + body_row
     return out
 
 

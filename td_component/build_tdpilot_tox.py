@@ -124,6 +124,48 @@ _legacy = _load_legacy_module()
 
 
 # ---------------------------------------------------------------------------
+# Canonical version (read dynamically — v1.6.10+ fix for label-drift class)
+# ---------------------------------------------------------------------------
+#
+# Pre-v1.6.10 history: every label string in this file was hardcoded as
+# "TDPilot v1.5.6 ..." (the version when the containerCOMP architecture was
+# introduced). Subsequent releases bumped 14+ files in the version cascade
+# but nobody updated these labels. Result: every build from v1.5.6 through
+# v1.6.9 printed "Built v1.5.6 tdpilot COMP" while actually shipping the
+# current version's API_VERSION inside the .tox. The user spotted this in
+# the v1.6.10 build session and asked "why 1.5.6?" — fair question.
+#
+# Fix: read __version__ once at build time from src/td_mcp/__init__.py and
+# thread it through every label. Bumping a release now just touches the 14
+# version-cascade files; the build script's labels follow automatically.
+
+
+def _read_canonical_version(repo_root):
+    """Parse src/td_mcp/__init__.py for __version__.
+
+    Used by build labels (comp.comment, info_text DAT, build print
+    statement) so labels stay in lockstep with the package without
+    per-release manual edits to this file.
+
+    Returns the version string (e.g. "1.6.10") or "?" on parse failure
+    — never raises, since a missing version label is cosmetic and
+    shouldn't abort an otherwise-valid build.
+    """
+    import re as _re
+
+    init_py = os.path.join(repo_root, "src", "td_mcp", "__init__.py")
+    try:
+        with open(init_py) as f:
+            text = f.read()
+        m = _re.search(r'__version__\s*=\s*"([^"]+)"', text)
+        if m:
+            return m.group(1)
+    except Exception:
+        pass
+    return "?"
+
+
+# ---------------------------------------------------------------------------
 # Configuration (mirrors build_export_mcp_tox.py for consistency)
 # ---------------------------------------------------------------------------
 
@@ -171,6 +213,22 @@ _UPDATE_PAGE = [
     ("Checkforupdates", "Pulse", "Check for Updates Now", None),
     ("Updatenow", "Pulse", "Update Now", None),
     ("Rollback", "Pulse", "Rollback to Previous Backup", None),
+    # v1.6.10: per-project pin-to-disk-tox flow. The v1.6.6 _save_toe_with_externaltox
+    # mechanism only fires for the canonical autoload .toe (~/.tdpilot/tdpilot_default.toe)
+    # via Updatenow/Settdautoload. User-created .toe files in arbitrary locations
+    # (Desktop, project folders) had a frozen embedded COMP body that would not
+    # auto-update when the on-disk .tox was refreshed by `npx tdpilot@latest`.
+    # Pinthisproject closes that gap: one click on any open project →
+    # comp.par.externaltox set to ~/.tdpilot/td_component/tdpilot.tox →
+    # project saved with saveExternalToxs=False → user reopens .toe → fresh body.
+    # Bodystatus is the live state indicator the renderer reads to show:
+    #   "✓ pinned"        — externaltox set, body loads from disk on every open
+    #   "⚠ frozen at X.Y.Z" — body is embedded; click Pinthisproject to fix
+    #   "external"        — externaltox set to a path other than canonical
+    #   "(checking)"      — initial state before installer probes
+    ("Bodyhdr", "Header", "Body source", None),
+    ("Bodystatus", "Str", "Body status", "(checking)"),
+    ("Pinthisproject", "Pulse", "Pin this project to disk .tox", None),
     ("Updateconfighdr", "Header", "Configuration", None),
     ("Autocheckonload", "Toggle", "Auto-check on project load", True),
     ("Backupdir", "Str", "Last Backup", "(none)"),
@@ -406,12 +464,17 @@ def _wire_installer_exec(parexec_dat, parent_comp):
 
 
 def _populate_tdpilot_comp(comp, repo_root, info_text):
-    """Build the full v1.5.6 tdpilot COMP children inside `comp`.
+    """Build the full tdpilot COMP children inside `comp`.
 
     Wipes existing children first so the build is reproducible (matches
     the OVERWRITE_COMPONENT semantics in build_export_mcp_tox).
+
+    The COMP architecture was introduced in v1.5.6; the current version
+    label is read dynamically from src/td_mcp/__init__.py to avoid the
+    label-drift class (see _read_canonical_version docstring).
     """
-    comp.comment = "TDPilot v1.5.6 installer + MCP server panel"
+    version = _read_canonical_version(repo_root)
+    comp.comment = "TDPilot v" + version + " installer + MCP server panel"
 
     # Panel sizing
     _legacy._set_first_par(comp, ("w",), PANEL_W)
@@ -529,18 +592,32 @@ def _resolve_export_path(repo_root):
     return out
 
 
-def _build_info_text_v156(repo_root, export_path):
+def _build_info_text(repo_root, export_path):
+    """Compose the info_text string baked into the COMP at build time.
+
+    v1.6.10: renamed from ``_build_info_text_v156`` (the version-suffixed
+    name was a relic of the v1.5.6-only era). Now reads the canonical
+    version dynamically so info_text stamps with the actual current
+    package version, not a frozen "v1.5.6" string.
+    """
     timestamp = datetime.now(timezone.utc).isoformat()
     repo_label = os.path.basename(os.path.abspath(repo_root.rstrip(os.sep))) or "TDPilot"
     tox_name = os.path.basename(export_path)
+    version = _read_canonical_version(repo_root)
     return (
-        "TDPilot v1.5.6 installer + MCP server\n"
+        "TDPilot v" + version + " installer + MCP server\n"
         "Generated by build_tdpilot_tox.py\n"
         "\n"
         "Generated at (UTC): " + timestamp + "\n"
         "Source repo: " + repo_label + "\n"
         "Export file: " + tox_name + "\n"
     )
+
+
+# Legacy alias kept for backwards compatibility — older external callers
+# (rare, mostly historical doc snippets) may still reference the v156 name.
+# Remove this alias in v1.7.x once we're confident nothing references it.
+_build_info_text_v156 = _build_info_text
 
 
 def build_and_export():
@@ -552,7 +629,7 @@ def build_and_export():
         )
 
     export_path = _resolve_export_path(repo_root)
-    info_text = _build_info_text_v156(repo_root, export_path)
+    info_text = _build_info_text(repo_root, export_path)
 
     # Build into a throwaway scratch container, then save.
     export_host = _legacy._resolve_export_host()
@@ -596,7 +673,7 @@ def build_and_export():
         _populate_tdpilot_comp(live, repo_root, info_text)
         print("[TDPilot] Installed " + live.path)
 
-    print("[TDPilot] Built v1.5.6 tdpilot COMP")
+    print("[TDPilot] Built v" + _read_canonical_version(repo_root) + " tdpilot COMP")
     print("[TDPilot] Exported TOX: " + export_path)
     if install_parent is None:
         print("[TDPilot] No live install requested (TD_MCP_PARENT_PATH='').")

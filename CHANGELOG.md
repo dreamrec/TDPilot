@@ -1,5 +1,85 @@
 # Changelog
 
+## 1.6.10 - 2026-05-03
+
+**Closes the v1.6.6 auto-update gap for user-created `.toe` files.** The
+v1.6.6 `_save_toe_with_externaltox` mechanism only protected the canonical
+`~/.tdpilot/tdpilot_default.toe` autoload — user `.toe` files in arbitrary
+locations (Desktop, project folders) had a frozen embedded COMP body that
+would not auto-update when `npx tdpilot@latest` refreshed the on-disk
+`.tox`. v1.6.10 generalizes the externaltox-pin recipe to any open
+project.
+
+### What's new
+
+**New `Pin this project` pulse on the Update page.** One click on any
+open `.toe`:
+1. Sets `comp.par.externaltox = ~/.tdpilot/td_component/tdpilot.tox`
+2. Sets `comp.par.enableexternaltox = True`
+3. Saves the project with `saveExternalToxs=False` (body becomes a path
+   reference, not embedded)
+4. User reopens the `.toe` → fresh body loads from disk
+
+From that point on, `npx tdpilot@latest` + TD relaunch = automatic
+update for that project, just like the canonical autoload.
+
+**New `Body status` panel row.** Surfaces live state of how the COMP
+body is sourced:
+- `✓ pinned` — body loads from canonical `.tox` on every open
+- `⚠ frozen at 1.6.X — click 'Pin this project'` — body is embedded and
+  drifting from disk version (the symptom that confused users for 7
+  releases)
+- `external (custom path)` — externaltox set but pointing at non-canonical `.tox`
+- `embedded (no auto-update)` — body embedded, version matches disk
+  (just legacy save state, no drift yet, but pinning is recommended)
+
+The frozen-body warning is the antidote to the v1.6.x "panel says X but
+parameter tab says Y" confusion class — users now see the state in the
+panel itself with an actionable hint.
+
+### Architecture
+
+`td_component/installer.py` — adds `pin_current_project()` (job
+runner) + `_do_pin_current_project()` (schedules main-thread save) +
+`_detect_body_state()` (probes externaltox + embedded callbacks
+API_VERSION) + `body_status_from_state()` (derives the Body row text).
+
+`td_component/autostart.py` — adds `save_toe_pin_current` action
+handler in `_execute_pending_main_thread_action`. Reuses the existing
+`_save_toe_with_externaltox` helper (introduced in v1.6.6) but targets
+`os.path.join(project.folder, project.name)` instead of the canonical
+autoload path. Refuses to save if the project hasn't been saved yet
+(unsaved-default name like "untitled.toe").
+
+`td_component/installer_exec.py` — adds `Pinthisproject →
+pin_current_project` route in the pulse dispatcher.
+
+`td_component/renderer.py` — adds `_read_body_row()` reading
+`parent.par.Bodystatus`. Wired into `render()` after Update row.
+
+`td_component/build_tdpilot_tox.py` — adds `Bodyhdr`, `Bodystatus`,
+`Pinthisproject` to `_UPDATE_PAGE`.
+
+### Why this wasn't covered by v1.6.6
+
+v1.6.6's `_save_toe_with_externaltox` runs only via the
+`Updatenow`/`Settdautoload` pulses, both of which call
+`installer.module.autoload_toe()` to compute the save target — that
+function always returns `~/.tdpilot/tdpilot_default.toe`. User
+projects in arbitrary locations never reached the externaltox-pin
+flow, so their `.toe` saves stayed at the pre-v1.6.6 default
+(`saveExternalToxs=True`, full COMP body embedded). Every TD launch
+restored the frozen body — and that frozen body is the
+`mcp_server/callbacks` Text DAT with whatever `API_VERSION` was
+current at last save. Hence: panel title says 1.6.X-1, parameter tab
+says 1.6.X (the latter is dynamically refreshed by the installer's
+runtime npm probe).
+
+### Documentation
+
+`docs/TD_INTRICACIES_AND_PATTERNS.md` §17 (the prior session's
+"v1.6.10 candidate" note) is now updated to reflect the shipped fix.
+
 ## 1.6.9 - 2026-05-03
 
 **Seventh release on the same complaint — but this time with verified visual
