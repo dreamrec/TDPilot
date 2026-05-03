@@ -1,5 +1,58 @@
 # Changelog
 
+## 1.6.3 - 2026-05-03
+
+`.tox` alignment release. Closes the cosmetic gap that opened during the
+v1.6.0/1/2 series — host-side server moved to v1.6.x but the `.tox`
+panel stayed at "TDPilot 1.5.3 / Tools 102" because (a) `API_VERSION`
+was deliberately pinned to keep the HTTP protocol stable across three
+host-side-only releases, and (b) the panel's `Tools` field had a
+hardcoded `102` fallback in `renderer.py:bootstrap()` that nothing was
+updating live. Both are now aligned.
+
+### Fixes
+
+- **`API_VERSION` `1.5.3` → `1.6.3`** in `td_component/mcp_webserver_callbacks.py`.
+  The HTTP protocol surface is unchanged; this is a cosmetic alignment
+  so the `.tox` panel header reads `TDPilot 1.6.3` to match the host
+  server. `td_get_capabilities`'s `mismatch` warning will now report
+  `mismatch: false` when host + .tox are both at v1.6.3.
+
+- **Panel tool-count `102` → `103`** in `td_component/renderer.py:bootstrap()`.
+  This is a static fallback baked at .tox build time (the .tox can't
+  query the host MCP server's live tool count over the existing WS
+  bridge — the bridge is host→TD, not TD→host). Bumped + added a
+  comment requiring it to stay in sync with `EXPECTED_MIN_TOOL_COUNT`
+  in `src/td_mcp/release_gates.py` on every release that adds/removes
+  tools.
+
+- **`.tox` rebuilt** with the v1.6.3 source. `.tox-source-hash.json`
+  refreshed by `build_export_mcp_tox.py`; CI's `check_tox_freshness.py`
+  gate stays green.
+
+### No tool changes
+
+Tool count unchanged at **103**. Hint corpus unchanged at 19 packs / 63
+hints. The 6 v1.6.0 tools (`td_get_focus`, `td_locations`,
+`td_get_hints`, `td_component_notes`) and v1.6.2 surface routing all
+ship as in v1.6.2.
+
+### Cascade
+
+- All 6 version manifests bumped 1.6.2 → 1.6.3
+- README/SKILL/MANUAL/INSTALL headers updated
+- 740/740 tests pass; all 4 CI gates green
+
+### Audit findings (no fix needed)
+
+The deep audit also flagged:
+- `autostart.py:_disable_auth()` silently disables MCP shared-secret
+  auth on every project load. **Intentional** — single-user local-dev
+  default, documented in plan §8 risk #1. Skipped.
+- 3 stale TODOs in `models/_legacy.py` (refactor), `tools_planning.py`
+  (v1.5.4 delegation), `tools_notes.py` (docstring). **All benign.**
+- No skipped/xfailed/warned tests; pytest is fully green.
+
 ## 1.6.2 - 2026-05-02
 
 Surface routing release. Adds the **2-axis topic × response-surface model**

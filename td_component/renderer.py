@@ -158,7 +158,15 @@ def tick():
 
 
 def bootstrap():
-    """Pre-populate static fields once on project load."""
+    """Pre-populate static fields once on project load.
+
+    ``tools`` is a static fallback baked at .tox build time. The .tox has
+    no way to query the host-side MCP server's live tool count (the host
+    runs in a separate process that the .tox can only call out to, not
+    receive pushes from over the existing WS bridge). Keep this in sync
+    with ``EXPECTED_MIN_TOOL_COUNT`` in ``src/td_mcp/release_gates.py`` —
+    bump together on every release that adds/removes tools.
+    """
     cache_dat = parent().op(MCP_COMP_PATH + "/state_cache")
     if cache_dat is None:
         return False
@@ -176,7 +184,7 @@ def bootstrap():
     cache_dat.module.update(
         version=version,
         build=build_str,
-        tools=102,
+        tools=103,  # keep in sync with EXPECTED_MIN_TOOL_COUNT in release_gates.py
         popx=_detect_popx(),
         ws="OK",
     )
