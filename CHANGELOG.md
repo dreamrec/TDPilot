@@ -1,5 +1,94 @@
 # Changelog
 
+## 1.6.9 - 2026-05-03
+
+**Seventh release on the same complaint — but this time with verified visual
+confirmation of the actual root cause.** Closes the v1.6.x panel-rendering
+saga.
+
+### v1.6.8's hypothesis was wrong
+
+v1.6.8 shipped claiming "TD's containerCOMP composes its panel from
+children whose nodeX/nodeY land inside `[0, w) × [0, h)`" — moving
+status_text from (600, 0) to (0, 0). That fixed nothing; the panel
+still rendered black at the network level even with all the other
+v1.6.7 fixes (state_cache + autostart triggers + display + viewer).
+
+### v1.6.9 actual root cause
+
+**The containerCOMP's panel background is determined by a single
+parameter on the `Look` page: `comp.par.top`.** It's a TOP-typed
+reference. If `top = None` (the default), the panel surface shows
+only `bgcolor` — no TOP composition based on display flags or position.
+
+The v1.5.x .tox had `comp.par.top = status_text` wired correctly. The
+v1.5.6 containerCOMP refactor in `build_tdpilot_tox.py` dropped the
+wiring entirely. Six releases of "fix the panel" addressed every
+adjacent layer EXCEPT the `top` param. Discovered v1.6.9 by probing
+the live COMP's Look-page params and seeing `top=None` after all
+v1.6.8 fixes were in place.
+
+### Fix
+
+`td_component/build_tdpilot_tox.py:_populate_tdpilot_comp` now sets:
+```python
+status_text = _create_status_text_top(comp, "status_text")
+# ...
+comp.par.top = status_text   # ← v1.6.9: THE actual fix
+```
+
+### Visual styling (per user feedback after panel started rendering)
+
+`_create_status_text_top` now uses native panel resolution + new colors:
+- `resolutionw = PANEL_W` (520), `resolutionh = PANEL_H` (320) — no
+  horizontal stretch (was 256×256 → mapped to 520×320 = 1.625:1 stretch)
+- `fontcolorr/g/b = 0.45 / 0.95 / 0.85` — cyan-greenish (was 55% white)
+- `bgcolorr/g/b = 0 / 0 / 0`, `bgalpha = 0.9` — 90%-opaque black
+
+### Tests
+
+- `tests/test_build_script_panel_fixes.py` — **+3 new tests**:
+  - `TestPanelBackgroundTopWired` — asserts build script sets
+    `comp.par.top = status_text` (the v1.6.9 actual fix)
+  - `TestStatusTextNativeResolution` — asserts resolution matches
+    PANEL_W × PANEL_H (no stretch)
+  - `TestStatusTextStyling` — asserts cyan-green text + 90% black bg
+- 802 → 805 tests, all green.
+- All 5 CI gates green: pytest, ruff check, ruff format (CI-scoped),
+  check_versions (lockstep API_VERSION), check_tox_freshness.
+
+### Documentation
+
+`docs/TD_INTRICACIES_AND_PATTERNS.md` (local-only; gitignored since
+v1.6.8) Section 14 rewritten with the correct rule:
+- v1.6.8's wrong hypothesis preserved as a learning artifact
+- v1.6.9 actual rule documented: panel-bg is `comp.par.top`, not
+  child-TOP composition by nodeX/nodeY
+- Generalizable debug ladder added: when panel renders empty, check
+  `comp.par.top` first, then TOP cooking, then viewer/display flags
+
+### What you need to do
+
+1. `npx tdpilot@latest`
+2. Re-deploy `tdpilot_startup.py` to TD's Startup dir:
+   ```bash
+   cp ~/.tdpilot/td_component/tdpilot_startup.py ~/Documents/Derivative/Startup/
+   ```
+3. Paste in TD Textport (Alt-T) ONE more time:
+   ```python
+   op('/project1/tdpilot').destroy()
+   op('/project1').loadTox('/Users/<you>/.tdpilot/td_component/tdpilot.tox')
+   project.save('/Users/<you>/.tdpilot/tdpilot_default.toe')
+   ```
+4. Panel will render at the `/project1` level immediately with cyan-green
+   text on 90%-black bg, native 520×320 resolution.
+
+### Cascade
+
+7 version manifests bumped 1.6.8 → 1.6.9. `API_VERSION` 1.6.8 → 1.6.9
+(lockstep). `.tox` rebuilt with all v1.6.9 fixes baked in. 6 doc/skill
+headers updated. `uv.lock` re-resolved.
+
 ## 1.6.8 - 2026-05-03
 
 Sixth release on the same user complaint, but this time with verified

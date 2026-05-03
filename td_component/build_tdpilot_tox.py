@@ -247,16 +247,20 @@ def _build_custom_params(comp):
 def _create_status_text_top(parent_comp, name="status_text"):
     """Create the textTOP that displays the rendered panel string.
 
-    Styling matches the live design: Courier New 14pt, left-top aligned,
-    16px inset, 4px line-spacing, 55% white. The renderer DAT writes
+    Styling (v1.6.9): Courier New 14pt, left-top aligned, 16px inset,
+    cyan-green text on 90%-opaque black, native panel resolution
+    (520×320 to match PANEL_W × PANEL_H — no horizontal stretch when
+    used as the containerCOMP's panel-bg TOP). The renderer DAT writes
     multi-line text into ``status_text.par.text`` once per second.
 
-    v1.6.7: also sets ``display=True`` and ``viewer=True`` on the TOP.
-    Without ``display=True``, containerCOMP's panel never shows the TOP
-    in its panel surface and the user just sees TD's "Ctn" placeholder
-    — even if status_text.par.text contains rendered content. This was
-    the third of the three v1.5.6-through-v1.6.6 build-script bugs that
-    surfaced together on fresh loadTox.
+    Style history:
+      - v1.6.7: enabled ``display=True`` and ``viewer=True``.
+      - v1.6.8: kept resolution at default 256×256 — caused horizontal
+        stretching when the panel mapped this square TOP to its 520×320
+        viewport (1.625:1 aspect ratio mismatch).
+      - v1.6.9: native 520×320 resolution + cyan-green text
+        (rgb 0.45/0.95/0.85) + 90% opaque black bg per user feedback.
+        No more stretching, panel reads cleanly at any zoom level.
     """
     top = _legacy._create_with_fallback(parent_comp, ("textTOP",), name)
     style = {
@@ -270,10 +274,25 @@ def _create_status_text_top(parent_comp, name="status_text"):
         "positionx": 16,
         "positiony": -16,
         "linespacing": 4,
-        "fontcolorr": 0.55,
-        "fontcolorg": 0.55,
-        "fontcolorb": 0.55,
+        # v1.6.9: cyan-greenish text color (was 55% white). Reads cleanly
+        # against the dark panel bg and matches the user's design preference.
+        "fontcolorr": 0.45,
+        "fontcolorg": 0.95,
+        "fontcolorb": 0.85,
         "fontcolora": 1.0,
+        # v1.6.9: 90%-opaque black background. The remaining 10% transparency
+        # lets a hint of TD's network background bleed through, giving the
+        # panel a slight contextual "embedded in the project" feel rather
+        # than a hard solid block.
+        "bgcolorr": 0.0,
+        "bgcolorg": 0.0,
+        "bgcolorb": 0.0,
+        "bgalpha": 0.9,
+        # v1.6.9: native panel resolution to eliminate horizontal stretch.
+        # Must match PANEL_W × PANEL_H. If you ever change PANEL_W/H above,
+        # update these too — or refactor to read from the parent COMP.
+        "resolutionw": PANEL_W,
+        "resolutionh": PANEL_H,
         "wordwrap": False,
     }
     for par_name, par_value in style.items():
@@ -419,22 +438,36 @@ def _populate_tdpilot_comp(comp, repo_root, info_text):
 
     # Status panel TOP
     #
-    # v1.6.8 fix: nodeX/nodeY MUST be inside the panel viewport (0..PANEL_W,
-    # 0..PANEL_H). TD's containerCOMP panel composition uses each child's
-    # network nodeX/nodeY as its position in the panel surface. A child
-    # placed outside the viewport (like the v1.6.7 build's `(600, 0)`,
-    # which is past PANEL_W=520 horizontally) renders correctly as a TOP
-    # but never appears in the panel — the user sees a black panel even
-    # though `status_text.par.text` has correct content.
+    # v1.6.8 PARTIAL fix (NOT actually sufficient — see v1.6.9 below):
+    # tried positioning status_text at (0, 0) thinking nodeX/nodeY = panel
+    # coordinates. The panel still rendered black at the network level.
+    # Hypothesis was wrong.
     #
-    # Place at (0, 0) — bottom-left of the panel (TD panel-coord Y goes up,
-    # so nodeY=0 = panel-bottom). The textTOP's internal `positiony=-16`
-    # offsets the rendered text inside the 256×256 surface, giving the
-    # familiar "padded from top-left" look while the TOP itself sits flush
-    # with the panel's bottom-left.
+    # v1.6.9 ACTUAL fix:
+    # ContainerCOMP panel composition does NOT auto-composite child TOPs by
+    # nodeX/nodeY. The panel BACKGROUND comes from the COMP's "Look" page
+    # `top` parameter (a TOP-typed reference). If `comp.par.top = None`,
+    # the panel renders only `bgcolor` — no child TOP content. THE FIX is
+    # to wire `comp.par.top = status_text` so the textTOP's pixels fill
+    # the panel background. This was set correctly in the v1.5.x build
+    # but lost in the v1.5.6 containerCOMP refactor.
+    #
+    # Verified live in TD 2025.32460: setting proj.par.top = status_text
+    # immediately surfaces the textTOP content in the network-editor view
+    # of the COMP icon. nodeX/nodeY position remains useful for network
+    # organization (and panel hit-testing if the TOP is interactive), but
+    # is NOT what makes the TOP visible in the panel.
     status_text = _create_status_text_top(comp, "status_text")
     try:
         status_text.nodeX, status_text.nodeY = 0, 0
+    except Exception:
+        pass
+
+    # v1.6.9: wire the containerCOMP's Look-page panel-background TOP to
+    # status_text. This is THE setting that makes the panel render the
+    # textTOP's content as the panel background image.
+    try:
+        comp.par.top = status_text
     except Exception:
         pass
 

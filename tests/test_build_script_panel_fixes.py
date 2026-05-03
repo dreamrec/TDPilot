@@ -181,6 +181,83 @@ class TestStatusTextInsideViewport:
         assert 0 <= y < 320, f"status_text.nodeY={y} is OUTSIDE the panel viewport (PANEL_H=320)."
 
 
+class TestStatusTextNativeResolution:
+    """v1.6.9: status_text resolution must match PANEL_W × PANEL_H so the
+    panel-bg TOP renders without horizontal stretching when composited
+    into the 520×320 panel viewport. v1.6.8 kept the default 256×256 which
+    stretched 1.625:1 in the wider direction."""
+
+    def test_status_text_resolution_matches_panel_size(self):
+        text = BUILD_TDPILOT.read_text(encoding="utf-8")
+        # The build script's style dict in _create_status_text_top must
+        # set resolutionw/h to PANEL_W/H. Look for both literal keys in
+        # the style dict (we use string keys, not direct par access).
+        assert '"resolutionw": PANEL_W' in text, (
+            "status_text resolutionw must match PANEL_W to avoid horizontal stretch when used as panel-bg TOP"
+        )
+        assert '"resolutionh": PANEL_H' in text, (
+            "status_text resolutionh must match PANEL_H to avoid vertical stretch when used as panel-bg TOP"
+        )
+
+
+class TestStatusTextStyling:
+    """v1.6.9: visual styling per user feedback — cyan-greenish text on
+    90% opaque black bg. Locked into a regression test so future style
+    refactors don't accidentally regress to the v1.6.8 grey-on-black look."""
+
+    def test_status_text_font_color_is_cyan_greenish(self):
+        text = BUILD_TDPILOT.read_text(encoding="utf-8")
+        # Cyan-greenish: roughly (0.45, 0.95, 0.85). Allow flexibility but
+        # assert the green channel is the strongest (the visual signature
+        # of cyan-green vs grey/white).
+        import re
+
+        rx = re.compile(r'"fontcolor([rgb])":\s*([\d.]+)')
+        colors = {m.group(1): float(m.group(2)) for m in rx.finditer(text)}
+        assert "r" in colors and "g" in colors and "b" in colors, (
+            "fontcolorr/g/b must all be set in _create_status_text_top"
+        )
+        # green > red AND green > blue → cyan/green tint, not grey
+        assert colors["g"] > colors["r"], f"fontcolor must be cyan-greenish (g > r); got rgb={colors}"
+        # Blue should also be elevated for the cyan note (not pure green)
+        assert colors["b"] > 0.5, f"fontcolor blue channel should be elevated for cyan tint; got rgb={colors}"
+
+    def test_status_text_bg_is_90pct_opaque_black(self):
+        text = BUILD_TDPILOT.read_text(encoding="utf-8")
+        assert '"bgcolorr": 0.0' in text and '"bgcolorg": 0.0' in text and '"bgcolorb": 0.0' in text, (
+            "status_text bg must be black (rgb=0,0,0)"
+        )
+        # 90% opaque = alpha 0.9
+        assert '"bgalpha": 0.9' in text, "status_text bg must be 90% opaque (alpha=0.9)"
+
+
+class TestPanelBackgroundTopWired:
+    """v1.6.9: containerCOMP's Look-page `top` parameter is what makes the
+    panel render any TOP content. Without `comp.par.top = status_text`, the
+    panel surface is just bgcolor — no text appears even when status_text
+    is correctly cooking pixels. v1.6.7-v1.6.8 missed this entirely; v1.6.9
+    discovered it by probing the live COMP's params and seeing `top=None`
+    on the Look page after all other fixes were in place.
+
+    The v1.5.x .tox had `top` wired correctly. The v1.5.6 containerCOMP
+    refactor in build_tdpilot_tox.py dropped the wiring. v1.6.9 restores."""
+
+    def test_populate_tdpilot_comp_wires_panel_bg_top(self):
+        """``_populate_tdpilot_comp`` MUST set ``comp.par.top = status_text``
+        on the outer containerCOMP. This is the single param that makes the
+        panel render the textTOP content (vs just showing bgcolor)."""
+        text = BUILD_TDPILOT.read_text(encoding="utf-8")
+        # The build script must contain this assignment (or a structurally
+        # equivalent one). Guard against the literal pattern used in v1.6.9.
+        assert "comp.par.top = status_text" in text, (
+            "build_tdpilot_tox.py must set `comp.par.top = status_text` "
+            "in _populate_tdpilot_comp — this is the containerCOMP Look-"
+            "page panel-background TOP. Without it, the panel renders as "
+            "just bgcolor, no text content. See v1.6.9 CHANGELOG and "
+            "Section 14 of docs/TD_INTRICACIES_AND_PATTERNS.md (local-only)."
+        )
+
+
 class TestOuterCompViewerEnabled:
     """v1.6.8 defense-in-depth: outer tdpilot containerCOMP must have
     ``viewer = True`` explicitly set. TD's default is True (as of TD
