@@ -185,6 +185,98 @@ def _read_api_version(tox_path):
     return "?"
 
 
+def _auto_pin_latest_tag(repo_root):
+    """Optional: git fetch + checkout latest released tag at TD launch.
+
+    Opt-in via ``TDPILOT_AUTO_PIN_TAG=1`` in ``~/.tdpilot/.tdpilot.env``
+    (toggle with ``npx tdpilot autopin --enable`` / ``--disable``).
+
+    When enabled, this:
+      1. ``git fetch --tags`` (5s timeout) — refreshes remote tag list.
+      2. Resolves the latest tag reachable from ``origin/main``.
+      3. If HEAD is already at that tag, no-op silently.
+      4. Otherwise ``git checkout <tag>`` so the .tox loaded immediately
+         after is the freshly-released one.
+
+    NEVER blocks TD startup. Every git call has a timeout; every error
+    path catches and prints to Textport without re-raising. Offline
+    starts incur a 5-second fetch timeout, then proceed with the current
+    pinned tag — the system degrades gracefully.
+
+    Why this lives in the startup script (not in the running .tox):
+    we need the new .tox on disk BEFORE the loadTox call, so the pin
+    must happen earlier in the boot sequence than the tdpilot COMP can
+    react. The .tox itself can never reload itself live — TD has no
+    "reload .tox in place" primitive — so the pin-then-load flow is
+    the only safe shape.
+    """
+    if os.environ.get("TDPILOT_AUTO_PIN_TAG", "0") != "1":
+        return
+    if not os.path.isdir(os.path.join(repo_root, ".git")):
+        print("[TDPilot] AUTOPIN skipped — not a git checkout at " + repo_root)
+        return
+
+    import subprocess  # local import: keeps cold-start cheap when autopin disabled
+
+    try:
+        subprocess.run(
+            ["git", "fetch", "--tags", "--quiet"],
+            cwd=repo_root,
+            timeout=5,
+            capture_output=True,
+            check=True,
+        )
+        # Latest tag reachable from origin/main (the release branch).
+        result = subprocess.run(
+            ["git", "describe", "--tags", "--abbrev=0", "origin/main"],
+            cwd=repo_root,
+            timeout=2,
+            capture_output=True,
+            check=True,
+            text=True,
+        )
+        latest_tag = result.stdout.strip()
+        if not latest_tag:
+            return
+
+        # What tag (if any) is HEAD currently exactly at?
+        current_proc = subprocess.run(
+            ["git", "describe", "--tags", "--exact-match", "HEAD"],
+            cwd=repo_root,
+            timeout=2,
+            capture_output=True,
+            text=True,
+        )
+        current_tag = current_proc.stdout.strip() if current_proc.returncode == 0 else ""
+
+        if current_tag == latest_tag:
+            return  # already on latest, nothing to do
+
+        subprocess.run(
+            ["git", "checkout", "--quiet", latest_tag],
+            cwd=repo_root,
+            timeout=10,
+            capture_output=True,
+            check=True,
+        )
+        print(
+            "[TDPilot] AUTOPIN updated "
+            + repo_root
+            + " from "
+            + (current_tag or "HEAD")
+            + " to "
+            + latest_tag
+        )
+    except subprocess.TimeoutExpired:
+        print("[TDPilot] AUTOPIN skipped — git timeout (offline?)")
+    except subprocess.CalledProcessError as exc:
+        # Stay silent on stderr details to avoid noisy startup logs;
+        # the user can run `git status` in ~/.tdpilot themselves to debug.
+        print("[TDPilot] AUTOPIN failed (continuing with current state): exit " + str(exc.returncode))
+    except Exception as exc:  # noqa: BLE001 — startup must not crash TD
+        print("[TDPilot] AUTOPIN unexpected error (continuing): " + str(exc))
+
+
 def _rebuild_from_source(repo_root):
     """Run build_export_mcp_tox.py to rebuild and install into /local."""
     build_script = os.path.join(repo_root, _BUILD_SCRIPT_RELATIVE)
@@ -234,7 +326,15 @@ def _startup():
         return
 
     # Load installer-written secret/policy env before the .tox runs its callbacks.
+    # MUST be called before _auto_pin_latest_tag — the env file is where the
+    # TDPILOT_AUTO_PIN_TAG opt-in flag lives.
     _load_env_file(repo_root)
+
+    # v1.6.4: optional pre-load git pin to latest released tag (opt-in via env).
+    # Runs BEFORE we resolve tox_path so a fresh checkout's .tox is what gets
+    # loaded into /local. Non-blocking — failures fall through to the existing
+    # (potentially stale) checkout.
+    _auto_pin_latest_tag(repo_root)
 
     tox_path = os.path.join(repo_root, _TOX_RELATIVE)
     tox_exists = os.path.isfile(tox_path)
@@ -250,8 +350,13 @@ def _startup():
     _rebuild_from_source(repo_root)
 
 
-try:
-    _startup()
-except Exception as e:
-    print(f"[TDPilot] Startup error: {e}")
-    print("[TDPilot] TDPilot did not load. Try: npx tdpilot install")
+# v1.6.4: tests need to import this module without auto-firing _startup()
+# (which would call op() / parent() and fail outside TD). Set
+# TDPILOT_STARTUP_SKIP=1 in the test setup; production TD launches leave
+# it unset, so behavior is unchanged.
+if os.environ.get("TDPILOT_STARTUP_SKIP") != "1":
+    try:
+        _startup()
+    except Exception as e:
+        print(f"[TDPilot] Startup error: {e}")
+        print("[TDPilot] TDPilot did not load. Try: npx tdpilot install")

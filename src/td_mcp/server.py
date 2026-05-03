@@ -565,6 +565,131 @@ def _run_init_command(args: argparse.Namespace) -> int:
     return 0
 
 
+_AUTOPIN_KEY = "TDPILOT_AUTO_PIN_TAG"
+
+
+def _autopin_env_file_path() -> Path:
+    """Resolve the env file path autopin reads/writes.
+
+    Single source of truth: ``~/.tdpilot/.tdpilot.env``. This matches the
+    second of two locations checked by ``td_component/tdpilot_startup.py``
+    `_load_env_file()` (the first is a repo-local copy used during dev).
+    Reusing the same path guarantees the CLI write and the TD-startup
+    read agree on what file to look at.
+    """
+    from td_mcp.auth_bootstrap import default_env_file
+
+    return default_env_file()
+
+
+def _read_autopin_state(path: Path) -> tuple[bool, str | None]:
+    """Return (enabled, raw_value).
+
+    ``enabled`` is True iff the key is present AND value is "1" / "true" /
+    "yes" (case-insensitive). ``raw_value`` is the literal string from the
+    file (or None if the key is absent), useful for the status display.
+    """
+    if not path.exists():
+        return (False, None)
+    try:
+        for raw in path.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            if key.strip() == _AUTOPIN_KEY:
+                clean = value.strip().strip('"').strip("'")
+                return (clean.lower() in ("1", "true", "yes", "on"), clean)
+    except OSError:
+        return (False, None)
+    return (False, None)
+
+
+def _write_autopin_state(path: Path, enable: bool) -> None:
+    """Set or clear ``TDPILOT_AUTO_PIN_TAG`` in the env file atomically.
+
+    Preserves all other lines (other env keys, comments, blank lines)
+    in their original order — this file is shared with the auth secret
+    and any other future CLI flags. Atomic write via tmp + replace so
+    a crash mid-write can't leave a half-written file that breaks the
+    TD startup script's env loader on next launch.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    existing_lines: list[str] = []
+    found = False
+    if path.exists():
+        try:
+            for raw in path.read_text(encoding="utf-8").splitlines():
+                stripped = raw.strip()
+                if "=" in stripped and stripped.partition("=")[0].strip() == _AUTOPIN_KEY:
+                    if enable:
+                        existing_lines.append(f"{_AUTOPIN_KEY}=1")
+                        found = True
+                    # If disabling, drop the line entirely (cleaner than `=0`).
+                else:
+                    existing_lines.append(raw)
+        except OSError:
+            pass
+
+    if enable and not found:
+        existing_lines.append(f"{_AUTOPIN_KEY}=1")
+
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text("\n".join(existing_lines) + ("\n" if existing_lines else ""), encoding="utf-8")
+    if os.name == "posix":
+        try:
+            os.chmod(tmp, 0o600)
+        except OSError:
+            pass
+    tmp.replace(path)
+
+
+def _run_autopin_command(args: argparse.Namespace) -> int:
+    """Toggle / inspect the TD-startup autopin flag.
+
+    The flag itself is read at TD launch by
+    ``td_component/tdpilot_startup.py:_auto_pin_latest_tag()``. This CLI
+    subcommand is the supported user-facing way to toggle it without
+    hand-editing the env file. ``--enable`` and ``--disable`` are
+    mutually exclusive; passing neither prints status.
+    """
+    enable = bool(getattr(args, "enable", False))
+    disable = bool(getattr(args, "disable", False))
+
+    if enable and disable:
+        print("[tdpilot] --enable and --disable are mutually exclusive.", file=sys.stderr)
+        return 2
+
+    env_path = _autopin_env_file_path()
+
+    if enable:
+        _write_autopin_state(env_path, True)
+        print("[tdpilot] Auto-pin ENABLED.")
+        print(f"[tdpilot] Wrote {_AUTOPIN_KEY}=1 to {env_path}")
+        print("[tdpilot] Next TD launch will git-fetch and checkout the latest tag from origin/main.")
+        return 0
+
+    if disable:
+        _write_autopin_state(env_path, False)
+        print("[tdpilot] Auto-pin DISABLED.")
+        print(f"[tdpilot] Removed {_AUTOPIN_KEY} from {env_path}")
+        return 0
+
+    # Status (no flag)
+    enabled, raw = _read_autopin_state(env_path)
+    state = "ENABLED" if enabled else "DISABLED"
+    print(f"Auto-pin: {state}")
+    print(f"Env file: {env_path}")
+    if raw is not None and not enabled:
+        print(f"  ({_AUTOPIN_KEY}={raw} — recognized values: 1, true, yes, on)")
+    if enabled:
+        print("Next TD launch will fetch + checkout the latest tag from origin/main.")
+    else:
+        print("To enable: tdpilot autopin --enable")
+    return 0
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="tdpilot",
@@ -607,6 +732,22 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Use this existing secret instead of generating one (requires --auth).",
     )
 
+    autopin_cmd = subparsers.add_parser(
+        "autopin",
+        help="Toggle whether TD startup auto-checks out the latest released tag in ~/.tdpilot.",
+    )
+    autopin_group = autopin_cmd.add_mutually_exclusive_group()
+    autopin_group.add_argument(
+        "--enable",
+        action="store_true",
+        help="Set TDPILOT_AUTO_PIN_TAG=1 in ~/.tdpilot/.tdpilot.env (TD startup will fetch+checkout latest tag).",
+    )
+    autopin_group.add_argument(
+        "--disable",
+        action="store_true",
+        help="Remove TDPILOT_AUTO_PIN_TAG from ~/.tdpilot/.tdpilot.env.",
+    )
+
     return parser
 
 
@@ -621,11 +762,17 @@ def main(argv: list[str] | None = None) -> None:
     # user to run install.sh, when autogen was supposed to handle it.
     # Skip for `init` because `init` is the config-generator, not a server
     # that consumes the secret; loading / minting at init time would be a
-    # side-effect on the wrong path.
-    if command != "init":
+    # side-effect on the wrong path. Skip for `autopin` for the same reason
+    # plus: autopin is a pure CLI utility that touches the env file directly,
+    # so triggering secret autogeneration here would be a confusing side
+    # effect of running `tdpilot autopin --status` on a fresh machine.
+    if command not in ("init", "autopin"):
         from td_mcp import auth_bootstrap
 
         auth_bootstrap.bootstrap_auth()
+
+    if command == "autopin":
+        raise SystemExit(_run_autopin_command(args))
 
     if command == "doctor":
         report = _collect_doctor_report(

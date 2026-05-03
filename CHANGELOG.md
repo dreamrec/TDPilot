@@ -1,5 +1,84 @@
 # Changelog
 
+## 1.6.4 - 2026-05-03
+
+Auto-pin to latest released tag at TD launch. Solves the failure mode
+diagnosed in v1.6.3: `~/.tdpilot/` (the runtime install directory used
+by `td_component/tdpilot_startup.py:loadTox`) lags behind the latest
+release until the user manually clicks the "Update Now" pulse on the
+in-TD installer panel. v1.6.4 makes that click optional — opt in with
+`npx tdpilot autopin --enable` and every TD startup will git-fetch and
+checkout the latest tag from `origin/main` before loading the .tox
+into `/local`. Tool count unchanged at 103.
+
+### Features
+
+- **`tdpilot autopin --enable | --disable | (status)` CLI subcommand.**
+  Toggles the `TDPILOT_AUTO_PIN_TAG=1` flag in
+  `~/.tdpilot/.tdpilot.env` (the shared env file, also used for the
+  auth secret since v1.4.5). Atomic write via tmp + replace so a crash
+  mid-write can never corrupt the file. Preserves all other keys,
+  comments, and blank lines untouched. Status mode (no flag) prints
+  current state + a hint at the toggle command.
+
+- **`_auto_pin_latest_tag(repo_root)` in `td_component/tdpilot_startup.py`.**
+  Called once at TD launch right after `_load_env_file()` (so the
+  opt-in flag is loaded before we check it) and before resolving
+  `tox_path` (so the freshly-checked-out .tox is what `loadTox` sees).
+  Sequence: `git fetch --tags` (5s timeout) → `git describe --tags
+  --abbrev=0 origin/main` to find the latest tag → `git describe
+  --tags --exact-match HEAD` to see if we're already there → `git
+  checkout <tag>` if not. Idempotent, never-blocking: TimeoutExpired,
+  CalledProcessError, and any other exception are caught and logged
+  to Textport without re-raising. Offline TD launches incur a 5s
+  fetch timeout then proceed with the current pinned tag.
+
+### Defensive design notes
+
+- **Opt-in by default.** Auto-update at startup has obvious risks
+  (network requests on every TD launch, behavior change without user
+  consent). v1.6.4 ships the mechanism but does not enable it; the
+  user must run `tdpilot autopin --enable` to opt in.
+- **Bypasses the `update_now` snapshot/backup flow.** v1.6.4's autopin
+  is `git checkout` only — it does NOT run `_uv_sync` or
+  `project.save(autoload_toe)`. The reasoning: a hands-off git
+  checkout at TD launch is safe (.tox load is read-only, the running
+  COMP gets destroyed-and-replaced fresh by `_load_tox_fast`); the
+  destructive `update_now` flow exists for the manual button which
+  takes a deeper backup. Two distinct UX paths, two distinct safety
+  postures.
+- **Non-blocking under failure.** Every git invocation has a timeout;
+  every exception is caught. Failure mode is "log to Textport,
+  continue with the current pinned tag" — TD startup is never
+  delayed by more than the 5s fetch timeout in the worst case.
+
+### Tests
+
+- **+29 unit tests in `tests/test_autopin.py`** (740 → 769 total).
+  Coverage: env-var-disabled no-op, missing `.git` skip, full happy
+  path with mocked subprocess, "already on latest" idempotent skip,
+  TimeoutExpired/CalledProcessError/OSError all caught, CLI
+  enable/disable/status flows, atomic write preserves other keys,
+  enable is idempotent, value-parsing accepts 1/true/yes/on,
+  argparse mutex group rejects --enable + --disable.
+
+### Breaking-change risk: NONE
+
+- Pure additive feature. Existing users who don't run `tdpilot
+  autopin --enable` see zero behavior change.
+- Existing `update_now` button on the TD-side installer panel still
+  works exactly as before. v1.6.4 adds a complementary "fire on
+  every launch" path; doesn't replace the manual button.
+- The `TDPILOT_STARTUP_SKIP=1` env var added for testability is
+  documented and harmless in production (TD never sets it).
+
+### Cascade
+
+- 7 version manifests bumped 1.6.3 → 1.6.4. `API_VERSION` 1.6.3 →
+  1.6.4. `.tox` rebuilt (new hash:
+  `e768cb915e6b9492…`). `.tox-source-hash.json` regenerated. 6
+  doc/skill headers updated. `uv.lock` re-resolved.
+
 ## 1.6.3 - 2026-05-03
 
 `.tox` alignment release. Closes the cosmetic gap that opened during the

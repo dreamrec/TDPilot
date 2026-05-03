@@ -1,6 +1,6 @@
 # TDPilot — TouchDesigner AI Assistant Plugin
 
-TDPilot v1.6.3 provides 103 MCP tools for live control of TouchDesigner projects from Claude (plus the v1.6.1 expanded hint corpus — 19 packs / 63 hints — with v1.6.2 surface routing for response-context-aware hints), plus a one-button-install panel inside the `.tox` itself (drag-drop into TD, click "Bootstrap All", done). This plugin makes TDPilot's skills and MCP server configuration permanently available across all Cowork sessions. v1.6.3 aligns the `.tox` `API_VERSION` with the v1.6.x line so the panel and `td_describe_surface` agree.
+TDPilot v1.6.4 provides 103 MCP tools for live control of TouchDesigner projects from Claude (plus the v1.6.1 expanded hint corpus — 19 packs / 63 hints — with v1.6.2 surface routing for response-context-aware hints), plus a one-button-install panel inside the `.tox` itself (drag-drop into TD, click "Bootstrap All", done). This plugin makes TDPilot's skills and MCP server configuration permanently available across all Cowork sessions. v1.6.4 adds opt-in "auto-pin to latest tag at TD launch" — toggle with `npx tdpilot autopin --enable`, and every TD startup will git-fetch + checkout the latest released tag before loading the .tox into `/local`.
 
 ## Components
 
