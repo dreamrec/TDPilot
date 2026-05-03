@@ -186,11 +186,17 @@ def _save_toe_with_externaltox(installer, target):
     if tox_path and os.path.isfile(tox_path) and hasattr(comp.par, "externaltox"):
         try:
             comp.par.externaltox = tox_path
-            # When externaltox is set, also enable "Reload TOX" on project
-            # load so TD actually re-reads the file every launch (some TD
-            # versions only auto-reload when this toggle is on).
-            if hasattr(comp.par, "reloadtoxonstart"):
-                comp.par.reloadtoxonstart = True
+            # v1.6.7 fix: the actual TD param is ``enableexternaltox``
+            # (toggle that, when True, makes TD load the .tox at the
+            # externaltox path on COMP creation / project load). v1.6.6
+            # used the wrong name ``reloadtoxonstart`` which doesn't exist
+            # on containerCOMP — silent no-op meant the .toe got saved
+            # with externaltox path set but enableexternaltox=False, so
+            # next TD launch restored an empty shell (the bug v1.6.7's
+            # users would have hit had they ever managed to upgrade
+            # cleanly to v1.6.6).
+            if hasattr(comp.par, "enableexternaltox"):
+                comp.par.enableexternaltox = True
             externaltox_set = True
         except Exception as exc:
             print("[TDPilot autostart] could not set externaltox:", exc)

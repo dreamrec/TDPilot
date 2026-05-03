@@ -83,16 +83,16 @@ class FakeParCollection:
     (e.g., baseCOMP without externaltox support).
     """
 
-    def __init__(self, has_externaltox=True, has_reloadtoxonstart=True):
+    def __init__(self, has_externaltox=True, has_enableexternaltox=True):
         if has_externaltox:
             self.externaltox = FakePar("")
-        if has_reloadtoxonstart:
-            self.reloadtoxonstart = FakePar(False)
+        if has_enableexternaltox:
+            self.enableexternaltox = FakePar(False)
 
 
 class FakeCOMP:
-    def __init__(self, has_externaltox=True, has_reloadtoxonstart=True):
-        self.par = FakeParCollection(has_externaltox, has_reloadtoxonstart)
+    def __init__(self, has_externaltox=True, has_enableexternaltox=True):
+        self.par = FakeParCollection(has_externaltox, has_enableexternaltox)
 
 
 class FakeProject:
@@ -141,7 +141,7 @@ class TestExternaltoxHappyPath:
         tox_file = td_component_dir / "tdpilot.tox"
         tox_file.write_bytes(b"fake .tox content")
 
-        comp = FakeCOMP(has_externaltox=True, has_reloadtoxonstart=True)
+        comp = FakeCOMP(has_externaltox=True, has_enableexternaltox=True)
         fake_project = FakeProject()
         install_globals(
             autostart_module, monkeypatch, comp=comp, fake_project=fake_project, install_dir=str(tmp_path)
@@ -158,8 +158,8 @@ class TestExternaltoxHappyPath:
         # but our FakePar doesn't — direct assignment just replaces it with
         # the raw string. Both behaviors yield equality with the path str.
         assert str(comp.par.externaltox) == str(tox_file)
-        # reloadtoxonstart got assigned True — same replacement semantics
-        assert bool(comp.par.reloadtoxonstart) is True
+        # enableexternaltox got assigned True — same replacement semantics
+        assert bool(comp.par.enableexternaltox) is True
         # project.save called once with target + saveExternalToxs=False
         assert len(fake_project.save_calls) == 1
         save_target, save_kwargs = fake_project.save_calls[0]
@@ -201,7 +201,7 @@ class TestExternaltoxFallbacks:
         td_component_dir.mkdir()
         (td_component_dir / "tdpilot.tox").write_bytes(b"fake")
 
-        comp = FakeCOMP(has_externaltox=False, has_reloadtoxonstart=False)
+        comp = FakeCOMP(has_externaltox=False, has_enableexternaltox=False)
         fake_project = FakeProject()
         install_globals(
             autostart_module, monkeypatch, comp=comp, fake_project=fake_project, install_dir=str(tmp_path)

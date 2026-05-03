@@ -39,6 +39,13 @@ _TOX_SOURCE_FILES = (
     "td_component/installer_exec.py",
     "td_component/autostart.py",
     "td_component/renderer.py",
+    # v1.6.7: state_cache module — was missing from main from v1.5.6 through
+    # v1.6.6, causing renderer.bootstrap to silently fail on every fresh
+    # loadTox (panel showed TD's "Ctn" placeholder forever, status_text
+    # stuck at default "derivative" text). Restored from a v1.6.0 worktree
+    # + wired into _populate_component so a textDAT named "state_cache"
+    # gets created inside mcp_server with this content baked in.
+    "td_component/state_cache.py",
 )
 
 
@@ -282,7 +289,17 @@ def _reset_or_create_comp(parent, name):
     return existing
 
 
-def _populate_component(comp, callbacks_code, event_emitter_code, ws_callbacks_code, info_text):
+def _populate_component(comp, callbacks_code, event_emitter_code, ws_callbacks_code, info_text, state_cache_code=""):
+    """Populate the mcp_server baseCOMP with its child DATs.
+
+    v1.6.7: ``state_cache_code`` is the new positional-with-default arg.
+    Callers built before v1.6.7 didn't pass it; without state_cache, the
+    panel renderer fails silently (returns False from bootstrap; tick
+    falls through to the "(state_cache not loaded)" placeholder string).
+    Default empty string keeps API back-compat — but the panel won't
+    render correctly until callers populate it from
+    ``td_component/state_cache.py``.
+    """
     comp.comment = "TDPilot v1.3 MCP server component"
     try:
         comp.nodeX = 400
@@ -299,6 +316,10 @@ def _populate_component(comp, callbacks_code, event_emitter_code, ws_callbacks_c
     ws_callbacks = _create_with_fallback(comp, ("textDAT",), "ws_callbacks")
     event_emitter = _create_with_fallback(comp, ("textDAT",), "event_emitter")
     info = _create_with_fallback(comp, ("textDAT",), "info")
+    # v1.6.7: state_cache textDAT — the renderer's data source. See
+    # docstring above for context. Created here so every fresh loadTox
+    # produces a panel-renderable COMP.
+    state_cache = _create_with_fallback(comp, ("textDAT",), "state_cache")
 
     _set_first_par(webserver, ("port",), WEB_PORT)
     _set_first_par(webserver, ("active", "enable"), 1)
@@ -308,6 +329,7 @@ def _populate_component(comp, callbacks_code, event_emitter_code, ws_callbacks_c
     ws_callbacks.text = ws_callbacks_code
     event_emitter.text = event_emitter_code
     info.text = info_text
+    state_cache.text = state_cache_code
 
     _configure_websocket_dat(ws_client)
 
@@ -318,6 +340,7 @@ def _populate_component(comp, callbacks_code, event_emitter_code, ws_callbacks_c
         ws_callbacks.nodeX, ws_callbacks.nodeY = 260, -180
         event_emitter.nodeX, event_emitter.nodeY = 520, -180
         info.nodeX, info.nodeY = 520, 0
+        state_cache.nodeX, state_cache.nodeY = 780, -90
     except Exception:
         pass
 

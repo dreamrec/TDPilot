@@ -1,5 +1,133 @@
 # Changelog
 
+## 1.6.7 - 2026-05-03
+
+Fixes three build-script regressions that have been present since v1.5.6
+plus one v1.6.6 typo. The combined effect: every fresh ``loadTox`` from
+v1.5.6 through v1.6.6 produced a COMP whose panel rendered as an empty
+"Ctn" placeholder, with ``Status: Not detected`` / ``Installed: --`` in
+the Install/Update tabs even when ~/.tdpilot was healthy on disk.
+
+The bugs were masked for users with pre-v1.5.6 installs because their
+``.toe`` files had baked-in state from earlier (working) build scripts
+that DID create ``state_cache``, enable autostart triggers, and set
+``display=True``. Only when someone did a fresh install OR a manual
+destroy + ``loadTox`` sequence did all three bugs surface together.
+
+### Bug 1 — ``state_cache`` textDAT never created
+
+``td_component/state_cache.py`` (the module the renderer reads from)
+was developed in a v1.6.0 worktree but never merged to main. The
+renderer's ``bootstrap()`` function silently returned ``False`` on
+every load (``cache_dat = parent().op(MCP_COMP_PATH + "/state_cache")``
+returned None), and ``tick()`` fell through to the
+``"(state_cache not loaded)"`` placeholder string. ``status_text.par.text``
+stayed at TD's default ``"derivative"`` placeholder forever.
+
+**Fix:**
+- Restored ``td_component/state_cache.py`` from the v1.6.0 worktree
+  (127 lines: thread-safe runtime cache with ``update``, ``snapshot``,
+  ``increment``, ``record_request``, ``mark_ws_error``, ``reset``).
+- Added to ``_TOX_SOURCE_FILES`` in ``build_export_mcp_tox.py`` so
+  the freshness hash tracks edits.
+- Added to ``SOURCE_FILES`` in ``scripts/check_tox_freshness.py``.
+- Modified ``_populate_component`` to create the ``state_cache``
+  textDAT inside ``mcp_server`` and bake the .py content into it.
+- Updated ``build_tdpilot_tox.py`` to read ``state_cache.py`` and
+  pass content as ``state_cache_code`` kwarg.
+
+### Bug 2 — ``autostart`` executeDAT trigger toggles all OFF
+
+``_create_text_dat_with_source`` created the executeDAT and stamped
+the source code into ``.text`` — but never enabled any of the
+trigger toggles (``start``, ``framestart``, ``projectpresave``, etc.).
+TD only fires callbacks when their toggle is ON. So ``onStart`` was
+defined as a function but TD never called it; same for
+``onFrameStart``, etc. Net effect: ``_disable_auth`` never ran (auth
+issues), ``_bootstrap`` never ran (panel never populated),
+``_tick`` never ran (panel never refreshed), main-thread-action
+bridge never fired (Update Now's save_toe never reached the action
+handler).
+
+**Fix:** ``_create_text_dat_with_source`` now enables the 8 toggles
+``autostart.py`` actually has callback functions for — guarded with
+``if op_type == "executeDAT"`` so other DAT types are unaffected.
+
+### Bug 3 — ``status_text`` textTOP ``display=False``
+
+``_create_status_text_top`` set the font, alignment, and position
+parameters via ``_set_first_par`` but never set the ``display`` flag.
+For a containerCOMP's panel surface to show a child TOP, that TOP
+must have ``display=True``. Without it, even when ``status_text.par.text``
+got populated correctly, the panel just rendered the default "Ctn"
+placeholder.
+
+**Fix:** ``_create_status_text_top`` now sets ``top.display = True``
+and ``top.viewer = True`` (direct attribute assignment, not via
+``_set_first_par``, because these are TOP node attributes not custom
+params).
+
+### Bug 4 — v1.6.6's wrong externaltox param name
+
+``_save_toe_with_externaltox`` (added in v1.6.6) tried to set
+``comp.par.reloadtoxonstart = True``. That parameter doesn't exist
+on containerCOMP. The correct toggle is ``enableexternaltox`` —
+when True, TD loads the .tox at the externaltox path on COMP
+creation / project load.
+
+This was a silent no-op in v1.6.6: the ``hasattr`` guard meant the
+assignment was skipped, so the .toe got saved with externaltox path
+set but ``enableexternaltox=False`` (the default). Next launch:
+empty shell COMP. Few users hit this in production because v1.6.6
+required a working "Update Now" click to even reach the
+``_save_toe_with_externaltox`` code path, and most users were stuck
+on Bug 1+2+3 first.
+
+**Fix:** Use ``comp.par.enableexternaltox`` (the actually-existing
+parameter name).
+
+### Tests
+
+- ``tests/test_build_script_panel_fixes.py`` — **+8 new regression
+  tests** covering each bug: state_cache file presence + required
+  functions + listed in TOX_SOURCE_FILES + listed in freshness gate
+  + ``_populate_component`` creates the DAT + ``build_tdpilot_tox.py``
+  passes the content; ``_create_text_dat_with_source`` enables
+  executeDAT triggers; ``_create_status_text_top`` sets display + viewer.
+- ``tests/test_externaltox_save.py`` — **6 tests renamed**
+  ``reloadtoxonstart`` → ``enableexternaltox`` to match the v1.6.7
+  param name. All assertions now hold against the correct TD param.
+- 791 → 799 tests, all green.
+- All 5 CI gates green: pytest, ruff check, ruff format, check_versions
+  (lockstep API_VERSION since v1.6.5), check_tox_freshness.
+
+### What you need to do
+
+1. ``npx tdpilot@latest`` (or click "Update" in Claude Code plugins —
+   should now work since v1.6.6 fixed the marketplace cache pull
+   pattern).
+2. Re-deploy ``tdpilot_startup.py`` to TD's Startup dir:
+   ```bash
+   cp ~/.tdpilot/td_component/tdpilot_startup.py ~/Documents/Derivative/Startup/
+   ```
+3. **In TD**, paste these three lines in the Textport (Alt-T) ONE
+   MORE TIME to swap your current COMP for the v1.6.7 .tox:
+   ```python
+   op('/project1/tdpilot').destroy()
+   op('/project1').loadTox('/Users/<you>/.tdpilot/td_component/tdpilot.tox')
+   project.save('/Users/<you>/.tdpilot/tdpilot_default.toe')
+   ```
+4. From this point forward: panel works. Future updates via
+   "Update Now" pulse will set ``enableexternaltox`` correctly,
+   so subsequent TD launches read the latest .tox automatically.
+
+### Cascade
+
+7 version manifests bumped 1.6.6 → 1.6.7. ``API_VERSION`` 1.6.6 →
+1.6.7 (lockstep — gate enforces). ``state_cache.py`` added to
+.tox source list (now 9 source files). ``.tox`` rebuilt with all
+fixes baked in. 6 doc/skill headers updated. ``uv.lock`` re-resolved.
+
 ## 1.6.6 - 2026-05-03
 
 Closes the "panel says X but disk has Y" drift class permanently via the

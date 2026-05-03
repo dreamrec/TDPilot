@@ -250,6 +250,13 @@ def _create_status_text_top(parent_comp, name="status_text"):
     Styling matches the live design: Courier New 14pt, left-top aligned,
     16px inset, 4px line-spacing, 55% white. The renderer DAT writes
     multi-line text into ``status_text.par.text`` once per second.
+
+    v1.6.7: also sets ``display=True`` and ``viewer=True`` on the TOP.
+    Without ``display=True``, containerCOMP's panel never shows the TOP
+    in its panel surface and the user just sees TD's "Ctn" placeholder
+    — even if status_text.par.text contains rendered content. This was
+    the third of the three v1.5.6-through-v1.6.6 build-script bugs that
+    surfaced together on fresh loadTox.
     """
     top = _legacy._create_with_fallback(parent_comp, ("textTOP",), name)
     style = {
@@ -271,6 +278,14 @@ def _create_status_text_top(parent_comp, name="status_text"):
     }
     for par_name, par_value in style.items():
         _legacy._set_first_par(top, (par_name,), par_value)
+    # v1.6.7: enable display + viewer flags so the panel actually shows
+    # the rendered text. These are TOP-node attributes (not custom params),
+    # so we set them directly rather than via _set_first_par.
+    try:
+        top.display = True
+        top.viewer = True
+    except Exception:
+        pass
     return top
 
 
@@ -284,6 +299,15 @@ def _create_text_dat_with_source(parent_comp, name, op_type, source_text):
 
     Tries op_type first, falls back to legacy-cased aliases TD has used over
     the years (parameterexecuteDAT vs parexecDAT, etc.).
+
+    v1.6.7: for executeDAT, also enable the trigger toggles that fire the
+    callback functions defined in ``source_text``. Without this, autostart's
+    ``onStart``, ``onFrameStart``, ``onProjectPostSave`` etc. are defined
+    but never called by TD — the COMP's auth-disable + panel-bootstrap +
+    main-thread-action machinery silently never fires. This is the bug
+    that left the v1.5.6-through-v1.6.6 panel stuck at "Ctn" placeholder
+    on every fresh loadTox. We enable the toggles ``autostart.py`` actually
+    uses; absent toggles (frameend, edit, etc.) stay at default False.
     """
     fallbacks = (op_type,)
     if op_type == "parameterexecuteDAT":
@@ -295,6 +319,23 @@ def _create_text_dat_with_source(parent_comp, name, op_type, source_text):
 
     dat = _legacy._create_with_fallback(parent_comp, fallbacks, name)
     dat.text = source_text
+
+    if op_type == "executeDAT":
+        # Trigger toggles autostart.py actually uses. Each toggle maps to
+        # a callback function name in the DAT module — see autostart.py.
+        executedat_triggers = (
+            "start",  # onStart fires _disable_auth + _bootstrap + _refresh_installer + _tick
+            "create",  # onCreate (currently no-op but reserved)
+            "exit",  # onExit (no-op but reserved)
+            "framestart",  # onFrameStart fires _tick + _refresh_installer + main-thread-actions
+            "playstatechange",  # onPlayStateChange (no-op but reserved)
+            "devicechange",  # onDeviceChange (no-op but reserved)
+            "projectpresave",  # onProjectPreSave (no-op but reserved)
+            "projectpostsave",  # onProjectPostSave (no-op but reserved)
+        )
+        for trig in executedat_triggers:
+            _legacy._set_first_par(dat, (trig,), True)
+
     return dat
 
 
@@ -395,12 +436,17 @@ def _populate_tdpilot_comp(comp, repo_root, info_text):
     callbacks_code = _legacy._read_repo_file(repo_root, "td_component/mcp_webserver_callbacks.py")
     event_emitter_code = _legacy._read_repo_file(repo_root, "td_component/event_emitter.py")
     ws_callbacks_code = _legacy._read_repo_file(repo_root, "td_component/ws_callbacks.py")
+    # v1.6.7: state_cache module text — bakes into the state_cache textDAT
+    # inside mcp_server. Without this, the renderer's bootstrap silently
+    # fails on every fresh loadTox (panel stays at TD's "Ctn" placeholder).
+    state_cache_code = _legacy._read_repo_file(repo_root, "td_component/state_cache.py")
     _legacy._populate_component(
         mcp_comp,
         callbacks_code,
         event_emitter_code,
         ws_callbacks_code,
         info_text,
+        state_cache_code=state_cache_code,
     )
     try:
         mcp_comp.nodeX, mcp_comp.nodeY = 375, 0

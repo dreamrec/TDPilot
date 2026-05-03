@@ -32,6 +32,9 @@ SOURCE_FILES = (
     "td_component/installer_exec.py",
     "td_component/autostart.py",
     "td_component/renderer.py",
+    # v1.6.7 — state_cache module that the renderer reads from. Was missing
+    # from main from v1.5.6 through v1.6.6 (see CHANGELOG v1.6.7).
+    "td_component/state_cache.py",
 )
 HASH_FILE = ROOT / "td_component" / ".tox-source-hash.json"
 TOX_FILE = ROOT / "td_component" / "tdpilot.tox"

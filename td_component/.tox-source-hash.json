@@ -1,6 +1,6 @@
 {
-  "tox_source_hash": "03176d6eb166f2159e0418970b4193d60a42fc027ef0908fdafdef121c627e14",
-  "built_at": "2026-05-03T09:08:26.683477+00:00",
+  "tox_source_hash": "03d551963ada20e3d1e8528dec8b9fee13e41fead4bc04c913f2de4a36bf3ca3",
+  "built_at": "2026-05-03T09:56:17.677229+00:00",
   "source_files": [
     "td_component/mcp_webserver_callbacks.py",
     "td_component/event_emitter.py",
@@ -9,6 +9,7 @@
     "td_component/installer.py",
     "td_component/installer_exec.py",
     "td_component/autostart.py",
-    "td_component/renderer.py"
+    "td_component/renderer.py",
+    "td_component/state_cache.py"
   ]
 }
