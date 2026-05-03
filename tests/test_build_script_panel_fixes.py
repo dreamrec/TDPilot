@@ -178,9 +178,7 @@ class TestStatusTextInsideViewport:
             f"The textTOP would render correctly but never composite into the panel "
             f"surface. Place at (0, 0) or another in-viewport position. See v1.6.8 CHANGELOG."
         )
-        assert 0 <= y < 320, (
-            f"status_text.nodeY={y} is OUTSIDE the panel viewport (PANEL_H=320)."
-        )
+        assert 0 <= y < 320, f"status_text.nodeY={y} is OUTSIDE the panel viewport (PANEL_H=320)."
 
 
 class TestOuterCompViewerEnabled:
