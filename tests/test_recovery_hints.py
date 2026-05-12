@@ -1,0 +1,99 @@
+"""Tests for the error_recovery hint pack and its integration with format_tool_error."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from td_mcp.errors import format_tool_error
+from td_mcp.hints import ALLOWED_SURFACES, default_registry, query_hints
+from td_mcp.hints.loader import HintMatch
+from td_mcp.td_client import TouchDesignerAPIError
+
+
+# ── Pack loading ──────────────────────────────────────────────────────────
+
+
+def test_error_recovery_surface_is_allowed():
+    """The new error_recovery surface must be registered in ALLOWED_SURFACES."""
+    assert "error_recovery" in ALLOWED_SURFACES
+
+
+def test_error_recovery_pack_loads():
+    """The bundled error_recovery.yaml must load without schema errors."""
+    reg = default_registry()
+    reg.reload()
+    pack_names = {p.topic for p in reg.topic_packs}
+    assert "error_recovery" in pack_names
+
+
+def test_error_recovery_pack_has_ten_hints():
+    """Pack contains exactly the 10 patterns ported from deepseek-v4."""
+    reg = default_registry()
+    reg.reload()
+    pack = next(p for p in reg.topic_packs if p.topic == "error_recovery")
+    assert len(pack.hints) == 10
+
+
+# ── Matching ──────────────────────────────────────────────────────────────
+
+
+def test_query_hints_matches_path_not_found():
+    """An error message like 'No node at path /foo' must match the path_not_found hint."""
+    reg = default_registry()
+    reg.reload()
+    matches: list[HintMatch] = reg.find(
+        surface="error_recovery",
+        error_text="No node at path /project1/missing",
+    )
+    ids = [m.hint.id for m in matches]
+    assert "path_not_found" in ids
+
+
+def test_query_hints_matches_thread_conflict():
+    reg = default_registry()
+    reg.reload()
+    matches: list[HintMatch] = reg.find(
+        surface="error_recovery",
+        error_text="THREAD CONFLICT: must run on main thread",
+    )
+    ids = [m.hint.id for m in matches]
+    assert "thread_conflict" in ids
+
+
+def test_query_hints_no_match_returns_empty():
+    """An unrecognised error message must return no matches (not all hints)."""
+    reg = default_registry()
+    reg.reload()
+    matches: list[HintMatch] = reg.find(
+        surface="error_recovery",
+        error_text="some completely unrelated error",
+    )
+    assert matches == []
+
+
+# ── format_tool_error integration ─────────────────────────────────────────
+
+
+def test_format_tool_error_attaches_recovery_hint_on_match():
+    """When the error message matches a pattern, the envelope must carry recovery_hints."""
+    exc = TouchDesignerAPIError("No node at path /project1/missing", status_code=404)
+    envelope_json = format_tool_error(exc)
+    envelope = json.loads(envelope_json)
+    assert envelope["success"] is False
+    hints = envelope["error"].get("recovery_hints") or envelope["error"].get("details", {}).get("recovery_hints")
+    assert hints is not None
+    ids = [h["id"] for h in hints]
+    assert "path_not_found" in ids
+
+
+def test_format_tool_error_omits_recovery_hints_on_no_match():
+    """No matching pattern -> envelope must NOT carry a recovery_hints field."""
+    exc = TouchDesignerAPIError("a totally unique never-seen-before error", status_code=500)
+    envelope_json = format_tool_error(exc)
+    envelope = json.loads(envelope_json)
+    err = envelope["error"]
+    assert "recovery_hints" not in err
+    assert "recovery_hints" not in err.get("details", {})

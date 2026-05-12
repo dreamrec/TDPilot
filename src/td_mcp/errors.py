@@ -7,18 +7,48 @@ import json
 from td_mcp.td_client import TouchDesignerAPIError, TouchDesignerConnectionError
 
 
+def _recovery_hints_for(message: str) -> list[dict]:
+    """Look up error_recovery hints matching the given message.
+
+    Returns a list of {id, priority, rule, next_tools} dicts. Empty list
+    when no patterns match or when the hints subsystem is unavailable
+    (defensive: a hints-system failure must NOT prevent error reporting).
+    """
+    if not isinstance(message, str) or not message.strip():
+        return []
+    try:
+        from td_mcp.hints.loader import default_registry  # local import to avoid cycles at startup
+        registry = default_registry()
+        matches = registry.find(surface="error_recovery", error_text=message)
+    except Exception:
+        return []
+    out: list[dict] = []
+    for m in matches:
+        hint = m.hint
+        out.append(
+            {
+                "id": hint.id,
+                "priority": hint.priority,
+                "rule": hint.rule.strip(),
+                "next_tools": list(hint.next_tools or []),
+            }
+        )
+    return out
+
+
 def _error_payload(code: str, message: str, details: dict | None = None) -> str:
-    return json.dumps(
-        {
-            "success": False,
-            "error": {
-                "code": code,
-                "message": message,
-                "details": details or {},
-            },
+    body: dict = {
+        "success": False,
+        "error": {
+            "code": code,
+            "message": message,
+            "details": details or {},
         },
-        indent=2,
-    )
+    }
+    hints = _recovery_hints_for(message)
+    if hints:
+        body["error"]["recovery_hints"] = hints
+    return json.dumps(body, indent=2)
 
 
 def format_tool_error(exc: Exception) -> str:

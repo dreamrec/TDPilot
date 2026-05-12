@@ -65,6 +65,7 @@ ALLOWED_SURFACES = frozenset(
         "query",  # explicit td_get_hints query (caller-driven)
         "inspect",  # td_get_node_detail response
         "screenshot",  # td_screenshot / td_capture_frame / td_capture_and_analyze
+        "error_recovery",  # NEW — auto-injected by format_tool_error on tool-call failures
     }
 )
 
@@ -252,6 +253,11 @@ class HintRegistry:
     def packs_root(self) -> Path:
         return self._packs_root
 
+    @property
+    def topic_packs(self) -> list[HintPack]:
+        self._ensure_loaded()
+        return list(self._topic_packs)
+
     def reload(self) -> HintRegistry:
         self._topic_packs = _scan_dir(self._packs_root, "topic")
         self._op_type_packs = _scan_dir(self._packs_root, "op_type")
@@ -342,9 +348,18 @@ class HintRegistry:
 
             if error_l and isinstance(hint.when, dict):
                 when_err = hint.when.get("error_match")
-                if isinstance(when_err, str) and when_err and when_err.lower() in error_l:
-                    score += 2.0
-                    reasons.append("error_match")
+                if isinstance(when_err, str) and when_err:
+                    err_matched = False
+                    try:
+                        if re.search(when_err, error_l, re.IGNORECASE):
+                            err_matched = True
+                    except re.error:
+                        # Fallback to case-insensitive substring for non-regex patterns
+                        if when_err.lower() in error_l:
+                            err_matched = True
+                    if err_matched:
+                        score += 2.0
+                        reasons.append("error_match")
 
             if intent_l and isinstance(hint.when, dict):
                 when_int = hint.when.get("intent_match")

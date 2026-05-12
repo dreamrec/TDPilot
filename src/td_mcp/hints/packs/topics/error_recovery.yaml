@@ -1,0 +1,136 @@
+schema_version: 2
+topic: error_recovery
+hints:
+  - id: unknown_op_type
+    priority: critical
+    rule: |
+      Operator type wasn't recognised. Call td_list_families to discover
+      valid op types in that family, or td_search_official_docs to find
+      the correct camelCase spelling (e.g. 'noiseTOP' not 'noise').
+    source: deepseek-v4 tdpilot_api_recovery.py:42
+    source_kind: backport
+    when:
+      error_match: "Unknown operator type|Cannot create operator"
+      surface: ["error_recovery"]
+    next_tools: [td_list_families, td_search_official_docs]
+
+  - id: api_unauthorized
+    priority: critical
+    rule: |
+      API authentication failed. The MCP server's shared secret is missing
+      or wrong. Run setup_mcp_in_td.py to regenerate ~/.tdpilot/.env, then
+      restart TouchDesigner so the running MCP WebServer reloads.
+    source: deepseek-v4 tdpilot_api_recovery.py:50
+    source_kind: backport
+    when:
+      error_match: "\\b401\\b|Unauthorized|API key invalid|API key.*missing"
+      surface: ["error_recovery"]
+    next_tools: []
+
+  - id: path_not_found
+    priority: critical
+    rule: |
+      The path doesn't resolve. Call td_get_nodes(path='/parent_path') to
+      list children of the parent COMP -- the node may have been renamed
+      or never created. Probe live state before re-issuing the same call.
+    source: deepseek-v4 tdpilot_api_recovery.py:57
+    source_kind: backport
+    when:
+      error_match: "Path not found|No node at path|No (op|operator) (found )?at|path .* does not exist"
+      surface: ["error_recovery"]
+    next_tools: [td_get_nodes, td_search_nodes]
+
+  - id: thread_conflict
+    priority: critical
+    rule: |
+      Tool touched TD globals from a non-cook thread. Don't return raw
+      op() / parent() references from td_exec_python -- stringify them
+      first (str(op('/path'))) or return the path string instead.
+    source: deepseek-v4 tdpilot_api_recovery.py:68
+    source_kind: backport
+    when:
+      error_match: "THREAD CONFLICT|thread conflict|outside the main thread"
+      surface: ["error_recovery"]
+    next_tools: [td_exec_python]
+
+  - id: corpus_not_installed
+    priority: useful
+    rule: |
+      The named knowledge corpus isn't on disk. Run the brain installer
+      (npx tdpilot brains add <corpus>) to install it under
+      ~/.tdpilot/data/normalized/, OR drop a pages.jsonl into that dir
+      yourself for an ad-hoc corpus.
+    source: deepseek-v4 tdpilot_api_recovery.py:76
+    source_kind: backport
+    when:
+      error_match: "corpus.*not installed|isn't installed locally|brain.db.*not found"
+      surface: ["error_recovery"]
+    next_tools: [td_knowledge_list, td_search_official_docs]
+
+  - id: recipe_invalid_tool
+    priority: useful
+    rule: |
+      Recipe step references a tool not in the registry. Run
+      td_validate_recipe before saving -- it lists every unknown name.
+      Common cause: typo in the tool field or a tool renamed between
+      TDPilot versions.
+    source: deepseek-v4 tdpilot_api_recovery.py:85
+    source_kind: backport
+    when:
+      error_match: "recipe.*invalid|unknown tool.*replay|Step missing tool name"
+      surface: ["error_recovery"]
+    next_tools: [td_validate_recipe]
+
+  - id: fts5_syntax
+    priority: context
+    rule: |
+      FTS5 query had special characters that broke the parser. The
+      search layer normally sanitises these -- if you're seeing this
+      directly, retry with simple alphanumeric terms.
+    source: deepseek-v4 tdpilot_api_recovery.py:94
+    source_kind: backport
+    when:
+      error_match: "malformed MATCH expression|fts5: syntax error"
+      surface: ["error_recovery"]
+    next_tools: []
+
+  - id: module_missing
+    priority: useful
+    rule: |
+      An expected textDAT child of the COMP is absent or import failed.
+      Check the COMP's children -- common cause is a stale .tox built
+      before a new module was added. Rebuilding tdpilot.tox usually
+      fixes this.
+    source: deepseek-v4 tdpilot_api_recovery.py:102
+    source_kind: backport
+    when:
+      error_match: "Module .* (not found|missing)|No module named"
+      surface: ["error_recovery"]
+    next_tools: [td_exec_python]
+
+  - id: permission_denied
+    priority: useful
+    rule: |
+      Filesystem permission error. The default state dir is
+      ~/.tdpilot/ -- verify it exists and is writable by the
+      TouchDesigner process owner.
+    source: deepseek-v4 tdpilot_api_recovery.py:110
+    source_kind: backport
+    when:
+      error_match: "Permission denied|read-only file system|EACCES"
+      surface: ["error_recovery"]
+    next_tools: []
+
+  - id: tool_timeout
+    priority: useful
+    rule: |
+      Tool exceeded its time budget. Cook-thread tools have a 60s
+      default; slow operations like td_screenshot can hit this on a
+      stalled cook. Try a narrower query or check Cooking Info for
+      stuck operators.
+    source: deepseek-v4 tdpilot_api_recovery.py:118
+    source_kind: backport
+    when:
+      error_match: "timed out|TimeoutError"
+      surface: ["error_recovery"]
+    next_tools: [td_cooking_info, td_emergency_stabilize]
