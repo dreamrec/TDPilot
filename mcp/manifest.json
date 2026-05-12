@@ -2,17 +2,25 @@
   "schema_version": 1,
   "name": "TDPilot",
   "slug": "tdpilot",
-  "version": "1.6.11",
+  "version": "1.6.12",
   "repository": "https://github.com/dreamrec/TDPilot",
   "description": "MCP server for TouchDesigner with live graph control, diagnostics, safety, streaming, knowledge corpus, technique memory, and typed patch sessions.",
   "entrypoints": {
     "npm": {
       "command": "npx",
-      "args": ["-y", "tdpilot"]
+      "args": [
+        "-y",
+        "tdpilot"
+      ]
     },
     "python": {
       "command": "uv",
-      "args": ["run", "--directory", "<repo-path>", "tdpilot"]
+      "args": [
+        "run",
+        "--directory",
+        "<repo-path>",
+        "tdpilot"
+      ]
     }
   },
   "defaults": {

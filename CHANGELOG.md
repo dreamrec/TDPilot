@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.6.12 - 2026-05-12
+
+### Fixed
+
+- **Claude Desktop MCP stdio bug (critical).** The npm wrapper at
+  `npm/run.js` was emitting progress messages to stdout via `console.log`
+  — but Claude Desktop spawns `npx -y tdpilot` and listens on stdout for
+  JSON-RPC the entire time, including BEFORE the Python MCP server takes
+  over. Any non-JSON line (`[TDPilot] Downloading to ...`,
+  `[TDPilot] Pinned to vX.Y.Z`, etc.) triggered
+  `Unexpected token 'T', "[TDPilot] D"... is not valid JSON` followed
+  by `Server disconnected` in the Claude Desktop UI. All four diagnostic
+  `console.log` calls in `npm/run.js` (lines 37, 56, 91, 99) now use
+  `console.error` (which Node routes to stderr). The Claude Code path
+  was unaffected because it invokes `uv run tdpilot` directly, bypassing
+  the npm wrapper.
+- Documented the stdout-discipline contract at the top of `npm/run.js`
+  so future log-line additions don't regress: any `console.log` in this
+  file before the spawn becomes MCP JSON-RPC poison.
+
+### Notes
+
+- `install.js`, `brains.js`, `plugin.js` remain on `console.log` — those
+  are CLI subcommand entry points (`npx tdpilot install`, `npx tdpilot
+  brains`), where stdout output is correct and expected.
+- No tool count change (still 104). `.tox` rebuilt only because
+  `API_VERSION` was bumped alongside the version cascade — no
+  TD-side logic changed.
+
 ## 1.6.11 - 2026-05-12
 
 ### What's new

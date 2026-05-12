@@ -9,6 +9,18 @@
  *   npx tdpilot plugin-install  install as a Claude Code plugin via marketplace
  *   npx tdpilot plugin-uninstall remove the Claude Code plugin
  *   npx tdpilot brains          manage downloaded brain DBs
+ *
+ * IMPORTANT — stdout discipline (v1.6.12 fix):
+ * When invoked without a subcommand, this wrapper eventually spawns the Python
+ * MCP server with `stdio: "inherit"`. That means the MCP client (Claude Desktop
+ * / Claude Code) is listening on OUR stdout for JSON-RPC the entire time —
+ * including the moments BEFORE we spawn the child. Any line written to stdout
+ * here (e.g. `console.log("[TDPilot] Downloading...")`) is parsed as JSON by
+ * the client and triggers `Unexpected token 'T', "[TDPilot] D"... is not
+ * valid JSON` followed by `Server disconnected`. Every diagnostic / progress
+ * message MUST go to stderr via `console.error` (or `console.warn`, which Node
+ * also routes to stderr). Only the spawned Python process is allowed to write
+ * to stdout — and only valid JSON-RPC.
  */
 
 const { execSync, spawn } = require("child_process");
@@ -34,7 +46,7 @@ function pinToLatestTag(dir) {
     const latestTag = run("git describe --tags --abbrev=0", { cwd: dir });
     if (latestTag) {
       run(`git checkout ${latestTag}`, { cwd: dir });
-      console.log(`[TDPilot] Pinned to ${latestTag}`);
+      console.error(`[TDPilot] Pinned to ${latestTag}`); // stderr — see top-of-file note
       return latestTag;
     }
   } catch {
@@ -53,7 +65,7 @@ function hasCommand(cmd) {
 }
 
 function installUv() {
-  console.log("[TDPilot] Installing uv...");
+  console.error("[TDPilot] Installing uv..."); // stderr — see top-of-file note
   if (os.platform() === "win32") {
     execSync(
       'powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"',
@@ -88,7 +100,7 @@ function ensureRepo() {
         run("git checkout main", { cwd: INSTALL_DIR });
         run("git pull", { cwd: INSTALL_DIR });
         pinToLatestTag(INSTALL_DIR);
-        console.log("[TDPilot] Updated to latest version (TDPILOT_AUTO_UPDATE=1).");
+        console.error("[TDPilot] Updated to latest version (TDPILOT_AUTO_UPDATE=1)."); // stderr — see top-of-file note
       } catch {
         // Offline or no git — fine, use what we have
       }
@@ -96,7 +108,7 @@ function ensureRepo() {
     return;
   }
 
-  console.log(`[TDPilot] Downloading to ${INSTALL_DIR}...`);
+  console.error(`[TDPilot] Downloading to ${INSTALL_DIR}...`); // stderr — see top-of-file note (this exact line was the v1.6.11 MCP stdio poison)
   if (hasCommand("git")) {
     execSync(`git clone ${REPO} "${INSTALL_DIR}"`, { stdio: "inherit" });
     pinToLatestTag(INSTALL_DIR);

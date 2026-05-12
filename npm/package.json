@@ -1,8 +1,15 @@
 {
   "name": "tdpilot",
-  "version": "1.6.11",
-  "description": "AI copilot for TouchDesigner with live MCP control — 104 tools, focus + locations, hint injection, component notes, POPx inspection, knowledge corpus, project lifecycle control, technique memory, typed patch sessions, Claude Code plugin marketplace install.",
-  "keywords": ["touchdesigner", "mcp", "ai", "model-context-protocol", "creative-coding", "claude-code-plugin"],
+  "version": "1.6.12",
+  "description": "AI copilot for TouchDesigner with live MCP control \u2014 104 tools, focus + locations, hint injection, component notes, POPx inspection, knowledge corpus, project lifecycle control, technique memory, typed patch sessions, Claude Code plugin marketplace install.",
+  "keywords": [
+    "touchdesigner",
+    "mcp",
+    "ai",
+    "model-context-protocol",
+    "creative-coding",
+    "claude-code-plugin"
+  ],
   "author": "dreamrec",
   "license": "MIT",
   "repository": {
@@ -16,7 +23,13 @@
   "bin": {
     "tdpilot": "./run.js"
   },
-  "files": ["run.js", "install.js", "plugin.js", "brains.js", "README.md"],
+  "files": [
+    "run.js",
+    "install.js",
+    "plugin.js",
+    "brains.js",
+    "README.md"
+  ],
   "engines": {
     "node": ">=16"
   }
