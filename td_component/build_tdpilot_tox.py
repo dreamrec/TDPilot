@@ -104,7 +104,10 @@ def _load_legacy_module():
     legacy_path = os.path.join(_THIS_DIR, "build_export_mcp_tox.py")
     if not os.path.isfile(legacy_path):
         raise RuntimeError("build_export_mcp_tox.py not found alongside build_tdpilot_tox.py at " + _THIS_DIR)
-    with open(legacy_path) as f:
+    # encoding="utf-8" required: TD launched from Finder/Dock inherits a minimal
+    # LaunchServices env where LANG is unset, so Python's open() defaults to
+    # ascii and chokes on em-dashes in the legacy module's docstring.
+    with open(legacy_path, encoding="utf-8") as f:
         legacy_src = f.read()
     # Strip the trailing module-level call so we don't auto-build legacy.
     legacy_src = _re.sub(r"\nbuild_and_export\(\)\s*$", "\n", legacy_src)
@@ -155,7 +158,8 @@ def _read_canonical_version(repo_root):
 
     init_py = os.path.join(repo_root, "src", "td_mcp", "__init__.py")
     try:
-        with open(init_py) as f:
+        # encoding="utf-8" — see legacy-load comment above for the LANG-unset rationale.
+        with open(init_py, encoding="utf-8") as f:
             text = f.read()
         m = _re.search(r'__version__\s*=\s*"([^"]+)"', text)
         if m:
