@@ -31,7 +31,7 @@ The goal: every action you take should leave the project cleaner, more readable,
 - `td_locations` — save/list/go/delete/rename per-project named network locations (host-side JSON storage in `~/.tdpilot/locations/`)
 
 ### Hints (1) *(NEW v1.6.0, corpus expanded v1.6.1, surface routing v1.6.2)*
-- `td_get_hints` — concise, source-cited rules for a topic / op_type / intent / **surface**. Pure host-side orchestrator over the YAML hint corpus at `src/td_mcp/hints/packs/`. As of v1.6.1: **19 packs / 63 hints** covering 11 topics (audio_reactive, custom_parameters, extensions, feedback, glsl, macros, panel_ui, pop, popx, recording, render_pipeline) and 8 op_types (audiofileinCHOP, extensionDAT, feedbackTOP, geometryCOMP, glslMAT, glslTOP, moviefileoutTOP, panelCOMP).
+- `td_get_hints` — concise, source-cited rules for a topic / op_type / intent / **surface**. Pure host-side orchestrator over the YAML hint corpus at `src/td_mcp/hints/packs/`. As of v1.6.11: **20 packs / 73 hints** covering 12 topics (audio_reactive, custom_parameters, error_recovery, extensions, feedback, glsl, macros, panel_ui, pop, popx, recording, render_pipeline) and 8 op_types (audiofileinCHOP, extensionDAT, feedbackTOP, geometryCOMP, glslMAT, glslTOP, moviefileoutTOP, panelCOMP).
 
   **v1.6.2 surface routing** — schema v2 adds optional `when.surface` per hint: a list of response-surfaces from `{create_node, set_params, exec, errors, plan, preview, query, inspect, screenshot}`. Surface-restricted hints fire only when the matching surface is in scope; unrestricted hints fire from any surface. Each tool's auto-injection passes its natural surface automatically (see `TOOL_SURFACES` in `src/td_mcp/hints/orchestrator.py`); explicit `td_get_hints` callers can pass `surface=...` to narrow.
 
