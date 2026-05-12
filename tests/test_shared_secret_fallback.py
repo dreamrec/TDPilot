@@ -145,11 +145,7 @@ class TestFileFallback:
     def test_file_skips_comments_and_blanks(self, callbacks_module):
         module, env_file = callbacks_module
         env_file.write_text(
-            "# header comment\n"
-            "\n"
-            "  # indented comment\n"
-            "TD_MCP_SHARED_SECRET=from-file\n"
-            "OTHER_KEY=ignored\n",
+            "# header comment\n\n  # indented comment\nTD_MCP_SHARED_SECRET=from-file\nOTHER_KEY=ignored\n",
             encoding="utf-8",
         )
 
@@ -159,8 +155,7 @@ class TestFileFallback:
         """A line like `MY_TD_MCP_SHARED_SECRET=...` must NOT match."""
         module, env_file = callbacks_module
         env_file.write_text(
-            "MY_TD_MCP_SHARED_SECRET=wrong-prefix\n"
-            "TD_MCP_SHARED_SECRET=correct-one\n",
+            "MY_TD_MCP_SHARED_SECRET=wrong-prefix\nTD_MCP_SHARED_SECRET=correct-one\n",
             encoding="utf-8",
         )
 
