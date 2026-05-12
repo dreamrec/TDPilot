@@ -24,7 +24,7 @@
     "transport": "stdio"
   },
   "surface": {
-    "tool_count": 103,
+    "tool_count": 104,
     "resource_template_count": 6,
     "static_resource_count": 1
   },

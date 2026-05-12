@@ -2122,6 +2122,7 @@ from td_mcp.registry.tools_vision import (  # noqa: E402
     td_analyze_frame,
     td_capture_frame,
 )
+from td_mcp.registry import tools_batch  # noqa: F401, E402  — registers td_tool_batch
 
 # ─────────────────────────────────────────────────────────────
 # CLI entrypoint

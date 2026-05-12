@@ -2708,6 +2708,20 @@
     },
     "required": []
   },
+  "td_tool_batch": {
+    "description_present": true,
+    "properties": {
+      "calls": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "array"
+      }
+    },
+    "required": [
+      "calls"
+    ]
+  },
   "td_unsubscribe": {
     "description_present": true,
     "properties": {
