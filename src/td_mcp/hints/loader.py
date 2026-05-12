@@ -20,7 +20,8 @@ Pack schema (YAML):
     next_tools: [td_get_param_help]  # list[str], optional
 
 Source kinds recognized today: skill_pitfall, user_essay, official_doc,
-hint_pack. Unknown values are accepted and surfaced verbatim in responses.
+hint_pack, backport. Unknown values are accepted and surfaced verbatim
+in responses.
 
 Schema versions:
 - v1 (legacy): no surface field. Hints fire from any surface (the original behavior).

@@ -20,7 +20,7 @@ def _recovery_hints_for(message: str) -> list[dict]:
         from td_mcp.hints.loader import default_registry  # local import to avoid cycles at startup
         registry = default_registry()
         matches = registry.find(surface="error_recovery", error_text=message)
-    except Exception:
+    except Exception:  # noqa: BLE001 — hints lookup must never block error reporting
         return []
     out: list[dict] = []
     for m in matches:

@@ -3,15 +3,11 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-
-import pytest
 
 from td_mcp.errors import format_tool_error
-from td_mcp.hints import ALLOWED_SURFACES, default_registry, query_hints
+from td_mcp.hints import ALLOWED_SURFACES, default_registry
 from td_mcp.hints.loader import HintMatch
 from td_mcp.td_client import TouchDesignerAPIError
-
 
 # ── Pack loading ──────────────────────────────────────────────────────────
 
@@ -102,3 +98,24 @@ def test_format_tool_error_omits_recovery_hints_on_no_match():
     err = envelope["error"]
     assert "recovery_hints" not in err
     assert "recovery_hints" not in err.get("details", {})
+
+
+def test_format_tool_error_no_hints_on_connection_error():
+    """Connection-error envelopes use a fixed message that shouldn't match
+    any recovery pattern. If a future hint pack adds a pattern matching
+    'connect' or 'TouchDesigner', connection envelopes would carry
+    confusing recovery_hints. This test pins the invariant.
+    """
+    from td_mcp.td_client import TouchDesignerConnectionError
+
+    exc = TouchDesignerConnectionError("connection refused on port 9981")
+    envelope_json = format_tool_error(exc)
+    envelope = json.loads(envelope_json)
+    assert envelope["success"] is False
+    # The fixed "Cannot connect to TouchDesigner." message must not match any
+    # recovery pattern. If it does in the future, the message or the pack
+    # needs adjustment.
+    assert "recovery_hints" not in envelope["error"], (
+        "Connection-error envelope must not carry recovery hints — the fixed "
+        "message text matched a pack pattern (review the patterns)."
+    )

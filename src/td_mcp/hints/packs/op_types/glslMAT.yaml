@@ -69,6 +69,6 @@ hints:
     source_kind: official_doc
     when:
       op_type: glslMAT
-      error_match: "checkerboard|red.?blue|compile"
+      error_match: "checkerboard|red[/-]?blue|compile"
       surface: [errors, screenshot]
 next_tools: [td_get_hints, td_get_param_help, td_get_content, td_get_errors]
