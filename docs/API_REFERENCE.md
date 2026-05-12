@@ -237,6 +237,7 @@ All tools in this section execute Python inside TouchDesigner. Most require `ful
 |------|-------------|------------|---------|
 | `td_get_server_metrics` | Get MCP server runtime metrics: telemetry, events, streams, safety, snapshots, jobs, audit status. | _(none)_ | JSON with `runtime`, `telemetry`, `events`, `visual_monitor`, `top_stream`, `safety`, `snapshots`, `jobs`, `audit_enabled`. |
 | `td_describe_surface` | Describe the MCP server surface: tool count, resource count, capabilities, version. | _(none)_ | JSON with `version`, `tool_count`, `resource_count`, `capabilities`. |
+| `td_tool_batch` | Dispatch up to 8 tool calls in a single model roundtrip. Sequential execution; per-call failures don't abort siblings. Backport from deepseek-v4. | `calls` (list[dict], **required**, max 8): Each entry is `{tool: str, args: dict}`. | JSON with `ok: true`, `count` (int), `results` array of `{tool, ok, result, error, elapsed_ms}`. |
 
 ---
 
