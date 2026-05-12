@@ -1971,7 +1971,10 @@ def _rescue_exec_mode_error(
 # tool_registry as registry; registry.td_memory_save(...)`` still work.
 # Resource handlers registered via @mcp.resource. Re-exported so tests
 # like test_resource_fallbacks.py that import by Python name keep working.
-from td_mcp.registry import tools_patch  # noqa: F401, E402  — registers 5 patch tools
+from td_mcp.registry import (
+    tools_batch,  # noqa: F401, E402  — registers td_tool_batch
+    tools_patch,  # noqa: F401, E402  — registers 5 patch tools
+)
 from td_mcp.registry.resources import (  # noqa: E402
     td_resource_chop_channel,
     td_resource_cook,
@@ -2122,7 +2125,6 @@ from td_mcp.registry.tools_vision import (  # noqa: E402
     td_analyze_frame,
     td_capture_frame,
 )
-from td_mcp.registry import tools_batch  # noqa: F401, E402  — registers td_tool_batch
 
 # ─────────────────────────────────────────────────────────────
 # CLI entrypoint

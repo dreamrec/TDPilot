@@ -1,5 +1,40 @@
 # Changelog
 
+## 1.6.11 - 2026-05-12
+
+### What's new
+
+- `td_tool_batch`: dispatch up to 8 tool calls in a single model roundtrip
+  (backport from deepseek-v4). Per-call failures don't abort siblings;
+  nested batches and missing tools are rejected with structured errors.
+  Tool count: 103 → 104.
+- `error_recovery` hint surface: 10 narrow error-pattern hints
+  (path-not-found, thread-conflict, unknown-op-type, etc.) automatically
+  attached to `format_tool_error` envelopes. Backport from deepseek-v4
+  `tdpilot_api_recovery.py`, integrated into the existing
+  `src/td_mcp/hints/` system rather than as a parallel module.
+
+### Fixed
+
+- Memory index serialization (`technique_store.py`, `knowledge_store.py`)
+  is now byte-stable across insertion orders. Adds `sort_keys=True` to
+  every `json.dumps` call. Improves prompt-cache prefix stability when
+  agents read the index.
+- `glslMAT.yaml` `error_match` pattern `red.?blue` tightened to
+  `red[/-]?blue` (the substring→regex upgrade in the hints subsystem
+  exposed that `.?` was matching any character; the explicit character
+  class restores the original intent of matching channel-name typos).
+
+### Internal
+
+- `HintRegistry.find()` upgraded `error_match` matching from substring
+  to regex with `re.error` fallback to substring. Enables alternation
+  patterns like `"foo|bar"` in YAML packs (previously such patterns
+  could only match if the literal pipe character appeared in the error
+  text). Existing packs with simple literal strings are unchanged.
+
+---
+
 ## 1.6.10 - 2026-05-03
 
 **Closes the v1.6.6 auto-update gap for user-created `.toe` files.** The

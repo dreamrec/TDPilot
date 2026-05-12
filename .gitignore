@@ -98,7 +98,17 @@ data/normalized/
 # documentation; anything that drifts off-purpose ends up here.
 docs/archive/
 
+# Working artifacts from superpowers:writing-plans / executing-plans skills.
+# Implementation plans are checked into this dir during active work, then
+# deleted when the work ships. Not for public distribution.
+docs/superpowers/
+
 # v1.6.8: keep this reference doc local-only (it captures discoveries
 # from session learnings; not for the public repo). Stays on disk for
 # Claude sessions in this dev clone but is excluded from git.
 docs/TD_INTRICACIES_AND_PATTERNS.md
+
+# Two-tier CONTEXT pattern (per CONTEXT.md ADR-005): the local file
+# carries session-specific paths, cross-links to gitignored docs, and
+# personal notes. Public glossary lives in CONTEXT.md.
+CONTEXT-local.md
