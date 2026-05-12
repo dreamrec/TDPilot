@@ -43,6 +43,14 @@ jobs:
         run: uv run python scripts/check_tox_freshness.py
 
       # Static script invocation — no GitHub event data consumed, so no
+      # injection risk from user-controlled inputs. Fetches
+      # docs.derivative.ca/Release_Notes and fails if the newest seed
+      # release card trails by more than 1 build. Soft-passes on network
+      # outages by default.
+      - name: Release-notes freshness check
+        run: uv run python scripts/check_release_notes_freshness.py
+
+      # Static script invocation — no GitHub event data consumed, so no
       # injection risk from user-controlled inputs. The script greps tracked
       # files for /Users/<name>/ and C:\Users\<name>\ patterns.
       - name: Personal path leak check

@@ -1,0 +1,49 @@
+{
+  "card_type": "release",
+  "build": "2025.32820",
+  "release_date": "2026-05-06",
+  "highlights": [
+    "Math Mix POP",
+    "Math Combine POP",
+    "POPs array attribute iteration via _name_[:] syntax",
+    "Movie File Out TOP EXR compression (ZIP / DWAA / DWAB)",
+    "GLSL MAT TDProjTextureLod and TDProjTextureSize",
+    "CPlusPlus POP/TOP cross-family CUDA buffer sharing",
+    "Blackmagic SDK 16 (100G card support)",
+    "CUDA 12.9.1",
+    "NDI 6.3.1",
+    "Twemoji default emoji font on macOS"
+  ],
+  "new_ops": [
+    {"type": "mathMixPOP", "family": "POP"},
+    {"type": "mathCombinePOP", "family": "POP"}
+  ],
+  "changed_ops": [
+    {"type": "analyzePOP", "change": "Added 'Max Verts per Line Strip' output toggle"},
+    {"type": "cplusplusPOP", "change": "Can access TOP CUDA array memory via getCUDAArray()"},
+    {"type": "cplusplusTOP", "change": "Can access POP buffers in CUDA memory"},
+    {"type": "popToDAT", "change": "Optional 'Number of Vertices' column when extracting primitives"},
+    {"type": "blobTrackTOP", "change": "Removed 2-blob limit for Non-Commercial licenses"},
+    {"type": "layoutTOP", "change": "Toggle parameters to reverse row/column direction; grid column alignment fix"},
+    {"type": "movieFileOutTOP", "change": "Added EXR compression method + quality parameters (ZIP, DWAA, DWAB)"},
+    {"type": "orbbecTOP", "change": "New parameters for Orbbec logging severity control"},
+    {"type": "jsonDAT", "change": "Added Double Quotes option to Output Format"},
+    {"type": "keyboardInDAT", "change": "Added OEM 102 key support"},
+    {"type": "glslMAT", "change": "Added vec4 TDProjTextureLod() and ivec3 TDProjTextureSize() functions"},
+    {"type": "particlePOP", "change": "Fixed birth-rate inaccuracy when <1 per frame"},
+    {"type": "switchPOP", "change": "Fixed blending between inputs with uint/int attributes"},
+    {"type": "triangulatePOP", "change": "Added zero-area triangle removal; fixed P attribute crashes"},
+    {"type": "topToPOP", "change": "Added swizzling support; fixed alpha display in Position mode"},
+    {"type": "dmxOutPOP", "change": "Fixed sACN universe >32767 sending"},
+    {"type": "extrudePOP", "change": "Fixed extra point in closed line strips"},
+    {"type": "deletePOP", "change": "Fixed crash when deleting line strip points"},
+    {"type": "textPOP", "change": "Fixed font file input and macOS issues"}
+  ],
+  "migration_warnings": [
+    "FBX COMP: Blend POP default changed from Off to Proportional — re-check blendshape behavior on existing FBX imports",
+    "moviePlayer / movieEngine palette: audio offset default changed to -0.15 — verify A/V sync in projects using this palette",
+    "Blackmagic SDK upgraded to 16.0 — re-test capture/output workflows on older Blackmagic hardware",
+    "Replicator COMP: onRemoveReplicant is now called for all operators on recreate — callbacks that previously skipped this path may fire unexpectedly"
+  ],
+  "docs_url": "https://docs.derivative.ca/Release_Notes"
+}
