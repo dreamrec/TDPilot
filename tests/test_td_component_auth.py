@@ -12,6 +12,18 @@ def _load_callbacks_module(secret: str, require_auth: str = "1"):
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
     spec.loader.exec_module(module)
+    # v1.6.13: _current_shared_secret() now has a file-fallback that opens
+    # ~/.tdpilot/.tdpilot.env. Redirect it to a nonexistent path so the
+    # fallback short-circuits and tests see ONLY what env says. Without
+    # this, tests that pass secret="" would inadvertently pick up the
+    # developer's real ~/.tdpilot/.tdpilot.env value.
+    module._ENV_FALLBACK_FILE = "/nonexistent/tdpilot-test-fallback.env"
+    # If the secret arg was empty AND the module-level SHARED_SECRET=
+    # _current_shared_secret() at import time already cached the real
+    # file secret back into os.environ, clear it now so the empty-secret
+    # tests work as intended.
+    if not secret:
+        os.environ.pop("TD_MCP_SHARED_SECRET", None)
     return module
 
 

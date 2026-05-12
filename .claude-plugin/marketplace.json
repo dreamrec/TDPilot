@@ -10,7 +10,7 @@
     {
       "name": "tdpilot",
       "description": "AI copilot for TouchDesigner with live MCP control \u2014 104 tools, focus + locations, hint injection, component notes, POPx inspection, knowledge corpus, project lifecycle, custom parameter authoring, snapshots, undo-block safety, and typed patch sessions. Works with Claude Desktop, Claude Code, and any MCP-compatible client.",
-      "version": "1.6.12",
+      "version": "1.6.13",
       "author": {
         "name": "silviu"
       },

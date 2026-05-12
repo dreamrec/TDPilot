@@ -1,5 +1,42 @@
 # Changelog
 
+## 1.6.13 - 2026-05-12
+
+### Fixed
+
+- **TD-side auth race (permanent fix).** When the user opened TouchDesigner
+  directly (Dock icon, double-click `.toe`, etc.) instead of via
+  `npx tdpilot`, the TD process inherited an empty `TD_MCP_SHARED_SECRET`
+  in its environment. Later, when `npx tdpilot` (or another invocation)
+  wrote `~/.tdpilot/.tdpilot.env` with a freshly generated secret, the
+  TD-side `_current_shared_secret()` in `td_component/mcp_webserver_callbacks.py`
+  still returned empty because it only read from `os.environ`. Every
+  MCP→TD request returned `401 Unauthorized: missing or invalid
+  TD_MCP_SHARED_SECRET` until the user manually pasted a Textport
+  one-liner that injected the value into `os.environ` — and that fix
+  evaporated on the next TD restart.
+- `_current_shared_secret()` now has a file fallback: env is the fast
+  path (cache), file is the source of truth. On a fast-path miss, the
+  function reads `~/.tdpilot/.tdpilot.env`, finds the secret, writes it
+  back to `os.environ` (so subsequent calls take the fast path), and
+  returns it. Mirrors the deepseek-v4 `fetch_api_key()` pattern. The
+  file parser handles quoted values, comments, blank lines, and the
+  `KEY=` (empty value) edge case correctly. See
+  `docs/TD_INTRICACIES_AND_PATTERNS.md` §15 for the full pattern.
+- **18 new tests in `tests/test_shared_secret_fallback.py`** covering:
+  env fast-path with/without file present, file fallback when env empty,
+  env-caching after file hit (so subsequent calls don't re-read disk),
+  quoted-value stripping (matched pairs only), comment + blank-line
+  skipping, exact-key matching (so `MY_TD_MCP_SHARED_SECRET=foo`
+  doesn't shadow the real key), empty-value handling, secrets containing
+  `=`, and full integration through `_check_auth_error`.
+- Test isolation: pre-existing `tests/test_td_component_auth.py` was
+  failing under the new fallback because the module's import-time
+  `SHARED_SECRET = _current_shared_secret()` was reading the developer's
+  real `~/.tdpilot/.tdpilot.env`. The helper now redirects
+  `_ENV_FALLBACK_FILE` to a nonexistent path after import and clears any
+  cached env so empty-secret tests stay deterministic.
+
 ## 1.6.12 - 2026-05-12
 
 ### Fixed

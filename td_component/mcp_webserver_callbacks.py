@@ -26,7 +26,7 @@ import traceback
 # Configuration
 # ─────────────────────────────────────────────────────────────
 
-API_VERSION = "1.6.12"
+API_VERSION = "1.6.13"
 SCREENSHOT_TEMP_PATH = os.path.join(os.environ.get('TEMP', os.environ.get('TMP', '/tmp')), 'td_mcp_screenshot.jpg')
 
 # Auth + policy env is read at CALL TIME, not import time — otherwise TD's
@@ -35,9 +35,48 @@ SCREENSHOT_TEMP_PATH = os.path.join(os.environ.get('TEMP', os.environ.get('TMP',
 # audit A-1. Module-level aliases remain below for backward compatibility with
 # external callers and tests that inspect them.
 
+# File fallback for the shared secret. Solves the launch-ordering race where
+# TD starts BEFORE the npx wrapper writes `~/.tdpilot/.tdpilot.env`, so the
+# TD process inherits an empty TD_MCP_SHARED_SECRET and every request 401s
+# until the user manually pastes a Textport patch. Mirrors the deepseek-v4
+# `fetch_api_key()` pattern: env is a fast cache, file is the source of
+# truth. See `docs/TD_INTRICACIES_AND_PATTERNS.md` §15 (auth race).
+_ENV_FALLBACK_FILE = os.path.expanduser("~/.tdpilot/.tdpilot.env")
+
+
 def _current_shared_secret():
-    """Read TD_MCP_SHARED_SECRET fresh from the environment."""
-    return os.environ.get('TD_MCP_SHARED_SECRET', '').strip()
+    """Read TD_MCP_SHARED_SECRET fresh, with file-fallback.
+
+    Resolution order (first non-empty wins):
+      1. os.environ['TD_MCP_SHARED_SECRET']  — fast path; tdpilot_startup
+         and Textport overrides write here.
+      2. ~/.tdpilot/.tdpilot.env              — fallback; absorbs the race
+         where auth_bootstrap writes the file AFTER TD already launched
+         and inherited an empty env. On hit, the value is written back to
+         os.environ so subsequent calls take the fast path.
+    """
+    v = os.environ.get('TD_MCP_SHARED_SECRET', '').strip()
+    if v:
+        return v
+    try:
+        with open(_ENV_FALLBACK_FILE, encoding="utf-8") as f:
+            for line in f:
+                stripped = line.strip()
+                if not stripped or stripped.startswith("#"):
+                    continue
+                if stripped.startswith("TD_MCP_SHARED_SECRET="):
+                    raw = stripped.split("=", 1)[1].strip()
+                    # Strip matched surrounding quotes (mirrors auth_bootstrap parser)
+                    if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in ('"', "'"):
+                        raw = raw[1:-1]
+                    raw = raw.strip()
+                    if raw:
+                        os.environ['TD_MCP_SHARED_SECRET'] = raw
+                        return raw
+                    return ''
+    except OSError:
+        pass
+    return ''
 
 
 def _current_require_auth():

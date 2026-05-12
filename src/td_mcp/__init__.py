@@ -1,6 +1,6 @@
 """TouchDesigner MCP Server — AI-powered control of TouchDesigner via MCP."""
 
-__version__ = "1.6.12"
+__version__ = "1.6.13"
 
 # v1.4.7: renamed from ``tdpilot_v1_3.tox`` (legacy v1.3-era filename) to a
 # version-less, stable filename. The TD component's API_VERSION lives inside
