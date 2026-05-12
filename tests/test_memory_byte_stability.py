@@ -158,3 +158,99 @@ def test_knowledge_store_index_sort_keys_in_output(tmp_path: Path):
     assert text.rstrip() == canonical.rstrip(), (
         "index.json keys are not sorted — sort_keys=True missing from _write_json"
     )
+
+
+# ---------------------------------------------------------------------------
+# PreferenceStore byte-stability tests
+# ---------------------------------------------------------------------------
+
+
+def test_preference_store_index_is_byte_stable(tmp_path: Path):
+    """Writing the same preferences in different orders must produce identical bytes.
+
+    PreferenceStore persists to <base_dir>/global/preferences.json.
+    The public set() API is clean (no UUID generation), so we use it directly
+    with two stores rooted at separate directories for isolation.
+    """
+    from td_mcp.memory import PreferenceStore
+
+    a = PreferenceStore(base_dir=str(tmp_path / "a"))
+    b = PreferenceStore(base_dir=str(tmp_path / "b"))
+
+    # Insert the same key-value pairs in opposite orders.
+    a.set("z_key", "z_value", scope="global")
+    a.set("a_key", "a_value", scope="global")
+
+    b.set("a_key", "a_value", scope="global")
+    b.set("z_key", "z_value", scope="global")
+
+    bytes_a = (tmp_path / "a" / "global" / "preferences.json").read_bytes()
+    bytes_b = (tmp_path / "b" / "global" / "preferences.json").read_bytes()
+
+    assert bytes_a == bytes_b, "PreferenceStore bytes diverged due to insertion order"
+
+
+# ---------------------------------------------------------------------------
+# SnapshotManager byte-stability tests
+# ---------------------------------------------------------------------------
+
+
+def test_snapshot_manager_index_is_byte_stable(tmp_path: Path):
+    """Snapshots with the same content but written via different insertion orders
+    must produce byte-identical files on disk.
+
+    SnapshotManager persists each snapshot to <storage_dir>/<snapshot_id>.json.
+    add_snapshot() generates a random UUID, so we inject pre-built payloads
+    directly into _snapshots/_order and call _persist_snapshot() — the same
+    internal-injection pattern used for TechniqueStore above.
+    """
+    from datetime import datetime, timezone
+
+    from td_mcp.memory import SnapshotManager
+
+    dir_a = tmp_path / "a"
+    dir_b = tmp_path / "b"
+    a = SnapshotManager(storage_dir=str(dir_a))
+    b = SnapshotManager(storage_dir=str(dir_b))
+
+    now = datetime.now(timezone.utc).isoformat()
+
+    # Two fixed snapshot IDs so the filenames match between stores.
+    sid_z = "zzzzz-0000-0000-0000-000000000000"
+    sid_a = "aaaaa-0000-0000-0000-000000000000"
+
+    payload_z = {
+        "snapshot_schema_version": 1,
+        "snapshot_id": sid_z,
+        "name": "z-snapshot",
+        "timestamp": now,
+        "snapshot": {"nodes": {"z_node": {"type": "nullTOP"}}, "connections": []},
+    }
+    payload_a = {
+        "snapshot_schema_version": 1,
+        "snapshot_id": sid_a,
+        "name": "a-snapshot",
+        "timestamp": now,
+        "snapshot": {"nodes": {"a_node": {"type": "nullTOP"}}, "connections": []},
+    }
+
+    def _inject(store: SnapshotManager, sid: str, payload: dict) -> None:
+        """Bypass add_snapshot UUID generation; inject and flush via _persist_snapshot."""
+        store._snapshots[sid] = payload
+        store._order.append(sid)
+        store._persist_snapshot(payload)
+
+    # Insert in opposite orders.
+    _inject(a, sid_z, payload_z)
+    _inject(a, sid_a, payload_a)
+
+    _inject(b, sid_a, payload_a)
+    _inject(b, sid_z, payload_z)
+
+    # Each snapshot is its own file; check both files for byte stability.
+    for sid in (sid_z, sid_a):
+        bytes_a = (dir_a / f"{sid}.json").read_bytes()
+        bytes_b = (dir_b / f"{sid}.json").read_bytes()
+        assert bytes_a == bytes_b, (
+            f"SnapshotManager bytes diverged for snapshot {sid} due to insertion order"
+        )

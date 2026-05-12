@@ -218,7 +218,10 @@ class SnapshotManager:
         file_path = self._snapshot_file(payload["snapshot_id"])
         tmp_path = file_path.with_suffix(".json.tmp")
         try:
-            tmp_path.write_text(json.dumps(payload, ensure_ascii=True), encoding="utf-8")
+            # sort_keys=True: byte-stable output preserves prompt-cache prefix hits.
+            # Two stores reaching the same final state via different insertion orders
+            # must produce identical bytes on disk (test_memory_byte_stability.py).
+            tmp_path.write_text(json.dumps(payload, ensure_ascii=True, sort_keys=True), encoding="utf-8")
             tmp_path.replace(file_path)
         except Exception as exc:
             logger.error("Failed to write %s: %s", file_path, exc)
