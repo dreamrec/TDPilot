@@ -88,23 +88,35 @@ def _make_error_envelope(
     """Build a per-call error envelope, normalising dict errors to strings.
 
     ``format_tool_error`` produces ``{"success": False, "error": {"code":
-    ..., "message": ..., "details": ...}}``. We extract the message so
-    that ``error`` in the envelope is always ``str | None``.
+    ..., "message": ..., "details": ..., "recovery_hints": [...]}}``. We
+    extract the message so that ``error`` in the envelope is always
+    ``str | None``, and forward ``recovery_hints`` when present so agents
+    using td_tool_batch get the same error guidance as direct calls.
+
+    ``recovery_hints`` is conditionally present — the key is OMITTED when
+    the source error dict carries no hints (matches the discipline in
+    ``format_tool_error`` where the field is absent on no-match).
     """
     err_val = result.get("error")
     if isinstance(err_val, dict):
         error_text: str | None = err_val.get("message") or str(err_val)
+        hints = err_val.get("recovery_hints")
     elif isinstance(err_val, str):
         error_text = err_val
+        hints = None
     else:
         error_text = "tool reported failure without an error message"
-    return {
+        hints = None
+    envelope: dict[str, Any] = {
         "tool": tool_name,
         "ok": False,
         "result": None,
         "error": error_text,
         "elapsed_ms": elapsed_ms,
     }
+    if hints:
+        envelope["recovery_hints"] = hints
+    return envelope
 
 
 def _is_tool_error(result: dict[str, Any]) -> bool:

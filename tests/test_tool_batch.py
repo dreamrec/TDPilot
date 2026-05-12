@@ -185,3 +185,95 @@ def test_tool_batch_dispatch_tool_reports_real_error():
     assert sub["result"] is None
     # error should be normalised to the message string (not the dict)
     assert "No node at path" in sub["error"]
+
+
+def test_tool_batch_forwards_recovery_hints_on_sub_call_failure():
+    """Recovery hints from format_tool_error envelopes are surfaced in batch sub-results.
+
+    Regression for cross-task gap discovered in final review of v1.6.11: prior
+    behavior dropped recovery_hints when batching a failing sub-call, degrading
+    error guidance for the agent.
+    """
+    import json
+    from unittest.mock import AsyncMock, patch
+
+    from mcp.types import TextContent
+
+    from td_mcp.registry.tools_batch import handle_tool_batch
+
+    # Simulate format_tool_error's exact shape — hints nested inside error dict
+    error_payload_with_hints = json.dumps({
+        "success": False,
+        "error": {
+            "code": "TD_API_ERROR",
+            "message": "No node at path /missing",
+            "details": {"status_code": 404},
+            "recovery_hints": [
+                {
+                    "id": "path_not_found",
+                    "priority": "critical",
+                    "rule": "Call td_get_nodes(path='/parent_path') to list children...",
+                    "next_tools": ["td_get_nodes", "td_search_nodes"],
+                }
+            ],
+        },
+    })
+    error_block = TextContent(type="text", text=error_payload_with_hints, annotations=None, meta=None)
+
+    with patch(
+        "td_mcp.registry.tools_batch.mcp.call_tool",
+        new=AsyncMock(return_value=([error_block], {})),
+    ):
+        result = handle_tool_batch({
+            "calls": [{"tool": "td_get_nodes", "args": {"path": "/missing"}}]
+        })
+
+    sub = result["results"][0]
+    assert sub["ok"] is False, f"expected sub-call failure, got {sub}"
+    assert "No node at path" in sub["error"]
+    assert "recovery_hints" in sub, "recovery_hints must be forwarded into the batch sub-result"
+    assert isinstance(sub["recovery_hints"], list)
+    assert len(sub["recovery_hints"]) == 1
+    assert sub["recovery_hints"][0]["id"] == "path_not_found"
+    assert sub["recovery_hints"][0]["next_tools"] == ["td_get_nodes", "td_search_nodes"]
+
+
+def test_tool_batch_omits_recovery_hints_when_absent():
+    """When the sub-call's error has no recovery hints, the field is OMITTED from
+    the sub-result (not set to None or []). Mirrors the format_tool_error discipline:
+    absent field rather than empty value, so a regression that drops the forward
+    fails the regression test cleanly.
+    """
+    import json
+    from unittest.mock import AsyncMock, patch
+
+    from mcp.types import TextContent
+
+    from td_mcp.registry.tools_batch import handle_tool_batch
+
+    # Error without recovery_hints
+    error_no_hints = json.dumps({
+        "success": False,
+        "error": {
+            "code": "TD_API_ERROR",
+            "message": "some unrecognized failure",
+            "details": {},
+        },
+    })
+    block = TextContent(type="text", text=error_no_hints, annotations=None, meta=None)
+
+    with patch(
+        "td_mcp.registry.tools_batch.mcp.call_tool",
+        new=AsyncMock(return_value=([block], {})),
+    ):
+        result = handle_tool_batch({
+            "calls": [{"tool": "td_get_nodes", "args": {"path": "/missing"}}]
+        })
+
+    sub = result["results"][0]
+    assert sub["ok"] is False
+    assert "some unrecognized failure" in sub["error"]
+    # Absent, not None, not []
+    assert "recovery_hints" not in sub, (
+        f"recovery_hints must be absent when not in source, got: {sub}"
+    )
