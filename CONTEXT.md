@@ -1,7 +1,7 @@
 # TDPilot Context
 
 > Shared language and stable architectural decisions for TDPilot — the
-> TouchDesigner MCP plugin (97+ tools, plus skills, commands, and a `.tox`).
+> TouchDesigner MCP plugin (104+ tools, plus skills, commands, and a `.tox`).
 > Consumed by Claude Code sessions before any work on this repo.
 >
 > A companion `CONTEXT-local.md` (gitignored) captures session-specific
@@ -44,7 +44,7 @@ rollback. Distinct from a **git tag** (release-level) and a `.tox`
 **Derived artifact** — A file that depends on other files but is NOT
 auto-regenerated: `td_component/tdpilot.tox` (depends on 4 source `.py`
 files), `tdpilot.plugin` ZIP (depends on skills + .tox + manifests), the
-user-visible tool count printed in 9 docs. CI gates catch drift; the
+user-visible tool count printed in 10 docs. CI gates catch drift; the
 artifacts themselves do not refresh on their own. _Avoid_: build output
 (misleading — implies an automatic build target).
 
