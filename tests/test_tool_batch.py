@@ -37,12 +37,14 @@ def test_tool_batch_sub_call_missing_tool_name():
     """A sub-call without a tool field must fail per-sub-call without aborting siblings."""
     from td_mcp.registry.tools_batch import handle_tool_batch
 
-    result = handle_tool_batch({
-        "calls": [
-            {"tool": "", "args": {}},
-            {"tool": "td_get_info", "args": {}},
-        ]
-    })
+    result = handle_tool_batch(
+        {
+            "calls": [
+                {"tool": "", "args": {}},
+                {"tool": "td_get_info", "args": {}},
+            ]
+        }
+    )
     assert result.get("ok") is True
     assert result["results"][0]["ok"] is False
     assert (
@@ -68,9 +70,7 @@ def test_tool_batch_dispatch_success():
         "td_mcp.registry.tools_batch.mcp.call_tool",
         new=AsyncMock(return_value=([mock_block], {})),
     ):
-        result = handle_tool_batch({
-            "calls": [{"tool": "td_get_nodes", "args": {"path": "/root"}}]
-        })
+        result = handle_tool_batch({"calls": [{"tool": "td_get_nodes", "args": {"path": "/root"}}]})
 
     assert result["ok"] is True
     assert result["count"] == 1
@@ -104,12 +104,14 @@ def test_tool_batch_dispatch_partial_failure():
         return ([ok_block], {})
 
     with patch("td_mcp.registry.tools_batch.mcp.call_tool", new=fake_call):
-        result = handle_tool_batch({
-            "calls": [
-                {"tool": "td_will_fail", "args": {}},
-                {"tool": "td_get_nodes", "args": {"path": "/root"}},
-            ]
-        })
+        result = handle_tool_batch(
+            {
+                "calls": [
+                    {"tool": "td_will_fail", "args": {}},
+                    {"tool": "td_get_nodes", "args": {"path": "/root"}},
+                ]
+            }
+        )
 
     assert result["ok"] is True
     assert result["count"] == 2
@@ -141,14 +143,10 @@ def test_tool_batch_dispatch_tool_reports_error_with_none_error_field():
         "td_mcp.registry.tools_batch.mcp.call_tool",
         new=AsyncMock(return_value=([success_block], {})),
     ):
-        result = handle_tool_batch({
-            "calls": [{"tool": "td_get_focus", "args": {}}]
-        })
+        result = handle_tool_batch({"calls": [{"tool": "td_get_focus", "args": {}}]})
 
     sub = result["results"][0]
-    assert sub["ok"] is True, (
-        f"explicit error=None must not be flagged as failure; got {sub}"
-    )
+    assert sub["ok"] is True, f"explicit error=None must not be flagged as failure; got {sub}"
     assert sub["result"]["navigated_to"] == "/here"
     assert sub["error"] is None
 
@@ -162,23 +160,23 @@ def test_tool_batch_dispatch_tool_reports_real_error():
 
     from td_mcp.registry.tools_batch import handle_tool_batch
 
-    error_payload = json.dumps({
-        "success": False,
-        "error": {
-            "code": "TD_API_ERROR",
-            "message": "No node at path /missing",
-            "details": {"status_code": 404},
-        },
-    })
+    error_payload = json.dumps(
+        {
+            "success": False,
+            "error": {
+                "code": "TD_API_ERROR",
+                "message": "No node at path /missing",
+                "details": {"status_code": 404},
+            },
+        }
+    )
     error_block = TextContent(type="text", text=error_payload, annotations=None, meta=None)
 
     with patch(
         "td_mcp.registry.tools_batch.mcp.call_tool",
         new=AsyncMock(return_value=([error_block], {})),
     ):
-        result = handle_tool_batch({
-            "calls": [{"tool": "td_get_nodes", "args": {"path": "/missing"}}]
-        })
+        result = handle_tool_batch({"calls": [{"tool": "td_get_nodes", "args": {"path": "/missing"}}]})
 
     sub = result["results"][0]
     assert sub["ok"] is False
@@ -202,31 +200,31 @@ def test_tool_batch_forwards_recovery_hints_on_sub_call_failure():
     from td_mcp.registry.tools_batch import handle_tool_batch
 
     # Simulate format_tool_error's exact shape — hints nested inside error dict
-    error_payload_with_hints = json.dumps({
-        "success": False,
-        "error": {
-            "code": "TD_API_ERROR",
-            "message": "No node at path /missing",
-            "details": {"status_code": 404},
-            "recovery_hints": [
-                {
-                    "id": "path_not_found",
-                    "priority": "critical",
-                    "rule": "Call td_get_nodes(path='/parent_path') to list children...",
-                    "next_tools": ["td_get_nodes", "td_search_nodes"],
-                }
-            ],
-        },
-    })
+    error_payload_with_hints = json.dumps(
+        {
+            "success": False,
+            "error": {
+                "code": "TD_API_ERROR",
+                "message": "No node at path /missing",
+                "details": {"status_code": 404},
+                "recovery_hints": [
+                    {
+                        "id": "path_not_found",
+                        "priority": "critical",
+                        "rule": "Call td_get_nodes(path='/parent_path') to list children...",
+                        "next_tools": ["td_get_nodes", "td_search_nodes"],
+                    }
+                ],
+            },
+        }
+    )
     error_block = TextContent(type="text", text=error_payload_with_hints, annotations=None, meta=None)
 
     with patch(
         "td_mcp.registry.tools_batch.mcp.call_tool",
         new=AsyncMock(return_value=([error_block], {})),
     ):
-        result = handle_tool_batch({
-            "calls": [{"tool": "td_get_nodes", "args": {"path": "/missing"}}]
-        })
+        result = handle_tool_batch({"calls": [{"tool": "td_get_nodes", "args": {"path": "/missing"}}]})
 
     sub = result["results"][0]
     assert sub["ok"] is False, f"expected sub-call failure, got {sub}"
@@ -252,28 +250,26 @@ def test_tool_batch_omits_recovery_hints_when_absent():
     from td_mcp.registry.tools_batch import handle_tool_batch
 
     # Error without recovery_hints
-    error_no_hints = json.dumps({
-        "success": False,
-        "error": {
-            "code": "TD_API_ERROR",
-            "message": "some unrecognized failure",
-            "details": {},
-        },
-    })
+    error_no_hints = json.dumps(
+        {
+            "success": False,
+            "error": {
+                "code": "TD_API_ERROR",
+                "message": "some unrecognized failure",
+                "details": {},
+            },
+        }
+    )
     block = TextContent(type="text", text=error_no_hints, annotations=None, meta=None)
 
     with patch(
         "td_mcp.registry.tools_batch.mcp.call_tool",
         new=AsyncMock(return_value=([block], {})),
     ):
-        result = handle_tool_batch({
-            "calls": [{"tool": "td_get_nodes", "args": {"path": "/missing"}}]
-        })
+        result = handle_tool_batch({"calls": [{"tool": "td_get_nodes", "args": {"path": "/missing"}}]})
 
     sub = result["results"][0]
     assert sub["ok"] is False
     assert "some unrecognized failure" in sub["error"]
     # Absent, not None, not []
-    assert "recovery_hints" not in sub, (
-        f"recovery_hints must be absent when not in source, got: {sub}"
-    )
+    assert "recovery_hints" not in sub, f"recovery_hints must be absent when not in source, got: {sub}"

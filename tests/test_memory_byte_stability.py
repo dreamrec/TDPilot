@@ -251,6 +251,4 @@ def test_snapshot_manager_index_is_byte_stable(tmp_path: Path):
     for sid in (sid_z, sid_a):
         bytes_a = (dir_a / f"{sid}.json").read_bytes()
         bytes_b = (dir_b / f"{sid}.json").read_bytes()
-        assert bytes_a == bytes_b, (
-            f"SnapshotManager bytes diverged for snapshot {sid} due to insertion order"
-        )
+        assert bytes_a == bytes_b, f"SnapshotManager bytes diverged for snapshot {sid} due to insertion order"

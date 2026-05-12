@@ -135,10 +135,7 @@ def _is_tool_error(result: dict[str, Any]) -> bool:
     We now treat ``success is False`` OR ``error`` present and non-None
     as a failure, which correctly classifies all four cases.
     """
-    return bool(
-        result.get("success") is False
-        or ("error" in result and result["error"] is not None)
-    )
+    return bool(result.get("success") is False or ("error" in result and result["error"] is not None))
 
 
 def _validate_call(i: int, call: Any) -> tuple[str, dict] | dict:
@@ -146,25 +143,37 @@ def _validate_call(i: int, call: Any) -> tuple[str, dict] | dict:
     or a ready-to-append error-envelope dict on failure."""
     if not isinstance(call, dict):
         return {
-            "tool": None, "ok": False, "result": None,
-            "error": f"call[{i}] is not an object", "elapsed_ms": 0,
+            "tool": None,
+            "ok": False,
+            "result": None,
+            "error": f"call[{i}] is not an object",
+            "elapsed_ms": 0,
         }
     tool_name = call.get("tool")
     if not isinstance(tool_name, str) or not tool_name.strip():
         return {
-            "tool": tool_name, "ok": False, "result": None,
-            "error": f"call[{i}].tool is missing or not a string", "elapsed_ms": 0,
+            "tool": tool_name,
+            "ok": False,
+            "result": None,
+            "error": f"call[{i}].tool is missing or not a string",
+            "elapsed_ms": 0,
         }
     if tool_name == _SELF_NAME:
         return {
-            "tool": tool_name, "ok": False, "result": None,
-            "error": "Nested tool_batch is not allowed", "elapsed_ms": 0,
+            "tool": tool_name,
+            "ok": False,
+            "result": None,
+            "error": "Nested tool_batch is not allowed",
+            "elapsed_ms": 0,
         }
     tool_args = call.get("args") or {}
     if not isinstance(tool_args, dict):
         return {
-            "tool": tool_name, "ok": False, "result": None,
-            "error": f"call[{i}].args must be an object", "elapsed_ms": 0,
+            "tool": tool_name,
+            "ok": False,
+            "result": None,
+            "error": f"call[{i}].args must be an object",
+            "elapsed_ms": 0,
         }
     return tool_name, tool_args
 
@@ -191,12 +200,7 @@ def handle_tool_batch(body: dict) -> dict:
         return {"error": "tool_batch requires non-empty 'calls' list"}
 
     if len(calls) > MAX_BATCH_SIZE:
-        return {
-            "error": (
-                f"tool_batch capped at {MAX_BATCH_SIZE} sub-calls "
-                f"(received {len(calls)})"
-            )
-        }
+        return {"error": (f"tool_batch capped at {MAX_BATCH_SIZE} sub-calls (received {len(calls)})")}
 
     results: list[dict] = []
     for i, call in enumerate(calls):
@@ -229,13 +233,15 @@ def handle_tool_batch(body: dict) -> dict:
             result = _parse_content_blocks(raw_result)
         except Exception as exc:  # noqa: BLE001 — per-call error surface
             elapsed_ms = int((time.monotonic() - t_start) * 1000)
-            results.append({
-                "tool": tool_name,
-                "ok": False,
-                "result": None,
-                "error": f"{type(exc).__name__}: {exc}",
-                "elapsed_ms": elapsed_ms,
-            })
+            results.append(
+                {
+                    "tool": tool_name,
+                    "ok": False,
+                    "result": None,
+                    "error": f"{type(exc).__name__}: {exc}",
+                    "elapsed_ms": elapsed_ms,
+                }
+            )
             continue
         elapsed_ms = int((time.monotonic() - t_start) * 1000)
 
@@ -244,13 +250,15 @@ def handle_tool_batch(body: dict) -> dict:
         if is_error:
             results.append(_make_error_envelope(tool_name, result, elapsed_ms))
         else:
-            results.append({
-                "tool": tool_name,
-                "ok": True,
-                "result": result,
-                "error": None,
-                "elapsed_ms": elapsed_ms,
-            })
+            results.append(
+                {
+                    "tool": tool_name,
+                    "ok": True,
+                    "result": result,
+                    "error": None,
+                    "elapsed_ms": elapsed_ms,
+                }
+            )
 
     return {"ok": True, "count": len(results), "results": results}
 
@@ -278,10 +286,15 @@ async def _dispatch_async(calls: list[dict]) -> list[dict]:
             result = _parse_content_blocks(raw_result)
         except Exception as exc:  # noqa: BLE001
             elapsed_ms = int((time.monotonic() - t_start) * 1000)
-            results.append({
-                "tool": tool_name, "ok": False, "result": None,
-                "error": f"{type(exc).__name__}: {exc}", "elapsed_ms": elapsed_ms,
-            })
+            results.append(
+                {
+                    "tool": tool_name,
+                    "ok": False,
+                    "result": None,
+                    "error": f"{type(exc).__name__}: {exc}",
+                    "elapsed_ms": elapsed_ms,
+                }
+            )
             continue
         elapsed_ms = int((time.monotonic() - t_start) * 1000)
 
@@ -290,13 +303,15 @@ async def _dispatch_async(calls: list[dict]) -> list[dict]:
         if is_error:
             results.append(_make_error_envelope(tool_name, result, elapsed_ms))
         else:
-            results.append({
-                "tool": tool_name,
-                "ok": True,
-                "result": result,
-                "error": None,
-                "elapsed_ms": elapsed_ms,
-            })
+            results.append(
+                {
+                    "tool": tool_name,
+                    "ok": True,
+                    "result": result,
+                    "error": None,
+                    "elapsed_ms": elapsed_ms,
+                }
+            )
 
     return results
 
@@ -337,12 +352,7 @@ async def td_tool_batch(
         return {"error": "tool_batch requires non-empty 'calls' list"}
 
     if len(calls) > MAX_BATCH_SIZE:
-        return {
-            "error": (
-                f"tool_batch capped at {MAX_BATCH_SIZE} sub-calls "
-                f"(received {len(calls)})"
-            )
-        }
+        return {"error": (f"tool_batch capped at {MAX_BATCH_SIZE} sub-calls (received {len(calls)})")}
 
     results = await _dispatch_async(calls)
     return {"ok": True, "count": len(results), "results": results}
