@@ -1,5 +1,72 @@
 # Changelog
 
+## 1.6.14 - 2026-05-12
+
+### Added
+
+- **TD 2025.32820 release card** in the knowledge corpus
+  (`src/td_mcp/knowledge/cards/release/2025.32820.json`). Tracks the May 6,
+  2026 Official build: Math Mix / Math Combine POPs, EXR compression in
+  Movie File Out TOP, GLSL MAT `TDProjTextureLod` / `TDProjTextureSize`,
+  CPlusPlus POP / TOP cross-family CUDA buffer sharing, Blackmagic SDK 16,
+  CUDA 12.9.1, NDI 6.3.1, plus 4 migration warnings (FBX Blend POP default
+  flip, moviePlayer audio offset, Blackmagic SDK upgrade, Replicator
+  `onRemoveReplicant` semantics change). `td_get_release_delta(build="2025.32820")`
+  now returns the full delta for the current Official build instead of
+  `"No release card for build X"`.
+- **CI freshness gate** (`scripts/check_release_notes_freshness.py`) that
+  fetches `docs.derivative.ca/Release_Notes` on every CI run and fails if
+  the newest seed card trails by more than 1 build. Soft-passes on network
+  errors by default (a Derivative outage shouldn't redden CI);
+  `--strict-network` opts into hard-fail for release validation. 14 new
+  tests in `tests/test_release_notes_freshness.py` including a
+  `test_shipped_seed_corpus_matches_or_lags_by_one` invariant that pins
+  the shipped corpus to `>= 2025.32820`.
+
+### Fixed
+
+- **MCP-server auth (TDClient) now resolves the shared secret fresh per
+  request** — symmetric with the TD-side file fallback shipped in v1.6.13.
+  Previously `TDClient` captured the secret once at construction and baked
+  it into the cached `httpx.AsyncClient` headers. If `bootstrap_auth` ran
+  late (the v1.5.2 / v1.6.13 bug-class), the captured value was empty and
+  every subsequent request sent an empty `X-TD-MCP-Secret` header to TD,
+  producing `401 Unauthorized: missing or invalid TD_MCP_SHARED_SECRET`
+  forever until process restart — even after the file had been correctly
+  written. With the asymmetric fix landing only on the TD side in v1.6.13,
+  this manifested as the persistent 401 we kept hitting in real sessions.
+- New per-request resolution chain (with 5-second TTL cache):
+  1. `os.environ['TD_MCP_SHARED_SECRET']` (fast path)
+  2. `~/.tdpilot/.tdpilot.env` (or `$TDPILOT_ENV_FILE`) — file fallback
+  3. `shared_secret` constructor arg — last-resort fallback for tests.
+
+  Auth headers are built per-request in `_raw_request` instead of baked
+  into the long-lived httpx client, so secret rotation or late env-loading
+  is picked up on the very next request.
+- HTTP 401 from TD now invalidates the secret cache and retries the
+  request once with a freshly-resolved secret. Two-layer retry: inner loop
+  handles connect/timeout/5xx with exponential backoff, outer loop handles
+  the single auth retry. The auth retry does NOT consume the
+  connect/timeout retry budget.
+- Back-compat preserved: `client.shared_secret` is now a property
+  (resolves fresh, cached); the existing setter still works and clears
+  the cache. `TDClient(shared_secret="...")` still accepted as the
+  last-resort fallback for tests.
+- 28 new tests in `tests/test_td_client_auth.py` covering parser edge
+  cases (quotes, comments, equals signs, exact-key matching), resolution
+  priority (env > file > explicit), TTL cache behavior, setter
+  invalidation, auth-header construction, and integration tests using
+  `httpx.MockTransport` that pin the 401 → invalidate → retry → succeed
+  path AND the 401 → retry → also-401 → propagate path.
+
+### Internal
+
+- `td_component/mcp_webserver_callbacks.py` `API_VERSION` bumped to
+  `1.6.14` per the v1.6.5 lockstep invariant; `td_component/tdpilot.tox`
+  rebuilt for v1.6.14 (no functional change beyond the version stamp —
+  the auth fix lives entirely on the MCP-server Python side, not in the
+  .tox).
+
 ## 1.6.13 - 2026-05-12
 
 ### Fixed
