@@ -351,6 +351,15 @@ class HintRegistry:
                 if isinstance(when_err, str) and when_err:
                     err_matched = False
                     try:
+                        # error_match is treated as a Python regex so that alternations
+                        # like "brain not installed|popx" in YAML packs work as expected
+                        # (pre-2026-05-12 this was a plain substring match, which meant
+                        # any pipe character was matched literally and multi-term patterns
+                        # in popx.yaml and glslMAT.yaml could never fire).
+                        # The re.error fallback preserves backward-compat for packs that
+                        # use regex-special characters as literals (e.g. bare parentheses).
+                        # Upgraded 2026-05-12 alongside the error_recovery pack, which
+                        # ships alternation patterns extensively.
                         if re.search(when_err, error_l, re.IGNORECASE):
                             err_matched = True
                     except re.error:

@@ -236,6 +236,41 @@ def test_query_by_error_text(tmp_path: Path):
     assert "not_enough_sources" in ids
 
 
+def test_error_match_alternation_pattern_matches_either_term(tmp_path: Path):
+    """v2 (2026-05-12): error_match is regex, so 'foo|bar' matches either term.
+
+    Previously this was substring-match — a pattern with pipes only matched if
+    the error contained the literal pipe-character string. The popx and glslMAT
+    packs ship multi-term alternations that depend on this regex behavior.
+    """
+    reg = _registry_with_pack(
+        tmp_path,
+        "topic",
+        "test_alt",
+        """
+        schema_version: 2
+        topic: test_alt
+        hints:
+          - id: alt_hint
+            priority: useful
+            rule: alternation should work
+            source: test
+            source_kind: skill_pitfall
+            when:
+              error_match: "first_term|second_term"
+        """,
+    )
+    # Match first alternation
+    matches_first = reg.find(error_text="here is first_term in the message")
+    assert any(m.hint.id == "alt_hint" for m in matches_first), "first_term should match"
+    # Match second alternation
+    matches_second = reg.find(error_text="here is second_term in the message")
+    assert any(m.hint.id == "alt_hint" for m in matches_second), "second_term should match"
+    # No match when neither term present
+    matches_none = reg.find(error_text="completely unrelated text")
+    assert not any(m.hint.id == "alt_hint" for m in matches_none), "no terms -> no match"
+
+
 # ── Auto-injection rules ───────────────────────────────────────────
 
 

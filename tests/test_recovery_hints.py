@@ -78,13 +78,18 @@ def test_query_hints_no_match_returns_empty():
 
 
 def test_format_tool_error_attaches_recovery_hint_on_match():
-    """When the error message matches a pattern, the envelope must carry recovery_hints."""
+    """When the error message matches a pattern, the envelope must carry recovery_hints
+    at the canonical location: envelope.error.recovery_hints (NOT nested in details)."""
     exc = TouchDesignerAPIError("No node at path /project1/missing", status_code=404)
     envelope_json = format_tool_error(exc)
     envelope = json.loads(envelope_json)
     assert envelope["success"] is False
-    hints = envelope["error"].get("recovery_hints") or envelope["error"].get("details", {}).get("recovery_hints")
-    assert hints is not None
+    # Canonical location only — no fallback. A misplacement bug must fail this test.
+    assert "recovery_hints" in envelope["error"], "recovery_hints missing from envelope.error"
+    assert "recovery_hints" not in envelope["error"].get("details", {}), (
+        "recovery_hints incorrectly nested in details — must be at error.recovery_hints"
+    )
+    hints = envelope["error"]["recovery_hints"]
     ids = [h["id"] for h in hints]
     assert "path_not_found" in ids
 
