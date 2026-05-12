@@ -451,7 +451,7 @@ class TechniqueStore:
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".json.tmp")
         try:
-            tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+            tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
             tmp.replace(path)
         except Exception as exc:
             logger.error("Failed to write %s: %s", path, exc)
