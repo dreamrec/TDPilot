@@ -7,7 +7,7 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v1.6.12
+# TDPilot Runtime v1.6.14
 
 [![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
@@ -88,6 +88,20 @@ You don't need all 104 tools. Start with these and expand as needed:
 **The loop:** Inspect -> Build -> Verify -> Snapshot -> Repeat.
 
 Everything else (vision, streaming, optimization, planning, TD2025 inspection) builds on top of this core.
+
+## What's New In 1.6.1 – 1.6.14
+
+Stability + ergonomics run since v1.6.0. Tool count unchanged at 104; hint corpus grew to 73 hints across 20 packs. Headlines:
+
+- **v1.6.14** — MCP-server-side auth fix: `TDClient` now resolves the shared secret fresh on every request (env → `~/.tdpilot/.tdpilot.env` → constructor fallback, with 5s cache) and retries once on a 401 after invalidating the cache. Symmetric with the v1.6.13 TD-side fallback — closes the asymmetric half that was still 401ing real sessions when `bootstrap_auth` ran late and a stale module-level secret got baked into the cached `httpx.AsyncClient` headers. Also ships the **TD 2025.32820 release card** (Math Mix / Math Combine POPs, EXR compression, GLSL MAT `TDProjTextureLod`/`TDProjTextureSize`, Blackmagic SDK 16, CUDA 12.9.1, NDI 6.3.1) and a **CI freshness gate** (`scripts/check_release_notes_freshness.py`) that fails when seed cards trail `docs.derivative.ca/Release_Notes` by more than one build.
+- **v1.6.13** — Permanent TD-side auth-race fix: `_current_shared_secret()` in `td_component/mcp_webserver_callbacks.py` now has a file fallback that reads `~/.tdpilot/.tdpilot.env` when `os.environ` is empty. Stops the 401 cascade when TD is opened directly (Dock icon, double-click `.toe`) and inherits an empty env, then `npx tdpilot` later writes the secret to the file.
+- **v1.6.12** — Critical: npm wrapper at `npm/run.js` no longer breaks Claude Desktop's stdio MCP transport. Pre-1.6.12 it emitted progress messages on stdout via `console.log`, but Claude Desktop listens on stdout for JSON-RPC, so every non-JSON line triggered `Unexpected token 'T'…` parse errors. All wrapper output now goes to stderr.
+- **v1.6.11** — DeepSeek-v4 backports: structured `recovery_hints` forwarded through `td_tool_batch` sub-results so the agent gets actionable error context per failed call; byte-stable JSON in `preference_store` and `snapshot_manager` (sorted keys + stable separators) so file diffs reflect actual state changes, not serializer entropy; hint-corpus growth across `error_recovery`, `panel_ui`, `pop`, `popx`, `recording`, and `custom_parameters` topics.
+- **v1.6.10** — "Pin this project to disk `.tox`" pulse + Body status row in the installer panel. Closes the v1.6.6 auto-update gap: pre-1.6.10 the `_save_toe_with_externaltox` mechanism only protected `~/.tdpilot/tdpilot_default.toe`; user-created `.toe` files in arbitrary locations had a frozen embedded COMP body that wouldn't auto-update. One click → externaltox attached → save with `saveExternalToxs=False` → reopen `.toe` → fresh content → automatic updates from then on.
+- **v1.6.2** — Hint schema v2 with `when.surface` routing. Optional per-hint `surface` list (`create_node`, `set_params`, `exec`, `errors`, `plan`, `preview`, `query`, `inspect`, `screenshot`) means hints fire only when the matching surface is in scope. Each tool's auto-injection passes its natural surface automatically; explicit `td_get_hints` callers can narrow with `surface=...`.
+- **v1.6.1** — Hint corpus expansion: 11 → 20 packs, 41 → 73 hints. New packs added for `audio_reactive`, `custom_parameters`, `error_recovery`, `extensions`, `feedback`, `glsl`, `macros`, `panel_ui`, `pop`, `popx`, `recording`, `render_pipeline` topics; op-type-keyed packs for `audiofileinCHOP`, `extensionDAT`, `feedbackTOP`, `geometryCOMP`, `glslMAT`, `glslTOP`, `moviefileoutTOP`, `panelCOMP`.
+
+The v1.6.3 – v1.6.9 line was a six-release sequence around panel rendering + restricted-mode bypass mechanics — captured in `docs/TD_INTRICACIES_AND_PATTERNS.md` (the dev-machine reference doc that came out of that postmortem). Full per-version detail: see [`CHANGELOG.md`](CHANGELOG.md).
 
 ## What's New In 1.6.0
 

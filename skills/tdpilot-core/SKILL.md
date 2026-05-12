@@ -1,7 +1,7 @@
 ---
 name: tdpilot-core
 description: >
-  Core patching discipline for TDPilot v1.6.9 — the AI assistant inside TouchDesigner.
+  Core patching discipline for TDPilot v1.6.14 — the AI assistant inside TouchDesigner.
   Use this skill whenever working with TouchDesigner through the td_ MCP tools.
   It governs how you build, debug, modify, and maintain TD projects: clean node
   layouts with color coding, error checking after every operation, visual
@@ -20,7 +20,7 @@ The goal: every action you take should leave the project cleaner, more readable,
 
 ---
 
-## Complete Tool Surface — v1.6.13 (104 tools, 6 resource templates + 1 static resource)
+## Complete Tool Surface — v1.6.14 (104 tools, 6 resource templates + 1 static resource)
 
 ### Scene & Info (2)
 - `td_get_info` — project name, TD version, OS, FPS, timeline state
@@ -31,7 +31,7 @@ The goal: every action you take should leave the project cleaner, more readable,
 - `td_locations` — save/list/go/delete/rename per-project named network locations (host-side JSON storage in `~/.tdpilot/locations/`)
 
 ### Hints (1) *(NEW v1.6.0, corpus expanded v1.6.1, surface routing v1.6.2)*
-- `td_get_hints` — concise, source-cited rules for a topic / op_type / intent / **surface**. Pure host-side orchestrator over the YAML hint corpus at `src/td_mcp/hints/packs/`. As of v1.6.12: **20 packs / 73 hints** covering 12 topics (audio_reactive, custom_parameters, error_recovery, extensions, feedback, glsl, macros, panel_ui, pop, popx, recording, render_pipeline) and 8 op_types (audiofileinCHOP, extensionDAT, feedbackTOP, geometryCOMP, glslMAT, glslTOP, moviefileoutTOP, panelCOMP).
+- `td_get_hints` — concise, source-cited rules for a topic / op_type / intent / **surface**. Pure host-side orchestrator over the YAML hint corpus at `src/td_mcp/hints/packs/`. As of v1.6.14: **20 packs / 73 hints** covering 12 topics (audio_reactive, custom_parameters, error_recovery, extensions, feedback, glsl, macros, panel_ui, pop, popx, recording, render_pipeline) and 8 op_types (audiofileinCHOP, extensionDAT, feedbackTOP, geometryCOMP, glslMAT, glslTOP, moviefileoutTOP, panelCOMP).
 
   **v1.6.2 surface routing** — schema v2 adds optional `when.surface` per hint: a list of response-surfaces from `{create_node, set_params, exec, errors, plan, preview, query, inspect, screenshot}`. Surface-restricted hints fire only when the matching surface is in scope; unrestricted hints fire from any surface. Each tool's auto-injection passes its natural surface automatically (see `TOOL_SURFACES` in `src/td_mcp/hints/orchestrator.py`); explicit `td_get_hints` callers can pass `surface=...` to narrow.
 
