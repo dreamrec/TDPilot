@@ -422,6 +422,9 @@ class KnowledgeStore:
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".json.tmp")
         try:
+            # sort_keys=True: byte-stable output preserves prompt-cache prefix hits.
+            # Two stores reaching the same final state via different insertion orders
+            # must produce identical bytes on disk (test_memory_byte_stability.py).
             tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
             tmp.replace(path)
         except Exception as exc:

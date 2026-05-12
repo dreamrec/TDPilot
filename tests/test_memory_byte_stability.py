@@ -17,10 +17,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from td_mcp.memory import KnowledgeStore, TechniqueStore
-
 
 # ---------------------------------------------------------------------------
 # TechniqueStore byte-stability tests
@@ -115,9 +112,6 @@ def test_knowledge_store_index_is_byte_stable(tmp_path: Path):
 
     def _insert(store: KnowledgeStore, eid: str, name: str, body: str) -> None:
         """Directly populate the global in-memory dict and flush to disk."""
-        import json as _json
-        from pathlib import Path as _Path
-
         record = {
             "id": eid,
             "name": name,
