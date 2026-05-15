@@ -32,6 +32,13 @@ Thumbs.db
 # Scratch TD projects inside td_component (build artifacts)
 td_component/NewProject*.toe
 
+# Versioned .tox sidecars (e.g. tdpilot1.6.14.tox) — produced alongside the
+# canonical td_component/tdpilot.tox by build_export_mcp_tox.py for local
+# one-click historical access in Finder. The canonical tdpilot.tox stays
+# tracked; per-version sidecars are local-only utility. Git tags already
+# provide historical recovery via `git show vX.Y.Z:td_component/tdpilot.tox`.
+td_component/tdpilot[0-9]*.tox
+
 # Generated QA artifacts (repo-root /reports/ only — don't swallow
 # docs/superpowers/reports/ which holds session review artifacts)
 /reports/

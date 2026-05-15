@@ -7,7 +7,7 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v1.6.14
+# TDPilot Runtime v1.6.15
 
 [![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
@@ -89,7 +89,7 @@ You don't need all 104 tools. Start with these and expand as needed:
 
 Everything else (vision, streaming, optimization, planning, TD2025 inspection) builds on top of this core.
 
-## What's New In 1.6.1 – 1.6.14
+## What's New In 1.6.15 – 1.6.14
 
 Stability + ergonomics run since v1.6.0. Tool count unchanged at 104; hint corpus grew to 73 hints across 20 packs. Headlines:
 

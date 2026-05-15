@@ -26,7 +26,7 @@ import traceback
 # Configuration
 # ─────────────────────────────────────────────────────────────
 
-API_VERSION = "1.6.14"
+API_VERSION = "1.6.15"
 SCREENSHOT_TEMP_PATH = os.path.join(os.environ.get('TEMP', os.environ.get('TMP', '/tmp')), 'td_mcp_screenshot.jpg')
 
 # Auth + policy env is read at CALL TIME, not import time — otherwise TD's
@@ -176,11 +176,63 @@ MONITOR_SUBSCRIPTIONS = {}
 # Main HTTP Router
 # ─────────────────────────────────────────────────────────────
 
+def _record_request_safe(uri, response, t0):
+    """Write per-request telemetry to the sibling state_cache textDAT.
+
+    Best-effort: every error path is swallowed. The state_cache module's
+    ``record_request(tool_name, latency_ms, ok)`` populates ``last_call``,
+    ``latency_ms``, ``request_count``, ``error_count``, and ``ws='OK'``
+    under a single threading.Lock acquisition. Reading is done by the
+    panel renderer's tick() at 1Hz.
+
+    v1.6.15: this writer wire-up was missing since v1.6.7 (when
+    state_cache.py was first shipped) — the state_cache.py docstring
+    explicitly documents that "MCP webserver callbacks write to this
+    cache on every request" but the call sites were never added. The
+    panel stayed stuck on None/-- placeholders for 8 releases until the
+    TD 2025+ auth fix in v1.6.15 made it possible to actually exercise
+    the request path and notice. See feedback_check_plugin_cache_freshness.md
+    in user memory for the surrounding multi-layer cascade.
+
+    ``parent()`` resolves to the mcp_server baseCOMP that contains this
+    callbacks textDAT; ``op('state_cache')`` finds the sibling created
+    by ``_populate_component`` (build_export_mcp_tox.py:437).
+    """
+    try:
+        if uri.startswith('/api/'):
+            tool_name = uri[len('/api/'):].split('?', 1)[0] or '/'
+        else:
+            tool_name = uri or '/'
+        latency_ms = (time.time() - t0) * 1000.0
+        status = int(response.get('statusCode', 200) or 200)
+        ok = status < 400
+        cache = parent().op('state_cache')
+        if cache is None or not hasattr(cache, 'module'):
+            return
+        cache.module.record_request(tool_name, latency_ms, ok)
+    except Exception:
+        pass
+
+
 def onHTTPRequest(webServerDAT, request, response):
     """
     Main entry point for all MCP server requests.
     Routes to handler functions based on URI path.
+
+    v1.6.15: wraps the entire dispatch in try/finally so EVERY return path
+    (OPTIONS preflight, 401 unauth, 403 cross-site, 200/404/500 dispatch)
+    writes telemetry to the sibling state_cache textDAT — feeding the
+    in-TD panel's request_count, error_count, last_call, and latency_ms
+    fields. See ``_record_request_safe`` above for context.
     """
+    _t0 = time.time()
+    try:
+        return _onHTTPRequest_impl(webServerDAT, request, response)
+    finally:
+        _record_request_safe(request.get('uri', '/'), response, _t0)
+
+
+def _onHTTPRequest_impl(webServerDAT, request, response):
     uri = request.get('uri', '/')
     method = request.get('method', 'GET')
 
@@ -311,9 +363,30 @@ def _extract_headers(request):
                 key, value = item.split(':', 1)
                 headers[key.strip().lower()] = value.strip()
 
-    for key in ('authorization', 'x-td-mcp-secret'):
-        if key in request and key not in headers:
-            headers[key] = str(request.get(key)).strip()
+    # TD 2025+ shape: HTTP headers are flattened at the top level of the
+    # request dict (NOT nested under a 'headers' key). They appear with their
+    # raw capitalized names (e.g. 'X-TD-MCP-Secret', 'Authorization', 'Host',
+    # 'User-Agent') alongside TD-system keys like 'method', 'uri', 'pars',
+    # 'data', 'clientAddress', 'serverAddress'. Walk all top-level keys and
+    # treat any non-system string-valued entry as a header. Diagnosed live
+    # 2026-05-15 — symptom was HTTP 401 on every request despite correct
+    # secret, because the old fallback only matched lowercase 'authorization'
+    # / 'x-td-mcp-secret' keys that TD never actually produces. See memory:
+    # feedback_check_plugin_cache_freshness.md (layer 7 + this 8th gotcha).
+    _SYSTEM_KEYS = {
+        'method', 'uri', 'pars', 'data', 'headers',
+        'clientAddress', 'serverAddress',
+    }
+    for key, value in request.items():
+        if key in _SYSTEM_KEYS:
+            continue
+        if not isinstance(value, (str, int, float, bool)):
+            continue
+        lk = str(key).strip().lower()
+        if lk in headers:
+            continue
+        headers[lk] = str(value).strip()
+
     return headers
 
 

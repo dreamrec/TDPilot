@@ -252,7 +252,25 @@ def onStart():
 
 
 def onCreate():
-    return
+    # v1.6.15: onStart only fires on project load (Cmd+Q + reopen). When the
+    # user drags the .tox into an existing project (the canonical install
+    # flow!), onStart never fires for this COMP — so _bootstrap() never
+    # populates the state_cache and the panel reads None for version/build/
+    # tools/ws. Hooking _disable_auth + _bootstrap here makes the panel
+    # populate correctly on drag-drop too. onCreate fires exactly once per
+    # COMP instantiation regardless of trigger (loadTox, drag, scripted
+    # create). Pre-existing v1.6.7+ regression — the panel-bug saga left
+    # this writer wire-up gap when state_cache was first added.
+    #
+    # _refresh_installer() ALSO fires here so the right-panel "Status" row
+    # stops showing the default "(checking)" string within ~1s of drag.
+    # Without this, the only trigger is onFrameStart's 60s tick — for the
+    # first minute after drag, the panel honestly shows the stale default,
+    # which users misread as "the panel is broken." Probe is cheap (file
+    # existence + which() lookups), safe to run synchronously on COMP init.
+    _disable_auth()
+    _bootstrap()
+    _refresh_installer()
 
 
 def onExit():

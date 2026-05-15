@@ -1,5 +1,121 @@
 # Changelog
 
+
+## 1.6.15 - 2026-05-15 — TD 2025+ auth-handshake fix + Pydantic v2 ClassVar fix + auto-versioned .tox sidecars
+
+### Fixed
+
+- **TD 2025+ HTTP request-shape compatibility for auth** (`td_component/mcp_webserver_callbacks.py:298`).
+  `_extract_headers(request)` was looking for headers nested under
+  `request['headers']`, but TD 2025+ flattens HTTP headers at the TOP LEVEL of
+  the WebServer DAT's request dict (alongside `'method'`, `'uri'`, `'pars'`,
+  `'data'`, `'clientAddress'`, `'serverAddress'`). The old fallback only
+  matched lowercase `'authorization'` / `'x-td-mcp-secret'` keys — which TD
+  never produces (TD uses capitalized `X-TD-MCP-Secret`). Result: **every
+  authenticated request returned HTTP 401** on TD 2025+ regardless of correct
+  secret config. The fix walks all top-level request keys, excludes the
+  TD-system key set, and treats the remainder as HTTP headers (lowercased
+  for case-insensitive lookup). Diagnosed live by adding a `print()` probe
+  to a populated callback DAT and observing the actual request structure.
+- **`AttributeError: LEGACY_SCOPES` on every `td_search_nodes` call**
+  (`src/td_mcp/models/_legacy.py:444`). Pydantic v2 was treating
+  `LEGACY_SCOPES: tuple[str, ...] = (...)` as a model field declaration (not
+  a class constant) because of the type annotation, hiding the value from
+  `SearchNodesInput.LEGACY_SCOPES` class-level access. The validator at
+  `cls.LEGACY_SCOPES` was untouched by usage paths (only fires when `scopes=`
+  is passed), so this stayed inert through CI; the bug only surfaced from
+  `registry/tools_data.py:439` which always runs. Fix: wrap both constants
+  in `typing.ClassVar` so Pydantic opts out of treating them as fields. All
+  916 existing tests still pass.
+- **In-TD status panel stuck at None placeholders for 8 releases**
+  (`td_component/autostart.py:onCreate`, `td_component/mcp_webserver_callbacks.py:onHTTPRequest`).
+  `state_cache.py` shipped in v1.6.7 with a documented contract: "MCP
+  webserver callbacks write to this cache on every request." The DAT
+  was created and the renderer wired to read it — but **the writer side
+  was never implemented**, so the panel always showed None placeholders
+  (rendered as `--`). Two distinct gaps:
+  - `autostart.py:onCreate` was empty (`return`); `_bootstrap()` only
+    fired from `onStart`, which doesn't trigger on drag-and-drop /
+    `loadTox` (the canonical install flow!) — only on full project
+    reload. So `version`/`build`/`tools`/`ws` stayed None after every
+    drag install. Fix: hook `_disable_auth()` + `_bootstrap()` in
+    `onCreate` too, which fires on every COMP instantiation.
+  - `mcp_webserver_callbacks.py:onHTTPRequest` never called
+    `state_cache.record_request()`. So `latency_ms`/`last_call`/
+    `request_count`/`error_count` stayed None/0 forever. Fix: wrap the
+    entire dispatch body in `try/finally`; in finally, call new
+    `_record_request_safe(uri, response, t0)` helper which derives
+    tool_name from the URI, computes latency, checks `response['statusCode']`
+    for ok/error, and writes to the sibling `state_cache` textDAT via
+    `parent().op('state_cache').module.record_request(...)`. Every return
+    path (OPTIONS preflight, 401, 403, 404, 200, 500) writes telemetry —
+    error_count correctly increments on every non-2xx. Verified live:
+    after the fix, panel populated with `version=1.6.15`, `build=2025.32820`,
+    `tools=104`, `ws=OK`, `popx=installed 1.2.1`, and per-request fields
+    that update with each call.
+- **`renderer.bootstrap` hardcoded `tools=103`** but the canonical
+  source-of-truth is `EXPECTED_MIN_TOOL_COUNT=104` in
+  `src/td_mcp/release_gates.py`. Bumped to 104; comment now flags it as
+  a sync point with the release-gates constant.
+- **Installer status row stuck at "Not detected" for ~60 seconds after every
+  drag** (`td_component/autostart.py:onCreate`,
+  `td_component/build_tdpilot_tox.py`). The `Installstatus` custom param's
+  default was the literal string `"Not detected"`, and `_refresh_installer()`
+  only fired from `onFrameStart`'s 60-second tick. So for the first minute
+  after every drag the panel honestly showed the misleading default —
+  users would reasonably read this as "the panel detection is broken."
+  Two fixes: (a) `autostart.onCreate` now also calls `_refresh_installer()`
+  so the probe runs synchronously on COMP init (probe is cheap — file
+  existence + which() lookups), and (b) the default param value changed
+  from `"Not detected"` to `"(checking)"` matching the existing
+  `Bodystatus` pattern (`renderer.py:131` already filters `(checking)`
+  from rendering, so the row gracefully hides until the probe writes a
+  real status). Verified live: after fresh drag, Status flipped within
+  ~1s to "Partial: missing TD autoload" — the user's actual install
+  state.
+
+### Added
+
+- **Auto-versioned `.tox` sidecar emission with version-named COMP**
+  (`td_component/build_export_mcp_tox.py`).
+  After writing the canonical `td_component/tdpilot.tox` (whose embedded
+  COMP is named `mcp_server`, unchanged — preserves all
+  `op('/local/mcp_server')` code paths), the build now ALSO writes
+  `td_component/tdpilot<VERSION>.tox` whose embedded COMP is named
+  `tdpilot<VERSION>` (with underscores — e.g. `tdpilot1_6_15`, since TD
+  operator names disallow dots). When a user drags this sidecar into TD,
+  the resulting COMP shows the version in its node label immediately
+  rather than the generic `mcp_server`. Reads `__version__` from
+  `src/td_mcp/__init__.py` at build time; graceful fallback (WARN + skip
+  sidecar OR copy without rename) if either the version can't be parsed
+  or TD rejects the rename. The canonical write is the sacred contract;
+  the sidecar never blocks it.
+- **Dynamic version string in the info DAT**
+  (`td_component/build_export_mcp_tox.py:_build_info_text`). The embedded
+  info DAT inside the mcp_server COMP previously hardcoded
+  `"TDPilot v1.3 MCP server component"` — stale by 12+ releases. Now reads
+  `__version__` and renders the current version (e.g.
+  `"TDPilot v1.6.15 MCP server component"`).
+- **`.gitignore` rule for versioned sidecars** (`td_component/tdpilot[0-9]*.tox`).
+  Pattern requires a digit immediately after `tdpilot`, so `tdpilot.tox`
+  (canonical) stays tracked while `tdpilot1.6.15.tox` (sidecar) is
+  local-only. Historical recovery is still available via
+  `git show vX.Y.Z:td_component/tdpilot.tox` at any release tag.
+
+### Notes
+
+- This release MUST trigger a `.tox` rebuild inside TouchDesigner before
+  any install path picks it up — the `.tox` is a snapshot of the source
+  files baked at build time. CI's `scripts/check_tox_freshness.py` enforces
+  this via `td_component/.tox-source-hash.json`.
+- Both fixes were discovered in a single debugging session that started
+  with HTTP 401 on every MCP→TD call. The cascade ran through seven
+  staleness layers (marketplace, plugin cache, installed_plugins.json,
+  Claude Code MCP-server process, user-data `.tox`, in-memory `.tox`,
+  TD's `/local/mcp_server` populated COMP) before reaching this real
+  source-code bug, and the search bug only surfaced because auth started
+  working.
+
 ## 1.6.14 - 2026-05-12
 
 ### Added

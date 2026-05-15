@@ -12,7 +12,7 @@ re-exporting the current flat namespace so external callers don't break.
 """
 
 from enum import Enum
-from typing import Any
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -441,8 +441,16 @@ class SearchNodesInput(BaseModel):
     )
     limit: int = Field(default=50, ge=1, le=200, description="Max results")
 
-    LEGACY_SCOPES: tuple[str, ...] = ("name", "type", "family", "all")
-    NEW_SCOPES: tuple[str, ...] = ("dat_text", "param_exprs")
+    # NOTE: ClassVar is REQUIRED here — without it, Pydantic v2 treats the
+    # annotated assignment as a model field declaration, hides the value from
+    # class-level attribute access (e.g. ``SearchNodesInput.LEGACY_SCOPES``),
+    # and raises AttributeError at the call sites in
+    # ``registry/tools_data.py``. Diagnosed live on 2026-05-15 right after
+    # the TD-2025+ auth bug was fixed — first ``td_search_nodes`` call
+    # surfaced this immediately. Both constants stay tuples (immutable —
+    # ``set(...) | set(...)`` works in the validator).
+    LEGACY_SCOPES: ClassVar[tuple[str, ...]] = ("name", "type", "family", "all")
+    NEW_SCOPES: ClassVar[tuple[str, ...]] = ("dat_text", "param_exprs")
 
     @field_validator("search_type")
     @classmethod
