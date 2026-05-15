@@ -195,7 +195,12 @@ PANEL_H = 320
 # Order matters - TD respects insertion order on the page.
 _INSTALL_PAGE = [
     ("Installhdr", "Header", "TDPilot Installer", None),
-    ("Installstatus", "Str", "Status", "(checking)"),  # v1.6.15: was "Not detected" — misleading placeholder before the autostart probe fires. "(checking)" matches the existing Bodystatus default and signals "probe in progress" instead of falsely declaring nothing is installed.
+    (
+        "Installstatus",
+        "Str",
+        "Status",
+        "(checking)",
+    ),  # v1.6.15: was "Not detected" — misleading placeholder before the autostart probe fires. "(checking)" matches the existing Bodystatus default and signals "probe in progress" instead of falsely declaring nothing is installed.
     ("Detectstate", "Pulse", "Detect State", None),
     ("Actionshdr", "Header", "Actions", None),
     ("Bootstrapall", "Pulse", "Bootstrap All (clone + plugin + autoload)", None),
