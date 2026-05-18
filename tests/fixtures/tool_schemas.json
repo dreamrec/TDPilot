@@ -696,6 +696,27 @@
       "path"
     ]
   },
+  "td_get_activity_log": {
+    "description_present": true,
+    "properties": {
+      "limit": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "integer"
+      },
+      "tool_filter": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": []
+  },
   "td_get_build_compatibility": {
     "description_present": true,
     "properties": {
@@ -2415,6 +2436,18 @@
     "required": [
       "query"
     ]
+  },
+  "td_self_update": {
+    "description_present": true,
+    "properties": {
+      "check_only": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      }
+    },
+    "required": []
   },
   "td_set_content": {
     "description_present": true,

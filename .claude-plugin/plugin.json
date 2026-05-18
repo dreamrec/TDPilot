@@ -1,7 +1,7 @@
 {
   "name": "tdpilot",
-  "version": "1.6.15",
-  "description": "TDPilot \u2014 AI copilot for TouchDesigner. 104 MCP tools for live node graph control, parameter management, diagnostics, safety, streaming, knowledge corpus, focus + locations, hint injection, component notes, technique memory, and typed patch sessions.",
+  "version": "1.6.16",
+  "description": "TDPilot \u2014 AI copilot for TouchDesigner. 106 MCP tools for live node graph control, parameter management, diagnostics, safety, streaming, knowledge corpus, focus + locations, hint injection, component notes, technique memory, typed patch sessions, agent activity log, and one-tool self-update.",
   "author": {
     "name": "silviu"
   },

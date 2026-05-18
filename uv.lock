@@ -1170,7 +1170,7 @@ wheels = [
 
 [[package]]
 name = "tdpilot"
-version = "1.6.14"
+version = "1.6.15"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },

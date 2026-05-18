@@ -220,7 +220,7 @@ def bootstrap():
     cache_dat.module.update(
         version=version,
         build=build_str,
-        tools=104,  # keep in sync with EXPECTED_MIN_TOOL_COUNT in release_gates.py
+        tools=106,  # keep in sync with EXPECTED_MIN_TOOL_COUNT in release_gates.py
         popx=_detect_popx(),
         ws="OK",
     )

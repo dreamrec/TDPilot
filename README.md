@@ -7,14 +7,14 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v1.6.15
+# TDPilot Runtime v1.6.16
 
 [![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
 [![downloads](https://img.shields.io/npm/dm/tdpilot?label=downloads)](https://www.npmjs.com/package/tdpilot)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![python](https://img.shields.io/badge/python-3.10%2B-blue)](./pyproject.toml)
-[![MCP tools](https://img.shields.io/badge/MCP%20tools-104-blueviolet)](./docs/API_REFERENCE.md)
+[![MCP tools](https://img.shields.io/badge/MCP%20tools-106-blueviolet)](./docs/API_REFERENCE.md)
 [![TouchDesigner](https://img.shields.io/badge/TouchDesigner-2025.30000%2B-ff6200)](https://derivative.ca)
 
 **TDPilot Runtime** is an MCP server for TouchDesigner.
@@ -31,7 +31,7 @@ It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networ
 /plugin install tdpilot@dreamrec-TDPilot
 ```
 
-That installs all **104 MCP tools**, 3 skills (`tdpilot-core`, `tdpilot-production`, `popx-touchdesigner`), 2 slash commands (`/td-check`, `/td-snapshot`), and the TD-side `.tox` component — one command, no Python setup required.
+That installs all **106 MCP tools**, 3 skills (`tdpilot-core`, `tdpilot-production`, `popx-touchdesigner`), 2 slash commands (`/td-check`, `/td-snapshot`), and the TD-side `.tox` component — one command, no Python setup required.
 
 **Shell one-liner alternative:**
 
@@ -70,11 +70,11 @@ Using Claude Desktop instead of Claude Code? See [`docs/INSTALL_CLAUDE_PLUGIN.md
 - A structured toolset for scene edits, diagnostics, event monitoring, and recovery.
 - A workflow-oriented MCP built for iterative patch development, not one-shot guessing.
 - A technique memory system that learns from your projects and builds a reusable library.
-- 104-tool runtime surface with focus + locations, hint injection, component notes, knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, custom parameter authoring, and typed patch sessions.
+- 106-tool runtime surface with focus + locations, hint injection, component notes, knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, custom parameter authoring, typed patch sessions, agent activity log, and one-tool self-update.
 
 ## Start Here: Core Workflow
 
-You don't need all 104 tools. Start with these and expand as needed:
+You don't need all 106 tools. Start with these and expand as needed:
 
 | Step | Tools | What You're Doing |
 |------|-------|-------------------|
@@ -89,9 +89,11 @@ You don't need all 104 tools. Start with these and expand as needed:
 
 Everything else (vision, streaming, optimization, planning, TD2025 inspection) builds on top of this core.
 
-## What's New In 1.6.15 – 1.6.14
+## What's New In 1.6.16 – 1.6.14
 
-Stability + ergonomics run since v1.6.0. Tool count unchanged at 104; hint corpus grew to 73 hints across 20 packs. Headlines:
+Stability + ergonomics run since v1.6.0. v1.6.16 adds two new agent-observability tools (`td_get_activity_log`, `td_self_update`); tool count 104 → 106. Hint corpus stays at 73 hints across 20 packs. Headlines:
+
+- **v1.6.16** — Agent-observability + self-update. Every tool response now carries a `_read_journal` hint (`call_count`, `result_unchanged`, `first_seen_at`, `last_seen_at`) so Claude can see across MCP request boundaries which reads have moved and which haven't — no more wasted token cycles re-fetching the same view of `td_get_nodes`. A 200-entry server-side activity ring buffer mirrors to an in-TD Table DAT (`/local/mcp_server/activity_log`) so users can wire agent activity into their visuals. New `td_self_update` MCP tool hits the GitHub releases API and (optionally) writes the latest `tdpilot.tox` to all three install paths (repo, Claude Code plugin cache, `~/.tdpilot/`) with md5 sync reporting — closing the seven-layer staleness saga documented in user memory.
 
 - **v1.6.14** — MCP-server-side auth fix: `TDClient` now resolves the shared secret fresh on every request (env → `~/.tdpilot/.tdpilot.env` → constructor fallback, with 5s cache) and retries once on a 401 after invalidating the cache. Symmetric with the v1.6.13 TD-side fallback — closes the asymmetric half that was still 401ing real sessions when `bootstrap_auth` ran late and a stale module-level secret got baked into the cached `httpx.AsyncClient` headers. Also ships the **TD 2025.32820 release card** (Math Mix / Math Combine POPs, EXR compression, GLSL MAT `TDProjTextureLod`/`TDProjTextureSize`, Blackmagic SDK 16, CUDA 12.9.1, NDI 6.3.1) and a **CI freshness gate** (`scripts/check_release_notes_freshness.py`) that fails when seed cards trail `docs.derivative.ca/Release_Notes` by more than one build.
 - **v1.6.13** — Permanent TD-side auth-race fix: `_current_shared_secret()` in `td_component/mcp_webserver_callbacks.py` now has a file fallback that reads `~/.tdpilot/.tdpilot.env` when `os.environ` is empty. Stops the 401 cascade when TD is opened directly (Dock icon, double-click `.toe`) and inherits an empty env, then `npx tdpilot` later writes the secret to the file.
@@ -205,7 +207,7 @@ Use this loop for every non-trivial task:
 
 6. **Control token cost** — Prefer metadata checks over continuous image payloads. Ask the user before enabling high-token frame streaming.
 
-## Tool Map (104 Tools)
+## Tool Map (106 Tools)
 
 ### 1) Scene + Timeline + Project Lifecycle
 Use for global context, playback control, save/load, and undo operations.

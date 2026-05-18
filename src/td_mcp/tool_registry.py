@@ -846,16 +846,47 @@ async def _forward(
     audit_details: dict[str, Any] | None = None,
 ) -> str:
     finish = _start_tool(ctx, tool_name)
+    started = time.perf_counter()
+    success = False
+    data: Any = None
     try:
         data = await _get_client(ctx).request(endpoint, body)
         if audit_event:
             _audit_log(ctx, audit_event, audit_details or (body or {}))
-        return _as_json_output(data)
+        output = _as_json_output(data)
+        success = True
+        # Annotate with read-journal hint so repeat calls surface
+        # "result_unchanged" without changing observable behavior. Defensive:
+        # any failure inside journaling is swallowed — a malformed entry
+        # must never break the tool response.
+        try:
+            from td_mcp import read_journal as _read_journal
+
+            hint = _read_journal.record_call(tool_name, body, data)
+            output = _read_journal.attach_hint(output, hint)
+        except Exception:
+            pass
+        return output
     except Exception as exc:
         _record_tool_error(ctx, tool_name)
         return format_tool_error(exc)
     finally:
         finish()
+        # Append to the activity ring buffer (server-side + in-TD Table DAT
+        # mirror via event_emitter). Defensive: a failure here must never
+        # break the tool response, hence the broad except.
+        try:
+            from td_mcp import activity_log as _activity_log
+
+            _activity_log.record(
+                tool_name=tool_name,
+                args=body,
+                result=data,
+                duration_ms=(time.perf_counter() - started) * 1000.0,
+                ok=success,
+            )
+        except Exception:
+            pass
 
 
 def _current_exec_mode() -> str:
@@ -2060,6 +2091,10 @@ from td_mcp.registry.tools_memory import (  # noqa: E402
     td_memory_recall,
     td_memory_replay,
     td_memory_save,
+)
+from td_mcp.registry.tools_meta import (  # noqa: E402
+    td_get_activity_log,
+    td_self_update,
 )
 from td_mcp.registry.tools_notes import (  # noqa: E402
     td_component_notes,

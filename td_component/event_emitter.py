@@ -112,3 +112,56 @@ def stats():
     result["buffer_depth"] = len(_BUFFER)
     result["dedupe_keys"] = len(_LAST_EMIT)
     return result
+
+
+# ─────────────────────────────────────────────────────────────
+# Activity log mirror (v1.6.16)
+# ─────────────────────────────────────────────────────────────
+# The MCP server keeps a ring buffer of recent tool calls. When TD is
+# connected via the ws_callbacks bridge, ws_callbacks dispatches an
+# ``activity`` message into this module's ``append_activity_row`` so the
+# same data lands in a Table DAT named ``activity_log`` inside the
+# ``mcp_server`` COMP. Users can wire that DAT into their visual patch —
+# agent activity becomes an addressable data source.
+
+ACTIVITY_DAT_CANDIDATES = (
+    "/local/mcp_server/activity_log",
+    "/project1/mcp_server/activity_log",
+    "activity_log",
+)
+ACTIVITY_MAX_ROWS = 200
+ACTIVITY_HEADER = ("ts", "tool", "args_summary", "duration_ms", "ok")
+
+
+def _resolve_activity_dat():
+    for path in ACTIVITY_DAT_CANDIDATES:
+        dat = op(path)
+        if dat is not None:
+            return dat
+    return None
+
+
+def append_activity_row(row):
+    """Append one row to the in-TD activity_log Table DAT.
+
+    ``row`` is a 5-tuple matching ``ACTIVITY_HEADER``. The DAT is treated
+    as a rolling window — when row count exceeds ``ACTIVITY_MAX_ROWS``,
+    the oldest non-header row is dropped.
+
+    Returns True when the row was written, False when the DAT can't be
+    resolved (TD-side wiring missing) — both cases must not raise.
+    """
+    dat = _resolve_activity_dat()
+    if dat is None:
+        return False
+    try:
+        # If empty, seed with the header row.
+        if dat.numRows == 0:
+            dat.appendRow(list(ACTIVITY_HEADER))
+        dat.appendRow([str(cell) for cell in row])
+        # Trim oldest rows (keep header at index 0).
+        while dat.numRows > ACTIVITY_MAX_ROWS + 1:
+            dat.deleteRow(1)
+        return True
+    except Exception:
+        return False
