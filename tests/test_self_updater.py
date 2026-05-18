@@ -16,7 +16,6 @@ import pytest
 
 from td_mcp import self_updater
 
-
 # ──────────────────────────────────────────────────────────
 # Pure version-comparison logic
 # ──────────────────────────────────────────────────────────

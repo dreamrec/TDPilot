@@ -308,7 +308,7 @@ async def audit_concurrent_calls(ctx: SimpleNamespace) -> None:
     check(
         "8.1  concurrent: 10 parallel calls all have envelopes",
         all("_read_journal" in p for p in parsed_all),
-        f"all hinted",
+        "all hinted",
     )
     check(
         "8.2  concurrent: call_count reaches 10 monotonically (no lost counts)",

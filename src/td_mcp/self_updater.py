@@ -60,8 +60,9 @@ import os
 import re
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 GITHUB_RELEASES_URL = "https://api.github.com/repos/dreamrec/TDPilot/releases/latest"
 DEFAULT_ASSET_NAME = "tdpilot.tox"
