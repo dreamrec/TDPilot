@@ -238,6 +238,31 @@ All tools in this section execute Python inside TouchDesigner. Most require `ful
 | `td_get_server_metrics` | Get MCP server runtime metrics: telemetry, events, streams, safety, snapshots, jobs, audit status. | _(none)_ | JSON with `runtime`, `telemetry`, `events`, `visual_monitor`, `top_stream`, `safety`, `snapshots`, `jobs`, `audit_enabled`. |
 | `td_describe_surface` | Describe the MCP server surface: tool count, resource count, capabilities, version. | _(none)_ | JSON with `version`, `tool_count`, `resource_count`, `capabilities`. |
 | `td_tool_batch` | Dispatch up to 8 tool calls in a single model roundtrip. Sequential execution; per-call failures don't abort siblings. Backport from deepseek-v4. | `calls` (list[dict], **required**, max 8): Each entry is `{tool: str, args: dict}`. | JSON with `ok: true`, `count` (int), `results` array of `{tool, ok, result, error, elapsed_ms}`. |
+| `td_get_activity_log` *(new in v1.6.16)* | Return recent tool-call activity from a 200-entry server-side ring buffer (mirrored to in-TD Table DAT `/local/mcp_server/activity_log`). | `limit` (int, default 20, 1-200), `tool_filter` (str, optional, exact tool name match). | JSON with `schema_version`, `count`, `max_buffer`, `entries[]` (newest first; each entry has `ts`, `tool`, `args_summary`, `result_summary`, `duration_ms`, `ok`). |
+| `td_self_update` *(new in v1.6.16)* | Check (and optionally install) the latest TDPilot release from GitHub. Pure-stdlib so it also runs from TD Textport via `python -m td_mcp.self_updater`. | `check_only` (bool, default `True`). When `False`, downloads the asset and writes it to the three install paths (repo working-tree, Claude Code plugin cache, `~/.tdpilot/`). | JSON with `installed`, `latest`, `newer_available`, `release_url`, `follow_up` (re-run-setup_mcp_in_td.py reminder). When `check_only=False` and an update happened: `installed_to[]`, `md5{path: hash}`, `bytes_written`. |
+
+### Response envelope: `_read_journal` *(new in v1.6.16)*
+
+Every successful tool response routed through the MCP dispatcher now carries an
+extra top-level field on its JSON envelope:
+
+```json
+{
+  "...tool-specific fields...": "...",
+  "_read_journal": {
+    "call_count": 3,
+    "first_seen_at": "2026-05-18T18:30:00Z",
+    "last_seen_at":  "2026-05-18T18:32:01Z",
+    "result_unchanged": true
+  }
+}
+```
+
+* `call_count` — how many times this session has dispatched the same tool with the same arguments.
+* `result_unchanged` — `null` on the first call; `true` when the repeated result hash matches the previous one; `false` when it differs.
+* The journal is **advisory only** — every call still executes against TD. The hint exists so AI agents can decide whether to re-fetch across MCP request boundaries without paying token cost on stable data.
+* Bounded to 500 distinct `(tool_name, args_fingerprint)` keys; oldest-by-`last_seen_at` evicted under pressure.
+* **Not** attached on error responses (4xx / `success: false` envelopes) — error responses have no meaningful "result hash" to dedupe.
 
 ---
 

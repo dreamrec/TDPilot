@@ -309,9 +309,9 @@ def _read_pkg_version(repo_root):
 def _save_versioned_export(repo_root, export_comp, canonical_path):
     """Save a versioned `.tox` sidecar with a version-named COMP baked in.
 
-    For ``td_component/tdpilot.tox`` at version ``1.6.15`` this produces
-    ``td_component/tdpilot1.6.15.tox`` whose embedded COMP is named
-    ``tdpilot1_6_15`` (underscores — TD operator names disallow dots).
+    For ``td_component/tdpilot.tox`` at version ``1.6.16`` this produces
+    ``td_component/tdpilot1.6.16.tox`` whose embedded COMP is named
+    ``tdpilot1_6_16`` (underscores — TD operator names disallow dots).
     Result: when a user drags this `.tox` into TD's network view, the
     resulting COMP shows the version in its node label immediately —
     no need to open the info DAT to identify which build is loaded.
@@ -325,7 +325,7 @@ def _save_versioned_export(repo_root, export_comp, canonical_path):
     then renaming back to ``mcp_server`` before the caller's downstream
     install step runs.
 
-    Filename keeps dots (``tdpilot1.6.15.tox``) for semver clarity and to
+    Filename keeps dots (``tdpilot1.6.16.tox``) for semver clarity and to
     match Finder-friendly version strings; COMP name uses underscores
     (``tdpilot1_6_15``) because TD operator names allow only alphanumerics
     and underscores.
