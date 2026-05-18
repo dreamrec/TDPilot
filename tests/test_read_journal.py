@@ -145,6 +145,7 @@ def test_snapshot_entries_have_tool_and_count():
 def test_attach_hint_to_json_string():
     """attach_hint() splices _read_journal into a JSON-string response."""
     import json
+
     response = json.dumps({"nodes": []})
     hint = read_journal.record_call("td_get_nodes", {}, {"nodes": []})
     new_response = read_journal.attach_hint(response, hint)
@@ -163,6 +164,7 @@ def test_attach_hint_to_dict():
 def test_attach_hint_to_non_dict_string_is_passthrough():
     """If JSON parses to a list (or other non-dict), attach_hint must not crash."""
     import json
+
     response = json.dumps([1, 2, 3])
     hint = read_journal.record_call("t", {}, [1, 2, 3])
     out = read_journal.attach_hint(response, hint)

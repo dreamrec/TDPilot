@@ -270,7 +270,7 @@ async def audit_td_self_update_tool(ctx: SimpleNamespace) -> None:
         check(
             "6.3  follow_up reminder present (post-update setup hint)",
             "follow_up" in parsed and "setup_mcp_in_td" in parsed.get("follow_up", ""),
-            f"follow_up={parsed.get('follow_up','')[:80]!r}",
+            f"follow_up={parsed.get('follow_up', '')[:80]!r}",
         )
 
 
@@ -299,9 +299,7 @@ async def audit_concurrent_calls(ctx: SimpleNamespace) -> None:
     """Fire 10 parallel calls; verify no race conditions in journal/log."""
     read_journal.reset()
     activity_log.reset()
-    results = await asyncio.gather(
-        *[tr._forward(ctx, "td_list_families", "families") for _ in range(10)]
-    )
+    results = await asyncio.gather(*[tr._forward(ctx, "td_list_families", "families") for _ in range(10)])
     # All 10 should have read_journal hints with call_count summing to ≥ 10
     parsed_all = [_parse_envelope(r) for r in results]
     counts = sorted(p["_read_journal"]["call_count"] for p in parsed_all)
@@ -350,6 +348,7 @@ async def audit_module_imports() -> None:
         "",
     )
     from td_mcp import self_updater
+
     check(
         "10.3 td_mcp.self_updater module loads cleanly",
         callable(self_updater.run) and callable(self_updater.is_newer),
