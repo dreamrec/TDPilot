@@ -15,4 +15,6 @@ from __future__ import annotations
 # 2026-05-02: bumped 101 → 102 with td_get_hints (v1.6.0 Phase 2).
 # 2026-05-02: bumped 102 → 103 with td_component_notes (v1.6.0 Phase 3).
 # 2026-05-12: bumped 103 → 104 with td_tool_batch (deepseek-v4 backport).
-EXPECTED_MIN_TOOL_COUNT: int = 104
+# 2026-05-18: bumped 104 → 106 with td_get_activity_log + td_self_update
+#             (v1.6.16 agent-observability + auto-update surface).
+EXPECTED_MIN_TOOL_COUNT: int = 106

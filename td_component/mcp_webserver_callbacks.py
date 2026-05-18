@@ -26,7 +26,7 @@ import traceback
 # Configuration
 # ─────────────────────────────────────────────────────────────
 
-API_VERSION = "1.6.15"
+API_VERSION = "1.6.16"
 SCREENSHOT_TEMP_PATH = os.path.join(os.environ.get('TEMP', os.environ.get('TMP', '/tmp')), 'td_mcp_screenshot.jpg')
 
 # Auth + policy env is read at CALL TIME, not import time — otherwise TD's
@@ -198,6 +198,10 @@ def _record_request_safe(uri, response, t0):
     callbacks textDAT; ``op('state_cache')`` finds the sibling created
     by ``_populate_component`` (build_export_mcp_tox.py:437).
     """
+    # v1.6.16: prep block — wrapped tight so any failure here aborts both
+    # writers cleanly. Both writers below are INDEPENDENT try blocks so a
+    # state_cache compile error (DAT empty / Python syntax error in its
+    # text) can't take down the activity_log mirror.
     try:
         if uri.startswith('/api/'):
             tool_name = uri[len('/api/'):].split('?', 1)[0] or '/'
@@ -206,10 +210,37 @@ def _record_request_safe(uri, response, t0):
         latency_ms = (time.time() - t0) * 1000.0
         status = int(response.get('statusCode', 200) or 200)
         ok = status < 400
-        cache = parent().op('state_cache')
-        if cache is None or not hasattr(cache, 'module'):
-            return
-        cache.module.record_request(tool_name, latency_ms, ok)
+    except Exception:
+        return
+
+    # state_cache writer — feeds the in-TD status panel.
+    # NOTE: avoid hasattr(cache, 'module'). TD's tdError on a broken
+    # state_cache.module access propagates through hasattr() (which
+    # only catches AttributeError), so a separate try/except is the
+    # only safe shape.
+    try:
+        cache = me.parent().op('state_cache')
+        if cache is not None:
+            cache.module.record_request(tool_name, latency_ms, ok)
+    except Exception:
+        pass
+
+    # activity_log mirror — feeds the in-TD Table DAT for visual wiring
+    # and the new td_get_activity_log MCP tool. Uses me.parent() (instance
+    # method, always defined) instead of the bare parent() global to be
+    # safe across TD module-load contexts.
+    try:
+        emitter = me.parent().op('event_emitter')
+        if emitter is not None:
+            ts_iso = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+            row = (
+                ts_iso,
+                tool_name,
+                '',  # args summary not available TD-side; surfaced via td_get_activity_log instead
+                '%.2f' % latency_ms,
+                '1' if ok else '0',
+            )
+            emitter.module.append_activity_row(row)
     except Exception:
         pass
 

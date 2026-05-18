@@ -1,6 +1,92 @@
 # Changelog
 
 
+## 1.6.16 - 2026-05-18 — Agent observability (read journal + activity log) + one-tool self-update
+
+### Added
+
+- **`_read_journal` response hint on every dispatched tool** (`src/td_mcp/read_journal.py`,
+  wired in `src/td_mcp/tool_registry.py:_forward`). Each tool response now carries a
+  `{call_count, first_seen_at, last_seen_at, result_unchanged}` envelope keyed by
+  (tool_name, args_fingerprint). The model can see, across MCP request boundaries,
+  whether a repeat call returned the same result hash — eliminating the wasted
+  token cycles of re-fetching `td_get_nodes("/project1")` seven times when nothing
+  has moved. The journal is **advisory only**: every call still executes against
+  TD, so a mutating scene never serves stale data. Bounded to 500 distinct
+  fingerprints, oldest-by-`last_seen_at` evicted under pressure. Thread-safe
+  module-level dict (same pattern as `state_cache`).
+- **`td_get_activity_log` MCP tool + 200-entry server-side ring buffer**
+  (`src/td_mcp/activity_log.py`, `src/td_mcp/registry/tools_meta.py`).
+  Every `_forward` dispatch appends one entry: `{ts, tool, args_summary,
+  result_summary, duration_ms, ok}`. `td_get_activity_log(limit, tool_filter)`
+  returns recent entries newest-first so Claude can ask "what have I done
+  this session?" without scrolling its own context. Optimized for time
+  ordering (vs `_read_journal`, which dedupes by fingerprint).
+- **In-TD `activity_log` Table DAT mirror** (`td_component/build_export_mcp_tox.py`,
+  `td_component/event_emitter.py:append_activity_row`,
+  `td_component/mcp_webserver_callbacks.py:_record_request_safe`). A new
+  Table DAT at `/local/mcp_server/activity_log` is populated on every MCP
+  HTTP request with the same five-column schema as the server-side buffer.
+  Users can chain this DAT into their visuals (Select DAT → Text TOP / CHOP
+  pipeline) so the AI's actions become an addressable, time-windowed
+  data source inside the live patch. Rolling window of 200 rows.
+- **`td_self_update` MCP tool + `td_mcp/self_updater.py`**. Hits the GitHub
+  releases API for `dreamrec/TDPilot`, compares the latest semver against
+  the running `__version__`, and (when `check_only=False`) downloads the
+  release asset and writes it to all three install paths the user-memory
+  staleness saga identified: the repo working-tree `td_component/`, the
+  Claude Code plugin cache `~/.claude/plugins/cache/dreamrec-TDPilot/.../`,
+  and the user-data dir `~/.tdpilot/td_component/`. Reports md5 sums per
+  path so the caller can verify three-way sync. The follow-up step
+  ("re-run setup_mcp_in_td.py inside TD Textport to refresh `/local/mcp_server`")
+  is included in the response payload so the seventh staleness layer
+  (live in-TD COMP) doesn't get forgotten. Pure stdlib (`urllib.request`,
+  `hashlib`) so it also runs inside TouchDesigner's Python interpreter via
+  `python -m td_mcp.self_updater`.
+
+### Changed
+
+- **Tool count 104 → 106** (`src/td_mcp/release_gates.py:EXPECTED_MIN_TOOL_COUNT`).
+  Two new tools above. All user-facing copies bumped: README badges, npm
+  description, plugin manifests, marketplace.json, skills, docs, CHANGELOG.
+- **`_forward` dispatch wrapper** (`src/td_mcp/tool_registry.py:839`) now runs
+  the read-journal + activity-log hooks in `try/finally` blocks. Failures
+  inside either observability layer are swallowed — they must never break
+  a tool response. Timing precision via `time.perf_counter` so reported
+  `duration_ms` includes only the TD round-trip + serialization.
+
+### Fixed
+
+- **`state_cache.py` source was never baked into the textDAT**
+  (`td_component/build_export_mcp_tox.py:build_and_export`). The file
+  was added to `_TOX_SOURCE_FILES` in v1.6.7 for freshness-hash tracking
+  but the `_populate_component` callers never passed `state_cache_code`,
+  so the DAT shipped with empty `.text`. Accessing `.module` on an empty
+  Text DAT raises `td.tdError: Module compilation error`, which
+  propagated through `hasattr(cache, 'module')` (only catches
+  `AttributeError`) and aborted the surrounding state_cache writer. v1.6.16
+  reads `td_component/state_cache.py` and threads it through both
+  `_populate_component` call sites. Latent since v1.6.7; surfaced when
+  the new dual-writer in `_record_request_safe` exposed the same code
+  path more directly.
+- **`_record_request_safe` lost the activity_log mirror when state_cache
+  raised** (`td_component/mcp_webserver_callbacks.py`). The state_cache
+  and activity_log writers shared one outer try/except, so a state_cache
+  `tdError` (above) killed both. v1.6.16 splits them into independent
+  try blocks and switches the `parent()` global to the always-defined
+  `me.parent()` instance method, so the activity_log mirror is resilient
+  to any future state_cache breakage.
+
+### Migration
+
+- No breaking surface changes. Every existing tool keeps its current
+  signature; the new `_read_journal` field is purely additive on responses.
+- Users who already have v1.6.15 installed can either reinstall the plugin
+  the normal way OR call the new `td_self_update(check_only=False)` from
+  Claude after upgrading to v1.6.16. The latter is the single-command flow
+  the rest of this release was built to enable.
+
+
 ## 1.6.15 - 2026-05-15 — TD 2025+ auth-handshake fix + Pydantic v2 ClassVar fix + auto-versioned .tox sidecars
 
 ### Fixed

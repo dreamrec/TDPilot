@@ -435,6 +435,14 @@ def _populate_component(comp, callbacks_code, event_emitter_code, ws_callbacks_c
     # docstring above for context. Created here so every fresh loadTox
     # produces a panel-renderable COMP.
     state_cache = _create_with_fallback(comp, ("textDAT",), "state_cache")
+    # v1.6.16: activity_log Table DAT — a rolling mirror of the MCP
+    # server's tool-call ring buffer. Each row is one tool dispatch:
+    # ``ts | tool | args_summary | duration_ms | ok``. event_emitter
+    # appends here via ``append_activity_row`` when the ws_callbacks
+    # bridge delivers an ``activity`` message. Users can chain this DAT
+    # into their visuals so the agent's actions become an addressable
+    # data stream inside the live patch.
+    activity_log = _create_with_fallback(comp, ("tableDAT",), "activity_log")
 
     _set_first_par(webserver, ("port",), WEB_PORT)
     _set_first_par(webserver, ("active", "enable"), 1)
@@ -445,6 +453,14 @@ def _populate_component(comp, callbacks_code, event_emitter_code, ws_callbacks_c
     event_emitter.text = event_emitter_code
     info.text = info_text
     state_cache.text = state_cache_code
+    # Seed the activity_log with its header row so wiring is non-empty
+    # before the first MCP request lands. Subsequent rows are appended
+    # by event_emitter.append_activity_row.
+    try:
+        activity_log.clear()
+        activity_log.appendRow(["ts", "tool", "args_summary", "duration_ms", "ok"])
+    except Exception:
+        pass
 
     _configure_websocket_dat(ws_client)
 
@@ -456,6 +472,7 @@ def _populate_component(comp, callbacks_code, event_emitter_code, ws_callbacks_c
         event_emitter.nodeX, event_emitter.nodeY = 520, -180
         info.nodeX, info.nodeY = 520, 0
         state_cache.nodeX, state_cache.nodeY = 780, -90
+        activity_log.nodeX, activity_log.nodeY = 780, -270
     except Exception:
         pass
 
@@ -488,6 +505,13 @@ def build_and_export():
     callbacks_code = _read_repo_file(repo_root, "td_component/mcp_webserver_callbacks.py")
     event_emitter_code = _read_repo_file(repo_root, "td_component/event_emitter.py")
     ws_callbacks_code = _read_repo_file(repo_root, "td_component/ws_callbacks.py")
+    # v1.6.16: state_cache.py was listed in _TOX_SOURCE_FILES since v1.6.7
+    # for freshness-hash tracking but its content was never baked into the
+    # state_cache textDAT — the build silently created an empty DAT, whose
+    # `.module` then raised tdError on access, taking the state_cache
+    # writer down with it. This read closes the loop so the DAT ships
+    # with a compilable module body.
+    state_cache_code = _read_repo_file(repo_root, "td_component/state_cache.py")
     export_path = _resolve_export_path(repo_root)
     info_text = _build_info_text(repo_root, export_path)
 
@@ -512,6 +536,7 @@ def build_and_export():
             event_emitter_code,
             ws_callbacks_code,
             info_text,
+            state_cache_code,
         )
         export_comp.save(export_path)
         _save_versioned_export(repo_root, export_comp, export_path)
@@ -531,6 +556,7 @@ def build_and_export():
             event_emitter_code,
             ws_callbacks_code,
             info_text,
+            state_cache_code,
         )
         print("[TDPilot] Installed {}".format(installed_comp.path))
 
