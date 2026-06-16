@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "td_brain_execute|td_transaction_apply|mcp__.*__td_brain_execute|mcp__.*__td_transaction_apply",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --directory \"${CLAUDE_PLUGIN_ROOT:-${CLAUDE_PROJECT_DIR:-.}}\" python -m td_mcp.brain.hook_check post-tool-use"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --directory \"${CLAUDE_PLUGIN_ROOT:-${CLAUDE_PROJECT_DIR:-.}}\" python -m td_mcp.brain.hook_check release-stop"
+          }
+        ]
+      }
+    ]
+  }
+}

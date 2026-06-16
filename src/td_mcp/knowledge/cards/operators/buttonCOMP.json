@@ -1,0 +1,20 @@
+{
+  "card_type": "operator",
+  "op_type": "buttonCOMP",
+  "family": "COMP",
+  "display_name": "Button COMP",
+  "docs_url": "https://docs.derivative.ca/Button_COMP",
+  "summary": "Panel component for discrete UI actions, toggles, and momentary triggers. Typically paired with Panel CHOP, callbacks, or custom parameters.",
+  "key_params": [
+    {"name": "label", "type": "String", "note": "Button label text"},
+    {"name": "value0", "type": "Float", "note": "Panel value used by downstream readers"},
+    {"name": "toggle", "type": "Toggle", "note": "Use toggle behavior instead of momentary pulse when needed"}
+  ],
+  "common_gotchas": [
+    "A Button COMP is UI state, not a CHOP by itself; use Panel CHOP, callbacks, or exports to drive a network.",
+    "Viewer Active must be enabled on the containing panel for direct mouse interaction."
+  ],
+  "related_snippets": ["panel_ui"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-16"
+}

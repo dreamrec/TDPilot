@@ -1,6 +1,6 @@
 # TDPilot API Reference
 
-> Auto-generated from TDPilot v1.6.16 | 106 tools | Source: `src/td_mcp/tool_registry.py`
+> Auto-generated from TDPilot v2.0.0 | 110 tools | Source: `src/td_mcp/tool_registry.py`
 
 ---
 
@@ -22,6 +22,7 @@
 14. [Official Knowledge (Docs, Snippets, Palette, Release)](#14-official-knowledge-docs-snippets-palette-release)
 15. [TD 2025 Native (Python Env, Threading, Logger, TDResources, COMP Audit, Color Pipeline)](#15-td-2025-native-python-env-threading-logger-tdresources-comp-audit-color-pipeline)
 16. [Server Introspection](#16-server-introspection)
+17. [Brain Planning, Transactions, And Cockpit](#17-brain-planning-transactions-and-cockpit)
 
 ---
 
@@ -263,6 +264,17 @@ extra top-level field on its JSON envelope:
 * The journal is **advisory only** — every call still executes against TD. The hint exists so AI agents can decide whether to re-fetch across MCP request boundaries without paying token cost on stable data.
 * Bounded to 500 distinct `(tool_name, args_fingerprint)` keys; oldest-by-`last_seen_at` evicted under pressure.
 * **Not** attached on error responses (4xx / `success: false` envelopes) — error responses have no meaningful "result hash" to dedupe.
+
+---
+
+## 17. Brain Planning, Transactions, And Cockpit
+
+| Tool | Description | Parameters | Returns |
+|------|-------------|------------|---------|
+| `td_brain_plan` *(new in v2.0.0)* | Read-only planner for non-trivial TouchDesigner visual programming tasks. Produces a grounded `BrainPlan` with concept graph, typed patch plan, risks, missing facts, blocked questions, and validation profile. | `intent` (str, required), `target_root` (str, default `/project1`), `output_top` (str, optional), `constraints` (object, optional), `preferred_domains` (array, optional), `validation_profile` (str, default `auto`), `include_memory` (bool, default `true`), `include_docs` (bool, default `true`). | Structured JSON with `success` and `plan`. Blocked plans include `blocked_questions` and must not be executed. |
+| `td_brain_execute` *(new in v2.0.0)* | Executes only a valid `BrainPlan` from `td_brain_plan`, using transaction defaults, validation, rollback, trace export, and optional validated learning. | `plan` (object, required), `transaction_policy` (`rollback_on_failure`, `dry_run`, or `no_rollback`, default `rollback_on_failure`), `learn_on_success` (bool, default `false`), `confirm_visual_payload` (bool, default `false`). | Structured JSON with transaction `result`, `trace`, `trace_export_path`, and optional `learned_memory_id`. |
+| `td_transaction_apply` *(new in v2.0.0)* | Safe executor for an existing `PatchPlan` or `BrainPlan` with preflight, snapshot, dry-run, max-op, dependency ordering, validation, and rollback options. | `plan` (object, required), `options` (`TransactionOptions`, optional). | Structured JSON with transaction status, validation report, rollback state, snapshot ids, failed op, and manual recovery flag when needed. |
+| `td_cockpit_render` *(new in v2.0.0)* | Read-only MCP Apps payload for the optional TDPilot Brain Cockpit. It renders plan, transaction, validation, rollback, and trace summaries without becoming authoritative state. | `plan` (object, optional), `transaction_result` (object, optional), `trace` (object, optional), `title` (str, default `TDPilot Brain Cockpit`). | Structured JSON with `cockpit` payload and `ui://tdpilot/cockpit.html` output template metadata. |
 
 ---
 

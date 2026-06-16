@@ -1,0 +1,21 @@
+{
+  "card_type": "operator",
+  "op_type": "glslTOP",
+  "family": "TOP",
+  "display_name": "GLSL TOP",
+  "docs_url": "https://docs.derivative.ca/GLSL_TOP",
+  "summary": "Renders a GLSL shader into a TOP image. Can run pixel shaders or compute shaders and should be paired with Info DAT or error checks for compile state.",
+  "key_params": [
+    {"name": "pixelshader", "type": "DAT", "note": "DAT containing the pixel shader source"},
+    {"name": "compute shader", "type": "DAT", "note": "Compute shader source when using compute mode"},
+    {"name": "glslversion", "type": "Menu", "note": "GLSL language version"},
+    {"name": "resolutionw", "type": "Int", "note": "Output width when not inherited"}
+  ],
+  "common_gotchas": [
+    "Shader compile failures can produce black output; inspect errors or an Info DAT before declaring success.",
+    "Sampler names and uniforms must match TouchDesigner's GLSL conventions for TOP inputs."
+  ],
+  "related_snippets": ["glsl_shader"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-16"
+}

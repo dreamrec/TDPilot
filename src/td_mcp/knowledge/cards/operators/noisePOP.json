@@ -1,0 +1,21 @@
+{
+  "card_type": "operator",
+  "op_type": "noisePOP",
+  "family": "POP",
+  "display_name": "Noise POP",
+  "docs_url": "https://docs.derivative.ca/Noise_POP",
+  "summary": "Adds procedural noise fields or attributes to POP data. Useful for particle motion, variation, and organic displacement in POP chains.",
+  "key_params": [
+    {"name": "amplitude", "type": "Float", "note": "Strength of the noise effect"},
+    {"name": "period", "type": "Float", "note": "Spatial scale of the noise"},
+    {"name": "offset", "type": "Float", "note": "Offset for animating or shifting the field"},
+    {"name": "noisesize", "type": "Menu", "note": "Number of components in the generated noise value when available"}
+  ],
+  "common_gotchas": [
+    "Noise can push particles out of view; validate finite POP bounds after applying it.",
+    "Animated POP noise should be checked for stable cook time and non-NaN attributes."
+  ],
+  "related_snippets": ["pop_particles"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-16"
+}

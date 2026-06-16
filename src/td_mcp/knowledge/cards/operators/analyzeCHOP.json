@@ -1,0 +1,20 @@
+{
+  "card_type": "operator",
+  "op_type": "analyzeCHOP",
+  "family": "CHOP",
+  "display_name": "Analyze CHOP",
+  "docs_url": "https://docs.derivative.ca/Analyze_CHOP",
+  "summary": "Reduces an input CHOP channel to analysis values such as average, maximum, minimum, peaks, or RMS-like summaries. Useful for turning audio or control streams into stable modulation signals.",
+  "key_params": [
+    {"name": "function", "type": "Menu", "note": "Analysis operation such as average, maximum, minimum, or peak-related modes"},
+    {"name": "scope", "type": "Menu", "note": "Controls whether analysis is per-channel or across channels"},
+    {"name": "timeslice", "type": "Toggle", "note": "Use time-sliced behavior for live streams when appropriate"}
+  ],
+  "common_gotchas": [
+    "Analyze CHOP can collapse many samples to one value; use Math CHOP afterward to scale the range for visual controls.",
+    "For live audio, confirm the upstream CHOP is cooking and producing nonzero channels before trusting the analysis value."
+  ],
+  "related_snippets": ["audio_reactive"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-16"
+}

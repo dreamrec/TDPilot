@@ -7,14 +7,14 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v1.6.16
+# TDPilot Runtime v2.0.0
 
 [![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
 [![downloads](https://img.shields.io/npm/dm/tdpilot?label=downloads)](https://www.npmjs.com/package/tdpilot)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![python](https://img.shields.io/badge/python-3.10%2B-blue)](./pyproject.toml)
-[![MCP tools](https://img.shields.io/badge/MCP%20tools-106-blueviolet)](./docs/API_REFERENCE.md)
+[![MCP tools](https://img.shields.io/badge/MCP%20tools-110-blueviolet)](./docs/API_REFERENCE.md)
 [![TouchDesigner](https://img.shields.io/badge/TouchDesigner-2025.30000%2B-ff6200)](https://derivative.ca)
 
 **TDPilot Runtime** is an MCP server for TouchDesigner.
@@ -31,7 +31,7 @@ It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networ
 /plugin install tdpilot@dreamrec-TDPilot
 ```
 
-That installs all **106 MCP tools**, 3 skills (`tdpilot-core`, `tdpilot-production`, `popx-touchdesigner`), 2 slash commands (`/td-check`, `/td-snapshot`), and the TD-side `.tox` component — one command, no Python setup required.
+That installs all **110 MCP tools**, 8 skills (`tdpilot-core`, `tdpilot-production`, `popx-touchdesigner`, plus 5 brain skills), 4 brain agents, 2 slash commands (`/td-check`, `/td-snapshot`), and the TD-side `.tox` component — one command, no Python setup required.
 
 **Shell one-liner alternative:**
 
@@ -69,15 +69,18 @@ Using Claude Desktop instead of Claude Code? See [`docs/INSTALL_CLAUDE_PLUGIN.md
 - A practical control layer between AI agents and TouchDesigner.
 - A structured toolset for scene edits, diagnostics, event monitoring, and recovery.
 - A workflow-oriented MCP built for iterative patch development, not one-shot guessing.
+- A correctness-first visual programming brain that plans TD concepts before it mutates networks.
 - A technique memory system that learns from your projects and builds a reusable library.
-- 106-tool runtime surface with focus + locations, hint injection, component notes, knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, custom parameter authoring, typed patch sessions, agent activity log, and one-tool self-update.
+- 110-tool runtime surface with focus + locations, hint injection, component notes, knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, custom parameter authoring, typed patch sessions, BrainPlan transactions, optional cockpit rendering, agent activity log, and one-tool self-update.
 
 ## Start Here: Core Workflow
 
-You don't need all 106 tools. Start with these and expand as needed:
+You don't need all 110 tools. Start with these and expand as needed:
 
 | Step | Tools | What You're Doing |
 |------|-------|-------------------|
+| **Plan** | `td_brain_plan` | Ground the user's visual intent in real TD operators, constraints, docs, hints, memory, and live state |
+| **Execute** | `td_brain_execute`, `td_transaction_apply` | Apply only a valid BrainPlan or PatchPlan with preflight, snapshots, rollback, and validation |
 | **Inspect** | `td_get_info`, `td_get_nodes`, `td_get_params`, `td_get_errors` | Understand current state before touching anything |
 | **Check memory** | `td_memory_recall` | See if a reusable technique already exists |
 | **Build** | `td_create_node`, `td_connect_nodes`, `td_set_params` | Make changes in small, reversible steps |
@@ -85,13 +88,22 @@ You don't need all 106 tools. Start with these and expand as needed:
 | **Protect** | `td_snapshot_scene`, `td_restore_snapshot` | Save milestones, roll back if needed |
 | **Remember** | `td_memory_learn`, `td_memory_save` | Save successful patterns for reuse |
 
-**The loop:** Inspect -> Build -> Verify -> Snapshot -> Repeat.
+**The loop:** Inspect -> Plan -> Execute transactionally -> Validate -> Snapshot or Roll back -> Learn only if validated.
 
 Everything else (vision, streaming, optimization, planning, TD2025 inspection) builds on top of this core.
 
-## What's New In 1.6.16 – 1.6.14
+## What's New In 2.0.0
 
-Stability + ergonomics run since v1.6.0. v1.6.16 adds two new agent-observability tools (`td_get_activity_log`, `td_self_update`); tool count 104 → 106. Hint corpus stays at 73 hints across 20 packs. Headlines:
+TDPilot v2.0.0 turns the mature 1.6 tool surface into a correctness-first visual programming brain. The release adds four public tools and a safer default workflow:
+
+- **`td_brain_plan`** — read-only planner that converts visual intent into `VisualTaskSpec -> ConceptGraph -> BrainPlan -> PatchPlan`. It grounds plans in live TD state, operator cards, hints, memory, data-domain compatibility, missing facts, and concept validators. Blocked plans return questions instead of guessing.
+- **`td_brain_execute`** — mutates only from a valid `BrainPlan`, applies transaction defaults, validates the resulting network, rolls back on apply or validation failure, exports a trace, and learns only from validated outcomes when requested.
+- **`td_transaction_apply`** — safe low-level executor for `PatchPlan` or `BrainPlan`, with preflight, max-op limits, snapshots, dry-run support, dependency ordering, rollback flags, and validation profiles.
+- **`td_cockpit_render`** — read-only MCP Apps cockpit payload for concept graph, transaction, validation, rollback, and trace summaries. The open MCP core stays local-first and has no hosted LLM dependency.
+- **Brain validators and atlas coverage** — concept profiles now cover feedback, audio-reactive, POP, GLSL, render pipeline, panel UI, control rigs, and generic TOP/CHOP/SOP/DAT chains. The structured operator atlas now covers every operator required by those profiles, and `scripts/audit_brain_atlas.py` gates it.
+- **Client packaging** — Codex and Claude plugin surfaces include brain skills, brain agents, deterministic hooks, MCP prompts, live cached resources, schema snapshots, and release audits.
+
+Recent v1.6 groundwork remains in place: read journals, agent activity log, self-update, hint routing, TD 2025 knowledge cards, and the one-button `.tox` installer.
 
 - **v1.6.16** — Agent-observability + self-update. Every tool response now carries a `_read_journal` hint (`call_count`, `result_unchanged`, `first_seen_at`, `last_seen_at`) so Claude can see across MCP request boundaries which reads have moved and which haven't — no more wasted token cycles re-fetching the same view of `td_get_nodes`. A 200-entry server-side activity ring buffer mirrors to an in-TD Table DAT (`/local/mcp_server/activity_log`) so users can wire agent activity into their visuals. New `td_self_update` MCP tool hits the GitHub releases API and (optionally) writes the latest `tdpilot.tox` to all three install paths (repo, Claude Code plugin cache, `~/.tdpilot/`) with md5 sync reporting — closing the seven-layer staleness saga documented in user memory.
 
@@ -207,7 +219,12 @@ Use this loop for every non-trivial task:
 
 6. **Control token cost** — Prefer metadata checks over continuous image payloads. Ask the user before enabling high-token frame streaming.
 
-## Tool Map (106 Tools)
+## Tool Map (110 Tools)
+
+### 0) Brain Planning + Transactions
+Use for non-trivial visual programming tasks where correctness, rollback, and validation matter.
+
+- `td_brain_plan`, `td_brain_execute`, `td_transaction_apply`, `td_cockpit_render`
 
 ### 1) Scene + Timeline + Project Lifecycle
 Use for global context, playback control, save/load, and undo operations.

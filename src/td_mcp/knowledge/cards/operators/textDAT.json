@@ -1,0 +1,20 @@
+{
+  "card_type": "operator",
+  "op_type": "textDAT",
+  "family": "DAT",
+  "display_name": "Text DAT",
+  "docs_url": "https://docs.derivative.ca/Text_DAT",
+  "summary": "Stores free-form text such as GLSL source, Python callbacks, JSON, notes, or generated configuration. Useful as a stable source DAT for shader and script operators.",
+  "key_params": [
+    {"name": "text", "type": "DAT contents", "note": "Text body stored in the DAT"},
+    {"name": "language", "type": "Menu", "note": "Editor language/highlighting when available"},
+    {"name": "syncfile", "type": "Toggle", "note": "Optional file sync behavior for external source files"}
+  ],
+  "common_gotchas": [
+    "Writing code into a Text DAT does not execute it by itself; connect or reference it from the consuming operator.",
+    "For GLSL source, validate compile state on the consuming GLSL TOP/MAT after edits."
+  ],
+  "related_snippets": ["glsl_shader"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-16"
+}

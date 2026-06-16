@@ -241,8 +241,10 @@ Prompt:
 
 ## Your "Good Enough" TDPilot Starter Stack
 
-If you do not want to learn all 106 tools, focus on this stack:
+If you do not want to learn all 110 tools, focus on this stack:
 
+- brain:
+  `td_brain_plan`, `td_brain_execute`, `td_transaction_apply`
 - inspect:
   `td_get_info`, `td_get_nodes`, `td_get_node_detail`, `td_get_params`
 - build:

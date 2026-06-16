@@ -1,6 +1,8 @@
 # TDPilot — TouchDesigner AI Assistant Plugin
 
-TDPilot v1.6.16 provides 106 MCP tools for live control of TouchDesigner projects from Claude. v1.6.16 adds agent-observability primitives: every tool response now carries a `_read_journal` hint so Claude can see across MCP request boundaries which reads have moved and which haven't, plus a 200-entry server-side `activity_log` ring buffer mirrored into an in-TD Table DAT (`/local/mcp_server/activity_log`) for wiring agent activity into a live visual patch. v1.6.16 also ships `td_self_update` — a one-tool GitHub-driven updater that writes the latest `tdpilot.tox` to all three install paths (repo working-tree, Claude Code plugin cache, `~/.tdpilot/`) with md5 sync reporting, closing the multi-layer staleness problem that dogged the v1.6.x line.
+TDPilot v2.0.0 provides 110 MCP tools for live control of TouchDesigner projects from Claude, Codex, and other MCP clients. The headline is the vNext visual programming brain: `td_brain_plan` grounds intent in real TD operators, hints, docs, memory, and live state; `td_brain_execute` mutates only from a valid BrainPlan; `td_transaction_apply` adds transactional rollback and validation to typed patch plans; and `td_cockpit_render` exposes an optional read-only cockpit UI for plan, validation, rollback, and trace summaries.
+
+The 1.6 observability layer remains: `_read_journal` hints, a 200-entry `activity_log` ring buffer mirrored into `/local/mcp_server/activity_log`, and `td_self_update` for syncing the `.tox` across repo, plugin cache, and `~/.tdpilot/`.
 
 ## Components
 
@@ -8,8 +10,9 @@ TDPilot v1.6.16 provides 106 MCP tools for live control of TouchDesigner project
 - **touchdesigner** — Connects to TDPilot MCP server via `npx tdpilot` (stdio transport)
 
 ### Skills
-- **tdpilot-core** — Core patching discipline: 106-tool reference, node layout, color coding, expressions, error verification, visual checks, technique memory, knowledge corpus, v1.1 features (custom parameters, project lifecycle, POP inspection), agent activity log, and self-update
+- **tdpilot-core** — Core patching discipline: 110-tool reference, node layout, color coding, expressions, error verification, visual checks, technique memory, knowledge corpus, custom parameters, project lifecycle, POP inspection, agent activity log, self-update, and the brain transaction loop
 - **tdpilot-production** — Production-safe workflow: staged edits, undo blocks, snapshots, completion gates, failure protocol
+- **tdpilot-brain-explorer / builder / validator / recovery / release** — Specialized v2 brain skills for inspect-before-mutate work, BrainPlan construction, validation, recovery, and release auditing
 - **popx-touchdesigner** — POPX workflow skill for 59 GPU-accelerated operators. References must be built locally from your own licensed POPx copy (see `references/BUILD.md`)
 
 ### Commands

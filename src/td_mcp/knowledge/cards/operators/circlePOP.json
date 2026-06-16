@@ -1,0 +1,20 @@
+{
+  "card_type": "operator",
+  "op_type": "circlePOP",
+  "family": "POP",
+  "display_name": "Circle POP",
+  "docs_url": "https://docs.derivative.ca/Circle_POP",
+  "summary": "Creates circular POP geometry or point data for particle and POP workflows. Useful as a simple finite emitter/source for POP chains.",
+  "key_params": [
+    {"name": "radius", "type": "Float", "note": "Circle radius"},
+    {"name": "divisions", "type": "Int", "note": "Number of points or segments around the circle"},
+    {"name": "orientation", "type": "Menu", "note": "Plane or orientation for the generated circle"}
+  ],
+  "common_gotchas": [
+    "POP workflows need finite bounds validation; sample P or bounds after adding motion/noise.",
+    "Use a Null POP output so downstream references remain stable as the internal POP chain changes."
+  ],
+  "related_snippets": ["pop_particles"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-16"
+}

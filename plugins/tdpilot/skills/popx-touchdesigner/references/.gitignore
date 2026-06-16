@@ -1,0 +1,6 @@
+# Generated reference files — build locally with scripts/build_popx_refs.py
+# These are not distributed because POPx documentation is copyrighted material.
+*.md
+*.json
+*.pyrepr
+!BUILD.md

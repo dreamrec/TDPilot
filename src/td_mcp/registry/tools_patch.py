@@ -23,7 +23,9 @@ from pydantic import Field, ValidationError
 
 from td_mcp import patch
 from td_mcp import tool_registry as _tr  # intentional cycle — see registry/__init__.py
+from td_mcp.brain.transaction import apply_transaction
 from td_mcp.errors import format_tool_error
+from td_mcp.models.brain import TransactionOptions
 from td_mcp.models.patch import PatchPlan, PatchPreview, ValidationPlan
 from td_mcp.tool_registry import mcp
 
@@ -140,14 +142,26 @@ async def td_patch_apply(
         bool,
         Field(default=True, description="Run validate_target after apply"),
     ] = True,
+    transaction_options: Annotated[
+        dict[str, Any] | None,
+        Field(
+            default=None,
+            description=(
+                "Optional TransactionOptions dict. When provided, td_patch_apply uses the "
+                "vNext transaction executor with preflight, snapshot, validation, and rollback policy."
+            ),
+        ),
+    ] = None,
 ) -> dict[str, Any]:
-    """Apply a PatchPlan in one undo block. Surface-to-caller on failure (no auto-rollback)."""
+    """Apply a PatchPlan in one undo block, optionally through the transaction executor."""
     finish = _tr._start_tool(ctx, "td_patch_apply")
     try:
         try:
             parsed = PatchPlan.model_validate(plan)
         except ValidationError as exc:
             return {"success": False, "error": f"invalid plan: {exc}"}
+        if label:
+            parsed = parsed.model_copy(update={"undo_label": label})
         client = _tr._get_client(ctx)
         # Inject the macro engine so kind=macro ops can route through the
         # server-side composition path (TD has no /api/macro/create endpoint).
@@ -156,6 +170,18 @@ async def td_patch_apply(
         # for any kind=macro op it encounters.
         services = _tr._get_services(ctx)
         macro_engine = getattr(services, "macro_engine", None)
+        if transaction_options is not None:
+            try:
+                tx_options = TransactionOptions.model_validate(transaction_options)
+            except ValidationError as exc:
+                return {"success": False, "error": f"invalid transaction_options: {exc}"}
+            result = await _apply_patch_transaction(ctx, parsed, tx_options, macro_engine=macro_engine)
+            _tr._audit_log(
+                ctx,
+                "td_patch_apply",
+                {"plan_id": parsed.id, "status": result.status, "ops": len(parsed.operations), "transaction": True},
+            )
+            return {"success": result.status in {"clean", "warnings", "dry_run"}, "result": result.model_dump(mode="json")}
         try:
             result = await patch.apply_plan(
                 client,
@@ -178,6 +204,44 @@ async def td_patch_apply(
         return format_tool_error(exc)
     finally:
         finish()
+
+
+async def _apply_patch_transaction(ctx: Context, plan: PatchPlan, options: TransactionOptions, *, macro_engine=None):
+    client = _tr._get_client(ctx)
+
+    async def create_snapshot(path: str) -> str | None:
+        payload = await _tr._capture_snapshot_payload(ctx, path=path, include_visual=False)
+        saved = _tr._get_snapshot_manager(ctx).add_snapshot(
+            payload,
+            name=f"patch_tx_{plan.id[:8]}",
+        )
+        return saved.get("snapshot_id")
+
+    async def restore_snapshot(snapshot_id: str) -> dict[str, Any] | None:
+        manager = _tr._get_snapshot_manager(ctx)
+        snapshot = manager.get_snapshot(snapshot_id)
+        if snapshot is None:
+            return {"failures": [{"error": f"snapshot not found: {snapshot_id}"}]}
+        nodes = snapshot.get("snapshot", {}).get("nodes", {})
+        if not isinstance(nodes, dict):
+            nodes = {}
+        return await _tr._restore_snapshot_nodes(
+            client,
+            _tr._get_safety_manager(ctx),
+            nodes,
+            partial_filters=[],
+            dry_run=False,
+        )
+
+    return await apply_transaction(
+        client,
+        plan,
+        options=options,
+        sentinel=_tr._PATCH_SENTINEL,
+        macro_engine=macro_engine,
+        create_snapshot=create_snapshot,
+        restore_snapshot=restore_snapshot,
+    )
 
 
 @mcp.tool(name="td_patch_validate")

@@ -153,10 +153,13 @@ This is how you keep the patch understandable.
 
 ## The Small Set Of Tools That Matter Most
 
-You do not need to learn all 106 tools to get real value.
+You do not need to learn all 110 tools to get real value.
 
 If you are new, focus on these:
 
+- `td_brain_plan`
+- `td_brain_execute`
+- `td_transaction_apply`
 - `td_get_info`
 - `td_get_nodes`
 - `td_get_node_detail`

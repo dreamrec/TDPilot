@@ -1,0 +1,19 @@
+{
+  "card_type": "operator",
+  "op_type": "nullPOP",
+  "family": "POP",
+  "display_name": "Null POP",
+  "docs_url": "https://docs.derivative.ca/Null_POP",
+  "summary": "Pass-through POP used as a stable output/reference point for POP chains. Helps keep downstream references stable while internal POP logic changes.",
+  "key_params": [
+    {"name": "cook", "type": "Menu", "note": "Cook behavior for the output"},
+    {"name": "display", "type": "Flag", "note": "Display flag should mark the intended POP output during debugging"}
+  ],
+  "common_gotchas": [
+    "A Null POP with no input is not a meaningful particle output; ensure the upstream POP chain is connected.",
+    "Use POP inspection to validate point counts, attributes, and finite bounds."
+  ],
+  "related_snippets": ["pop_particles"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-16"
+}

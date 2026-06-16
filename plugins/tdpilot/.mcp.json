@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "touchdesigner": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${CODEX_PLUGIN_ROOT}",
+        "tdpilot"
+      ],
+      "env": {
+        "TD_MCP_HOST": "127.0.0.1",
+        "TD_MCP_PORT": "9981",
+        "TD_MCP_WS_PORT": "9982",
+        "TD_MCP_EXEC_MODE": "restricted",
+        "TD_MCP_REQUIRE_AUTH": "1",
+        "TD_MCP_AUTOGENERATE_SECRET": "1"
+      }
+    }
+  }
+}

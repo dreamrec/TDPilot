@@ -1,0 +1,21 @@
+{
+  "card_type": "operator",
+  "op_type": "levelTOP",
+  "family": "TOP",
+  "display_name": "Level TOP",
+  "docs_url": "https://docs.derivative.ca/Level_TOP",
+  "summary": "Adjusts brightness, contrast, opacity, gamma, black level, and related image levels. In feedback loops, opacity on the Post page is the canonical trail decay control.",
+  "key_params": [
+    {"name": "opacity", "type": "Float", "note": "Post-page opacity, commonly used as feedback decay"},
+    {"name": "brightness1", "type": "Float", "note": "Brightness multiplier"},
+    {"name": "blacklevel", "type": "Float", "note": "Input black level remapping"},
+    {"name": "gamma", "type": "Float", "note": "Gamma correction"}
+  ],
+  "common_gotchas": [
+    "For feedback trails, decay should usually use opacity, not brightness.",
+    "Extreme level changes can make a valid chain look black or clipped; verify luminance/entropy after applying."
+  ],
+  "related_snippets": ["feedback"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-16"
+}

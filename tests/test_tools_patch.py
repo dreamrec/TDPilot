@@ -41,6 +41,7 @@ def test_td_patch_apply_registered():
     props = t.inputSchema.get("properties", {})
     assert "plan" in props
     assert "auto_validate" in props
+    assert "transaction_options" in props
 
 
 def test_td_patch_validate_registered():
@@ -121,6 +122,28 @@ async def test_td_patch_apply_happy_path(mcp_ctx, td_client, monkeypatch):
     assert result["success"] is True
     assert result["result"]["status"] == "clean"
     assert "/p/n1" in result["result"]["created_paths"]
+
+
+@pytest.mark.asyncio
+async def test_td_patch_apply_transaction_options_dry_run(mcp_ctx, td_client, monkeypatch):
+    _patch_services(monkeypatch, td_client)
+    td_client.responses = {"nodes": {"nodes": []}}
+    plan_result = await tools_patch.td_patch_plan(
+        mcp_ctx,
+        target_root="/p",
+        operations=[{"kind": "create_node", "target": "/p", "args": {"op_type": "noise", "name": "n1"}}],
+    )
+    plan_dict = plan_result["plan"]
+
+    result = await tools_patch.td_patch_apply(
+        mcp_ctx,
+        plan=plan_dict,
+        transaction_options={"dry_run": True, "snapshot_before": False},
+    )
+
+    assert result["success"] is True
+    assert result["result"]["status"] == "dry_run"
+    assert not any(call[0] == "node/create" for call in td_client.calls)
 
 
 @pytest.mark.asyncio

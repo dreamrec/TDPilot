@@ -1,0 +1,51 @@
+{
+  "name": "tdpilot",
+  "version": "2.0.0",
+  "description": "TDPilot for Codex: TouchDesigner MCP control with 110 tools, diagnostics, safety, streaming, knowledge, hints, transactions, the vNext visual programming brain, and optional cockpit UI.",
+  "author": {
+    "name": "dreamrec",
+    "email": "dreamrec@users.noreply.github.com",
+    "url": "https://github.com/dreamrec"
+  },
+  "homepage": "https://github.com/dreamrec/TDPilot",
+  "repository": "https://github.com/dreamrec/TDPilot",
+  "license": "MIT",
+  "keywords": [
+    "touchdesigner",
+    "td",
+    "mcp",
+    "creative-coding",
+    "visual-programming",
+    "brainplan",
+    "popx",
+    "particles",
+    "simulations"
+  ],
+  "skills": "./skills/",
+  "agents": "./agents/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "TDPilot",
+    "shortDescription": "TouchDesigner MCP control for Codex.",
+    "longDescription": "Codex-facing TDPilot wrapper with vNext brain skills including tdpilot-brain-explorer, BrainPlan-first build discipline, transaction rollback defaults, validation-first learning, and an MCP server configuration that points at Codex's local vendor import.",
+    "developerName": "dreamrec",
+    "category": "Developer Tools",
+    "capabilities": [
+      "TouchDesigner",
+      "MCP",
+      "Live Patching",
+      "BrainPlan",
+      "Transactions",
+      "Diagnostics",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/dreamrec/TDPilot",
+    "defaultPrompt": [
+      "Explore this TouchDesigner project with tdpilot-brain-explorer before planning.",
+      "Plan this TouchDesigner build with td_brain_plan before editing.",
+      "Execute this BrainPlan transactionally and validate it.",
+      "Recover this TDPilot network from the last failed transaction."
+    ],
+    "brandColor": "#4A8CFF"
+  }
+}

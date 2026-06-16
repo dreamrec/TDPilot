@@ -41,6 +41,10 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+from td_mcp.release_gates import EXPECTED_MIN_TOOL_COUNT  # noqa: E402
+
 DEFAULT_OUTPUT = ROOT / "tdpilot.mcpb"
 
 # Files/directories copied from repo root into the bundle root.
@@ -87,15 +91,20 @@ def _build_manifest(version: str) -> dict:
         "name": "tdpilot",
         "display_name": "TDPilot",
         "version": version,
-        "description": "AI copilot for TouchDesigner — 103 MCP tools for live node graph control, parameter management, diagnostics, safety, streaming, technique memory, knowledge corpus, focus + locations, hint injection, component notes, and typed patch sessions.",
+        "description": (
+            f"AI copilot for TouchDesigner — {EXPECTED_MIN_TOOL_COUNT} MCP tools for live graph "
+            "control, diagnostics, safety, streaming, technique memory, typed patch sessions, "
+            "and a correctness-first BrainPlan transaction layer."
+        ),
         "long_description": (
             "TDPilot is a production-grade MCP server for TouchDesigner. "
-            "It exposes 103 tools that let an AI agent inspect, build, wire, "
+            f"It exposes {EXPECTED_MIN_TOOL_COUNT} tools that let an AI agent inspect, build, wire, "
             "optimize, and stabilize live TD networks via real tool calls. "
             "Includes a typed patch-session API (plan/preview/apply/validate/"
-            "variations) with sentinel-guarded undo blocks, knowledge-corpus "
-            "lookups, vision diagnostics, project-lifecycle control, snapshot "
-            "safety, and a technique-memory system for reusable subnet patterns. "
+            "variations), the vNext BrainPlan planning and transaction workflow, "
+            "sentinel-guarded undo blocks, knowledge-corpus lookups, vision diagnostics, "
+            "project-lifecycle control, snapshot safety, and a technique-memory system "
+            "for reusable subnet patterns. "
             "After install, drag the bundled td_component/tdpilot.tox into "
             "your TouchDesigner /local container — see README for details."
         ),

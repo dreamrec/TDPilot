@@ -534,6 +534,7 @@ async def _ensure_project_scope(ctx: Context) -> None:
     services = _get_services(ctx)
     store = services.technique_store
     pref = services.preference_store
+    knowledge = services.knowledge_store
     # Nothing to do if either store is absent or already bound.
     if store is None or pref is None:
         return
@@ -555,6 +556,8 @@ async def _ensure_project_scope(ctx: Context) -> None:
         raw = raw[:-4]
     store.rebind_project_scope(raw)
     pref.rebind_project_scope(raw)
+    if knowledge is not None:
+        knowledge.rebind_project_scope(raw)
     logger.info("Lazily bound project scope to %r from live TD after startup miss", raw)
 
 
@@ -2006,14 +2009,34 @@ from td_mcp.registry import (
     tools_batch,  # noqa: F401, E402  — registers td_tool_batch
     tools_patch,  # noqa: F401, E402  — registers 5 patch tools
 )
+from td_mcp.registry.prompts import (  # noqa: E402
+    td_brain_build,
+    td_brain_debug,
+    td_brain_validate,
+    td_learn_validated_technique,
+    td_recover_network,
+    td_snapshot_before_edit,
+)
 from td_mcp.registry.resources import (  # noqa: E402
+    td_resource_activity_recent,
     td_resource_chop_channel,
+    td_resource_cockpit,
     td_resource_cook,
     td_resource_error,
     td_resource_job,
+    td_resource_memory_technique,
+    td_resource_node,
     td_resource_parameter,
+    td_resource_project_state,
     td_resource_timeline,
+    td_resource_top_analysis,
     td_resource_top_frame,
+)
+from td_mcp.registry.tools_brain import (  # noqa: E402
+    td_brain_execute,
+    td_brain_plan,
+    td_cockpit_render,
+    td_transaction_apply,
 )
 from td_mcp.registry.tools_content import (  # noqa: E402
     td_custom_parameters,

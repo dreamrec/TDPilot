@@ -1,7 +1,7 @@
 {
   "name": "tdpilot",
-  "version": "1.6.16",
-  "description": "AI copilot for TouchDesigner with live MCP control \u2014 106 tools, focus + locations, hint injection, component notes, POPx inspection, knowledge corpus, project lifecycle control, technique memory, typed patch sessions, agent activity log, one-tool self-update, Claude Code plugin marketplace install.",
+  "version": "2.0.0",
+  "description": "AI copilot for TouchDesigner with live MCP control \u2014 110 tools, correctness-first BrainPlan transactions, optional cockpit UI, focus + locations, hints, POPx inspection, knowledge corpus, technique memory, typed patches, activity log, self-update, and Claude/Codex plugin surfaces.",
   "keywords": [
     "touchdesigner",
     "mcp",

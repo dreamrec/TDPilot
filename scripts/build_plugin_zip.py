@@ -6,6 +6,8 @@ The plugin layout is committed at the repo root:
   - .mcp.json                         (plugin MCP config template)
   - commands/                         (slash commands)
   - skills/                           (skills, already at root)
+  - agents/                           (Claude Code plugin agents)
+  - hooks/                            (deterministic plugin hooks)
   - td_component/tdpilot.tox          (binary TD component — built in TD)
   - plugin_README.md                  (goes into ZIP as README.md)
 
@@ -54,46 +56,17 @@ PLUGIN_FILES: list[tuple[str, str, bool]] = [
     # Slash commands.
     ("commands/td-check.md", "commands/td-check.md", True),
     ("commands/td-snapshot.md", "commands/td-snapshot.md", True),
-    # Skills.
-    ("skills/tdpilot-core/SKILL.md", "skills/tdpilot-core/SKILL.md", True),
-    (
-        "skills/tdpilot-core/references/advanced-workflows.md",
-        "skills/tdpilot-core/references/advanced-workflows.md",
-        True,
-    ),
-    (
-        "skills/tdpilot-core/references/preset-systems-and-ui.md",
-        "skills/tdpilot-core/references/preset-systems-and-ui.md",
-        False,
-    ),
-    ("skills/tdpilot-production/SKILL.md", "skills/tdpilot-production/SKILL.md", True),
-    ("skills/popx-touchdesigner/SKILL.md", "skills/popx-touchdesigner/SKILL.md", True),
-    (
-        "skills/popx-touchdesigner/references/.gitignore",
-        "skills/popx-touchdesigner/references/.gitignore",
-        False,
-    ),
-    (
-        "skills/popx-touchdesigner/references/BUILD.md",
-        "skills/popx-touchdesigner/references/BUILD.md",
-        False,
-    ),
-    (
-        "skills/popx-touchdesigner/scripts/build_popx_refs.py",
-        "skills/popx-touchdesigner/scripts/build_popx_refs.py",
-        False,
-    ),
-    (
-        "skills/popx-touchdesigner/scripts/search_popx_refs.py",
-        "skills/popx-touchdesigner/scripts/search_popx_refs.py",
-        False,
-    ),
 ]
 
 # Directories bundled recursively (source code + lockfile so ``uv run``
 # inside the unpacked ZIP can resolve dependencies). Mirrors the
 # .mcpb bundle (scripts/build_mcpb.py) layout for consistency.
-PLUGIN_DIRS: tuple[tuple[str, str], ...] = (("src", "src"),)
+PLUGIN_DIRS: tuple[tuple[str, str], ...] = (
+    ("skills", "skills"),
+    ("agents", "agents"),
+    ("hooks", "hooks"),
+    ("src", "src"),
+)
 PLUGIN_EXTRA_FILES: tuple[tuple[str, str, bool], ...] = (
     ("pyproject.toml", "pyproject.toml", True),
     ("uv.lock", "uv.lock", False),  # optional but recommended
@@ -122,7 +95,7 @@ def _walk_dir_into_zip(zf: zipfile.ZipFile, src_root: Path, arc_root: str) -> No
 def build(output: Path) -> None:
     missing_required = []
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-        # 1. Manifest + skills + .tox (the original plugin layout).
+        # 1. Manifest + .tox (the original plugin layout).
         for src_rel, arc, required in PLUGIN_FILES:
             src = ROOT / src_rel
             if not src.exists():

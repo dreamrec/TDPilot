@@ -52,6 +52,103 @@
     },
     "required": []
   },
+  "td_brain_execute": {
+    "description_present": true,
+    "properties": {
+      "confirm_visual_payload": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "learn_on_success": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "plan": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "object"
+      },
+      "transaction_policy": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      }
+    },
+    "required": [
+      "plan"
+    ]
+  },
+  "td_brain_plan": {
+    "description_present": true,
+    "properties": {
+      "constraints": {
+        "any_of_types": [
+          "null",
+          "object"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "include_docs": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "include_memory": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "intent": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "string"
+      },
+      "output_top": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "preferred_domains": {
+        "any_of_types": [
+          "array",
+          "null"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "target_root": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "validation_profile": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      }
+    },
+    "required": [
+      "intent"
+    ]
+  },
   "td_capture_and_analyze": {
     "description_present": true,
     "properties": {
@@ -167,6 +264,45 @@
         "any_of_types": [
           "array",
           "null"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      }
+    },
+    "required": []
+  },
+  "td_cockpit_render": {
+    "description_present": true,
+    "properties": {
+      "plan": {
+        "any_of_types": [
+          "null",
+          "object"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "title": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "string"
+      },
+      "trace": {
+        "any_of_types": [
+          "null",
+          "object"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "transaction_result": {
+        "any_of_types": [
+          "null",
+          "object"
         ],
         "default_present": true,
         "enum": null,
@@ -1905,6 +2041,15 @@
         "default_present": false,
         "enum": null,
         "type": "object"
+      },
+      "transaction_options": {
+        "any_of_types": [
+          "null",
+          "object"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
       }
     },
     "required": [
@@ -2753,6 +2898,29 @@
     },
     "required": [
       "calls"
+    ]
+  },
+  "td_transaction_apply": {
+    "description_present": true,
+    "properties": {
+      "options": {
+        "any_of_types": [
+          "null",
+          "object"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "plan": {
+        "any_of_types": [],
+        "default_present": false,
+        "enum": null,
+        "type": "object"
+      }
+    },
+    "required": [
+      "plan"
     ]
   },
   "td_unsubscribe": {

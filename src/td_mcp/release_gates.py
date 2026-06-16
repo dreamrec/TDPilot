@@ -17,4 +17,7 @@ from __future__ import annotations
 # 2026-05-12: bumped 103 → 104 with td_tool_batch (deepseek-v4 backport).
 # 2026-05-18: bumped 104 → 106 with td_get_activity_log + td_self_update
 #             (v1.6.16 agent-observability + auto-update surface).
-EXPECTED_MIN_TOOL_COUNT: int = 106
+# 2026-06-16: bumped 106 → 109 with td_brain_plan, td_brain_execute,
+#             and td_transaction_apply (vNext correctness brain).
+# 2026-06-16: bumped 109 → 110 with td_cockpit_render (optional MCP Apps cockpit).
+EXPECTED_MIN_TOOL_COUNT: int = 110

@@ -2,9 +2,9 @@
   "schema_version": 1,
   "name": "TDPilot",
   "slug": "tdpilot",
-  "version": "1.6.16",
+  "version": "2.0.0",
   "repository": "https://github.com/dreamrec/TDPilot",
-  "description": "MCP server for TouchDesigner with live graph control, diagnostics, safety, streaming, knowledge corpus, technique memory, and typed patch sessions.",
+  "description": "MCP server for TouchDesigner with live graph control, diagnostics, safety, streaming, knowledge corpus, technique memory, typed patch sessions, and a correctness-first BrainPlan transaction layer.",
   "entrypoints": {
     "npm": {
       "command": "npx",
@@ -32,9 +32,9 @@
     "transport": "stdio"
   },
   "surface": {
-    "tool_count": 106,
-    "resource_template_count": 6,
-    "static_resource_count": 1
+    "tool_count": 110,
+    "resource_template_count": 9,
+    "static_resource_count": 4
   },
   "artifacts": {
     "td_component_tox": "td_component/tdpilot.tox",

@@ -21,3 +21,4 @@ from __future__ import annotations
 # `_legacy.__all__` (or all public names if no __all__) becomes importable as
 # ``from td_mcp.models import X``, matching the pre-split behavior exactly.
 from td_mcp.models._legacy import *  # noqa: F401,F403
+from td_mcp.models.brain import *  # noqa: F401,F403

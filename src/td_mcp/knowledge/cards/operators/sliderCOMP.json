@@ -1,0 +1,21 @@
+{
+  "card_type": "operator",
+  "op_type": "sliderCOMP",
+  "family": "COMP",
+  "display_name": "Slider COMP",
+  "docs_url": "https://docs.derivative.ca/Slider_COMP",
+  "summary": "Panel component for continuous user control. Usually read with Panel CHOP or exported/bound to parameters.",
+  "key_params": [
+    {"name": "value0", "type": "Float", "note": "Primary slider value"},
+    {"name": "rangemin", "type": "Float", "note": "Minimum UI/control range when exposed"},
+    {"name": "rangemax", "type": "Float", "note": "Maximum UI/control range when exposed"},
+    {"name": "label", "type": "String", "note": "Optional slider label"}
+  ],
+  "common_gotchas": [
+    "A Slider COMP needs Panel CHOP, callback, export, or binding to affect the network.",
+    "Clamp and scale slider output before driving sensitive visual parameters."
+  ],
+  "related_snippets": ["panel_ui", "control_rig"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-16"
+}

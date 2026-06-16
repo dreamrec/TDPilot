@@ -1,0 +1,21 @@
+{
+  "card_type": "operator",
+  "op_type": "audiofileinCHOP",
+  "family": "CHOP",
+  "display_name": "Audio File In CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_File_In_CHOP",
+  "summary": "Reads audio from disk or supported URLs and outputs time-sliced audio channels. Common source for audio-reactive control chains.",
+  "key_params": [
+    {"name": "file", "type": "File", "note": "Audio file path or supported URL"},
+    {"name": "reloadpulse", "type": "Pulse", "note": "Reload the current file"},
+    {"name": "play", "type": "Toggle", "note": "Controls playback"},
+    {"name": "playmode", "type": "Menu", "note": "Playback behavior for the file"}
+  ],
+  "common_gotchas": [
+    "An empty or missing file path can leave downstream analysis flat; validate channel data before mapping to visuals.",
+    "Large files stream from disk; avoid assuming the entire file is resident in memory."
+  ],
+  "related_snippets": ["audio_reactive"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-16"
+}

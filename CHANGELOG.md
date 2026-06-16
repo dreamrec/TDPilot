@@ -1,6 +1,54 @@
 # Changelog
 
 
+
+## 2.0.0 - 2026-06-16 — Correctness-first visual programming brain
+
+### Added
+
+- **Brain planning layer**: `td_brain_plan` now converts visual intent into
+  `VisualTaskSpec -> ConceptGraph -> BrainPlan -> PatchPlan` without mutating
+  TouchDesigner. Plans are grounded in live state, operator cards, hints,
+  technique memory, domain compatibility, risks, missing facts, and blocked
+  questions.
+- **Transactional execution**: `td_brain_execute` applies only valid BrainPlans
+  and defaults to preflight, snapshots, validation, rollback on apply failure,
+  rollback on validation failure, trace export, and validated-only learning.
+- **Safe low-level executor**: `td_transaction_apply` accepts a `PatchPlan` or
+  `BrainPlan` with dry-run, max-op, validation-profile, dependency-ordering,
+  snapshot, and rollback controls.
+- **Optional cockpit UI**: `td_cockpit_render` exposes a read-only MCP Apps
+  payload backed by `ui://tdpilot/cockpit.html` for concept graph, transaction,
+  validation, rollback, and trace summaries.
+- **Brain validators and traces** for feedback, audio-reactive, POP, GLSL,
+  render pipeline, panel UI, custom-parameter control rigs, and generic
+  TOP/CHOP/SOP/DAT chains.
+- **Operator atlas coverage gate**: added missing structured operator cards for
+  the brain profiles and `scripts/audit_brain_atlas.py` to keep the planner's
+  required operator set covered.
+- **Client packaging**: Codex/Claude brain skills, brain agents, deterministic
+  hooks, MCP prompts, cached live resources, schema snapshots, golden evals,
+  and release audits are now part of the distributable surface.
+
+### Changed
+
+- **Tool count 106 -> 110** (`src/td_mcp/release_gates.py:EXPECTED_MIN_TOOL_COUNT`).
+- The default non-trivial TD workflow is now inspect -> brain plan -> execute
+  transactionally -> validate -> roll back or learn only validated outcomes.
+- `td_patch_apply` remains backward-compatible while opting into the same
+  transaction policy where requested.
+- Public metadata now advertises the 110-tool brain/cockpit surface across the
+  MCP manifest, Claude plugin, Codex plugin, npm package, docs, and skills.
+
+### Verification
+
+- Added focused tests for brain models, planner routing, transaction behavior,
+  MCP brain tools, cockpit resource metadata, schema snapshots, atlas coverage,
+  plugin packaging, hook checks, skills, and plugin surface audits.
+- Added release commands for `eval_brain_golden.py`, `brain_live_smoke.py`,
+  `audit_brain_atlas.py`, `audit_brain_skills.py`, and
+  `audit_plugin_surface.py`.
+
 ## 1.6.16 - 2026-05-18 — Agent observability (read journal + activity log) + one-tool self-update
 
 ### Added
