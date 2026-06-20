@@ -2,7 +2,7 @@
 
 
 
-## Unreleased
+## 2.0.1 - 2026-06-20 — Concept-to-node compiler (Phase 1) + green CI
 
 ### Added
 
@@ -27,6 +27,17 @@
   local-only private plugins.
 - `data/generated/` build artifacts are gitignored so they cannot be swept into
   a commit.
+- Concept compiler `_has_panel` matches `ui` as a whole word — a bare substring
+  previously matched `build`, `fluid`, etc. and spuriously flagged panel intent.
+- Concept-to-node eval `tool_choice` / `rollback_behavior` checks now measure
+  plan behavior (non-blocked plan with operations; patch undo label) instead of
+  the golden-case metadata, removing two vacuous passes.
+- `BrainPattern` rejects unknown validation probe names (master plan §4.3) so a
+  typo can no longer silently produce no validation.
+- Package-build smoke check (`scripts/check_package_builds.sh`) feeds `grep`
+  via a here-string instead of `echo | grep`; under `set -o pipefail` (GitHub's
+  shell) the piped form let `grep -q`'s early-exit SIGPIPE on the now-large
+  plugin zip report a false "missing file". (Matches the existing wheel check.)
 
 ## 2.0.0 - 2026-06-20 — Correctness-first visual programming brain + full operator atlas
 

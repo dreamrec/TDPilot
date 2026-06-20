@@ -98,7 +98,7 @@ else
         # tar -t lists entries; the prefix is "package/" inside npm tarballs.
         CONTENTS=$(tar -tzf "$NPM_TARBALL")
         for required in "package/run.js" "package/install.js" "package/brains.js" "package/README.md"; do
-            if echo "$CONTENTS" | grep -q "^${required}$"; then
+            if grep -q "^${required}\$" <<< "$CONTENTS"; then
                 ok "npm tarball contains ${required#package/}"
             else
                 fail "npm tarball missing ${required#package/}"
@@ -124,7 +124,7 @@ else
     else
         CONTENTS=$(unzip -l "$PLUGIN_OUT" | awk '{print $NF}')
         for required in ".mcp.json" ".claude-plugin/plugin.json" "td_component/tdpilot.tox" "README.md"; do
-            if echo "$CONTENTS" | grep -q "^${required}$"; then
+            if grep -q "^${required}\$" <<< "$CONTENTS"; then
                 ok "plugin zip contains ${required}"
             else
                 fail "plugin zip missing ${required}"
