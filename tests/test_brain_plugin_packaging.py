@@ -97,6 +97,37 @@ def test_codex_claude_plugin_surfaces_advertise_reviewed_operator_atlas():
     assert "Official Derivative" in advertised_surfaces
 
 
+def test_concept_to_node_master_plan_is_linked_and_implementation_ready():
+    plan_path = ROOT / "docs" / "TDPILOT_CONCEPT_TO_NODE_MASTER_PLAN.md"
+    readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
+    roadmap_text = (ROOT / "docs" / "TDPILOT_EFFECTIVENESS_ROADMAP.md").read_text(encoding="utf-8")
+
+    assert plan_path.exists()
+    plan_text = plan_path.read_text(encoding="utf-8")
+
+    assert "docs/TDPILOT_CONCEPT_TO_NODE_MASTER_PLAN.md" in readme_text
+    assert "docs/TDPILOT_CONCEPT_TO_NODE_MASTER_PLAN.md" in roadmap_text
+    for required in (
+        "Prompt -> ConceptCompiler -> CandidateGraph -> PatternResolver",
+        "CompiledVisualTaskSpec",
+        "CandidateConceptGraph",
+        "BrainPattern",
+        "OperatorAvailabilityMatrix",
+        "OperatorSubstitutionRule",
+        "ParamSemantics",
+        "GeneratedCodeBlock",
+        "ProfileValidationProbe",
+        "AssemblyMacro",
+        "ConceptToNodeEvalCase",
+        "Official Derivative",
+        "Codex",
+        "Claude Code",
+        "6-9 focused weeks",
+        "10-14 weeks",
+    ):
+        assert required in plan_text
+
+
 def test_audit_plugin_surface_cli_outputs_json_report():
     proc = subprocess.run(
         [sys.executable, "scripts/audit_plugin_surface.py", "--root", str(ROOT)],

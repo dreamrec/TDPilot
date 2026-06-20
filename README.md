@@ -59,6 +59,7 @@ Using Claude Desktop instead of Claude Code? See [`docs/INSTALL_CLAUDE_PLUGIN.md
 - Memory guide: `docs/MEMORY_GUIDE.md`
 - Production manual: `docs/MANUAL.md`
 - API reference: `docs/API_REFERENCE.md`
+- Concept-to-node master plan: `docs/TDPILOT_CONCEPT_TO_NODE_MASTER_PLAN.md`
 - Effectiveness roadmap: `docs/TDPILOT_EFFECTIVENESS_ROADMAP.md`
 - Security model: `docs/SECURITY.md`
 - Troubleshooting: `docs/TROUBLESHOOTING.md`

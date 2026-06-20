@@ -16,6 +16,24 @@ class FakeCardIndex:
         return None
 
 
+PHASE_ONE_SEED_OPS = {
+    "audiofileinCHOP",
+    "analyzeCHOP",
+    "mathCHOP",
+    "nullCHOP",
+    "noiseTOP",
+    "feedbackTOP",
+    "levelTOP",
+    "compositeTOP",
+    "nullTOP",
+    "containerCOMP",
+    "sliderCOMP",
+    "buttonCOMP",
+    "panelCHOP",
+    "textDAT",
+}
+
+
 @pytest.mark.asyncio
 async def test_feedback_intent_builds_grounded_concept_graph_and_patch_plan():
     client = FakeTDClient(
@@ -272,3 +290,46 @@ async def test_docs_evidence_softens_incomplete_live_family_list():
     assert plan.missing_facts == []
     assert "family-list-omitted:feedbackTOP" in plan.risk_flags
     assert any(item == "docs:feedbackTOP" for item in plan.grounding_evidence)
+
+
+@pytest.mark.asyncio
+async def test_compiler_path_builds_audio_feedback_panel_debug_candidate_graph():
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "CHOP": ["audiofileinCHOP", "analyzeCHOP", "mathCHOP", "nullCHOP", "panelCHOP"],
+                    "TOP": ["noiseTOP", "feedbackTOP", "levelTOP", "compositeTOP", "nullTOP"],
+                    "COMP": ["containerCOMP", "sliderCOMP", "buttonCOMP"],
+                    "DAT": ["textDAT"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent="Build an audio-reactive feedback visual with a control panel and debug output",
+        target_root="/project1",
+        output_top="/project1/out1",
+        card_index=FakeCardIndex(PHASE_ONE_SEED_OPS),
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.compiled_task is not None
+    assert plan.compiled_task.domains == ["CHOP", "TOP", "COMP", "DAT"]
+    assert plan.concept_graph.profile == "concept_compiled"
+    assert plan.candidate_graphs
+    candidate = plan.candidate_graphs[0]
+    assert candidate.profiles == ["audio_reactive", "feedback", "panel_ui"]
+    assert {
+        "audio_analysis_chop_chain",
+        "feedback_top_loop",
+        "panel_control_output",
+        "debug_output_conventions",
+    }.issubset(set(candidate.pattern_ids))
+    assert set(candidate.required_ops).issubset(set(plan.patch_plan.required_ops))
+    assert "textDAT" in plan.patch_plan.required_ops
+    assert any(edge.kind == "control" and edge.source == "audio_out" for edge in plan.concept_graph.edges)
+    assert all(f"docs:{op_type}" in plan.grounding_evidence for op_type in candidate.required_ops)

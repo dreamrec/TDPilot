@@ -5,6 +5,9 @@ zero-concept backlog. The goal is faster, more reliable translation from a
 creative concept into actual TouchDesigner nodes, parameters, Python, GLSL, and
 validation evidence.
 
+For the deep implementation blueprint, see
+`docs/TDPILOT_CONCEPT_TO_NODE_MASTER_PLAN.md`.
+
 ## Current Leverage
 
 - 110 local MCP tools for live TD inspection, mutation, validation, memory,

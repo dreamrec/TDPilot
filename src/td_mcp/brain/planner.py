@@ -5,9 +5,21 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from td_mcp.brain.concept_compiler import (
+    build_candidate_graphs,
+    compile_visual_task,
+    is_supported_compiler_route,
+)
 from td_mcp.brain.validators import classify_intent_profile
 from td_mcp.hints import query_hints
-from td_mcp.models.brain import BrainPlan, ConceptEdge, ConceptGraph, ConceptNode, VisualTaskSpec
+from td_mcp.models.brain import (
+    BrainPlan,
+    CandidateConceptGraph,
+    ConceptEdge,
+    ConceptGraph,
+    ConceptNode,
+    VisualTaskSpec,
+)
 from td_mcp.models.patch import PatchOperation, PatchPlan, ValidationPlan
 
 
@@ -482,6 +494,30 @@ async def build_brain_plan(
         include_memory=include_memory,
         include_docs=include_docs,
     )
+    compiled_task = compile_visual_task(
+        intent,
+        target_root=target_root,
+        output_top=output_top,
+        constraints=constraints,
+        preferred_domains=preferred_domains,
+        validation_profile=validation_profile,
+        card_index=card_index if include_docs else None,
+    )
+    if is_supported_compiler_route(compiled_task):
+        candidate_graphs = build_candidate_graphs(compiled_task)
+        if candidate_graphs:
+            available_ops = await _read_available_ops(td_client)
+            existing_names = await _read_existing_names(td_client, target_root)
+            return _plan_from_candidate_graph(
+                task=task,
+                compiled_task=compiled_task,
+                candidate_graphs=candidate_graphs,
+                available_ops=available_ops,
+                existing_names=existing_names,
+                card_index=card_index if include_docs else None,
+                validation_profile=validation_profile,
+            )
+
     profile = classify_intent_profile(intent, preferred_domains)
     spec = _PROFILE_SPECS.get(profile)
     if profile == "generic" and _intent_is_under_specified(intent, preferred_domains):
@@ -696,6 +732,67 @@ def _classify_required_ops(
     return sorted(missing), sorted(family_omitted)
 
 
+def _plan_from_candidate_graph(
+    *,
+    task: VisualTaskSpec,
+    compiled_task,
+    candidate_graphs: list[CandidateConceptGraph],
+    available_ops: set[str],
+    existing_names: set[str],
+    card_index,
+    validation_profile: str,
+) -> BrainPlan:
+    candidate = candidate_graphs[0]
+    grounding = _dedupe(
+        [
+            *compiled_task.grounding_evidence,
+            *candidate.grounding_evidence,
+            "compiler:path:phase1-audio-feedback-panel-debug",
+        ]
+    )
+    missing_ops, family_omitted_ops = _classify_required_ops(
+        candidate.required_ops,
+        available_ops,
+        card_index=card_index,
+    )
+    graph = ConceptGraph(
+        task=task,
+        profile="concept_compiled",
+        concepts=candidate.concepts,
+        edges=candidate.edges,
+        operators=list(candidate.required_ops),
+        unresolved=missing_ops,
+        evidence=grounding,
+        risk_flags=[
+            *candidate.risk_flags,
+            *[f"missing-op:{op}" for op in missing_ops],
+            *[f"family-list-omitted:{op}" for op in family_omitted_ops],
+        ],
+    )
+    missing_facts = [f"missing_op:{op}" for op in missing_ops]
+    blocked_questions = []
+    if missing_ops:
+        blocked_questions.append(
+            "The current TouchDesigner operator family list does not include every required operator for the compiler-backed candidate graph."
+        )
+        patch_plan = _empty_patch(task, reason="missing required operators")
+    else:
+        patch_plan = _compile_patch_plan(task, graph, existing_names)
+
+    return BrainPlan(
+        task=task,
+        concept_graph=graph,
+        patch_plan=patch_plan,
+        compiled_task=compiled_task,
+        candidate_graphs=candidate_graphs,
+        validation_profile=_resolve_validation_profile(validation_profile),
+        blocked_questions=blocked_questions,
+        missing_facts=missing_facts,
+        grounding_evidence=grounding,
+        risk_flags=list(graph.risk_flags),
+    )
+
+
 def _operator_has_docs(card_index, op_type: str) -> bool:
     if card_index is None:
         return False
@@ -799,6 +896,10 @@ def _base_name_for(concept: ConceptNode) -> str:
 
 def _join_path(parent: str, name: str) -> str:
     return f"{parent.rstrip('/')}/{name}".replace("//", "/")
+
+
+def _dedupe(items: list[str]) -> list[str]:
+    return list(dict.fromkeys(items))
 
 
 def _resolve_param_refs(value: Any, concept_names: dict[str, str], target_root: str) -> Any:

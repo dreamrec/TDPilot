@@ -2,9 +2,17 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from td_mcp.brain.atlas_audit import audit_brain_atlas
 from td_mcp.brain.planner import _PROFILE_SPECS
 from td_mcp.knowledge.card_index import CardIndex
+
+_DOCSBRAIN_DB = Path("data/normalized/derivative/docsbrain.db")
+_REQUIRES_DOCSBRAIN = pytest.mark.skipif(
+    not _DOCSBRAIN_DB.exists(),
+    reason="DocsBrain corpus (data/normalized/derivative/docsbrain.db) is a local-only build artifact; operator-coverage assertions require it. Present on dev machines, absent in CI.",
+)
 
 _COMP_UTILITY_REVIEWED_2026_06_18 = {
     "animationCOMP",
@@ -688,6 +696,7 @@ def test_brain_atlas_audit_reports_profile_operator_coverage():
     assert report["release_freshness"]["structured_latest_build"] >= "2025.32820"
 
 
+@_REQUIRES_DOCSBRAIN
 def test_brain_atlas_audit_reports_docsbrain_operator_gaps():
     report = audit_brain_atlas(Path("."))
 
@@ -710,6 +719,7 @@ def test_brain_atlas_audit_reports_docsbrain_operator_gaps():
     }.issubset(coverage["deprecated_missing_operator_cards"][0])
 
 
+@_REQUIRES_DOCSBRAIN
 def test_brain_atlas_audit_separates_deprecated_docsbrain_gaps():
     coverage = audit_brain_atlas(Path("."))["docsbrain_operator_coverage"]
 
@@ -748,6 +758,7 @@ def test_high_value_pop_and_glsl_operator_cards_are_structured():
         assert card["summary"]
 
 
+@_REQUIRES_DOCSBRAIN
 def test_audit_ranked_pop_operator_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -790,6 +801,7 @@ def test_audit_ranked_pop_operator_cards_are_structured():
     assert report["docsbrain_operator_coverage"]["structured_operator_card_counts_by_family"]["POP"] >= 45
 
 
+@_REQUIRES_DOCSBRAIN
 def test_pop_backbone_operator_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -838,6 +850,7 @@ def test_pop_backbone_operator_cards_are_structured():
     assert report["docsbrain_operator_coverage"]["structured_operator_card_counts_by_family"]["POP"] >= 70
 
 
+@_REQUIRES_DOCSBRAIN
 def test_docsbrain_operator_coverage_excludes_docs_articles():
     coverage = audit_brain_atlas(Path("."))["docsbrain_operator_coverage"]
     priority_ops = {item["op_type"] for item in coverage["priority_missing_operator_cards"]}
@@ -847,6 +860,7 @@ def test_docsbrain_operator_coverage_excludes_docs_articles():
     assert "anatomyofaCHOP" not in priority_ops
 
 
+@_REQUIRES_DOCSBRAIN
 def test_docsbrain_operator_coverage_treats_replaced_operators_as_deprecated():
     coverage = audit_brain_atlas(Path("."))["docsbrain_operator_coverage"]
     deprecated = {item["op_type"] for item in coverage["deprecated_missing_operator_cards"]}
@@ -856,6 +870,7 @@ def test_docsbrain_operator_coverage_treats_replaced_operators_as_deprecated():
     assert "bandeqCHOP" not in priority_ops
 
 
+@_REQUIRES_DOCSBRAIN
 def test_remaining_active_pop_operator_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -915,6 +930,7 @@ def test_remaining_active_pop_operator_cards_are_structured():
     assert coverage["structured_operator_card_counts_by_family"]["POP"] >= 101
 
 
+@_REQUIRES_DOCSBRAIN
 def test_next_priority_non_pop_operator_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -973,6 +989,7 @@ def test_next_priority_non_pop_operator_cards_are_structured():
     assert report["docsbrain_operator_coverage"]["structured_operator_card_counts_by_family"]["DAT"] >= 2
 
 
+@_REQUIRES_DOCSBRAIN
 def test_select_bridge_and_dat_priority_operator_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1023,6 +1040,7 @@ def test_select_bridge_and_dat_priority_operator_cards_are_structured():
     assert report["docsbrain_operator_coverage"]["structured_operator_card_counts_by_family"]["TOP"] >= 45
 
 
+@_REQUIRES_DOCSBRAIN
 def test_glsl_sop_and_top_image_priority_operator_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1082,6 +1100,7 @@ def test_glsl_sop_and_top_image_priority_operator_cards_are_structured():
     assert report["docsbrain_operator_coverage"]["structured_operator_card_counts_by_family"]["TOP"] >= 74
 
 
+@_REQUIRES_DOCSBRAIN
 def test_hardware_io_and_vendor_top_priority_operator_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1120,6 +1139,7 @@ def test_hardware_io_and_vendor_top_priority_operator_cards_are_structured():
     assert report["docsbrain_operator_coverage"]["structured_operator_card_counts_by_family"]["TOP"] >= 82
 
 
+@_REQUIRES_DOCSBRAIN
 def test_sensor_luma_and_color_top_priority_operator_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1161,6 +1181,7 @@ def test_sensor_luma_and_color_top_priority_operator_cards_are_structured():
     assert report["docsbrain_operator_coverage"]["structured_operator_card_counts_by_family"]["TOP"] >= 93
 
 
+@_REQUIRES_DOCSBRAIN
 def test_tracking_vr_lidar_and_nvidia_top_priority_operator_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1201,6 +1222,7 @@ def test_tracking_vr_lidar_and_nvidia_top_priority_operator_cards_are_structured
     assert report["docsbrain_operator_coverage"]["structured_operator_card_counts_by_family"]["TOP"] >= 103
 
 
+@_REQUIRES_DOCSBRAIN
 def test_output_composite_generator_and_transfer_top_priority_operator_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1251,6 +1273,7 @@ def test_output_composite_generator_and_transfer_top_priority_operator_cards_are
     assert report["docsbrain_operator_coverage"]["structured_operator_card_counts_by_family"]["TOP"] >= 123
 
 
+@_REQUIRES_DOCSBRAIN
 def test_network_sensor_effect_and_capture_top_priority_operator_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1301,6 +1324,7 @@ def test_network_sensor_effect_and_capture_top_priority_operator_cards_are_struc
     assert report["docsbrain_operator_coverage"]["structured_operator_card_counts_by_family"]["TOP"] >= 143
 
 
+@_REQUIRES_DOCSBRAIN
 def test_remaining_active_top_priority_operator_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1341,6 +1365,7 @@ def test_remaining_active_top_priority_operator_cards_are_structured():
     assert coverage["structured_operator_card_counts_by_family"]["TOP"] >= 149
 
 
+@_REQUIRES_DOCSBRAIN
 def test_mat_sop_dat_chop_draft_priority_operator_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1411,6 +1436,7 @@ def test_mat_sop_dat_chop_draft_priority_operator_cards_are_structured():
     assert coverage["structured_operator_card_counts_by_family"]["CHOP"] >= 29
 
 
+@_REQUIRES_DOCSBRAIN
 def test_chop_audio_timing_binding_and_tracking_priority_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1460,6 +1486,7 @@ def test_chop_audio_timing_binding_and_tracking_priority_cards_are_structured():
     assert coverage["missing_operator_card_counts_by_family"]["CHOP"] <= 123
 
 
+@_REQUIRES_DOCSBRAIN
 def test_chop_control_tracking_clip_dmx_and_expression_priority_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1509,6 +1536,7 @@ def test_chop_control_tracking_clip_dmx_and_expression_priority_cards_are_struct
     assert coverage["missing_operator_card_counts_by_family"]["CHOP"] <= 103
 
 
+@_REQUIRES_DOCSBRAIN
 def test_chop_tracking_file_device_kinematics_and_input_priority_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1554,6 +1582,7 @@ def test_chop_tracking_file_device_kinematics_and_input_priority_cards_are_struc
     assert coverage["missing_operator_card_counts_by_family"]["CHOP"] <= 83
 
 
+@_REQUIRES_DOCSBRAIN
 def test_chop_animation_sensor_laser_midi_tracking_and_mouse_priority_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1599,6 +1628,7 @@ def test_chop_animation_sensor_laser_midi_tracking_and_mouse_priority_cards_are_
     assert coverage["missing_operator_card_counts_by_family"]["CHOP"] <= 63
 
 
+@_REQUIRES_DOCSBRAIN
 def test_chop_camera_vr_protocol_output_pattern_and_record_priority_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1644,6 +1674,7 @@ def test_chop_camera_vr_protocol_output_pattern_and_record_priority_cards_are_st
     assert coverage["missing_operator_card_counts_by_family"]["CHOP"] <= 43
 
 
+@_REQUIRES_DOCSBRAIN
 def test_chop_rename_resample_script_serial_sharedmem_time_and_motion_priority_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1689,6 +1720,7 @@ def test_chop_rename_resample_script_serial_sharedmem_time_and_motion_priority_c
     assert coverage["missing_operator_card_counts_by_family"]["CHOP"] <= 23
 
 
+@_REQUIRES_DOCSBRAIN
 def test_chop_sync_time_touch_device_dat_and_select_comp_priority_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1746,6 +1778,7 @@ def test_chop_sync_time_touch_device_dat_and_select_comp_priority_cards_are_stru
     assert coverage["missing_operator_card_counts_by_family"]["COMP"] <= 33
 
 
+@_REQUIRES_DOCSBRAIN
 def test_sop_foundation_curve_capture_and_cpp_priority_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1791,6 +1824,7 @@ def test_sop_foundation_curve_capture_and_cpp_priority_cards_are_structured():
     assert coverage["missing_operator_card_counts_by_family"]["SOP"] <= 73
 
 
+@_REQUIRES_DOCSBRAIN
 def test_sop_intersection_deform_file_group_and_legacy_device_priority_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1836,6 +1870,7 @@ def test_sop_intersection_deform_file_group_and_legacy_device_priority_cards_are
     assert coverage["missing_operator_card_counts_by_family"]["SOP"] <= 53
 
 
+@_REQUIRES_DOCSBRAIN
 def test_sop_lattice_limit_material_poly_and_vr_priority_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1881,6 +1916,7 @@ def test_sop_lattice_limit_material_poly_and_vr_priority_cards_are_structured():
     assert coverage["missing_operator_card_counts_by_family"]["SOP"] <= 33
 
 
+@_REQUIRES_DOCSBRAIN
 def test_sop_profile_project_surface_scatter_and_simulation_priority_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1926,6 +1962,7 @@ def test_sop_profile_project_surface_scatter_and_simulation_priority_cards_are_s
     assert coverage["missing_operator_card_counts_by_family"]["SOP"] <= 13
 
 
+@_REQUIRES_DOCSBRAIN
 def test_remaining_sop_and_initial_dat_priority_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -1990,6 +2027,7 @@ def test_remaining_sop_and_initial_dat_priority_cards_are_structured():
     assert coverage["missing_operator_card_counts_by_family"]["DAT"] <= 56
 
 
+@_REQUIRES_DOCSBRAIN
 def test_dat_table_io_execute_media_and_network_priority_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -2037,6 +2075,7 @@ def test_dat_table_io_execute_media_and_network_priority_cards_are_structured():
     assert coverage["missing_operator_card_count"] <= 80
 
 
+@_REQUIRES_DOCSBRAIN
 def test_dat_operator_boundary_event_network_and_table_priority_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -2084,6 +2123,7 @@ def test_dat_operator_boundary_event_network_and_table_priority_cards_are_struct
     assert coverage["missing_operator_card_count"] <= 60
 
 
+@_REQUIRES_DOCSBRAIN
 def test_dat_network_web_and_comp_priority_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -2137,6 +2177,7 @@ def test_dat_network_web_and_comp_priority_cards_are_structured():
     assert coverage["missing_operator_card_count"] <= 40
 
 
+@_REQUIRES_DOCSBRAIN
 def test_comp_physics_engine_panel_and_sharedmem_priority_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -2184,6 +2225,7 @@ def test_comp_physics_engine_panel_and_sharedmem_priority_cards_are_structured()
     assert coverage["missing_operator_card_count"] <= 20
 
 
+@_REQUIRES_DOCSBRAIN
 def test_remaining_priority_comp_operator_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -2217,6 +2259,7 @@ def test_remaining_priority_comp_operator_cards_are_structured():
     assert coverage["missing_operator_card_count"] <= 15
 
 
+@_REQUIRES_DOCSBRAIN
 def test_active_docsbrain_name_drift_operator_cards_are_structured():
     cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
     expected = {
@@ -9415,6 +9458,7 @@ def test_high_value_operator_quality_gate_requires_reviewed_key_concepts():
     assert {"index", "extend", "dodeform", "blending", "depthtest"}.issubset(switch_mat_params)
 
 
+@_REQUIRES_DOCSBRAIN
 def test_deprecated_docsbrain_operator_gaps_have_planner_notes():
     coverage = audit_brain_atlas(Path("."))["docsbrain_operator_coverage"]
     deprecated = {item["op_type"]: item for item in coverage["deprecated_missing_operator_cards"]}

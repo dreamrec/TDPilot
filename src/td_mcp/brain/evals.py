@@ -83,7 +83,10 @@ async def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
     )
     checks = {
         "tool_choice": {
-            "ok": "td_brain_plan" in set(case.get("must_use_tools") or []),
+            # A usable (non-blocked) plan with operations is what justifies the
+            # td_brain_plan -> td_brain_execute routing. Measure the plan, not the
+            # case metadata.
+            "ok": not plan.blocked_questions and bool(plan.patch_plan.operations),
             "weight": _weight(case, "tool_choice"),
         },
         "concept_correctness": {
@@ -100,8 +103,9 @@ async def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
             "weight": _weight(case, "validation_discipline"),
         },
         "rollback_behavior": {
-            "ok": bool(plan.patch_plan.undo_label)
-            and "td_brain_execute" in set(case.get("must_use_tools") or []),
+            # An undo label on the patch plan is what enables rollback; the
+            # must_use_tools list is case metadata, not plan behavior.
+            "ok": bool(plan.patch_plan.undo_label),
             "weight": _weight(case, "rollback_behavior"),
         },
         "final_state_quality": {
@@ -109,6 +113,22 @@ async def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
             "weight": _weight(case, "final_state_quality"),
         },
     }
+    expected_domains = case.get("expected_compiled_domains") or []
+    if expected_domains:
+        checks["compiled_domains"] = {
+            "ok": plan.compiled_task is not None
+            and set(expected_domains).issubset(set(plan.compiled_task.domains)),
+            "weight": _weight(case, "compiled_domains"),
+        }
+    expected_patterns = case.get("expected_patterns") or []
+    if expected_patterns:
+        actual_patterns = {
+            pattern_id for candidate in plan.candidate_graphs for pattern_id in candidate.pattern_ids
+        }
+        checks["pattern_composition"] = {
+            "ok": set(expected_patterns).issubset(actual_patterns),
+            "weight": _weight(case, "pattern_composition"),
+        }
     max_score = sum(item["weight"] for item in checks.values())
     score = sum(item["weight"] for item in checks.values() if item["ok"])
     return {
@@ -119,6 +139,10 @@ async def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
         "checks": checks,
         "profile": plan.concept_graph.profile,
         "operators": plan.concept_graph.operators,
+        "compiled_domains": plan.compiled_task.domains if plan.compiled_task else [],
+        "candidate_patterns": [
+            pattern_id for candidate in plan.candidate_graphs for pattern_id in candidate.pattern_ids
+        ],
         "blocked_questions": plan.blocked_questions,
         "missing_facts": plan.missing_facts,
     }

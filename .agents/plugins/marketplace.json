@@ -1,0 +1,20 @@
+{
+  "name": "tdpilot-local",
+  "interface": {
+    "displayName": "TDPilot Local Plugins"
+  },
+  "plugins": [
+    {
+      "name": "tdpilot",
+      "source": {
+        "source": "local",
+        "path": "./plugins/tdpilot"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

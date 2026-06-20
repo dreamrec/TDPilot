@@ -18,6 +18,7 @@ def test_load_golden_cases_preserves_ids_and_expected_ops():
 
     assert {case["id"] for case in cases} >= {
         "feedback_loop_basic",
+        "audio_feedback_panel_debug",
         "glsl_top_shader",
         "glsl_material_shader",
         "glsl_pop_attribute_shader",

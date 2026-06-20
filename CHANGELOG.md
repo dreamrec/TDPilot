@@ -2,6 +2,32 @@
 
 
 
+## Unreleased
+
+### Added
+
+- **Concept-to-node compiler (Phase 1, internal)**: `src/td_mcp/brain/concept_compiler.py`
+  (`compile_visual_task`, `build_candidate_graphs`) plus a validated
+  `BrainPattern` registry in `src/td_mcp/brain/patterns.py` turn a creative
+  prompt into a `CompiledVisualTaskSpec` and a ranked `CandidateConceptGraph`
+  list before PatchPlan compilation. New Pydantic models in
+  `src/td_mcp/models/brain.py`. Blueprint:
+  `docs/TDPILOT_CONCEPT_TO_NODE_MASTER_PLAN.md`. This layer is not yet wired into
+  the public MCP surface — tool count is unchanged at 110.
+- Concept-to-node eval seeds and compiler/pattern/model tests.
+
+### Fixed
+
+- **CI is green on a clean checkout.** Atlas operator-coverage tests now skip
+  when the local-only DocsBrain corpus
+  (`data/normalized/derivative/docsbrain.db`, a dev build artifact that is never
+  committed) is absent, instead of failing.
+- Added a public `.agents/plugins/marketplace.json` (Codex marketplace mirror,
+  tdpilot-only) so the plugin-surface audit passes in CI without leaking
+  local-only private plugins.
+- `data/generated/` build artifacts are gitignored so they cannot be swept into
+  a commit.
+
 ## 2.0.0 - 2026-06-20 — Correctness-first visual programming brain + full operator atlas
 
 ### Added
