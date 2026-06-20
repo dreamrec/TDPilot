@@ -1,0 +1,513 @@
+{
+  "card_type": "operator",
+  "op_type": "glslCOMP",
+  "family": "COMP",
+  "display_name": "GLSL COMP",
+  "docs_url": "https://docs.derivative.ca/GLSL_COMP",
+  "summary": "Panel Component that uses vertex and pixel shaders to render directly to the screen. It is useful for pixel accurate UI because the rendered resolution adapts to display DPI scaling, panel variables are available to the shader, and the usual panel layout, interaction, look, children, drag/drop, extension, clone, and external tox controls still apply.",
+  "key_params": [
+    {
+      "name": "vertexdat",
+      "type": "DAT",
+      "note": "DAT containing the vertex shader code."
+    },
+    {
+      "name": "pixeldat",
+      "type": "DAT",
+      "note": "DAT containing the pixel shader code."
+    },
+    {
+      "name": "sampler0name",
+      "type": "String",
+      "note": "Sampler uniform name declared in the GLSL program."
+    },
+    {
+      "name": "sampler0top",
+      "type": "TOP",
+      "note": "TOP bound to the named sampler uniform."
+    },
+    {
+      "name": "sampler0extendu",
+      "type": "Menu",
+      "note": "Sampler extend mode in U."
+    },
+    {
+      "name": "sampler0extendv",
+      "type": "Menu",
+      "note": "Sampler extend mode in V."
+    },
+    {
+      "name": "sampler0extendw",
+      "type": "Menu",
+      "note": "Sampler extend mode in W, useful for 3D TOP samplers."
+    },
+    {
+      "name": "sampler0filter",
+      "type": "Menu",
+      "note": "Sampler filtering mode."
+    },
+    {
+      "name": "sampler0anisotropy",
+      "type": "Menu",
+      "note": "Sampler anisotropic filtering amount."
+    },
+    {
+      "name": "vec0name",
+      "type": "String",
+      "note": "Named vector uniform."
+    },
+    {
+      "name": "vec0value",
+      "type": "Float",
+      "note": "Vector uniform value; float, vec2, vec3, and vec4 declarations consume the leading components."
+    },
+    {
+      "name": "const0name",
+      "type": "String",
+      "note": "Specialization constant name declared in the shader."
+    },
+    {
+      "name": "const0value",
+      "type": "Float",
+      "note": "Specialization constant value."
+    },
+    {
+      "name": "x",
+      "type": "Int",
+      "note": "Panel X position in pixels relative to its parent."
+    },
+    {
+      "name": "y",
+      "type": "Int",
+      "note": "Panel Y position in pixels relative to its parent."
+    },
+    {
+      "name": "w",
+      "type": "Int",
+      "note": "Panel width in pixels."
+    },
+    {
+      "name": "h",
+      "type": "Int",
+      "note": "Panel height in pixels."
+    },
+    {
+      "name": "fixedaspect",
+      "type": "Menu",
+      "note": "Locks one dimension to the Aspect Ratio when fixed-aspect layout is used."
+    },
+    {
+      "name": "aspect",
+      "type": "Float",
+      "note": "Width/height ratio used by Fixed Aspect."
+    },
+    {
+      "name": "layer",
+      "type": "Int",
+      "note": "Depth layer used to order sibling panel drawing."
+    },
+    {
+      "name": "hmode",
+      "type": "Menu",
+      "note": "Horizontal sizing mode: Fixed Width, Fill, or Anchors."
+    },
+    {
+      "name": "leftanchor",
+      "type": "Float",
+      "note": "Normalized left anchor when horizontal mode uses Anchors."
+    },
+    {
+      "name": "rightanchor",
+      "type": "Float",
+      "note": "Normalized right anchor when horizontal mode uses Anchors."
+    },
+    {
+      "name": "vmode",
+      "type": "Menu",
+      "note": "Vertical sizing mode: Fixed Height, Fill, or Anchors."
+    },
+    {
+      "name": "bottomanchor",
+      "type": "Float",
+      "note": "Normalized bottom anchor when vertical mode uses Anchors."
+    },
+    {
+      "name": "topanchor",
+      "type": "Float",
+      "note": "Normalized top anchor when vertical mode uses Anchors."
+    },
+    {
+      "name": "alignallow",
+      "type": "Menu",
+      "note": "Allows or ignores parent Align settings and margins."
+    },
+    {
+      "name": "alignorder",
+      "type": "Int",
+      "note": "Ordering value when a parent panel aligns its children."
+    },
+    {
+      "name": "postoffsetx",
+      "type": "Int",
+      "note": "Post-layout X offset."
+    },
+    {
+      "name": "postoffsety",
+      "type": "Int",
+      "note": "Post-layout Y offset."
+    },
+    {
+      "name": "sizefromwindow",
+      "type": "Toggle",
+      "note": "Sets panel width and height from its floating viewer window size."
+    },
+    {
+      "name": "display",
+      "type": "Toggle",
+      "note": "Shows or hides the panel."
+    },
+    {
+      "name": "enable",
+      "type": "Toggle",
+      "note": "Enables or prevents interaction with this panel."
+    },
+    {
+      "name": "helpdat",
+      "type": "DAT",
+      "note": "Text DAT shown as rollover help for the control panel."
+    },
+    {
+      "name": "cursor",
+      "type": "Menu",
+      "note": "Cursor shown when the pointer is over the panel."
+    },
+    {
+      "name": "multitouch",
+      "type": "Menu",
+      "note": "Controls built-in multi-touch handling for the panel."
+    },
+    {
+      "name": "constraincursor",
+      "type": "Toggle",
+      "note": "Constrains the cursor inside the panel once it enters."
+    },
+    {
+      "name": "clickthrough",
+      "type": "Toggle",
+      "note": "Ignores mouse clicks on this panel when enabled."
+    },
+    {
+      "name": "mousewheel",
+      "type": "Toggle",
+      "note": "Captures mouse-wheel events over this panel."
+    },
+    {
+      "name": "mouserel",
+      "type": "Toggle",
+      "note": "Reports relative mouse movement in panel uv values."
+    },
+    {
+      "name": "resize",
+      "type": "Toggle",
+      "note": "Enables resizing the panel by dragging edges."
+    },
+    {
+      "name": "reposition",
+      "type": "Menu",
+      "note": "Enables drag-to-reposition behavior for a window or component."
+    },
+    {
+      "name": "anchordrag",
+      "type": "Menu",
+      "note": "Chooses whether drag-to-reposition edits anchors or offsets."
+    },
+    {
+      "name": "scrolloverlay",
+      "type": "Menu",
+      "note": "Controls whether the panel is affected by parent scrollbar position."
+    },
+    {
+      "name": "bgcolorr",
+      "type": "Float",
+      "note": "Background color red component."
+    },
+    {
+      "name": "bgcolorg",
+      "type": "Float",
+      "note": "Background color green component."
+    },
+    {
+      "name": "bgcolorb",
+      "type": "Float",
+      "note": "Background color blue component."
+    },
+    {
+      "name": "bgalpha",
+      "type": "Float",
+      "note": "Background alpha."
+    },
+    {
+      "name": "top",
+      "type": "TOP",
+      "note": "Background TOP displayed behind the panel."
+    },
+    {
+      "name": "topfill",
+      "type": "Menu",
+      "note": "How the Background TOP fills the panel."
+    },
+    {
+      "name": "topsmoothness",
+      "type": "Menu",
+      "note": "Filtering used by the Background TOP."
+    },
+    {
+      "name": "composite",
+      "type": "Menu",
+      "note": "How this panel composites with sibling panels."
+    },
+    {
+      "name": "opacity",
+      "type": "Float",
+      "note": "Panel transparency."
+    },
+    {
+      "name": "align",
+      "type": "Menu",
+      "note": "Child panel alignment mode."
+    },
+    {
+      "name": "spacing",
+      "type": "Int",
+      "note": "Space between children when aligning them."
+    },
+    {
+      "name": "alignmax",
+      "type": "Int",
+      "note": "Maximum number of children per row or column for selected align modes."
+    },
+    {
+      "name": "marginl",
+      "type": "Int",
+      "note": "Left margin around the child layout."
+    },
+    {
+      "name": "marginr",
+      "type": "Int",
+      "note": "Right margin around the child layout."
+    },
+    {
+      "name": "marginb",
+      "type": "Int",
+      "note": "Bottom margin around the child layout."
+    },
+    {
+      "name": "margint",
+      "type": "Int",
+      "note": "Top margin around the child layout."
+    },
+    {
+      "name": "justifymethod",
+      "type": "Menu",
+      "note": "Justifies children individually or as a group."
+    },
+    {
+      "name": "justifyh",
+      "type": "Menu",
+      "note": "Horizontal child justification."
+    },
+    {
+      "name": "justifyv",
+      "type": "Menu",
+      "note": "Vertical child justification."
+    },
+    {
+      "name": "fit",
+      "type": "Menu",
+      "note": "Scales children to fit width, height, or best fit."
+    },
+    {
+      "name": "crop",
+      "type": "Menu",
+      "note": "Crops child panels that extend outside the parent panel bounds."
+    },
+    {
+      "name": "phscrollbar",
+      "type": "Menu",
+      "note": "Horizontal scrollbar behavior."
+    },
+    {
+      "name": "pvscrollbar",
+      "type": "Menu",
+      "note": "Vertical scrollbar behavior."
+    },
+    {
+      "name": "scrollbarthickness",
+      "type": "Int",
+      "note": "Scrollbar thickness in pixels."
+    },
+    {
+      "name": "drag",
+      "type": "Menu",
+      "note": "Controls whether this panel can be dragged and which drag workflow is used."
+    },
+    {
+      "name": "dragscript",
+      "type": "DAT",
+      "note": "Script executed when starting to drag this panel."
+    },
+    {
+      "name": "drop",
+      "type": "Menu",
+      "note": "Controls whether this panel accepts dropped items."
+    },
+    {
+      "name": "dropscript",
+      "type": "DAT",
+      "note": "Script or table DAT used to process drops onto this panel."
+    },
+    {
+      "name": "dragdropcallbacks",
+      "type": "DAT",
+      "note": "DAT holding custom drag/drop callback scripts."
+    },
+    {
+      "name": "reinitextensions",
+      "type": "Pulse",
+      "note": "Recompiles extension objects."
+    },
+    {
+      "name": "ext0object",
+      "type": "String",
+      "note": "Python class instance attached as a component extension."
+    },
+    {
+      "name": "ext0name",
+      "type": "String",
+      "note": "Optional extension search name."
+    },
+    {
+      "name": "ext0promote",
+      "type": "Toggle",
+      "note": "Promotes an extension to direct component-level access."
+    },
+    {
+      "name": "parentshortcut",
+      "type": "String",
+      "note": "Parent shortcut name usable inside the component."
+    },
+    {
+      "name": "opshortcut",
+      "type": "String",
+      "note": "Global operator shortcut name usable anywhere in the project."
+    },
+    {
+      "name": "iop0shortcut",
+      "type": "String",
+      "note": "Internal OP shortcut name usable inside this component."
+    },
+    {
+      "name": "iop0op",
+      "type": "OP",
+      "note": "Internal OP path referenced by the shortcut."
+    },
+    {
+      "name": "nodeview",
+      "type": "Menu",
+      "note": "Node viewer source, including default panel viewer or another operator viewer."
+    },
+    {
+      "name": "opviewer",
+      "type": "OP",
+      "note": "Operator whose viewer is shown when Node View is Operator Viewer."
+    },
+    {
+      "name": "enablecloning",
+      "type": "Toggle",
+      "note": "Controls whether the component actively clones from its clone master."
+    },
+    {
+      "name": "clone",
+      "type": "COMP",
+      "note": "Clone master component."
+    },
+    {
+      "name": "loadondemand",
+      "type": "Toggle",
+      "note": "Loads the component only when required."
+    },
+    {
+      "name": "externaltox",
+      "type": "File",
+      "note": "External .tox file that can source this component's contents."
+    },
+    {
+      "name": "reloadcustom",
+      "type": "Toggle",
+      "note": "Reloads top-level custom parameter values when loading from external .tox."
+    },
+    {
+      "name": "reloadbuiltin",
+      "type": "Toggle",
+      "note": "Reloads top-level built-in parameter values when loading from external .tox."
+    },
+    {
+      "name": "relpath",
+      "type": "Menu",
+      "note": "Relative file path behavior for paths inside the component."
+    }
+  ],
+  "key_concepts": [
+    "pixel accurate UI",
+    "DPI scaling",
+    "Panel variables",
+    "Panel Component",
+    "sampler dimensions",
+    "Texture Sampling Parameters",
+    "Vector uniforms",
+    "Specialization Constants",
+    "Layout Page",
+    "Fixed Aspect",
+    "Anchors",
+    "Depth Layer",
+    "Panel Page",
+    "Display",
+    "Enable",
+    "Multi-Touch",
+    "Click Through",
+    "Look Page",
+    "Background TOP",
+    "Composite",
+    "Opacity",
+    "Children Page",
+    "Crop",
+    "Drag-and-Drop",
+    "Extensions",
+    "Parent Shortcut",
+    "Global OP Shortcut",
+    "Internal Operators",
+    "Node Viewer",
+    "clone",
+    "external .tox",
+    "Info CHOP"
+  ],
+  "common_gotchas": [
+    "Sampler declarations in GLSL must match the bound TOP dimensionality, such as sampler2D for a 2D TOP and sampler3D for a 3D TOP.",
+    "Display hides the panel and may incur layout processing; for simple overlays, adjust opacity instead.",
+    "Enable prevents interaction with the panel but does not mean the shader or panel network no longer exists.",
+    "Built-in Multi-Touch can interfere with scripts that handle touches through Multi Touch In DAT, so disable built-in handling when a custom touch pipeline owns events.",
+    "Panel anchors are normalized 0-1 values relative to the parent panel, while offsets and margins are absolute pixels.",
+    "Layer only orders panels at the same hierarchy level; sibling panels with equal layer values fall back to operator name ordering.",
+    "Background TOP fill and smoothness affect only the panel background, not the shader's own sampler uniforms.",
+    "external .tox reload options affect top-level custom and built-in parameters differently from node parameters inside the component.",
+    "Drag/drop callbacks can copy or modify operators in a temporary network, so treat drop scripts as behavior, not just metadata.",
+    "Use Info CHOP channels such as warnings and errors to diagnose cook and shader-panel state."
+  ],
+  "related_snippets": [
+    "GLSL_snippets",
+    "COMP_snippets",
+    "TOP_snippets"
+  ],
+  "build_relevance": "2023.11280+ panel shader surface with DPI-aware rendering",
+  "last_verified": "2026-06-18"
+}

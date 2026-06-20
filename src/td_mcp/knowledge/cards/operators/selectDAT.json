@@ -1,0 +1,154 @@
+{
+  "card_type": "operator",
+  "op_type": "selectDAT",
+  "family": "DAT",
+  "display_name": "Select DAT",
+  "docs_url": "https://docs.derivative.ca/Select_DAT",
+  "summary": "Fetches a DAT from elsewhere in the project and optionally selects a subset of table rows and columns by name, index, values, or expressions.",
+  "key_params": [
+    {
+      "name": "dat",
+      "type": "DAT",
+      "note": "Referenced DAT path"
+    },
+    {
+      "name": "firstrow",
+      "type": "Toggle",
+      "note": "Always include first row"
+    },
+    {
+      "name": "firstcol",
+      "type": "Toggle",
+      "note": "Always include first column"
+    },
+    {
+      "name": "extractrows",
+      "type": "Menu",
+      "note": "All, by name, by index, by values, or by condition"
+    },
+    {
+      "name": "rownamestart",
+      "type": "String",
+      "note": "Starting row name"
+    },
+    {
+      "name": "rowindexstart",
+      "type": "Integer",
+      "note": "Starting row index"
+    },
+    {
+      "name": "rownameend",
+      "type": "String",
+      "note": "Ending row name"
+    },
+    {
+      "name": "rowindexend",
+      "type": "Integer",
+      "note": "Ending row index"
+    },
+    {
+      "name": "rownames",
+      "type": "String",
+      "note": "Explicit row value list"
+    },
+    {
+      "name": "rowexpr",
+      "type": "Expr",
+      "note": "Row-selection expression"
+    },
+    {
+      "name": "fromcol",
+      "type": "String",
+      "note": "Column used for row value/expression selection"
+    },
+    {
+      "name": "extractcols",
+      "type": "Menu",
+      "note": "All, by name, by index, by values, or by condition"
+    },
+    {
+      "name": "colnamestart",
+      "type": "String",
+      "note": "Starting column name"
+    },
+    {
+      "name": "colindexstart",
+      "type": "Integer",
+      "note": "Starting column index"
+    },
+    {
+      "name": "colnameend",
+      "type": "String",
+      "note": "Ending column name"
+    },
+    {
+      "name": "colindexend",
+      "type": "Integer",
+      "note": "Ending column index"
+    },
+    {
+      "name": "colnames",
+      "type": "String",
+      "note": "Explicit column value list"
+    },
+    {
+      "name": "colexpr",
+      "type": "Expr",
+      "note": "Column-selection expression"
+    },
+    {
+      "name": "fromrow",
+      "type": "String",
+      "note": "Row used for column value/expression selection"
+    },
+    {
+      "name": "data",
+      "type": "Menu",
+      "note": "Input data as strings or expressions"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "output",
+      "type": "Menu",
+      "note": "Choose whether selected DAT output is data, strings, or expressions"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Select DAT references another DAT; it does not copy data into an independent static table.",
+    "Row/column selection modes change which Start/End/Values/Expression parameters matter.",
+    "Include First Row/Col can keep headers even when the selected range would otherwise exclude them.",
+    "Expression selection evaluates conditions against the configured source row or column.",
+    "Use a Null DAT after Select DAT when downstream consumers need a stable output path.",
+    "Avoid selecting by index when source table layouts may reorder; names or headers are safer."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2021.10000+ table subset/reference",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Fetches a DAT from another project location and optionally extracts table subsets.",
+    "Row and column extract modes support all, name range, index range, explicit values, and expression conditions.",
+    "From Column and From Row choose the comparison source for value-based selections.",
+    "Output mode can pass data through, evaluate strings, or evaluate expressions."
+  ]
+}

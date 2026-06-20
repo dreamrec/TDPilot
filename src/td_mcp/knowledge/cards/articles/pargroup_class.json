@@ -1,0 +1,53 @@
+{
+  "card_type": "article",
+  "article_id": "pargroup_class",
+  "title": "ParGroup Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "PARAMETER",
+    "COMP"
+  ],
+  "summary": "Official Derivative Python API reference for parameter groups, covering tuple-valued parameter state, bind/export metadata, default modes, enable expressions, group-level value/expression access, copy/destroy behavior, and multi-component parameter handling.",
+  "source_url": "https://docs.derivative.ca/ParGroup_Class",
+  "docsbrain_page_id": "pargroup_class",
+  "covered_operators": [
+    "parameterCOMP",
+    "parameterDAT",
+    "pargroupexecuteDAT",
+    "scriptCHOP",
+    "scriptDAT",
+    "scriptSOP",
+    "scriptTOP"
+  ],
+  "key_concepts": [
+    "ParGroup",
+    "bindExpr",
+    "bindMaster",
+    "bindReferences",
+    "bindRange",
+    "default",
+    "defaultExpr",
+    "defaultBindExpr",
+    "defaultMode",
+    "enable",
+    "enableExpr",
+    "exportOP",
+    "exportSource",
+    "expr",
+    "eval()",
+    "copy()",
+    "destroy()"
+  ],
+  "guidance": [
+    "Use this article when generated Python needs to work with a tuple-style parameter group such as translate, color, or size.",
+    "Many ParGroup members are tuple-valued, so generated code should provide one value per component instead of a scalar when setting expressions or defaults.",
+    "bindExpr is a tuple of expressions and should be quoted as expressions, not passed as live objects.",
+    "Group enable affects all individual parameters in the group, while enableExpr is shared by the group and its parameters.",
+    "Destroying a sequential ParGroup destroys the whole sequence block; re-fetch parameter references after destructive operations."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

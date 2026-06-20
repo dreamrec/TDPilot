@@ -1,0 +1,49 @@
+{
+  "card_type": "operator",
+  "op_type": "nvidiabackgroundTOP",
+  "family": "TOP",
+  "display_name": "NVIDIA Background TOP",
+  "docs_url": "https://docs.derivative.ca/NVIDIA_Background_TOP",
+  "summary": "Uses NVIDIA Maxine Video Effects AI segmentation to output a monochrome foreground/background key, commonly used with Matte TOP or other compositing nodes to replace a webcam-style background.",
+  "key_params": [
+    {
+      "name": "mode",
+      "type": "Menu",
+      "note": "Quality or Performance segmentation model."
+    },
+    {
+      "name": "segment",
+      "type": "Menu",
+      "note": "Treat chairs as foreground or Background in the matte."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP pixel format for the monochrome output image."
+    }
+  ],
+  "common_gotchas": [
+    "Official docs mark this TOP as Windows-only and requiring a 20/30/40/50 series NVIDIA RTX card.",
+    "The required Video Effects SDK models must be downloaded separately for the target GPU.",
+    "Do not combine this feature with ZED device workflows in one project because of TensorRT version conflicts.",
+    "The background engine requires at least 512x288 video input.",
+    "The AI key lags the source by multiple frames; delay the source image, for example with Cache TOP, before compositing."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Matte_snippets"
+  ],
+  "build_relevance": "ai_video_effect",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Uses NVIDIA Maxine AI segmentation to separate a foreground person from the background.",
+    "Outputs a monochrome key image for Matte TOP or other compositing workflows.",
+    "The model is tuned for webcam-like single-person footage rather than arbitrary scenes.",
+    "AI processing introduces frame latency that should be matched by delaying the source image."
+  ]
+}

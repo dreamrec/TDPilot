@@ -1,0 +1,74 @@
+{
+  "card_type": "operator",
+  "op_type": "directdisplayoutTOP",
+  "family": "TOP",
+  "display_name": "Direct Display Out TOP",
+  "docs_url": "https://docs.derivative.ca/Direct_Display_Out_TOP",
+  "summary": "Outputs a TOP directly to Vulkan direct display surfaces, bypassing the Windows desktop compositor and Window COMP.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable direct display output"
+    },
+    {
+      "name": "display",
+      "type": "Menu",
+      "note": "Direct display output target"
+    },
+    {
+      "name": "hwframelock",
+      "type": "Toggle",
+      "note": "Enable hardware frame lock when licensed and configured"
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution policy"
+    },
+    {
+      "name": "resolution",
+      "type": "WH",
+      "note": "Custom output resolution"
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Common TOP output aspect policy"
+    },
+    {
+      "name": "npasses",
+      "type": "Int",
+      "note": "Common TOP pass repeat count"
+    },
+    {
+      "name": "chanmask",
+      "type": "String",
+      "note": "Common TOP channel mask"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "This is not a normal window output path; display removal and Mosaic/QSync style setup happen outside TouchDesigner.",
+    "Workstation NVIDIA RTX/Quadro hardware and Windows 11 Pro for Workstations or Enterprise are part of the documented setup.",
+    "The official tool name is configureDdisplay.exe.",
+    "Hardware frame lock requires a Pro license."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "hardware_output",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Direct Display Out TOP sends image output to direct-display hardware surfaces rather than a normal Window COMP.",
+    "It can bypass the Windows Desktop and compositor for reliable playback display paths.",
+    "The workflow depends on external display removal and setup outside TouchDesigner.",
+    "The operator can control up to three outputs.",
+    "Hardware frame lock is a Pro-only feature.",
+    "The workflow is Windows/NVIDIA workstation oriented and requires matching OS and GPU setup."
+  ]
+}

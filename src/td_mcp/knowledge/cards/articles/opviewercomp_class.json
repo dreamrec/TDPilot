@@ -1,0 +1,42 @@
+{
+  "card_type": "article",
+  "article_id": "opviewercomp_class",
+  "title": "opviewerCOMP Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "COMP",
+    "PANEL",
+    "UI"
+  ],
+  "summary": "Official Derivative Python API reference for OP Viewer COMP instances, covering the operator-specific isViewable() recursion-safety query and inherited PanelCOMP / COMP behavior.",
+  "source_url": "https://docs.derivative.ca/OpviewerCOMP_Class",
+  "docsbrain_page_id": "opviewercomp_class",
+  "covered_operators": [
+    "opviewerCOMP"
+  ],
+  "key_concepts": [
+    "opviewerCOMP Class",
+    "OP Viewer COMP",
+    "COMP class",
+    "PanelCOMP Class",
+    "No operator specific members",
+    "isViewable()",
+    "path",
+    "recursion issues",
+    "operator argument",
+    "inherited PanelCOMP",
+    "panel",
+    "PanelValue Class"
+  ],
+  "guidance": [
+    "Use this article when a script needs to ask whether an OP Viewer COMP can safely view a target operator without recursion issues.",
+    "Pass a path or operator argument to isViewable() before assigning or validating a viewer target that might create a recursive view chain.",
+    "Use the exact official docs URL casing OpviewerCOMP_Class; OPViewerCOMP_Class is not the local DocsBrain page URL.",
+    "There are no operator-specific members on opviewerCOMP Class; panel values and focus behavior come from inherited PanelCOMP behavior."
+  ],
+  "related_snippets": [
+    "panel_ui"
+  ],
+  "last_verified": "2026-06-18"
+}

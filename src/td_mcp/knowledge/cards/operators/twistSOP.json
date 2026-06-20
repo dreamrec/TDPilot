@@ -1,0 +1,78 @@
+{
+  "card_type": "operator",
+  "op_type": "twistSOP",
+  "family": "SOP",
+  "display_name": "Twist SOP",
+  "docs_url": "https://docs.derivative.ca/Twist_SOP",
+  "summary": "Applies non-linear deformations including twist, bend, shear, taper, linear taper, and squash/stretch to selected geometry.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Restrict deformation to a point or primitive group."
+    },
+    {
+      "name": "op",
+      "type": "Menu",
+      "note": "Choose twist, bend, shear, taper, linear taper, or squash/stretch."
+    },
+    {
+      "name": "paxis",
+      "type": "Menu",
+      "note": "Primary axis for deformation."
+    },
+    {
+      "name": "saxis",
+      "type": "Menu",
+      "note": "Secondary axis for deformation."
+    },
+    {
+      "name": "p",
+      "type": "Float3",
+      "note": "Pivot/origin of the deformation."
+    },
+    {
+      "name": "px",
+      "type": "Float",
+      "note": "Pivot X."
+    },
+    {
+      "name": "py",
+      "type": "Float",
+      "note": "Pivot Y."
+    },
+    {
+      "name": "pz",
+      "type": "Float",
+      "note": "Pivot Z."
+    },
+    {
+      "name": "strength",
+      "type": "Float",
+      "note": "Amount of deformation."
+    },
+    {
+      "name": "roll",
+      "type": "Float",
+      "note": "Rolloff or repeated effect distribution across bounds."
+    }
+  ],
+  "common_gotchas": [
+    "Low-division geometry may appear unchanged or faceted; add subdivisions before strong bends or twists.",
+    "Strength and roll mean different things for each operation, so generated controls should label the chosen deformation clearly.",
+    "Linear Taper ignores Strength and Rolloff.",
+    "Rolloff at zero can localize the effect so tightly that Strength appears ineffective.",
+    "Moving the pivot away from the object center often gives better squash/stretch and bend control."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "nonlinear-geometry-deformation",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Twist SOP performs non-linear deformations including twist, bend, shear, taper, linear taper, and squash/stretch.",
+    "Primary and secondary axes define the deformation frame.",
+    "The pivot parameter sets the deformation origin and is often moved away from the object center for useful control.",
+    "Strength and rolloff have operation-specific meanings and can affect twist amount, bend extremities, shear amount, taper direction, or volume preservation."
+  ]
+}

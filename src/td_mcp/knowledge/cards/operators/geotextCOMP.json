@@ -1,0 +1,40 @@
+{
+  "card_type": "operator",
+  "op_type": "geotextCOMP",
+  "family": "COMP",
+  "display_name": "Geo Text COMP",
+  "docs_url": "https://docs.derivative.ca/Geo_Text_COMP",
+  "summary": "Directly renders 3D text with the Slug library, using fonts, layout-box controls, optional Specification DAT/CHOP rows, and normal Object COMP transform/material/render pages rather than generating SOP geometry.",
+  "key_params": [
+    {"name": "mode", "type": "Menu", "note": "Use the Text parameter or a Specification DAT"},
+    {"name": "text", "type": "String", "note": "Text rendered in Text mode"},
+    {"name": "specdat", "type": "DAT", "note": "Rows defining independent text blocks and parameter overrides"},
+    {"name": "specchop", "type": "CHOP", "note": "Numeric per-block overrides matching Specification DAT rows"},
+    {"name": "sorted", "type": "Toggle", "note": "Sort Specification DAT text blocks by depth for alpha blending"},
+    {"name": "formatcodes", "type": "Toggle", "note": "Enable TouchDesigner text formatting codes"},
+    {"name": "escapeseq", "type": "Toggle", "note": "Parse escape sequences in Specification DAT text"},
+    {"name": "wordwrap", "type": "Toggle", "note": "Wrap text to the layout box width"},
+    {"name": "facecam", "type": "Toggle", "note": "Orient text to face the camera"},
+    {"name": "layoutsize", "type": "WH", "note": "Layout box size used for alignment, clipping, and wrapping"},
+    {"name": "layoutanchor", "type": "UV", "note": "Anchor point of the layout box in object space"},
+    {"name": "drawpriority", "type": "Integer", "note": "Render ordering control, important for transparent glyphs"}
+  ],
+  "key_concepts": [
+    "Geo Text COMP renders 3D text directly with the Slug text engine rather than outputting SOP geometry.",
+    "Text can come from the Text parameter, Specification DAT rows, or Specification CHOP channels.",
+    "Layout size, layout anchor, word wrap, face-camera behavior, and depth-scale controls define how text is positioned in 3D space.",
+    "Format codes, escape sequences, sorting, draw priority, and depth/lift controls help manage transparent glyph rendering.",
+    "Specification DAT/CHOP workflows require matching row/sample structure so per-string attributes such as text, transform, font size, and color line up."
+  ],
+  "common_gotchas": [
+    "Geo Text COMP does not output SOP geometry; it renders glyphs directly.",
+    "The layout box substitutes for Text COMP width/height and is not visible by default.",
+    "Specification CHOP sample count must match Specification DAT data rows after the header.",
+    "Specification DAT column names must match supported parameter names such as text, tx, fontsize, or fontcolor channels.",
+    "Glyphs use blended transparent rectangles, so Draw Priority and back-to-front row order matter for correct compositing.",
+    "Depth sorting many Specification DAT text blocks can be expensive; enable it only when alpha artifacts require it."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2025.30000+ Slug-based 3D text rendering",
+  "last_verified": "2026-06-18"
+}

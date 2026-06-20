@@ -1,0 +1,83 @@
+{
+  "card_type": "operator",
+  "op_type": "spriteSOP",
+  "family": "SOP",
+  "display_name": "Sprite SOP",
+  "docs_url": "https://docs.derivative.ca/Sprite_SOP",
+  "summary": "Creates camera-facing quad sprite geometry at positions supplied by CHOP samples, with optional width, color, alpha, and constant-width falloff controls.",
+  "key_params": [
+    {
+      "name": "xyzchop",
+      "type": "CHOP Path",
+      "note": "Three-channel position CHOP"
+    },
+    {
+      "name": "camera",
+      "type": "COMP Path",
+      "note": "Camera the quads face"
+    },
+    {
+      "name": "widthchop",
+      "type": "CHOP Path",
+      "note": "One-channel width CHOP"
+    },
+    {
+      "name": "colorchop",
+      "type": "CHOP Path",
+      "note": "Three-channel RGB CHOP"
+    },
+    {
+      "name": "alphachop",
+      "type": "CHOP Path",
+      "note": "One-channel alpha CHOP"
+    },
+    {
+      "name": "perspectivewidth",
+      "type": "Float",
+      "note": "Perspective width"
+    },
+    {
+      "name": "constantwidth",
+      "type": "Float",
+      "note": "Blend between perspective and constant width"
+    },
+    {
+      "name": "constantwidthnear",
+      "type": "Float",
+      "note": "Near constant width"
+    },
+    {
+      "name": "constantwitdhfar",
+      "type": "Float",
+      "note": "Far constant width, preserving official misspelling"
+    },
+    {
+      "name": "falloffstart",
+      "type": "Float",
+      "note": "Constant width falloff start"
+    },
+    {
+      "name": "falloffend",
+      "type": "Float",
+      "note": "Constant width falloff end"
+    }
+  ],
+  "common_gotchas": [
+    "xyzchop is required and must provide exactly three position channels.",
+    "The camera path must be valid for billboarding.",
+    "Width, color, and alpha CHOP sample counts should match intended sprite count.",
+    "The official far-width id is misspelled constantwitdhfar and must be preserved exactly."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "chop-driven-sprite-quad-geometry",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Sprite SOP creates quad sprites at positions from the XYZ CHOP parameter.",
+    "xyzchop requires three channels, and each sample creates one centered quad.",
+    "Generated quads always face the specified Camera COMP.",
+    "Optional CHOPs drive width, RGB color, and alpha per sample.",
+    "Constant-width parameters blend perspective width with near/far falloff widths."
+  ]
+}

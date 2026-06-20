@@ -6,17 +6,88 @@
   "docs_url": "https://docs.derivative.ca/Movie_File_In_TOP",
   "summary": "Loads image or video files (PNG, JPG, EXR, MP4, HAP, NotchLC, etc.) from disk into a texture. Supports image sequences and looping.",
   "key_params": [
-    {"name": "file", "type": "String", "note": "File path to the image or video file"},
-    {"name": "play", "type": "Toggle", "note": "Enable/disable playback for video files"},
-    {"name": "index", "type": "Float", "note": "Frame index for image sequences or seek position in video"},
-    {"name": "reload", "type": "Toggle", "note": "Pulse to force-reload the file from disk"},
-    {"name": "preread", "type": "Toggle", "note": "Pre-read frames ahead for smoother playback"}
+    {
+      "name": "file",
+      "type": "File/URL/Folder",
+      "note": "Movie, image, folder sequence, or URL source"
+    },
+    {
+      "name": "reload",
+      "type": "Toggle",
+      "note": "Reload parameter tuple containing reload pulse"
+    },
+    {
+      "name": "reloadpulse",
+      "type": "Pulse",
+      "note": "Force source reload"
+    },
+    {
+      "name": "playmode",
+      "type": "Menu",
+      "note": "locked, specify, sequential, or timecodeop"
+    },
+    {
+      "name": "play",
+      "type": "Toggle",
+      "note": "Play sequential movie"
+    },
+    {
+      "name": "speed",
+      "type": "Float",
+      "note": "Sequential playback speed"
+    },
+    {
+      "name": "index",
+      "type": "Float",
+      "note": "Explicit movie index for Specify Index mode"
+    },
+    {
+      "name": "indexunit",
+      "type": "Menu",
+      "note": "indices, frames, seconds, or fraction"
+    },
+    {
+      "name": "imageindexing",
+      "type": "Menu",
+      "note": "zero or filename for image sequences"
+    },
+    {
+      "name": "inputcolorspace",
+      "type": "Menu",
+      "note": "Input color-space treatment before GPU upload"
+    },
+    {
+      "name": "decodepixelformat",
+      "type": "Menu",
+      "note": "Decode pixel format selection"
+    },
+    {
+      "name": "prereadframes",
+      "type": "Int",
+      "note": "Number of frames to read ahead"
+    },
+    {
+      "name": "hwdecode",
+      "type": "Toggle",
+      "note": "Use supported hardware decode where applicable"
+    }
   ],
   "common_gotchas": [
-    "HAP and NotchLC codecs offer GPU-decoded playback and are vastly faster than H.264 for real-time use.",
-    "Large image sequences can consume significant RAM — use pre-read carefully and monitor memory."
+    "Movie index values are movie-frame indices, not project timeline frame numbers.",
+    "Folder sequences sort alphanumerically unless filename-based image indexing is selected.",
+    "pre-read improves heavy playback but consumes memory and CPU resources.",
+    "hwdecode does not help Hap or NotchLC because those formats are already hardware decoded.",
+    "The official parameter is prereadframes, not the stale preread name."
   ],
   "related_snippets": [],
   "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Loads movie files, still images, image sequences, folders of images, and supported URLs into TOPs.",
+    "Movie index values refer to the sequence of images in the movie file, not the global project frame rate.",
+    "Play Mode selects timeline-locked, explicit index, sequential, or timecode-driven playback.",
+    "Image sequence indexing can be zero-based after alphanumeric sorting or filename-based.",
+    "Tune and decode controls manage pre-reading, hardware decode, timeouts, HTTP predownload, and CPU decode resources.",
+    "Info CHOP channels expose open, decode, read-ahead, and hardware-decode state for diagnostics."
+  ]
 }

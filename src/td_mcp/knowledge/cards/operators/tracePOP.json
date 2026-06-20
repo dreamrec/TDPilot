@@ -1,0 +1,213 @@
+{
+  "card_type": "operator",
+  "op_type": "tracePOP",
+  "family": "POP",
+  "display_name": "Trace POP",
+  "docs_url": "https://docs.derivative.ca/Trace_POP",
+  "summary": "Traces a TOP image or 2D POP field into contour lines, contour line strips, or triangle surfaces around pixels or sampled values that pass a threshold. Use it for 2D image-to-POP outlines, masks, and filled surfaces when threshold/channel choice, border handling, winding, smoothing, re-ranging, and GPU allocation limits matter.",
+  "key_params": [
+    {
+      "name": "inputattrscope",
+      "type": "Str",
+      "note": "Attribute scope to sample when the input is a dimension-2 POP."
+    },
+    {
+      "name": "posattrib",
+      "type": "Toggle",
+      "note": "Uses the P attribute to position threshold lines when sampling a dimension-2 POP input."
+    },
+    {
+      "name": "top",
+      "type": "TOP",
+      "note": "TOP image to sample and trace."
+    },
+    {
+      "name": "channel",
+      "type": "Menu",
+      "note": "Input channel used for threshold comparison: luminance, red, green, blue, alpha, RGB/RGBA average, or RGB/RGBA maximum."
+    },
+    {
+      "name": "resmult",
+      "type": "Float",
+      "note": "Resolution multiplier applied to the input before tracing."
+    },
+    {
+      "name": "threshold",
+      "type": "Float",
+      "note": "Threshold value that determines inside vs outside regions."
+    },
+    {
+      "name": "inside",
+      "type": "Menu",
+      "note": "Chooses whether below/equal-to-threshold or above-threshold values are considered inside; affects segment direction."
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Controls sampling outside the image boundary, such as Hold or Zero, to determine border contours."
+    },
+    {
+      "name": "twodimensions",
+      "type": "Menu",
+      "note": "Output mode: contour lines, contour line strips, or surface triangles."
+    },
+    {
+      "name": "uniquepoints",
+      "type": "Toggle",
+      "note": "When outputting lines, chooses shared or unique points."
+    },
+    {
+      "name": "winding",
+      "type": "Menu",
+      "note": "Controls closed line-strip orientation, including natural outer-surface and hole winding."
+    },
+    {
+      "name": "smooth",
+      "type": "Float",
+      "note": "Smooth Edge Distance control for averaging neighboring line-strip point positions."
+    },
+    {
+      "name": "filterdist",
+      "type": "Float",
+      "note": "Smooth Edge Distance value component."
+    },
+    {
+      "name": "rerangep",
+      "type": "Toggle",
+      "note": "Enables ReRange P for remapping output position coordinates."
+    },
+    {
+      "name": "tolow",
+      "type": "Float2",
+      "note": "Low target range for ReRange P in X and Y."
+    },
+    {
+      "name": "tolow0",
+      "type": "Float",
+      "note": "X component of Map to Low."
+    },
+    {
+      "name": "tolow1",
+      "type": "Float",
+      "note": "Y component of Map to Low."
+    },
+    {
+      "name": "tohigh",
+      "type": "Float2",
+      "note": "High target range for ReRange P in X and Y."
+    },
+    {
+      "name": "tohigh0",
+      "type": "Float",
+      "note": "X component of Map to High."
+    },
+    {
+      "name": "tohigh1",
+      "type": "Float",
+      "note": "Y component of Map to High."
+    },
+    {
+      "name": "normal",
+      "type": "Menu",
+      "note": "Outputs a Normal (N) attribute on points or primitives."
+    },
+    {
+      "name": "normaldirection",
+      "type": "Menu",
+      "note": "Chooses default or +Z normal direction."
+    },
+    {
+      "name": "texture",
+      "type": "Toggle",
+      "note": "Outputs point texture coordinates (Tex)."
+    },
+    {
+      "name": "allocfract",
+      "type": "Float",
+      "note": "Fraction of maximum allocation reserved for generated points/primitives."
+    },
+    {
+      "name": "setmaxnumls",
+      "type": "Toggle",
+      "note": "Enables an explicit Max Num Line Strips limit."
+    },
+    {
+      "name": "maxnumls",
+      "type": "Int",
+      "note": "Maximum line-strip count for GPU preallocation."
+    },
+    {
+      "name": "setmaxnumvertsperls",
+      "type": "Toggle",
+      "note": "Enables an explicit Max Num Verts per Line Strip limit."
+    },
+    {
+      "name": "maxnumvertsperls",
+      "type": "Int",
+      "note": "Maximum vertices per line strip; helps prevent GPU infinite-loop conditions."
+    },
+    {
+      "name": "cpureadback",
+      "type": "Toggle",
+      "note": "Copies topology count information from GPU back to CPU."
+    },
+    {
+      "name": "bypass",
+      "type": "Toggle",
+      "note": "Common POP bypass flag."
+    },
+    {
+      "name": "freeextragpumem",
+      "type": "Pulse",
+      "note": "Frees accumulated GPU memory after output sizes have grown and shrunk."
+    },
+    {
+      "name": "delinputattrs",
+      "type": "Toggle",
+      "note": "Deletes input attributes that are not explicitly output, useful for isolating branches."
+    }
+  ],
+  "key_concepts": [
+    "TOP image tracing",
+    "brightness threshold",
+    "Channel menu",
+    "Luminance",
+    "contour lines",
+    "contour line strips",
+    "surface triangles",
+    "Resolution Multiplier",
+    "Smooth Edge Distance",
+    "Line Smooth POP",
+    "Extend border handling",
+    "open line strips",
+    "Winding",
+    "holes",
+    "P(0) -0.5 to 0.5",
+    "ReRange P",
+    "Normal attribute",
+    "Texture Coordinates",
+    "GPU preallocation",
+    "Max Num Line Strips",
+    "Max Num Verts per Line Strip",
+    "Copy Topology Info Back to CPU",
+    "Info CHOP",
+    "Polygonize POP",
+    "Triangulate POP",
+    "Extrude POP"
+  ],
+  "common_gotchas": [
+    "Max Num Line Strips and Max Num Verts per Line Strip must be pre-determined for the GPU to avoid overflows or pathological line-strip work.",
+    "Fraction of Max Allocation can save GPU memory, but if it is too low, points and primitives may be missing and the info popup may show maximum counts were reached.",
+    "Copy Topology Info Back to CPU causes a stall on discrete GPUs, so enable it only when CPU-side point/topology counts are worth the synchronization cost.",
+    "Extend changes border behavior: Hold can continue contours around the border while Zero can separate them as open line strips.",
+    "Winding affects holes: natural winding makes outer line strips counter-clockwise and enclosed line strips clockwise, while Counter ClockWise reverses hole orientation too.",
+    "Output mode matters: 2-point lines are the fastest but least useful form, line strips are contour-friendly, and surface triangles are needed for filled surfaces.",
+    "The default output P range is centered around P(0) -0.5 to 0.5; use ReRange P when downstream POPs or render setups expect a different coordinate range.",
+    "Smooth Edge Distance behaves like a line smoothing stage and can change vertex positions; verify outlines before using them for precise masks or topology."
+  ],
+  "related_snippets": [
+    "POP_snippets"
+  ],
+  "build_relevance": "2025.32460+ 2D TOP/image-to-POP tracing and contour/surface generation",
+  "last_verified": "2026-06-18"
+}

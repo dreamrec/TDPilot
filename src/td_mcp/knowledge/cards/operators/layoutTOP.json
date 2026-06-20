@@ -1,0 +1,105 @@
+{
+  "card_type": "operator",
+  "op_type": "layoutTOP",
+  "family": "TOP",
+  "display_name": "Layout TOP",
+  "docs_url": "https://docs.derivative.ca/Layout_TOP",
+  "summary": "Arranges multiple TOP inputs or referenced TOP paths into rows, columns, or grids, with fit controls for how each image occupies its cell.",
+  "key_params": [
+    {
+      "name": "top",
+      "type": "TOP/String",
+      "note": "Additional TOP path list included before wired inputs"
+    },
+    {
+      "name": "scaleres",
+      "type": "Toggle",
+      "note": "Scale output resolution by row/column layout when using input resolution"
+    },
+    {
+      "name": "align",
+      "type": "Menu",
+      "note": "none, horizlr, horizrl, verttb, vertbt, gridrows, or gridcols"
+    },
+    {
+      "name": "fit",
+      "type": "Menu",
+      "note": "fill, fithorz, fitvert, fitbest, fitoutside, or nativeres cell fitting"
+    },
+    {
+      "name": "rowlayout",
+      "type": "Menu",
+      "note": "max or exact row-count behavior"
+    },
+    {
+      "name": "numrows",
+      "type": "Int",
+      "note": "Number of rows for the selected row layout"
+    },
+    {
+      "name": "collayout",
+      "type": "Menu",
+      "note": "max or exact column-count behavior"
+    },
+    {
+      "name": "numcols",
+      "type": "Int",
+      "note": "Number of columns for the selected column layout"
+    },
+    {
+      "name": "bcolor",
+      "type": "Color",
+      "note": "Border color components bcolorr, bcolorg, bcolorb, bcolora"
+    },
+    {
+      "name": "borders",
+      "type": "Float4",
+      "note": "Per-side border widths bordersl, bordersr, bordersb, borderst"
+    },
+    {
+      "name": "bgcolor",
+      "type": "Color",
+      "note": "Background fill color for uncovered area"
+    },
+    {
+      "name": "premultrgbbyalpha",
+      "type": "Toggle",
+      "note": "Premultiply background color by alpha"
+    },
+    {
+      "name": "compover",
+      "type": "Toggle",
+      "note": "Composite over background where alpha is less than one"
+    },
+    {
+      "name": "xord",
+      "type": "Menu",
+      "note": "Transform order for per-input transforms"
+    },
+    {
+      "name": "legacyxform",
+      "type": "Toggle",
+      "note": "Use legacy transform matrix behavior"
+    }
+  ],
+  "common_gotchas": [
+    "TOP paths listed in the top parameter appear before wired inputs when both are used.",
+    "Scale Resolution can produce very large textures when many high-resolution inputs are laid out.",
+    "Fit Outside and Native Resolution can crop or expose cell background depending on cell size.",
+    "rowlayout and collayout use compact ids, and collayout is not spelled columnlayout.",
+    "legacyxform changes transform matrix behavior and can shift existing layouts."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Positions multiple input TOPs into rows, columns, or grids with equal output cell allocation.",
+    "TOP paths in the top parameter are placed before wired inputs when both input styles are used.",
+    "Scale Resolution can enlarge the output by row and column count when output resolution uses the input.",
+    "Fit controls how each image is scaled or cropped inside its allotted cell.",
+    "Transform-page controls apply per-input 2D transforms after layout cell assignment.",
+    "Border and background controls fill the non-image area around laid-out inputs."
+  ]
+}

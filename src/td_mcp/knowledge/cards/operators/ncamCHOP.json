@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "ncamCHOP",
+  "family": "CHOP",
+  "display_name": "Ncam CHOP",
+  "docs_url": "https://docs.derivative.ca/Ncam_CHOP",
+  "summary": "Receives Ncam Reality camera-tracking, projection, optical-property, and timecode data over TCP for virtual production camera sync.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Receive data from the Ncam system while on"},
+    {"name": "protocol", "type": "Menu", "note": "TCP network protocol; currently the only supported option"},
+    {"name": "netaddress", "type": "String", "note": "Ncam server network address"},
+    {"name": "port", "type": "Integer", "note": "Ncam server network port"},
+    {"name": "cameraview", "type": "Menu", "note": "Output translation/rotation, matrix, both, or off"},
+    {"name": "cameraproj", "type": "Menu", "note": "Output field of view, matrix, both, or off"},
+    {"name": "cameraprops", "type": "Menu", "note": "Output normalized, physical, both, or off camera properties"},
+    {"name": "timecode", "type": "Menu", "note": "Output HH:MM:SS:FF, timecode counter, both, or off"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"}
+  ],
+  "key_concepts": [
+    "Ncam CHOP is available only in TouchDesigner Pro.",
+    "It receives camera tracking data from an external Ncam Reality system.",
+    "The documented network transport is TCP.",
+    "Outputs can include camera position, orientation, projection, optical properties, and timecode.",
+    "The output channels are intended to drive Camera COMP settings for synced virtual production rendering.",
+    "Ncam TOP can receive image data from the camera for compositing with rendered content."
+  ],
+  "common_gotchas": [
+    "TouchDesigner Pro is required.",
+    "Only TCP is documented; do not plan UDP or serial Ncam input modes.",
+    "A valid Ncam server network address and port are required before live tracking will work.",
+    "Output channel sets depend on Camera View, Camera Projection, Camera Properties, and Timecode settings.",
+    "Camera properties may be normalized 0-1 or physical units, so downstream unit assumptions need to be explicit."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2023.11280+ Ncam virtual production tracking",
+  "last_verified": "2026-06-18"
+}

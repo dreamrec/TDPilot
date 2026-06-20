@@ -1,0 +1,31 @@
+{
+  "card_type": "operator",
+  "op_type": "inversecurveSOP",
+  "family": "SOP",
+  "display_name": "Inverse Curve SOP",
+  "docs_url": "https://docs.derivative.ca/Inverse_Curve_SOP",
+  "summary": "Builds a curve from data produced by an Inverse Curve CHOP, turning channel data back into SOP curve geometry.",
+  "key_params": [
+    {
+      "name": "chop",
+      "type": "CHOP",
+      "note": "Inverse Curve CHOP whose data reconstructs the curve."
+    }
+  ],
+  "common_gotchas": [
+    "Arbitrary CHOP channels are not sufficient; the source must be compatible Inverse Curve CHOP data.",
+    "Use this when a workflow intentionally converted curve geometry through Inverse Curve CHOP.",
+    "Mismatched sample/channel layout can reconstruct a curve that does not match the original."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "specialized-curve-roundtrip",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Inverse Curve SOP builds a curve from data produced by an Inverse Curve CHOP.",
+    "It is a specialized curve round-trip operator, not a general CHOP-to-curve converter.",
+    "The official page documents one operator parameter, `chop`, for the Inverse Curve CHOP source.",
+    "Validate channel layout before expecting the reconstructed curve to match the source curve."
+  ]
+}

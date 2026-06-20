@@ -1,0 +1,72 @@
+{
+  "card_type": "operator",
+  "op_type": "blendSOP",
+  "family": "SOP",
+  "display_name": "Blend SOP",
+  "docs_url": "https://docs.derivative.ca/Blend_SOP",
+  "summary": "Morphs between up to sixteen SOP shapes with matching topology, optionally blending positions, colors, normals, texture coordinates, and other attributes.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Point or primitive group in the first input to blend"
+    },
+    {
+      "name": "diff",
+      "type": "Toggle",
+      "note": "Use differencing mode for exaggerated values outside 0-1"
+    },
+    {
+      "name": "dopos",
+      "type": "Toggle",
+      "note": "Blend point positions"
+    },
+    {
+      "name": "doclr",
+      "type": "Toggle",
+      "note": "Blend point colors"
+    },
+    {
+      "name": "donml",
+      "type": "Toggle",
+      "note": "Blend normals"
+    },
+    {
+      "name": "douvw",
+      "type": "Toggle",
+      "note": "Blend texture coordinates"
+    },
+    {
+      "name": "doup",
+      "type": "Toggle",
+      "note": "Blend additional point attributes"
+    },
+    {
+      "name": "input",
+      "type": "Sequence",
+      "note": "Input weight sequence block"
+    },
+    {
+      "name": "input0weight",
+      "type": "Float",
+      "note": "Blend weight for an input; additional input weights follow the same pattern"
+    }
+  ],
+  "common_gotchas": [
+    "All blend sources need the same point/CV and face counts for predictable morphs.",
+    "Point order matters; mismatched ordering can twist or drag parts across the model.",
+    "In differencing mode the first input is a base reference, so its blend channel does not exaggerate that input.",
+    "Only inputs with non-zero weights cook, so muted blend sources may not update until weighted."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Blend SOP morphs between up to sixteen SOP inputs with matching topology.",
+    "Source point/CV counts, face counts, and point order must match for predictable blending.",
+    "Individual toggles control whether positions, colors, normals, texture coordinates, and other attributes are blended.",
+    "Differencing mode treats the first input as a base reference and allows exaggerated values outside the 0-1 range."
+  ]
+}

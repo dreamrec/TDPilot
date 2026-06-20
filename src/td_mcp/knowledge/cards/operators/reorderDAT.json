@@ -1,0 +1,77 @@
+{
+  "card_type": "operator",
+  "op_type": "reorderDAT",
+  "family": "DAT",
+  "display_name": "Reorder DAT",
+  "docs_url": "https://docs.derivative.ca/Reorder_DAT",
+  "summary": "Reorders, swaps, replaces, duplicates, or deletes rows and columns from an input table using names, indices, or a specified order list.",
+  "key_params": [
+    {
+      "name": "reorder",
+      "type": "Menu",
+      "note": "Choose whether rows or columns are processed"
+    },
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "Reverse, replace, swap, or copy in specified order"
+    },
+    {
+      "name": "before",
+      "type": "String",
+      "note": "Rows or columns copied, swapped, or replaced from"
+    },
+    {
+      "name": "after",
+      "type": "String",
+      "note": "Rows or columns copied, swapped, or replaced to"
+    },
+    {
+      "name": "order",
+      "type": "String",
+      "note": "Explicit row or column order for specified-order modes"
+    },
+    {
+      "name": "delete",
+      "type": "Toggle",
+      "note": "Delete unspecified rows or columns in specified-order modes"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Specified-order modes can duplicate rows or columns by listing the same name or index more than once.",
+    "Rows or columns not listed are appended in input order unless Delete Unspecified is enabled.",
+    "Name-based replacement and swap depend on stable header/label cells; index-based modes drift if upstream table shape changes.",
+    "Input must be table-shaped; free-form text should be converted before planning row/column reordering."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "table-row-column-reordering",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Reorders DAT rows or columns from an input table.",
+    "Method, Before, After, and Order parameters define explicit or relative reorder behavior.",
+    "Delete controls whether rows or columns outside the reordered set are removed.",
+    "Generated table tools should preserve intended headers when reordering row or column data."
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "card_type": "operator",
+  "op_type": "edgeTOP",
+  "family": "TOP",
+  "display_name": "Edge TOP",
+  "docs_url": "https://docs.derivative.ca/Edge_TOP",
+  "summary": "Detects and highlights image edges by comparing neighboring pixels, with channel selection and compositing controls.",
+  "key_params": [
+    {
+      "name": "select",
+      "type": "Menu",
+      "note": "Edge source: luminance, RGBA channels, RGB average, or RGBA average"
+    },
+    {
+      "name": "blacklevel",
+      "type": "Float",
+      "note": "Black level applied before finding edges"
+    },
+    {
+      "name": "strength",
+      "type": "Float",
+      "note": "Edge gain"
+    },
+    {
+      "name": "offset",
+      "type": "XY",
+      "note": "Neighbor sample step"
+    },
+    {
+      "name": "offsetunit",
+      "type": "Menu",
+      "note": "Units for sample step"
+    },
+    {
+      "name": "edgecolor",
+      "type": "RGBA",
+      "note": "Color for detected edges"
+    },
+    {
+      "name": "premultrgbbyalpha",
+      "type": "Toggle",
+      "note": "Premultiply edge RGB by alpha"
+    },
+    {
+      "name": "alphaoutputmenu",
+      "type": "Menu",
+      "note": "Alpha output mode: edge, one, or zero"
+    },
+    {
+      "name": "combineinput",
+      "type": "Menu",
+      "note": "Output edge only or composite edge with input"
+    },
+    {
+      "name": "operand",
+      "type": "Menu",
+      "note": "Composite operation when combining with input"
+    },
+    {
+      "name": "swaporder",
+      "type": "Toggle",
+      "note": "Swap blend order when compositing"
+    }
+  ],
+  "common_gotchas": [
+    "High Strength can turn image noise into apparent edges.",
+    "Pixel-unit Offset is resolution-sensitive.",
+    "Alpha can be edge, one, or zero; it does not automatically preserve input alpha.",
+    "Combine with Input, Operand, and Swap Order all affect final blend math."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Edge TOP finds edges by comparing each pixel to neighboring pixels.",
+    "Select chooses the source channel or channel average used for edge detection.",
+    "Black Level preprocesses the image before edge extraction.",
+    "Strength increases detected edge gain and detail visibility.",
+    "Offset and Offset Unit control the sample distance used to detect edges.",
+    "Edge output can be edge-only or composited back with the input using blend operations."
+  ]
+}

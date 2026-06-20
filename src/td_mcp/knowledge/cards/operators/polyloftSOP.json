@@ -1,0 +1,91 @@
+{
+  "card_type": "operator",
+  "op_type": "polyloftSOP",
+  "family": "SOP",
+  "display_name": "Polyloft SOP",
+  "docs_url": "https://docs.derivative.ca/Polyloft_SOP",
+  "summary": "Builds triangle meshes by lofting between point groups or faces, optionally using rest geometry to stabilize point order.",
+  "key_params": [
+    {
+      "name": "proximity",
+      "type": "Toggle",
+      "note": "Order points by proximity"
+    },
+    {
+      "name": "consolidate",
+      "type": "Toggle",
+      "note": "Consolidate overlapping output points"
+    },
+    {
+      "name": "dist",
+      "type": "Float",
+      "note": "Consolidation distance"
+    },
+    {
+      "name": "minimize",
+      "type": "Toggle",
+      "note": "Minimize twist or connection distance"
+    },
+    {
+      "name": "closeu",
+      "type": "Menu",
+      "note": "U closure behavior"
+    },
+    {
+      "name": "closev",
+      "type": "Menu",
+      "note": "V closure behavior"
+    },
+    {
+      "name": "creategroup",
+      "type": "Toggle",
+      "note": "Create output group"
+    },
+    {
+      "name": "polygroup",
+      "type": "String",
+      "note": "Output polygon group"
+    },
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "Loft method"
+    },
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Primitive or point group selection"
+    },
+    {
+      "name": "prim",
+      "type": "Int",
+      "note": "Primitive selection"
+    },
+    {
+      "name": "point",
+      "type": "Sequence",
+      "note": "Point group sequence"
+    },
+    {
+      "name": "point0group",
+      "type": "String",
+      "note": "First point group entry"
+    }
+  ],
+  "common_gotchas": [
+    "Polyloft does not add new points, so sparse or irregular inputs can create visibly uneven triangulation.",
+    "Rest input only helps when the rest groups match the animated source groups.",
+    "Closure and proximity choices can change point correspondence and cause flips if animated casually."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "polygon-loft-mesh-generation",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Polyloft SOP generates triangle meshes by stitching points without adding new points.",
+    "Input faces or point groups do not need equal point counts, but point ordering still affects the surface.",
+    "A rest input can stabilize point order and reduce popping for changing source geometry.",
+    "Rest geometry must have groups matching the animated geometry for stable correspondence."
+  ]
+}

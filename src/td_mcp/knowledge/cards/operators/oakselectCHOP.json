@@ -1,0 +1,45 @@
+{
+  "card_type": "operator",
+  "op_type": "oakselectCHOP",
+  "family": "CHOP",
+  "display_name": "OAK Select CHOP",
+  "docs_url": "https://docs.derivative.ca/OAK_Select_CHOP",
+  "summary": "Selects and converts a named stream from an OAK Device CHOP into CHOP channels, with callbacks for complex DepthAI message types.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Toggle whether the OAK Select CHOP cooks"},
+    {"name": "chop", "type": "CHOP", "note": "OAK Device CHOP running the DepthAI pipeline"},
+    {"name": "stream", "type": "String", "note": "Name of the OAK stream to receive"},
+    {"name": "queuesize", "type": "Integer", "note": "Number of OAK messages TouchDesigner reuses for memory efficiency"},
+    {"name": "maxitems", "type": "Integer", "note": "Maximum items converted per cook for consistent channel counts"},
+    {"name": "outputformat", "type": "Menu", "note": "Items as separate channels or items as separate samples"},
+    {"name": "firstsample", "type": "Toggle", "note": "Use only the most recently received message"},
+    {"name": "rate", "type": "Float", "note": "Output sample rate"},
+    {"name": "callbacks", "type": "DAT", "note": "Callback DAT for custom message parsing"},
+    {"name": "setuppars", "type": "Pulse", "note": "Run setupParameters callback"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"}
+  ],
+  "key_concepts": [
+    "OAK Select CHOP is used with an OAK Device CHOP and a stream name.",
+    "Simple supported streams can appear as named CHOP channels without manual coding.",
+    "Image detection messages can expose 2D coordinates and labels as channels.",
+    "Complex message types such as NNData or Buffer may require callback parsing.",
+    "Output Format controls whether items become separate channels or separate samples.",
+    "Use First Sample Only keeps only the latest message for high-rate streams such as IMU data."
+  ],
+  "common_gotchas": [
+    "Requires a configured OAK Device CHOP and a stream name that exists in its DepthAI pipeline.",
+    "Some OAK message types need callback parsing instead of automatic channel conversion.",
+    "Queue Size affects memory reuse and message buffering behavior.",
+    "Max Items affects stable channel counts when detections vary frame to frame.",
+    "Items as Separate Channels enables time slicing, while Items as Separate Samples does not.",
+    "Use First Sample Only can intentionally discard older high-rate messages."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2023.11280+ OAK stream selection",
+  "last_verified": "2026-06-18"
+}

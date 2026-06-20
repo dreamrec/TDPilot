@@ -1,0 +1,60 @@
+{
+  "card_type": "operator",
+  "op_type": "opticalflowTOP",
+  "family": "TOP",
+  "display_name": "Optical Flow TOP",
+  "docs_url": "https://docs.derivative.ca/Optical_Flow_TOP",
+  "summary": "Computes motion vectors from an input image, outputting horizontal motion in red and vertical motion in green as 32-bit floating point screen-width-per-second values.",
+  "key_params": [
+    {
+      "name": "gridsize",
+      "type": "Menu",
+      "note": "Output grid: grid1x1, grid2x2, or grid4x4."
+    },
+    {
+      "name": "quality",
+      "type": "Menu",
+      "note": "High, medium, or low optical-flow quality/speed tradeoff."
+    },
+    {
+      "name": "costoutput",
+      "type": "Toggle",
+      "note": "Output uncertainty/cost in the blue channel."
+    },
+    {
+      "name": "gain",
+      "type": "XY",
+      "note": "Post-scale R/X and G/Y flow values."
+    },
+    {
+      "name": "manualtiming",
+      "type": "Toggle",
+      "note": "Use explicit timestamps for sources whose frame rate differs from the project."
+    },
+    {
+      "name": "timestamp",
+      "type": "Float",
+      "note": "Video-frame timestamp in seconds when manual timing is enabled."
+    }
+  ],
+  "common_gotchas": [
+    "Official docs mark Optical Flow TOP as Windows-only.",
+    "Requires an NVIDIA 3000-series or higher GPU.",
+    "Turing GPUs only support 4x4 grid size; newer GPUs can use all grid options.",
+    "Higher quality and smaller grids produce larger/slower outputs.",
+    "Manual Timing needs a reliable per-frame timestamp, often from an Info CHOP on the video source."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Motion_snippets",
+    "GPU_snippets"
+  ],
+  "build_relevance": "motion_analysis",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Detects motion patterns in an input image.",
+    "Outputs horizontal motion in red and vertical motion in green.",
+    "Motion values are 32-bit float screen-width-per-second data, not display colors.",
+    "Optional cost output writes uncertainty/cost into the blue channel."
+  ]
+}

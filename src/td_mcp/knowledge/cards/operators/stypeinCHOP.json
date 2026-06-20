@@ -1,0 +1,43 @@
+{
+  "card_type": "operator",
+  "op_type": "stypeinCHOP",
+  "family": "CHOP",
+  "display_name": "Stype In CHOP",
+  "docs_url": "https://docs.derivative.ca/Stype_In_CHOP",
+  "summary": "Receives Stype/RedSpy camera tracking data over the Stype HF protocol and outputs virtual-camera transform, lens, timecode, and diagnostic channels.",
+  "key_concepts": [
+    "Stype In CHOP is a TouchDesigner Pro operator for receiving Stype/RedSpy camera tracking data over the Stype HF protocol.",
+    "Its channels drive virtual-camera transforms, lens values, timecode, and Stype TOP lens-distortion workflows.",
+    "The connected channel reports whether valid Stype messages have arrived recently, while recording, focus_distance, and timecode channels mirror Stype Kit metadata.",
+    "Camera channels include tx/ty/tz, rx/ry/rz, fov, padded_fov, aspect, focus, zoom, sensor center, radial distortion, and sensor size values.",
+    "Info CHOP channels expose valid, unrecognized, corrupt, missing, and dropped packet counts plus the last packet number for network diagnosis.",
+    "Protocol, multicast address, network port, and local adapter settings must match the Stype hardware output; Padding expands FOV for distortion sampling outside the normal render area."
+  ],
+  "key_params": [
+    {"name": "protocol", "type": "Menu", "note": "Messaging UDP, multicast messaging UDP, or reliable messaging UDT"},
+    {"name": "msging", "type": "MenuItem", "note": "Messaging UDP protocol"},
+    {"name": "multicastmsging", "type": "MenuItem", "note": "Multicast messaging UDP protocol"},
+    {"name": "reliablemsging", "type": "MenuItem", "note": "Reliable messaging UDT protocol"},
+    {"name": "netaddress", "type": "String", "note": "Multicast listen address"},
+    {"name": "port", "type": "Integer", "note": "Network port, default protocol value 6301"},
+    {"name": "localaddress", "type": "String", "note": "NIC/local adapter address for multi-adapter machines"},
+    {"name": "active", "type": "Toggle", "note": "Receive packets on the configured port"},
+    {"name": "padding", "type": "Float", "note": "Increase FOV for lens-distortion sampling outside the normal render area"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP channel scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Common CHOP sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"}
+  ],
+  "common_gotchas": [
+    "Official docs list this operator as TouchDesigner Pro only.",
+    "Requires Stype hardware sending the Stype HF protocol.",
+    "While Active is off, no updating occurs and data sent to the port is lost.",
+    "Use Info CHOP to diagnose dropped or skipped packets.",
+    "Outputs camera tx/ty/tz, rx/ry/rz, FOV, padded FOV, aspect, focus, zoom, sensor-center, distortion, and sensor-size channels for Camera COMP and Stype TOP workflows.",
+    "Port, protocol, multicast address, and local adapter must match the hardware output settings.",
+    "Stype TOP uses the lens/sensor distortion channels for lens correction; keep CHOP/TOP configuration paired."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ Pro virtual-production camera tracking",
+  "last_verified": "2026-06-18"
+}

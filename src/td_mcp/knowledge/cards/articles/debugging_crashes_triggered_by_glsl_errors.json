@@ -1,0 +1,49 @@
+{
+  "card_type": "article",
+  "article_id": "debugging_crashes_triggered_by_glsl_errors",
+  "title": "Debugging Crashes Triggered by GLSL Errors",
+  "family": "GLSL",
+  "families": [
+    "GLSL",
+    "TOP",
+    "MAT",
+    "GPU"
+  ],
+  "summary": "Official Derivative troubleshooting note for Vulkan-era GLSL crashes, especially out-of-range sampler or uniform array access, guard defines for GLSL TOP input arrays, infinite-loop checks, Robust Buffer Access hints, and Nvidia Aftermath crash capture.",
+  "source_url": "https://docs.derivative.ca/Debugging_crashes_triggered_by_GLSL_errors",
+  "docsbrain_page_id": "debugging_crashes_triggered_by_glsl_errors",
+  "covered_operators": [
+    "glslTOP",
+    "glslmultiTOP",
+    "glslMAT",
+    "glslPOP",
+    "glsladvancedPOP",
+    "textDAT"
+  ],
+  "key_concepts": [
+    "Vulkan",
+    "out of bounds array access",
+    "sampler arrays",
+    "uniform arrays",
+    "sTD*Inputs[]",
+    "TD_NUM_*_INPUTS",
+    "infinite loops",
+    "lower end GPUs",
+    "Robust Buffer Access",
+    "TOUCH_ROBUST_BUFFER_ACCESS=1",
+    "Nvidia Aftermath",
+    "TOUCH_ENABLE_NV_AFTERMATH=1"
+  ],
+  "guidance": [
+    "Use this article when custom GLSL TOP or MAT code can crash TouchDesigner instead of only producing a compile/runtime error.",
+    "Guard dynamic sTD*Inputs[] sampler-array access with TD_NUM_*_INPUTS defines so the shader never indexes beyond the connected inputs.",
+    "For uniform arrays that are not texture buffers, ensure enough data is supplied for every element the GLSL can access.",
+    "Check for infinite loops and shaders that may time out on lower end GPUs before assuming a TouchDesigner runtime issue.",
+    "Use Robust Buffer Access with TOUCH_ROBUST_BUFFER_ACCESS=1 only as a diagnostic hint for out-of-bounds access, not as a way to hide invalid GLSL.",
+    "On Nvidia GPUs, TOUCH_ENABLE_NV_AFTERMATH=1 can produce a GPU crash file for Derivative support."
+  ],
+  "related_snippets": [
+    "GLSL_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

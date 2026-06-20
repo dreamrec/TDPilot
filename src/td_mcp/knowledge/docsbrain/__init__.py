@@ -9,6 +9,8 @@ import sqlite3
 from pathlib import Path
 from typing import Any, Optional
 
+from td_mcp.knowledge.card_index import CardIndex
+
 logger = logging.getLogger(__name__)
 
 
@@ -101,10 +103,16 @@ class DocsBrain:
         db_path: Path,
         changelog_path: Path | None = None,
         manifest_path: Path | None = None,
+        fallback_cards_dir: Path | None = None,
     ) -> None:
         self._db_path = Path(db_path)
         self._conn = sqlite3.connect(str(self._db_path))
         self._conn.row_factory = sqlite3.Row
+        self._fallback_index = (
+            CardIndex(fallback_cards_dir)
+            if fallback_cards_dir is not None and Path(fallback_cards_dir).exists()
+            else None
+        )
 
         # Load operator changelog
         self._changelog: dict[str, list[dict]] = {}
@@ -287,7 +295,7 @@ class DocsBrain:
         """Look up an operator by op_type (e.g. 'compositeTOP')."""
         operator_name = self._op_type_map.get(op_type)
         if not operator_name:
-            return None
+            return self._fallback_index.get_operator(op_type) if self._fallback_index is not None else None
 
         cursor = self._conn.execute(
             """SELECT * FROM chunks
@@ -297,7 +305,7 @@ class DocsBrain:
         )
         rows = cursor.fetchall()
         if not rows:
-            return None
+            return self._fallback_index.get_operator(op_type) if self._fallback_index is not None else None
 
         first = dict(rows[0])
         # Build response matching CardIndex shape
@@ -353,7 +361,9 @@ class DocsBrain:
             )
             row = cursor.fetchone()
         if not row:
-            return None
+            return (
+                self._fallback_index.get_palette(component_name) if self._fallback_index is not None else None
+            )
 
         d = dict(row)
         return {
@@ -372,7 +382,7 @@ class DocsBrain:
         )
         rows = cursor.fetchall()
         if not rows:
-            return None
+            return self._fallback_index.get_release(build) if self._fallback_index is not None else None
 
         entries = []
         for row in rows:

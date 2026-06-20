@@ -1,0 +1,41 @@
+{
+  "card_type": "operator",
+  "op_type": "limitPOP",
+  "family": "POP",
+  "display_name": "Limit POP",
+  "docs_url": "https://docs.derivative.ca/Limit_POP",
+  "summary": "Applies lower and upper constraints to selected attributes by clamping, looping, or zig-zagging values, with optional positive-only output, type casting, and quantization. Parameter Size allows separate control per component.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Attribute class to operate on"},
+    {"name": "group", "type": "Str", "note": "Optional group limiting which elements are affected"},
+    {"name": "inputattrscope", "type": "Str", "note": "Input attribute or components to limit"},
+    {"name": "parsize", "type": "Menu", "note": "Number of independent component parameter lanes"},
+    {"name": "mintype", "type": "Menu", "note": "Minimum behavior: off, clamp, loop, or zig zag"},
+    {"name": "maxtype", "type": "Menu", "note": "Maximum behavior: off, clamp, loop, or zig zag"},
+    {"name": "min", "type": "Float", "note": "Minimum value"},
+    {"name": "max", "type": "Float", "note": "Maximum value"},
+    {"name": "positive", "type": "Toggle", "note": "Outputs absolute values"},
+    {"name": "castto", "type": "Menu", "note": "Optional output type cast"},
+    {"name": "outputattrscope", "type": "Str", "note": "Output attribute scope"},
+    {"name": "overrideautoattr", "type": "Toggle", "note": "Override automatic output attribute typing"},
+    {"name": "attrtype", "type": "Menu", "note": "Output data type when overriding automatic typing"},
+    {"name": "attrnumcomps", "type": "Menu", "note": "Output component count"},
+    {"name": "attrdefaultval", "type": "Float4", "note": "Default output value if limiting cannot be computed"},
+    {"name": "quantize", "type": "Menu", "note": "Optional quantization mode after limiting"},
+    {"name": "quantstep", "type": "Float", "note": "Step size for quantization"},
+    {"name": "quantoffset", "type": "Float", "note": "Offset for the quantization grid"}
+  ],
+  "key_concepts": [
+    "Limit POP constrains selected attributes by applying minimum and maximum behavior independently.",
+    "Minimum and maximum modes can clamp, loop, or zig-zag values, so the operator can bound or wrap attributes without extra math nodes.",
+    "Positive-only, cast, output-attribute, and quantize controls let Limit POP finish a value-shaping chain in one operator."
+  ],
+  "common_gotchas": [
+    "Set Parameter Size to match the scoped components when RGB, UV, or vector channels need independent limits.",
+    "Loop and zig-zag are wrapping operations, not hard clamps; choose clamp for physical bounds.",
+    "Math Mix or Math Combine may be better for formulas that combine limiting with other arithmetic."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

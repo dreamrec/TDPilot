@@ -1,0 +1,177 @@
+{
+  "card_type": "operator",
+  "op_type": "noiseSOP",
+  "family": "SOP",
+  "display_name": "Noise SOP",
+  "docs_url": "https://docs.derivative.ca/Noise_SOP",
+  "summary": "Displaces or perturbs selected point attributes using procedural noise patterns based on the same math as Noise CHOP.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Point group to affect."
+    },
+    {
+      "name": "attribute",
+      "type": "Menu",
+      "note": "Target point attribute such as position, normal, color, alpha, uv, or w."
+    },
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "Noise type."
+    },
+    {
+      "name": "seed",
+      "type": "Float",
+      "note": "Noise seed."
+    },
+    {
+      "name": "period",
+      "type": "Float",
+      "note": "Noise period/inverse frequency."
+    },
+    {
+      "name": "harmon",
+      "type": "Int",
+      "note": "Harmonics count."
+    },
+    {
+      "name": "spread",
+      "type": "Float",
+      "note": "Harmonic spread."
+    },
+    {
+      "name": "rough",
+      "type": "Float",
+      "note": "Roughness for harmonic detail."
+    },
+    {
+      "name": "exp",
+      "type": "Float",
+      "note": "Exponent."
+    },
+    {
+      "name": "numint",
+      "type": "Int",
+      "note": "Number of intervals."
+    },
+    {
+      "name": "amp",
+      "type": "Float",
+      "note": "Noise amplitude."
+    },
+    {
+      "name": "keepnormals",
+      "type": "Toggle",
+      "note": "Keep/recompute normals behavior."
+    },
+    {
+      "name": "xord",
+      "type": "Menu",
+      "note": "Transform order for sampling."
+    },
+    {
+      "name": "rord",
+      "type": "Menu",
+      "note": "Rotate order for sampling."
+    },
+    {
+      "name": "t",
+      "type": "XYZ",
+      "note": "Sampling translate."
+    },
+    {
+      "name": "tx",
+      "type": "Float",
+      "note": "Sampling translate X."
+    },
+    {
+      "name": "ty",
+      "type": "Float",
+      "note": "Sampling translate Y."
+    },
+    {
+      "name": "tz",
+      "type": "Float",
+      "note": "Sampling translate Z."
+    },
+    {
+      "name": "r",
+      "type": "XYZ",
+      "note": "Sampling rotate."
+    },
+    {
+      "name": "rx",
+      "type": "Float",
+      "note": "Sampling rotate X."
+    },
+    {
+      "name": "ry",
+      "type": "Float",
+      "note": "Sampling rotate Y."
+    },
+    {
+      "name": "rz",
+      "type": "Float",
+      "note": "Sampling rotate Z."
+    },
+    {
+      "name": "s",
+      "type": "XYZ",
+      "note": "Sampling scale."
+    },
+    {
+      "name": "sx",
+      "type": "Float",
+      "note": "Sampling scale X."
+    },
+    {
+      "name": "sy",
+      "type": "Float",
+      "note": "Sampling scale Y."
+    },
+    {
+      "name": "sz",
+      "type": "Float",
+      "note": "Sampling scale Z."
+    },
+    {
+      "name": "p",
+      "type": "XYZ",
+      "note": "Sampling pivot."
+    },
+    {
+      "name": "px",
+      "type": "Float",
+      "note": "Sampling pivot X."
+    },
+    {
+      "name": "py",
+      "type": "Float",
+      "note": "Sampling pivot Y."
+    },
+    {
+      "name": "pz",
+      "type": "Float",
+      "note": "Sampling pivot Z."
+    }
+  ],
+  "common_gotchas": [
+    "When targeting position, noise follows point normals; missing normals alter the result because normals can be computed implicitly.",
+    "`period` must be greater than zero except for Random noise.",
+    "Harmonics without roughness, or roughness without harmonics, will not produce the expected harmonic detail."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Noise SOP perturbs selected point attributes using Noise CHOP style noise functions.",
+    "Position noise is applied along point normals, and missing normals can be computed implicitly.",
+    "`period` is inverse frequency and must be greater than zero except for Random noise.",
+    "Harmonics and roughness both need nonzero values to add harmonic detail.",
+    "Transform controls move the sampling point through 3D noise space for reproducible animated looks."
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "tristripSOP",
+  "family": "SOP",
+  "display_name": "Tristrip SOP",
+  "docs_url": "https://docs.derivative.ca/Tristrip_SOP",
+  "summary": "Converts primitive geometry into triangle strips, a render-friendly representation that can be faster than individual triangles or quads.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Primitive group to convert; blank converts the full input"
+    },
+    {
+      "name": "constrainstriplength",
+      "type": "Toggle",
+      "note": "Limit generated strips to a maximum triangle count"
+    },
+    {
+      "name": "maxstriplength",
+      "type": "Int",
+      "note": "Maximum number of triangles per strip when constrained"
+    }
+  ],
+  "common_gotchas": [
+    "Tristrip SOP changes primitive organization; downstream tools expecting original primitive numbers may break.",
+    "Use a source group when only render-heavy portions of geometry need strip conversion.",
+    "Maximum strip length can trade render batching for more predictable topology chunks.",
+    "This is an optimization and formatting tool, not a substitute for geometry cleanup or normal repair."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "render-geometry-optimization",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Tristrip SOP converts primitive geometry into triangle strips.",
+    "Triangle strips can render faster than separate triangles or quads.",
+    "Source Group limits conversion to selected primitives while blank group converts all input geometry.",
+    "Strip length can be constrained to a maximum triangle count for predictable topology chunks."
+  ]
+}

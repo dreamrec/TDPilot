@@ -1,0 +1,55 @@
+{
+  "card_type": "article",
+  "article_id": "write_a_cplusplus_plugin",
+  "title": "Write a CPlusPlus Plugin",
+  "family": "CPLUSPLUS",
+  "families": [
+    "CPLUSPLUS",
+    "CHOP",
+    "TOP",
+    "POP",
+    "SOP",
+    "DAT",
+    "COMP"
+  ],
+  "summary": "Official Derivative overview for TouchDesigner CPlusPlus plugins, covering plugin class lifecycle, sample-code workflow, platform build/debug paths, custom parameters, Info CHOP/DAT output, Python limitations, and custom-operator reuse.",
+  "source_url": "https://docs.derivative.ca/Write_a_CPlusPlus_Plugin",
+  "docsbrain_page_id": "write_a_cplusplus_plugin",
+  "covered_operators": [
+    "cplusplusCHOP",
+    "cplusplusTOP",
+    "cplusplusPOP",
+    "cplusplusSOP",
+    "cplusplusDAT"
+  ],
+  "key_concepts": [
+    "CPlusPlus OPs",
+    "plugin class instance",
+    "execute()",
+    "Samples/CPlusPlus",
+    "setupParameters()",
+    "pulsePressed()",
+    "OP_ParameterManager",
+    "OP_NumericParameter",
+    "OP_StringParameter",
+    "Info CHOP",
+    "Info DAT",
+    "Custom Operator",
+    "TOUCH_TEXT_CONSOLE"
+  ],
+  "guidance": [
+    "Use this article when a plan needs C++ plugin lifecycle grounding rather than a single CPlusPlus operator's parameter list.",
+    "Each CPlusPlus OP loads a compiled plugin and creates a per-operator class instance; reinit/unload behavior can reset plugin-side state or release a binary file.",
+    "Start from Samples/CPlusPlus and the matching base-class header; most detailed API contracts live in the C++ headers and sample comments.",
+    "Custom parameters are defined through setupParameters() and pulse actions are handled through pulsePressed(); RGB/RGBA parameter reads should use color-aware accessors when color workflows matter.",
+    "Python only works when the plugin is installed as a Custom Operator; it does not work inside a regular CPlusPlus node.",
+    "Avoid console printing in performance or shipping contexts because std::cout output has runtime cost."
+  ],
+  "related_snippets": [
+    "CHOP_snippets",
+    "TOP_snippets",
+    "POP_snippets",
+    "SOP_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

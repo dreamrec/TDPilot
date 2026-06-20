@@ -1,0 +1,122 @@
+{
+  "card_type": "operator",
+  "op_type": "ousterTOP",
+  "family": "TOP",
+  "display_name": "Ouster TOP",
+  "docs_url": "https://docs.derivative.ca/Ouster_TOP",
+  "summary": "Connects to Ouster lidar sensors and outputs panoramic 32-bit floating point sensor data channels such as range, XYZ, signal, reflectivity, near IR, and flags.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable connection to the sensor."
+    },
+    {
+      "name": "reinitialize",
+      "type": "Pulse",
+      "note": "Reinitialize the device connection/configuration."
+    },
+    {
+      "name": "deviceaddress",
+      "type": "String",
+      "note": "Sensor IP address or os-serial device name."
+    },
+    {
+      "name": "lidarport",
+      "type": "Int",
+      "note": "UDP port for lidar data."
+    },
+    {
+      "name": "imuport",
+      "type": "Int",
+      "note": "UDP port for IMU data."
+    },
+    {
+      "name": "targetaddress",
+      "type": "String",
+      "note": "Target address the sensor sends data to."
+    },
+    {
+      "name": "scanmode",
+      "type": "Menu",
+      "note": "Choose scan resolution/rate mode such as mode512x10, mode1024x20, or mode4096x5."
+    },
+    {
+      "name": "opmode",
+      "type": "Menu",
+      "note": "Set sensor Normal or Standby operating mode."
+    },
+    {
+      "name": "azimuthwindow",
+      "type": "Range",
+      "note": "Limit scan azimuth window."
+    },
+    {
+      "name": "signalmultiplier",
+      "type": "Menu",
+      "note": "Set signal-strength multiplier."
+    },
+    {
+      "name": "dataformat",
+      "type": "Menu",
+      "note": "Set lidar packet format such as legacy, single, dual, or low data rate."
+    },
+    {
+      "name": "redchannel",
+      "type": "Menu",
+      "note": "Choose sensor data mapped to red."
+    },
+    {
+      "name": "greenchannel",
+      "type": "Menu",
+      "note": "Choose sensor data mapped to green."
+    },
+    {
+      "name": "bluechannel",
+      "type": "Menu",
+      "note": "Choose sensor data mapped to blue."
+    },
+    {
+      "name": "alphachannel",
+      "type": "Menu",
+      "note": "Choose sensor data mapped to alpha."
+    },
+    {
+      "name": "timemode",
+      "type": "Menu",
+      "note": "Internal OSC, Sync Pulse In, or PTP 1588 time sync."
+    },
+    {
+      "name": "iomode",
+      "type": "Menu",
+      "note": "Configure multipurpose IO sync/NMEA/encoder behavior."
+    },
+    {
+      "name": "phaselock",
+      "type": "Toggle",
+      "note": "Phase-lock behavior for synchronized acquisition."
+    }
+  ],
+  "common_gotchas": [
+    "Official docs say Ouster TOP supports Windows and macOS ARM builds of TouchDesigner.",
+    "Only available in Educational, Commercial, and Pro licenses.",
+    "Requires Ouster device firmware 2.x or 3.x.",
+    "High-resolution scan modes can require up to 130 Mbps; Gigabit Ethernet is required for full operation.",
+    "Range values are in millimeters, while calculated XYZ positions are in meters.",
+    "TouchDesigner transforms 3D coordinates into its Y-up coordinate system, which differs from original Ouster coordinate space."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Lidar_snippets",
+    "Sensor_snippets"
+  ],
+  "build_relevance": "lidar_sensor_input",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Connects to Ouster lidar sensors and receives high-bandwidth lidar packets.",
+    "Maps lidar channels such as range, signal, reflectivity, near IR, flags, and XYZ into RGBA data images.",
+    "GPU conversion can calculate 3D XYZ positions from beam azimuth and altitude tables.",
+    "Info CHOP access exposes IMU and timing data for sensor synchronization workflows.",
+    "Time sync can use internal OSC, sync pulse input, or PTP 1588 modes."
+  ]
+}

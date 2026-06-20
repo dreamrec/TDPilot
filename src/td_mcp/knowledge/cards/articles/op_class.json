@@ -1,0 +1,60 @@
+{
+  "card_type": "article",
+  "article_id": "op_class",
+  "title": "OP Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "OP",
+    "COMP",
+    "CHOP",
+    "DAT",
+    "SOP",
+    "TOP",
+    "MAT",
+    "POP"
+  ],
+  "summary": "Official Derivative Python API reference for a single operator object, covering operator lookup shortcuts, parameter collections, storage, tags, children, errors and warnings, flags, cook information, viewer methods, and common OP operations.",
+  "source_url": "https://docs.derivative.ca/OP_Class",
+  "docsbrain_page_id": "op_class",
+  "covered_operators": [
+    "opfindDAT",
+    "opexecuteDAT",
+    "parameterDAT",
+    "scriptCHOP",
+    "scriptDAT",
+    "scriptSOP",
+    "scriptTOP"
+  ],
+  "key_concepts": [
+    "OP",
+    "op()",
+    "opex",
+    "parent",
+    "iop",
+    "ipar",
+    "par",
+    "parGroup",
+    "storage",
+    "store()",
+    "fetch()",
+    "tags",
+    "children",
+    "errors()",
+    "warnings()",
+    "scriptErrors()",
+    "cook()",
+    "openViewer()"
+  ],
+  "guidance": [
+    "Use this article when generated Python needs to navigate operators, inspect common OP state, or manipulate shared OP-level metadata.",
+    "Prefer opex in generated expressions when a missing operator should raise a useful error instead of returning None from op().",
+    "Use par for single parameters and parGroup for grouped controls such as transforms, colors, and tuples.",
+    "Use storage/store()/fetch() for operator-scoped persistent state, and tags for searchable user labels that findChildren() and OP Find DAT can use.",
+    "Use errors(), warnings(), and scriptErrors() for diagnostics before applying a plan or after validating a generated network."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

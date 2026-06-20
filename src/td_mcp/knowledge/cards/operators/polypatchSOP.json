@@ -1,0 +1,91 @@
+{
+  "card_type": "operator",
+  "op_type": "polypatchSOP",
+  "family": "SOP",
+  "display_name": "Polypatch SOP",
+  "docs_url": "https://docs.derivative.ca/Polypatch_SOP",
+  "summary": "Creates a smooth polygonal patch from mesh, polygon, NURBS, or Bezier face inputs with selectable basis and connectivity.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Source face or primitive group"
+    },
+    {
+      "name": "basis",
+      "type": "Menu",
+      "note": "Patch basis"
+    },
+    {
+      "name": "connecttype",
+      "type": "Menu",
+      "note": "Output polygon connectivity"
+    },
+    {
+      "name": "closeu",
+      "type": "Menu",
+      "note": "U closure"
+    },
+    {
+      "name": "closev",
+      "type": "Menu",
+      "note": "V closure"
+    },
+    {
+      "name": "firstuclamp",
+      "type": "Menu",
+      "note": "First U clamp"
+    },
+    {
+      "name": "lastuclamp",
+      "type": "Menu",
+      "note": "Last U clamp"
+    },
+    {
+      "name": "firstvclamp",
+      "type": "Menu",
+      "note": "First V clamp"
+    },
+    {
+      "name": "lastvclamp",
+      "type": "Menu",
+      "note": "Last V clamp"
+    },
+    {
+      "name": "divisions",
+      "type": "XY",
+      "note": "Patch divisions"
+    },
+    {
+      "name": "divisionsx",
+      "type": "Int",
+      "note": "U divisions"
+    },
+    {
+      "name": "divisionsy",
+      "type": "Int",
+      "note": "V divisions"
+    },
+    {
+      "name": "polys",
+      "type": "Toggle",
+      "note": "Force polygon output rather than mesh output"
+    }
+  ],
+  "common_gotchas": [
+    "Input primitive type and connectivity strongly affect the resulting patch topology.",
+    "Clamp and close settings are boundary continuity controls, not general smoothing toggles.",
+    "The polys parameter forces polygonal output rather than mesh output and should be explicit when downstream SOPs expect polygons."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "polygonal-patch-smoothing",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Polypatch SOP builds a smooth polygonal patch from supported face or mesh inputs.",
+    "The official basis choices are Cardinal and BSpline.",
+    "Connectivity can output rows, columns, triangles, quads, alternating triangles, or inherit source connectivity.",
+    "Boundary continuity is controlled with close and clamp parameters in U and V."
+  ]
+}

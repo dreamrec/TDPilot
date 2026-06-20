@@ -1,0 +1,62 @@
+{
+  "card_type": "article",
+  "article_id": "panel_component",
+  "title": "Panel Component",
+  "family": "COMP",
+  "families": [
+    "COMP",
+    "PANEL",
+    "UI",
+    "PYTHON"
+  ],
+  "summary": "Official Derivative overview of Panel Components, the Component sub-family used to create custom interactive 2D control panels and user interfaces in TouchDesigner.",
+  "source_url": "https://docs.derivative.ca/Panel_Component",
+  "docsbrain_page_id": "panel_component",
+  "covered_operators": [
+    "containerCOMP",
+    "widgetCOMP",
+    "textCOMP",
+    "sliderCOMP",
+    "buttonCOMP",
+    "listCOMP",
+    "opviewerCOMP",
+    "parameterCOMP",
+    "selectCOMP",
+    "tableCOMP"
+  ],
+  "key_concepts": [
+    "Panel Component",
+    "Panel Components",
+    "custom interactive 2D control panels",
+    "user interfaces",
+    "Panels",
+    "OP Create dialog",
+    "OP Snippets",
+    "Container COMP",
+    "Widget COMP",
+    "Text COMP",
+    "Slider COMP",
+    "Button COMP",
+    "List COMP",
+    "OP Viewer COMP",
+    "Parameter COMP",
+    "Select COMP",
+    "Table COMP",
+    "Panels within Panels",
+    "Parenting",
+    "3D Parenting",
+    "Scripting with Panels",
+    "Panel Value",
+    "Panel Execute DAT",
+    "PanelValue Class",
+    "PanelCOMP Class"
+  ],
+  "guidance": [
+    "Use this article when selecting a 2D UI component family for panels, controls, widgets, parameter surfaces, operator viewers, or optimized table-like UI.",
+    "Choose Container COMP as the usual parent when placing panels inside panels; attached nodes in the same network can also participate in panel parenting like 3D Parenting.",
+    "Use OP Viewer COMP when an operator viewer should become a panel, and Parameter COMP when an operator's parameters should become a panel surface.",
+    "For scripted behavior, connect this page with Panel Value, Panel Execute DAT, PanelValue Class, PanelCOMP Class, and the individual Panel COMP classes."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

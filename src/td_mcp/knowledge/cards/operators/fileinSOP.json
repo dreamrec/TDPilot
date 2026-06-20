@@ -1,0 +1,51 @@
+{
+  "card_type": "operator",
+  "op_type": "fileinSOP",
+  "family": "SOP",
+  "display_name": "File In SOP",
+  "docs_url": "https://docs.derivative.ca/File_In_SOP",
+  "summary": "Reads SOP geometry from disk or URL, including geometry previously saved from TouchDesigner, Model Editor, Houdini, or other tools.",
+  "key_params": [
+    {
+      "name": "file",
+      "type": "File",
+      "note": "Geometry file path or URL."
+    },
+    {
+      "name": "flipfacing",
+      "type": "Toggle",
+      "note": "Flip primitive winding/facing on load."
+    },
+    {
+      "name": "normals",
+      "type": "Toggle",
+      "note": "Compute normals if the loaded geometry has none."
+    },
+    {
+      "name": "refresh",
+      "type": "Toggle",
+      "note": "Continuously refresh the source file."
+    },
+    {
+      "name": "refreshpulse",
+      "type": "Pulse",
+      "note": "Manually reload the file."
+    }
+  ],
+  "common_gotchas": [
+    "`normals` does not overwrite existing normals; it computes them if none exist.",
+    "`flipfacing` changes primitive winding/facing and is not the same as generating normals.",
+    "Remote loading depends on URL availability and the official docs specifically describe `http://` style URLs."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "File In SOP reads SOP geometry from disk or URL, including TouchDesigner and common model/export formats.",
+    "`file` can point at local geometry or a web URL; official docs call out `http://` URL usage.",
+    "`normals` computes normals only when the loaded geometry has none.",
+    "`refresh` and `refreshpulse` support continuous or manual reload workflows."
+  ]
+}

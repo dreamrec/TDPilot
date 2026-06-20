@@ -1,0 +1,37 @@
+{
+  "card_type": "operator",
+  "op_type": "mergeCHOP",
+  "family": "CHOP",
+  "display_name": "Merge CHOP",
+  "docs_url": "https://docs.derivative.ca/Merge_CHOP",
+  "summary": "Combines channels from all CHOP inputs in input order, with controls for interval alignment, sample-rate handling, duplicate channel names, and common CHOP export behavior.",
+  "key_params": [
+    {"name": "align", "type": "Menu", "note": "How inputs with different start and end times are aligned"},
+    {"name": "duplicate", "type": "Menu", "note": "How duplicate channel names are made unique, kept, discarded, or replaced"},
+    {"name": "timeslice", "type": "Toggle", "note": "Merge only the current time slice when time slicing is enabled"},
+    {"name": "scope", "type": "String", "note": "Common CHOP scope pattern for affected channels"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate match policy for mixed-rate inputs"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"},
+    {"name": "commonrenamefrom", "type": "String", "note": "Common rename pattern applied to exported channels"},
+    {"name": "commonrenameto", "type": "String", "note": "Common rename replacement pattern"}
+  ],
+  "key_concepts": [
+    "Merge CHOP outputs the channels from all connected CHOP inputs.",
+    "Channel order follows the order of the input CHOPs.",
+    "The Duplicate Names menu determines whether conflicting channel names are made unique, kept from the first input, kept from the last input, or replaced.",
+    "The Align menu resolves inputs with different start and end intervals by extending, stretching, shifting, or trimming channels.",
+    "With Time Slice enabled, Merge CHOP merges the current time slice rather than the full historical channel range.",
+    "Sample Rate Match controls whether mixed sample rates are resampled or treated as an error."
+  ],
+  "common_gotchas": [
+    "Duplicate names are common after merges; choose the duplicate-name policy before exporting or binding the resulting channels.",
+    "Align modes can trim, stretch, shift, or extend data, so verify the output interval before using merged channels as timing references.",
+    "Time-sliced merges output only the current slice, not the entire input length.",
+    "Mixed sample rates can be resampled unless Sample Rate Match is set to error on rate mismatch."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18"
+}

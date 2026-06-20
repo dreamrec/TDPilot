@@ -1,0 +1,117 @@
+{
+  "card_type": "operator",
+  "op_type": "refineSOP",
+  "family": "SOP",
+  "display_name": "Refine SOP",
+  "docs_url": "https://docs.derivative.ca/Refine_SOP",
+  "summary": "Adds or removes CVs in NURBS, Bezier, polygonal faces, and surfaces while separating shape-preserving refinement from lossy unrefinement.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Primitive group to refine"
+    },
+    {
+      "name": "firstu",
+      "type": "Toggle",
+      "note": "Enable first U control"
+    },
+    {
+      "name": "domainu1",
+      "type": "Float",
+      "note": "First U value"
+    },
+    {
+      "name": "secondu",
+      "type": "Toggle",
+      "note": "Enable second U control"
+    },
+    {
+      "name": "domainu2",
+      "type": "Float",
+      "note": "Second U value"
+    },
+    {
+      "name": "divsu",
+      "type": "Int",
+      "note": "U divisions for refine or subdivide"
+    },
+    {
+      "name": "firstv",
+      "type": "Toggle",
+      "note": "Enable first V control"
+    },
+    {
+      "name": "domainv1",
+      "type": "Float",
+      "note": "First V value"
+    },
+    {
+      "name": "secondv",
+      "type": "Toggle",
+      "note": "Enable second V control"
+    },
+    {
+      "name": "domainv2",
+      "type": "Float",
+      "note": "Second V value"
+    },
+    {
+      "name": "divsv",
+      "type": "Int",
+      "note": "V divisions for refine or subdivide"
+    },
+    {
+      "name": "refineu",
+      "type": "Int",
+      "note": "NURB U knot insert count"
+    },
+    {
+      "name": "refinev",
+      "type": "Int",
+      "note": "NURB V knot insert count"
+    },
+    {
+      "name": "space",
+      "type": "Menu",
+      "note": "Uniform domain or arc length spacing"
+    },
+    {
+      "name": "unrefineu",
+      "type": "Int",
+      "note": "NURB U knot removal count"
+    },
+    {
+      "name": "unrefinev",
+      "type": "Int",
+      "note": "NURB V knot removal count"
+    },
+    {
+      "name": "tolu",
+      "type": "Float",
+      "note": "Unrefine tolerance U"
+    },
+    {
+      "name": "tolv",
+      "type": "Float",
+      "note": "Unrefine tolerance V"
+    }
+  ],
+  "common_gotchas": [
+    "Refinement is shape-preserving, but unrefinement can smooth or melt the original surface.",
+    "Tolerance controls only apply to unrefinement, not refinement.",
+    "Use Uniform Domain Lengths when domain ranges are animated to avoid undetermined inserted points.",
+    "U and V interval fields are parametric 0-1 domains, not world-space distances."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "surface-and-curve-cv-refinement",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Refine SOP can increase CV counts without changing shape for supported curves and surfaces.",
+    "Unrefinement removes CVs over parametric intervals and is lossy within a tolerance.",
+    "Refinement can use a single U/V location, while unrefinement requires First and Second U/V interval boundaries.",
+    "Subdivide is equivalent to refine for polygons and Beziers, and maximum refinement for NURBS."
+  ]
+}

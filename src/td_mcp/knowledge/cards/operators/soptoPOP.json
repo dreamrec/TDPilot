@@ -1,0 +1,31 @@
+{
+  "card_type": "operator",
+  "op_type": "soptoPOP",
+  "family": "POP",
+  "display_name": "SOP to POP",
+  "docs_url": "https://docs.derivative.ca/SOP_to_POP",
+  "summary": "Converts SOP 3D geometry to POP geometry. SOP point, vertex, and primitive attributes are converted to POP attributes, with common renames such as uv to Tex, Cd to Color, width to LineWidth, and pscale to PointScale.",
+  "key_params": [
+    {"name": "sop", "type": "SOP", "note": "SOP reference to convert"},
+    {"name": "polygons", "type": "Menu", "note": "How to handle polygons with five or more points"},
+    {"name": "mesh", "type": "Menu", "note": "How to convert SOP mesh primitives"},
+    {"name": "inputcolorspace", "type": "Menu", "note": "Color-space interpretation for incoming color data"}
+  ],
+  "key_concepts": [
+    "SOP geometry to POP geometry bridge",
+    "SOP point, vertex, and primitive attribute conversion",
+    "attribute renames: uv to Tex and Cd to Color",
+    "width to LineWidth and pscale to PointScale",
+    "triangles and quads preserved as POP primitives",
+    "5+ point polygon handling",
+    "mesh conversion to quads, rows, or ignored output"
+  ],
+  "common_gotchas": [
+    "POPs do not support polygons with five or more points; choose ignore, triangulate, or closed line strip behavior.",
+    "SOP meshes do not preserve row/column dimension automatically; use Dimension POP when that structure matters.",
+    "SOP primitive types like sphere and rare Bezier/NURBS forms are converted as points without primitives."
+  ],
+  "related_snippets": ["POP_snippets", "SOP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

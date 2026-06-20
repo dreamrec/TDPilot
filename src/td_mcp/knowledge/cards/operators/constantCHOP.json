@@ -4,17 +4,155 @@
   "family": "CHOP",
   "display_name": "Constant CHOP",
   "docs_url": "https://docs.derivative.ca/Constant_CHOP",
-  "summary": "Outputs one or more channels with static values that you define. The simplest way to create named control channels for parameters or logic.",
+  "summary": "Creates named constant-value CHOP channels. Use it for stable control signals, default values, slider snapshots, parameter exports, and one-sample or interval-length control channels with explicit extend behavior.",
   "key_params": [
-    {"name": "name0", "type": "String", "note": "Name of the first channel"},
-    {"name": "value0", "type": "Float", "note": "Value of the first channel"},
-    {"name": "name1", "type": "String", "note": "Name of the second channel (additional channels added similarly)"},
-    {"name": "value1", "type": "Float", "note": "Value of the second channel"}
+    {
+      "name": "const",
+      "type": "Sequence",
+      "note": "Sequence of channel name/value pairs."
+    },
+    {
+      "name": "const0name",
+      "type": "String",
+      "note": "Channel name or Pattern Expansion expression."
+    },
+    {
+      "name": "const0value",
+      "type": "Float",
+      "note": "Constant value for the generated channel."
+    },
+    {
+      "name": "snap",
+      "type": "Pulse",
+      "note": "Snapshot the first input's channel names and values into the Constant CHOP."
+    },
+    {
+      "name": "first",
+      "type": "Integer",
+      "note": "First incoming channel to use during Snapshot Input."
+    },
+    {
+      "name": "current",
+      "type": "Toggle",
+      "note": "Require this CHOP to be current for the second Active input to affect values."
+    },
+    {
+      "name": "single",
+      "type": "Toggle",
+      "note": "Use a one-sample channel interval when enabled."
+    },
+    {
+      "name": "start",
+      "type": "Float",
+      "note": "Start of the channel interval."
+    },
+    {
+      "name": "startunit",
+      "type": "Menu",
+      "note": "Units for Start: samples, frames, or seconds."
+    },
+    {
+      "name": "end",
+      "type": "Float",
+      "note": "End of the channel interval."
+    },
+    {
+      "name": "endunit",
+      "type": "Menu",
+      "note": "Units for End: samples, frames, or seconds."
+    },
+    {
+      "name": "rate",
+      "type": "Float",
+      "note": "Sample rate of the generated channels."
+    },
+    {
+      "name": "left",
+      "type": "Menu",
+      "note": "Extend behavior before the channel range."
+    },
+    {
+      "name": "right",
+      "type": "Menu",
+      "note": "Extend behavior after the channel range."
+    },
+    {
+      "name": "defval",
+      "type": "Float",
+      "note": "Value used by the Default Value extend condition."
+    },
+    {
+      "name": "timeslice",
+      "type": "Toggle",
+      "note": "Force output channels to be time sliced."
+    },
+    {
+      "name": "scope",
+      "type": "String",
+      "note": "Channel scope affected by common CHOP operations."
+    },
+    {
+      "name": "srselect",
+      "type": "Menu",
+      "note": "Sample-rate match behavior for multiple input CHOPs."
+    },
+    {
+      "name": "exportmethod",
+      "type": "Menu",
+      "note": "Method used to export channels to parameters."
+    },
+    {
+      "name": "autoexportroot",
+      "type": "OP Path",
+      "note": "Root node used by Channel Name is Path:Parameter exports."
+    },
+    {
+      "name": "exporttable",
+      "type": "DAT Path",
+      "note": "DAT table used by DAT Table export methods."
+    }
+  ],
+  "key_concepts": [
+    "constant-value channels",
+    "name/value pairs",
+    "Name field creates channels",
+    "Pattern Expansion",
+    "one sample long by default",
+    "CHOP interval",
+    "Snapshot Input",
+    "Parameter CHOP",
+    "par.snap.pulse()",
+    "First Channel",
+    "40 channels",
+    "Active input",
+    "Active Needs Current",
+    "Mouse In CHOP",
+    "MIDI In CHOP",
+    "Single Sample",
+    "Sample Rate",
+    "Extend Left",
+    "Extend Right",
+    "Default Value",
+    "Time Slice",
+    "Export Method",
+    "Info CHOP",
+    "start",
+    "length",
+    "sample_rate",
+    "num_channels",
+    "time_slice",
+    "export_sernum"
   ],
   "common_gotchas": [
-    "Channel names must be unique within the node; duplicate names are silently renamed with a suffix."
+    "The Name field creates channels only when it contains a name or Pattern Expansion expression; blank name slots do not create channels.",
+    "Constant CHOP outputs are one sample long by default; turn off Single Sample and use the Channel page Start/End/Rate fields for longer intervals.",
+    "Snapshot Input can pull names and values from a Parameter CHOP or other input CHOP; script the same action with par.snap.pulse().",
+    "The second Active input adds offsets only when it is greater than zero, and Active Needs Current can limit that behavior to the current CHOP.",
+    "First Channel is useful when snapshotting more incoming channels than the Constant CHOP can hold in one operator."
   ],
-  "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "related_snippets": [
+    "CHOP_snippets"
+  ],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
 }

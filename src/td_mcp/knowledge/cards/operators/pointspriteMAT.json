@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "pointspriteMAT",
+  "family": "MAT",
+  "display_name": "Point Sprite MAT",
+  "docs_url": "https://docs.derivative.ca/Point_Sprite_MAT",
+  "summary": "Renders point sprites with color, color-map, size, rectangular offset, and distance attenuation controls for particle and point-cloud style geometry.",
+  "key_params": [
+    {"name": "color", "type": "RGBA", "note": "Base point-sprite color"},
+    {"name": "colormap", "type": "TOP", "note": "Texture applied to each point sprite"},
+    {"name": "pointsize", "type": "Float", "note": "Constant point-sprite size in pixels"},
+    {"name": "sizingmodel", "type": "Menu", "note": "How point size is interpreted"},
+    {"name": "attenpscale", "type": "Toggle", "note": "Enable distance-based point-scale attenuation"},
+    {"name": "attennear", "type": "Float", "note": "Near distance for attenuation"},
+    {"name": "attenfar", "type": "Float", "note": "Far distance for attenuation"},
+    {"name": "offsetleft", "type": "Float", "note": "Left offset for rectangular sprite shape"},
+    {"name": "offsetright", "type": "Float", "note": "Right offset for rectangular sprite shape"}
+  ],
+  "key_concepts": [
+    "Point Sprite MAT renders point-based geometry as camera-facing sprites, commonly from Particle SOP, DAT to SOP, or Convert SOP workflows.",
+    "Sprite color can come from material color, point color/alpha, and a color map, with color-map alpha participating in the final composite.",
+    "Final sprite size combines the pscale point attribute with constant size, sizing model, and optional distance attenuation controls.",
+    "Constant sizing is screen-space by default, while Perspective Correct sizing treats Constant Point Size as world-space width.",
+    "Color maps can use 3D or 2D texture arrays, where the W texture coordinate selects the map slice."
+  ],
+  "common_gotchas": [
+    "Point sprite size is screen-space by default, so distant points may not shrink unless attenuation is configured.",
+    "The input SOP must contain point-sprite compatible points, commonly from Particle SOP, DAT to SOP, or Convert SOP workflows.",
+    "Large point sizes and dense point clouds can become fill-rate heavy.",
+    "Color-map alpha and common MAT blending/depth states determine whether sprites composite correctly."
+  ],
+  "related_snippets": ["MAT_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

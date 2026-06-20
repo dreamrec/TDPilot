@@ -1,0 +1,62 @@
+{
+  "card_type": "operator",
+  "op_type": "etherdreamDAT",
+  "family": "DAT",
+  "display_name": "EtherDream DAT",
+  "docs_url": "https://docs.derivative.ca/EtherDream_DAT",
+  "summary": "Polls for connected EtherDream laser devices and lists discovered device information in a DAT table for laser-output setup and diagnostics.",
+  "key_params": [
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "Script run when polling for EtherDream devices"
+    },
+    {
+      "name": "columns",
+      "type": "Menu",
+      "note": "Choose which discovered-device columns are included in the table"
+    },
+    {
+      "name": "poll",
+      "type": "Pulse",
+      "note": "Poll for connected EtherDream devices"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language setting"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Choose the edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom extension used when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT display word-wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "EtherDream DAT discovers laser DAC devices; it does not generate laser point streams by itself.",
+    "Device discovery depends on network/device state and may need an explicit Poll pulse after hardware changes.",
+    "Selectable columns mean downstream scripts should use headers, not fixed column positions.",
+    "Generated laser workflows should include safety gating outside the discovery DAT before enabling output operators."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "laser-device-discovery",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Polls the network and lists detected EtherDream laser DAC devices.",
+    "Runs a callbacks DAT during polling, matching the discovery pattern used by device-list DATs.",
+    "Column selection controls which discovered device fields are present in the table.",
+    "Laser Device CHOP is the modern output path for sending laser point streams; this DAT is for discovery."
+  ]
+}

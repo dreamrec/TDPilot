@@ -1,0 +1,53 @@
+{
+  "card_type": "operator",
+  "op_type": "eventCHOP",
+  "family": "CHOP",
+  "display_name": "Event CHOP",
+  "docs_url": "https://docs.derivative.ca/Event_CHOP",
+  "summary": "Creates one active sample per off-to-on event and manages overlapping ADSR-style event lifetimes for MIDI, keyboard, Python, or other trigger sources.",
+  "key_params": [
+    {"name": "id", "type": "Toggle", "note": "Output unique event ID channel"},
+    {"name": "index", "type": "Toggle", "note": "Output source channel index"},
+    {"name": "active", "type": "Toggle", "note": "Output event active state"},
+    {"name": "input", "type": "Toggle", "note": "Output input value captured at event birth"},
+    {"name": "time", "type": "Toggle", "note": "Output seconds since event start"},
+    {"name": "adsr", "type": "Toggle", "note": "Output ADSR envelope value"},
+    {"name": "state", "type": "Toggle", "note": "Output fractional attack/decay/sustain/release state"},
+    {"name": "attacktime", "type": "Float", "note": "Attack duration"},
+    {"name": "attacktunit", "type": "Menu", "note": "Units for Attack Time"},
+    {"name": "attacklevel", "type": "Float", "note": "Attack peak level"},
+    {"name": "decaytime", "type": "Float", "note": "Decay duration"},
+    {"name": "decaytunit", "type": "Menu", "note": "Units for Decay Time"},
+    {"name": "sustaintime", "type": "Float", "note": "Sustain duration"},
+    {"name": "sustaintunit", "type": "Menu", "note": "Units for Sustain Time"},
+    {"name": "sustainmin", "type": "Float", "note": "Sustain starting level"},
+    {"name": "sustainmax", "type": "Float", "note": "Sustain ending level"},
+    {"name": "releasetime", "type": "Float", "note": "Release duration"},
+    {"name": "releasetunit", "type": "Menu", "note": "Units for Release Time"},
+    {"name": "releaselevel", "type": "Float", "note": "End-of-life release level"},
+    {"name": "speed", "type": "Float", "note": "Per-event speed multiplier"},
+    {"name": "globalspeed", "type": "Float", "note": "Global speed multiplier"},
+    {"name": "resetcondition", "type": "Menu", "note": "Reset behavior for second input"},
+    {"name": "reset", "type": "Toggle", "note": "Clear active events while on"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Clear events instantly"},
+    {"name": "callbacks", "type": "DAT", "note": "DAT with onCreate() and onDestroy() callbacks"}
+  ],
+  "key_concepts": [
+    "Manages the birth and lifetime of overlapping off-to-on events, especially MIDI, keyboard, and Python-triggered events.",
+    "Generates one active sample per event until that event's attack, decay, sustain, and release lifetime completes.",
+    "Input 0 triggers events, input 1 resets events, and optional input 2 samples values for each event.",
+    "Output channels can include id, index, active, input, time, adsr, and state so downstream instancing can track event state.",
+    "The state channel moves through attack, sustain/loop, and release ranges and can drive phase-like controls such as movie offsets.",
+    "Callbacks DAT supports onCreate() and onDestroy() hooks for event lifecycle handling."
+  ],
+  "common_gotchas": [
+    "Event CHOP creates samples for active events, not one fixed channel per note or trigger.",
+    "The first input triggers events, the second resets events, and the optional third input samples values for each event.",
+    "Many overlapping triggers can create many samples; downstream instancing should handle changing sample counts.",
+    "The id channel is useful for stable randomization or per-event lookup because event indices can shift as events die.",
+    "Callbacks should be validated because generated code can run on event creation and destruction."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

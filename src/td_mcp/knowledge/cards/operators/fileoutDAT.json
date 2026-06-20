@@ -1,0 +1,67 @@
+{
+  "card_type": "operator",
+  "op_type": "fileoutDAT",
+  "family": "DAT",
+  "display_name": "File Out DAT",
+  "docs_url": "https://docs.derivative.ca/File_Out_DAT",
+  "summary": "Writes DAT text or table contents to .txt or .dat files, with append and explicit write controls for logging or export workflows.",
+  "key_params": [
+    {
+      "name": "file",
+      "type": "File",
+      "note": "Destination path for DAT text or table output"
+    },
+    {
+      "name": "n",
+      "type": "Integer",
+      "note": "Manual index value available for numbered output filenames"
+    },
+    {
+      "name": "write",
+      "type": "Pulse",
+      "note": "Write the current DAT contents to disk"
+    },
+    {
+      "name": "append",
+      "type": "Toggle",
+      "note": "Append to an existing text file instead of replacing it"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Append mode is for text output and keeps the file handle open; turn it off when rewriting complete files.",
+    "With Append off, writing replaces the target file, so generated tools need explicit user-safe destinations.",
+    "The N parameter is not automatically incremented by the operator.",
+    "With no input DAT, File Out DAT can be used with send-style text triggering, which is different from normal wired export."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "text-table-file-export",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Writes DAT contents to .dat or .txt files.",
+    "The N parameter supports manually incrementing numbered output filenames.",
+    "Write triggers the file save action.",
+    "Append mode appends to text output instead of replacing the file."
+  ]
+}

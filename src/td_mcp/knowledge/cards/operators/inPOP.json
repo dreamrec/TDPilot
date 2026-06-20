@@ -1,0 +1,26 @@
+{
+  "card_type": "operator",
+  "op_type": "inPOP",
+  "family": "POP",
+  "display_name": "In POP",
+  "docs_url": "https://docs.derivative.ca/In_POP",
+  "summary": "Exposes a POP input connector on the parent component and brings that parent input into the internal POP network. If the parent input is unconnected, it can pass through data from its second input as a default fallback.",
+  "key_params": [
+    {"name": "label", "type": "Str", "note": "Hover label shown on the parent component input connector"},
+    {"name": "connectorder", "type": "Int", "note": "Sort key for ordering parent component input connectors"}
+  ],
+  "key_concepts": [
+    "Parent component input connector export",
+    "One In POP creates one parent input connector",
+    "Second input supplies default data when the parent input is unconnected",
+    "Connect Order sorts component input connectors"
+  ],
+  "common_gotchas": [
+    "Each In POP creates one parent input connector, so duplicate or stale In POPs alter a component's public interface.",
+    "Use the second input as an explicit default-data fallback for reusable components that must cook when nothing is connected.",
+    "Keep connectorder stable in generated components so user wiring does not jump around between revisions."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,105 @@
+{
+  "card_type": "operator",
+  "op_type": "chromakeyTOP",
+  "family": "TOP",
+  "display_name": "Chroma Key TOP",
+  "docs_url": "https://docs.derivative.ca/Chroma_Key_TOP",
+  "summary": "Pulls a key matte from HSV ranges and outputs either a new alpha matte or the keyed source image.",
+  "key_params": [
+    {
+      "name": "huemin",
+      "type": "Float",
+      "note": "Minimum hue included in the key"
+    },
+    {
+      "name": "huemax",
+      "type": "Float",
+      "note": "Maximum hue included in the key"
+    },
+    {
+      "name": "hsoftlow",
+      "type": "Float",
+      "note": "Hue low-edge softness"
+    },
+    {
+      "name": "hsofthigh",
+      "type": "Float",
+      "note": "Hue high-edge softness"
+    },
+    {
+      "name": "satmin",
+      "type": "Float",
+      "note": "Minimum saturation included in the key"
+    },
+    {
+      "name": "satmax",
+      "type": "Float",
+      "note": "Maximum saturation included in the key"
+    },
+    {
+      "name": "ssoftlow",
+      "type": "Float",
+      "note": "Saturation low-edge softness"
+    },
+    {
+      "name": "ssofthigh",
+      "type": "Float",
+      "note": "Saturation high-edge softness"
+    },
+    {
+      "name": "valmin",
+      "type": "Float",
+      "note": "Minimum value included in the key"
+    },
+    {
+      "name": "valmax",
+      "type": "Float",
+      "note": "Maximum value included in the key"
+    },
+    {
+      "name": "vsoftlow",
+      "type": "Float",
+      "note": "Value low-edge softness"
+    },
+    {
+      "name": "vsofthigh",
+      "type": "Float",
+      "note": "Value high-edge softness"
+    },
+    {
+      "name": "invert",
+      "type": "Toggle",
+      "note": "Invert the new alpha"
+    },
+    {
+      "name": "rgbout",
+      "type": "Menu",
+      "note": "RGB output: multalpha or newalpha"
+    },
+    {
+      "name": "alphaout",
+      "type": "Menu",
+      "note": "Alpha output: newalpha1 or multnewalpha"
+    }
+  ],
+  "common_gotchas": [
+    "Hue, saturation, and value ranges all have to match before a pixel is included in the key.",
+    "Min/max ranges without soft controls often create harsh matte edges.",
+    "RGB Output and Alpha Output modes can make the node output a matte rather than keyed RGB.",
+    "Use the Palette chromaKey component when interactive sampling and spill controls are needed."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "palette_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Chroma Key TOP selects pixels that fall inside Hue, Saturation, and Value min/max ranges.",
+    "Soft low and high controls feather the boundaries of Hue, Saturation, and Value ranges.",
+    "Output controls choose whether RGB is source multiplied by new alpha or the new alpha itself.",
+    "Alpha output can be the new alpha or source alpha multiplied by new alpha.",
+    "The Palette chromaKey component wraps this TOP with sampling, edge softening, and spill controls.",
+    "The official TOP supports 3D textures and 2D texture arrays."
+  ]
+}

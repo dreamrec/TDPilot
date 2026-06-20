@@ -4,13 +4,47 @@
   "family": "SOP",
   "display_name": "Merge SOP",
   "docs_url": "https://docs.derivative.ca/Merge_SOP",
-  "summary": "Combines multiple SOP inputs into a single geometry output. The geometry remains as separate primitives but lives in one operator for unified processing.",
-  "key_params": [],
-  "common_gotchas": [
-    "Merge does not fuse overlapping points — use a Fuse SOP afterward if you need a watertight mesh.",
-    "Large numbers of merged inputs can slow down cooking; consider instancing instead for repeated geometry."
+  "summary": "Merges geometry from multiple SOPs into one SOP output. Inputs can be wired directly or gathered by the SOPs parameter with wildcard pattern matching for large same-name sets.",
+  "key_params": [
+    {
+      "name": "sops",
+      "type": "SOP Pattern",
+      "note": "SOPs parameter; optional SOP path/name patterns to merge in addition to wired inputs, with wildcard Pattern Matching support."
+    }
   ],
-  "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "key_concepts": [
+    "multiple SOP inputs",
+    "SOPs parameter",
+    "wildcard Pattern Matching",
+    "unified geometry output",
+    "separate primitives",
+    "wired SOP inputs",
+    "Info CHOP",
+    "Common SOP Info Channels",
+    "num_points",
+    "num_prims",
+    "num_particles",
+    "last_vbo_update_time",
+    "last_meta_vbo_update_time",
+    "Geometry Batches",
+    "single draw command",
+    "SOP cook time",
+    "VBO update",
+    "same material",
+    "Object Merge SOP",
+    "Select SOP",
+    "Fuse SOP"
+  ],
+  "common_gotchas": [
+    "The SOPs parameter supports wildcard Pattern Matching; broad patterns can accidentally pull in helper SOPs, so prefer stable names or explicit wired inputs for critical geometry.",
+    "Merge SOP does not fuse overlapping points or weld surfaces; use Fuse SOP or topology tools afterward when the downstream network needs connected geometry.",
+    "A Merge SOP can reduce render batch count when merged SOPs share the same material and can be rendered with a single draw command.",
+    "Do not use Merge SOP as a blanket optimization when inputs cook every frame; the merge cook can cost more than rendering extra batches.",
+    "Use Object Merge SOP when source component transforms should be baked, and Select SOP when a direct reference to a stable SOP endpoint is enough."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
 }

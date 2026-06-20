@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "audiostreaminCHOP",
+  "family": "CHOP",
+  "display_name": "Audio Stream In CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_Stream_In_CHOP",
+  "summary": "Receives audio from stream sources such as server/RTSP-style streams, Video Stream In TOP, or WebRTC connections.",
+  "key_concepts": [
+    "Audio Stream In CHOP streams audio into TouchDesigner from an RTSP-style server URL or a WebRTC peer.",
+    "Server source mode uses Server URL, while WebRTC source mode uses a WebRTC DAT, connection, and track.",
+    "Video Stream In TOP can be referenced when the incoming video stream carries embedded audio.",
+    "Audio Sync Offset compensates for playback latency when stream audio must align with images.",
+    "Info CHOP channels expose stream state such as sample, seconds, open, opening, and open_failed."
+  ],
+  "key_params": [
+    {"name": "srctype", "type": "Menu", "note": "Source type such as server or WebRTC"},
+    {"name": "url", "type": "String", "note": "Server URL when using server stream source"},
+    {"name": "videostreamintop", "type": "TOP", "note": "Video Stream In TOP source for associated audio"},
+    {"name": "play", "type": "Toggle", "note": "Play/receive audio stream"},
+    {"name": "opentimeout", "type": "Float", "note": "Timeout while opening stream source"},
+    {"name": "syncoffset", "type": "Float", "note": "Audio sync offset"},
+    {"name": "volume", "type": "Float", "note": "Output volume"},
+    {"name": "webrtc", "type": "DAT", "note": "WebRTC DAT when using WebRTC source"},
+    {"name": "webrtcconnection", "type": "String", "note": "WebRTC connection identifier"},
+    {"name": "webrtctrack", "type": "String", "note": "WebRTC audio input track"}
+  ],
+  "common_gotchas": [
+    "Network stream availability depends on URL, peer state, ports, and firewall/network routing.",
+    "Use sync offset when pairing stream audio with video.",
+    "WebRTC mode requires matching WebRTC DAT, connection, peer, and track names.",
+    "Open timeout should be set with the expected network conditions in mind."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

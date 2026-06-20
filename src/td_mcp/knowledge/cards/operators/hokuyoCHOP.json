@@ -1,0 +1,38 @@
+{
+  "card_type": "operator",
+  "op_type": "hokuyoCHOP",
+  "family": "CHOP",
+  "display_name": "Hokuyo CHOP",
+  "docs_url": "https://docs.derivative.ca/Hokuyo_CHOP",
+  "summary": "Communicates with Hokuyo serial or ethernet laser scanners and outputs scan measurements in polar or Cartesian coordinates for tracking workflows.",
+  "key_concepts": [
+    "Connects to Hokuyo laser scanners over either serial or ethernet interfaces and outputs scan measurements as CHOP channels.",
+    "Scan output can be Polar coordinates for angle/distance or Cartesian coordinates for x/y positions with the scanner as origin.",
+    "Start Step and End Step restrict the measurement range and must match the supported range of the specific Hokuyo model.",
+    "Serial-only High Sensitivity and Motor Speed controls trade detection behavior against measurement error or multi-scanner interference.",
+    "Cartesian output is a documented direct source shape for Blob Track CHOP object detection workflows."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable connection to the Hokuyo sensor"},
+    {"name": "interface", "type": "Menu", "note": "Serial or ethernet interface"},
+    {"name": "port", "type": "String", "note": "Serial COM port"},
+    {"name": "netaddress", "type": "String", "note": "Ethernet scanner address"},
+    {"name": "highsensitivity", "type": "Toggle", "note": "Serial-only high sensitivity mode"},
+    {"name": "motorspeed", "type": "Float", "note": "Serial-only motor speed adjustment"},
+    {"name": "startstep", "type": "Integer", "note": "First scan data point"},
+    {"name": "endstep", "type": "Integer", "note": "Last scan data point"},
+    {"name": "output", "type": "Menu", "note": "Polar or Cartesian coordinates"},
+    {"name": "polarcoords", "type": "MenuItem", "note": "Distance and scan angle output"},
+    {"name": "cartesiancoords", "type": "MenuItem", "note": "x/y position output with sensor at origin"}
+  ],
+  "common_gotchas": [
+    "Only specific Hokuyo models were tested in-house even though the docs say serial and ethernet scanners generally work.",
+    "Windows firewall can block ethernet Hokuyo devices; each TouchDesigner install may need network permission.",
+    "Start and end steps are device-specific and must stay within the scanner's valid measurement range.",
+    "High Sensitivity can increase detection ability but also measurement error and is only available on serial devices.",
+    "Cartesian output is the preferred input shape for Blob Track CHOP workflows."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ sensor hardware",
+  "last_verified": "2026-06-18"
+}

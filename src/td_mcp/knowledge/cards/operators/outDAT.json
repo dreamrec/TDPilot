@@ -1,0 +1,52 @@
+{
+  "card_type": "operator",
+  "op_type": "outDAT",
+  "family": "DAT",
+  "display_name": "Out DAT",
+  "docs_url": "https://docs.derivative.ca/Out_DAT",
+  "summary": "Creates a DAT output connector on a Component so internal DAT data can be published through the component boundary.",
+  "key_params": [
+    {
+      "name": "label",
+      "type": "String",
+      "note": "Popup label shown when hovering the Component output"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Use input or node script language for DAT editing behavior"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Choose the edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom extension used when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Out DAT is a component-boundary connector, not a file writer or table generator.",
+    "Component outputs are positioned alphanumerically on the right side of the parent Component.",
+    "Use a matching In DAT and Out DAT convention when generating reusable components with DAT ports.",
+    "The label affects UI affordance only; downstream wiring still depends on connector order and node names."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "component-dat-output-boundaries",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Creates a DAT output connector on a component boundary.",
+    "The Label parameter controls the connector label shown on the parent component.",
+    "Out DAT provides a stable exported table or text output from inside reusable components.",
+    "Common DAT parameters still control language, editor extension, custom extension, and word wrap."
+  ]
+}

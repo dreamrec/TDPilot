@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "syncinCHOP",
+  "family": "CHOP",
+  "display_name": "Sync In CHOP",
+  "docs_url": "https://docs.derivative.ca/Sync_In_CHOP",
+  "summary": "Client-side CHOP for synchronizing timelines across multiple TouchDesigner processes with a Sync Out CHOP server.",
+  "key_concepts": [
+    "Sync In CHOP participates in a TouchDesigner Pro Sync In/Sync Out pair that keeps timelines in multiple processes within a single frame.",
+    "A sync setup uses one Sync Out process and one or more Sync In client processes.",
+    "Sync In client processes should run with Realtime off because their frame rate is determined by the Sync Out CHOP.",
+    "Sync CHOPs synchronize by pausing their own timelines until the participating Sync In/Out CHOPs have cooked.",
+    "If any Sync process fails to communicate, the other processes time out and may all run slowly.",
+    "Extra CHOP channels sent through Sync Out are received by Sync In clients, making the pair useful for frame sync plus small synchronized control values."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Participate in timeline synchronization"},
+    {"name": "multicastaddress", "type": "String", "note": "Multicast address used to discover/synchronize with Sync Out"},
+    {"name": "port", "type": "Integer", "note": "Network port shared with Sync Out"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common-page time-slice behavior"},
+    {"name": "srselect", "type": "Menu", "note": "Common-page sample-rate matching behavior"}
+  ],
+  "common_gotchas": [
+    "Official Sync In page returned a Derivative MediaWiki database error during 2026-06-19 verification; shared behavior was verified from the official Sync Out page.",
+    "Official docs list the Sync pair as TouchDesigner Pro only.",
+    "Client processes with Sync In should have the Realtime flag off because Sync Out determines their frame rates.",
+    "All monitors across server and clients should use the same refresh rate.",
+    "If any Sync process fails to communicate, the others can timeout and all processes may run slowly.",
+    "Windows firewall can block communication; check firewall before blaming network logic."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2025.30000+ Pro multi-process timeline sync client",
+  "last_verified": "2026-06-18"
+}

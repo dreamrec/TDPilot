@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "rerangePOP",
+  "family": "POP",
+  "display_name": "ReRange POP",
+  "docs_url": "https://docs.derivative.ca/ReRange_POP",
+  "summary": "Maps attribute values from one numeric range to another and writes to the same, an existing, or a new attribute. It supports point, vertex, and primitive attributes, component swizzles, per-component parameter lanes, and optional type casting.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Attribute class to operate on"},
+    {"name": "group", "type": "Str", "note": "Optional group scope"},
+    {"name": "inputattrscope", "type": "Str", "note": "Input attribute or component swizzle"},
+    {"name": "parsize", "type": "Menu", "note": "Number of independent parameter lanes"},
+    {"name": "fromlow", "type": "Float", "note": "Input low value"},
+    {"name": "fromhigh", "type": "Float", "note": "Input high value"},
+    {"name": "tolow", "type": "Float", "note": "Output low value"},
+    {"name": "tohigh", "type": "Float", "note": "Output high value"},
+    {"name": "castto", "type": "Menu", "note": "Automatic, float, or int output cast"},
+    {"name": "outputattrscope", "type": "Str", "note": "Output attribute scope"}
+  ],
+  "key_concepts": [
+    "Maps input attribute values from a From low/high range into a To low/high output range.",
+    "Operates on point, vertex, or primitive attributes and can restrict work to groups.",
+    "Input and output scopes may reference components or swizzle order, enabling component reordering while reranging.",
+    "Can write back into the same attribute, an existing different attribute, or a new auto-typed attribute with optional cast override."
+  ],
+  "common_gotchas": [
+    "Component swizzles like P(1) P(0) or P.yx can intentionally reorder output components.",
+    "Set Parameter Size to match vector components when each axis needs a different range.",
+    "Reranging into the same attribute is destructive; write to a new attribute when the original scale is still needed."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

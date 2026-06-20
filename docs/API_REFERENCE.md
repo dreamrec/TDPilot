@@ -330,5 +330,5 @@ Tools that accept `response_format` support two modes:
 | `feedback_loop` | Classic feedback loop with TOP chain |
 | `feedback_displacement` | Feedback with displacement mapping |
 | `audio_reactive` | Audio-reactive parameter modulation |
-| `particle_gpu` | GPU particle system |
+| `particle_gpu` | POP point-field preview: source -> noise -> Null POP -> Render Simple TOP |
 | `post_processing` | Post-processing effects chain |

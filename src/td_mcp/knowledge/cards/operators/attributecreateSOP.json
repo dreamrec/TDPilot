@@ -1,0 +1,27 @@
+{
+  "card_type": "operator",
+  "op_type": "attributecreateSOP",
+  "family": "SOP",
+  "display_name": "Attribute Create SOP",
+  "docs_url": "https://docs.derivative.ca/Attribute_Create_SOP",
+  "summary": "Adds computed normals or tangents to SOP geometry, commonly preparing surfaces for lighting and normal-map workflows.",
+  "key_params": [
+    {"name": "compnml", "type": "Toggle", "note": "Create normals on the geometry"},
+    {"name": "comptang", "type": "Toggle", "note": "Create tangent attributes on the geometry"},
+    {"name": "mikktspace", "type": "Toggle", "note": "Use MikkTSpace tangent generation"}
+  ],
+  "common_gotchas": [
+    "MikkTSpace fixes certain normal-map tangent discontinuities but is slower than the regular tangent method.",
+    "This SOP does not create arbitrary custom attributes; use CHOP to SOP or Script SOP for custom attribute creation.",
+    "Normals and tangents depend on valid source topology and texture coordinates."
+  ],
+  "related_snippets": ["SOP_snippets", "MAT_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Attribute Create SOP computes normals and tangents for SOP geometry.",
+    "Despite its name, the official page scopes this SOP to normal/tangent creation rather than arbitrary custom attributes.",
+    "MikkTSpace tangent generation can improve some normal-map workflows at a higher cook cost.",
+    "Normals and tangents depend on valid topology and texture-coordinate data in the source geometry."
+  ]
+}

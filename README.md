@@ -18,7 +18,7 @@
 [![TouchDesigner](https://img.shields.io/badge/TouchDesigner-2025.30000%2B-ff6200)](https://derivative.ca)
 
 **TDPilot Runtime** is an MCP server for TouchDesigner.
-It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networks with real tool calls — and now remember what works.
+It lets an AI agent inspect, build, wire, optimize, and stabilize live TD networks with real tool calls — and now remember what works. The v2 brain ships with a 656-card reviewed operator atlas with zero-concept backlog, so concept-to-node planning can stay grounded in Official Derivative docs instead of vague recipes.
 
 `#tdpilot` `#touchdesigner` `#mcp` `#livepatch` `#audioreactive` `#realtime`
 
@@ -59,6 +59,7 @@ Using Claude Desktop instead of Claude Code? See [`docs/INSTALL_CLAUDE_PLUGIN.md
 - Memory guide: `docs/MEMORY_GUIDE.md`
 - Production manual: `docs/MANUAL.md`
 - API reference: `docs/API_REFERENCE.md`
+- Effectiveness roadmap: `docs/TDPILOT_EFFECTIVENESS_ROADMAP.md`
 - Security model: `docs/SECURITY.md`
 - Troubleshooting: `docs/TROUBLESHOOTING.md`
 - MCP 1.1 surface: `docs/MCP_1_1_SURFACE.md`
@@ -71,7 +72,15 @@ Using Claude Desktop instead of Claude Code? See [`docs/INSTALL_CLAUDE_PLUGIN.md
 - A workflow-oriented MCP built for iterative patch development, not one-shot guessing.
 - A correctness-first visual programming brain that plans TD concepts before it mutates networks.
 - A technique memory system that learns from your projects and builds a reusable library.
+- A 656-card reviewed operator atlas with zero-concept backlog, covering CHOP, COMP, DAT, MAT, POP, SOP, and TOP with Official Derivative docs, `key_concepts`, `key_params`, and gotchas.
 - 110-tool runtime surface with focus + locations, hint injection, component notes, knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, custom parameter authoring, typed patch sessions, BrainPlan transactions, optional cockpit rendering, agent activity log, and one-tool self-update.
+
+## Packaged Add-ons
+
+- **Reviewed operator atlas** — The core local add-on for translating abstract ideas into real TD operators. Agents can use the 656-card reviewed operator atlas, Official Derivative source URLs, params, concepts, and gotchas to choose smaller, safer operator chains.
+- **Brain skills and agents** — Codex and Claude Code both ship explorer, builder, validator, recovery, and release workflows, so the same inspect -> plan -> execute -> validate discipline works in either client.
+- **Hooks and release guards** — Local deterministic checks catch plugin mirror drift, personal path leaks, stale `.tox` state, and unsafe release handoffs.
+- **Optional local knowledge packs** — POPX and future specialty packs stay local and user-owned; they extend planning context without adding hosted-service dependencies.
 
 ## Start Here: Core Workflow
 
@@ -79,7 +88,7 @@ You don't need all 110 tools. Start with these and expand as needed:
 
 | Step | Tools | What You're Doing |
 |------|-------|-------------------|
-| **Plan** | `td_brain_plan` | Ground the user's visual intent in real TD operators, constraints, docs, hints, memory, and live state |
+| **Plan** | `td_brain_plan` | Ground the user's visual intent in real TD operators, the reviewed atlas, Official Derivative docs, constraints, hints, memory, and live state |
 | **Execute** | `td_brain_execute`, `td_transaction_apply` | Apply only a valid BrainPlan or PatchPlan with preflight, snapshots, rollback, and validation |
 | **Inspect** | `td_get_info`, `td_get_nodes`, `td_get_params`, `td_get_errors` | Understand current state before touching anything |
 | **Check memory** | `td_memory_recall` | See if a reusable technique already exists |
@@ -100,7 +109,7 @@ TDPilot v2.0.0 turns the mature 1.6 tool surface into a correctness-first visual
 - **`td_brain_execute`** — mutates only from a valid `BrainPlan`, applies transaction defaults, validates the resulting network, rolls back on apply or validation failure, exports a trace, and learns only from validated outcomes when requested.
 - **`td_transaction_apply`** — safe low-level executor for `PatchPlan` or `BrainPlan`, with preflight, max-op limits, snapshots, dry-run support, dependency ordering, rollback flags, and validation profiles.
 - **`td_cockpit_render`** — read-only MCP Apps cockpit payload for concept graph, transaction, validation, rollback, and trace summaries. The open MCP core stays local-first and has no hosted LLM dependency.
-- **Brain validators and atlas coverage** — concept profiles now cover feedback, audio-reactive, POP, GLSL, render pipeline, panel UI, control rigs, and generic TOP/CHOP/SOP/DAT chains. The structured operator atlas now covers every operator required by those profiles, and `scripts/audit_brain_atlas.py` gates it.
+- **Brain validators and atlas coverage** — concept profiles now cover feedback, audio-reactive, POP, GLSL, render pipeline, panel UI, control rigs, and generic TOP/CHOP/SOP/DAT chains. The 656-card reviewed operator atlas now has zero-concept backlog across CHOP, COMP, DAT, MAT, POP, SOP, and TOP, and `scripts/audit_brain_atlas.py` gates it.
 - **Client packaging** — Codex and Claude plugin surfaces include brain skills, brain agents, deterministic hooks, MCP prompts, live cached resources, schema snapshots, and release audits.
 
 Recent v1.6 groundwork remains in place: read journals, agent activity log, self-update, hint routing, TD 2025 knowledge cards, and the one-button `.tox` installer.

@@ -1,0 +1,56 @@
+{
+  "card_type": "operator",
+  "op_type": "polystitchSOP",
+  "family": "SOP",
+  "display_name": "Polystitch SOP",
+  "docs_url": "https://docs.derivative.ca/Polystitch_SOP",
+  "summary": "Stitches polygonal boundary cracks by matching nearby boundary pieces and snapping high-detail edges to low-detail edges.",
+  "key_params": [
+    {
+      "name": "stitch",
+      "type": "String",
+      "note": "Polygons to consider for stitching"
+    },
+    {
+      "name": "corners",
+      "type": "String",
+      "note": "Point numbers treated as boundary breaks"
+    },
+    {
+      "name": "tol3d",
+      "type": "Float",
+      "note": "Maximum distance between stitchable edges"
+    },
+    {
+      "name": "consolidate",
+      "type": "Toggle",
+      "note": "Consolidate snapped points along the boundary"
+    },
+    {
+      "name": "findcorner",
+      "type": "Toggle",
+      "note": "Automatically find corner points by angle"
+    },
+    {
+      "name": "angle",
+      "type": "Float",
+      "note": "Corner angle threshold"
+    }
+  ],
+  "common_gotchas": [
+    "Spatially coincident edges are not enough; boundary uniqueness is based on point numbers.",
+    "Consolidation happens along the boundary, not across the whole surface.",
+    "Tolerance and corner angle settings can over-stitch separate pieces if set too broadly."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "polygon-boundary-crack-repair",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Polystitch SOP repairs cracks between polygonal surfaces evaluated at differing levels of detail.",
+    "Boundary uniqueness is determined by point numbers rather than spatial position.",
+    "Boundaries are split at corner points, either manually or by an automatic angle threshold.",
+    "Boundary pieces within tolerance are stitched by snapping high-detail points to the lower-detail edge."
+  ]
+}

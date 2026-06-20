@@ -1,0 +1,44 @@
+{
+  "card_type": "operator",
+  "op_type": "midioutCHOP",
+  "family": "CHOP",
+  "display_name": "MIDI Out CHOP",
+  "docs_url": "https://docs.derivative.ca/MIDI_Out_CHOP",
+  "summary": "Sends MIDI events to devices, software synths, or files when properly named input CHOP channels change.",
+  "key_concepts": [
+    "Sends MIDI events to devices, software synths, or MIDI files whenever appropriately named input channels change.",
+    "Channel names map to MIDI events, such as ch3c14 for controller 14 on channel 3 or ch7n60 for note 60 on channel 7.",
+    "Time-sliced input preserves event timing when the TouchDesigner timeline is running in realtime.",
+    "Note and controller normalization determines whether input values are interpreted as raw 0-127 data or scaled from normalized ranges.",
+    "Cook Every Frame should be enabled for reliable output even when the CHOP is not displayed in a viewer.",
+    "The operator can send notes, aftertouch, pressure, pitch wheel, controller, program change, MIDI clock, start/stop/continue, and MIDI Timecode events."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable MIDI output"},
+    {"name": "destination", "type": "Menu", "note": "Output to device or file"},
+    {"name": "device", "type": "Menu", "note": "MIDI output device"},
+    {"name": "file", "type": "File", "note": "MIDI file target"},
+    {"name": "id", "type": "Integer", "note": "Device ID"},
+    {"name": "onebased", "type": "Toggle", "note": "Use one-based MIDI channel numbering"},
+    {"name": "writefile", "type": "Pulse", "note": "Write output MIDI file"},
+    {"name": "prefix", "type": "String", "note": "Channel prefix used for event mapping"},
+    {"name": "cookalways", "type": "Toggle", "note": "Cook every frame"},
+    {"name": "notename", "type": "String", "note": "Note event channel naming pattern"},
+    {"name": "controlname", "type": "String", "note": "Control-change channel naming pattern"},
+    {"name": "controlnorm", "type": "Menu", "note": "Normalize control values or use 0-127"},
+    {"name": "progname", "type": "String", "note": "Program-change channel naming pattern"},
+    {"name": "barname", "type": "String", "note": "Bar message channel naming pattern"},
+    {"name": "barticks", "type": "Integer", "note": "Ticks per bar for bar messages"}
+  ],
+  "common_gotchas": [
+    "Input channels must be named according to MIDI event conventions such as ch3c14 or ch7n60.",
+    "Events are sent when channel values change during the last time slice; stable values do not resend unless behavior is forced elsewhere.",
+    "Realtime timing is preserved only when the TouchDesigner timeline is running in realtime.",
+    "If Normalize is None, note/control values must already be in MIDI 0-127 range; normalized mode maps 0-1 to 0-127.",
+    "Use Rename CHOP before MIDI Out CHOP when generated channel names do not match MIDI event naming rules.",
+    "The midioutCHOP Python class can send more flexible MIDI events through an existing MIDI Out CHOP."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ MIDI/control output",
+  "last_verified": "2026-06-18"
+}

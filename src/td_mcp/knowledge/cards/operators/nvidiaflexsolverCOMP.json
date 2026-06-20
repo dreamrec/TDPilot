@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "nvidiaflexsolverCOMP",
+  "family": "COMP",
+  "display_name": "NVIDIA Flex Solver COMP",
+  "docs_url": "https://docs.derivative.ca/NVIDIA_Flex_Solver_COMP",
+  "summary": "Runs an NVIDIA Flex particle-physics simulation for Actor COMPs and Force COMP fields, analogous to a world/solver that updates actor transforms using Flex-specific particle radius, cohesion, boundary, and iteration controls.",
+  "key_params": [
+    {"name": "actors", "type": "COMP list", "note": "Actor COMPs included in the Flex simulation"},
+    {"name": "forces", "type": "COMP list", "note": "Force COMPs used as Flex force fields"},
+    {"name": "gravity", "type": "XYZ", "note": "Global gravitational acceleration"},
+    {"name": "init", "type": "Pulse", "note": "Reset bodies to initial state"},
+    {"name": "start", "type": "Pulse", "note": "Initialize and begin stepping the simulation"},
+    {"name": "play", "type": "Toggle", "note": "Run or pause simulation stepping"},
+    {"name": "rate", "type": "Float", "note": "Simulation sample rate and timestep source"},
+    {"name": "preroll", "type": "Toggle", "note": "Run simulation before start to settle into an initial state"},
+    {"name": "prerolltime", "type": "Seconds", "note": "Simulation time to advance during pre-roll"},
+    {"name": "substeps", "type": "Integer", "note": "Substeps per solver step"},
+    {"name": "iterations", "type": "Integer", "note": "Iterations per substep"},
+    {"name": "alwayssim", "type": "Toggle", "note": "Keep simulation stepping even when not otherwise demanded"},
+    {"name": "bounds", "type": "Toggle", "note": "Enable simulation boundaries"},
+    {"name": "boundmode", "type": "Menu", "note": "Use a bounding box SOP or individual planes as boundaries"}
+  ],
+  "key_concepts": [
+    "NVIDIA Flex Solver COMP runs a Flex particle-physics simulation and updates referenced Actor COMP transforms as playback advances.",
+    "Referenced actors can live anywhere in the project, but cannot already be part of another Bullet or Flex Solver COMP.",
+    "Global forces are limited to Force COMP force-field behavior, and gravity applies to actors regardless of mass.",
+    "Initialize, Start, Play, rate, preroll, substeps, and iterations control simulation stepping and startup state.",
+    "Driver and GPU support is constrained; Derivative recommends NVIDIA 546.xx drivers and notes RTX 40 as the last supported card family."
+  ],
+  "common_gotchas": [
+    "NVIDIA Flex Solver COMP is Windows-only.",
+    "Actors referenced by a Flex solver cannot already be referenced by another Solver COMP, including Bullet Solver COMP.",
+    "Only Force COMP force-field behavior is supported for Flex global forces.",
+    "Recent NVIDIA drivers can break some Flex features; Derivative notes 546.xx drivers as the recommended range and RTX 40 series as the last supported card family.",
+    "Pre-roll updates initial simulation state but can hide unstable setup until runtime if show-pre-roll and Info CHOP channels are not inspected.",
+    "Boundary planes do not need to be orthogonal, so misplaced planes can produce surprising containment behavior."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ Windows NVIDIA Flex physics solver",
+  "last_verified": "2026-06-18"
+}

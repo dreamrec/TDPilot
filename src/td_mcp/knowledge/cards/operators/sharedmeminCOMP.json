@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "sharedmeminCOMP",
+  "family": "COMP",
+  "display_name": "Shared Mem In COMP",
+  "docs_url": "https://docs.derivative.ca/Shared_Mem_In_COMP",
+  "summary": "Reads transform data from a named shared memory block created by another TouchDesigner process with Shared Mem Out COMP, enabling cross-process object-transform sharing.",
+  "key_params": [
+    {"name": "name", "type": "String", "note": "Shared memory block name to read from"},
+    {"name": "parentshortcut", "type": "String", "note": "Common COMP parent shortcut"},
+    {"name": "opshortcut", "type": "String", "note": "Common COMP global operator shortcut"},
+    {"name": "iop", "type": "Sequence", "note": "Internal OP shortcut table"},
+    {"name": "opviewer", "type": "OP path", "note": "Operator viewer used for node viewer when configured"},
+    {"name": "enablecloning", "type": "Toggle", "note": "Enable active cloning from a clone master"},
+    {"name": "externaltox", "type": "File", "note": "External .tox source path for the component"},
+    {"name": "relpath", "type": "Menu", "note": "Relative file path behavior for child file paths"}
+  ],
+  "key_concepts": [
+    "Shared Mem In COMP reads transform data from a named shared memory block created by another TouchDesigner process.",
+    "The Shared Mem Name parameter must match the writer's shared memory block name exactly.",
+    "The operator is for transform exchange between processes, not arbitrary TOP, CHOP, or DAT data transfer.",
+    "Current docs note license availability for Educational, Commercial, and Pro, while also stating Commercial/Pro availability on the page.",
+    "Common COMP shortcut, node-viewer, clone, external-tox, and relative-path settings still apply because this is a component wrapper."
+  ],
+  "common_gotchas": [
+    "Shared Mem In COMP requires TouchDesigner Educational, Commercial, or Pro according to current docs, and the page also notes Commercial/Pro availability.",
+    "The Shared Mem Name must exactly match the writer's name or no transform data will be read.",
+    "It reads transform data, not arbitrary TOP/CHOP/DAT payloads.",
+    "The source shared memory block must be created by another Touch process using Shared Mem Out COMP.",
+    "Coordinate and update timing between processes should be validated with Info CHOP/errors before relying on live transforms.",
+    "Name collisions across multiple processes can make the wrong transform stream appear to connect."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ cross-process transform shared memory input",
+  "last_verified": "2026-06-18"
+}

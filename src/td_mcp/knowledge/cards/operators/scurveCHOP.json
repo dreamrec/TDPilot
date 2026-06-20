@@ -1,0 +1,47 @@
+{
+  "card_type": "operator",
+  "op_type": "scurveCHOP",
+  "family": "CHOP",
+  "display_name": "S Curve CHOP",
+  "docs_url": "https://docs.derivative.ca/S_Curve_CHOP",
+  "summary": "Generates static S-curve channels with selectable curve type, length, range mapping, and channel-extension behavior.",
+  "key_concepts": [
+    "S Curve CHOP generates S-curve channels rather than transforming a required input signal.",
+    "Curve Type selects half-cosine, logistic, or arctangent curve families.",
+    "Length sets the number of samples, while Prepend and Append add samples before or after the curve.",
+    "Steepness, Linearize, and Bias shape the curve profile before it is remapped.",
+    "From Range maps input index space and To Range maps the generated curve output values.",
+    "Channel Names can generate multiple channels by pattern, and the Channel page controls sample rate and left/right extension behavior."
+  ],
+  "key_params": [
+    {"name": "type", "type": "Menu", "note": "Half cosine, logistic, or arctangent curve"},
+    {"name": "halfcosine", "type": "MenuItem", "note": "Half-cosine S-curve type"},
+    {"name": "log", "type": "MenuItem", "note": "Logistic S-curve type"},
+    {"name": "atan", "type": "MenuItem", "note": "Arctangent S-curve type"},
+    {"name": "length", "type": "Integer", "note": "Number of samples to generate"},
+    {"name": "prepend", "type": "Integer", "note": "Samples to add before the curve"},
+    {"name": "append", "type": "Integer", "note": "Samples to add after the curve"},
+    {"name": "steepness", "type": "Float", "note": "Curve steepness"},
+    {"name": "linearize", "type": "Float", "note": "Amount of curvature reduction"},
+    {"name": "bias", "type": "Float", "note": "Move curve bias backward or forward"},
+    {"name": "fromrange", "type": "Float2", "note": "Input index range"},
+    {"name": "torange", "type": "Float2", "note": "Output value range"},
+    {"name": "channelname", "type": "String", "note": "Generated channel-name pattern"},
+    {"name": "rate", "type": "Float", "note": "Output sample rate"},
+    {"name": "left", "type": "Menu", "note": "Left extend condition"},
+    {"name": "right", "type": "Menu", "note": "Right extend condition"},
+    {"name": "defval", "type": "Float", "note": "Default value for default-value extend mode"}
+  ],
+  "common_gotchas": [
+    "This is a generator; it does not require an input CHOP.",
+    "Length, Prepend, and Append control sample count, not seconds unless interpreted through the sample rate.",
+    "Use Extend Left/Right deliberately when generated curves feed lookup or timeline systems.",
+    "Half cosine, logistic, and arctangent have different endpoint feel; choose by animation profile, not just smoothness.",
+    "For live one-shot easing from triggers, Timer CHOP or Phaser CHOP may be a better fit.",
+    "Linearize reduces curvature; it is not the same control as the output To Range.",
+    "Channel-name patterns can create many channels, so downstream scope assumptions should stay explicit."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ generated easing curves",
+  "last_verified": "2026-06-18"
+}

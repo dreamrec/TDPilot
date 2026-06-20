@@ -1,0 +1,83 @@
+{
+  "card_type": "operator",
+  "op_type": "cropTOP",
+  "family": "TOP",
+  "display_name": "Crop TOP",
+  "docs_url": "https://docs.derivative.ca/Crop_TOP",
+  "summary": "Crops an image by moving left, right, bottom, and top edges, discarding cropped pixels and reducing output resolution.",
+  "key_params": [
+    {
+      "name": "cropleft",
+      "type": "Float",
+      "note": "Left crop edge position"
+    },
+    {
+      "name": "cropleftunit",
+      "type": "Menu",
+      "note": "Units for left crop edge"
+    },
+    {
+      "name": "cropright",
+      "type": "Float",
+      "note": "Right crop edge position"
+    },
+    {
+      "name": "croprightunit",
+      "type": "Menu",
+      "note": "Units for right crop edge"
+    },
+    {
+      "name": "cropbottom",
+      "type": "Float",
+      "note": "Bottom crop edge position"
+    },
+    {
+      "name": "cropbottomunit",
+      "type": "Menu",
+      "note": "Units for bottom crop edge"
+    },
+    {
+      "name": "croptop",
+      "type": "Float",
+      "note": "Top crop edge position"
+    },
+    {
+      "name": "croptopunit",
+      "type": "Menu",
+      "note": "Units for top crop edge"
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Tile edge behavior: hold, zero, repeat, or mirror"
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution policy"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Crop reduces resolution; it is not just a matte or viewer crop.",
+    "Edge unit parameters are easy to misread when mixing pixel and fraction values.",
+    "Extend only matters when sampling outside the cropped tile edges.",
+    "Common output resolution or aspect overrides can hide the actual cropped dimensions."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Crop TOP defines new left, right, bottom, and top edges for the image.",
+    "Discarded pixels are removed, reducing the TOP resolution rather than only masking visibility.",
+    "Each crop edge has a companion unit parameter controlling how the edge value is interpreted.",
+    "Extend controls how sampling behaves at tile edges when outside data is needed.",
+    "Common TOP output resolution and aspect settings can still reshape the cropped result."
+  ]
+}

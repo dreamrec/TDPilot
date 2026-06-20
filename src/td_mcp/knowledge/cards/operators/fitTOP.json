@@ -1,0 +1,99 @@
+{
+  "card_type": "operator",
+  "op_type": "fitTOP",
+  "family": "TOP",
+  "display_name": "Fit TOP",
+  "docs_url": "https://docs.derivative.ca/Fit_TOP",
+  "summary": "Resizes and positions an input image into the Common page output resolution using fit, justify, transform, and background controls.",
+  "key_params": [
+    {
+      "name": "fit",
+      "type": "Menu",
+      "note": "Fit mode: fill, fithorz, fitvert, fitbest, fitoutside, or nativeres"
+    },
+    {
+      "name": "justifyh",
+      "type": "Menu",
+      "note": "Horizontal justification"
+    },
+    {
+      "name": "justifyv",
+      "type": "Menu",
+      "note": "Vertical justification"
+    },
+    {
+      "name": "xord",
+      "type": "Menu",
+      "note": "Transform order"
+    },
+    {
+      "name": "t",
+      "type": "XY",
+      "note": "Translation"
+    },
+    {
+      "name": "tunit",
+      "type": "Menu",
+      "note": "Translation units"
+    },
+    {
+      "name": "r",
+      "type": "Float",
+      "note": "Rotation"
+    },
+    {
+      "name": "s",
+      "type": "XY",
+      "note": "Scale"
+    },
+    {
+      "name": "p",
+      "type": "XY",
+      "note": "Pivot"
+    },
+    {
+      "name": "punit",
+      "type": "Menu",
+      "note": "Pivot units"
+    },
+    {
+      "name": "bgcolor",
+      "type": "RGBA",
+      "note": "Background fill color"
+    },
+    {
+      "name": "premultrgbbyalpha",
+      "type": "Toggle",
+      "note": "Premultiply background RGB by alpha"
+    },
+    {
+      "name": "legacyxform",
+      "type": "Toggle",
+      "note": "Use legacy transform behavior"
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution policy"
+    }
+  ],
+  "common_gotchas": [
+    "Fill stretches or squashes; Fit Best preserves aspect inside; Fit Outside fills and crops.",
+    "Native Resolution does not scale and can be cropped by smaller outputs.",
+    "Transform results depend on pivot and transform order.",
+    "Common output resolution must be set intentionally because Fit TOP targets that resolution."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Fit TOP resizes input imagery to the output resolution set on the Common page.",
+    "Fit modes choose between stretching, fitting inside, filling/cropping outside, or native resolution.",
+    "Justification positions the fitted image after scale decisions are made.",
+    "Transform order, translation, rotation, scale, and pivot can further adjust the image.",
+    "Background color fills exposed areas where the fitted image does not cover the output.",
+    "Legacy Transform changes transform math and should be treated as compatibility behavior."
+  ]
+}

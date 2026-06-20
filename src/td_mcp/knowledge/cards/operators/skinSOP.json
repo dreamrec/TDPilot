@@ -1,0 +1,82 @@
+{
+  "card_type": "operator",
+  "op_type": "skinSOP",
+  "family": "SOP",
+  "display_name": "Skin SOP",
+  "docs_url": "https://docs.derivative.ca/Skin_SOP",
+  "summary": "Builds skinned surfaces over faces or surface boundary curves, supporting linear, bilinear, swept, triangular, square, and multiple-boundary cases.",
+  "key_params": [
+    {
+      "name": "uprims",
+      "type": "String",
+      "note": "U cross-section primitive group"
+    },
+    {
+      "name": "vprims",
+      "type": "String",
+      "note": "V cross-section primitive group"
+    },
+    {
+      "name": "surftype",
+      "type": "Menu",
+      "note": "Polygon or mesh connectivity"
+    },
+    {
+      "name": "keepshape",
+      "type": "Toggle",
+      "note": "Preserve shape for linear skinning"
+    },
+    {
+      "name": "closev",
+      "type": "Menu",
+      "note": "V wrap mode"
+    },
+    {
+      "name": "force",
+      "type": "Toggle",
+      "note": "Use explicit V order"
+    },
+    {
+      "name": "orderv",
+      "type": "Int",
+      "note": "V order"
+    },
+    {
+      "name": "skinops",
+      "type": "Menu",
+      "note": "Skin all primitives, groups, or skipped sets"
+    },
+    {
+      "name": "inc",
+      "type": "Int",
+      "note": "N value for grouped or skipped skinning"
+    },
+    {
+      "name": "prim",
+      "type": "Toggle",
+      "note": "Keep input primitives"
+    },
+    {
+      "name": "polys",
+      "type": "Toggle",
+      "note": "Convert mesh surface output to polygons"
+    }
+  ],
+  "common_gotchas": [
+    "Parametric direction must match across cross-sections or surfaces can twist or flip.",
+    "Preserve Shape is disabled for bilinear skinning and may look unintuitive with coincident or very close CVs.",
+    "V Wrap and V Order are ignored in bilinear cases, and V Order is also irrelevant for all-polygon or all-mesh inputs.",
+    "Use Bridge SOP when tangency control is more important than broad skin construction."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "surface-skinning-from-cross-sections",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Skin SOP builds surfaces across faces or surface boundary curves.",
+    "Inputs should contain only faces or only surfaces, though the individual face/surface types can differ.",
+    "One input performs linear skinning across cross-sections; a second input enables bilinear cross-skinning.",
+    "Sort SOP or Primitive SOP can correct ordering and parametric direction when twists or flips appear."
+  ]
+}

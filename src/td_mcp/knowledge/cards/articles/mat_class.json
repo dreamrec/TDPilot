@@ -1,0 +1,49 @@
+{
+  "card_type": "article",
+  "article_id": "mat_class",
+  "title": "MAT Class",
+  "family": "MAT",
+  "families": [
+    "MAT",
+    "PYTHON",
+    "OP",
+    "GLSL"
+  ],
+  "summary": "Official Derivative Python API reference for Material operators, noting that MAT has no operator-specific members or methods and uses the inherited OP Class surface for lookup, parameters, tags, storage, diagnostics, and common OP behavior.",
+  "source_url": "https://docs.derivative.ca/MAT_Class",
+  "docsbrain_page_id": "mat_class",
+  "covered_operators": [
+    "constantMAT",
+    "glslMAT",
+    "inMAT",
+    "lineMAT",
+    "nullMAT",
+    "outMAT",
+    "pbrMAT",
+    "phongMAT"
+  ],
+  "key_concepts": [
+    "MAT",
+    "OP Class",
+    "No operator specific members",
+    "No operator specific methods",
+    "op()",
+    "opex",
+    "par",
+    "parGroup",
+    "storage",
+    "tags",
+    "errors()",
+    "warnings()"
+  ],
+  "guidance": [
+    "Use this article when generated Python needs to manipulate MAT operators through common OP behavior rather than MAT-specific methods.",
+    "For MAT scripting, use inherited OP features such as op()/opex lookup, par/parGroup parameter access, tags, storage, and diagnostics.",
+    "Do not invent MAT-specific Python methods; current official MAT Class docs state there are no operator-specific members or methods.",
+    "For shader-material behavior, pair this class reference with Write a GLSL MAT and individual MAT operator cards."
+  ],
+  "related_snippets": [
+    "GLSL_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

@@ -1,0 +1,109 @@
+{
+  "card_type": "operator",
+  "op_type": "cacheTOP",
+  "family": "TOP",
+  "display_name": "Cache TOP",
+  "docs_url": "https://docs.derivative.ca/Cache_TOP",
+  "summary": "Stores TOP frames in GPU memory for delay, freeze, loop, replacement, and random-access playback workflows.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Capture frames into the cache"
+    },
+    {
+      "name": "activepulse",
+      "type": "Pulse",
+      "note": "Capture a frame pulse"
+    },
+    {
+      "name": "cacheonce",
+      "type": "Toggle",
+      "note": "Cache only once when enabled"
+    },
+    {
+      "name": "replace",
+      "type": "Toggle",
+      "note": "Replace an existing cache slot"
+    },
+    {
+      "name": "replacespulse",
+      "type": "Pulse",
+      "note": "Pulse a cache-slot replacement"
+    },
+    {
+      "name": "replaceindex",
+      "type": "Int",
+      "note": "Cache slot index to replace"
+    },
+    {
+      "name": "prefill",
+      "type": "Int",
+      "note": "Number of slots to prefill"
+    },
+    {
+      "name": "prefillpulse",
+      "type": "Pulse",
+      "note": "Pulse prefill"
+    },
+    {
+      "name": "cachesize",
+      "type": "Int",
+      "note": "Number of frames stored in GPU memory"
+    },
+    {
+      "name": "step",
+      "type": "Int",
+      "note": "Capture every N cooks"
+    },
+    {
+      "name": "outputindex",
+      "type": "Float",
+      "note": "Frame index relative to newest cached frame"
+    },
+    {
+      "name": "outputindexunit",
+      "type": "Menu",
+      "note": "Units for output index"
+    },
+    {
+      "name": "interp",
+      "type": "Toggle",
+      "note": "Interpolate between non-integer output indices"
+    },
+    {
+      "name": "alwayscook",
+      "type": "Toggle",
+      "note": "Cook even if output is not otherwise required"
+    },
+    {
+      "name": "reset",
+      "type": "Toggle",
+      "note": "Reset cache while enabled"
+    },
+    {
+      "name": "resetpulse",
+      "type": "Pulse",
+      "note": "Pulse cache reset"
+    }
+  ],
+  "common_gotchas": [
+    "GPU memory use scales with cache size, resolution, and pixel format.",
+    "Output Index 0 is newest; negative indices move backward through the cache.",
+    "Prefill greater than zero behaves as if Active is off while filling.",
+    "Non-integer Output Index blends only when Interp is enabled."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Cache TOP stores a sequence of TOP frames in GPU memory.",
+    "Disabling Active freezes capture while cached frames remain available for output.",
+    "Output Index 0 is the newest frame; negative indices address older cached frames.",
+    "Step controls how often frames are captured into the cache.",
+    "Replace and Prefill controls let specific cache slots be initialized or overwritten.",
+    "Reset releases the cached texture memory and clears cached frames."
+  ]
+}

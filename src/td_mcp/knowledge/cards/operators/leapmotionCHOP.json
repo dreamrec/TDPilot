@@ -1,0 +1,51 @@
+{
+  "card_type": "operator",
+  "op_type": "leapmotionCHOP",
+  "family": "CHOP",
+  "display_name": "Leap Motion CHOP",
+  "docs_url": "https://docs.derivative.ca/Leap_Motion_CHOP",
+  "summary": "Reads hand, finger, tool, gesture, tracking-state, and status channels from an Ultraleap/Leap Motion controller.",
+  "key_concepts": [
+    "Reads hand, finger, tool, gesture, and tracking-state channels from a single Ultraleap/Leap Motion controller.",
+    "API selection matters: Gemini/Orion V4/V5 are current and stable, while legacy V2 preserves older gesture and tool tracking features.",
+    "TouchDesigner must be pointed at the correct tracking library location, especially on Windows where LeapC.dll or Leap.dll folder selection is explicit.",
+    "Status and debug channels expose device connection, sequence IDs, counts, and per-object tracking flags for runtime health checks.",
+    "Hand, finger, tool, and gesture count parameters limit indexed channel groups; data remains tied to the same tracked object while the sensor sees it."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Capture data from the Leap Motion sensor"},
+    {"name": "api", "type": "Menu", "note": "Select legacy V2 or Orion/Gemini V4/V5 tracking API"},
+    {"name": "libfolder", "type": "Folder", "note": "Windows path to LeapC.dll or Leap.dll library folder"},
+    {"name": "hmd", "type": "Menu", "note": "Head-mounted display mode"},
+    {"name": "debugchannels", "type": "Toggle", "note": "Output connected and sequence_id debug channels"},
+    {"name": "statuschannels", "type": "Toggle", "note": "Output counts and tracking status channels"},
+    {"name": "namedhands", "type": "Toggle", "note": "Name channels by left/right hand"},
+    {"name": "hands", "type": "Integer", "note": "Number of hands to output"},
+    {"name": "lefthands", "type": "Integer", "note": "Number of left-hand channel sets"},
+    {"name": "righthands", "type": "Integer", "note": "Number of right-hand channel sets"},
+    {"name": "handvelocity", "type": "Toggle", "note": "Output hand velocity channels"},
+    {"name": "pinchstrength", "type": "Toggle", "note": "Output pinch strength"},
+    {"name": "grabstrength", "type": "Toggle", "note": "Output grab strength"},
+    {"name": "namedfingers", "type": "Toggle", "note": "Name finger channels semantically"},
+    {"name": "fingersperhand", "type": "Integer", "note": "Number of finger channel sets per hand"},
+    {"name": "fingersize", "type": "Toggle", "note": "Output finger length and width channels"},
+    {"name": "fingerextended", "type": "Toggle", "note": "Output straightness/extended state per finger"},
+    {"name": "fingerjoints", "type": "Toggle", "note": "Output MCP/PIP/DIP/tip joint positions"},
+    {"name": "tools", "type": "Integer", "note": "Number of tool channel sets"},
+    {"name": "circlegestures", "type": "Integer", "note": "Number of circle gesture channel sets"},
+    {"name": "swipegestures", "type": "Integer", "note": "Number of swipe gesture channel sets"},
+    {"name": "keytapgestures", "type": "Integer", "note": "Number of key tap gesture channel sets"},
+    {"name": "screentapgestures", "type": "Integer", "note": "Number of screen tap gesture channel sets"}
+  ],
+  "common_gotchas": [
+    "Only one Leap Motion device can be connected at a time.",
+    "TouchDesigner does not include a Leap/Ultraleap hardware or software license; check project licensing separately.",
+    "Install Ultraleap Tracking Software first; Gemini drivers are recommended for current Windows/macOS tracking.",
+    "On Windows, Library Folder must point at the correct LeapC.dll or Leap.dll folder for the selected API.",
+    "Gemini V5 works in one orientation by default, unlike older V2/V4 APIs that could work in either orientation.",
+    "V5 has better tracking stability, while V2 preserves some legacy gesture/tool features."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ hand tracking",
+  "last_verified": "2026-06-18"
+}

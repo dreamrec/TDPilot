@@ -1,0 +1,62 @@
+{
+  "card_type": "operator",
+  "op_type": "nvidiartxvideoTOP",
+  "family": "TOP",
+  "display_name": "NVIDIA RTX Video TOP",
+  "docs_url": "https://docs.derivative.ca/NVIDIA_RTX_Video_TOP",
+  "summary": "Applies NVIDIA RTX Video SDK AI filters for video super-resolution, SDR-to-HDR conversion, or both in one TOP.",
+  "key_params": [
+    {
+      "name": "mode",
+      "type": "Menu",
+      "note": "Choose superres, sdrtohdr, or superreshdr processing."
+    },
+    {
+      "name": "superresquality",
+      "type": "Menu",
+      "note": "Bicubic, low, medium, high, or ultra VSR quality."
+    },
+    {
+      "name": "hdrcontrast",
+      "type": "Float",
+      "note": "Generated HDR contrast."
+    },
+    {
+      "name": "hdrsaturation",
+      "type": "Float",
+      "note": "Generated HDR saturation."
+    },
+    {
+      "name": "hdrmiddlegray",
+      "type": "Float",
+      "note": "Average brightness target for generated HDR."
+    },
+    {
+      "name": "hdrmaxluminance",
+      "type": "Float",
+      "note": "Peak luminance target in thousands of nits."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Final TOP resolution policy."
+    }
+  ],
+  "common_gotchas": [
+    "Combined Super-Resolution + HDR mode is documented as higher-performance than chaining two nodes.",
+    "Ultra super-resolution is highest quality but slowest.",
+    "HDR modes need an HDR-aware downstream display/output path or the result can be misleading in SDR monitoring.",
+    "The implementation can be replaced by a custom operator build placed in the plugin directory."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "ai_video_filter",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Applies NVIDIA RTX Video SDK AI filters to video inputs.",
+    "Can run video super-resolution, SDR-to-HDR conversion, or both together.",
+    "Super-resolution quality is a performance/quality tradeoff from Bicubic through Ultra.",
+    "The official implementation can be replaced by placing a custom operator build in the plugin directory."
+  ]
+}

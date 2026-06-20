@@ -1,0 +1,121 @@
+{
+  "card_type": "operator",
+  "op_type": "lensdistortTOP",
+  "family": "TOP",
+  "display_name": "Lens Distort TOP",
+  "docs_url": "https://docs.derivative.ca/Lens_Distort_TOP",
+  "summary": "Applies or removes Brown-Conrady lens distortion using radial, tangential, optical-center, focal-length, and layout controls.",
+  "key_params": [
+    {
+      "name": "invert",
+      "type": "Toggle",
+      "note": "Approximate undistortion instead of applying distortion"
+    },
+    {
+      "name": "k1",
+      "type": "Float",
+      "note": "First radial distortion coefficient"
+    },
+    {
+      "name": "k2",
+      "type": "Float",
+      "note": "Second radial distortion coefficient"
+    },
+    {
+      "name": "k3",
+      "type": "Float",
+      "note": "Third radial distortion coefficient; not used by inverse mode"
+    },
+    {
+      "name": "p1",
+      "type": "Float",
+      "note": "First tangential distortion coefficient"
+    },
+    {
+      "name": "p2",
+      "type": "Float",
+      "note": "Second tangential distortion coefficient"
+    },
+    {
+      "name": "center",
+      "type": "Float2",
+      "note": "Optical center components center1 and center2"
+    },
+    {
+      "name": "centerunit",
+      "type": "Menu",
+      "note": "relative, absolute, pixelrel, or pixelabs"
+    },
+    {
+      "name": "focallength",
+      "type": "Float2",
+      "note": "Camera matrix focal length components"
+    },
+    {
+      "name": "focallengthunit",
+      "type": "Menu",
+      "note": "fraction or pixels"
+    },
+    {
+      "name": "layout",
+      "type": "Menu",
+      "note": "scale or native distorted-image layout"
+    },
+    {
+      "name": "extendmode",
+      "type": "Menu",
+      "note": "hold, zero, repeat, or mirror outside-source sampling"
+    },
+    {
+      "name": "alpha",
+      "type": "Float",
+      "note": "Optimal transform alpha value"
+    },
+    {
+      "name": "transformmode",
+      "type": "Menu",
+      "note": "none, optimal, custom, or newmatrix"
+    },
+    {
+      "name": "newfocallength",
+      "type": "Float2",
+      "note": "Post-distortion focal length override"
+    },
+    {
+      "name": "centeroffset",
+      "type": "Float2",
+      "note": "Shift distorted image within the output frame"
+    },
+    {
+      "name": "scale",
+      "type": "Float2",
+      "note": "Post-distortion scale"
+    },
+    {
+      "name": "cropmode",
+      "type": "Menu",
+      "note": "none, roi, or custom"
+    }
+  ],
+  "common_gotchas": [
+    "Inverse distortion is approximate and cannot recreate image content that was projected outside the frame.",
+    "k3 is not used by inverse distortion, even though it is part of the forward radial model.",
+    "Positive radial coefficients tend toward barrel/fisheye distortion; negative values tend toward pincushion distortion.",
+    "Optimal alpha and ROI crop choices can change output framing and resolution.",
+    "OpenCV calibration data must be mapped into the official center and focal-length units correctly."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "camera_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Applies or approximates inverse Brown-Conrady lens distortion to TOP images.",
+    "Radial coefficients k1, k2, and k3 model barrel, fisheye, or pincushion distortion.",
+    "Tangential coefficients p1 and p2 compensate for off-axis lens/sensor alignment.",
+    "Optical center and focal length define the camera matrix used before distortion is applied.",
+    "Layout and post-transform controls preserve native detail, crop to ROI, or fit distorted content into the output frame.",
+    "Info CHOP channels expose optimal center, focal length, and ROI values for calibrated camera workflows."
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "choptoSOP",
+  "family": "SOP",
+  "display_name": "CHOP to SOP",
+  "docs_url": "https://docs.derivative.ca/CHOP_to_SOP",
+  "summary": "Creates or modifies SOP geometry from CHOP channels, mapping samples into points, polygons, normals, and custom point attributes.",
+  "key_params": [
+    {"name": "group", "type": "String", "note": "Optional SOP group to modify"},
+    {"name": "chop", "type": "CHOP", "note": "CHOP source for geometry data"},
+    {"name": "startpos", "type": "XYZ", "note": "Generated line start position"},
+    {"name": "endpos", "type": "XYZ", "note": "Generated line end position"},
+    {"name": "chanscope", "type": "String", "note": "CHOP channel scope"},
+    {"name": "attscope", "type": "String", "note": "SOP attribute scope"},
+    {"name": "organize", "type": "Menu", "note": "How samples are organized into geometry"},
+    {"name": "mapping", "type": "Menu", "note": "Channel-to-attribute mapping policy"},
+    {"name": "compnml", "type": "Toggle", "note": "Compute normals"},
+    {"name": "comptang", "type": "Toggle", "note": "Compute tangents"}
+  ],
+  "common_gotchas": [
+    "Named tx, ty, and tz channels map naturally to point positions; missing position channels fall back to the generated line and warn.",
+    "The default generated shape is a line from -1 to 1 with one point per CHOP sample.",
+    "Custom attributes created from CHOPs are float attributes of size 1 unless mapped otherwise.",
+    "Resampling changes sample-to-point correspondence compared with one-to-one mapping."
+  ],
+  "related_snippets": ["CHOP_snippets", "SOP_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "CHOP to SOP converts CHOP samples into SOP point positions and attributes.",
+    "Without an input SOP, the default generated geometry is a line from -1 to 1 with one point per CHOP sample.",
+    "Channels named tx, ty, and tz map naturally to P position components.",
+    "Channel scope, attribute scope, and mapping mode control whether samples map one-to-one or are resampled onto geometry."
+  ]
+}

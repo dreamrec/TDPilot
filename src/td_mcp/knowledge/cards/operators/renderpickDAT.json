@@ -1,0 +1,92 @@
+{
+  "card_type": "operator",
+  "op_type": "renderpickDAT",
+  "family": "DAT",
+  "display_name": "Render Pick DAT",
+  "docs_url": "https://docs.derivative.ca/Render_Pick_DAT",
+  "summary": "Performs render picking for rows of UV coordinates in a DAT and returns object paths plus optional position, normal, depth, UV, color, alpha, and instance data.",
+  "key_params": [
+    {
+      "name": "strategy",
+      "type": "Menu",
+      "note": "Update or hold strategy for pick rows"
+    },
+    {
+      "name": "responsetime",
+      "type": "Menu",
+      "note": "Next-cook or this-cook response mode"
+    },
+    {
+      "name": "pickradius",
+      "type": "Float",
+      "note": "Radius around each UV sample"
+    },
+    {
+      "name": "rendertop",
+      "type": "TOP",
+      "note": "Render TOP or Render Pass TOP to pick from"
+    },
+    {
+      "name": "allowmulticamera",
+      "type": "Toggle",
+      "note": "Allow picking across multiple cameras"
+    },
+    {
+      "name": "usepickableflags",
+      "type": "Toggle",
+      "note": "Respect object pickable flags"
+    },
+    {
+      "name": "mergeinputdat",
+      "type": "Toggle",
+      "note": "Include input rows in output"
+    },
+    {
+      "name": "activatecallbacks",
+      "type": "Toggle",
+      "note": "Enable pick callbacks"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "Callback DAT for pick events"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Input rows need the documented select, u, and v columns for multi-sample picking.",
+    "This Cook response is slower than Next Cook because it waits for current render information.",
+    "Picked path and data fields depend on render setup, camera, pickable flags, and enabled fetch options."
+  ],
+  "related_snippets": [
+    "DAT_snippets",
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Samples a 3D render at pick locations and returns surface information from rendered geometry.",
+    "Input pick DATs require at least select, u, and v columns.",
+    "Render TOP/Render Pass TOP source, pick radius, strategy, and response time control the picking query.",
+    "Callbacks can be activated to react to render-pick results, often paired with Multi Touch In DAT."
+  ]
+}

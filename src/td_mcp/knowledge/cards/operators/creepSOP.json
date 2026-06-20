@@ -1,0 +1,106 @@
+{
+  "card_type": "operator",
+  "op_type": "creepSOP",
+  "family": "SOP",
+  "display_name": "Creep SOP",
+  "docs_url": "https://docs.derivative.ca/Creep_SOP",
+  "summary": "Deforms and animates source geometry from input 0 along the surface of path geometry from input 1.",
+  "key_params": [
+    {
+      "name": "reset",
+      "type": "Pulse",
+      "note": "Reset the creep transform state."
+    },
+    {
+      "name": "resetmethod",
+      "type": "Menu",
+      "note": "Reset method for source/path initialization."
+    },
+    {
+      "name": "fillpath",
+      "type": "Toggle",
+      "note": "Scale the source to fill the path extents."
+    },
+    {
+      "name": "keepproportions",
+      "type": "Toggle",
+      "note": "Preserve proportions while fitting along the path."
+    },
+    {
+      "name": "t",
+      "type": "XYZ",
+      "note": "Path-space translate."
+    },
+    {
+      "name": "tx",
+      "type": "Float",
+      "note": "Path U translate."
+    },
+    {
+      "name": "ty",
+      "type": "Float",
+      "note": "Path V translate."
+    },
+    {
+      "name": "tz",
+      "type": "Float",
+      "note": "Path W/elevation translate."
+    },
+    {
+      "name": "r",
+      "type": "XYZ",
+      "note": "Path-space rotate."
+    },
+    {
+      "name": "rx",
+      "type": "Float",
+      "note": "X rotation."
+    },
+    {
+      "name": "ry",
+      "type": "Float",
+      "note": "Y rotation."
+    },
+    {
+      "name": "rz",
+      "type": "Float",
+      "note": "Z rotation."
+    },
+    {
+      "name": "s",
+      "type": "XYZ",
+      "note": "Path-space scale."
+    },
+    {
+      "name": "sx",
+      "type": "Float",
+      "note": "X scale."
+    },
+    {
+      "name": "sy",
+      "type": "Float",
+      "note": "Y scale."
+    },
+    {
+      "name": "sz",
+      "type": "Float",
+      "note": "Z scale."
+    }
+  ],
+  "common_gotchas": [
+    "Input order matters: input 0 is the source geometry and input 1 is the path surface.",
+    "`fillpath` can intentionally change proportions unless `keepproportions` is used.",
+    "Path-space translate/rotate/scale values do not behave like a simple object transform on the original geometry."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Creep SOP deforms source geometry from input 0 along the path surface or curve from input 1.",
+    "`reset` and `resetmethod` define the initial creep transform state before animation or offsets are applied.",
+    "`fillpath` stretches or shrinks the source to the path extents, while `keepproportions` reduces distortion.",
+    "Translate values map into the path coordinate space, with X/Y/Z corresponding to U/V/W elevation behavior."
+  ]
+}

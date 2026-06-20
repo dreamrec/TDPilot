@@ -1,0 +1,127 @@
+{
+  "card_type": "operator",
+  "op_type": "midieventDAT",
+  "family": "DAT",
+  "display_name": "MIDI Event DAT",
+  "docs_url": "https://docs.derivative.ca/MIDI_Event_DAT",
+  "summary": "Logs MIDI messages entering or leaving TouchDesigner through active MIDI operators, with FIFO storage, filters, and per-packet callbacks.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable MIDI event logging"
+    },
+    {
+      "name": "skipsense",
+      "type": "Toggle",
+      "note": "Do not log MIDI active sensing messages"
+    },
+    {
+      "name": "skiptiming",
+      "type": "Toggle",
+      "note": "Do not report MIDI timing messages"
+    },
+    {
+      "name": "filter",
+      "type": "Toggle",
+      "note": "Enable MIDI message filter parameters"
+    },
+    {
+      "name": "message",
+      "type": "String",
+      "note": "Filter by MIDI message content"
+    },
+    {
+      "name": "channel",
+      "type": "String",
+      "note": "Filter by MIDI channel in the 1-16 range"
+    },
+    {
+      "name": "index",
+      "type": "String",
+      "note": "Filter by MIDI message index in the 1-128 range"
+    },
+    {
+      "name": "value",
+      "type": "String",
+      "note": "Filter by MIDI value in the 0-127 range"
+    },
+    {
+      "name": "dir",
+      "type": "String",
+      "note": "Filter by MIDI direction, input or output"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT Path",
+      "note": "Callback DAT called for each received MIDI packet"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose where callback scripts execute from"
+    },
+    {
+      "name": "fromop",
+      "type": "OP path",
+      "note": "Operator context used when Execute From is set to Specified Operator"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Limit FIFO output to a bounded number of messages"
+    },
+    {
+      "name": "maxlines",
+      "type": "Int",
+      "note": "Maximum retained message rows when Clamp Output is on"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear all logged rows except the heading"
+    },
+    {
+      "name": "bytes",
+      "type": "Toggle",
+      "note": "Include raw MIDI bytes in the output"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "No messages appear unless active MIDI In or MIDI Out operators are configured to receive or send messages.",
+    "Controller indices are 1-based in the 1-128 range, unlike many zero-based programming APIs.",
+    "Callbacks run once per packet and can be high frequency for clocks or controllers.",
+    "Direction filtering matters when the project has both inbound and outbound MIDI traffic."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "midi-event-logging",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Receives MIDI events from the Perform mode event stream and writes them to a DAT table.",
+    "Filter, message, channel, index, value, and direction parameters constrain captured MIDI messages.",
+    "Skip Sense and Skip Timing can suppress high-volume MIDI timing/status traffic.",
+    "Callbacks and FIFO retention controls shape event handling and table size."
+  ]
+}

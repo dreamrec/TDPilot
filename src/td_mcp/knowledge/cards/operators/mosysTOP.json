@@ -1,0 +1,43 @@
+{
+  "card_type": "operator",
+  "op_type": "mosysTOP",
+  "family": "TOP",
+  "display_name": "MoSys TOP",
+  "docs_url": "https://docs.derivative.ca/MoSys_TOP",
+  "summary": "Applies simulated lens distortion for MoSys camera tracking workflows using channel data from a connected MoSys CHOP.",
+  "key_params": [
+    {
+      "name": "chop",
+      "type": "CHOP",
+      "note": "MoSys CHOP containing tracking/lens channels"
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution override"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP pixel format override"
+    }
+  ],
+  "common_gotchas": [
+    "Official docs mark MoSys TOP as TouchDesigner Pro only.",
+    "Requires a MoSys CHOP with valid camera-tracking channel data; the TOP is not a standalone tracking receiver.",
+    "Input texture quality and resolution affect the final distorted render because the TOP warps image content.",
+    "Use it as part of a camera-tracking/render-composite pipeline, not as a generic image effect."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "CameraTracking_snippets"
+  ],
+  "build_relevance": "camera_tracking_distortion",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Works with MoSys camera tracking systems for virtual-production lens distortion.",
+    "Uses channel data from a connected MoSys CHOP to calculate simulated lens distortion.",
+    "Warps the input TOP as part of a camera-tracking/render-composite pipeline.",
+    "Official docs mark the operator as available only in TouchDesigner Pro."
+  ]
+}

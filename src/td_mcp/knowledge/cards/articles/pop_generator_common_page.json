@@ -1,0 +1,47 @@
+{
+  "card_type": "article",
+  "article_id": "pop_generator_common_page",
+  "title": "POP Generator Common Page",
+  "family": "POP",
+  "families": [
+    "POP",
+    "PARAMETER",
+    "GPU"
+  ],
+  "summary": "Official Derivative common page for POP generator operators, covering Bypass, Free Extra GPU Memory, and Delete Input Attributes behavior.",
+  "source_url": "https://docs.derivative.ca/POP_Generator_Common_Page",
+  "docsbrain_page_id": "pop_generator_common_page",
+  "covered_operators": [
+    "boxPOP",
+    "circlePOP",
+    "gridPOP",
+    "linePOP",
+    "pointgeneratorPOP",
+    "rectanglePOP",
+    "spherePOP",
+    "torusPOP"
+  ],
+  "key_concepts": [
+    "Parameters - Common Page",
+    "Bypass",
+    "bypass",
+    "first input",
+    "Free Extra GPU Memory",
+    "freeextragpumem",
+    "Delete Input Attributes",
+    "delinputattrs",
+    "GPU memory",
+    "isolate attributes"
+  ],
+  "guidance": [
+    "Use this article when a generated POP card or planner note needs common POP generator controls.",
+    "Bypass passes the first input through unchanged when the operator has an input to pass through.",
+    "Free Extra GPU Memory releases accumulated memory after output memory has grown and shrunk.",
+    "Delete Input Attributes limits output to the attributes specified by the POP, which can isolate attributes into a separate branch."
+  ],
+  "related_snippets": [
+    "POP_snippets",
+    "POP_attribute_ontology"
+  ],
+  "last_verified": "2026-06-18"
+}

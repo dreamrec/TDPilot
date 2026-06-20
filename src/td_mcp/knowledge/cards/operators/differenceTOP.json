@@ -1,0 +1,104 @@
+{
+  "card_type": "operator",
+  "op_type": "differenceTOP",
+  "family": "TOP",
+  "display_name": "Difference TOP",
+  "docs_url": "https://docs.derivative.ca/Difference_TOP",
+  "summary": "Performs a two-input difference composite, with fixed-layer and overlay transform controls before comparison.",
+  "key_params": [
+    {
+      "name": "size",
+      "type": "Menu",
+      "note": "Fixed layer, input1 or input2"
+    },
+    {
+      "name": "prefit",
+      "type": "Menu",
+      "note": "Overlay fit mode: fill, fithorz, fitvert, fitbest, fitoutside, or nativeres"
+    },
+    {
+      "name": "justifyh",
+      "type": "Menu",
+      "note": "Horizontal overlay alignment"
+    },
+    {
+      "name": "justifyv",
+      "type": "Menu",
+      "note": "Vertical overlay alignment"
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Overlay edge behavior: hold, zero, repeat, or mirror"
+    },
+    {
+      "name": "r",
+      "type": "Float",
+      "note": "Overlay rotation"
+    },
+    {
+      "name": "t",
+      "type": "XY",
+      "note": "Overlay translation"
+    },
+    {
+      "name": "tunit",
+      "type": "Menu",
+      "note": "Units for overlay translation"
+    },
+    {
+      "name": "s",
+      "type": "XY",
+      "note": "Overlay scale"
+    },
+    {
+      "name": "p",
+      "type": "XY",
+      "note": "Overlay pivot"
+    },
+    {
+      "name": "punit",
+      "type": "Menu",
+      "note": "Units for overlay pivot"
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution policy"
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Common TOP output aspect policy"
+    },
+    {
+      "name": "npasses",
+      "type": "Int",
+      "note": "Common TOP pass repeat count"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Fixed Layer does not change input order; it chooses the reference resolution and aspect.",
+    "Mismatched timing, resolution, or aspect can look like image difference even when the source content matches.",
+    "Transform controls affect only the overlay input.",
+    "Use Native Resolution for pixel-accurate comparisons and motion masks."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Difference TOP compares two input images and outputs their pixel difference.",
+    "Fixed Layer selects which input controls the default output resolution and aspect.",
+    "The non-fixed input is treated as the overlay and can be prefit, justified, extended, and transformed before comparison.",
+    "Transform parameters affect only the overlay, not the fixed input or input order.",
+    "Native Resolution is useful when frame or image comparisons must stay pixel-accurate.",
+    "The official TOP supports 3D textures and 2D texture arrays."
+  ]
+}

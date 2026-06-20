@@ -1,0 +1,57 @@
+{
+  "card_type": "article",
+  "article_id": "rendering_shadows",
+  "title": "Rendering Shadows",
+  "family": "RENDERING",
+  "families": [
+    "RENDERING",
+    "COMP",
+    "TOP",
+    "MAT",
+    "GLSL"
+  ],
+  "summary": "Official Derivative shadow-rendering walkthrough for Light COMP shadow setup, shadow casters, polygon offset artifact cleanup, shadow-map detail tuning with Depth TOP, material-level shadow strength/color, and custom shadow maps accessed from GLSL materials.",
+  "source_url": "https://docs.derivative.ca/Rendering_Shadows",
+  "docsbrain_page_id": "rendering_shadows",
+  "covered_operators": [
+    "lightCOMP",
+    "phongMAT",
+    "depthTOP",
+    "renderTOP",
+    "glslMAT"
+  ],
+  "key_concepts": [
+    "Rendering Shadows",
+    "Built-In Shadows",
+    "Hard, 2D Mapped",
+    "Shadow Casters",
+    "Polygon Offset Factor",
+    "moire artifacts",
+    "Focal Length",
+    "Aperture",
+    "FOV",
+    "Depth TOP",
+    "Near",
+    "shadow map",
+    "Shadow Strength",
+    "Shadow Color",
+    "Custom Shadow Map",
+    "TDShadowTexture",
+    "Write a GLSL Material",
+    "Polygon Depth Offset",
+    "Render TOP Advanced page",
+    "Light COMP"
+  ],
+  "guidance": [
+    "Use this article when building or debugging shadows in a 3D render scene.",
+    "Enable Light COMP shadows by setting Shadow Type to Hard, 2D Mapped, then restrict Shadow Casters when light/camera geometry should not cast into the map.",
+    "Remove shadow artifacts by tuning the light shadow page Polygon Offset Factor values.",
+    "Improve detail by framing the shadow map with light Focal Length, Aperture, or FOV and previewing the map through a Depth TOP pointed at the light.",
+    "Shadow Strength and Shadow Color on a Phong MAT affect shadows on that material; other receiving materials need their own settings.",
+    "For custom shadow maps, feed a texture such as a Depth TOP into the Light COMP Shadows page, access it with TDShadowTexture in a GLSL material, and consider Render TOP Polygon Depth Offset when rendering the map."
+  ],
+  "related_snippets": [
+    "GLSL_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

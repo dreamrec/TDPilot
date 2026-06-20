@@ -1,0 +1,50 @@
+{
+  "card_type": "operator",
+  "op_type": "clockCHOP",
+  "family": "CHOP",
+  "display_name": "Clock CHOP",
+  "docs_url": "https://docs.derivative.ca/Clock_CHOP",
+  "summary": "Generates date, time, countdown, moon, and solar channels as integer units or 0-1 fractional ramps.",
+  "key_concepts": [
+    "Generates channels for year, month, week, day, hour, minute, second, and millisecond as either integer units or 0-1 fractional ramps.",
+    "Countdown mode compares a target date from the first input against current time or optional second-input time channels.",
+    "Hour Format changes the hour cycle and AM/PM channel behavior, while Hour Adjust offsets the current wall-clock time after it is read.",
+    "Start Reference defines the zero year/day/hour/minute basis as either January 1 2000 or TouchDesigner process start.",
+    "Solar and moon outputs depend on latitude, longitude, hemisphere, and enabled moon/sun phase, sunrise, sunset, and declination channels.",
+    "The operator follows wall-clock time rather than a musical or timeline transport clock."
+  ],
+  "key_params": [
+    {"name": "output", "type": "Menu", "note": "Units, Fractions, or Countdown output mode"},
+    {"name": "hourformat", "type": "Menu", "note": "12-hour or 24-hour channel behavior"},
+    {"name": "houradjust", "type": "Float", "note": "Offset applied after reading the current time"},
+    {"name": "startref", "type": "Integer", "note": "Reference year for year channels"},
+    {"name": "msec", "type": "Toggle", "note": "Output millisecond channel"},
+    {"name": "sec", "type": "Toggle", "note": "Output second channel"},
+    {"name": "min", "type": "Toggle", "note": "Output minute channel"},
+    {"name": "hour", "type": "Toggle", "note": "Output hour channel"},
+    {"name": "ampm", "type": "Toggle", "note": "Output AM/PM channel"},
+    {"name": "wday", "type": "Toggle", "note": "Output day-of-week channel"},
+    {"name": "day", "type": "Toggle", "note": "Output day-of-month channel"},
+    {"name": "yday", "type": "Toggle", "note": "Output day-of-year channel"},
+    {"name": "week", "type": "Toggle", "note": "Output week-of-year channel"},
+    {"name": "month", "type": "Toggle", "note": "Output month channel"},
+    {"name": "year", "type": "Toggle", "note": "Output year channel"},
+    {"name": "latitude", "type": "Float2", "note": "Solar latitude"},
+    {"name": "longitude", "type": "Float2", "note": "Solar longitude"},
+    {"name": "moonphase", "type": "Toggle", "note": "Output moon phase"},
+    {"name": "sunphase", "type": "Toggle", "note": "Output sun phase"},
+    {"name": "sunrise", "type": "Toggle", "note": "Output sunrise time"},
+    {"name": "sunset", "type": "Toggle", "note": "Output sunset time"},
+    {"name": "declination", "type": "Toggle", "note": "Output solar declination"}
+  ],
+  "common_gotchas": [
+    "Fractions mode outputs 0-1 ramps; Units mode outputs date/time integers.",
+    "Countdown mode expects input channels named year, month, day, hour, min, sec, and msec, with missing values defaulting to midnight January 1.",
+    "Two-digit countdown years are interpreted relative to the current century convention used by the operator.",
+    "Solar channels depend on correct latitude, longitude, and hemisphere settings.",
+    "Clock CHOP follows wall-clock date/time, so use Beat, Timer, or Ableton Link CHOP for transport-synced timing."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

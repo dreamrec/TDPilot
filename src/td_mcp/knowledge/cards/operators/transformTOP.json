@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "transformTOP",
+  "family": "TOP",
+  "display_name": "Transform TOP",
+  "docs_url": "https://docs.derivative.ca/Transform_TOP",
+  "summary": "Applies 2D image transforms including translate, rotate, scale, pivot, background fill, alpha premultiply options, and repeated or mirrored tiling.",
+  "key_params": [
+    {"name": "xord", "type": "Menu", "note": "Transform order"},
+    {"name": "t", "type": "XY", "note": "Translate in X/Y"},
+    {"name": "tunit", "type": "Menu", "note": "Translate units"},
+    {"name": "rotate", "type": "Float", "note": "Image rotation"},
+    {"name": "s", "type": "XY", "note": "Scale in X/Y"},
+    {"name": "growshrink", "type": "XY", "note": "Pixel-unit grow or shrink amount"},
+    {"name": "p", "type": "XY", "note": "Pivot point"},
+    {"name": "punit", "type": "Menu", "note": "Pivot units"},
+    {"name": "bgcolor", "type": "RGBA", "note": "Background fill color"},
+    {"name": "premultrgbbyalpha", "type": "Toggle", "note": "Premultiply RGB by alpha before compositing"},
+    {"name": "compover", "type": "Toggle", "note": "Composite transformed pixels over the background"},
+    {"name": "mipmapbias", "type": "Float", "note": "Bias mipmap level used for filtered input textures"},
+    {"name": "extend", "type": "Menu", "note": "Hold, zero, repeat, or mirror tile edges"},
+    {"name": "limittiles", "type": "Toggle", "note": "Limit repeated tiles to configured U/V ranges"},
+    {"name": "tileu", "type": "XY", "note": "Horizontal tile range when limiting tiles"},
+    {"name": "tilev", "type": "XY", "note": "Vertical tile range when limiting tiles"}
+  ],
+  "common_gotchas": [
+    "Transform order changes the final image position; do not assume translate/rotate/scale commute.",
+    "Pivot units and translate units matter when mixing normalized, pixel, and aspect-based controls.",
+    "Grow/Shrink is a pixel-unit scale offset, not the same control as normalized Scale.",
+    "Comp Over changes how alpha-less-than-one areas combine with the background color.",
+    "Repeat/mirror tiles are only visible when scale/translate exposes areas beyond the original image."
+  ],
+  "related_snippets": ["TOP_snippets"],
+  "build_relevance": "image_transform",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Transform TOP applies 2D translate, rotate, scale, pivot, and pixel grow/shrink operations to an image.",
+    "The transform order menu is non-commutative, so changing xord changes the visual result.",
+    "Background color, alpha premultiplication, and composite-over controls determine how exposed or translucent pixels are filled.",
+    "Extend and tile-limit controls can repeat or mirror the transformed image into newly exposed regions."
+  ]
+}

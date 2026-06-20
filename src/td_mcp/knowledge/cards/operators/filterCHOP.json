@@ -4,17 +4,44 @@
   "family": "CHOP",
   "display_name": "Filter CHOP",
   "docs_url": "https://docs.derivative.ca/Filter_CHOP",
-  "summary": "Smooths CHOP channel values over time using various filter types (lowpass, spring, etc.). Essential for removing jitter from sensors, audio, or noisy inputs.",
+  "summary": "Smooths or sharpens CHOP samples by combining each sample with weighted neighbor samples, with filter types for Gaussian, Box, Edge, Sharpen, De-spike, Ramp Preserve, and One Euro behavior.",
+  "key_concepts": [
+    "Filters by combining each sample with a range of neighboring samples; the Type parameter selects the weighting behavior.",
+    "Width and Width Unit determine the neighbor window, smoothing strength, and delay introduced by most filter types.",
+    "Effect blends between the original and filtered channels so plans can soften the filter without rebuilding the network.",
+    "De-spike, Ramp Preserve, and One Euro modes use their dedicated tolerance, rate, cutoff, speed, and slope controls.",
+    "Filter per Sample changes multi-sample channel behavior by filtering each sample independently instead of across the whole channel."
+  ],
   "key_params": [
-    {"name": "filtertype", "type": "Menu", "note": "Filter algorithm: Gaussian, Box, Edge Detect, or custom"},
-    {"name": "filterwidth", "type": "Float", "note": "Width/duration of the smoothing window in seconds or samples"},
-    {"name": "resetcondition", "type": "Menu", "note": "When to reset the filter state"}
+    {"name": "type", "type": "Menu", "note": "Filter algorithm such as Gaussian, Box, Edge Detect, Sharpen, De-spike, Ramp Preserve, or One Euro"},
+    {"name": "effect", "type": "Float", "note": "Blend amount for the filter effect"},
+    {"name": "width", "type": "Float", "note": "Neighbor-sample window used by the filter"},
+    {"name": "widthunit", "type": "Menu", "note": "Width units: samples, frames, or seconds"},
+    {"name": "spike", "type": "Float", "note": "De-spike tolerance"},
+    {"name": "ramptolerance", "type": "Float", "note": "Ramp Preserve reset tolerance"},
+    {"name": "ramprate", "type": "Float", "note": "Ramp Preserve output ramp rate"},
+    {"name": "passes", "type": "Integer", "note": "Number of times the filter is applied"},
+    {"name": "cutoff", "type": "Float", "note": "One Euro low-speed cutoff frequency"},
+    {"name": "speedcoeff", "type": "Float", "note": "One Euro speed coefficient for high-speed lag"},
+    {"name": "slopecutoff", "type": "Float", "note": "One Euro slope cutoff frequency"},
+    {"name": "slopedownreset", "type": "Toggle", "note": "Bypass/reset on large downward slope"},
+    {"name": "slopedownmax", "type": "Float", "note": "Downward slope threshold for reset"},
+    {"name": "slopeupreset", "type": "Toggle", "note": "Bypass/reset on large upward slope"},
+    {"name": "slopeupmax", "type": "Float", "note": "Upward slope threshold for reset"},
+    {"name": "reset", "type": "Toggle", "note": "Bypass/reset the filter effect"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Immediately reset the filter effect"},
+    {"name": "filterpersample", "type": "Toggle", "note": "Filter each sample independently for multi-sample channels"},
+    {"name": "scope", "type": "Pattern", "note": "Channel pattern to affect"}
   ],
   "common_gotchas": [
-    "Higher filter width adds more lag — balance smoothness vs. responsiveness for real-time control.",
-    "Filter introduces latency proportional to the filter width; for zero-latency smoothing use a Lag CHOP instead."
+    "Gaussian and Box filters delay the output by half the filter size; De-spike delays by the full filter size.",
+    "Left Half Gaussian and Left Half Box avoid the future-sample delay by using samples back in time.",
+    "The official filter type parameter is named type, not filtertype.",
+    "Use Audio Filter CHOP, Band EQ CHOP, or Parametric EQ CHOP for most sound-filtering plans.",
+    "One Euro tuning trades slow-speed jitter reduction against fast-motion lag through cutoff, slope cutoff, and speed coefficient.",
+    "Filter per Sample changes how multi-sample channels are interpreted, so test time-sliced or multi-sample inputs explicitly."
   ],
   "related_snippets": [],
   "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "last_verified": "2026-06-18"
 }

@@ -1,0 +1,78 @@
+{
+  "card_type": "operator",
+  "op_type": "simplerenderTOP",
+  "family": "TOP",
+  "display_name": "Simple Render TOP",
+  "docs_url": "https://docs.derivative.ca/Simple_Render_TOP",
+  "summary": "Legacy alias card for Render Simple TOP workflows: render one POP directly without separate Camera, Geometry, or Light COMPs.",
+  "key_params": [
+    {
+      "name": "pop",
+      "type": "POP",
+      "note": "POP geometry source to render."
+    },
+    {
+      "name": "normalizegeo",
+      "type": "Toggle",
+      "note": "Normalize the POP geometry for simple rendering."
+    },
+    {
+      "name": "materialsource",
+      "type": "Menu",
+      "note": "Internal Phong controls or external MAT node."
+    },
+    {
+      "name": "ortho",
+      "type": "Toggle",
+      "note": "Use orthographic camera behavior."
+    },
+    {
+      "name": "fov",
+      "type": "Float",
+      "note": "Perspective field of view."
+    },
+    {
+      "name": "orthowidth",
+      "type": "Float",
+      "note": "Orthographic width."
+    },
+    {
+      "name": "camdistance",
+      "type": "Float",
+      "note": "Camera distance."
+    },
+    {
+      "name": "bgcolor",
+      "type": "RGBA",
+      "note": "Premultiplied background color."
+    },
+    {
+      "name": "wireframe",
+      "type": "Toggle",
+      "note": "Render material as wireframe."
+    },
+    {
+      "name": "mat",
+      "type": "MAT",
+      "note": "External MAT when material source uses a MAT node."
+    }
+  ],
+  "common_gotchas": [
+    "Use rendersimpleTOP for new plans; simplerenderTOP is a legacy alias-style card.",
+    "This workflow does not expose separate Camera COMP or Light COMP control surfaces.",
+    "Background alpha matters because the background color is premultiplied.",
+    "POP render/display flags are ignored by the current Render Simple operator."
+  ],
+  "related_snippets": [
+    "POP_snippets",
+    "TOP_snippets"
+  ],
+  "build_relevance": "legacy_alias_for_rendersimpleTOP",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Simple Render TOP is a legacy/redirect-style reference; current planning should prefer Render Simple TOP / rendersimpleTOP.",
+    "Render Simple renders one POP directly without Camera, Geometry, or Light COMPs.",
+    "The current operator ignores POP render/display flags and renders the selected POP path.",
+    "Material can come from the internal Phong controls or an external MAT node."
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "switchPOP",
+  "family": "POP",
+  "display_name": "Switch POP",
+  "docs_url": "https://docs.derivative.ca/Switch_POP",
+  "summary": "Chooses one POP input by numeric index and can optionally blend between adjacent inputs for fractional index values. Inputs may have different point, vertex, and primitive counts, but blending requires compatible lengths.",
+  "key_params": [
+    {"name": "index", "type": "Float", "note": "Input index; fractional values can blend adjacent inputs"},
+    {"name": "extend", "type": "Menu", "note": "Index extend behavior such as clamp, loop, or zigzag"},
+    {"name": "blend", "type": "Toggle", "note": "Enable blending between adjacent inputs"},
+    {"name": "lengthmismatchnotif", "type": "Menu", "note": "Notification behavior for length mismatch during blending"},
+    {"name": "lengthmismatchaction", "type": "Menu", "note": "How mismatched input lengths are sampled during blending"},
+    {"name": "pointattrscope", "type": "String", "note": "Point attributes to switch or blend"},
+    {"name": "primattrscope", "type": "String", "note": "Primitive attributes to switch or blend"},
+    {"name": "vertattrscope", "type": "String", "note": "Vertex attributes to switch or blend"},
+    {"name": "input", "type": "Sequential", "note": "Input source blocks"},
+    {"name": "input0pop", "type": "POP", "note": "POP source for an input block"}
+  ],
+  "key_concepts": [
+    "Outputs one selected POP input unchanged when Index is an integer.",
+    "Fractional Index values can blend adjacent inputs when Blend between Inputs is enabled.",
+    "Extend controls clamp, loop, or zigzag behavior for indices outside the input range, including negative indices.",
+    "Point, primitive, and vertex attribute scopes choose which attributes participate in switching or blending."
+  ],
+  "common_gotchas": [
+    "Fractional blending only works meaningfully when adjacent inputs have compatible element counts and attributes.",
+    "Clamp, loop, and zigzag extend modes change behavior outside the input index range.",
+    "Validate integer/uint attribute blending on older builds; recent builds include fixes in this area."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

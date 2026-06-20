@@ -1,0 +1,138 @@
+{
+  "card_type": "operator",
+  "op_type": "vertexSOP",
+  "family": "SOP",
+  "display_name": "Vertex SOP",
+  "docs_url": "https://docs.derivative.ca/Vertex_SOP",
+  "summary": "Edits and creates attributes on a per-vertex, rather than per-point, basis, including color, alpha, UV texture coordinates, crease weights, and custom vertex attributes.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Limit vertex edits to selected geometry."
+    },
+    {
+      "name": "doclr",
+      "type": "Menu",
+      "note": "Keep, add, or remove vertex color attributes."
+    },
+    {
+      "name": "diff",
+      "type": "Float3",
+      "note": "Vertex diffuse color values."
+    },
+    {
+      "name": "diffr",
+      "type": "Float",
+      "note": "Vertex red value."
+    },
+    {
+      "name": "diffg",
+      "type": "Float",
+      "note": "Vertex green value."
+    },
+    {
+      "name": "diffb",
+      "type": "Float",
+      "note": "Vertex blue value."
+    },
+    {
+      "name": "alpha",
+      "type": "Float",
+      "note": "Vertex alpha value."
+    },
+    {
+      "name": "douvw",
+      "type": "Menu",
+      "note": "Keep, add, or remove vertex texture coordinates."
+    },
+    {
+      "name": "map",
+      "type": "Float3",
+      "note": "Vertex texture coordinate values."
+    },
+    {
+      "name": "mapu",
+      "type": "Float",
+      "note": "Texture U coordinate."
+    },
+    {
+      "name": "mapv",
+      "type": "Float",
+      "note": "Texture V coordinate."
+    },
+    {
+      "name": "mapw",
+      "type": "Float",
+      "note": "Texture W coordinate."
+    },
+    {
+      "name": "docrease",
+      "type": "Menu",
+      "note": "Keep, add, or remove creaseweight values."
+    },
+    {
+      "name": "crease",
+      "type": "Float",
+      "note": "Creaseweight value for subdivision edges."
+    },
+    {
+      "name": "attr",
+      "type": "Custom Sequence",
+      "note": "Create named custom vertex attributes."
+    },
+    {
+      "name": "attr0name",
+      "type": "String",
+      "note": "Name for custom attribute 0."
+    },
+    {
+      "name": "attr0type",
+      "type": "Menu",
+      "note": "Type for custom attribute 0."
+    },
+    {
+      "name": "attr0value",
+      "type": "Float4",
+      "note": "Value tuple for custom attribute 0."
+    },
+    {
+      "name": "attr0value1",
+      "type": "Float",
+      "note": "Custom attribute value component 1."
+    },
+    {
+      "name": "attr0value2",
+      "type": "Float",
+      "note": "Custom attribute value component 2."
+    },
+    {
+      "name": "attr0value3",
+      "type": "Float",
+      "note": "Custom attribute value component 3."
+    },
+    {
+      "name": "attr0value4",
+      "type": "Float",
+      "note": "Custom attribute value component 4."
+    }
+  ],
+  "common_gotchas": [
+    "Vertex attributes are not point attributes; shared points can have different values on different primitive corners.",
+    "The current official page does not expose normal editing controls for Vertex SOP, so do not plan it as a normal editor.",
+    "Second-input primitive or vertex mismatches cycle through primitives or ignore extra first-input vertices.",
+    "Crease weights describe the edge from the current vertex to the next vertex in the primitive, so ordering matters.",
+    "Subdivide SOP is the practical viewer for crease-weight effects; values must be greater than zero to matter."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "attribute-authoring-and-subdivision",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Vertex SOP edits attributes per vertex, not per point, so different corners sharing one point can carry different values.",
+    "A second input can supply matching attribute values; fewer primitives cycle and extra vertices in the first input are ignored.",
+    "Diffuse color, alpha, texture coordinates, crease weights, and custom attributes are the official current vertex attribute surface.",
+    "If an attribute exists as a point attribute, adding it in Vertex SOP can elevate it to a vertex attribute, because an attribute cannot exist on both points and vertices."
+  ]
+}

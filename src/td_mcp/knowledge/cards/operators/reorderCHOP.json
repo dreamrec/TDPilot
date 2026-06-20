@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "reorderCHOP",
+  "family": "CHOP",
+  "display_name": "Reorder CHOP",
+  "docs_url": "https://docs.derivative.ca/Reorder_CHOP",
+  "summary": "Reorders channels by numeric pattern, name pattern, sort method, random order, grouping, or a second reference CHOP without changing channel values.",
+  "key_params": [
+    {"name": "method", "type": "Menu", "note": "Numeric pattern, character pattern, base-name sort, numeric-suffix sort, value sort, reverse, random, group, or split mode"},
+    {"name": "orderref", "type": "Menu", "note": "Interpret optional second input as channel names or sample indices"},
+    {"name": "numpattern", "type": "String", "note": "Numeric channel-index pattern"},
+    {"name": "charpattern", "type": "String", "note": "Channel-name pattern"},
+    {"name": "seed", "type": "Float", "note": "Random reorder seed"},
+    {"name": "nvalue", "type": "Integer", "note": "Group size or every-Nth value"},
+    {"name": "rempos", "type": "Menu", "note": "Place unmatched channels at beginning or end"},
+    {"name": "remorder", "type": "Menu", "note": "Keep unmatched channels in input order or alphanumeric order"}
+  ],
+  "key_concepts": [
+    "Reorder CHOP changes the order of channels without changing any channel values.",
+    "Channels can be reordered by numeric pattern, character pattern, base-name sort, numeric-suffix sort, value sort, reverse, random, group, or split modes.",
+    "When an Order Reference input is connected, Numeric Pattern and Character Pattern are ignored.",
+    "Order Reference can use channel names or a single channel of sample indices to define the output order.",
+    "Use Sort CHOP for sample ordering inside channels; Reorder CHOP is for channel order relative to other channels."
+  ],
+  "common_gotchas": [
+    "Channel values are never affected; only channel order changes.",
+    "When a second Order Reference input is present, numeric and character patterns are ignored.",
+    "By-name reference uses channel names; by-index reference expects a single channel whose sample values specify the order.",
+    "Use Sort CHOP to reorder samples inside channels; use Reorder CHOP to reorder channels relative to each other.",
+    "Random reorders need an explicit seed for reproducible generated networks."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ channel ordering and packing",
+  "last_verified": "2026-06-18"
+}

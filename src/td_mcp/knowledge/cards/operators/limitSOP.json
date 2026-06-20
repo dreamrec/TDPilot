@@ -1,0 +1,237 @@
+{
+  "card_type": "operator",
+  "op_type": "limitSOP",
+  "family": "SOP",
+  "display_name": "Limit SOP",
+  "docs_url": "https://docs.derivative.ca/Limit_SOP",
+  "summary": "Creates SOP geometry from CHOP samples, mapping named channels to point transforms, color, alpha, texture W, radius, and custom attributes.",
+  "key_params": [
+    {
+      "name": "chop",
+      "type": "CHOP",
+      "note": "CHOP containing sample data."
+    },
+    {
+      "name": "rord",
+      "type": "Menu",
+      "note": "Rotate order for rotation channels."
+    },
+    {
+      "name": "chanx",
+      "type": "String",
+      "note": "X position channel."
+    },
+    {
+      "name": "chany",
+      "type": "String",
+      "note": "Y position channel."
+    },
+    {
+      "name": "chanz",
+      "type": "String",
+      "note": "Z position channel."
+    },
+    {
+      "name": "chanrx",
+      "type": "String",
+      "note": "Rotate X channel."
+    },
+    {
+      "name": "chanry",
+      "type": "String",
+      "note": "Rotate Y channel."
+    },
+    {
+      "name": "chanrz",
+      "type": "String",
+      "note": "Rotate Z channel."
+    },
+    {
+      "name": "chanrad",
+      "type": "String",
+      "note": "Uniform radius channel."
+    },
+    {
+      "name": "chanradx",
+      "type": "String",
+      "note": "Radius X channel."
+    },
+    {
+      "name": "chanrady",
+      "type": "String",
+      "note": "Radius Y channel."
+    },
+    {
+      "name": "chanradz",
+      "type": "String",
+      "note": "Radius Z channel."
+    },
+    {
+      "name": "chanr",
+      "type": "String",
+      "note": "Red color channel."
+    },
+    {
+      "name": "chang",
+      "type": "String",
+      "note": "Green color channel."
+    },
+    {
+      "name": "chanb",
+      "type": "String",
+      "note": "Blue color channel."
+    },
+    {
+      "name": "chanalpha",
+      "type": "String",
+      "note": "Alpha channel."
+    },
+    {
+      "name": "texturew",
+      "type": "String",
+      "note": "Texture W/time-offset channel."
+    },
+    {
+      "name": "customattr",
+      "type": "Sequence",
+      "note": "Custom attribute sequence."
+    },
+    {
+      "name": "customattr0name",
+      "type": "String",
+      "note": "First custom attribute name."
+    },
+    {
+      "name": "customattr0chan0",
+      "type": "String",
+      "note": "First custom attribute component 0 channel."
+    },
+    {
+      "name": "customattr0chan1",
+      "type": "String",
+      "note": "First custom attribute component 1 channel."
+    },
+    {
+      "name": "customattr0chan2",
+      "type": "String",
+      "note": "First custom attribute component 2 channel."
+    },
+    {
+      "name": "customattr0chan3",
+      "type": "String",
+      "note": "First custom attribute component 3 channel."
+    },
+    {
+      "name": "output",
+      "type": "Menu",
+      "note": "Geometry output type."
+    },
+    {
+      "name": "divisions",
+      "type": "Int",
+      "note": "Divisions for polygon/circle/tube/strip outputs."
+    },
+    {
+      "name": "rad",
+      "type": "Float",
+      "note": "Radius of generated geometry."
+    },
+    {
+      "name": "flipsmooth",
+      "type": "Toggle",
+      "note": "Smooth orientation flips along a path."
+    },
+    {
+      "name": "dolimit",
+      "type": "Menu",
+      "note": "Position limit mode."
+    },
+    {
+      "name": "xlimitmin",
+      "type": "Float",
+      "note": "X limit minimum."
+    },
+    {
+      "name": "xlimitmax",
+      "type": "Float",
+      "note": "X limit maximum."
+    },
+    {
+      "name": "ylimitmin",
+      "type": "Float",
+      "note": "Y limit minimum."
+    },
+    {
+      "name": "ylimitmax",
+      "type": "Float",
+      "note": "Y limit maximum."
+    },
+    {
+      "name": "zlimitmin",
+      "type": "Float",
+      "note": "Z limit minimum."
+    },
+    {
+      "name": "zlimitmax",
+      "type": "Float",
+      "note": "Z limit maximum."
+    },
+    {
+      "name": "texture",
+      "type": "Toggle",
+      "note": "Apply texture coordinates."
+    },
+    {
+      "name": "orient",
+      "type": "Toggle",
+      "note": "Orient output to path."
+    },
+    {
+      "name": "lookat",
+      "type": "COMP",
+      "note": "Look-at object."
+    },
+    {
+      "name": "dorotate",
+      "type": "Menu",
+      "note": "Rotate generated polys/circles."
+    },
+    {
+      "name": "rotatex",
+      "type": "Float",
+      "note": "Output rotate X."
+    },
+    {
+      "name": "rotatey",
+      "type": "Float",
+      "note": "Output rotate Y."
+    },
+    {
+      "name": "rotatez",
+      "type": "Float",
+      "note": "Output rotate Z."
+    },
+    {
+      "name": "normals",
+      "type": "Toggle",
+      "note": "Compute normals."
+    }
+  ],
+  "common_gotchas": [
+    "Rotation channels only apply to polygon-at-each-point and primitive-circle-at-each-point outputs.",
+    "`rad` is disabled for Polygonal Line output.",
+    "Every CHOP sample creates geometry, so sample count directly controls output size."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "chop-to-sop-geometry",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Limit SOP creates SOP geometry at every CHOP sample.",
+    "Channel names map CHOP data into point position, rotation, color, alpha, radius, texture W, and custom attributes.",
+    "Output mode determines whether the samples become a line, per-point polygons/circles/spheres, tubes, or strips.",
+    "Bounding limits can clamp, loop, or zigzag generated positions.",
+    "Copy SOP can inherit these point attributes when Use Template Point Attributes is enabled."
+  ]
+}

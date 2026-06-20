@@ -1,0 +1,49 @@
+{
+  "card_type": "operator",
+  "op_type": "serialCHOP",
+  "family": "CHOP",
+  "display_name": "Serial CHOP",
+  "docs_url": "https://docs.derivative.ca/Serial_CHOP",
+  "summary": "Sends script strings over an RS-232 serial connection when input channels meet transition conditions, and exposes simple numeric ASCII input on a return channel.",
+  "key_concepts": [
+    "Serial CHOP communicates through an external serial port using RS-232 style serial settings.",
+    "The operator monitors input-channel transitions and sends the corresponding script string through the serial connection.",
+    "Any received ASCII numeric digits are reflected on an output channel named return.",
+    "Use Serial DAT instead when received data is more complex than simple ASCII numeric values.",
+    "Port, baud rate, data bits, parity, and stop bits must match the external serial device.",
+    "The Scripts page maps Script sequence entries to input channels and converts supported escape sequences such as carriage return and line feed."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable the serial connection"},
+    {"name": "state", "type": "Menu", "note": "Input transition to monitor: off-to-on, while on, on-to-off, while off, or value change"},
+    {"name": "offtoon", "type": "MenuItem", "note": "Send when the input transitions off to on"},
+    {"name": "on", "type": "MenuItem", "note": "Send while the input is on"},
+    {"name": "ontooff", "type": "MenuItem", "note": "Send when the input transitions on to off"},
+    {"name": "off", "type": "MenuItem", "note": "Send while the input is off"},
+    {"name": "valuechange", "type": "MenuItem", "note": "Send when the input value changes"},
+    {"name": "port", "type": "Menu", "note": "COM port to use"},
+    {"name": "baudrate", "type": "Integer", "note": "Explicit baud rate"},
+    {"name": "baudmenu", "type": "Menu", "note": "Common baud-rate presets"},
+    {"name": "databits", "type": "Menu", "note": "Data bits per packet"},
+    {"name": "parity", "type": "Menu", "note": "None, even, or odd parity"},
+    {"name": "stopbits", "type": "Menu", "note": "One or two stop bits"},
+    {"name": "script", "type": "String", "note": "Script sequence mapped to input channels"},
+    {"name": "script0callback", "type": "String", "note": "Script sent for input channel/script index 0"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP channel scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Common CHOP sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"}
+  ],
+  "common_gotchas": [
+    "This CHOP is for RS-232 style serial control through COM ports; USB serial adapters need drivers.",
+    "It only reflects received ASCII digits on the output channel named return.",
+    "Use Serial DAT for complex received data or arbitrary serial parsing.",
+    "Script strings are sent when corresponding input-channel transitions match the State parameter.",
+    "Escape sequences such as carriage return and line feed are converted in outgoing scripts.",
+    "Match baud rate, data bits, parity, and stop bits to the external device before enabling Active.",
+    "Device availability and COM naming are platform/driver dependent, especially for USB-to-serial adapters."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ serial device control",
+  "last_verified": "2026-06-18"
+}

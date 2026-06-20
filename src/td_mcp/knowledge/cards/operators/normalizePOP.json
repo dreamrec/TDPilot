@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "normalizePOP",
+  "family": "POP",
+  "display_name": "Normalize POP",
+  "docs_url": "https://docs.derivative.ca/Normalize_POP",
+  "summary": "Normalizes XYZ positions or any selected attribute into 0-1 ranges, with support for cartesian, polar, cylindrical, bias, lookup-curve, exponent, and output re-range workflows.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Point, vertex, or primitive class"},
+    {"name": "inputattrscope", "type": "String", "note": "Input attribute or components to normalize"},
+    {"name": "parsize", "type": "Menu", "note": "Number of components/parameters"},
+    {"name": "aspectcorrect", "type": "Toggle", "note": "Aspect-correct normalization"},
+    {"name": "replace", "type": "Toggle", "note": "Replace errors with Error Value"},
+    {"name": "mode", "type": "Menu", "note": "Normalization mode per component"},
+    {"name": "bias", "type": "Float", "note": "Bias normalized values toward 0 or 1"},
+    {"name": "outputattrscope", "type": "String/Menu", "note": "Destination attribute scope"}
+  ],
+  "key_concepts": [
+    "Rescales selected attribute components into a normalized 0-1 range and writes them to existing or new attributes.",
+    "Supports Cartesian, polar, and cylindrical normalization modes for position-derived coordinate attributes.",
+    "Bias, lookup curve, exponent, and to-low/to-high controls shape normalized values after the initial 0-1 mapping.",
+    "Aspect correction and error replacement help keep normalization stable when bounds, NaN, or infinite values are present."
+  ],
+  "common_gotchas": [
+    "Normalize can process arbitrary components, so swizzled scopes like P(1) P(0) change the coordinate interpretation.",
+    "Polar and cylindrical normalization derive ranges from geometry, such as farthest radius.",
+    "Use Projection POP when the task is true coordinate-system conversion rather than normalization plus shaping."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

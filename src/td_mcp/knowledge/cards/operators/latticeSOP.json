@@ -1,0 +1,97 @@
+{
+  "card_type": "operator",
+  "op_type": "latticeSOP",
+  "family": "SOP",
+  "display_name": "Lattice SOP",
+  "docs_url": "https://docs.derivative.ca/Lattice_SOP",
+  "summary": "Deforms input geometry by comparing a rest lattice or point cloud with a deformed version and applying the resulting offsets to the source geometry.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Source group to deform."
+    },
+    {
+      "name": "deformtype",
+      "type": "Menu",
+      "note": "Lattice or point deformation mode."
+    },
+    {
+      "name": "lattice",
+      "type": "Menu Value",
+      "note": "Regular lattice mode."
+    },
+    {
+      "name": "points",
+      "type": "Menu Value",
+      "note": "Point cloud deformation mode."
+    },
+    {
+      "name": "divs",
+      "type": "XYZ Int",
+      "note": "Lattice divisions."
+    },
+    {
+      "name": "divsx",
+      "type": "Int",
+      "note": "X divisions."
+    },
+    {
+      "name": "divsy",
+      "type": "Int",
+      "note": "Y divisions."
+    },
+    {
+      "name": "divsz",
+      "type": "Int",
+      "note": "Z divisions."
+    },
+    {
+      "name": "kernel",
+      "type": "Menu",
+      "note": "Metaball kernel function for point mode."
+    },
+    {
+      "name": "wyvill",
+      "type": "Menu Value",
+      "note": "Wyvill kernel."
+    },
+    {
+      "name": "elendt",
+      "type": "Menu Value",
+      "note": "Elendt kernel."
+    },
+    {
+      "name": "blinn",
+      "type": "Menu Value",
+      "note": "Blinn kernel."
+    },
+    {
+      "name": "links",
+      "type": "Menu Value",
+      "note": "Links kernel."
+    },
+    {
+      "name": "radius",
+      "type": "Float",
+      "note": "Point-mode capture radius."
+    }
+  ],
+  "common_gotchas": [
+    "Regular lattice mode expects matching point order and division counts between rest and deformed lattices.",
+    "Point mode only affects source points inside rest-point capture radii.",
+    "A rest lattice that does not enclose the source geometry leaves parts undeformed."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Lattice SOP deforms source geometry by comparing rest geometry with a deformed copy.",
+    "Its three inputs have distinct roles: geometry to deform, rest lattice/points, and deformed lattice/points.",
+    "Regular lattice mode requires matching rest/deformed grid order and divisions, typically from a Box SOP with divisions.",
+    "Point mode uses a radius and metaball-style kernel weighting around rest points.",
+    "The rest lattice or points must enclose or cover the geometry to be deformed."
+  ]
+}

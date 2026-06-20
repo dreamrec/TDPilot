@@ -1,0 +1,391 @@
+{
+  "card_type": "operator",
+  "op_type": "glslPOP",
+  "family": "POP",
+  "display_name": "GLSL POP",
+  "docs_url": "https://docs.derivative.ca/GLSL_POP",
+  "summary": "Runs a GLSL compute shader over one POP attribute class at a time: points, vertices, or primitives. It can create and modify attributes, drive dispatch sizing from inputs or attributes, expose shader uniforms/samplers/temp buffers/constants, and use collision acceleration structures, but it cannot change the number of input elements.",
+  "key_params": [
+    {
+      "name": "computedat",
+      "type": "DAT",
+      "note": "Compute shader source DAT."
+    },
+    {
+      "name": "attrclass",
+      "type": "Menu",
+      "note": "Selected attribute class for the shader dispatch: point, vertex, or primitive."
+    },
+    {
+      "name": "numthreadsmode",
+      "type": "Menu",
+      "note": "Chooses how the compute shader thread count is derived."
+    },
+    {
+      "name": "threadsinput",
+      "type": "Int",
+      "note": "Input index used when thread count comes from another input."
+    },
+    {
+      "name": "numelems",
+      "type": "Int",
+      "note": "Requested element count for Manual Number of Elements mode."
+    },
+    {
+      "name": "numelemspop",
+      "type": "POP",
+      "note": "POP reference used when thread count comes from an attribute value."
+    },
+    {
+      "name": "numelemsclass",
+      "type": "Menu",
+      "note": "Attribute class that contains the number-of-elements attribute."
+    },
+    {
+      "name": "numelemsattr",
+      "type": "String",
+      "note": "Attribute whose first value supplies the requested element count."
+    },
+    {
+      "name": "workgroupsizex",
+      "type": "Int",
+      "note": "Manual workgroup size in X."
+    },
+    {
+      "name": "workgroupsizey",
+      "type": "Int",
+      "note": "Manual workgroup size in Y."
+    },
+    {
+      "name": "workgroupsizez",
+      "type": "Int",
+      "note": "Manual workgroup size in Z."
+    },
+    {
+      "name": "dispatchsizex",
+      "type": "Int",
+      "note": "Manual dispatch group count in X."
+    },
+    {
+      "name": "dispatchsizey",
+      "type": "Int",
+      "note": "Manual dispatch group count in Y."
+    },
+    {
+      "name": "dispatchsizez",
+      "type": "Int",
+      "note": "Manual dispatch group count in Z."
+    },
+    {
+      "name": "outputattrs",
+      "type": "String",
+      "note": "Input attributes that are allocated on the output and can be written by the shader."
+    },
+    {
+      "name": "outputaccess",
+      "type": "Menu",
+      "note": "Controls whether output attribute buffers are write-only or read-write."
+    },
+    {
+      "name": "initoutputattrs",
+      "type": "Toggle",
+      "note": "Initializes output attributes before the custom compute shader dispatch."
+    },
+    {
+      "name": "prevpassoutput",
+      "type": "Toggle",
+      "note": "Copies previous pass outputs to inputs for the next pass."
+    },
+    {
+      "name": "npasses",
+      "type": "Int",
+      "note": "Number of shader passes."
+    },
+    {
+      "name": "input0pops",
+      "type": "POP",
+      "note": "Additional input POP references beyond connected inputs."
+    },
+    {
+      "name": "simplexnoise",
+      "type": "Menu",
+      "note": "Selects the TDSimplexNoise() implementation for shader-side noise."
+    },
+    {
+      "name": "attr0name",
+      "type": "Menu",
+      "note": "Name or predefined semantic for a newly created attribute."
+    },
+    {
+      "name": "attr0customname",
+      "type": "String",
+      "note": "Custom name for a newly created attribute."
+    },
+    {
+      "name": "attr0type",
+      "type": "Menu",
+      "note": "Data type for a newly created attribute."
+    },
+    {
+      "name": "attr0numcomps",
+      "type": "Int",
+      "note": "Number of components for a newly created attribute."
+    },
+    {
+      "name": "attr0isarray",
+      "type": "Toggle",
+      "note": "Marks the new attribute as an array attribute."
+    },
+    {
+      "name": "attr0arraysize",
+      "type": "Int",
+      "note": "Array size for a newly created array attribute."
+    },
+    {
+      "name": "attr0value",
+      "type": "Float",
+      "note": "Default value for a newly created attribute."
+    },
+    {
+      "name": "matattr0name",
+      "type": "String",
+      "note": "Custom matrix attribute name."
+    },
+    {
+      "name": "matattr0numrows",
+      "type": "Int",
+      "note": "Matrix attribute row count."
+    },
+    {
+      "name": "matattr0numcols",
+      "type": "Int",
+      "note": "Matrix attribute column count."
+    },
+    {
+      "name": "matattr0isarray",
+      "type": "Toggle",
+      "note": "Marks the matrix attribute as an array."
+    },
+    {
+      "name": "matattr0arraysize",
+      "type": "Int",
+      "note": "Array size for a matrix attribute array."
+    },
+    {
+      "name": "matattr0qualifier",
+      "type": "Menu",
+      "note": "Qualifier such as transform matrix for a matrix attribute."
+    },
+    {
+      "name": "premultcolor",
+      "type": "Toggle",
+      "note": "Premultiplies RGB color uniform values by alpha."
+    },
+    {
+      "name": "color0name",
+      "type": "String",
+      "note": "Name of a color uniform."
+    },
+    {
+      "name": "color0rgb",
+      "type": "RGB",
+      "note": "RGB value for a color uniform."
+    },
+    {
+      "name": "color0alpha",
+      "type": "Float",
+      "note": "Alpha value for a color uniform."
+    },
+    {
+      "name": "vec0name",
+      "type": "String",
+      "note": "Name of a vector uniform."
+    },
+    {
+      "name": "vec0type",
+      "type": "Menu",
+      "note": "Vector uniform type such as float, vec2, ivec3, or uvec4."
+    },
+    {
+      "name": "vec0value",
+      "type": "Float",
+      "note": "Vector uniform value."
+    },
+    {
+      "name": "sampler0name",
+      "type": "String",
+      "note": "Name of a sampler uniform."
+    },
+    {
+      "name": "sampler0top",
+      "type": "TOP",
+      "note": "TOP source for a sampler uniform."
+    },
+    {
+      "name": "sampler0extendu",
+      "type": "Menu",
+      "note": "Texture extend mode for U coordinates."
+    },
+    {
+      "name": "sampler0extendv",
+      "type": "Menu",
+      "note": "Texture extend mode for V coordinates."
+    },
+    {
+      "name": "sampler0extendw",
+      "type": "Menu",
+      "note": "Texture extend mode for W coordinates."
+    },
+    {
+      "name": "sampler0filter",
+      "type": "Menu",
+      "note": "Texture filtering mode for the sampler TOP."
+    },
+    {
+      "name": "array0name",
+      "type": "String",
+      "note": "Name of a uniform array."
+    },
+    {
+      "name": "array0type",
+      "type": "Menu",
+      "note": "Uniform array component type."
+    },
+    {
+      "name": "array0chop",
+      "type": "CHOP",
+      "note": "CHOP source for the array uniform."
+    },
+    {
+      "name": "array0arraytype",
+      "type": "Menu",
+      "note": "Uniform array or texture buffer binding."
+    },
+    {
+      "name": "matrix0name",
+      "type": "String",
+      "note": "Name of a matrix uniform."
+    },
+    {
+      "name": "matrix0value",
+      "type": "OP",
+      "note": "Matrix source passed to the shader."
+    },
+    {
+      "name": "tempbuffer0name",
+      "type": "String",
+      "note": "Name of a temporary buffer uniform."
+    },
+    {
+      "name": "tempbuffer0initval",
+      "type": "Float",
+      "note": "Initial value for a temporary buffer."
+    },
+    {
+      "name": "const0name",
+      "type": "String",
+      "note": "Name of a specialization constant."
+    },
+    {
+      "name": "const0value",
+      "type": "Value",
+      "note": "Value for a specialization constant."
+    },
+    {
+      "name": "asname",
+      "type": "String",
+      "note": "Acceleration structure uniform name for collision/ray-query workflows."
+    },
+    {
+      "name": "colpop",
+      "type": "POP",
+      "note": "Collision POP used to build an acceleration structure for shader-side ray queries."
+    },
+    {
+      "name": "buildflag",
+      "type": "Menu",
+      "note": "Acceleration structure build strategy: dynamic fast build or static fast trace."
+    },
+    {
+      "name": "opaquecolgeo",
+      "type": "Toggle",
+      "note": "Controls whether collision geometry is treated as opaque."
+    },
+    {
+      "name": "freeextragpumem",
+      "type": "Pulse",
+      "note": "Frees extra GPU memory accumulated after output memory has grown and shrunk."
+    },
+    {
+      "name": "delinputattrs",
+      "type": "Toggle",
+      "note": "Deletes input attributes not explicitly output, useful for isolating attributes into a branch."
+    },
+    {
+      "name": "parmcolorspace",
+      "type": "Menu",
+      "note": "Color space interpretation for color parameters when Working Color Space is active."
+    },
+    {
+      "name": "parmreferencewhite",
+      "type": "Menu",
+      "note": "Reference-white handling for color parameter conversion."
+    }
+  ],
+  "key_concepts": [
+    "Compute Shader",
+    "selected attribute class",
+    "TDIndex()",
+    "TDNumElements()",
+    "TDInputNumElements()",
+    "TDInputNumPoints()",
+    "TDInputNumPrims()",
+    "TDInputNumVerts()",
+    "TDInputPointIndex()",
+    "TDIn_AttribName()",
+    "TDInPoint_AttribName()",
+    "TDInPrim_AttribName()",
+    "TDInVert_AttribName()",
+    "TDInCache_AttribName()",
+    "cTDArraySize_Attrib",
+    "Output Attributes",
+    "Initialize Output Attributes",
+    "Read-Write output access",
+    "writeonly SSBO",
+    "atomic operations",
+    "multi-pass GLSL POP",
+    "Copy Previous Pass Output to Input",
+    "TDSimplexNoise()",
+    "Create Attributes Page",
+    "Matrix Attribute",
+    "Color uniforms",
+    "Vector uniforms",
+    "Sampler Page",
+    "Texture Buffer arrays",
+    "Temp Buffers",
+    "Specialization Constants",
+    "collision acceleration structure",
+    "hardware raytracing",
+    "Delete Input Attributes",
+    "Info CHOP"
+  ],
+  "common_gotchas": [
+    "GLSL POP operates on one attribute class and cannot change point, vertex, or primitive counts; use GLSL Advanced POP when topology, index buffers, or output counts must change.",
+    "In Manual Number of Elements and automatic modes, guard writes with TDIndex() and TDNumElements() because TouchDesigner rounds actual dispatches up to the workgroup size.",
+    "In Manual mode, where workgroup size and dispatch size are specified in three dimensions, TDIndex() and TDNumElements() are undefined and will cause compile errors.",
+    "For P[id] writes, P must exist or be created and must be included in Output Attributes so the output buffer is allocated.",
+    "Output attributes are uninitialized unless Initialize Output Attributes is enabled or the shader writes every output value; reading uninitialized attributes can cause unpredictable behavior and crashes.",
+    "Use Read-Write output access when the shader needs to read output attributes or perform atomic operations; otherwise prefer writeonly SSBO intent.",
+    "Use TDInPoint_AttribName(), TDInPrim_AttribName(), or TDInVert_AttribName() when reading from a class other than the selected Attribute Class.",
+    "When Delete Input Attributes is enabled, downstream POPs only receive attributes that were explicitly output, so preserve any attributes the branch still needs.",
+    "Collision POP acceleration structures require matching shader ray-query code and a build strategy suited to dynamic or static geometry.",
+    "Inspect Info CHOP/operator errors for shader warnings and compile failures before treating empty geometry as a POP logic problem."
+  ],
+  "related_snippets": [
+    "GLSL_snippets",
+    "POP_snippets",
+    "POP_attribute_ontology"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

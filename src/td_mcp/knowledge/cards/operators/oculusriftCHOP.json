@@ -1,0 +1,49 @@
+{
+  "card_type": "operator",
+  "op_type": "oculusriftCHOP",
+  "family": "CHOP",
+  "display_name": "Oculus Rift CHOP",
+  "docs_url": "https://docs.derivative.ca/Oculus_Rift_CHOP",
+  "summary": "Outputs Oculus Rift HMD/controller orientation, acceleration, velocity, device info, and eye projection matrices for VR integration.",
+  "key_concepts": [
+    "Oculus Rift CHOP is a Windows-only Oculus Rift interface for HMD, controller, and projection-matrix channel data.",
+    "Output selects HMD, left or right controller, or left or right eye projection-matrix modes.",
+    "The CHOP can output orientation, acceleration, velocity, angular velocity, device info, and controller button channels.",
+    "Recenter resets position and yaw from the current HMD pose and is used to align the virtual origin with the user.",
+    "Projection matrix output is intended for Camera COMP custom projection parameters in stereo rendering setups.",
+    "When no Oculus Rift is attached, the docs describe default developer-kit-style channels for development/testing."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Update Oculus data when the CHOP cooks"},
+    {"name": "output", "type": "Menu", "note": "HMD, controller, or eye-projection-matrix output mode"},
+    {"name": "hmd", "type": "MenuItem", "note": "HMD output mode"},
+    {"name": "leftcontroller", "type": "MenuItem", "note": "Left Oculus controller output"},
+    {"name": "rightcontroller", "type": "MenuItem", "note": "Right Oculus controller output"},
+    {"name": "leftmatrix", "type": "MenuItem", "note": "Left eye projection matrix output"},
+    {"name": "rightmatrix", "type": "MenuItem", "note": "Right eye projection matrix output"},
+    {"name": "orientation", "type": "Toggle", "note": "Output orientation channels"},
+    {"name": "recenter", "type": "Pulse", "note": "Reset positional components and yaw orientation using current HMD pose"},
+    {"name": "acceleration", "type": "Toggle", "note": "Output acceleration channels"},
+    {"name": "velocity", "type": "Toggle", "note": "Output velocity/angular velocity channels"},
+    {"name": "deviceinfo", "type": "Toggle", "note": "Output device information"},
+    {"name": "controllerbuttons", "type": "Toggle", "note": "Output controller button states"},
+    {"name": "near", "type": "Float", "note": "Near clip distance for projection matrix"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"}
+  ],
+  "common_gotchas": [
+    "Official docs list this operator as Windows-only.",
+    "Projection matrix channels must be passed into a camera Custom Projection parameter for proper stereo rendering.",
+    "Prediction can reduce apparent latency by estimating future orientation, but generated plans should make prediction timing explicit.",
+    "Without an Oculus Rift connected, default developer-kit-style channels are output for design/testing only.",
+    "Calibration/projection values may differ on future devices and should not be treated as stable across headsets.",
+    "Use Oculus Rift TOP or newer OpenVR/OpenXR-style workflows when the rendering path needs headset-specific output."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ Windows/Oculus VR",
+  "last_verified": "2026-06-18"
+}

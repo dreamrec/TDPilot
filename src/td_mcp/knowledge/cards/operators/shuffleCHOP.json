@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "shuffleCHOP",
+  "family": "CHOP",
+  "display_name": "Shuffle CHOP",
+  "docs_url": "https://docs.derivative.ca/Shuffle_CHOP",
+  "summary": "Reorganizes channel samples by transposing, sequencing channels into longer channels, or splitting samples into channels.",
+  "key_params": [
+    {"name": "method", "type": "Menu", "note": "Off, swap channels/samples, sequence, or split mode"},
+    {"name": "nval", "type": "Integer", "note": "N value for grouped/every-Nth sequence or split modes"},
+    {"name": "firstsample", "type": "Toggle", "note": "Use only the first sample of each channel"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common-page time-slice behavior"},
+    {"name": "srselect", "type": "Menu", "note": "Common-page sample-rate matching behavior"}
+  ],
+  "key_concepts": [
+    "Shuffle CHOP reorganizes samples across a set of channels rather than simply renaming or reordering channels.",
+    "Swap Channels and Samples transposes the channel/sample layout.",
+    "Sequence modes concatenate channels by name, all channels, groups of N, or every Nth channel.",
+    "Split modes create numbered channels from samples or sample groups.",
+    "Shuffle CHOP is useful after SOP to CHOP or TOP to CHOP when point or image data needs row/column reshaping."
+  ],
+  "common_gotchas": [
+    "Swap mode transposes channel/sample layout: many channels can become many samples or the reverse.",
+    "Sequencing all channels produces one long channel, which can change downstream assumptions about channel count.",
+    "Split modes create numbered channels from sample segments.",
+    "Useful after SOP to CHOP or TOP to CHOP when point/image data needs row/column reshaping.",
+    "Use Reorder CHOP when only channel order should change; Shuffle CHOP changes sample organization."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ sample/channel layout reshaping",
+  "last_verified": "2026-06-18"
+}

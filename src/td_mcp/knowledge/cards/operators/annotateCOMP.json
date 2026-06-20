@@ -1,0 +1,41 @@
+{
+  "card_type": "operator",
+  "op_type": "annotateCOMP",
+  "family": "COMP",
+  "display_name": "Annotate COMP",
+  "docs_url": "https://docs.derivative.ca/Annotate_COMP",
+  "summary": "Displays colored network-editor rectangles containing authored text, graphics, node grouping, and optional operator viewers for documenting and organizing TouchDesigner networks.",
+  "key_params": [
+    {"name": "Titletext", "type": "String", "note": "Text in the title bar for the default setup"},
+    {"name": "Bodytext", "type": "String", "note": "Text in the body area"},
+    {"name": "Mode", "type": "Menu", "note": "Comment, Network Box, or Annotate mode"},
+    {"name": "Bodywordwrap", "type": "Toggle", "note": "Wrap body text within the annotate bounds"},
+    {"name": "Backcolor", "type": "RGB", "note": "Base background color"},
+    {"name": "Opacity", "type": "Float", "note": "Overall annotate opacity"},
+    {"name": "Opviewerdisplay", "type": "Toggle", "note": "Show the embedded operator viewer"},
+    {"name": "Opviewer", "type": "OP", "note": "Operator shown in the embedded viewer"},
+    {"name": "Opviewerinteractive", "type": "Toggle", "note": "Allow interaction with the embedded viewer"},
+    {"name": "opviewer", "type": "OP", "note": "Operator whose view defines the full Annotate area"},
+    {"name": "enable", "type": "Toggle", "note": "Enable or pass-through annotate interaction"},
+    {"name": "encloseops", "type": "Toggle", "note": "Move enclosed operators with the annotate"},
+    {"name": "utility", "type": "Toggle", "note": "Mark as utility node for search/order behavior"},
+    {"name": "layerzone", "type": "Menu", "note": "Layer below grid, between grid and nodes, or above nodes"}
+  ],
+  "key_concepts": [
+    "Annotate COMP documents and organizes networks with colored rectangles, user text, graphics, grouping, and optional viewers.",
+    "The built-in forms are Comment, Network Box, and full Annotate mode, each with different editing and grouping behavior.",
+    "The default setup combines internal nodes and an extension to provide text editing, network-box behavior, and node-viewing features.",
+    "OP Viewer controls can show and optionally interact with an embedded operator viewer inside the annotation.",
+    "Utility and layer-zone settings affect search inclusion and whether the annotate appears below the grid, between grid and nodes, or above nodes."
+  ],
+  "common_gotchas": [
+    "Comments, Network Boxes, and full Annotates are built-in forms of Annotate COMP with different behavior.",
+    "The default setup's rich features come from internal nodes and an extension, not only from bare component parameters.",
+    "Locked annotates pass clicks through to the network body; use the title bar or RMB menu for management.",
+    "With Enclose Operators on, dragging the annotate moves enclosed nodes unless using the alternate drag behavior.",
+    "Enter and zoom-to-enter are disabled for Annotates; use Jump Down, path navigation, or the parameter dialog node menu."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ network documentation, grouping, and embedded viewers",
+  "last_verified": "2026-06-18"
+}

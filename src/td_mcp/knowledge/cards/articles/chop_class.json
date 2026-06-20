@@ -1,0 +1,51 @@
+{
+  "card_type": "article",
+  "article_id": "chop_class",
+  "title": "CHOP Class",
+  "family": "CHOP",
+  "families": [
+    "CHOP",
+    "PYTHON",
+    "CHANNEL"
+  ],
+  "summary": "Official Derivative Python API reference for Channel operators, covering channel counts, sample counts, sample rate, time-slice state, channel lookup, NumPy conversion, keyframe conversion, and channel export.",
+  "source_url": "https://docs.derivative.ca/CHOP_Class",
+  "docsbrain_page_id": "chop_class",
+  "covered_operators": [
+    "constantCHOP",
+    "fileoutCHOP",
+    "infoCHOP",
+    "nullCHOP",
+    "scriptCHOP",
+    "selectCHOP",
+    "soptoCHOP",
+    "toptoCHOP"
+  ],
+  "key_concepts": [
+    "CHOP",
+    "Channel",
+    "numChans",
+    "numSamples",
+    "rate",
+    "start",
+    "end",
+    "isTimeSlice",
+    "export",
+    "chan()",
+    "chans()",
+    "numpyArray()",
+    "convertToKeyframes()",
+    "save()"
+  ],
+  "guidance": [
+    "Use this article when generated Python needs to inspect CHOP channels, sample counts, time ranges, or convert channel data to arrays or keyframes.",
+    "Set rate and start/startTime before len/end/endTime when modifying Script CHOP channel ranges because the attributes depend on each other.",
+    "Use chan() for the first matching channel or None, and chans() for a list of matches or all channels.",
+    "Use numChans, numSamples, and rate for channel-shape validation instead of assuming audio or control-rate defaults.",
+    "Use numpyArray() for bulk numeric reads and save() for .clip, .bclip, .chan, .bchan, or .aiff export."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

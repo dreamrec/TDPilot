@@ -9,7 +9,7 @@ hints:
         - `feedback_loop`         — feedback → level decay → composite → out
         - `post_processing`       — level → blur → out
         - `audio_reactive`        — audiodevicein → analyze → math → null
-        - `particle_gpu`          — particlePOP → noisePOP → renderPOP → null
+        - `particle_gpu`          — circlePOP → noisePOP → nullPOP → rendersimpleTOP → nullTOP
         - `feedback_displacement` — noise → feedback/decay → displace → merge → out
       Always call `td_list_macros` at runtime to confirm — types may be
       added or removed across versions.

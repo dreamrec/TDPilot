@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "audioplayCHOP",
+  "family": "CHOP",
+  "display_name": "Audio Play CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_Play_CHOP",
+  "summary": "Plays one or more sound files directly to an audio device, with trigger/loop modes, output routing, volume, and device selection.",
+  "key_concepts": [
+    "Audio Play CHOP plays supported sound files directly to an audio output device.",
+    "Audio samples do not enter or pass through TouchDesigner CHOP channels, so downstream CHOP processing is not possible.",
+    "The state channel is 1 while any file is playing and 0 otherwise.",
+    "Input 0 triggers playback, input 1 can control volume, and input 2 can control pan.",
+    "DAT List mode lets one CHOP trigger multiple listed files individually by channel."
+  ],
+  "key_params": [
+    {"name": "device", "type": "Menu", "note": "Audio output device"},
+    {"name": "outputs", "type": "Menu", "note": "Output speaker/channel layout"},
+    {"name": "file", "type": "File", "note": "Sound file path"},
+    {"name": "datlist", "type": "DAT", "note": "DAT list of sound files"},
+    {"name": "volume", "type": "Float", "note": "Playback volume"},
+    {"name": "mode", "type": "Menu", "note": "Play while on, trigger, or loop mode"},
+    {"name": "trigger", "type": "Pulse", "note": "Trigger playback when in trigger mode"},
+    {"name": "cookalways", "type": "Toggle", "note": "Cook every frame for responsive triggering"}
+  ],
+  "common_gotchas": [
+    "Audio Play CHOP plays to a device rather than outputting audio samples for further CHOP processing.",
+    "DAT file lists need valid paths and stable row ordering for deterministic triggers.",
+    "Trigger and loop modes behave differently from Play While On; choose based on desired transport semantics.",
+    "For processed audio chains, prefer Audio File In CHOP plus filters/dynamics and Audio Device Out CHOP."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

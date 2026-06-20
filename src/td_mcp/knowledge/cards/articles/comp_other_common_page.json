@@ -1,0 +1,58 @@
+{
+  "card_type": "article",
+  "article_id": "comp_other_common_page",
+  "title": "COMP Other Common Page",
+  "family": "PARAMETER",
+  "families": [
+    "COMP",
+    "PARAMETER",
+    "TOX",
+    "CLONE"
+  ],
+  "summary": "Official Derivative common page for miscellaneous COMPs, covering shortcuts, internal OPs, operator viewer, clone, load-on-demand, external .tox, reload, backup, sub-component load, and relative path behavior.",
+  "source_url": "https://docs.derivative.ca/COMP_Other_Common_Page",
+  "docsbrain_page_id": "comp_other_common_page",
+  "covered_operators": [
+    "timeCOMP",
+    "engineCOMP",
+    "replicatorCOMP",
+    "parameterCOMP",
+    "opviewerCOMP"
+  ],
+  "key_concepts": [
+    "COMP Other Common Page",
+    "Other Common Page",
+    "Parameters - Common Page",
+    "node viewer",
+    "clone relationships",
+    "parentshortcut",
+    "opshortcut",
+    "iop",
+    "iop0shortcut",
+    "iop0op",
+    "opviewer",
+    "enablecloning",
+    "enablecloningpulse",
+    "clone",
+    "loadondemand",
+    "enableexternaltox",
+    "enableexternaltoxpulse",
+    "externaltox",
+    "reloadcustom",
+    "reloadbuiltin",
+    "savebackup",
+    "subcompname",
+    "relpath",
+    ".tox",
+    ".toe"
+  ],
+  "guidance": [
+    "Use this article for miscellaneous COMPs with shared shortcut, clone, external .tox, and relative path behavior.",
+    "Enable External .tox controls whether startup loads from the referenced .tox or from contents saved in the .toe.",
+    "Reload Custom Parameters and Reload Built-In Parameters affect only top-level parameters; internal nodes still reload from the .tox.",
+    "Sub-Component to Load can pull a named COMP from inside a .tox and make it the top-level loaded COMP.",
+    "Relative path behavior can inherit, resolve relative to the .toe, or resolve relative to the external .tox."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

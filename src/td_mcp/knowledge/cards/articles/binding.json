@@ -1,0 +1,51 @@
+{
+  "card_type": "article",
+  "article_id": "binding",
+  "title": "Binding",
+  "family": "PARAMETER",
+  "families": [
+    "PARAMETER",
+    "CHOP",
+    "DAT",
+    "COMP",
+    "PYTHON"
+  ],
+  "summary": "Official Derivative reference for binding, a bidirectional parameter mode that links parameters, table cells, Bind CHOP channels, panel values, dependency objects, and object attributes through bind masters, references, chains, and bind tuples.",
+  "source_url": "https://docs.derivative.ca/Binding",
+  "docsbrain_page_id": "binding",
+  "covered_operators": [
+    "bindCHOP",
+    "parameterDAT",
+    "parameterexecuteDAT",
+    "pargroupexecuteDAT",
+    "tableDAT",
+    "textDAT"
+  ],
+  "key_concepts": [
+    "Binding",
+    "Bind Mode",
+    "bind master",
+    "bind reference",
+    "bind chain",
+    "bind expression",
+    "bindExpr",
+    "bind tuple",
+    "menuSource",
+    "Bind CHOP",
+    "Panel Values",
+    "Dependency objects"
+  ],
+  "guidance": [
+    "Use this article when two or more controls must stay synchronized bidirectionally instead of one driving the other by export or expression.",
+    "When setting up by dragging, drag the bind master to the reference so the generated relationship preserves the documented direction.",
+    "A bind reference does not use its constant, expression, or export modes; its bind expression resolves to the master.",
+    "Bind masters can have expressions or exports, but if changed by references they may enter constant mode.",
+    "For custom menu parameters, use menuSource to duplicate the source menu options before binding values.",
+    "Use bind tuples such as (op('text1'), 'text') when binding to object attributes rather than normal parameter objects."
+  ],
+  "related_snippets": [
+    "CHOP_snippets",
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

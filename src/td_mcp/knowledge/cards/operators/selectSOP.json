@@ -1,0 +1,30 @@
+{
+  "card_type": "operator",
+  "op_type": "selectSOP",
+  "family": "SOP",
+  "display_name": "Select SOP",
+  "docs_url": "https://docs.derivative.ca/Select_SOP",
+  "summary": "References a SOP from another location, sharing memory when a single SOP is selected and acting as a stable geometry proxy.",
+  "key_params": [
+    {
+      "name": "sop",
+      "type": "SOP Path",
+      "note": "SOP source to reference"
+    }
+  ],
+  "common_gotchas": [
+    "The referenced SOP path must resolve at cook time.",
+    "Memory sharing means upstream changes are reflected directly in the selected geometry.",
+    "Select SOP is a reference node and does not filter primitives or attributes by itself."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "sop-reference-proxy",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Select SOP references SOP geometry from any location.",
+    "Selecting a single SOP can share memory instead of recreating geometry.",
+    "The operator exposes one official source path parameter, sop."
+  ]
+}

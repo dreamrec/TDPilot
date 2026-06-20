@@ -1,0 +1,37 @@
+{
+  "card_type": "operator",
+  "op_type": "histogramPOP",
+  "family": "POP",
+  "display_name": "Histogram POP",
+  "docs_url": "https://docs.derivative.ca/Histogram_POP",
+  "summary": "Builds a frequency distribution from one scalar attribute component. It outputs a fixed number of bin points with a count attribute, optional bin value attribute, and controls for quantization and out-of-range values.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Point, vertex, or primitive class to sample"},
+    {"name": "inputattrscope", "type": "Str", "note": "Scalar attribute or vector component to histogram"},
+    {"name": "useinputrange", "type": "Toggle", "note": "Use an explicit input value range"},
+    {"name": "inputrange", "type": "Float2", "note": "Minimum and maximum input range"},
+    {"name": "inputrangemin", "type": "Float", "note": "Minimum input value for explicit range"},
+    {"name": "inputrangemax", "type": "Float", "note": "Maximum input value for explicit range"},
+    {"name": "outputbinval", "type": "Toggle", "note": "Output bin start/value attribute"},
+    {"name": "quantize", "type": "Menu", "note": "Floor, round, or ceiling quantization"},
+    {"name": "outsiderange", "type": "Menu", "note": "Clamp, discard, or add extra out-of-range bins"},
+    {"name": "numbins", "type": "Int", "note": "Number of bins"},
+    {"name": "countattr", "type": "Str", "note": "Count output attribute name"}
+  ],
+  "key_concepts": [
+    "Histogram POP samples one scalar attribute component and outputs a frequency distribution as POP points.",
+    "The output contains one point per bin, with Count tracking how many input values landed in each interval.",
+    "Input Range defines the min/max span divided into Number of Bins; out-of-range values can be clamped, discarded, or counted in extra bins.",
+    "Output Bin Value can write a separate BinValue-style attribute for the interval start/value of each bin.",
+    "Vector attributes must be reduced or scoped to one component, such as P(1), before histogramming.",
+    "The result is analysis geometry rather than annotated source geometry, and is often viewed through POP to CHOP or a POP viewer graph."
+  ],
+  "common_gotchas": [
+    "Histogram operates on a single component, so reduce vector attributes with Math POP or scope a component like P(1).",
+    "The output is bins as POP points, not the original geometry with annotations.",
+    "Out-of-range handling changes totals; use extra bins when preserving discarded counts matters."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

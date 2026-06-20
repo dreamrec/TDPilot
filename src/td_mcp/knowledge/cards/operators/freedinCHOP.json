@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "freedinCHOP",
+  "family": "CHOP",
+  "display_name": "FreeD In CHOP",
+  "docs_url": "https://docs.derivative.ca/FreeD_In_CHOP",
+  "summary": "Receives FreeD camera tracking data over the network and outputs camera position, rotation, focus, zoom, user, and camera ID channels.",
+  "key_concepts": [
+    "Reads device-independent FreeD camera tracking over the network and exposes CHOP channels suitable for driving a virtual Camera COMP.",
+    "Outputs camera_id, tx, ty, tz, rx, ry, rz, focus, zoom, and user channels from the incoming FreeD stream.",
+    "FreeD is documented as an older, lower-precision interchange protocol without lens distortion data, so Stype or Ncam may be preferable when hardware supports them.",
+    "Only the FreeD D1 camera position and orientation message is processed; other FreeD message types are ignored.",
+    "Camera ID filters multi-camera streams, while a blank Camera ID displays whichever camera packet was most recently received.",
+    "Protocol, Network Address, Network Port, and Local Address determine UDP or multicast reception on multi-NIC systems."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Receive FreeD packets while on"},
+    {"name": "protocol", "type": "Menu", "note": "Network protocol, such as UDP messaging or multicast"},
+    {"name": "netaddress", "type": "String", "note": "Multicast address to listen on"},
+    {"name": "port", "type": "Integer", "note": "Network port to receive FreeD packets"},
+    {"name": "localaddress", "type": "Menu", "note": "Local NIC/IP address to receive on"},
+    {"name": "cameraid", "type": "Integer", "note": "Optional filter for incoming camera_id"}
+  ],
+  "common_gotchas": [
+    "FreeD is an older interchange protocol; prefer hardware-specific protocols such as Stype or Ncam when precision and lens data matter.",
+    "FreeD In CHOP only processes the D1 camera position/orientation message; other FreeD message types are ignored.",
+    "If Camera ID is blank, the CHOP displays whichever camera data arrived last.",
+    "Focus and zoom are arbitrary 24-bit units whose meaning depends on the sending hardware.",
+    "Multi-NIC systems should set Local Address explicitly to avoid listening on the wrong interface."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ network tracking",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,50 @@
+{
+  "card_type": "operator",
+  "op_type": "texturemapPOP",
+  "family": "POP",
+  "display_name": "Texture Map POP",
+  "docs_url": "https://docs.derivative.ca/Texture_Map_POP",
+  "summary": "Creates texture-coordinate attributes such as Tex for POP surfaces, using projection methods including equirectangular, dome/fisheye, projection mapping, and triplanar coordinates.",
+  "key_params": [
+    {"name": "group", "type": "String", "note": "Primitive group scope"},
+    {"name": "transforminput", "type": "Toggle", "note": "Transform existing input texture coordinates"},
+    {"name": "inputtexattr", "type": "String", "note": "Input texture-coordinate attribute to transform"},
+    {"name": "posattr", "type": "String", "note": "Position attribute used for mapping"},
+    {"name": "texmethod", "type": "Menu", "note": "Texture mapping method"},
+    {"name": "axis", "type": "Menu", "note": "Projection axis"},
+    {"name": "fov", "type": "Float", "note": "Projection field-of-view angle"},
+    {"name": "centermode", "type": "Menu", "note": "Center source for fisheye projection"},
+    {"name": "center", "type": "Float3", "note": "Manual fisheye projection center"},
+    {"name": "camera", "type": "COMP", "note": "Camera for projection mapping"},
+    {"name": "cameraaspect", "type": "Float2", "note": "Camera aspect ratio for projection mapping"},
+    {"name": "applyto", "type": "Menu", "note": "Natural location or point/vertex texture assignment"},
+    {"name": "s", "type": "Float3", "note": "UV scale on the Texture page"},
+    {"name": "offset", "type": "Float3", "note": "UV offset"},
+    {"name": "angle", "type": "Float", "note": "UV rotation angle"},
+    {"name": "outputattrscope", "type": "String/Menu", "note": "Destination texture attribute such as Tex"},
+    {"name": "fixseams", "type": "Toggle", "note": "Fix face seams for mapping"},
+    {"name": "overrideautoattr", "type": "Toggle", "note": "Override automatic output attribute creation"},
+    {"name": "attrtype", "type": "Menu", "note": "Output attribute data type"},
+    {"name": "attrnumcomps", "type": "Int", "note": "Output attribute component count"},
+    {"name": "attrdefaultval", "type": "Float4", "note": "Default output attribute value"},
+    {"name": "xord", "type": "Menu", "note": "Transform order for the Transform page"},
+    {"name": "rord", "type": "Menu", "note": "Rotate order for the Transform page"},
+    {"name": "t", "type": "Float3", "note": "Transform-page texture-coordinate translation"},
+    {"name": "r", "type": "Float3", "note": "Transform-page texture-coordinate rotation"},
+    {"name": "scaletwo", "type": "Float3", "note": "Transform-page UV scale"},
+    {"name": "p", "type": "Float3", "note": "Transform-page pivot"}
+  ],
+  "key_concepts": [
+    "Texture Map POP creates or transforms texture-coordinate attributes for POP surfaces, and the output does not have to be named Tex.",
+    "Projection methods include normalized/position XYZ, cylindrical, face-based, spherical equirectangular, fisheye, camera perspective, and triplanar coordinates.",
+    "Point versus vertex assignment, seam fixing, output attribute typing, and Texture/Transform page transforms determine whether coordinates suit materials, projection mapping, or multi-UV workflows."
+  ],
+  "common_gotchas": [
+    "Tex is a float3 attribute and may live on point or vertex class depending on mapping needs.",
+    "Materials can use attributes other than Tex, but many workflows expect Tex, Tex2, Tex3 style names.",
+    "Triplanar mapping creates multiple texture-coordinate attributes for blending orthographic projections."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

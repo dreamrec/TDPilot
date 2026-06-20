@@ -1,0 +1,46 @@
+{
+  "card_type": "operator",
+  "op_type": "ncamTOP",
+  "family": "TOP",
+  "display_name": "Ncam TOP",
+  "docs_url": "https://docs.derivative.ca/Ncam_TOP",
+  "summary": "Receives image streams from an external Ncam Reality tracking system through an Ncam CHOP, including film, lens-distortion, depth, distorted input, and composite outputs.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Request image data from the Ncam server"
+    },
+    {
+      "name": "chop",
+      "type": "CHOP",
+      "note": "Ncam CHOP connected to the Ncam server"
+    },
+    {
+      "name": "output",
+      "type": "Menu",
+      "note": "composite, distort, distort_passthrough, film_passthrough, or depth_passthrough"
+    }
+  ],
+  "common_gotchas": [
+    "Composite and Distort Input modes require an input TOP to warp or composite.",
+    "Unavailable server streams produce errors, even if the operator and CHOP are configured.",
+    "Turning active off stops image requests but does not deactivate the referenced Ncam CHOP.",
+    "Official docs mark Ncam TOP as TouchDesigner Pro only."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "CameraTracking_snippets",
+    "VirtualProduction_snippets"
+  ],
+  "build_relevance": "virtual_production_camera_io",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Receives image streams from an external Ncam Reality tracking system.",
+    "Requires a connected Ncam CHOP as the server/tracking data source.",
+    "Output modes include film passthrough, depth passthrough, distortion-map passthrough, distorted input, and composite.",
+    "The distortion map is a 32-bit float image whose red and green channels store source coordinates.",
+    "Multiple Ncam TOPs can access different streams from the same Ncam setup.",
+    "Official docs mark Ncam TOP as TouchDesigner Pro only."
+  ]
+}

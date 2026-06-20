@@ -1,0 +1,69 @@
+{
+  "card_type": "operator",
+  "op_type": "embossTOP",
+  "family": "TOP",
+  "display_name": "Emboss TOP",
+  "docs_url": "https://docs.derivative.ca/Emboss_TOP",
+  "summary": "Creates embossed relief by comparing neighboring pixels from a selected source channel.",
+  "key_params": [
+    {
+      "name": "select",
+      "type": "Menu",
+      "note": "Source channel: luminance, RGBA channels, RGB average, or RGBA average"
+    },
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "Neighbor comparison: prevcur, curnext, or prevnext"
+    },
+    {
+      "name": "midpoint",
+      "type": "Float",
+      "note": "Neutral midpoint for embossed output"
+    },
+    {
+      "name": "strength",
+      "type": "Float",
+      "note": "Emboss strength"
+    },
+    {
+      "name": "offset",
+      "type": "XY",
+      "note": "Neighbor sample step"
+    },
+    {
+      "name": "offsetunit",
+      "type": "Menu",
+      "note": "Units for sample step"
+    },
+    {
+      "name": "direction",
+      "type": "Float",
+      "note": "Emboss lighting direction"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Low-contrast source images may produce weak relief.",
+    "Direction changes the perceived lighting and can invert the raised/depressed look.",
+    "Midpoint shifts the neutral balance between shadows and highlights.",
+    "Offset changes relief scale and is resolution-sensitive in pixel units."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Emboss TOP creates raised or recessed relief from image edge differences.",
+    "Select chooses the source channel or channel average used to derive relief.",
+    "Method controls which neighboring samples are compared.",
+    "Midpoint sets the neutral gray around which highlights and shadows form.",
+    "Strength controls relief depth, and Direction controls perceived light direction.",
+    "The official TOP supports 3D textures and 2D texture arrays."
+  ]
+}

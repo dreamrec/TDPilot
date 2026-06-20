@@ -4,15 +4,102 @@
   "family": "TOP",
   "display_name": "Select TOP",
   "docs_url": "https://docs.derivative.ca/Select_TOP",
-  "summary": "References a TOP from anywhere in the project by path, allowing you to use its output without a direct wire connection.",
+  "summary": "References a TOP from another location in TouchDesigner by path. It creates an instance of the referenced TOP, which makes it useful for stable cross-network texture routing while saving graphics memory.",
   "key_params": [
-    {"name": "top", "type": "String", "note": "Path to the source TOP to reference (absolute or relative)"}
+    {
+      "name": "top",
+      "type": "TOP Path",
+      "note": "Path to the TOP being referenced; drag and drop a TOP or enter its path manually."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP control for using, scaling, fitting, limiting, or overriding the referenced TOP resolution."
+    },
+    {
+      "name": "resolution",
+      "type": "Int2",
+      "note": "Custom output width and height when Output Resolution is Custom Resolution."
+    },
+    {
+      "name": "resmenu",
+      "type": "Menu",
+      "note": "Common resolution presets."
+    },
+    {
+      "name": "resmult",
+      "type": "Toggle",
+      "note": "Applies the global TOP resolution multiplier from preferences."
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Chooses input, resolution-derived, or custom output aspect ratio."
+    },
+    {
+      "name": "aspect",
+      "type": "Float2",
+      "note": "Custom aspect ratio pair used when Output Aspect is Custom Aspect."
+    },
+    {
+      "name": "armenu",
+      "type": "Menu",
+      "note": "Common aspect-ratio presets."
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Input image filtering: nearest, linear, or mipmap."
+    },
+    {
+      "name": "fillmode",
+      "type": "Menu",
+      "note": "Controls how the TOP image fills the node viewer."
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Viewer filtering: nearest, linear, or mipmap."
+    },
+    {
+      "name": "npasses",
+      "type": "Integer",
+      "note": "Repeats the TOP operation multiple times by feeding each pass back into the first input."
+    },
+    {
+      "name": "chanmask",
+      "type": "Mask",
+      "note": "Chooses which RGBA channels the TOP operates on."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Pixel format used to store image channel data."
+    }
+  ],
+  "key_concepts": [
+    "reference a TOP from any other location",
+    "save graphics memory",
+    "instance of referenced TOP",
+    "TOP path",
+    "drag and drop TOP target",
+    "stable cross-network texture reference",
+    "Output Resolution",
+    "Pixel Format",
+    "Info CHOP",
+    "resx",
+    "resy",
+    "aspectx",
+    "aspecty",
+    "depth",
+    "gpu_memory_used"
   ],
   "common_gotchas": [
-    "If the referenced path is invalid or the target is deleted, the Select silently outputs nothing.",
-    "Overusing Selects across many COMPs can obscure data flow — prefer exports or In/Out TOPs for structured designs."
+    "Select TOP creates an instance of the referenced TOP to save graphics memory; do not treat it as a copied texture buffer.",
+    "Use Input for resolution, aspect, and pixel format when the Select TOP should preserve the referenced texture metadata exactly.",
+    "The TOP parameter is a path reference, so keep source operators named and routed intentionally; a renamed or moved target requires updating the path."
   ],
   "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
 }

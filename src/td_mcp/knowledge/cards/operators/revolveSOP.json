@@ -1,0 +1,122 @@
+{
+  "card_type": "operator",
+  "op_type": "revolveSOP",
+  "family": "SOP",
+  "display_name": "Revolve SOP",
+  "docs_url": "https://docs.derivative.ca/Revolve_SOP",
+  "summary": "Revolves grouped faces around an origin and direction vector to create a surface of revolution with mesh, polygon, spline, arc, cap, and guide controls.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Input group to revolve"
+    },
+    {
+      "name": "surftype",
+      "type": "Menu",
+      "note": "Mesh connectivity mode"
+    },
+    {
+      "name": "origin",
+      "type": "XYZ",
+      "note": "Origin of the revolve axis"
+    },
+    {
+      "name": "originx",
+      "type": "Float",
+      "note": "Revolve origin X"
+    },
+    {
+      "name": "originy",
+      "type": "Float",
+      "note": "Revolve origin Y"
+    },
+    {
+      "name": "originz",
+      "type": "Float",
+      "note": "Revolve origin Z"
+    },
+    {
+      "name": "dir",
+      "type": "XYZ",
+      "note": "Direction vector for the revolve axis"
+    },
+    {
+      "name": "dirx",
+      "type": "Float",
+      "note": "Direction X"
+    },
+    {
+      "name": "diry",
+      "type": "Float",
+      "note": "Direction Y"
+    },
+    {
+      "name": "dirz",
+      "type": "Float",
+      "note": "Direction Z"
+    },
+    {
+      "name": "polys",
+      "type": "Toggle",
+      "note": "Convert output mesh to individual polygons"
+    },
+    {
+      "name": "imperfect",
+      "type": "Toggle",
+      "note": "Approximate spline output as nonrational curves"
+    },
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "Closed, open arc, or closed arc revolve type"
+    },
+    {
+      "name": "angle",
+      "type": "Range",
+      "note": "Start and end angles of the revolve"
+    },
+    {
+      "name": "beginangle",
+      "type": "Float",
+      "note": "Beginning angle"
+    },
+    {
+      "name": "endangle",
+      "type": "Float",
+      "note": "Ending angle"
+    },
+    {
+      "name": "divs",
+      "type": "Int",
+      "note": "Revolve divisions"
+    },
+    {
+      "name": "order",
+      "type": "Int",
+      "note": "Spline order when spline output is selected"
+    },
+    {
+      "name": "cap",
+      "type": "Toggle",
+      "note": "Add faceted end caps"
+    }
+  ],
+  "common_gotchas": [
+    "The guide-geometry display toggle is global and affects guide geometry for other SOPs too.",
+    "The angle parameter is a start/end range, not one scalar angle; values over 360 degrees are valid.",
+    "Cap, polys, imperfect, and order choices affect whether downstream SOPs see closed faceted geometry, mesh polygons, or spline-style output.",
+    "Input face position relative to the revolve axis determines volume and self-intersection risk."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "surface-of-revolution-geometry",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Revolve SOP creates a surface of revolution from input faces around an origin and direction vector.",
+    "Guide geometry shows the revolve origin and direction, and the guide visibility toggle is a global viewport setting.",
+    "Output detail is controlled separately by revolve type, start/end angles, divisions, order, caps, and mesh connectivity.",
+    "Group selection restricts which input faces are revolved."
+  ]
+}

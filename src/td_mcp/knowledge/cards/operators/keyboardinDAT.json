@@ -1,0 +1,106 @@
+{
+  "card_type": "operator",
+  "op_type": "keyboardinDAT",
+  "family": "DAT",
+  "display_name": "Keyboard In DAT",
+  "docs_url": "https://docs.derivative.ca/Keyboard_In_DAT",
+  "summary": "Records keyboard key-down and key-up events into a FIFO table, with key, shortcut, panel, modifier, callback, and line-limit controls.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable keyboard event capture"
+    },
+    {
+      "name": "perform",
+      "type": "Toggle",
+      "note": "Capture while TouchDesigner is in Perform Mode"
+    },
+    {
+      "name": "keys",
+      "type": "String",
+      "note": "Key filter"
+    },
+    {
+      "name": "shortcuts",
+      "type": "String",
+      "note": "Shortcut filter"
+    },
+    {
+      "name": "panels",
+      "type": "String",
+      "note": "Panel filter"
+    },
+    {
+      "name": "lrmodifiers",
+      "type": "Toggle",
+      "note": "Distinguish left and right modifier keys"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "Callback DAT"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Callback execution location"
+    },
+    {
+      "name": "fromop",
+      "type": "OP",
+      "note": "Operator used for callback relative paths"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Clamp output to max line count"
+    },
+    {
+      "name": "maxlines",
+      "type": "Int",
+      "note": "Maximum stored event rows"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear event table"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "The DAT is event-driven and FIFO; clamp or clear it in long-running systems to prevent unbounded tables.",
+    "Perform Mode capture and panel filters can make events appear missing if they do not match the current UI context.",
+    "Callback execution location affects relative operator lookups."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Logs keyboard events into a FIFO DAT table.",
+    "Active, Perform, Keys, Shortcuts, and Panels constrain which keyboard sources are captured.",
+    "Modifier handling can distinguish left/right modifier keys when enabled.",
+    "Received message callbacks and clamp/max-lines controls shape event handling and retention."
+  ]
+}

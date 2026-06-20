@@ -1,0 +1,63 @@
+{
+  "card_type": "operator",
+  "op_type": "transposeDAT",
+  "family": "DAT",
+  "display_name": "Transpose DAT",
+  "docs_url": "https://docs.derivative.ca/Transpose_DAT",
+  "summary": "Converts rows into columns and columns into rows, swapping a table's orientation for downstream lookup, export, or reshaping workflows.",
+  "key_params": [
+    {
+      "name": "input0",
+      "type": "DAT input",
+      "note": "Source table whose rows and columns are swapped"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script language setting"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Common DAT editor extension setting"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node display wrapping setting"
+    },
+    {
+      "name": "num_rows",
+      "type": "Info CHOP",
+      "note": "Output row count after transpose"
+    },
+    {
+      "name": "num_cols",
+      "type": "Info CHOP",
+      "note": "Output column count after transpose"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when extension mode uses a custom extension"
+    }
+  ],
+  "common_gotchas": [
+    "The first input row becomes the first output column, so header rows become header columns.",
+    "Downstream DAT references by row or column index may need to be rewritten after transposing.",
+    "Empty cells remain empty but their coordinates change with the table orientation.",
+    "Transpose DAT has no operator-specific page parameters, so use upstream DATs for filtering or renaming.",
+    "For one-row key/value tables, verify whether downstream consumers expect keys across columns or down rows."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2021.10000+ table reshaping",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Transpose DAT swaps input table rows and columns.",
+    "The output row count becomes the input column count and the output column count becomes the input row count.",
+    "It operates on its input table directly and exposes only common DAT controls.",
+    "Info CHOP channels report common DAT dimensions such as num_rows and num_cols after transposition."
+  ]
+}

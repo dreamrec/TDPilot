@@ -1,0 +1,60 @@
+{
+  "card_type": "operator",
+  "op_type": "choptoTOP",
+  "family": "TOP",
+  "display_name": "CHOP to TOP",
+  "docs_url": "https://docs.derivative.ca/CHOP_to_TOP",
+  "summary": "Converts CHOP sample data into TOP pixels using channel grouping, layout, clamp, and pixel-format controls.",
+  "key_params": [
+    {
+      "name": "chop",
+      "type": "CHOP",
+      "note": "Source CHOP to convert"
+    },
+    {
+      "name": "dataformat",
+      "type": "Menu",
+      "note": "Packing format: r, rg, rgb, rgba, a, or legacy"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Clamp sample values before writing pixels"
+    },
+    {
+      "name": "layout",
+      "type": "Menu",
+      "note": "Image layout: rowscropped, rowswrapped, or square"
+    },
+    {
+      "name": "rgba",
+      "type": "RGBA",
+      "note": "Fill value for extra or missing channels/pixels"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Channel names such as r0 or b1 do not determine placement; order in the CHOP does.",
+    "Extra pixels or missing channels use the RGBA fill values.",
+    "Maximum texture width can crop or wrap long CHOP data depending on layout.",
+    "Use float pixel formats when negative or high-range channel values matter."
+  ],
+  "related_snippets": [
+    "CHOP_snippets",
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "CHOP to TOP converts CHOP samples into image pixels.",
+    "Data Format controls whether samples are packed as R, RG, RGB, RGBA, Alpha, or legacy data.",
+    "Channel order controls packing; CHOP channel names do not determine placement.",
+    "Layout controls rows cropped, rows wrapped, or square texture placement.",
+    "Default output precision is 32-bit float, useful for data textures and negative values.",
+    "Square layout is useful for point-cloud-style data textures."
+  ]
+}

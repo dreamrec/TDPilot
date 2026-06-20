@@ -1,0 +1,103 @@
+{
+  "card_type": "operator",
+  "op_type": "webrtcDAT",
+  "family": "DAT",
+  "display_name": "WebRTC DAT",
+  "docs_url": "https://docs.derivative.ca/WebRTC_DAT",
+  "summary": "Represents a WebRTC peer and outputs a table of peer-to-peer connections, including UUID, connection state, signaling state, ICE connection state, and ICE gathering state.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Allow connecting to peers and sending media/data; disabling closes existing connections"
+    },
+    {
+      "name": "reset",
+      "type": "Pulse",
+      "note": "Reset the peer, equivalent to deactivating and reactivating"
+    },
+    {
+      "name": "bitratelimits",
+      "type": "Toggle",
+      "note": "Enable custom bitrate limits for associated tracks"
+    },
+    {
+      "name": "minbitrate",
+      "type": "Integer",
+      "note": "Minimum bitrate in kbps for tracks"
+    },
+    {
+      "name": "maxbitrate",
+      "type": "Integer",
+      "note": "Maximum bitrate in kbps for tracks"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "DAT containing WebRTC callbacks"
+    },
+    {
+      "name": "stun",
+      "type": "String",
+      "note": "STUN server URL for ICE negotiation"
+    },
+    {
+      "name": "username",
+      "type": "String",
+      "note": "TURN username"
+    },
+    {
+      "name": "password",
+      "type": "String",
+      "note": "TURN password"
+    },
+    {
+      "name": "turn",
+      "type": "Sequence",
+      "note": "TURN server URL sequence"
+    },
+    {
+      "name": "turn0server",
+      "type": "String",
+      "note": "First TURN server URL in the TURN server sequence"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language handling mode"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor file extension mode"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when extension mode uses a custom extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Node viewer word-wrap behavior"
+    }
+  ],
+  "common_gotchas": [
+    "Each connection gets a generated UUID that must be passed to connection-level WebRTC Python methods.",
+    "The DAT manages connection/signaling state; audio and video media flow through Video Stream In/Out TOPs and Audio Stream In/Out CHOPs.",
+    "Failed ICE connection state often points to NAT traversal trouble; a TURN server may be required when STUN is insufficient.",
+    "Deactivating Active closes existing connections, so do not use it as a harmless pause switch.",
+    "Custom bitrate limits apply to all tracks associated with the WebRTC DAT."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2022.24140+ WebRTC peer state and ICE signaling",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "WebRTC DAT represents a peer and outputs one table row per peer-to-peer connection UUID.",
+    "The output table exposes connection, signaling, ICE connection, and ICE gathering states for debugging.",
+    "STUN and TURN settings support ICE traversal when direct peer connectivity fails.",
+    "Media tracks are handled by Video/Audio Stream In and Out operators while this DAT manages connection state."
+  ]
+}

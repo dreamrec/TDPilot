@@ -1,0 +1,53 @@
+{
+  "card_type": "operator",
+  "op_type": "orbbecselectTOP",
+  "family": "TOP",
+  "display_name": "Orbbec Select TOP",
+  "docs_url": "https://docs.derivative.ca/Orbbec_Select_TOP",
+  "summary": "Selects additional color, depth, infrared, or point-cloud image streams from a primary Orbbec TOP.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Receive selected image stream."
+    },
+    {
+      "name": "top",
+      "type": "TOP",
+      "note": "Primary Orbbec TOP."
+    },
+    {
+      "name": "image",
+      "type": "Menu",
+      "note": "Image stream to output: color, depth, ir, or pointcloud."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP pixel format for preserving data textures."
+    }
+  ],
+  "common_gotchas": [
+    "Requires a configured primary Orbbec TOP; the Select TOP does not connect to the camera by itself.",
+    "The primary Orbbec TOP must also be active.",
+    "Available image modes depend on the Orbbec device and primary TOP settings.",
+    "Depth outputs are 32-bit float meters.",
+    "Point-cloud outputs store XYZ in RGB channels as 32-bit float data textures."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Retrieves additional image streams from a camera controlled by a primary Orbbec TOP.",
+    "The primary Orbbec TOP must be valid and active for the Select TOP to output video.",
+    "Selected streams include color, depth, IR, and point-cloud outputs where supported.",
+    "Resolution and frame rate are controlled by the primary Orbbec TOP."
+  ]
+}

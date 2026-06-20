@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "warpCHOP",
+  "family": "CHOP",
+  "display_name": "Warp CHOP",
+  "docs_url": "https://docs.derivative.ca/Warp_CHOP",
+  "summary": "Time-warps first-input channels using a single warp curve from the second input as either rate control or index control.",
+  "key_concepts": [
+    "Warp CHOP time-warps the first input channels using one warp curve from the second input.",
+    "Rate Control treats 1 as unchanged speed, values above 1 as faster, values below 1 as slower, and negative values as reverse.",
+    "Index Control treats the warp curve values as direct indices into the first input.",
+    "The output channel count, channel names, and sample rate come from the pre-warp first input.",
+    "The output start/end interval comes from the warp-curve second input.",
+    "Passing a rate curve through Speed CHOP and then using Index Control is equivalent to Rate Control in many workflows."
+  ],
+  "key_params": [
+    {"name": "method", "type": "Menu", "note": "Rate Control or Index Control"},
+    {"name": "rate", "type": "MenuItem", "note": "Interpret second input as playback-rate curve"},
+    {"name": "index", "type": "MenuItem", "note": "Interpret second input as an index into first input"},
+    {"name": "scaleindex", "type": "Toggle", "note": "Stretch index values to the channel length"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common-page time-slice behavior"},
+    {"name": "srselect", "type": "Menu", "note": "Common-page sample-rate matching behavior"}
+  ],
+  "common_gotchas": [
+    "Input 0 is the pre-warp channels; input 1 is a single warp curve.",
+    "Usually intended for non-time-sliced pre-keyframed motion channels.",
+    "Rate value 1 keeps normal speed, greater than 1 speeds up, less than 1 slows down, and negative rates reverse.",
+    "Index control treats the warp curve as a direct lookup into input 0.",
+    "Output channel names/count and sample rate come from input 0, but output interval comes from the warp curve input.",
+    "Passing a rate curve through Speed CHOP then using Index Control is equivalent to Rate Control in many workflows."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ time-warping animation channels",
+  "last_verified": "2026-06-18"
+}

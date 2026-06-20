@@ -1,0 +1,41 @@
+{
+  "card_type": "operator",
+  "op_type": "modelSOP",
+  "family": "SOP",
+  "display_name": "Model SOP",
+  "docs_url": "https://docs.derivative.ca/Model_SOP",
+  "summary": "Stores raw geometry made with TouchDesigner's SOP modeler and protects that modeled data from being unlocked or accidentally destroyed.",
+  "key_params": [
+    {
+      "name": "num_points",
+      "type": "Info CHOP",
+      "note": "Diagnostic count of points in the stored geometry."
+    },
+    {
+      "name": "num_prims",
+      "type": "Info CHOP",
+      "note": "Diagnostic count of primitives in the stored geometry."
+    },
+    {
+      "name": "cook_time",
+      "type": "Info CHOP",
+      "note": "Diagnostic cook time channel."
+    }
+  ],
+  "common_gotchas": [
+    "Model SOP is not the normal target for procedural construction.",
+    "It cannot be unlocked because that protects modeler data.",
+    "Use procedural SOPs when repeatable generation is required."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "modeler-locked-geometry",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Model SOP stores raw geometry produced by the SOP Modeler.",
+    "It cannot be unlocked, protecting modeled data from accidental destruction.",
+    "Any SOP can be locked and edited with the modeler; Model SOP is the protected storage result.",
+    "The official page has no normal user parameter page; documented values are Info CHOP diagnostics."
+  ]
+}

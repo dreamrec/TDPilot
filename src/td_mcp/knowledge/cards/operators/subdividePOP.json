@@ -1,0 +1,27 @@
+{
+  "card_type": "operator",
+  "op_type": "subdividePOP",
+  "family": "POP",
+  "display_name": "Subdivide POP",
+  "docs_url": "https://docs.derivative.ca/Subdivide_POP",
+  "summary": "Subdivides and smooths surfaces by splitting quads into triangles and recursively splitting triangles into four triangles, blending new and existing points with neighbors. Crease weight can preserve more of the original shape.",
+  "key_params": [
+    {"name": "iterations", "type": "Int", "note": "Subdivision depth"},
+    {"name": "creaseweight", "type": "Float", "note": "How strongly sharp edges/original shape are preserved"},
+    {"name": "simplecoeffs", "type": "Toggle", "note": "Use simple coefficient computation"},
+    {"name": "cpureadback", "type": "Toggle", "note": "Copy topology information back to CPU"}
+  ],
+  "key_concepts": [
+    "Subdivide POP increases surface density by recursively splitting triangles and smoothing points with neighbor information.",
+    "Crease Weight balances smoothing against preservation of the original shape, making it useful for both smoothing and simple face subdivision.",
+    "CPU readback exposes topology counts after GPU subdivision when downstream planning or diagnostics need confirmed sizes."
+  ],
+  "common_gotchas": [
+    "Subdivision grows topology quickly; budget point/primitive counts before repeated iterations.",
+    "Crease Weight near 1 is useful when the goal is face subdivision rather than heavy smoothing.",
+    "Subdivide works on surfaces; non-surface or line-only inputs should be converted or guarded first."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

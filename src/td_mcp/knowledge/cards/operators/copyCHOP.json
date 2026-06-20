@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "copyCHOP",
+  "family": "CHOP",
+  "display_name": "Copy CHOP",
+  "docs_url": "https://docs.derivative.ca/Copy_CHOP",
+  "summary": "Creates repeated copies of the second input's channels using trigger or level timing from the first input, with optional stamping values for procedural variation.",
+  "key_concepts": [
+    "Produces multiple copies of the second input along the timeline of the first input.",
+    "The first input supplies trigger signals or convolve levels, while the second input supplies the copied signal or CHOP chain.",
+    "Triggered Copy creates overlapping copies at threshold crossings; Convolve shifts and scales the second input at every first-input sample.",
+    "Output Method chooses one channel per template channel or one channel per copy channel.",
+    "Stamp Inputs recooks the second input for each triggered copy so downstream expressions can read per-copy values through fetchStamp.",
+    "Remainder controls whether partial copies are discarded, extend the output, or mix into the beginning."
+  ],
+  "key_params": [
+    {"name": "method", "type": "Menu", "note": "Use first-input triggers or convolve with first-input level channels"},
+    {"name": "output", "type": "Menu", "note": "How copied channels are combined in the output"},
+    {"name": "threshold", "type": "Float", "note": "Trigger threshold when Method uses trigger channels"},
+    {"name": "remainder", "type": "Menu", "note": "How partial copies are handled"},
+    {"name": "keep", "type": "Toggle", "note": "Keep copy state after the triggering event"},
+    {"name": "stamp", "type": "Toggle", "note": "Enable copy-time variable stamping"},
+    {"name": "copy", "type": "String", "note": "Sequence of values available as stamps"},
+    {"name": "copy0param", "type": "String", "note": "Stamped variable name"},
+    {"name": "copy0value", "type": "Expr", "note": "Expression or value assigned to the stamped variable"}
+  ],
+  "common_gotchas": [
+    "The first input controls copy timing; the second input is the signal being copied.",
+    "Stamping only affects expressions that explicitly read the stamped variables.",
+    "Trigger thresholds and remainder behavior can change copy counts without an obvious graph error."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18"
+}

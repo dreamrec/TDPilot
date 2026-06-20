@@ -20,7 +20,9 @@ EXPECTED_AGENTS = (
     "td-brain-validator.md",
     "td-release-auditor.md",
 )
-PERSONAL_PATH_RE = re.compile(r"/Users/[A-Za-z][A-Za-z0-9._-]*/|C:\\Users\\[A-Za-z]|/home/[a-z][a-z0-9_-]{2,}/")
+PERSONAL_PATH_RE = re.compile(
+    r"/Users/[A-Za-z][A-Za-z0-9._-]*/|C:\\Users\\[A-Za-z]|/home/[a-z][a-z0-9_-]{2,}/"
+)
 
 
 def audit_plugin_surface(root: str | Path) -> dict[str, Any]:
@@ -38,7 +40,10 @@ def audit_plugin_surface(root: str | Path) -> dict[str, Any]:
 
     return {
         "schema_version": 1,
-        "ok": not missing and not mirror_mismatches and not personal_path_leaks and mcp_config["uses_plugin_root_placeholder"],
+        "ok": not missing
+        and not mirror_mismatches
+        and not personal_path_leaks
+        and mcp_config["uses_plugin_root_placeholder"],
         "tool_count": tool_count,
         "brain_skill_count": len(EXPECTED_BRAIN_SKILLS),
         "agent_count": len(EXPECTED_AGENTS),
@@ -78,7 +83,9 @@ def _missing_artifacts(root: Path) -> list[str]:
     ]
     paths.extend(root / "skills" / name / "SKILL.md" for name in EXPECTED_BRAIN_SKILLS)
     paths.extend(root / ".agents" / "skills" / name / "SKILL.md" for name in EXPECTED_BRAIN_SKILLS)
-    paths.extend(root / "plugins" / "tdpilot" / "skills" / name / "SKILL.md" for name in EXPECTED_BRAIN_SKILLS)
+    paths.extend(
+        root / "plugins" / "tdpilot" / "skills" / name / "SKILL.md" for name in EXPECTED_BRAIN_SKILLS
+    )
     paths.extend(root / "agents" / name for name in EXPECTED_AGENTS)
     paths.extend(root / "plugins" / "tdpilot" / "agents" / name for name in EXPECTED_AGENTS)
     return [str(path.relative_to(root)) for path in paths if not path.exists()]
@@ -92,16 +99,28 @@ def _mirror_mismatches(root: Path) -> list[str]:
             root / ".agents" / "skills" / name / "SKILL.md",
             root / "plugins" / "tdpilot" / "skills" / name / "SKILL.md",
         ):
-            if canonical.exists() and mirror.exists() and canonical.read_text(encoding="utf-8") != mirror.read_text(encoding="utf-8"):
+            if (
+                canonical.exists()
+                and mirror.exists()
+                and canonical.read_text(encoding="utf-8") != mirror.read_text(encoding="utf-8")
+            ):
                 mismatches.append(f"{mirror.relative_to(root)} differs from {canonical.relative_to(root)}")
     for agent in EXPECTED_AGENTS:
         canonical = root / "agents" / agent
         mirror = root / "plugins" / "tdpilot" / "agents" / agent
-        if canonical.exists() and mirror.exists() and canonical.read_text(encoding="utf-8") != mirror.read_text(encoding="utf-8"):
+        if (
+            canonical.exists()
+            and mirror.exists()
+            and canonical.read_text(encoding="utf-8") != mirror.read_text(encoding="utf-8")
+        ):
             mismatches.append(f"{mirror.relative_to(root)} differs from {canonical.relative_to(root)}")
     root_hooks = root / "hooks" / "hooks.json"
     plugin_hooks = root / "plugins" / "tdpilot" / "hooks" / "hooks.json"
-    if root_hooks.exists() and plugin_hooks.exists() and root_hooks.read_text(encoding="utf-8") != plugin_hooks.read_text(encoding="utf-8"):
+    if (
+        root_hooks.exists()
+        and plugin_hooks.exists()
+        and root_hooks.read_text(encoding="utf-8") != plugin_hooks.read_text(encoding="utf-8")
+    ):
         mismatches.append("plugins/tdpilot/hooks/hooks.json differs from hooks/hooks.json")
     return mismatches
 

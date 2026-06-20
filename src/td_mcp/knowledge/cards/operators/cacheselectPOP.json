@@ -1,0 +1,28 @@
+{
+  "card_type": "operator",
+  "op_type": "cacheselectPOP",
+  "family": "POP",
+  "display_name": "Cache Select POP",
+  "docs_url": "https://docs.derivative.ca/Cache_Select_POP",
+  "summary": "References a Cache POP and outputs one cached data set selected by Cache Index. Index 0 selects the current cached frame and negative values select older cached frames.",
+  "key_params": [
+    {"name": "cachepop", "type": "POP", "note": "Cache POP to fetch snapshots from"},
+    {"name": "index", "type": "Int/Float", "note": "Cache index; 0 current, negative values older"},
+    {"name": "cacheindexunit", "type": "Menu", "note": "Index unit such as raw index, frames, or seconds"},
+    {"name": "interp", "type": "Toggle", "note": "Interpolate cached frames when point counts match"}
+  ],
+  "key_concepts": [
+    "References a Cache POP and outputs one cached snapshot selected by Cache Index.",
+    "Cache Index uses Cache POP history addressing: 0 selects current data and negative values select older data.",
+    "Out-of-range indices clamp to the available cache range rather than wrapping.",
+    "Interpolation can blend between cached frames when the cached snapshots have matching point counts."
+  ],
+  "common_gotchas": [
+    "Positive indices are not the normal access pattern; out-of-range values clamp to the cache range.",
+    "Interpolated output needs matching point counts, otherwise the nearest cached frame is used.",
+    "The referenced Cache POP must be actively holding the history you expect."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

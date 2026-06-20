@@ -1,0 +1,51 @@
+{
+  "card_type": "operator",
+  "op_type": "videodeviceinTOP",
+  "family": "TOP",
+  "display_name": "Video Device In TOP",
+  "docs_url": "https://docs.derivative.ca/Video_Device_In_TOP",
+  "summary": "Captures live video from cameras, capture cards, IP cameras, dongles, and decoders through supported device drivers.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Capture the image stream while enabled"},
+    {"name": "driver", "type": "Menu", "note": "Capture library or vendor driver"},
+    {"name": "device", "type": "Menu", "note": "Detected device or input"},
+    {"name": "specifyip", "type": "Toggle", "note": "Specify an IP source when supported"},
+    {"name": "ip", "type": "String", "note": "IP address used when Specify IP is enabled"},
+    {"name": "options", "type": "Pulse", "note": "Open the DirectShow camera options/control panel"},
+    {"name": "deinterlace", "type": "Menu", "note": "Deinterlace field handling"},
+    {"name": "precedence", "type": "Menu", "note": "Field precedence for bob deinterlacing"},
+    {"name": "signalformat", "type": "Menu", "note": "Capture resolution, frame rate, and progressive/interlaced format"},
+    {"name": "inputpixelformat", "type": "Menu", "note": "Input pixel precision where supported"},
+    {"name": "inputcolorspace", "type": "Menu", "note": "Input color-space interpretation before Working Color Space conversion"},
+    {"name": "inputreferencewhite", "type": "Menu", "note": "SDR/HDR reference-white treatment for input conversion"},
+    {"name": "transfermode", "type": "Menu", "note": "Frame transfer/upload strategy"},
+    {"name": "memorymode", "type": "Menu", "note": "Regular or pinned transfer memory"},
+    {"name": "syncinputs", "type": "Toggle", "note": "Synchronize multiple supported capture inputs"},
+    {"name": "syncgroupindex", "type": "Integer", "note": "Sync group for multiple inputs"},
+    {"name": "preset", "type": "Menu", "note": "Camera preset/options mode where supported"},
+    {"name": "gain", "type": "Float", "note": "Camera gain where supported"},
+    {"name": "exposure", "type": "Float", "note": "Camera exposure where supported"},
+    {"name": "limitfps", "type": "Toggle", "note": "Limit capture FPS"},
+    {"name": "limitedfps", "type": "Float", "note": "FPS target when limiting"},
+    {"name": "capture", "type": "Toggle", "note": "Enable still capture mode where supported"},
+    {"name": "capturepulse", "type": "Pulse", "note": "Single capture pulse"}
+  ],
+  "common_gotchas": [
+    "If a visible device produces no stream, another application may already be using it.",
+    "Use Info DAT/Info CHOP to inspect detected devices, performance, and embedded timecode where available.",
+    "Vendor support is platform-dependent; some capture drivers are Windows-only or macOS-limited.",
+    "On-demand sync-to-frame can stall the TouchDesigner process and should be used sparingly.",
+    "Multi-input sync requires supported devices and genlocked sources.",
+    "Imaging Source is listed as not supported, IDS GigE Vision is not supported, and Allied Vision support is PvAPI rather than Vimba.",
+    "Ximea options are camera-specific and should not be generalized to every driver."
+  ],
+  "related_snippets": ["TOP_snippets"],
+  "build_relevance": "camera_capture_input",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Video Device In TOP captures live video from cameras, capture cards, dongles, IP cameras, and decoders.",
+    "Multiple Device In TOPs can capture simultaneously, with Info DAT and Info CHOP used for device, status, performance, and timecode diagnostics.",
+    "Driver, signal-format, pixel-format, color-space, transfer, memory, and sync parameters are vendor and platform dependent.",
+    "Sync Inputs is intended for supported devices with genlocked sources so frames from multiple inputs arrive together."
+  ]
+}

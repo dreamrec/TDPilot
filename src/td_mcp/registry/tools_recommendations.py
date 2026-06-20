@@ -54,6 +54,96 @@ def _is_informative_card(card: dict) -> bool:
     return False
 
 
+def _flatten_strings(value: Any) -> str:
+    strings: list[str] = []
+
+    def visit(item: Any) -> None:
+        if isinstance(item, str):
+            strings.append(item.lower())
+        elif isinstance(item, dict):
+            for nested in item.values():
+                visit(nested)
+        elif isinstance(item, list):
+            for nested in item:
+                visit(nested)
+
+    visit(value)
+    return " ".join(strings)
+
+
+def _matches_query_metadata(query: str, metadata: dict[str, Any]) -> bool:
+    haystack = _flatten_strings(metadata)
+    query_lower = query.lower().strip()
+    if not query_lower:
+        return True
+    if query_lower in haystack:
+        return True
+    tokens = [token for token in query_lower.replace("_", " ").split() if token]
+    return bool(tokens) and all(token in haystack for token in tokens)
+
+
+def _example_matches_family(metadata: dict[str, Any], family: str | None) -> bool:
+    if not family:
+        return True
+    target = family.upper()
+    candidates: set[str] = set()
+
+    def add(value: Any) -> None:
+        if isinstance(value, str) and value.strip():
+            candidates.add(value.strip().upper())
+        elif isinstance(value, list):
+            for item in value:
+                add(item)
+
+    add(metadata.get("family"))
+    add(metadata.get("families"))
+    for op_type in metadata.get("operators", []):
+        if not isinstance(op_type, str):
+            continue
+        upper = op_type.upper()
+        for suffix in ("COMP", "CHOP", "SOP", "TOP", "DAT", "MAT", "POP"):
+            if upper.endswith(suffix):
+                candidates.add(suffix)
+                break
+    return target in candidates
+
+
+def _official_snippet_examples(
+    card: dict[str, Any],
+    query: str,
+    family: str | None,
+) -> list[dict[str, Any]]:
+    metadata = card.get("official_examples", [])
+    if not isinstance(metadata, list):
+        return []
+
+    candidates = [
+        item for item in metadata if isinstance(item, dict) and _example_matches_family(item, family)
+    ]
+    matches = [item for item in candidates if _matches_query_metadata(query, item)]
+    selected = matches or candidates[:3]
+
+    examples: list[dict[str, Any]] = []
+    for item in selected[:3]:
+        examples.append(
+            {
+                "type": "official_snippet_example",
+                "id": item.get("example_id", ""),
+                "display_name": item.get("display_name", ""),
+                "summary": item.get("summary", ""),
+                "family": item.get("family", card.get("family", "")),
+                "operators": item.get("operators", []),
+                "topics": item.get("topics", []),
+                "source_url": item.get("source_url", ""),
+                "supporting_urls": item.get("supporting_urls", []),
+                "access_path": item.get("access_path", ""),
+                "source_context": item.get("source_context", ""),
+                "snippet_id": card.get("snippet_id", ""),
+            }
+        )
+    return examples
+
+
 @mcp.tool(name="td_recommend_official_component")
 async def td_recommend_official_component(
     ctx: Context,
@@ -162,6 +252,7 @@ async def td_find_official_example(
 
         examples = []
         for card in snippet_results:
+            examples.extend(_official_snippet_examples(card, query, family))
             examples.append(
                 {
                     "type": "snippet",

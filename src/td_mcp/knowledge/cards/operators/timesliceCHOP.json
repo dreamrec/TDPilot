@@ -1,0 +1,37 @@
+{
+  "card_type": "operator",
+  "op_type": "timesliceCHOP",
+  "family": "CHOP",
+  "display_name": "Time Slice CHOP",
+  "docs_url": "https://docs.derivative.ca/Time_Slice_CHOP",
+  "summary": "Converts non-time-sliced input into a time slice from the previous cooked frame to the current frame using hold or interpolation, smoothing skipped-frame control data.",
+  "key_concepts": [
+    "Time Slice CHOP outputs a CHOP time slice covering samples between the previous cooked frame and the current frame.",
+    "It smooths input that is only sampled when TouchDesigner cooks or draws, filling skipped frames before downstream CHOPs such as Record, Gesture, or Lag.",
+    "The output keeps the input channel names and count while changing the frame range to the current time-slice region.",
+    "Hold mode repeats the current value through the slice, while Linear mode interpolates between the last cooked value and current value.",
+    "Trim mode outputs the input trimmed to the current time-slice range.",
+    "Quaternion Blend uses quaternion interpolation for channels tagged as rotation channels."
+  ],
+  "key_params": [
+    {"name": "method", "type": "Menu", "note": "Hold or Linear sampling"},
+    {"name": "hold", "type": "MenuItem", "note": "Hold current value across the time slice"},
+    {"name": "linear", "type": "MenuItem", "note": "Interpolate from last cook value to current value"},
+    {"name": "trim", "type": "MenuItem", "note": "Trim input to current time-slice region"},
+    {"name": "quatrot", "type": "Toggle", "note": "Quaternion rotation blending"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common-page time-slice flag"},
+    {"name": "srselect", "type": "Menu", "note": "Common-page sample-rate matching behavior"},
+    {"name": "commonrenamefrom", "type": "String", "note": "Common CHOP rename source pattern"},
+    {"name": "commonrenameto", "type": "String", "note": "Common CHOP rename replacement pattern"}
+  ],
+  "common_gotchas": [
+    "Channel names and count do not change; only the output frame range becomes the current time slice.",
+    "Useful before Record CHOP, Gesture CHOP, and Lag CHOP when input is sampled only on cooked frames.",
+    "Linear mode interpolates values between the last cook and current cook; Hold mode repeats current values across the slice.",
+    "If the input lies outside the current time-slice region, extend conditions may be sampled.",
+    "Do not use Time Slice CHOP when full static channel history is required."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ skipped-frame smoothing/time-slice conversion",
+  "last_verified": "2026-06-18"
+}

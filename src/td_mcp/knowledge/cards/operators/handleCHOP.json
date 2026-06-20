@@ -1,0 +1,33 @@
+{
+  "card_type": "operator",
+  "op_type": "handleCHOP",
+  "family": "CHOP",
+  "display_name": "Handle CHOP",
+  "docs_url": "https://docs.derivative.ca/Handle_CHOP",
+  "summary": "Solves Handle COMP inverse-kinematics systems and outputs rotation channels for bones so attached handles move toward their targets.",
+  "key_concepts": [
+    "Creates rx, ry, and rz rotation channels for each bone listed in Source.",
+    "Fixed bones identify branches or units that should rotate together during the IK solve.",
+    "Iterations improve solution accuracy at the cost of additional cook time.",
+    "Init and Preroll reset and stabilize the solve around the rest pose.",
+    "Max Angle Change limits per-frame bone rotation to tame drastic or erratic solutions."
+  ],
+  "key_params": [
+    {"name": "source", "type": "String", "note": "Bone object names to solve and output rx/ry/rz channels for"},
+    {"name": "fixed", "type": "String", "note": "Bones that should rotate as fixed branches or units"},
+    {"name": "iterations", "type": "Integer", "note": "Solver iterations; higher values improve accuracy at higher cook cost"},
+    {"name": "init", "type": "Integer", "note": "Frame where bones reset to default rest angles"},
+    {"name": "preroll", "type": "Integer", "note": "Iterations at initialization/preroll"},
+    {"name": "delta", "type": "Float", "note": "Maximum angle change per bone per frame"}
+  ],
+  "common_gotchas": [
+    "Handle CHOP expects a valid Bone/Handle COMP setup; it is not a standalone rig builder.",
+    "Export the solved rotation channels to the bones to drive the IK result.",
+    "More iterations improve the solution but increase cook time.",
+    "Max Angle Change can tame erratic behavior but may make the chain lag behind fast targets.",
+    "Use the source-grab workflow carefully; non-bone objects are ignored, but missing bones leave no useful solve."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ legacy IK",
+  "last_verified": "2026-06-18"
+}

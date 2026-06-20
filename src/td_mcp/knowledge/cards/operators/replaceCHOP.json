@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "replaceCHOP",
+  "family": "CHOP",
+  "display_name": "Replace CHOP",
+  "docs_url": "https://docs.derivative.ca/Replace_CHOP",
+  "summary": "Replaces channels from the first input with matching channels from the second input and passes unmatched first-input channels through.",
+  "key_params": [
+    {"name": "length", "type": "Menu", "note": "Choose output range from first input or second input"},
+    {"name": "first", "type": "MenuItem", "note": "Use first input range"},
+    {"name": "second", "type": "MenuItem", "note": "Use second input range"},
+    {"name": "notify", "type": "Toggle", "note": "Notify when input names change"},
+    {"name": "srselect", "type": "Menu", "note": "Common-page sample-rate matching behavior"}
+  ],
+  "key_concepts": [
+    "Replace CHOP replaces first-input channels with same-named channels from the second input.",
+    "Channels present in the first input but missing from the second input pass through unchanged.",
+    "The operator can act as a fast delete workflow by sending all channels to input 2 and only kept channels to input 1.",
+    "Length chooses whether the first or second input range defines the output interval.",
+    "Notify on Change is a diagnostic for input-name changes and is not part of the replacement logic."
+  ],
+  "common_gotchas": [
+    "Replacement is name-based: only matching channels from the second input replace first-input channels.",
+    "Unmatched first-input channels are passed through unchanged.",
+    "It can delete channels quickly by sending all channels to input 2 and only kept channels to input 1.",
+    "Length selection controls whether the first or second input interval defines the output range.",
+    "Notify on Change is a diagnostic and can add overhead in busy patching workflows."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ fast channel replacement/deletion",
+  "last_verified": "2026-06-18"
+}

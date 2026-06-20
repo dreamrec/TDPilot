@@ -1,0 +1,51 @@
+{
+  "card_type": "article",
+  "article_id": "attributes_class",
+  "title": "Attributes Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "SOP",
+    "GEOMETRY"
+  ],
+  "summary": "Official Derivative Python API reference for SOP Attributes collections, covering owner metadata, subscript lookup by attribute name, and creation of standard or custom geometric attributes.",
+  "source_url": "https://docs.derivative.ca/Attributes_Class",
+  "docsbrain_page_id": "attributes_class",
+  "covered_operators": [
+    "attributeSOP",
+    "attributecreateSOP",
+    "scriptSOP"
+  ],
+  "key_concepts": [
+    "Attributes Class",
+    "owner",
+    "[name]",
+    "create(name, default)",
+    "Attribute",
+    "pointAttribs",
+    "primAttribs",
+    "vertexAttribs",
+    "N",
+    "uv",
+    "T",
+    "v",
+    "Cd",
+    "normal",
+    "texture",
+    "tangent",
+    "velocity",
+    "diffuse color"
+  ],
+  "guidance": [
+    "Use this article when a script needs to resolve a SOP attribute collection such as pointAttribs, primAttribs, or vertexAttribs before accessing a specific Attribute object.",
+    "Access an attribute by name with the [] subscript operator when the attribute already exists.",
+    "Use create(name, default) for new SOP attributes; standard attributes N, uv, T, v, and Cd have implied defaults while custom attributes should supply explicit default values.",
+    "Do not present create(name, default) as a POP attribute-creation API; pair POP code generation with POP Class and POP operator cards instead.",
+    "Keep standard attributes distinct from arbitrary custom attributes so generated code does not invent incompatible defaults."
+  ],
+  "related_snippets": [
+    "POP_attribute_ontology",
+    "POP_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,40 @@
+{
+  "card_type": "operator",
+  "op_type": "oculusriftSOP",
+  "family": "SOP",
+  "display_name": "Oculus Rift SOP",
+  "docs_url": "https://docs.derivative.ca/Oculus_Rift_SOP",
+  "summary": "Loads Oculus Rift Touch controller geometry as SOP meshes for Windows VR controller visualization.",
+  "key_params": [
+    {
+      "name": "model",
+      "type": "Menu",
+      "note": "Controller model to load"
+    },
+    {
+      "name": "leftcontroller",
+      "type": "Menu Item",
+      "note": "Left Controller model choice"
+    },
+    {
+      "name": "rightcontroller",
+      "type": "Menu Item",
+      "note": "Right Controller model choice"
+    }
+  ],
+  "common_gotchas": [
+    "This is a geometry loader, not the operator that provides tracking data or stereo rendering.",
+    "The operator is Windows-only, so cross-platform patches need a fallback mesh path.",
+    "Runtime availability still depends on Oculus runtime and hardware support outside the SOP itself."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "windows-vr-controller-geometry",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Outputs controller model geometry rather than tracking channels or eye rendering.",
+    "The model menu chooses between the left and right Oculus Touch controller meshes.",
+    "The official page marks the operator as Microsoft Windows only."
+  ]
+}

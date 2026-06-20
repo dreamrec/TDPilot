@@ -1,0 +1,50 @@
+{
+  "card_type": "operator",
+  "op_type": "soptoCHOP",
+  "family": "CHOP",
+  "display_name": "SOP to CHOP",
+  "docs_url": "https://docs.derivative.ca/SOP_to_CHOP",
+  "summary": "Converts SOP point attributes into CHOP channels for positions, colors, normals, texture coordinates, point indexes, custom attributes, and normalized positions.",
+  "key_concepts": [
+    "SOP to CHOP creates CHOP channels from point attributes on a selected SOP.",
+    "Position output reads the P attribute and creates tx, ty, and tz channels.",
+    "Color, normal, texture coordinate, point index, normalized position, and custom attribute toggles select which SOP point data becomes CHOP samples.",
+    "Group restricts conversion to points in a named SOP point group.",
+    "Custom attributes are selected with Attribute Scope and can be renamed with Rename Scope.",
+    "The official docs note SOP to CHOP works in tandem with Channel SOP for editing point data in CHOPs and feeding it back to geometry."
+  ],
+  "key_params": [
+    {"name": "sop", "type": "SOP", "note": "SOP source to convert"},
+    {"name": "group", "type": "String", "note": "Optional SOP group"},
+    {"name": "position", "type": "Toggle", "note": "Output P as position channels"},
+    {"name": "colorrgb", "type": "Toggle", "note": "Output Cd RGB channels"},
+    {"name": "coloralpha", "type": "Toggle", "note": "Output alpha channel"},
+    {"name": "normal", "type": "Toggle", "note": "Output normal channels"},
+    {"name": "textureuv", "type": "Toggle", "note": "Output uv channels"},
+    {"name": "texturew", "type": "Toggle", "note": "Output uvw third component"},
+    {"name": "pointindex", "type": "Toggle", "note": "Output point index"},
+    {"name": "normpos", "type": "Toggle", "note": "Output normalized point position"},
+    {"name": "custom", "type": "Toggle", "note": "Output custom attributes"},
+    {"name": "attribscope", "type": "String", "note": "Custom attribute scope"},
+    {"name": "renamescope", "type": "String", "note": "Optional output channel rename scope"},
+    {"name": "transobj", "type": "Object", "note": "Optional transform object"},
+    {"name": "rate", "type": "Float", "note": "Output sample rate"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP channel scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Common CHOP sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"}
+  ],
+  "common_gotchas": [
+    "SOP to CHOP works on point attributes; vertex or primitive attributes may need conversion first.",
+    "Custom attribute scopes must match SOP attribute names exactly or with supported patterns.",
+    "Transformed output depends on the transform object, so keep object-space versus world-space use explicit.",
+    "Color Alpha uses the alpha color attribute and creates the alpha channel; do not assume RGB includes alpha.",
+    "Rename Scope must provide one name per acquired attribute value when overriding channel names.",
+    "For the opposite direction, use Channel SOP rather than SOP to CHOP."
+  ],
+  "related_snippets": ["SOP_snippets", "CHOP_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18"
+}

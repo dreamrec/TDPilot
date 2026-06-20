@@ -1,0 +1,43 @@
+{
+  "card_type": "operator",
+  "op_type": "ltcoutCHOP",
+  "family": "CHOP",
+  "display_name": "LTC Out CHOP",
+  "docs_url": "https://docs.derivative.ca/LTC_Out_CHOP",
+  "summary": "Generates SMPTE linear timecode as an audio signal for routing to audio output or other LTC-aware systems.",
+  "key_concepts": [
+    "Outputs SMPTE linear timecode encoded as an audio signal that can be routed to Audio Device Out CHOP.",
+    "Play Mode can run sequentially or reference timecode from a CHOP, DAT, or Timecode Class object.",
+    "Play, Cue, Cue Pulse, and initial frame/second/minute/hour parameters define whether the output advances or holds a starting time.",
+    "Frame Rate usually sits between 24 and 30; rates above 30 use non-standard user-bit behavior and may not be readable by other systems.",
+    "Drop Frame Numbering implements 29.97 NTSC-style skipped frame numbers, while High FPS Behaviour cycles or duplicates LTC frame counts.",
+    "User Data fields 1-8 write custom user bits, commonly used for reel number or date metadata."
+  ],
+  "key_params": [
+    {"name": "playmode", "type": "Menu", "note": "Sequential or reference a Timecode object/CHOP/DAT"},
+    {"name": "play", "type": "Toggle", "note": "Increment or hold output count"},
+    {"name": "cue", "type": "Toggle", "note": "Hold output at initial values while on"},
+    {"name": "cuepulse", "type": "Pulse", "note": "Pulse to reset output to initial values"},
+    {"name": "frame", "type": "Integer", "note": "Initial frame"},
+    {"name": "second", "type": "Integer", "note": "Initial second"},
+    {"name": "minute", "type": "Integer", "note": "Initial minute"},
+    {"name": "hour", "type": "Integer", "note": "Initial hour"},
+    {"name": "framerate", "type": "Float", "note": "Encoded frame messages per second"},
+    {"name": "dropframe", "type": "Toggle", "note": "Use NTSC 29.97 drop-frame numbering"},
+    {"name": "highfpsbehaviour", "type": "Menu", "note": "Frame counting behavior above LTC frame rate"},
+    {"name": "audiorate", "type": "Float", "note": "Audio output sample rate"},
+    {"name": "user1", "type": "Integer", "note": "User bits field 1"},
+    {"name": "user2", "type": "Integer", "note": "User bits field 2"},
+    {"name": "user3", "type": "Integer", "note": "User bits field 3"}
+  ],
+  "common_gotchas": [
+    "LTC Out produces an audio signal; route it to Audio Device Out CHOP or another audio path for physical output.",
+    "Use Info CHOP to inspect the timecode currently being output.",
+    "Standard LTC is limited to 30 fps; higher frame rates use custom user-bit behavior and may not be readable by other software/devices.",
+    "Drop-frame numbering skips frame numbers 0 and 1 at the first second of most minutes for 29.97 NTSC compatibility.",
+    "Cue holds initial values while enabled; Cue Pulse resets once and then play behavior resumes."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ timecode/audio",
+  "last_verified": "2026-06-18"
+}

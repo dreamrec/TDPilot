@@ -1,0 +1,57 @@
+{
+  "card_type": "operator",
+  "op_type": "infoDAT",
+  "family": "DAT",
+  "display_name": "Info DAT",
+  "docs_url": "https://docs.derivative.ca/Info_DAT",
+  "summary": "Outputs string information exposed by a target operator, complementing numeric Info CHOP diagnostics with text-style details when available.",
+  "key_params": [
+    {
+      "name": "op",
+      "type": "OP Path",
+      "note": "Target operator to inspect"
+    },
+    {
+      "name": "passive",
+      "type": "Toggle",
+      "note": "Avoid forcing the target operator to cook while reading info"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Many operators expose no extra string information, so an empty or sparse table is valid.",
+    "Passive reads can avoid side effects but may return stale information until the target cooks.",
+    "Info DAT is different from Info CHOP, which exposes numeric channels rather than string rows.",
+    "Do not build logic that assumes specific row names unless the target operator type is known."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "operator-string-diagnostics",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Displays string information exposed by a referenced operator.",
+    "The Operator parameter points to the node whose information table is queried.",
+    "Passive mode can avoid automatic recooking at the cost of possibly stale output.",
+    "Only some operators expose additional string information through Info DAT."
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "card_type": "operator",
+  "op_type": "rectanglePOP",
+  "family": "POP",
+  "display_name": "Rectangle POP",
+  "docs_url": "https://docs.derivative.ca/Rectangle_POP",
+  "summary": "Creates a four-point rectangle with optional rounded corners and outputs no primitives, point primitives, lines, line strips, triangles, or quads. It can fill a camera view, match input bounds, create Tex/N attributes, and apply anchors and transforms.",
+  "key_params": [
+    {"name": "surftype", "type": "Menu", "note": "Connectivity primitive type"},
+    {"name": "modifybounds", "type": "Toggle", "note": "Use connected input bounds as the base rectangle bounds"},
+    {"name": "orient", "type": "Menu", "note": "XY, YZ, ZX, or Fill Camera View orientation"},
+    {"name": "camera", "type": "COMP", "note": "Camera used for Fill Camera View mode"},
+    {"name": "distfromcam", "type": "Float", "note": "Distance from camera for camera-fill mode"},
+    {"name": "cameraaspect", "type": "Float2", "note": "Aspect ratio used for Fill Camera View projection"},
+    {"name": "size", "type": "Float2", "note": "Rectangle size"},
+    {"name": "roundcorners", "type": "Toggle", "note": "Enable rounded corners"},
+    {"name": "cornerradius", "type": "Float", "note": "Rounded corner radius"},
+    {"name": "cornersides", "type": "Int", "note": "Number of sides for rounded corners"},
+    {"name": "anchoru", "type": "Menu", "note": "Anchor left, middle, or right side at X=0"},
+    {"name": "anchorv", "type": "Menu", "note": "Anchor bottom, middle, or top side at Y=0"},
+    {"name": "t", "type": "Float3", "note": "Post-translate generated points"},
+    {"name": "r", "type": "Float3", "note": "Post-rotate generated points in degrees"},
+    {"name": "scale", "type": "Float", "note": "Uniform post-scale for generated points"},
+    {"name": "normal", "type": "Menu", "note": "Create normal attributes"},
+    {"name": "texture", "type": "Menu", "note": "Create point or vertex texture coordinates"},
+    {"name": "texturefit", "type": "Menu", "note": "Scale and position texture coordinates relative to the rectangle"}
+  ],
+  "key_concepts": [
+    "four-point rectangle",
+    "Fill Camera View",
+    "input bounding box",
+    "Modify Bounds",
+    "rounded corners",
+    "camera aspect",
+    "Anchor U/V",
+    "post transform",
+    "Texture Fit",
+    "Tex and N attributes"
+  ],
+  "common_gotchas": [
+    "Fill Camera View requires a valid camera and aspect settings; otherwise the generated rectangle will not match view framing.",
+    "Rounded corners add points, so downstream point-index assumptions must account for cornersides.",
+    "Camera-fill background plates usually want quads or triangles, while line workflows need line strip/lines connectivity."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

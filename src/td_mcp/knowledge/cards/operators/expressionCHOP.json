@@ -1,0 +1,33 @@
+{
+  "card_type": "operator",
+  "op_type": "expressionCHOP",
+  "family": "CHOP",
+  "display_name": "Expression CHOP",
+  "docs_url": "https://docs.derivative.ca/Expression_CHOP",
+  "summary": "Applies Python-style expressions to input CHOP sample values, recycling expressions across channels and preserving the first input's channel set and length.",
+  "key_params": [
+    {"name": "chanperexpr", "type": "Integer", "note": "Channels processed by each expression before moving to the next expression"},
+    {"name": "limitexpr", "type": "Toggle", "note": "Limit the number of output channels"},
+    {"name": "limitnum", "type": "Integer", "note": "Maximum output channels when limiting is enabled"},
+    {"name": "expr", "type": "Sequence", "note": "Sequence of expressions"},
+    {"name": "expr0expr", "type": "String", "note": "Expression text; use me.inputVal or me.inputs[...] to access values"}
+  ],
+  "key_concepts": [
+    "Modifies input channel samples using math expressions.",
+    "The output normally keeps the same channel names and sample length as the first input.",
+    "Each expression is applied to raw samples or keyframe values, then recycled when more channels exist than expression slots.",
+    "Channels per Expr controls how many channels use one expression before the next expression is selected.",
+    "Expression text can use me.inputVal for the current value and me.inputs[...] to read other input channels.",
+    "Evaluate DAT is the official companion when the goal is general expression evaluation instead of sample-wise CHOP processing."
+  ],
+  "common_gotchas": [
+    "The output keeps the first input's channel names and sample length unless output limiting is enabled.",
+    "Expressions are recycled when there are more channels than expression slots.",
+    "Use me.inputVal for the current input sample and me.inputs[1][0] or me.inputs[1]['chan1'] for other input channels.",
+    "Per-sample Python expressions can be slow on large, high-rate CHOPs.",
+    "Use Evaluate DAT when the goal is general expression testing rather than sample-wise channel processing."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

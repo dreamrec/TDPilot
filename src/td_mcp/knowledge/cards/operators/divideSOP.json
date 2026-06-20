@@ -1,0 +1,116 @@
+{
+  "card_type": "operator",
+  "op_type": "divideSOP",
+  "family": "SOP",
+  "display_name": "Divide SOP",
+  "docs_url": "https://docs.derivative.ca/Divide_SOP",
+  "summary": "Subdivides polygonal geometry, convexes polygons, bricks faces into quads/triangles, smooths polygons, and optionally removes shared edges.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Polygon group to divide."
+    },
+    {
+      "name": "convex",
+      "type": "Toggle",
+      "note": "Convex concave polygons."
+    },
+    {
+      "name": "numsides",
+      "type": "Int",
+      "note": "Maximum side count when dividing polygons."
+    },
+    {
+      "name": "planar",
+      "type": "Toggle",
+      "note": "Triangulate non-planar polygons."
+    },
+    {
+      "name": "smooth",
+      "type": "Toggle",
+      "note": "Smooth polygons."
+    },
+    {
+      "name": "weight",
+      "type": "XYZ",
+      "note": "Smoothing weights."
+    },
+    {
+      "name": "weight1",
+      "type": "Float",
+      "note": "First smoothing weight."
+    },
+    {
+      "name": "weight2",
+      "type": "Float",
+      "note": "Second smoothing weight."
+    },
+    {
+      "name": "divs",
+      "type": "Int",
+      "note": "Division count."
+    },
+    {
+      "name": "brick",
+      "type": "Toggle",
+      "note": "Enable bricker subdivision."
+    },
+    {
+      "name": "size",
+      "type": "XYZ",
+      "note": "Brick size."
+    },
+    {
+      "name": "sizex",
+      "type": "Float",
+      "note": "Brick size X."
+    },
+    {
+      "name": "sizey",
+      "type": "Float",
+      "note": "Brick size Y."
+    },
+    {
+      "name": "sizez",
+      "type": "Float",
+      "note": "Brick size Z."
+    },
+    {
+      "name": "offset",
+      "type": "XYZ",
+      "note": "Brick offset."
+    },
+    {
+      "name": "angle",
+      "type": "XYZ",
+      "note": "Brick angle."
+    },
+    {
+      "name": "removesh",
+      "type": "Toggle",
+      "note": "Remove shared edges."
+    },
+    {
+      "name": "dual",
+      "type": "Toggle",
+      "note": "Create dual polygons."
+    }
+  ],
+  "common_gotchas": [
+    "High `divs` values can grow polygon counts very quickly.",
+    "`numsides` must remain at least 3 for valid polygon output.",
+    "Use Facet SOP Consolidate Points before smoothing when input polygons do not share points."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Divide SOP operates on polygonal geometry for convexing, triangulation, smoothing, bricking, and shared-edge cleanup.",
+    "`convex` and `numsides` split concave or large-sided polygons into smaller legal pieces.",
+    "`smooth` requires shared points; the official docs recommend Facet SOP Consolidate Points when polygons do not share points.",
+    "`brick`, `divs`, `size`, `offset`, and `angle` can create many grid-like polygons quickly."
+  ]
+}

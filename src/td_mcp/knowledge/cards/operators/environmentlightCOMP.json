@@ -1,0 +1,39 @@
+{
+  "card_type": "operator",
+  "op_type": "environmentlightCOMP",
+  "family": "COMP",
+  "display_name": "Environment Light COMP",
+  "docs_url": "https://docs.derivative.ca/Environment_Light_COMP",
+  "summary": "Provides scene-wide environment lighting from an HDR-style texture or color, where object orientation and the environment map orientation influence lighting but object position does not.",
+  "key_params": [
+    {"name": "c", "type": "RGB", "note": "Environment light color"},
+    {"name": "dimmer", "type": "Float", "note": "Intensity multiplier for the light"},
+    {"name": "envlightmap", "type": "TOP", "note": "Sphere, equirectangular, or cube-map texture used for environment lighting/reflection"},
+    {"name": "envlightmaptype2d", "type": "Menu", "note": "2D environment map type, currently equirectangular"},
+    {"name": "envlightmapquality", "type": "Float", "note": "Sample quality multiplier for environment lighting"},
+    {"name": "envlightmaprotate", "type": "XYZ", "note": "Rotates the environment map texture"},
+    {"name": "envlightmapprefilter", "type": "Menu", "note": "Controls automatic or manual pre-filtering of the environment map"},
+    {"name": "envlightspecmap", "type": "TOP", "note": "Pre-filtered specular map from PreFilter Map TOP"},
+    {"name": "material", "type": "MAT", "note": "Material for geometry inside the component"},
+    {"name": "render", "type": "Toggle", "note": "Render visibility with the Render flag"},
+    {"name": "lightmask", "type": "String", "note": "Subset of Render TOP lights used by geometry"}
+  ],
+  "key_concepts": [
+    "Environment Light COMP provides image-based scene lighting from outside the objects rather than from a specific point in space.",
+    "Object orientation and environment-map rotation affect which parts of the map light each side of a surface, while object position does not.",
+    "Environment Map accepts sphere, equirectangular, or cube-map style sources and adds reflection-like contribution to normal lighting.",
+    "Environment Map Quality and PBR MAT environment-light quality multiply together to control sample quality.",
+    "Automatic pre-filtering improves render quality but can be expensive for animated or frequently changing environment maps."
+  ],
+  "common_gotchas": [
+    "Environment Light has no point position; moving objects in space does not change how the light hits them.",
+    "Object orientation and environment-map rotation matter because different sides sample different parts of the map.",
+    "Environment map contribution is added to normal lighting, so reduce material diffuse/specular when using it for pure reflection looks.",
+    "Automatic pre-filtering gives better quality but can be expensive for animated or frequently changing maps.",
+    "Sphere maps, equirectangular maps, and cube maps have different setup expectations; choose the correct TOP source format.",
+    "The light still needs to be included in the Render TOP lighting setup to affect the rendered scene."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ image-based environment lighting",
+  "last_verified": "2026-06-18"
+}

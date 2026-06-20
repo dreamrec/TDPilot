@@ -1,0 +1,93 @@
+{
+  "card_type": "operator",
+  "op_type": "crossTOP",
+  "family": "TOP",
+  "display_name": "Cross TOP",
+  "docs_url": "https://docs.derivative.ca/Cross_TOP",
+  "summary": "Blends two TOP inputs using a crossfade value while transform controls position the overlay layer.",
+  "key_params": [
+    {
+      "name": "cross",
+      "type": "Float",
+      "note": "Crossfade amount between input 1 and input 2"
+    },
+    {
+      "name": "size",
+      "type": "Menu",
+      "note": "Fixed layer, input1 or input2"
+    },
+    {
+      "name": "prefit",
+      "type": "Menu",
+      "note": "Overlay fit mode such as fill, fithorz, fitvert, fitbest, fitworst, or nativeres"
+    },
+    {
+      "name": "justifyh",
+      "type": "Menu",
+      "note": "Horizontal overlay alignment"
+    },
+    {
+      "name": "justifyv",
+      "type": "Menu",
+      "note": "Vertical overlay alignment"
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Overlay extend behavior: hold, zero, repeat, or mirror"
+    },
+    {
+      "name": "r",
+      "type": "Float",
+      "note": "Overlay rotation"
+    },
+    {
+      "name": "t",
+      "type": "XY",
+      "note": "Overlay translation"
+    },
+    {
+      "name": "tunit",
+      "type": "Menu",
+      "note": "Units for overlay translation"
+    },
+    {
+      "name": "s",
+      "type": "XY",
+      "note": "Overlay scale"
+    },
+    {
+      "name": "p",
+      "type": "XY",
+      "note": "Overlay pivot"
+    },
+    {
+      "name": "punit",
+      "type": "Menu",
+      "note": "Units for overlay pivot"
+    },
+    {
+      "name": "legacyxform",
+      "type": "Toggle",
+      "note": "Use legacy transform matrix behavior"
+    }
+  ],
+  "common_gotchas": [
+    "Transform controls do not change the blend formula; they affect overlay placement only.",
+    "Different input sizes depend on Fixed Layer and prefit choices.",
+    "Legacy Transform changes transform order and rotation behavior.",
+    "Texture array and 3D texture crossfades need matching source layout expectations."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Cross TOP blends two inputs with Input1 times (1 - cross) plus Input2 times cross.",
+    "Cross value 0 outputs input 1 and value 1 outputs input 2.",
+    "Fixed Layer controls default output resolution and aspect while overlay transform controls only the adjustable layer.",
+    "Prefit, justify, and extend define how the overlay aligns against the fixed layer.",
+    "The official TOP supports 3D textures and 2D texture arrays."
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "card_type": "operator",
+  "op_type": "audioparaeqCHOP",
+  "family": "CHOP",
+  "display_name": "Audio Para EQ CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_Para_EQ_CHOP",
+  "summary": "Applies parametric EQ bands with controllable frequency and bandwidth for more targeted audio filtering than fixed graphic EQ bands.",
+  "key_concepts": [
+    "Audio Para EQ CHOP applies up to three parametric filters to incoming audio.",
+    "The three filters are evaluated in series, so later filters process the output of earlier filters.",
+    "Each enabled filter has center frequency, bandwidth, and boost controls.",
+    "Boost is measured in dB, with positive values making audio around the center frequency louder and negative values making it quieter.",
+    "Frequency-modulation inputs can drive fast center-frequency changes at CHOP sample rates to avoid audible stepping."
+  ],
+  "key_params": [
+    {"name": "units", "type": "Menu", "note": "Frequency unit scale"},
+    {"name": "logarithmic", "type": "Toggle", "note": "Use logarithmic frequency controls"},
+    {"name": "frequency", "type": "Float", "note": "Base or target frequency control"},
+    {"name": "enableeq1", "type": "Toggle", "note": "Enable EQ band 1"},
+    {"name": "boost1", "type": "Float", "note": "Boost or cut EQ band 1 in dB"},
+    {"name": "bandwidth1", "type": "Float", "note": "Bandwidth of EQ band 1"},
+    {"name": "enableeq2", "type": "Toggle", "note": "Enable EQ band 2"},
+    {"name": "boost2", "type": "Float", "note": "Boost or cut EQ band 2 in dB"},
+    {"name": "bandwidth2", "type": "Float", "note": "Bandwidth of EQ band 2"},
+    {"name": "enableeq3", "type": "Toggle", "note": "Enable EQ band 3"},
+    {"name": "boost3", "type": "Float", "note": "Boost or cut EQ band 3 in dB"},
+    {"name": "bandwidth3", "type": "Float", "note": "Bandwidth of EQ band 3"},
+    {"name": "drywet", "type": "Float", "note": "Blend filtered output with the dry input"}
+  ],
+  "common_gotchas": [
+    "Use Audio Para EQ when center frequency and bandwidth matter; use Audio Band EQ for fixed graphic bands.",
+    "Bandwidth values interact with frequency and can make broad tonal changes or narrow resonant cuts.",
+    "Frequency controls should be kept inside the useful range for the input sample rate.",
+    "Multiple active bands can compound gain and clip downstream output."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

@@ -16,7 +16,12 @@ EVAL_PATH = ROOT / "tests" / "evals" / "td_brain_golden.jsonl"
 def test_load_golden_cases_preserves_ids_and_expected_ops():
     cases = load_golden_cases(EVAL_PATH)
 
-    assert {case["id"] for case in cases} >= {"feedback_loop_basic", "glsl_top_shader"}
+    assert {case["id"] for case in cases} >= {
+        "feedback_loop_basic",
+        "glsl_top_shader",
+        "glsl_material_shader",
+        "glsl_pop_attribute_shader",
+    }
     assert all(case["expected_ops"] for case in cases)
 
 
@@ -25,7 +30,7 @@ async def test_evaluate_golden_cases_scores_all_current_profiles():
     report = await evaluate_golden_cases(EVAL_PATH)
 
     assert report["ok"] is True
-    assert report["case_count"] >= 6
+    assert report["case_count"] >= 8
     assert report["passed"] == report["case_count"]
     assert all(item["passed"] for item in report["cases"])
     assert all("concept_correctness" in item["checks"] for item in report["cases"])

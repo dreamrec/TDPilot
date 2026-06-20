@@ -1,0 +1,40 @@
+{
+  "card_type": "operator",
+  "op_type": "blacktraxCHOP",
+  "family": "CHOP",
+  "display_name": "BlackTrax CHOP",
+  "docs_url": "https://docs.derivative.ca/BlackTrax_CHOP",
+  "summary": "Receives tracking data from CAST BlackTrax motion tracking systems, outputting beacon position, rotation, velocity, acceleration, centroid, and LED channels.",
+  "key_concepts": [
+    "Receives RTTrPM packet data from an external BlackTrax system and exposes tracked beacon channels inside TouchDesigner.",
+    "Each BlackTrax beacon has an ID from the BlackTrax software, so stable TD channel layout depends on either a Mapping Table or incremental Max Beacons output.",
+    "Output Format chooses between rows in the Mapping Table and a fixed Max Beacons count, which changes how many beacon channel groups are created.",
+    "Centroid, Velocity, Acceleration, and LEDs toggles let planners limit the channel surface to only the tracking data needed for the patch.",
+    "Server-side WYSIWYG coordinates and Euler rotations are the documented expected BlackTrax configuration for TouchDesigner reception."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable BlackTrax receiver"},
+    {"name": "port", "type": "Int", "note": "Network port used for tracking data"},
+    {"name": "protocol", "type": "Menu", "note": "Network protocol"},
+    {"name": "netaddress", "type": "String", "note": "Network address/interface for receiving data"},
+    {"name": "samplerate", "type": "Float", "note": "Output sample rate"},
+    {"name": "outputformat", "type": "Menu", "note": "Output channel organization"},
+    {"name": "maxbeacons", "type": "Int", "note": "Maximum beacon count when not using a mapping table"},
+    {"name": "centroid", "type": "Toggle", "note": "Output beacon translation and rotation channels"},
+    {"name": "velocity", "type": "Toggle", "note": "Output velocity channels"},
+    {"name": "acceleration", "type": "Toggle", "note": "Output acceleration channels"},
+    {"name": "leds", "type": "Toggle", "note": "Output per-LED position channels"},
+    {"name": "reset", "type": "Toggle", "note": "Clear stored beacons and stale data while on"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Immediately clear stored beacons and stale data"},
+    {"name": "mappingtable", "type": "DAT", "note": "Mapping table for beacon/channel layout"}
+  ],
+  "common_gotchas": [
+    "BlackTrax CHOP is TouchDesigner Pro only and requires a functioning external BlackTrax system.",
+    "Port, protocol, and network address must match the tracking server configuration.",
+    "Mapping tables are important for stable channel naming when beacon counts or identities matter.",
+    "High-rate tracking data can produce many channels; limit outputs to centroid, velocity, LEDs, or acceleration only when needed."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

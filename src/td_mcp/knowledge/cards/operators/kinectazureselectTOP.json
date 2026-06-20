@@ -1,0 +1,54 @@
+{
+  "card_type": "operator",
+  "op_type": "kinectazureselectTOP",
+  "family": "TOP",
+  "display_name": "Kinect Azure Select TOP",
+  "docs_url": "https://docs.derivative.ca/Kinect_Azure_Select_TOP",
+  "summary": "Selects additional image streams from a primary active Kinect Azure TOP.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable selected stream capture"
+    },
+    {
+      "name": "top",
+      "type": "TOP",
+      "note": "Primary Kinect Azure TOP"
+    },
+    {
+      "name": "image",
+      "type": "Menu",
+      "note": "Selected image stream"
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution policy"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "No useful output appears without an active primary Kinect Azure TOP.",
+    "Aligned-stream resolution depends on the primary Color Resolution or Depth Mode.",
+    "Player index depends on body tracking and may need additional hardware support.",
+    "Remapped point clouds can contain gaps and artifacts."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Kinect Azure Select TOP captures additional streams from a primary Kinect Azure TOP.",
+    "The referenced primary TOP must be active and owns camera configuration.",
+    "Select TOP inherits camera resolution, frame rate, depth, sync, and tracking setup from the primary.",
+    "Image modes include color, remapped color, depth, remapped depth, infrared, player index, and point clouds.",
+    "Point cloud stores XYZ coordinates in RGB channels in meters.",
+    "This operator is for extra streams, not for configuring a physical camera."
+  ]
+}

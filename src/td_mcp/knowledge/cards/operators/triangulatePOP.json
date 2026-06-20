@@ -1,0 +1,27 @@
+{
+  "card_type": "operator",
+  "op_type": "triangulatePOP",
+  "family": "POP",
+  "display_name": "Triangulate POP",
+  "docs_url": "https://docs.derivative.ca/Triangulate_POP",
+  "summary": "Converts closed line strips into triangles that fill their interiors, with modes for convex-only fast triangulation or slower convex-and-concave triangulation. It can also triangulate quads.",
+  "key_params": [
+    {"name": "mode", "type": "Menu", "note": "Convex only or convex and concave triangulation"},
+    {"name": "triangulatequads", "type": "Toggle", "note": "Convert quad primitives to triangles"},
+    {"name": "lsmaxverts", "type": "Int", "note": "Max vertices per closed input line strip in concave mode"},
+    {"name": "maxiter", "type": "Int", "note": "Iteration limit for concave triangulation"}
+  ],
+  "key_concepts": [
+    "Triangulate POP fills closed line strips with triangles and can also convert quad primitives into triangle primitives.",
+    "Convex-only mode is the fast path, while convex-and-concave mode handles more shapes but requires explicit vertex and iteration limits.",
+    "Long, concave, or self-intersecting line strips need careful max-iteration settings to avoid partial output or excessive cook time."
+  ],
+  "common_gotchas": [
+    "Open line strips and unrelated primitive types pass through unmodified.",
+    "Convex-only mode is much faster but assumes closed line strips are convex.",
+    "Concave mode can get slow on long line strips and needs adequate Max Verts per Input Line Strip."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

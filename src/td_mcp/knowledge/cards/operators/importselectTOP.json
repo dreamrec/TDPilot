@@ -1,0 +1,55 @@
+{
+  "card_type": "operator",
+  "op_type": "importselectTOP",
+  "family": "TOP",
+  "display_name": "Import Select TOP",
+  "docs_url": "https://docs.derivative.ca/Import_Select_TOP",
+  "summary": "Loads texture map images referenced by an FBX COMP or USD COMP import parent.",
+  "key_params": [
+    {
+      "name": "parent",
+      "type": "COMP",
+      "note": "FBX COMP or USD COMP import parent"
+    },
+    {
+      "name": "texture",
+      "type": "String",
+      "note": "Path to texture image within imported asset context"
+    },
+    {
+      "name": "reload",
+      "type": "Pulse",
+      "note": "Reload texture from import parent"
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution policy"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "A missing or wrong import parent means the texture path cannot be resolved.",
+    "Blank Parent performs implicit import-parent search, which can select an unexpected ancestor.",
+    "External texture file paths must remain valid after asset moves.",
+    "Reload after replacing imported assets; Import Select does not create missing maps."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "COMP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Import Select TOP selects texture images defined by imported FBX COMP or USD COMP assets.",
+    "Imported maps can include color, normal, metallic, and other material texture images.",
+    "Texture image data may be embedded in the source asset, such as USDZ, or stored externally by path.",
+    "Parent points to the import parent, and blank Parent searches for the first import parent in the path.",
+    "Texture is a path to the texture image inside the import context.",
+    "Reload refreshes image data from the import parent."
+  ]
+}

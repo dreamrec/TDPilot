@@ -1,0 +1,53 @@
+{
+  "card_type": "operator",
+  "op_type": "widgetCOMP",
+  "family": "COMP",
+  "display_name": "Widget COMP",
+  "docs_url": "https://docs.derivative.ca/Widget_COMP",
+  "summary": "Provides a generic panel-widget component with layout, panel interaction, look, child alignment, drag/drop, extension, and common clone/viewer controls for custom UI widgets.",
+  "key_params": [
+    {"name": "x", "type": "Pixels", "note": "Horizontal panel position relative to the parent"},
+    {"name": "y", "type": "Pixels", "note": "Vertical panel position relative to the parent"},
+    {"name": "w", "type": "Pixels", "note": "Panel width"},
+    {"name": "h", "type": "Pixels", "note": "Panel height"},
+    {"name": "fixedaspect", "type": "Menu", "note": "Keep a fixed aspect ratio using width or height"},
+    {"name": "layer", "type": "Integer", "note": "Depth ordering among sibling panels"},
+    {"name": "hmode", "type": "Menu", "note": "Fixed, fill, or anchor-driven horizontal sizing"},
+    {"name": "vmode", "type": "Menu", "note": "Fixed, fill, or anchor-driven vertical sizing"},
+    {"name": "alignallow", "type": "Menu", "note": "Allow or ignore parent alignment rules"},
+    {"name": "display", "type": "Toggle", "note": "Show or hide the panel"},
+    {"name": "enable", "type": "Toggle", "note": "Enable interaction with the panel"},
+    {"name": "multitouch", "type": "Menu", "note": "Parent, built-in first-touch, or disabled multi-touch handling"},
+    {"name": "clickthrough", "type": "Toggle", "note": "Ignore mouse clicks on this panel"},
+    {"name": "opacity", "type": "Float", "note": "Transparency control for display overlays"},
+    {"name": "align", "type": "Menu", "note": "Child layout: rows, columns, directions, grid, or network-node matching"},
+    {"name": "spacing", "type": "Pixels", "note": "Space between aligned children"},
+    {"name": "fit", "type": "Menu", "note": "Scale children to fit width, height, or best fit"},
+    {"name": "crop", "type": "Menu", "note": "Controls whether children outside bounds are cropped"},
+    {"name": "drag", "type": "Menu", "note": "Drag source behavior using parent, legacy, or callback systems"}
+  ],
+  "key_concepts": [
+    "generic Panel Component widget shell",
+    "Layout Page fixed, fill, and anchor sizing",
+    "Panel Page display, enable, click-through, and multi-touch controls",
+    "Look Page background, borders, disabled colors, and opacity",
+    "Children Page alignment and fit behavior",
+    "Drag/Drop callbacks for custom interaction",
+    "Extensions Page for Python widget behavior"
+  ],
+  "common_gotchas": [
+    "Widget COMP is a generic panel/widget shell; domain behavior comes from children, extensions, callbacks, or custom parameters.",
+    "Display can trigger layout processing; use opacity for simple visual hiding when interaction/layout should remain stable.",
+    "Enable Off prevents panel interaction but can still show the widget with disabled look settings.",
+    "Built-in multi-touch handles only the first touch and can conflict with Multi Touch In DAT scripts.",
+    "Click Through ignores mouse clicks even when the panel is visible.",
+    "Fill and Anchor modes depend on the parent panel dimensions and can move or stretch unexpectedly when the parent changes.",
+    "Depth Layer ties are ordered by operator name among siblings at the same hierarchy level.",
+    "Child Fit overrides child justification controls; Align and Offset can overwrite each other in child layout.",
+    "Margins are absolute pixels and may not be reflected in the node's panel viewer.",
+    "Use drag/drop callbacks for modern custom behavior rather than relying on legacy drag scripts."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ custom panel widget shell and child layout controls",
+  "last_verified": "2026-06-17"
+}

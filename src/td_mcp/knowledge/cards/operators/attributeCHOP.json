@@ -1,0 +1,28 @@
+{
+  "card_type": "operator",
+  "op_type": "attributeCHOP",
+  "family": "CHOP",
+  "display_name": "Attribute CHOP",
+  "docs_url": "https://docs.derivative.ca/Attribute_CHOP",
+  "summary": "Adds, replaces, appends, or removes CHOP channel attributes. Its current high-value use is tagging rotation channel triplets as quaternion data so compatible CHOPs can interpolate rotations with spherical interpolation.",
+  "key_concepts": [
+    "Adds, removes, replaces, or appends CHOP channel attributes, with the current documented attribute type focused on quaternion rotation grouping.",
+    "Quaternion attributes group rotation triplets such as rx, ry, and rz so compatible CHOPs can use spherical linear interpolation instead of independent XYZ interpolation.",
+    "Join CHOP, Composite CHOP, Interpolate CHOP, Object CHOP, Stretch CHOP, and Resample CHOP are documented consumers of quaternion rotation attributes.",
+    "Function controls whether existing attributes pass through, are replaced, appended, or removed from the scoped channels.",
+    "Scope selects the channel triplets affected by the quaternion attribute; Rotate Order records the order used when interpreting the triplet."
+  ],
+  "key_params": [
+    {"name": "slerp", "type": "Menu", "note": "Attribute operation: pass through, replace, append, or remove"},
+    {"name": "rord", "type": "Menu", "note": "Rotation order used when grouping rotation triplets"},
+    {"name": "scope", "type": "String", "note": "Channels that receive or lose the quaternion attribute"}
+  ],
+  "common_gotchas": [
+    "The Scope must select the intended rotation triplet channels; unrelated channels should not be tagged as quaternion rotations.",
+    "Append errors if an attribute already exists on a scoped channel and would be overwritten.",
+    "Quaternion attributes improve rotation interpolation in compatible CHOPs, but they do not change the numeric channel samples by themselves."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18"
+}

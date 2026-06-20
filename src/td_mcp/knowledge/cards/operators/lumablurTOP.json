@@ -1,0 +1,65 @@
+{
+  "card_type": "operator",
+  "op_type": "lumablurTOP",
+  "family": "TOP",
+  "display_name": "Luma Blur TOP",
+  "docs_url": "https://docs.derivative.ca/Luma_Blur_TOP",
+  "summary": "Blurs an image per pixel using luminance or greyscale values from a second input, with separate blur widths for black and white control values.",
+  "key_params": [
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "catmull, gaussian, box, bartlette, sinc, hanning, or blackman kernel"
+    },
+    {
+      "name": "widthchan",
+      "type": "Menu",
+      "note": "luminance, rgba channels, rgbaverage, or average blur driver"
+    },
+    {
+      "name": "blackvalue",
+      "type": "Float",
+      "note": "Input channel value mapped to black filter width"
+    },
+    {
+      "name": "whitevalue",
+      "type": "Float",
+      "note": "Input channel value mapped to white filter width"
+    },
+    {
+      "name": "blackwidth",
+      "type": "Float",
+      "note": "Blur width where the second input is black"
+    },
+    {
+      "name": "whitewidth",
+      "type": "Float",
+      "note": "Blur width where the second input is white"
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "hold, zero, repeat, or mirror blur sampling at edges"
+    }
+  ],
+  "common_gotchas": [
+    "A meaningful second input is essential; a flat driver produces a uniform blur.",
+    "Sinc can preserve detail but may introduce ringing artifacts.",
+    "Box is cheaper but visibly boxy compared with Gaussian or Catmull-Rom.",
+    "Large blackwidth or whitewidth values can be expensive on high-resolution textures.",
+    "The official token is bartlette, preserving the docs spelling."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Luma_snippets"
+  ],
+  "build_relevance": "image_filter",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Uses a second input luminance or channel image to vary blur width per pixel.",
+    "Black and white filter widths define blur amounts at the two ends of the driving channel.",
+    "Kernel type changes sharpness, ringing, cost, and edge behavior.",
+    "Extend controls how samples outside the source image are treated during blur.",
+    "The operator supports 3D Textures and 2D Texture Arrays."
+  ]
+}

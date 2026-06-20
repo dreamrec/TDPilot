@@ -1,0 +1,678 @@
+{
+  "card_type": "operator",
+  "op_type": "glsladvancedPOP",
+  "family": "POP",
+  "display_name": "GLSL Advanced POP",
+  "docs_url": "https://docs.derivative.ca/GLSL_Advanced_POP",
+  "summary": "Advanced GLSL POP for compute shaders that can read, write, and create point, vertex, and primitive attributes in one shader, write topology/index buffers, modify output point and primitive counts, target extra POP outputs, and dispatch either once or per primitive batch.",
+  "key_params": [
+    {
+      "name": "computedat",
+      "type": "DAT",
+      "note": "Compute shader source DAT."
+    },
+    {
+      "name": "shaderdispatchmode",
+      "type": "Menu",
+      "note": "Single Shader Dispatch or Per Primitive Batch dispatch."
+    },
+    {
+      "name": "numelems",
+      "type": "Int",
+      "note": "Manual number of elements for thread dispatch."
+    },
+    {
+      "name": "numelemspop",
+      "type": "POP",
+      "note": "POP reference used when element count comes from an attribute."
+    },
+    {
+      "name": "numelemsclass",
+      "type": "Menu",
+      "note": "Attribute class holding the number-of-elements attribute."
+    },
+    {
+      "name": "numelemsattr",
+      "type": "String",
+      "note": "Attribute whose first value supplies the element count."
+    },
+    {
+      "name": "workgroupsizex",
+      "type": "Int",
+      "note": "Manual workgroup size in X."
+    },
+    {
+      "name": "workgroupsizey",
+      "type": "Int",
+      "note": "Manual workgroup size in Y."
+    },
+    {
+      "name": "workgroupsizez",
+      "type": "Int",
+      "note": "Manual workgroup size in Z."
+    },
+    {
+      "name": "dispatchsizex",
+      "type": "Int",
+      "note": "Manual dispatch group count in X."
+    },
+    {
+      "name": "dispatchsizey",
+      "type": "Int",
+      "note": "Manual dispatch group count in Y."
+    },
+    {
+      "name": "dispatchsizez",
+      "type": "Int",
+      "note": "Manual dispatch group count in Z."
+    },
+    {
+      "name": "numthreadsbatchmode",
+      "type": "Menu",
+      "note": "Chooses whether per-primitive-batch dispatch runs per input/output vertex or primitive."
+    },
+    {
+      "name": "ptoutputattrs",
+      "type": "String",
+      "note": "Input point attributes allocated and modified by the shader."
+    },
+    {
+      "name": "primoutputattrs",
+      "type": "String",
+      "note": "Input primitive attributes allocated and modified by the shader."
+    },
+    {
+      "name": "vertoutputattrs",
+      "type": "String",
+      "note": "Vertex attributes allocated on output."
+    },
+    {
+      "name": "outputaccess",
+      "type": "Menu",
+      "note": "Write-only or read-write access for output attribute buffers."
+    },
+    {
+      "name": "initoutputattrs",
+      "type": "Toggle",
+      "note": "Initializes output attributes before the custom compute shader dispatch."
+    },
+    {
+      "name": "prevpassoutput",
+      "type": "Toggle",
+      "note": "Copies previous pass outputs to inputs for the next pass."
+    },
+    {
+      "name": "npasses",
+      "type": "Int",
+      "note": "Number of shader passes."
+    },
+    {
+      "name": "input0pops",
+      "type": "POP",
+      "note": "Additional input POP references beyond connected POPs."
+    },
+    {
+      "name": "simplexnoise",
+      "type": "Menu",
+      "note": "TDSimplexNoise() implementation choice for shader code."
+    },
+    {
+      "name": "numthreadsmode",
+      "type": "Menu",
+      "note": "Thread-count source, including input classes, max output classes, manual count, attribute count, or manual dispatch."
+    },
+    {
+      "name": "render",
+      "type": "Toggle",
+      "note": "Enables rendering in the viewer; disable for intermediate or non-renderable outputs."
+    },
+    {
+      "name": "maxpointsmode",
+      "type": "Menu",
+      "note": "Chooses whether max output points come from input or a custom value."
+    },
+    {
+      "name": "maxpoints",
+      "type": "Int",
+      "note": "Maximum point capacity when custom point allocation is used."
+    },
+    {
+      "name": "pointcountinfo",
+      "type": "Menu",
+      "note": "Input point count source."
+    },
+    {
+      "name": "pointcountmode",
+      "type": "Menu",
+      "note": "Output point count source: from input, zero, or set."
+    },
+    {
+      "name": "pointcountpop",
+      "type": "POP",
+      "note": "POP that holds the output point count."
+    },
+    {
+      "name": "pointcountclass",
+      "type": "Menu",
+      "note": "Attribute class of the point-count attribute."
+    },
+    {
+      "name": "pointcountattr",
+      "type": "String",
+      "note": "Attribute that holds the output point count."
+    },
+    {
+      "name": "maxtrianglesmode",
+      "type": "Menu",
+      "note": "Max triangle primitive allocation mode."
+    },
+    {
+      "name": "maxtriangles",
+      "type": "Int",
+      "note": "Maximum triangle primitive capacity."
+    },
+    {
+      "name": "maxquadsmode",
+      "type": "Menu",
+      "note": "Max quad primitive allocation mode."
+    },
+    {
+      "name": "maxquads",
+      "type": "Int",
+      "note": "Maximum quad primitive capacity."
+    },
+    {
+      "name": "maxlinestripsmode",
+      "type": "Menu",
+      "note": "Max line-strip primitive allocation mode."
+    },
+    {
+      "name": "maxlinestrips",
+      "type": "Int",
+      "note": "Maximum line-strip primitive capacity."
+    },
+    {
+      "name": "maxlsvertsmode",
+      "type": "Menu",
+      "note": "Max line-strip vertex allocation mode."
+    },
+    {
+      "name": "maxlsverts",
+      "type": "Int",
+      "note": "Maximum line-strip vertex capacity."
+    },
+    {
+      "name": "maxlinesmode",
+      "type": "Menu",
+      "note": "Max line primitive allocation mode."
+    },
+    {
+      "name": "maxlines",
+      "type": "Int",
+      "note": "Maximum line primitive capacity."
+    },
+    {
+      "name": "maxpointprimsmode",
+      "type": "Menu",
+      "note": "Max point-primitive allocation mode."
+    },
+    {
+      "name": "maxpointprims",
+      "type": "Int",
+      "note": "Maximum point-primitive capacity."
+    },
+    {
+      "name": "lsinfoupdate",
+      "type": "Menu",
+      "note": "Line Strip Info buffer update mode."
+    },
+    {
+      "name": "lsinfopop",
+      "type": "POP",
+      "note": "POP containing Line Strip Info source attributes."
+    },
+    {
+      "name": "lsinfoclass",
+      "type": "Menu",
+      "note": "Attribute class for the Line Strip Info attribute."
+    },
+    {
+      "name": "lsinfoattr",
+      "type": "String",
+      "note": "Attribute used for the Line Strip Info buffer."
+    },
+    {
+      "name": "lsindexpop",
+      "type": "POP",
+      "note": "POP containing the Line Strip Index per Vert source attribute."
+    },
+    {
+      "name": "lsindexclass",
+      "type": "Menu",
+      "note": "Attribute class for the line-strip index-per-vertex attribute."
+    },
+    {
+      "name": "lsindexattr",
+      "type": "String",
+      "note": "Attribute used for the Line Strip Index per Vert buffer."
+    },
+    {
+      "name": "lsmaxvertsoverride",
+      "type": "Menu",
+      "note": "Overrides max verts per line strip for downstream allocation."
+    },
+    {
+      "name": "lsmaxverts",
+      "type": "Int",
+      "note": "Maximum verts per line strip for allocation."
+    },
+    {
+      "name": "initoutputprims",
+      "type": "Menu",
+      "note": "Initializes output primitive index buffers by copying input primitives or setting vertices to zero."
+    },
+    {
+      "name": "topoinfo",
+      "type": "Menu",
+      "note": "Topology information source: input, attributes, or max parameters."
+    },
+    {
+      "name": "topoinfopop",
+      "type": "POP",
+      "note": "POP that holds topology info attributes."
+    },
+    {
+      "name": "topoinfoclass",
+      "type": "Menu",
+      "note": "Attribute class for topology info attributes."
+    },
+    {
+      "name": "trianglecountmode",
+      "type": "Menu",
+      "note": "Output triangle count source."
+    },
+    {
+      "name": "trianglecountattr",
+      "type": "String",
+      "note": "Attribute used to set triangle count."
+    },
+    {
+      "name": "quadcountmode",
+      "type": "Menu",
+      "note": "Output quad count source."
+    },
+    {
+      "name": "quadcountattr",
+      "type": "String",
+      "note": "Attribute used to set quad count."
+    },
+    {
+      "name": "linestripcountmode",
+      "type": "Menu",
+      "note": "Output line-strip count source."
+    },
+    {
+      "name": "linestripcountattr",
+      "type": "String",
+      "note": "Attribute used to set line-strip count."
+    },
+    {
+      "name": "lsvertcountmode",
+      "type": "Menu",
+      "note": "Line-strip vertex count source."
+    },
+    {
+      "name": "lsvertcountattr",
+      "type": "String",
+      "note": "Attribute used for line-strip vertex count."
+    },
+    {
+      "name": "linecountmode",
+      "type": "Menu",
+      "note": "Output line primitive count source."
+    },
+    {
+      "name": "linecountattr",
+      "type": "String",
+      "note": "Attribute used to set line primitive count."
+    },
+    {
+      "name": "pointprimcountmode",
+      "type": "Menu",
+      "note": "Output point-primitive count source."
+    },
+    {
+      "name": "pointprimcountattr",
+      "type": "String",
+      "note": "Attribute used for point-primitive count."
+    },
+    {
+      "name": "extraout0name",
+      "type": "String",
+      "note": "Name of an extra output."
+    },
+    {
+      "name": "extraout0pop",
+      "type": "POP",
+      "note": "POP reference for an extra output."
+    },
+    {
+      "name": "extraout0ptattrs",
+      "type": "String",
+      "note": "Point attributes modified on the extra output."
+    },
+    {
+      "name": "extraout0primattrs",
+      "type": "String",
+      "note": "Primitive attributes modified on the extra output."
+    },
+    {
+      "name": "extraout0vertattrs",
+      "type": "String",
+      "note": "Vertex attributes modified on the extra output."
+    },
+    {
+      "name": "extraout0outputaccess",
+      "type": "Menu",
+      "note": "Write-only or read-write access for an extra output."
+    },
+    {
+      "name": "extraout0prevpassoutput",
+      "type": "Toggle",
+      "note": "Copies previous extra-output pass output to the next pass input."
+    },
+    {
+      "name": "extraout0copyinputattrs",
+      "type": "Toggle",
+      "note": "Initializes allocated extra-output attributes from input values."
+    },
+    {
+      "name": "attr0class",
+      "type": "Menu",
+      "note": "Attribute class for a new attribute: point, vertex, or primitive."
+    },
+    {
+      "name": "attr0name",
+      "type": "Menu",
+      "note": "Predefined or custom new attribute name."
+    },
+    {
+      "name": "attr0customname",
+      "type": "String",
+      "note": "Custom name for a new attribute."
+    },
+    {
+      "name": "attr0type",
+      "type": "Menu",
+      "note": "Data type for a new attribute."
+    },
+    {
+      "name": "attr0numcomps",
+      "type": "Int",
+      "note": "Number of components for a new attribute."
+    },
+    {
+      "name": "attr0isarray",
+      "type": "Toggle",
+      "note": "Marks a new attribute as an array."
+    },
+    {
+      "name": "attr0arraysize",
+      "type": "Int",
+      "note": "Array size for a new array attribute."
+    },
+    {
+      "name": "attr0value",
+      "type": "Float",
+      "note": "Default value for a new attribute."
+    },
+    {
+      "name": "matattr0class",
+      "type": "Menu",
+      "note": "Attribute class for a new matrix attribute."
+    },
+    {
+      "name": "matattr0name",
+      "type": "String",
+      "note": "Custom matrix attribute name."
+    },
+    {
+      "name": "matattr0numrows",
+      "type": "Int",
+      "note": "Matrix attribute row count."
+    },
+    {
+      "name": "matattr0numcols",
+      "type": "Int",
+      "note": "Matrix attribute column count."
+    },
+    {
+      "name": "matattr0isarray",
+      "type": "Toggle",
+      "note": "Marks a new matrix attribute as an array."
+    },
+    {
+      "name": "matattr0arraysize",
+      "type": "Int",
+      "note": "Array size for a matrix attribute array."
+    },
+    {
+      "name": "matattr0qualifier",
+      "type": "Menu",
+      "note": "Qualifier such as transform matrix."
+    },
+    {
+      "name": "premultcolor",
+      "type": "Toggle",
+      "note": "Premultiplies RGB color uniform values by alpha."
+    },
+    {
+      "name": "color0name",
+      "type": "String",
+      "note": "Name of a color uniform."
+    },
+    {
+      "name": "color0rgb",
+      "type": "RGB",
+      "note": "RGB value for a color uniform."
+    },
+    {
+      "name": "color0alpha",
+      "type": "Float",
+      "note": "Alpha value for a color uniform."
+    },
+    {
+      "name": "vec0name",
+      "type": "String",
+      "note": "Name of a vector uniform."
+    },
+    {
+      "name": "vec0type",
+      "type": "Menu",
+      "note": "Vector uniform type."
+    },
+    {
+      "name": "vec0value",
+      "type": "Float",
+      "note": "Vector uniform value."
+    },
+    {
+      "name": "sampler0name",
+      "type": "String",
+      "note": "Name of a sampler uniform."
+    },
+    {
+      "name": "sampler0top",
+      "type": "TOP",
+      "note": "TOP source for a sampler uniform."
+    },
+    {
+      "name": "sampler0extendu",
+      "type": "Menu",
+      "note": "Texture extend mode for U coordinates."
+    },
+    {
+      "name": "sampler0extendv",
+      "type": "Menu",
+      "note": "Texture extend mode for V coordinates."
+    },
+    {
+      "name": "sampler0extendw",
+      "type": "Menu",
+      "note": "Texture extend mode for W coordinates."
+    },
+    {
+      "name": "sampler0filter",
+      "type": "Menu",
+      "note": "Texture filtering mode."
+    },
+    {
+      "name": "array0name",
+      "type": "String",
+      "note": "Name of a uniform array."
+    },
+    {
+      "name": "array0type",
+      "type": "Menu",
+      "note": "Uniform array component type."
+    },
+    {
+      "name": "array0chop",
+      "type": "CHOP",
+      "note": "CHOP source for a uniform array."
+    },
+    {
+      "name": "array0arraytype",
+      "type": "Menu",
+      "note": "Uniform array or texture buffer binding."
+    },
+    {
+      "name": "matrix0name",
+      "type": "String",
+      "note": "Name of a matrix uniform."
+    },
+    {
+      "name": "matrix0value",
+      "type": "OP",
+      "note": "Matrix source/value passed to the shader."
+    },
+    {
+      "name": "tempbuffer0name",
+      "type": "String",
+      "note": "Name of a temporary buffer."
+    },
+    {
+      "name": "tempbuffer0initval",
+      "type": "Float",
+      "note": "Initial value for a temporary buffer."
+    },
+    {
+      "name": "const0name",
+      "type": "String",
+      "note": "Name of a specialization constant."
+    },
+    {
+      "name": "const0value",
+      "type": "Value",
+      "note": "Value for a specialization constant."
+    },
+    {
+      "name": "freeextragpumem",
+      "type": "Pulse",
+      "note": "Frees extra GPU memory accumulated after output memory grows and shrinks."
+    },
+    {
+      "name": "delinputattrs",
+      "type": "Toggle",
+      "note": "Outputs only explicitly specified attributes, isolating attributes into a branch."
+    },
+    {
+      "name": "parmcolorspace",
+      "type": "Menu",
+      "note": "Color space interpretation for color parameters when Working Color Space is active."
+    },
+    {
+      "name": "parmreferencewhite",
+      "type": "Menu",
+      "note": "Reference-white handling for color parameter conversion."
+    }
+  ],
+  "key_concepts": [
+    "Single Shader Dispatch",
+    "Per Primitive Batch",
+    "Number of Threads",
+    "point output attributes",
+    "primitive output attributes",
+    "vertex output attributes",
+    "Output Access",
+    "Initialize Output Attributes",
+    "Copy Previous Pass Output to Input",
+    "multi-pass GLSL POP",
+    "Max Points",
+    "Max Triangles",
+    "Max Quads",
+    "Max Line Strips",
+    "Max Lines",
+    "Max Point Prims",
+    "Topology Info",
+    "Line Strip Info",
+    "Line Strip Index per Vert",
+    "Initialize Output Primitives",
+    "Extra Outputs",
+    "GLSL Select POP",
+    "Create Attribs Page",
+    "Matrix Attribute",
+    "Color uniforms",
+    "Vector uniforms",
+    "Sampler Page",
+    "Texture Buffer arrays",
+    "Temp Buffers",
+    "Specialization Constants",
+    "oTDPoint_AttribName[]",
+    "oTDPrim_AttribName[]",
+    "oTDVert_AttribName[]",
+    "cTDArraySizePoint_Attrib",
+    "cTDArraySizePrim_Attrib",
+    "cTDArraySizeVert_Attrib",
+    "oTDPoint_OutputName_AttribName[]",
+    "oTDPrim_OutputName_AttribName[]",
+    "oTDVert_OutputName_AttribName[]",
+    "I[] index buffer",
+    "output counts",
+    "TDInputNumVertsPerPrim()",
+    "TDInputPrimType()",
+    "TDInputPrimVertsStartIndex()",
+    "TDPrimsStartIndex()",
+    "TDInputVertsStartIndex()",
+    "TDVertsStartIndex()",
+    "TDInputNumPrimsBatch()",
+    "TDNumPrimsBatch()",
+    "TDInputNumVertsBatch()",
+    "TDNumVertsBatch()",
+    "TDDimension()",
+    "TDDimCoords()",
+    "TDDimPointIndex()",
+    "Topology POP",
+    "Delete Input Attributes",
+    "Info CHOP"
+  ],
+  "common_gotchas": [
+    "GLSL Advanced POP is the correct choice when a shader needs to change output counts or write multiple point/vertex/primitive classes; keep Max Points and max primitive capacities large enough for the intended output.",
+    "I[] index buffer writes are only available for Advanced POP primitive outputs when the relevant Max Primitives mode is custom or otherwise allocates writable topology capacity.",
+    "Extra Outputs are named shader namespaces and are selected downstream with GLSL Select POP; keep extra-output names stable because generated helper names include them.",
+    "Per Primitive Batch dispatch is useful when all primitives in the current batch have the same type, but batch helper functions should be used instead of assuming global primitive or vertex indices.",
+    "When changing point, vertex, or primitive counts, do not assume every input attribute still has a one-to-one output element; explicitly write or initialize the attributes the branch needs.",
+    "Use Init Output Attributes, Copy Previous Pass Output, or explicit writes for every allocated attribute before downstream reads; uninitialized SSBO data can lead to unstable geometry.",
+    "Line-strip outputs need consistent Line Strip Info, line-strip index-per-vertex data, max verts per line strip, and primitive restart handling.",
+    "Use Topology POP when multiple Advanced POP passes each produce part of the final topology and combining/declaring topology outside shader code is clearer.",
+    "When Delete Input Attributes is enabled, only explicitly output attributes remain available downstream.",
+    "Inspect Info CHOP/operator errors for compile errors, warnings, and cook health before treating empty output as a topology-only issue."
+  ],
+  "related_snippets": [
+    "GLSL_snippets",
+    "POP_snippets",
+    "POP_attribute_ontology"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

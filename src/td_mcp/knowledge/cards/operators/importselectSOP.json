@@ -1,0 +1,157 @@
+{
+  "card_type": "operator",
+  "op_type": "importselectSOP",
+  "family": "SOP",
+  "display_name": "Import Select SOP",
+  "docs_url": "https://docs.derivative.ca/Import_Select_SOP",
+  "summary": "Selects and loads geometry primitives from USD COMP or FBX COMP import parents, with optional custom animation playback controls.",
+  "key_params": [
+    {
+      "name": "parent",
+      "type": "COMP",
+      "note": "USD COMP or FBX COMP parent."
+    },
+    {
+      "name": "geometry",
+      "type": "String",
+      "note": "Imported geometry primitive path."
+    },
+    {
+      "name": "reload",
+      "type": "Pulse",
+      "note": "Reload import selection."
+    },
+    {
+      "name": "comptang",
+      "type": "Toggle",
+      "note": "Compute tangents."
+    },
+    {
+      "name": "useparentanim",
+      "type": "Toggle",
+      "note": "Use parent animation controls."
+    },
+    {
+      "name": "shiftanimationstart",
+      "type": "Toggle",
+      "note": "Shift animation start to timeline start."
+    },
+    {
+      "name": "sampleratemode",
+      "type": "Menu",
+      "note": "Sample-rate source mode."
+    },
+    {
+      "name": "samplerate",
+      "type": "Float",
+      "note": "Local sample rate."
+    },
+    {
+      "name": "playmode",
+      "type": "Menu",
+      "note": "Playback mode."
+    },
+    {
+      "name": "initialize",
+      "type": "Pulse",
+      "note": "Initialize playback."
+    },
+    {
+      "name": "start",
+      "type": "Pulse",
+      "note": "Start playback."
+    },
+    {
+      "name": "cue",
+      "type": "Toggle",
+      "note": "Enable cue point."
+    },
+    {
+      "name": "cuepulse",
+      "type": "Pulse",
+      "note": "Jump to cue point."
+    },
+    {
+      "name": "cuepoint",
+      "type": "Float",
+      "note": "Cue point."
+    },
+    {
+      "name": "cuepointunit",
+      "type": "Menu",
+      "note": "Cue point unit."
+    },
+    {
+      "name": "play",
+      "type": "Toggle",
+      "note": "Play local animation."
+    },
+    {
+      "name": "index",
+      "type": "Float",
+      "note": "Playback index."
+    },
+    {
+      "name": "indexunit",
+      "type": "Menu",
+      "note": "Playback index unit."
+    },
+    {
+      "name": "speed",
+      "type": "Float",
+      "note": "Playback speed."
+    },
+    {
+      "name": "trim",
+      "type": "Toggle",
+      "note": "Enable trim range."
+    },
+    {
+      "name": "tstart",
+      "type": "Float",
+      "note": "Trim start."
+    },
+    {
+      "name": "tstartunit",
+      "type": "Menu",
+      "note": "Trim start unit."
+    },
+    {
+      "name": "tend",
+      "type": "Float",
+      "note": "Trim end."
+    },
+    {
+      "name": "tendunit",
+      "type": "Menu",
+      "note": "Trim end unit."
+    },
+    {
+      "name": "textendleft",
+      "type": "Menu",
+      "note": "Left extension mode."
+    },
+    {
+      "name": "textendright",
+      "type": "Menu",
+      "note": "Right extension mode."
+    }
+  ],
+  "common_gotchas": [
+    "The parent must be a valid USD COMP or FBX COMP with imported primitives.",
+    "Geo Path must match an imported primitive path; merged imports may require the generated Info DAT to inspect original paths.",
+    "When `useparentanim` is off, local playback settings must be configured or the imported animation may not move."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Import Select SOP loads selected geometry primitives from USD COMP or FBX COMP import parents.",
+    "It supports imported mesh, points, NURBS curves/patches, and Basis Curves paths exposed by the parent import.",
+    "Merged geometry can create an adjacent Info DAT with original primitive paths.",
+    "When `useparentanim` is disabled, the local Playback page controls timing, trim, cueing, and extension.",
+    "Straight-to-GPU behavior is controlled by the import parent, so CPU readback assumptions depend on the parent COMP."
+  ]
+}

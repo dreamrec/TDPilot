@@ -1,0 +1,39 @@
+{
+  "card_type": "article",
+  "article_id": "comp_generator_shortcuts_page",
+  "title": "COMP Generator Shortcuts Page",
+  "family": "PARAMETER",
+  "families": [
+    "COMP",
+    "PARAMETER",
+    "PYTHON"
+  ],
+  "summary": "Official Derivative generator COMP Shortcuts page for parent shortcuts, global OP shortcuts, and internal OP shortcut/path pairs.",
+  "source_url": "https://docs.derivative.ca/COMP_Generator_Shortcuts_Page",
+  "docsbrain_page_id": "comp_generator_shortcuts_page",
+  "covered_operators": [
+    "baseCOMP",
+    "timeCOMP",
+    "replicatorCOMP",
+    "engineCOMP"
+  ],
+  "key_concepts": [
+    "COMP Generator Shortcuts Page",
+    "Generator Shortcuts Page",
+    "Parameters - Shortcuts Page",
+    "parentshortcut",
+    "opshortcut",
+    "iopshortcut1",
+    "iop1",
+    "Parent Shortcut",
+    "Global OP Shortcut",
+    "Internal OP",
+    "Internal Operators"
+  ],
+  "guidance": [
+    "Use this article as the generator COMP version of the same shortcut contract: parent shortcut local to the component, global shortcut accessible anywhere, and internal shortcut pointing at an internal OP.",
+    "Prefer scoped parent or internal shortcuts unless project-wide global access is required."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

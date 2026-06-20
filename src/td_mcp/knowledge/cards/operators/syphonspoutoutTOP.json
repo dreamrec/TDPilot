@@ -1,0 +1,47 @@
+{
+  "card_type": "operator",
+  "op_type": "syphonspoutoutTOP",
+  "family": "TOP",
+  "display_name": "Syphon Spout Out TOP",
+  "docs_url": "https://docs.derivative.ca/Syphon_Spout_Out_TOP",
+  "summary": "Publishes the input TOP texture locally through Spout on Windows or Syphon on macOS.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable publishing the input texture."
+    },
+    {
+      "name": "sendername",
+      "type": "String",
+      "note": "Syphon/Spout sender name to advertise."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "The output only sends while Active is enabled.",
+    "Syphon ignores high-depth format intent because it is 8-bit RGBA-limited.",
+    "Spout on Windows requires an Nvidia or AMD GPU; Intel-only does not work.",
+    "Shared memory works only on the same computer, so use Touch Out or NDI for network workflows."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "local_texture_sharing",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Syphon Spout Out shares an input texture through local shared memory.",
+    "Spout on Windows can share higher-depth formats up to 32-bit float RGBA, while Syphon is limited to 8-bit RGBA.",
+    "The sender is local to the machine and is not a network transport.",
+    "The Sender Name is the discovery name receivers use to attach."
+  ]
+}

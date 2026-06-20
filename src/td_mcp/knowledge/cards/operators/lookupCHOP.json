@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "lookupCHOP",
+  "family": "CHOP",
+  "display_name": "Lookup CHOP",
+  "docs_url": "https://docs.derivative.ca/Lookup_CHOP",
+  "summary": "Uses index channels from the first input to sample/interpolate values from lookup-table channels in the second input.",
+  "key_concepts": [
+    "Uses the first input as the Index Channel and the second input as the Lookup Table.",
+    "By default, index value 0 maps to the first lookup-table sample and index value 1 maps to the last sample.",
+    "Output length and sample rate follow the Index input, while output channel count and names follow the Lookup Table input.",
+    "Interpolate chooses between interpolated values between lookup samples and nearest-sample lookup.",
+    "Cyclic Range adjusts whether index 0 and 1 meet smoothly for cyclic lookup tables.",
+    "Out-of-range index values use the lookup table extend conditions selected by Extend Left and Extend Right."
+  ],
+  "key_params": [
+    {"name": "index", "type": "Float2", "note": "Index range mapping"},
+    {"name": "index1", "type": "Float", "note": "Index value mapping to lookup start"},
+    {"name": "index2", "type": "Float", "note": "Index value mapping to lookup end"},
+    {"name": "cyclic", "type": "Menu", "note": "Cyclic lookup handling"},
+    {"name": "chanmatch", "type": "Menu", "note": "How lookup and index channels are matched"},
+    {"name": "match", "type": "Menu", "note": "Match by channel number or channel name"},
+    {"name": "interp", "type": "Toggle", "note": "Interpolate between lookup samples"},
+    {"name": "left", "type": "Menu", "note": "Extend-left condition"},
+    {"name": "right", "type": "Menu", "note": "Extend-right condition"},
+    {"name": "defval", "type": "Float", "note": "Default extend value"},
+    {"name": "timeslice", "type": "Toggle", "note": "Output a time slice"},
+    {"name": "scope", "type": "Pattern", "note": "Channel pattern to affect"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate matching behavior"}
+  ],
+  "common_gotchas": [
+    "Input 0 is the index channel and input 1 is the lookup table; reversing them changes the whole meaning.",
+    "By default index 0 maps to the first lookup sample and index 1 maps to the last lookup sample.",
+    "The output length and sample rate follow the index input, while output channel names/count follow the lookup-table input.",
+    "Indexes outside the index range use the lookup table's extend conditions.",
+    "Enable cyclic range when lookup index 0 and 1 should meet smoothly for looping waveforms or beat phases.",
+    "Channel-name matching leaves unmatched index channels unchanged, which can surprise generated plans."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ mapping/control",
+  "last_verified": "2026-06-18"
+}

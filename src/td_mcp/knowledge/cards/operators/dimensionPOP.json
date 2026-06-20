@@ -1,0 +1,29 @@
+{
+  "card_type": "operator",
+  "op_type": "dimensionPOP",
+  "family": "POP",
+  "display_name": "Dimension POP",
+  "docs_url": "https://docs.derivative.ca/Dimension_POP",
+  "summary": "Changes how a POP's point list is interpreted as dimensions without changing the point, vertex, or primitive data. It is useful after generators or data conversions when downstream POPs or GLSL code need consistent _Dim metadata.",
+  "key_params": [
+    {"name": "mode", "type": "Menu", "note": "Choose reordering dimensions or setting explicit dimensions"},
+    {"name": "dimorder", "type": "Str", "note": "Dimension index order for reorder mode"},
+    {"name": "dim", "type": "Sequential", "note": "Sequential blocks describing output dimensions"},
+    {"name": "dim0number", "type": "Int", "note": "Dimension size for the first dimension block"}
+  ],
+  "key_concepts": [
+    "Dimension POP changes POP dimension metadata, not the underlying points, point order, vertices, primitives, or attributes.",
+    "Set Dimensions can add, remove, split, or reshape virtual dimensions as long as the product of dimensions equals the number of points.",
+    "Reorder Dimensions changes how dimension indices are interpreted and can be used to swap row/column style organization before lookup or shader workflows.",
+    "If the requested dimension product does not equal the point count, the operator warns and leaves the dimension organization unchanged.",
+    "Use Dimension POP before GLSL POP, lookup, skinning, or data-grid logic that relies on _Dim-style point organization rather than topology."
+  ],
+  "common_gotchas": [
+    "The product of the new dimensions must equal the number of points or the operator warns and leaves dimensions unchanged.",
+    "Dimension POP does not reorder or modify geometry unless the chosen mode says to reorder dimensions; it mostly changes metadata interpretation.",
+    "Use it before GLSL or lookup logic that reads _Dim metadata so shader indexing matches the intended layout."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

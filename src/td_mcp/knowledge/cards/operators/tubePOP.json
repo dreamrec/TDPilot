@@ -1,0 +1,49 @@
+{
+  "card_type": "operator",
+  "op_type": "tubePOP",
+  "family": "POP",
+  "display_name": "Tube POP",
+  "docs_url": "https://docs.derivative.ca/Tube_POP",
+  "summary": "Creates a cylinder or tube as rows and columns of points, with separate bottom/top radii for tapered tubes, optional arcs/end caps, and connectivity as points, rows, columns, lines, triangles, alternating triangles, or quads.",
+  "key_params": [
+    {"name": "surftype", "type": "Menu", "note": "Connectivity primitive type"},
+    {"name": "linetype", "type": "Menu", "note": "Line strip or lines output for line modes"},
+    {"name": "orient", "type": "Menu", "note": "Tube axis"},
+    {"name": "modifybounds", "type": "Toggle", "note": "Use input bounds as initial tube bounds"},
+    {"name": "rad", "type": "Float2", "note": "Bottom and top radii"},
+    {"name": "height", "type": "Float", "note": "Tube height"},
+    {"name": "cols", "type": "Int", "note": "Divisions around the tube"},
+    {"name": "rows", "type": "Int", "note": "Divisions along the tube"},
+    {"name": "anchoru", "type": "Menu", "note": "Anchor left, middle, or right side at X=0"},
+    {"name": "anchorv", "type": "Menu", "note": "Anchor bottom, middle, or top side at Y=0"},
+    {"name": "anchorw", "type": "Menu", "note": "Anchor back, middle, or front side at Z=0"},
+    {"name": "t", "type": "Float3", "note": "Post-translate generated points"},
+    {"name": "r", "type": "Float3", "note": "Post-rotate generated points in degrees"},
+    {"name": "scale", "type": "Float", "note": "Uniform post-scale for generated points"},
+    {"name": "normal", "type": "Menu", "note": "Create normals"},
+    {"name": "texture", "type": "Menu", "note": "Create texture coordinates"},
+    {"name": "closedu", "type": "Toggle", "note": "Close tube geometry around U"},
+    {"name": "angleu", "type": "Float2", "note": "Begin and end angle for a partial cylinder arc"},
+    {"name": "endcaps", "type": "Toggle", "note": "Add primitives to cap tube ends without changing point dimensions"}
+  ],
+  "key_concepts": [
+    "cylinder or tube shape",
+    "top and bottom radius",
+    "tapered tube",
+    "Rows and Columns connectivity",
+    "dimension metadata",
+    "axis orientation",
+    "partial cylinder arc",
+    "End Caps",
+    "Anchor U/V/W",
+    "Modify Bounds"
+  ],
+  "common_gotchas": [
+    "Tube POP emits dimension metadata numCols by numRows; keep it intact for _Dim indexing and Connectivity POP.",
+    "End caps add primitives while preserving point dimensions, so topology count changes without point count changes.",
+    "Rows and columns line modes are useful for visualizing construction but are not the same as renderable surface quads."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "fileinCHOP",
+  "family": "CHOP",
+  "display_name": "File In CHOP",
+  "docs_url": "https://docs.derivative.ca/File_In_CHOP",
+  "summary": "Reads CHOP channel and audio files from disk or URLs into channel data, including .chan, .clip, .bclip, .aiff, and .wav workflows.",
+  "key_params": [
+    {"name": "file", "type": "File", "note": "Channel/audio file path or http URL"},
+    {"name": "nameoption", "type": "Menu", "note": "Use names in file, new names, or filename"},
+    {"name": "name", "type": "String", "note": "Channel name when using new names"},
+    {"name": "rateoption", "type": "Menu", "note": "No change, override, or resample sample rate"},
+    {"name": "rate", "type": "Float", "note": "Sample rate used by override or resample mode"},
+    {"name": "left", "type": "Menu", "note": "Left extend condition"},
+    {"name": "right", "type": "Menu", "note": "Right extend condition"},
+    {"name": "defval", "type": "Float", "note": "Default value for default extend mode"},
+    {"name": "renamefrom", "type": "Pattern", "note": "Channel rename source pattern"},
+    {"name": "renameto", "type": "Pattern", "note": "Channel rename destination pattern"},
+    {"name": "overridpattern", "type": "Pattern", "note": "Channels whose values are overridden"},
+    {"name": "overridevalue", "type": "Float", "note": "Override value"},
+    {"name": "refresh", "type": "Toggle", "note": "Refresh/reload behavior"},
+    {"name": "refreshpulse", "type": "Pulse", "note": "Reload the file immediately"}
+  ],
+  "key_concepts": [
+    "Reads CHOP channel and audio files from disk or the web into CHOP channels.",
+    "Official supported examples include .chan, .clip, .bclip, .aiff, and .wav file types.",
+    "MIDI files are routed to MIDI In CHOP rather than File In CHOP.",
+    "Name Options controls whether loaded channels use names in the file, a new explicit name, or the filename.",
+    "Rate Options can preserve the file sample rate, override the declared rate, or resample channel data.",
+    "Left and Right extend conditions, rename patterns, value override, and refresh controls can preprocess loaded data before downstream use."
+  ],
+  "common_gotchas": [
+    "Use http:// explicitly for URL reads.",
+    "Override changes the sample rate metadata without resampling; Resample actually converts the channel data.",
+    "Large source rates can create very large arrays unless rate handling is deliberate.",
+    "File In CHOP is for channel/audio files; MIDI files should use MIDI In CHOP.",
+    "Extend and rename parameters affect downstream sampling and exports, so preserve intended channel names."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

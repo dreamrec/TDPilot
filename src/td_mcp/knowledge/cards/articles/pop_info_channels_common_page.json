@@ -1,0 +1,41 @@
+{
+  "card_type": "article",
+  "article_id": "pop_info_channels_common_page",
+  "title": "POP Info Channels Common Page",
+  "family": "POP",
+  "families": [
+    "POP",
+    "CHOP",
+    "GPU"
+  ],
+  "summary": "Official Derivative common page anchor for POP info channels, linking POP operators to Info CHOP inspection patterns and the common POP info-channel sections found on operator pages.",
+  "source_url": "https://docs.derivative.ca/POP_Info_Channels_Common_Page",
+  "docsbrain_page_id": "pop_info_channels_common_page",
+  "covered_operators": [
+    "infoCHOP",
+    "nullPOP",
+    "glslPOP",
+    "pointPOP",
+    "rendersimpleTOP"
+  ],
+  "key_concepts": [
+    "Common POP Info Channels",
+    "Info CHOP",
+    "POP",
+    "Point Operators",
+    "GPU",
+    "Render TOP",
+    "operator-specific info channels"
+  ],
+  "guidance": [
+    "Use this article as a common-page anchor when a POP plan needs runtime inspection through Info CHOP.",
+    "The public common page is intentionally sparse; read the operator-specific Info CHOP Channels section on each POP card or official operator page for concrete channel names.",
+    "Use Info CHOP alongside POP validation when checking cook health, warnings, errors, dimensions, counts, or operator-specific diagnostics.",
+    "Keep POP info-channel guidance distinct from Common Operator Info Channels, which are listed on individual operator pages."
+  ],
+  "related_snippets": [
+    "POP_snippets",
+    "CHOP_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

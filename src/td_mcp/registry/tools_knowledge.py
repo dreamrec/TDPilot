@@ -44,7 +44,7 @@ async def td_search_official_docs(
     family: str | None = None,
     limit: int = 10,
 ) -> dict[str, Any]:
-    """Search the knowledge corpus for operators, palette components, releases, or snippets."""
+    """Search the knowledge corpus for operators, palette, releases, snippets, or articles."""
     idx = _tr._get_card_index(ctx)
     results = idx.search(query, card_types=card_types, family=family, limit=limit)
     svc = _tr._get_services(ctx)

@@ -1,0 +1,69 @@
+{
+  "card_type": "operator",
+  "op_type": "directxinTOP",
+  "family": "TOP",
+  "display_name": "DirectX In TOP",
+  "docs_url": "https://docs.derivative.ca/DirectX_In_TOP",
+  "summary": "Imports DirectX shared textures by handle for Windows DirectX interop workflows.",
+  "key_params": [
+    {
+      "name": "handle",
+      "type": "String",
+      "note": "Shared DirectX texture handle"
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution policy"
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Common TOP output aspect policy"
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Common TOP input smoothing mode"
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Common TOP viewer smoothing mode"
+    },
+    {
+      "name": "npasses",
+      "type": "Int",
+      "note": "Common TOP pass repeat count"
+    },
+    {
+      "name": "chanmask",
+      "type": "String",
+      "note": "Common TOP channel mask"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "A stale or invalid shared texture handle will not import useful image data.",
+    "Producer lifetime, texture format, and consumer timing matter for stable interop.",
+    "32-bit float input uses nearest filtering regardless of selected smoothing.",
+    "This operator is Windows/license gated and should not be planned for macOS projects."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "interop_windows",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "DirectX In TOP imports shared DirectX textures from another application or DirectX Out TOP.",
+    "It uses DirectX Sharing Resources and supports DirectX 9.0 or later interop.",
+    "The Handle parameter identifies the shared texture resource to import.",
+    "A DirectX Out TOP Info DAT can provide handles for paired in/out workflows.",
+    "This is an interop endpoint, not a generic TOP selector.",
+    "The operator is Windows-only and available for Educational, Commercial, and Pro licenses."
+  ]
+}

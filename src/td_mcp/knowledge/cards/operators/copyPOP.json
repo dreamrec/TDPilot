@@ -1,0 +1,45 @@
+{
+  "card_type": "operator",
+  "op_type": "copyPOP",
+  "family": "POP",
+  "display_name": "Copy POP",
+  "docs_url": "https://docs.derivative.ca/Copy_POP",
+  "summary": "Makes transformed copies of an input POP, optionally placing copies at each point of a second template POP. Copy and template attributes can drive transform, identity, and output attribute composition.",
+  "key_params": [
+    {"name": "ncy", "type": "Int", "note": "Number of copies, or copies per template point when templated"},
+    {"name": "xord", "type": "Menu", "note": "Transform order for copy transforms"},
+    {"name": "rord", "type": "Menu", "note": "Rotate order"},
+    {"name": "t", "type": "Float3", "note": "Translate"},
+    {"name": "r", "type": "Float3", "note": "Rotate"},
+    {"name": "s", "type": "Float3", "note": "Scale"},
+    {"name": "p", "type": "Float3", "note": "Pivot for copy transforms"},
+    {"name": "scale", "type": "Float", "note": "Uniform scale for copy transforms"},
+    {"name": "copyid", "type": "Toggle/String", "note": "Enable and name CopyId attribute"},
+    {"name": "copyidname", "type": "Str", "note": "Name of the generated CopyId attribute"},
+    {"name": "lookat", "type": "Str", "note": "Target used for look-at orientation"},
+    {"name": "upvector", "type": "Float3", "note": "Up vector for look-at orientation"},
+    {"name": "forwarddir", "type": "Menu", "note": "Forward direction used by look-at orientation"},
+    {"name": "vlength", "type": "Float", "note": "Vector length used by look-at orientation"},
+    {"name": "dimension", "type": "Menu", "note": "How copied output affects POP dimension metadata"},
+    {"name": "dotemplatematrix", "type": "Toggle", "note": "Apply transform matrices from template points"},
+    {"name": "transformattr", "type": "Str", "note": "Template attribute containing transform matrices"},
+    {"name": "templatexord", "type": "Menu", "note": "Transform order for template transforms"},
+    {"name": "templaterord", "type": "Menu", "note": "Rotate order for template transforms"},
+    {"name": "dotemplatetranslate", "type": "Toggle", "note": "Apply template-point translations"},
+    {"name": "translateattr", "type": "Str", "note": "Template attribute containing translations"},
+    {"name": "templateattr", "type": "Sequential", "note": "Template attribute composition blocks"}
+  ],
+  "key_concepts": [
+    "Copy POP creates repeated transformed copies, with numeric copies using cumulative transforms from one copy to the next.",
+    "When a template POP is connected, template points and attributes can drive per-copy transforms, translations, orientation, identity, and output attributes.",
+    "CopyId, dimension metadata, look-at orientation, template matrices, and template translations are the main controls for keeping copied geometry addressable downstream."
+  ],
+  "common_gotchas": [
+    "Transforms for numeric copies are cumulative; the first copy has no transform and later copies build from the prior one.",
+    "When a template input is connected, copy count is multiplied per template point.",
+    "Copy POP can increase POP dimension metadata; validate dimension-sensitive downstream logic."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

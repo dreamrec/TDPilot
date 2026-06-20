@@ -1,0 +1,72 @@
+{
+  "card_type": "operator",
+  "op_type": "serialdevicesDAT",
+  "family": "DAT",
+  "display_name": "Serial Devices DAT",
+  "docs_url": "https://docs.derivative.ca/Serial_Devices_DAT",
+  "summary": "Lists connected serial devices and can poll or callback when devices are added, removed, occupied, or become available.",
+  "key_params": [
+    {
+      "name": "callbacks",
+      "type": "DAT Path",
+      "note": "Runs once for each change to the device table"
+    },
+    {
+      "name": "usage",
+      "type": "Menu",
+      "note": "Report any, in-use, or not-in-use serial devices"
+    },
+    {
+      "name": "refreshpulse",
+      "type": "Pulse",
+      "note": "Manually poll for device changes"
+    },
+    {
+      "name": "enablepolling",
+      "type": "Toggle",
+      "note": "Poll periodically for serial device changes"
+    },
+    {
+      "name": "pollingtime",
+      "type": "Seconds",
+      "note": "Interval between polls when polling is enabled"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Serial Devices DAT discovers ports; it does not open or communicate with devices by itself.",
+    "Usage filtering can hide occupied or available devices depending on the selected mode.",
+    "Polling too frequently can add avoidable OS/device-manager churn in large hardware setups.",
+    "Callbacks should treat device rows as volatile because USB serial devices can disappear or rename across reconnects."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "serial-device-discovery",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Lists serial devices available to TouchDesigner.",
+    "Usage controls which serial-device category is listed.",
+    "Refresh Pulse updates the detected device table on demand.",
+    "Polling controls periodically refresh the list and set the polling interval."
+  ]
+}

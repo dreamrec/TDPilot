@@ -12,7 +12,9 @@ from td_mcp.brain.planner import build_brain_plan
 class StaticEvalTDClient:
     """Small TDClient stand-in for deterministic planner evals."""
 
-    def __init__(self, families: dict[str, list[str]] | None = None, nodes: list[dict[str, Any]] | None = None) -> None:
+    def __init__(
+        self, families: dict[str, list[str]] | None = None, nodes: list[dict[str, Any]] | None = None
+    ) -> None:
         self.families = families or {}
         self.nodes = nodes or []
 
@@ -70,7 +72,9 @@ async def evaluate_golden_cases(path: str | Path) -> dict[str, Any]:
 
 async def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
     expected_ops = list(case.get("expected_ops") or [])
-    client = StaticEvalTDClient(families=families_for_ops(expected_ops), nodes=case.get("existing_nodes") or [])
+    client = StaticEvalTDClient(
+        families=families_for_ops(expected_ops), nodes=case.get("existing_nodes") or []
+    )
     plan = await build_brain_plan(
         client,
         intent=str(case["intent"]),
@@ -78,13 +82,17 @@ async def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
         validation_profile=str(case.get("validation_profile") or "auto"),
     )
     checks = {
-        "tool_choice": {"ok": "td_brain_plan" in set(case.get("must_use_tools") or []), "weight": _weight(case, "tool_choice")},
+        "tool_choice": {
+            "ok": "td_brain_plan" in set(case.get("must_use_tools") or []),
+            "weight": _weight(case, "tool_choice"),
+        },
         "concept_correctness": {
             "ok": plan.concept_graph.profile == case.get("expected_profile"),
             "weight": _weight(case, "concept_correctness"),
         },
         "network_structure": {
-            "ok": set(expected_ops).issubset(set(plan.concept_graph.operators)) and bool(plan.patch_plan.operations),
+            "ok": set(expected_ops).issubset(set(plan.concept_graph.operators))
+            and bool(plan.patch_plan.operations),
             "weight": _weight(case, "network_structure"),
         },
         "validation_discipline": {
@@ -92,7 +100,8 @@ async def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
             "weight": _weight(case, "validation_discipline"),
         },
         "rollback_behavior": {
-            "ok": bool(plan.patch_plan.undo_label) and "td_brain_execute" in set(case.get("must_use_tools") or []),
+            "ok": bool(plan.patch_plan.undo_label)
+            and "td_brain_execute" in set(case.get("must_use_tools") or []),
             "weight": _weight(case, "rollback_behavior"),
         },
         "final_state_quality": {

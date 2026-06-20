@@ -4,19 +4,455 @@
   "family": "TOP",
   "display_name": "Render TOP",
   "docs_url": "https://docs.derivative.ca/Render_TOP",
-  "summary": "Renders a 3D scene from a Camera COMP, Geometry COMPs, and Light COMPs into a 2D texture. The primary bridge between 3D and 2D workflows.",
+  "summary": "Primary TOP for rendering 3D scenes. It needs at least a Camera COMP and Geometry COMP, with materials assigned on the geometry, and can output normal color renders, multiple cameras, depth/extra color buffers, UV unwraps, cube maps, transparency peels, GLSL MAT vectors/samplers, and image outputs for downstream TOP compositing.",
   "key_params": [
-    {"name": "camera", "type": "String", "note": "Path to the Camera COMP used for rendering"},
-    {"name": "geometry", "type": "String", "note": "Path(s) to Geometry COMPs to render (space-separated or wildcard)"},
-    {"name": "lights", "type": "String", "note": "Path(s) to Light COMPs (space-separated or wildcard)"},
-    {"name": "resolutionw", "type": "Int", "note": "Output resolution width in pixels"},
-    {"name": "resolutionh", "type": "Int", "note": "Output resolution height in pixels"}
+    {
+      "name": "camera",
+      "type": "COMP Pattern",
+      "note": "Camera or cameras to render through; multiple cameras can be retrieved with Render Select TOP."
+    },
+    {
+      "name": "multicamerahint",
+      "type": "Menu",
+      "note": "Optimization hint for multi-camera rendering."
+    },
+    {
+      "name": "geometry",
+      "type": "COMP Pattern",
+      "note": "Geometry COMPs included in the render; supports pattern matching."
+    },
+    {
+      "name": "lights",
+      "type": "COMP Pattern",
+      "note": "Lights used by the render; supports pattern matching."
+    },
+    {
+      "name": "antialias",
+      "type": "Menu",
+      "note": "Anti-aliasing level; higher settings use more graphics memory."
+    },
+    {
+      "name": "bgcolor",
+      "type": "RGBA",
+      "note": "Render background color combined with the Camera COMP background color."
+    },
+    {
+      "name": "premultrgbbyalpha",
+      "type": "Toggle",
+      "note": "Pre-multiply background RGB by alpha."
+    },
+    {
+      "name": "rendermode",
+      "type": "Menu",
+      "note": "2D, Cube Map, Fish-Eye, Dual Paraboloid, UV Unwrap, or omnidirectional stereo cube map rendering."
+    },
+    {
+      "name": "posside",
+      "type": "Toggle3",
+      "note": "Positive cube-map sides to render when Render Mode is Cube Map."
+    },
+    {
+      "name": "negside",
+      "type": "Toggle3",
+      "note": "Negative cube-map sides to render when Render Mode is Cube Map."
+    },
+    {
+      "name": "uvunwrapcoord",
+      "type": "Menu",
+      "note": "SOP texture coordinate layer used for UV Unwrap rendering."
+    },
+    {
+      "name": "uvunwrapcoordattrib",
+      "type": "String",
+      "note": "POP texture-coordinate attribute used for UV Unwrap rendering."
+    },
+    {
+      "name": "transparency",
+      "type": "Menu",
+      "note": "Transparency mode such as sorted blending, order independent transparency, or alpha-to-coverage."
+    },
+    {
+      "name": "depthpeel",
+      "type": "Toggle",
+      "note": "Render depth peel layers that can be retrieved with Render Select TOP."
+    },
+    {
+      "name": "transpeellayers",
+      "type": "Integer",
+      "note": "Number of peel passes for order independent transparency."
+    },
+    {
+      "name": "render",
+      "type": "Toggle",
+      "note": "Enable rendering; when off, Render Pulse can cook a single frame."
+    },
+    {
+      "name": "renderpulse",
+      "type": "Pulse",
+      "note": "Render a single frame while Render is off."
+    },
+    {
+      "name": "dither",
+      "type": "Toggle",
+      "note": "Dither output to reduce 8-bit banding artifacts."
+    },
+    {
+      "name": "coloroutputneeded",
+      "type": "Toggle",
+      "note": "Skip copying/resolving color output when the pass only needs non-color results."
+    },
+    {
+      "name": "drawdepthonly",
+      "type": "Toggle",
+      "note": "Write only depth values; use Depth TOP to consume the depth buffer."
+    },
+    {
+      "name": "numcolorbufs",
+      "type": "Integer",
+      "note": "Number of RGBA color buffers shaders can output."
+    },
+    {
+      "name": "allowbufblending",
+      "type": "Toggle",
+      "note": "Allow blending on extra buffers beyond the first."
+    },
+    {
+      "name": "depthformat",
+      "type": "Menu",
+      "note": "24-bit fixed or 32-bit float depth buffer format."
+    },
+    {
+      "name": "cullface",
+      "type": "Menu",
+      "note": "Cull front faces, back faces, both faces, or neither."
+    },
+    {
+      "name": "overridemat",
+      "type": "MAT Path",
+      "note": "Material applied to every rendered Geometry COMP, useful for pre-processing passes."
+    },
+    {
+      "name": "polygonoffset",
+      "type": "Toggle",
+      "note": "Enable polygon depth offset for z-fighting, shadow, and coplanar-surface passes."
+    },
+    {
+      "name": "polygonoffsetfactor",
+      "type": "Float",
+      "note": "Slope-dependent depth offset factor."
+    },
+    {
+      "name": "polygonoffsetunits",
+      "type": "Float",
+      "note": "Constant depth offset units."
+    },
+    {
+      "name": "overdraw",
+      "type": "Toggle",
+      "note": "Visualize scene overdraw."
+    },
+    {
+      "name": "overdrawlimit",
+      "type": "Integer",
+      "note": "Quantization limit for overdraw visualization."
+    },
+    {
+      "name": "cropleft",
+      "type": "Float",
+      "note": "Projection-matrix crop from the left."
+    },
+    {
+      "name": "cropleftunit",
+      "type": "Menu",
+      "note": "Units for Crop Left: pixels, fraction, or fraction aspect."
+    },
+    {
+      "name": "cropright",
+      "type": "Float",
+      "note": "Projection-matrix crop from the right."
+    },
+    {
+      "name": "croprightunit",
+      "type": "Menu",
+      "note": "Units for Crop Right: pixels, fraction, or fraction aspect."
+    },
+    {
+      "name": "cropbottom",
+      "type": "Float",
+      "note": "Projection-matrix crop from the bottom."
+    },
+    {
+      "name": "cropbottomunit",
+      "type": "Menu",
+      "note": "Units for Crop Bottom: pixels, fraction, or fraction aspect."
+    },
+    {
+      "name": "croptop",
+      "type": "Float",
+      "note": "Projection-matrix crop from the top."
+    },
+    {
+      "name": "croptopunit",
+      "type": "Menu",
+      "note": "Units for Crop Top: pixels, fraction, or fraction aspect."
+    },
+    {
+      "name": "vec",
+      "type": "Sequence",
+      "note": "Sequence of GLSL MAT vector uniforms shared by the render."
+    },
+    {
+      "name": "vec0name",
+      "type": "String",
+      "note": "Vector uniform name declared in the shader."
+    },
+    {
+      "name": "vec0value",
+      "type": "Float4",
+      "note": "Value assigned to the vector uniform."
+    },
+    {
+      "name": "uni0name",
+      "type": "String",
+      "note": "Legacy sampler uniform name field on the Samplers page."
+    },
+    {
+      "name": "sampler",
+      "type": "Sequence",
+      "note": "Sequence of GLSL MAT sampler bindings."
+    },
+    {
+      "name": "sampler0name",
+      "type": "String",
+      "note": "Sampler uniform name used by the GLSL program."
+    },
+    {
+      "name": "sampler0top",
+      "type": "TOP Path",
+      "note": "TOP bound to the sampler uniform."
+    },
+    {
+      "name": "sampler0extendu",
+      "type": "Menu",
+      "note": "Sampler U extend mode."
+    },
+    {
+      "name": "sampler0extendv",
+      "type": "Menu",
+      "note": "Sampler V extend mode."
+    },
+    {
+      "name": "sampler0extendw",
+      "type": "Menu",
+      "note": "Sampler W extend mode."
+    },
+    {
+      "name": "sampler0filter",
+      "type": "Menu",
+      "note": "Sampler filtering mode."
+    },
+    {
+      "name": "sampler0anisotropy",
+      "type": "Menu",
+      "note": "Sampler anisotropic filtering amount."
+    },
+    {
+      "name": "image",
+      "type": "Sequence",
+      "note": "Sequence of GLSL MAT image outputs allocated by the Render TOP."
+    },
+    {
+      "name": "image0name",
+      "type": "String",
+      "note": "Uniform/image output name."
+    },
+    {
+      "name": "image0arraylength",
+      "type": "Integer",
+      "note": "Array length for image uniforms; 0 means not an array."
+    },
+    {
+      "name": "image0res",
+      "type": "Int2",
+      "note": "Resolution of the image output."
+    },
+    {
+      "name": "image0format",
+      "type": "Menu",
+      "note": "Pixel format allocated for the image output."
+    },
+    {
+      "name": "image0type",
+      "type": "Menu",
+      "note": "2D texture, 2D texture array, 3D texture, or cube texture image type."
+    },
+    {
+      "name": "image0depth",
+      "type": "Integer",
+      "note": "Depth for 2D texture array or 3D texture image outputs."
+    },
+    {
+      "name": "image0access",
+      "type": "Menu",
+      "note": "Write Only or Read-Write image access."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP control for using, scaling, fitting, limiting, or overriding output resolution."
+    },
+    {
+      "name": "resolution",
+      "type": "Int2",
+      "note": "Custom output width and height when Output Resolution is Custom Resolution."
+    },
+    {
+      "name": "resolutionw",
+      "type": "Integer",
+      "note": "Custom output width."
+    },
+    {
+      "name": "resolutionh",
+      "type": "Integer",
+      "note": "Custom output height."
+    },
+    {
+      "name": "resmenu",
+      "type": "Menu",
+      "note": "Common resolution presets."
+    },
+    {
+      "name": "resmult",
+      "type": "Toggle",
+      "note": "Applies the global TOP resolution multiplier from preferences."
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Chooses input, resolution-derived, or custom output aspect ratio."
+    },
+    {
+      "name": "aspect",
+      "type": "Float2",
+      "note": "Custom aspect ratio pair used when Output Aspect is Custom Aspect."
+    },
+    {
+      "name": "armenu",
+      "type": "Menu",
+      "note": "Common aspect-ratio presets."
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Input image filtering: nearest, linear, or mipmap."
+    },
+    {
+      "name": "fillmode",
+      "type": "Menu",
+      "note": "Controls how the TOP image fills the node viewer."
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Viewer filtering: nearest, linear, or mipmap."
+    },
+    {
+      "name": "npasses",
+      "type": "Integer",
+      "note": "Repeats the TOP operation multiple times by feeding each pass back into the first input."
+    },
+    {
+      "name": "chanmask",
+      "type": "Mask",
+      "note": "Chooses which RGBA channels the TOP operates on."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Pixel format used to store image channel data."
+    },
+    {
+      "name": "parmcolorspace",
+      "type": "Menu",
+      "note": "Color space for color parameters when a project Working Color Space is active."
+    },
+    {
+      "name": "parmreferencewhite",
+      "type": "Menu",
+      "note": "Reference-white behavior for parameter color-space conversion."
+    }
+  ],
+  "key_concepts": [
+    "render all 3D scenes",
+    "Camera object",
+    "Geometry object",
+    "Material MAT",
+    "Phong MAT",
+    "GLSL shaders",
+    "TOP textures",
+    "TOP compositing",
+    "RGBA and single-channel formats",
+    "Multi-Pass Depth Peeling",
+    "Order Independent Transparency",
+    "Multiple Cameras",
+    "Render Select TOP",
+    "Multi-Camera Rendering",
+    "Images page",
+    "Pattern Matching",
+    "Camera Light Mask",
+    "Depth Peeling disables Multi-Camera rendering",
+    "Order Independent Transparency disables Multi-Camera rendering",
+    "Anti-Alias memory",
+    "Background Color",
+    "Render Mode",
+    "2D render mode",
+    "Cube Map",
+    "Fish-Eye",
+    "Dual Paraboloid",
+    "UV Unwrap",
+    "Depth TOP",
+    "Color Output Needed",
+    "Draw Depth Only",
+    "# of Color Buffers",
+    "Allow Blending for Extra Buffers",
+    "Depth Buffer Format",
+    "Cull Face",
+    "Override Material",
+    "Polygon Depth Offset",
+    "Display Overdraw",
+    "Crop projection matrix",
+    "GLSL MAT vectors",
+    "GLSL MAT samplers",
+    "TDImageStore_Name()",
+    "TDImageLoad_Name()",
+    "image outputs",
+    "2D Texture Array",
+    "3D Texture",
+    "Read-Write image access",
+    "Output Resolution",
+    "Pixel Format",
+    "Info CHOP",
+    "resx",
+    "resy",
+    "aspectx",
+    "aspecty",
+    "depth",
+    "gpu_memory_used"
   ],
   "common_gotchas": [
-    "An empty Geometry or Camera parameter produces a black output with no error — always verify paths.",
-    "Render is GPU-intensive at high resolutions; use instancing in Geometry COMPs rather than duplicating geometry."
+    "A Render TOP needs a Camera object, a Geometry object, and a Material on the Geometry COMP as the minimum useful render setup; missing any one of these is a common black-render cause.",
+    "The Geometry and Lights parameters support Pattern Matching, so patterns like geo* ^geo7 can intentionally include many objects while excluding one by name.",
+    "Multi-Camera rendering is fastest when cameras can share a pass, but differing Camera Light Mask results can force one pass per camera.",
+    "Depth Peeling or Order Independent Transparency disables Multi-Camera rendering, so do not combine those features expecting the same multi-camera speedup.",
+    "The crop parameters modify the projection matrix without changing texture resolution; keep the Render TOP aspect aligned with the real overall output or the cropped projection will stretch incorrectly.",
+    "Images page outputs are declared for GLSL MATs by the Render TOP and are retrieved after the render with Render Select TOP; do not declare those image uniforms manually in the GLSL MAT itself.",
+    "Color Output Needed can be turned off for depth/prepass workflows, but that intentionally avoids copying the color result to the TOP texture.",
+    "Higher Anti-Alias settings consume more graphics memory, so verify gpu_memory_used with an Info CHOP when increasing render quality."
   ],
-  "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "related_snippets": [
+    "GLSL_snippets",
+    "TOP_snippets"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
 }

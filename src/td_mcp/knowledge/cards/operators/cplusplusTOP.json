@@ -1,0 +1,70 @@
+{
+  "card_type": "operator",
+  "op_type": "cplusplusTOP",
+  "family": "TOP",
+  "display_name": "CPlusPlus TOP",
+  "docs_url": "https://docs.derivative.ca/CPlusPlus_TOP",
+  "summary": "Loads a compiled C++ plugin for custom TOP behavior, including custom parameters, multiple output buffers, CPU memory, and CUDA output paths.",
+  "key_params": [
+    {
+      "name": "plugin",
+      "type": "File",
+      "note": "Compiled plugin file to load"
+    },
+    {
+      "name": "reinit",
+      "type": "Toggle",
+      "note": "Reinitialize plugin while enabled"
+    },
+    {
+      "name": "reinitpulse",
+      "type": "Pulse",
+      "note": "Pulse plugin reinitialization"
+    },
+    {
+      "name": "unloadplugin",
+      "type": "Pulse",
+      "note": "Unload plugin so the file can be replaced"
+    },
+    {
+      "name": "antialias",
+      "type": "Menu",
+      "note": "Antialias samples: aa1 through aa32"
+    },
+    {
+      "name": "depthbuffer",
+      "type": "Menu",
+      "note": "Depth buffer mode: none, fixed24, or float32"
+    },
+    {
+      "name": "stencilbuffer",
+      "type": "Toggle",
+      "note": "Enable stencil buffer"
+    },
+    {
+      "name": "numcolorbufs",
+      "type": "Int",
+      "note": "Number of output color buffers"
+    }
+  ],
+  "common_gotchas": [
+    "Unload every TOP using a plugin before replacing that plugin file on disk.",
+    "Python support works for Custom Operators, not inside a normal CPlusPlus TOP node.",
+    "CUDA operations must be bracketed with the documented begin/end calls.",
+    "Printing from plugin code can significantly hurt performance."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "CPlusPlus_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "CPlusPlus TOP loads a compiled plugin that implements custom TOP behavior.",
+    "Each CPlusPlus TOP owns one plugin class instance.",
+    "Plugins can expose custom parameters and Info CHOP/DAT output.",
+    "The TOP can output multiple color buffers when the plugin supports them.",
+    "CUDA plugin workflows use documented beginCUDAOperations and endCUDAOperations lifecycle calls.",
+    "Plugins compiled against older pre-2022 OpenGL-era headers may need Vulkan-era upgrades."
+  ]
+}

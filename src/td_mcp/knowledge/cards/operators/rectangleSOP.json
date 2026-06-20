@@ -1,0 +1,121 @@
+{
+  "card_type": "operator",
+  "op_type": "rectangleSOP",
+  "family": "SOP",
+  "display_name": "Rectangle SOP",
+  "docs_url": "https://docs.derivative.ca/Rectangle_SOP",
+  "summary": "Creates a planar four-sided polygon sized explicitly, from a camera view frustum, or from an input SOP bounding box.",
+  "key_params": [
+    {
+      "name": "orient",
+      "type": "Menu",
+      "note": "Major plane or Fill Camera View orientation"
+    },
+    {
+      "name": "camera",
+      "type": "COMP Path",
+      "note": "Camera used for Fill Camera View"
+    },
+    {
+      "name": "camz",
+      "type": "Float",
+      "note": "Camera distance for camera-fill sizing"
+    },
+    {
+      "name": "cameraaspect",
+      "type": "XY",
+      "note": "Camera aspect ratio"
+    },
+    {
+      "name": "cameraaspectx",
+      "type": "Float",
+      "note": "Camera aspect X"
+    },
+    {
+      "name": "cameraaspecty",
+      "type": "Float",
+      "note": "Camera aspect Y"
+    },
+    {
+      "name": "modifybounds",
+      "type": "Toggle",
+      "note": "Further modify input bounds-derived rectangle"
+    },
+    {
+      "name": "size",
+      "type": "XY",
+      "note": "Rectangle size or scale"
+    },
+    {
+      "name": "sizex",
+      "type": "Float",
+      "note": "Size X"
+    },
+    {
+      "name": "sizey",
+      "type": "Float",
+      "note": "Size Y"
+    },
+    {
+      "name": "t",
+      "type": "XYZ",
+      "note": "Center or offset"
+    },
+    {
+      "name": "tx",
+      "type": "Float",
+      "note": "Center X"
+    },
+    {
+      "name": "ty",
+      "type": "Float",
+      "note": "Center Y"
+    },
+    {
+      "name": "tz",
+      "type": "Float",
+      "note": "Center Z"
+    },
+    {
+      "name": "reverseanchors",
+      "type": "Toggle",
+      "note": "Invert anchor direction"
+    },
+    {
+      "name": "anchoru",
+      "type": "Float",
+      "note": "Anchor U"
+    },
+    {
+      "name": "anchorv",
+      "type": "Float",
+      "note": "Anchor V"
+    },
+    {
+      "name": "texture",
+      "type": "Menu",
+      "note": "Texture coordinate mode"
+    },
+    {
+      "name": "normals",
+      "type": "Toggle",
+      "note": "Compute normal attribute"
+    }
+  ],
+  "common_gotchas": [
+    "Rectangle SOP creates one four-sided polygon, not a subdivided grid.",
+    "Size and center change meaning in camera or input-bounds modes, acting as scale and offset.",
+    "Camera Aspect matches texture-friendly aspect ratio but does not replace a full camera projection setup."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "planar-rectangle-geometry",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Rectangle SOP creates a single planar four-sided polygon.",
+    "It can be sized directly, from a camera fill view, or from the bounds of an input SOP.",
+    "When driven by camera or bounds modes, size acts as scale and center acts as offset.",
+    "Texture and normal toggles control whether uv and N attributes are created on the rectangle."
+  ]
+}

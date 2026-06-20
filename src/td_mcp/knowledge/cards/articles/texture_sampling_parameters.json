@@ -1,0 +1,48 @@
+{
+  "card_type": "article",
+  "article_id": "texture_sampling_parameters",
+  "title": "Texture Sampling Parameters",
+  "family": "PARAMETER",
+  "families": [
+    "PARAMETER",
+    "MAT",
+    "TOP",
+    "GLSL"
+  ],
+  "summary": "Official Derivative reference for texture sampling parameter groups exposed where a TOP is sampled in materials or shaders, including extend, filter, anisotropy, texture-coordinate layer, coordinate interpolation, and map-prefixed internal parameter names.",
+  "source_url": "https://docs.derivative.ca/Texture_Sampling_Parameters",
+  "docsbrain_page_id": "texture_sampling_parameters",
+  "covered_operators": [
+    "phongMAT",
+    "pbrMAT",
+    "glslMAT",
+    "constantMAT",
+    "textureSOP"
+  ],
+  "key_concepts": [
+    "+ button",
+    "extendu",
+    "extendv",
+    "extendw",
+    "filter",
+    "anisotropy",
+    "coord",
+    "coordinterp",
+    "colormapextendu",
+    "3D Texture",
+    "Texture Extend Modes",
+    "Texture Filtering"
+  ],
+  "guidance": [
+    "Use this article when a plan needs to expose or tune sampling behavior for a TOP used by a MAT or shader parameter.",
+    "Open the texture-sampling parameters with the + button next to a TOP-sampling parameter.",
+    "Internal parameter names are prefixed by the owning map parameter, so the colormap Extend U parameter becomes colormapextendu.",
+    "Use extendu, extendv, and extendw for coordinate wrap behavior, with extendw only relevant to 3D Texture sampling.",
+    "Use filter, anisotropy, coord, and coordinterp to control filtering quality, texture-coordinate set, and interpolation behavior."
+  ],
+  "related_snippets": [
+    "GLSL_snippets",
+    "TOP_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

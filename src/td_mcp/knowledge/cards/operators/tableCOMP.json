@@ -1,0 +1,45 @@
+{
+  "card_type": "operator",
+  "op_type": "tableCOMP",
+  "family": "COMP",
+  "display_name": "Table COMP",
+  "docs_url": "https://docs.derivative.ca/Table_COMP",
+  "summary": "Creates a DAT-driven grid of panel gadgets where each cell's value, state, and appearance are described by cell, row, column, and table attribute DATs.",
+  "key_params": [
+    {"name": "attributes", "type": "DAT list", "note": "Cell Attributes DAT list, one entry per cell"},
+    {"name": "rowattributes", "type": "DAT list", "note": "Row Attributes DAT list, one entry per row"},
+    {"name": "colattributes", "type": "DAT list", "note": "Column Attributes DAT list, one entry per column"},
+    {"name": "tableattributes", "type": "DAT", "note": "Fallback table-wide attributes"},
+    {"name": "values", "type": "DAT list", "note": "Cell contents for cells whose attribute type is field"},
+    {"name": "tablerows", "type": "Integer", "note": "Number of table rows"},
+    {"name": "tablecols", "type": "Integer", "note": "Number of table columns"},
+    {"name": "tablealign", "type": "Menu", "note": "Horizontal or vertical ordering of cells"},
+    {"name": "fontsizeunit", "type": "Menu", "note": "Interprets font sizes as pixels or points"},
+    {"name": "infoformat", "type": "Menu", "note": "Info DAT state output as a column or grid"},
+    {"name": "tableoffset", "type": "XY", "note": "Draw offset for the table inside the component"},
+    {"name": "tablereset", "type": "Pulse", "note": "Refreshes the Table COMP after definition DAT changes"},
+    {"name": "w", "type": "Pixels", "note": "Panel width"},
+    {"name": "h", "type": "Pixels", "note": "Panel height"}
+  ],
+  "key_concepts": [
+    "DAT-defined UI grid",
+    "cell, row, column, and table attribute precedence",
+    "cell states: default, rollover, select, selectrollover",
+    "Value Tables for editable field contents",
+    "Info DAT cell state output",
+    "Table Reset after definition DAT changes"
+  ],
+  "common_gotchas": [
+    "Table COMP cells are defined by DAT tables; it is not a general spreadsheet editor by itself.",
+    "Attribute lookup falls through cell, row, column, and table attribute DATs, so broad table defaults can be overridden at several levels.",
+    "Cell state affects the second-level lookup; account for default, rollover, select, and selectrollover states.",
+    "Value tables need one row per cell; reshape multi-column data before wiring it as values.",
+    "Input 0 expects a Table DAT with rows used as Table COMP cell content.",
+    "Do not drive font selection with both fontpath and font attributes at the same time.",
+    "Table Offset moves the drawn table, not the COMP panel itself, and can interact with child cropping.",
+    "Use Table Reset after changing definition DATs if the panel does not visually refresh."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ DAT-backed grid panel gadgets",
+  "last_verified": "2026-06-17"
+}

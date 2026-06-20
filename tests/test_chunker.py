@@ -65,6 +65,96 @@ class TestChunkPage:
             # No chunk should be absurdly large for this small fixture
             assert chunk["token_estimate"] < 5000
 
+    def test_operator_parameter_names_ignore_bullet_menu_choices(self, tmp_path: Path):
+        html_path = tmp_path / "Anti_Alias_TOP.html"
+        html_path.write_text(
+            """<!DOCTYPE html>
+<html>
+<body>
+<div id="mw-content-text">
+  <h1 id="firstHeading"><span class="mw-page-title-main">Anti Alias TOP</span></h1>
+  <h2><span class="mw-headline" id="Summary">Summary</span></h2>
+  <p>The Anti Alias TOP applies screen-space antialiasing.</p>
+  <h2><span class="mw-headline" id="Parameters_-_Anti_Alias_Page">Parameters - Anti Alias Page</span></h2>
+  <p>Quality <code>quality</code> - &#8862; - Controls the quality of the anti-alias process.</p>
+  <ul>
+    <li>Low <code>low</code> -</li>
+    <li>Medium <code>medium</code> -</li>
+    <li>High <code>high</code> -</li>
+  </ul>
+  <p>Edge Detect Source <code>edgedetectsource</code> - &#8862; - Controls how edges are detected.</p>
+  <ul>
+    <li>Luminance <code>lum</code> - Uses luminance.</li>
+    <li>RGB <code>rgb</code> - Uses RGB channels.</li>
+  </ul>
+  <p>Edge Threshold <code>edgethreshold</code> - Controls the sensitivity of edge detection.</p>
+</div>
+</body>
+</html>
+""",
+            encoding="utf-8",
+        )
+        page = normalize_file(html_path, "Anti_Alias_TOP.html")
+        assert page is not None
+
+        chunks = chunk_page(page, html_path)
+        params_chunk = next(
+            chunk for chunk in chunks if chunk["section_title"] == "Parameters - Anti Alias Page"
+        )
+
+        assert params_chunk["parameter_names"] == [
+            "Quality\nquality",
+            "Edge Detect Source\nedgedetectsource",
+            "Edge Threshold\nedgethreshold",
+        ]
+
+    def test_operator_parameter_names_ignore_nested_collapsible_menu_choices(self, tmp_path: Path):
+        html_path = tmp_path / "Anti_Alias_TOP.html"
+        html_path.write_text(
+            """<!DOCTYPE html>
+<html>
+<body>
+<div id="mw-content-text">
+  <h1 id="firstHeading"><span class="mw-page-title-main">Anti Alias TOP</span></h1>
+  <h2><span class="mw-headline" id="Summary">Summary</span></h2>
+  <p>The Anti Alias TOP applies screen-space antialiasing.</p>
+  <h2><span class="mw-headline" id="Parameters_-_Anti_Alias_Page"><div class="sectionBarTOP">Parameters - Anti Alias Page</div></span></h2>
+  <div id="quality">
+    <span class="parNameTOP">Quality</span> <code>quality</code> - <span class="mw-customtoggle-quality">⊞</span> - Controls quality.
+    <div class="mw-collapsible mw-collapsed" id="mw-customcollapsible-quality">
+      <ul><li><span class="parNameTOP">Low</span> <code>low</code> -</li></ul>
+      <ul><li><span class="parNameTOP">Medium</span> <code>medium</code> -</li></ul>
+      <ul><li><span class="parNameTOP">High</span> <code>high</code> -</li></ul>
+    </div>
+  </div>
+  <div id="edgedetectsource">
+    <span class="parNameTOP">Edge Detect Source</span> <code>edgedetectsource</code> - <span class="mw-customtoggle-edgedetectsource">⊞</span> - Controls edge detection.
+    <div class="mw-collapsible mw-collapsed" id="mw-customcollapsible-edgedetectsource">
+      <ul><li><span class="parNameTOP">Luminance</span> <code>lum</code> - Uses luminance.</li></ul>
+      <ul><li><span class="parNameTOP">RGB</span> <code>rgb</code> - Uses RGB channels.</li></ul>
+    </div>
+  </div>
+  <div id="edgethreshold"><span class="parNameTOP">Edge Threshold</span> <code>edgethreshold</code> - Controls threshold.</div>
+</div>
+</body>
+</html>
+""",
+            encoding="utf-8",
+        )
+        page = normalize_file(html_path, "Anti_Alias_TOP.html")
+        assert page is not None
+
+        chunks = chunk_page(page, html_path)
+        params_chunk = next(
+            chunk for chunk in chunks if chunk["section_title"] == "Parameters - Anti Alias Page"
+        )
+
+        assert params_chunk["parameter_names"] == [
+            "Quality\nquality",
+            "Edge Detect Source\nedgedetectsource",
+            "Edge Threshold\nedgethreshold",
+        ]
+
 
 class TestReleaseNoteChunks:
     def test_release_notes_produce_chunks(self):

@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "deleteCHOP",
+  "family": "CHOP",
+  "display_name": "Delete CHOP",
+  "docs_url": "https://docs.derivative.ca/Delete_CHOP",
+  "summary": "Deletes or retains whole channels and/or samples from a CHOP using name, number, value, constantness, sample comparisons, and scope rules.",
+  "key_params": [
+    {"name": "delchannels", "type": "Toggle", "note": "Enable channel deletion"},
+    {"name": "discard", "type": "Menu", "note": "Delete or keep matched channels"},
+    {"name": "scoped", "type": "Pattern", "note": "Channel scope used for name-based deletion"},
+    {"name": "select", "type": "Menu", "note": "Channel selection method"},
+    {"name": "byname", "type": "Menu", "note": "Select channels by name"},
+    {"name": "bynum", "type": "Menu", "note": "Select channels by number"},
+    {"name": "delscope", "type": "Pattern", "note": "Channel pattern to delete"},
+    {"name": "selnumbers", "type": "String", "note": "Channel number ranges to select"},
+    {"name": "chanvalue", "type": "Menu", "note": "Select channels by value range"},
+    {"name": "partial", "type": "Toggle", "note": "Whether partial value-range matches count"},
+    {"name": "selrange", "type": "Float2", "note": "Value range for selection"},
+    {"name": "delsamples", "type": "Toggle", "note": "Enable sample deletion"},
+    {"name": "compchans", "type": "Menu", "note": "Compare-channel mode for sample deletion"},
+    {"name": "firstchan", "type": "Toggle", "note": "Use first channel as sample compare source"},
+    {"name": "lastchan", "type": "Toggle", "note": "Use last channel as sample compare source"}
+  ],
+  "key_concepts": [
+    "Delete CHOP removes whole channels, individual samples, or both from the input CHOP.",
+    "Channel deletion can match by channel name, channel number ranges, value ranges, or constant-valued channels.",
+    "Delete and Non-scoped modes choose whether matched channels are removed or retained.",
+    "Sample deletion uses one or more compare channels, and deleting a sample index removes that sample from every channel.",
+    "When all samples are deleted, the operator keeps one sample and reports a length of one sample."
+  ],
+  "common_gotchas": [
+    "Deleting a sample index removes that sample from every channel, not only the compare channel.",
+    "If all samples are deleted, the operator keeps one sample and reports length one.",
+    "Channel deletion and sample deletion are separate workflows with different parameter pages.",
+    "Compare-channel choice is critical for multi-channel data such as RGBA or XYZ position samples.",
+    "For simpler channel filtering or interval trimming, Select CHOP, Trim CHOP, or Splice CHOP may be clearer."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

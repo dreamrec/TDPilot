@@ -1,0 +1,84 @@
+{
+  "card_type": "operator",
+  "op_type": "reorderTOP",
+  "family": "TOP",
+  "display_name": "Reorder TOP",
+  "docs_url": "https://docs.derivative.ca/Reorder_TOP",
+  "summary": "Maps channels from one or more input TOPs, constants, or luminance into the output RGBA channels.",
+  "key_params": [
+    {
+      "name": "outputred",
+      "type": "Menu",
+      "note": "Source input or constant for output red."
+    },
+    {
+      "name": "outputredchan",
+      "type": "Menu",
+      "note": "Channel selected from the red source."
+    },
+    {
+      "name": "outputgreen",
+      "type": "Menu",
+      "note": "Source input or constant for output green."
+    },
+    {
+      "name": "outputgreenchan",
+      "type": "Menu",
+      "note": "Channel selected from the green source."
+    },
+    {
+      "name": "outputblue",
+      "type": "Menu",
+      "note": "Source input or constant for output blue."
+    },
+    {
+      "name": "outputbluechan",
+      "type": "Menu",
+      "note": "Channel selected from the blue source."
+    },
+    {
+      "name": "outputalpha",
+      "type": "Menu",
+      "note": "Source input or constant for output alpha."
+    },
+    {
+      "name": "outputalphachan",
+      "type": "Menu",
+      "note": "Channel selected from the alpha source."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "chanmask",
+      "type": "Menu",
+      "note": "Common TOP channel mask."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "This is a multi-input TOP; output channels can come from different inputs.",
+    "Use constants or luminance intentionally when building masks, alpha channels, or packed data.",
+    "Reorder changes channel wiring only; it does not do color-space conversion.",
+    "Common TOP channel mask and format can change what downstream operators see.",
+    "Official labels contain the typo Ouput for several output channel controls; keep ids, not labels, authoritative."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Compositing_snippets"
+  ],
+  "build_relevance": "channel_routing",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Routes output RGBA channels from one or more input TOPs.",
+    "Each output channel can choose its source input and source channel independently.",
+    "Constants, zero, one, and luminance can be used as channel sources.",
+    "Supports 3D textures and 2D texture arrays while preserving channel-routing semantics."
+  ]
+}

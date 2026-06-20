@@ -1,0 +1,54 @@
+{
+  "card_type": "article",
+  "article_id": "sop_class",
+  "title": "SOP Class",
+  "family": "SOP",
+  "families": [
+    "SOP",
+    "PYTHON",
+    "GEOMETRY"
+  ],
+  "summary": "Official Derivative Python API reference for Surface operators, covering geometry point and primitive collections, point and vertex counts, point/primitive/vertex attributes, groups, bounds, geometry saving, and inherited OP behavior.",
+  "source_url": "https://docs.derivative.ca/SOP_Class",
+  "docsbrain_page_id": "sop_class",
+  "covered_operators": [
+    "addSOP",
+    "boxSOP",
+    "fileinSOP",
+    "nullSOP",
+    "scriptSOP",
+    "selectSOP",
+    "soptoCHOP",
+    "soptoDAT"
+  ],
+  "key_concepts": [
+    "SOP",
+    "points",
+    "prims",
+    "numPoints",
+    "numVertices",
+    "numPrims",
+    "pointAttribs",
+    "primAttribs",
+    "vertexAttribs",
+    "pointGroups",
+    "primGroups",
+    "center",
+    "min",
+    "max",
+    "size",
+    "bounds()",
+    "save()"
+  ],
+  "guidance": [
+    "Use this article when generated Python needs to inspect legacy SOP geometry, attributes, groups, bounds, or geometry export.",
+    "Use points and prims for geometry collections, and numPoints, numVertices, and numPrims for shape validation.",
+    "Use pointAttribs, primAttribs, and vertexAttribs for attribute-aware SOP planning instead of assuming only positions exist.",
+    "Use bounds() for center and size queries, and save() for geometry export to supported SOP formats.",
+    "Do not use TOP or POP NumPy readback methods as SOP methods; current official SOP Class docs expose geometry collections and bounds/save helpers instead."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

@@ -1,0 +1,348 @@
+{
+  "card_type": "operator",
+  "op_type": "glslmultiTOP",
+  "family": "TOP",
+  "display_name": "GLSL Multi TOP",
+  "docs_url": "https://docs.derivative.ca/GLSL_Multi_TOP",
+  "summary": "Renders a GLSL shader into a TOP image with GLSL TOP behavior, but supports more than 3 input TOPs for many-texture shader pipelines. It can run vertex/pixel or compute shaders, map inputs across 3D/array slices, allocate multiple color buffers, and expose vector, CHOP-array, matrix, atomic-counter, and specialization-constant uniforms.",
+  "key_params": [
+    {
+      "name": "glslversion",
+      "type": "Menu",
+      "note": "GLSL language version used to compile the shader."
+    },
+    {
+      "name": "mode",
+      "type": "Menu",
+      "note": "Choose Vertex/Pixel Shader or Compute Shader mode."
+    },
+    {
+      "name": "predat",
+      "type": "DAT",
+      "note": "Preprocess directives DAT for directives that must appear before TouchDesigner inserted declarations."
+    },
+    {
+      "name": "vertexdat",
+      "type": "DAT",
+      "note": "DAT containing optional vertex shader source."
+    },
+    {
+      "name": "pixeldat",
+      "type": "DAT",
+      "note": "DAT containing pixel shader source."
+    },
+    {
+      "name": "computedat",
+      "type": "DAT",
+      "note": "DAT containing compute shader source when mode is Compute Shader."
+    },
+    {
+      "name": "loaduniformnames",
+      "type": "Pulse",
+      "note": "Attempts to pre-fill uniform parameter names from uniforms declared in the shader."
+    },
+    {
+      "name": "autodispatchsize",
+      "type": "Toggle",
+      "note": "Automatically sets compute dispatch size from local size and output resolution so at least one thread per pixel runs."
+    },
+    {
+      "name": "dispatchsizex",
+      "type": "Int",
+      "note": "Compute dispatch size in X."
+    },
+    {
+      "name": "dispatchsizey",
+      "type": "Int",
+      "note": "Compute dispatch size in Y."
+    },
+    {
+      "name": "dispatchsizez",
+      "type": "Int",
+      "note": "Compute dispatch size in Z for 3D, array, or custom compute workloads."
+    },
+    {
+      "name": "outputaccess",
+      "type": "Menu",
+      "note": "Controls whether output textures are write-only, read-only, or read-write."
+    },
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "Output texture type: 2D Texture, 2D Texture Array, or 3D Texture."
+    },
+    {
+      "name": "depth",
+      "type": "Menu",
+      "note": "Depth source for 3D Texture or 2D Texture Array outputs."
+    },
+    {
+      "name": "customdepth",
+      "type": "Int",
+      "note": "Manual output depth when depth source is Custom."
+    },
+    {
+      "name": "clearoutputs",
+      "type": "Toggle",
+      "note": "Clears compute outputs at cook start instead of preserving previous output texture contents."
+    },
+    {
+      "name": "clearvaluer",
+      "type": "Float",
+      "note": "Red component used when clearing compute outputs."
+    },
+    {
+      "name": "clearvalueg",
+      "type": "Float",
+      "note": "Green component used when clearing compute outputs."
+    },
+    {
+      "name": "clearvalueb",
+      "type": "Float",
+      "note": "Blue component used when clearing compute outputs."
+    },
+    {
+      "name": "clearvaluea",
+      "type": "Float",
+      "note": "Alpha component used when clearing compute outputs."
+    },
+    {
+      "name": "inputmapping",
+      "type": "Menu",
+      "note": "Maps all inputs to every 3D/array slice or assigns N input(s) per slice."
+    },
+    {
+      "name": "nval",
+      "type": "Int",
+      "note": "Number of inputs per slice for N Input(s) per Slice input mapping."
+    },
+    {
+      "name": "inputextenduv",
+      "type": "Menu",
+      "note": "Input texture extend behavior for U/V coordinates outside the 0-1 range."
+    },
+    {
+      "name": "inputextendw",
+      "type": "Menu",
+      "note": "Input texture extend behavior for W coordinates, useful for 3D textures."
+    },
+    {
+      "name": "numcolorbufs",
+      "type": "Int",
+      "note": "Number of RGBA color buffers allocated for multi-output shaders."
+    },
+    {
+      "name": "vec0name",
+      "type": "String",
+      "note": "Vector uniform name declared in the shader."
+    },
+    {
+      "name": "vec0value",
+      "type": "Float",
+      "note": "Vector uniform value components."
+    },
+    {
+      "name": "array0name",
+      "type": "String",
+      "note": "CHOP array uniform name."
+    },
+    {
+      "name": "array0type",
+      "type": "Menu",
+      "note": "Array uniform component type such as float, vec2, vec3, or vec4."
+    },
+    {
+      "name": "array0chop",
+      "type": "CHOP",
+      "note": "CHOP whose channel data is sent into the shader as an array."
+    },
+    {
+      "name": "array0arraytype",
+      "type": "Menu",
+      "note": "Array storage type: uniform array or texture buffer."
+    },
+    {
+      "name": "matrix0name",
+      "type": "String",
+      "note": "Matrix uniform name."
+    },
+    {
+      "name": "matrix0value",
+      "type": "OP",
+      "note": "Matrix parameter source passed to the shader."
+    },
+    {
+      "name": "ac0name",
+      "type": "String",
+      "note": "Atomic counter uniform name."
+    },
+    {
+      "name": "ac0initvalue",
+      "type": "Menu",
+      "note": "Atomic counter initialization source: single value or CHOP values."
+    },
+    {
+      "name": "ac0singlevalue",
+      "type": "Int",
+      "note": "Single value used to initialize atomic counters."
+    },
+    {
+      "name": "ac0chopvalue",
+      "type": "CHOP",
+      "note": "CHOP source used to initialize atomic counters in track order."
+    },
+    {
+      "name": "const0name",
+      "type": "String",
+      "note": "Specialization constant name."
+    },
+    {
+      "name": "const0value",
+      "type": "Float",
+      "note": "Specialization constant value."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Output resolution behavior."
+    },
+    {
+      "name": "resolutionw",
+      "type": "Int",
+      "note": "Custom output width."
+    },
+    {
+      "name": "resolutionh",
+      "type": "Int",
+      "note": "Custom output height."
+    },
+    {
+      "name": "resmenu",
+      "type": "Menu",
+      "note": "Preset resolution menu."
+    },
+    {
+      "name": "resmult",
+      "type": "Toggle",
+      "note": "Applies the global TOP resolution multiplier."
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Output aspect behavior."
+    },
+    {
+      "name": "aspect1",
+      "type": "Float",
+      "note": "First custom aspect value."
+    },
+    {
+      "name": "aspect2",
+      "type": "Float",
+      "note": "Second custom aspect value."
+    },
+    {
+      "name": "armenu",
+      "type": "Menu",
+      "note": "Preset aspect-ratio menu."
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Input TOP pixel filtering mode."
+    },
+    {
+      "name": "fillmode",
+      "type": "Menu",
+      "note": "Viewer fill behavior."
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Viewer pixel filtering mode."
+    },
+    {
+      "name": "npasses",
+      "type": "Int",
+      "note": "Number of repeated TOP passes; each pass feeds the previous output back into the first input."
+    },
+    {
+      "name": "chanmask",
+      "type": "String",
+      "note": "Channel mask selecting which RGBA channels the TOP operates on."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Output pixel format."
+    },
+    {
+      "name": "parmcolorspace",
+      "type": "Menu",
+      "note": "Color space used to interpret color parameters before conversion to working color space."
+    },
+    {
+      "name": "parmreferencewhite",
+      "type": "Menu",
+      "note": "Reference-white handling for parameter color conversion."
+    }
+  ],
+  "key_concepts": [
+    "more than 3 inputs",
+    "GLSL TOP parity",
+    "multi input",
+    "Compute Shader",
+    "Auto Dispatch Size",
+    "Dispatch Size",
+    "Read-Write output access",
+    "2D Texture Array",
+    "3D Texture",
+    "Input Mapping",
+    "N inputs per Slice",
+    "Input Extend Mode UV",
+    "Input Extend Mode W",
+    "# of Color Buffers",
+    "Render Select TOP",
+    "TD_NUM_2D_INPUTS",
+    "TD_NUM_3D_INPUTS",
+    "TD_NUM_2D_ARRAY_INPUTS",
+    "TD_NUM_CUBE_INPUTS",
+    "sTD2DInputs[]",
+    "sTD3DInputs",
+    "sTD2DArrayInputs",
+    "sTDCubeInputs",
+    "nonuniformEXT()",
+    "uTD2DInfos",
+    "uTD3DInfos",
+    "uTDOutputInfo",
+    "TDImageStoreOutput()",
+    "TDImageLoadOutput()",
+    "sTDComputeOutputs[]",
+    "Vector uniforms",
+    "CHOP Uniform arrays",
+    "Texture Buffer arrays",
+    "Atomic Counters",
+    "Specialization Constants",
+    "uTDPass",
+    "Common TOP Info Channels",
+    "Info CHOP"
+  ],
+  "common_gotchas": [
+    "GLSL Multi TOP follows GLSL TOP behavior but supports more than 3 inputs, so use it when input count exceeds the regular GLSL TOP input limit.",
+    "Use nonuniformEXT() when dynamically indexing sampler arrays such as sTD2DInputs[] from per-pixel shader logic.",
+    "When a compute shader reads output textures, previous output values, or feedback-style data, set Output Access to Read-Write instead of Write Only.",
+    "In N inputs per Slice mode, input mapping loops back to the first input if it runs out of inputs before the last output slice.",
+    "Use Render Select TOP to inspect color buffers beyond buffer 0 when # of Color Buffers is greater than one.",
+    "Auto Dispatch Size ensures at least one compute thread per output pixel, but custom compute shaders still need bounds guards around gl_GlobalInvocationID.",
+    "For 3D Texture or 2D Texture Array outputs, dispatch enough Z threads or use shader logic that writes all required slices.",
+    "Texture Buffer arrays hold many more CHOP array values than uniform arrays, but shader declarations must use samplerBuffer and texelFetch().",
+    "Do not include a #version statement in shader DATs because TouchDesigner adds it during compilation.",
+    "Use Info CHOP/Info DAT style diagnostics for cook, warning, error, and compile state before trusting output pixels."
+  ],
+  "related_snippets": [
+    "GLSL_snippets",
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18"
+}

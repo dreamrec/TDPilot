@@ -1,0 +1,52 @@
+{
+  "card_type": "article",
+  "article_id": "top_class",
+  "title": "TOP Class",
+  "family": "TOP",
+  "families": [
+    "TOP",
+    "PYTHON",
+    "GPU",
+    "GLSL"
+  ],
+  "summary": "Official Derivative Python API reference for Texture operators, covering texture dimensions, pixel format and memory, pixel sampling, NumPy and CUDA readback, file saving, byte-array export, and inherited OP behavior.",
+  "source_url": "https://docs.derivative.ca/TOP_Class",
+  "docsbrain_page_id": "top_class",
+  "covered_operators": [
+    "glslTOP",
+    "glslmultiTOP",
+    "moviefileoutTOP",
+    "nullTOP",
+    "renderTOP",
+    "scriptTOP",
+    "texture3dTOP",
+    "webrenderTOP"
+  ],
+  "key_concepts": [
+    "TOP",
+    "width",
+    "height",
+    "aspect",
+    "aspectWidth",
+    "aspectHeight",
+    "pixelFormat",
+    "gpuMemory",
+    "sample()",
+    "numpyArray()",
+    "cudaArray()",
+    "save()",
+    "saveByteArray()",
+    "isTOP"
+  ],
+  "guidance": [
+    "Use this article when generated Python needs to inspect or export TOP images, sample pixels, or bridge TOP data into NumPy/CUDA workflows.",
+    "Use width, height, aspect, and pixelFormat for resolution-aware plans instead of parsing parameters from specific TOP operators.",
+    "numpyArray(delayed=True) avoids immediate GPU stalls but returns the previous available result, so validators must handle None on the first call.",
+    "Use save() for filesystem export and saveByteArray() when the image should stay in memory.",
+    "Remember that writing to a NumPy array returned from a TOP does not change the TOP texture."
+  ],
+  "related_snippets": [
+    "GLSL_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

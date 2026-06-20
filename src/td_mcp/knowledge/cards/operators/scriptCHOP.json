@@ -1,0 +1,37 @@
+{
+  "card_type": "operator",
+  "op_type": "scriptCHOP",
+  "family": "CHOP",
+  "display_name": "Script CHOP",
+  "docs_url": "https://docs.derivative.ca/Script_CHOP",
+  "summary": "Runs Python callbacks each cook to generate or modify CHOP channel data, with default docked callbacks for cook, setupParameters, and onPulse.",
+  "key_concepts": [
+    "Script CHOP runs Python callbacks every time the CHOP cooks, making it the custom procedural CHOP generator path.",
+    "A new Script CHOP is created with a docked DAT containing cook, onPulse, and setupParameters callback methods.",
+    "The cook callback runs each cook, setupParameters runs from the Setup Parameters pulse, and onPulse responds to custom pulse parameters.",
+    "Because Script CHOP can read data from anywhere, TouchDesigner tracks broad dependencies and can recook when referenced operators, parameters, or nodes change.",
+    "Script CHOP supports NumPy array conversion to and from CHOP channels through CHOP Class workflows.",
+    "Use Script CHOP when custom channel generation is needed; prefer built-in CHOPs when a standard operator expresses the transform."
+  ],
+  "key_params": [
+    {"name": "callbacks", "type": "DAT", "note": "DAT containing Script CHOP callbacks"},
+    {"name": "setuppars", "type": "Pulse", "note": "Run setupParameters callback"},
+    {"name": "modoutsidecook", "type": "Toggle", "note": "Allow external scripts to update the CHOP outside cook without locking"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common-page time-slice behavior"},
+    {"name": "scope", "type": "String", "note": "Common CHOP channel scope pattern"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"},
+    {"name": "srselect", "type": "Menu", "note": "Common-page sample-rate matching behavior"}
+  ],
+  "common_gotchas": [
+    "Default docked callbacks are cook, onPulse, and setupParameters.",
+    "Because Script CHOP can read from anywhere, dependency detection is conservative and can cause recooks when referenced operators or parameters change.",
+    "Use numpyArray() workflows for efficient conversion between CHOP channels and NumPy arrays.",
+    "Generated plans should create or attach the callbacks DAT explicitly; an empty Script CHOP is not useful.",
+    "Prefer built-in CHOPs for simple transforms; use Script CHOP for custom channel generation or procedural dependencies."
+  ],
+  "related_snippets": ["CHOP_snippets", "Python_snippets"],
+  "build_relevance": "2021.10000+ custom Python CHOP generation",
+  "last_verified": "2026-06-18"
+}

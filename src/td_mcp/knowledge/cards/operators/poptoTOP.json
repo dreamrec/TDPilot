@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "poptoTOP",
+  "family": "TOP",
+  "display_name": "POP to TOP",
+  "docs_url": "https://docs.derivative.ca/POP_to_TOP",
+  "summary": "Converts POP points or attributes into TOP pixels. By default it maps P position to 32-bit float image channels and uses alpha as an active-pixel mask.",
+  "key_params": [
+    {"name": "pop", "type": "POP", "note": "POP source to convert"},
+    {"name": "rgbamode", "type": "Menu", "note": "Convert position/active or custom attributes"},
+    {"name": "extract", "type": "Menu", "note": "Point, vertex, or primitive attribute extraction"},
+    {"name": "attribscope", "type": "String", "note": "Attribute scope for custom conversion"},
+    {"name": "layout", "type": "Menu", "note": "Fit, wrap, crop, or use POP dimension"}
+  ],
+  "key_concepts": [
+    "POP points to TOP pixels",
+    "P position as 32-bit float image channels",
+    "alpha as active-pixel mask",
+    "Position and Active versus Custom modes",
+    "point, vertex, and primitive attribute extraction",
+    "Fit to Square, Wrapped, Cropped, and POP Dimension layouts",
+    "2D and 3D TOP output dimensions"
+  ],
+  "common_gotchas": [
+    "POP to TOP is a data conversion, not a shaded render; use Render Simple TOP or Render TOP for visible geometry.",
+    "Inactive pixels have alpha 0, so downstream TOP logic should account for the active mask.",
+    "Use POP Dimension layout when the POP already has meaningful row/column/depth dimensions."
+  ],
+  "related_snippets": ["POP_snippets", "TOP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

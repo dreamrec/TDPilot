@@ -1,0 +1,273 @@
+{
+  "card_type": "operator",
+  "op_type": "opfindDAT",
+  "family": "DAT",
+  "display_name": "OP Find DAT",
+  "docs_url": "https://docs.derivative.ca/OP_Find_DAT",
+  "summary": "Traverses component hierarchy or a prefiltered input list to output one table row per operator matching family, type, path, parameter, comment, tag, DAT-content, or callback criteria.",
+  "key_params": [
+    {
+      "name": "activecook",
+      "type": "Menu",
+      "note": "Choose off, automatic, always, or incremental search cooking"
+    },
+    {
+      "name": "cookpulse",
+      "type": "Pulse",
+      "note": "Manually force the OP Find DAT to update"
+    },
+    {
+      "name": "component",
+      "type": "COMP Path",
+      "note": "Root component where hierarchy traversal begins"
+    },
+    {
+      "name": "includecomponent",
+      "type": "Toggle",
+      "note": "Include the root component itself in the search"
+    },
+    {
+      "name": "includewired",
+      "type": "Toggle",
+      "note": "Include components wired to the starting component"
+    },
+    {
+      "name": "mindepth",
+      "type": "Int",
+      "note": "Minimum recursive sub-component depth to search"
+    },
+    {
+      "name": "limitmaxdepth",
+      "type": "Toggle",
+      "note": "Enable a maximum recursive search depth"
+    },
+    {
+      "name": "maxdepth",
+      "type": "Int",
+      "note": "Maximum recursive search depth when Limit Max Depth is on"
+    },
+    {
+      "name": "limitmaxops",
+      "type": "Toggle",
+      "note": "Limit the total number of operators iterated"
+    },
+    {
+      "name": "maxops",
+      "type": "Int",
+      "note": "Maximum operator count when Limit Max Operators is on"
+    },
+    {
+      "name": "objects",
+      "type": "Toggle",
+      "note": "Include Object COMPs"
+    },
+    {
+      "name": "panels",
+      "type": "Toggle",
+      "note": "Include Panel COMPs"
+    },
+    {
+      "name": "other",
+      "type": "Toggle",
+      "note": "Include other COMP types such as Base COMP"
+    },
+    {
+      "name": "tops",
+      "type": "Toggle",
+      "note": "Include TOP family operators"
+    },
+    {
+      "name": "chops",
+      "type": "Toggle",
+      "note": "Include CHOP family operators"
+    },
+    {
+      "name": "sops",
+      "type": "Toggle",
+      "note": "Include SOP family operators"
+    },
+    {
+      "name": "mats",
+      "type": "Toggle",
+      "note": "Include MAT family operators"
+    },
+    {
+      "name": "dats",
+      "type": "Toggle",
+      "note": "Include DAT family operators"
+    },
+    {
+      "name": "casesensitive",
+      "type": "Toggle",
+      "note": "Apply case sensitivity to pattern matching filters"
+    },
+    {
+      "name": "combinefilters",
+      "type": "Menu",
+      "note": "Combine filters using all, any, or custom boolean logic"
+    },
+    {
+      "name": "customcombine",
+      "type": "String",
+      "note": "Custom boolean expression for combining filters"
+    },
+    {
+      "name": "namefilter",
+      "type": "String",
+      "note": "Filter by operator name"
+    },
+    {
+      "name": "typefilter",
+      "type": "String",
+      "note": "Filter by operator type such as waveCHOP or panelexecuteDAT"
+    },
+    {
+      "name": "parentshortcutfilter",
+      "type": "String",
+      "note": "Filter by Parent Shortcut"
+    },
+    {
+      "name": "opshortcutfilter",
+      "type": "String",
+      "note": "Filter by OP Shortcut"
+    },
+    {
+      "name": "pathfilter",
+      "type": "String",
+      "note": "Filter by operator path"
+    },
+    {
+      "name": "parentfilter",
+      "type": "String",
+      "note": "Filter by relative parent path"
+    },
+    {
+      "name": "excludefilter",
+      "type": "String",
+      "note": "Exclude matching relative paths from the search"
+    },
+    {
+      "name": "wirepathfilter",
+      "type": "String",
+      "note": "Filter by wire path"
+    },
+    {
+      "name": "commentfilter",
+      "type": "String",
+      "note": "Filter by operator comment"
+    },
+    {
+      "name": "tagsfilter",
+      "type": "String",
+      "note": "Filter by user-defined tags"
+    },
+    {
+      "name": "textfilter",
+      "type": "String",
+      "note": "Filter DAT-family operators by text contents"
+    },
+    {
+      "name": "parnamefilter",
+      "type": "String",
+      "note": "Filter operators by parameter name"
+    },
+    {
+      "name": "parvaluefilter",
+      "type": "String",
+      "note": "Filter operators by parameter value"
+    },
+    {
+      "name": "parexpressionfilter",
+      "type": "String",
+      "note": "Filter operators by parameter expression"
+    },
+    {
+      "name": "parnondefaultonly",
+      "type": "Toggle",
+      "note": "Only match parameters with non-default values"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT Path",
+      "note": "Optional callback can reject otherwise matched rows"
+    },
+    {
+      "name": "convertbool",
+      "type": "Toggle",
+      "note": "Convert boolean values to 1 or 0 in callback output"
+    },
+    {
+      "name": "convertnone",
+      "type": "Toggle",
+      "note": "Convert None values to empty strings in callback output"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "idcol",
+      "type": "Toggle",
+      "note": "Include the unique operator id column"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "legacycols",
+      "type": "Toggle",
+      "note": "Use legacy OP Find output column names"
+    },
+    {
+      "name": "namecol",
+      "type": "Toggle",
+      "note": "Include the operator name column"
+    },
+    {
+      "name": "pathcol",
+      "type": "Toggle",
+      "note": "Include the operator path column"
+    },
+    {
+      "name": "relpathcol",
+      "type": "Toggle",
+      "note": "Include the path relative to the search root"
+    },
+    {
+      "name": "typecol",
+      "type": "Toggle",
+      "note": "Include the operator type column"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Deep hierarchy searches can be expensive; generated diagnostics should set depth or maximum-operator bounds when possible.",
+    "Incremental cook mode spreads search work over frames and may output partial results until traversal finishes.",
+    "An input DAT can seed search roots, but its first column must contain operator ids generated by OP Find's ID column.",
+    "Case sensitivity applies across all pattern criteria, so mixed path/tag/name searches need one consistent matching mode.",
+    "Callback filters should be pure predicates; mutating the searched hierarchy while searching can destabilize results."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "network-inventory-and-filtering",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Traverses a component hierarchy and outputs one row per operator matching selected criteria.",
+    "Component, depth, family, and operator-count parameters bound the search space.",
+    "Filter parameters match names, types, paths, comments, tags, DAT text, and parameter names/values/expressions.",
+    "Column toggles and callbacks customize the result table and allow custom output columns."
+  ]
+}

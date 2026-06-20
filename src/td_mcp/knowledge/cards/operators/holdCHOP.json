@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "holdCHOP",
+  "family": "CHOP",
+  "display_name": "Hold CHOP",
+  "docs_url": "https://docs.derivative.ca/Hold_CHOP",
+  "summary": "Samples the first input according to trigger behavior from the second input and holds the captured values until the next sample event.",
+  "key_concepts": [
+    "Samples channels from the first input and uses the second input as the trigger source.",
+    "Sample modes choose rising edge, high level, falling edge, low level, or trigger value change behavior.",
+    "Hold Last continues sampling while on and holds values while off, which is easy to misread in generated plans.",
+    "Hold Last Pulse immediately samples the input and holds that captured value.",
+    "Hold per Sample applies the hold to each sample for multi-sample channels instead of only the last sample."
+  ],
+  "key_params": [
+    {"name": "sample", "type": "Menu", "note": "When to sample: off-to-on, while on, on-to-off, while off, or value change"},
+    {"name": "offtoon", "type": "MenuItem", "note": "Sample on rising trigger edge"},
+    {"name": "whileon", "type": "MenuItem", "note": "Sample while trigger is above zero"},
+    {"name": "ontooff", "type": "MenuItem", "note": "Sample on falling trigger edge"},
+    {"name": "whileoff", "type": "MenuItem", "note": "Sample while trigger is zero"},
+    {"name": "valuechange", "type": "MenuItem", "note": "Sample whenever trigger value changes"},
+    {"name": "hold", "type": "Toggle", "note": "Continue sampling while on, or hold values while off"},
+    {"name": "holdpulse", "type": "Pulse", "note": "Sample and hold immediately"},
+    {"name": "holdsamples", "type": "Toggle", "note": "Hold each sample rather than only the last sample"}
+  ],
+  "common_gotchas": [
+    "The default behavior samples on a 0-to-1 style event from input 2.",
+    "In off-to-on mode, Hold does not resample while the second input stays high and does not sample on the falling edge.",
+    "Input 1 supplies values; input 2 controls sampling.",
+    "Hold per Sample matters for multi-sample channels because normal hold behavior works on the current channel value.",
+    "For continuous latch behavior, choose While On or Value Change rather than Off to On."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

@@ -2,7 +2,7 @@
 
 
 
-## 2.0.0 - 2026-06-16 — Correctness-first visual programming brain
+## 2.0.0 - 2026-06-20 — Correctness-first visual programming brain + full operator atlas
 
 ### Added
 
@@ -26,6 +26,17 @@
 - **Operator atlas coverage gate**: added missing structured operator cards for
   the brain profiles and `scripts/audit_brain_atlas.py` to keep the planner's
   required operator set covered.
+- **Full operator atlas**: expanded the structured knowledge base to **656
+  operator cards** (615 new) spanning the near-complete TouchDesigner operator
+  set across TOP/CHOP/SOP/POP/COMP/MAT/DAT families, plus a new article-card
+  channel. Each card carries summary, key concepts, key params (with TD 2025+
+  param names), common gotchas, docs URL, and a `last_verified` date.
+- **Atlas authoring + docs pipeline**: `src/td_mcp/brain/atlas_drafts.py` and
+  `operator_availability.py`, plus `scripts/draft_brain_atlas_cards.py`,
+  `scripts/sample_operator_availability.py`,
+  `scripts/refresh_docs_mirror_from_inventory.py`, and
+  `scripts/refresh_docs_release_pages.py` to draft, sample, and refresh atlas
+  cards and the docsbrain mirror from a Derivative docs inventory.
 - **Client packaging**: Codex/Claude brain skills, brain agents, deterministic
   hooks, MCP prompts, cached live resources, schema snapshots, golden evals,
   and release audits are now part of the distributable surface.
@@ -39,6 +50,9 @@
   transaction policy where requested.
 - Public metadata now advertises the 110-tool brain/cockpit surface across the
   MCP manifest, Claude plugin, Codex plugin, npm package, docs, and skills.
+- **Refreshed 41 existing operator cards** with corrected TD 2025+ parameter
+  names (e.g. LFO CHOP `type`->`wavetype`, `amplitude`->`amp`), added key
+  concepts, and updated `last_verified` dates.
 
 ### Verification
 
@@ -48,6 +62,13 @@
 - Added release commands for `eval_brain_golden.py`, `brain_live_smoke.py`,
   `audit_brain_atlas.py`, `audit_brain_skills.py`, and
   `audit_plugin_surface.py`.
+- Added atlas + docs coverage tests (`test_seed_corpus.py`,
+  `test_atlas_coverage.py`, `test_atlas_drafts.py`,
+  `test_operator_availability.py`, `test_docs_mirror_refresh.py`,
+  `test_docs_release_refresh.py`). Full suite: **1,149 tests passing**.
+- Fixed `test_tools_contract.py` resource-count regex to detect multi-line
+  `@mcp.resource(` decorators (the cockpit resource); manifest surface now
+  validates at 110 tools / 9 templates / 4 static resources.
 
 ## 1.6.16 - 2026-05-18 — Agent observability (read journal + activity log) + one-tool self-update
 

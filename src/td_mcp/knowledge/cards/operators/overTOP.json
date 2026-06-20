@@ -1,0 +1,89 @@
+{
+  "card_type": "operator",
+  "op_type": "overTOP",
+  "family": "TOP",
+  "display_name": "Over TOP",
+  "docs_url": "https://docs.derivative.ca/Over_TOP",
+  "summary": "Alpha-composites Input 1 over Input 2, using Input 1 alpha to reveal or obscure the background image.",
+  "key_params": [
+    {
+      "name": "size",
+      "type": "Menu",
+      "note": "Fixed layer that defines final resolution/aspect: input1 or input2."
+    },
+    {
+      "name": "prefit",
+      "type": "Menu",
+      "note": "Fit behavior for the foreground before compositing."
+    },
+    {
+      "name": "justifyh",
+      "type": "Menu",
+      "note": "Horizontal placement of the foreground layer."
+    },
+    {
+      "name": "justifyv",
+      "type": "Menu",
+      "note": "Vertical placement of the foreground layer."
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Foreground sampling beyond image edges."
+    },
+    {
+      "name": "r",
+      "type": "Float",
+      "note": "Foreground rotation."
+    },
+    {
+      "name": "t",
+      "type": "XY",
+      "note": "Foreground translation."
+    },
+    {
+      "name": "tunit",
+      "type": "Menu",
+      "note": "Translation units."
+    },
+    {
+      "name": "s",
+      "type": "XY",
+      "note": "Foreground scale."
+    },
+    {
+      "name": "p",
+      "type": "XY",
+      "note": "Foreground pivot."
+    },
+    {
+      "name": "punit",
+      "type": "Menu",
+      "note": "Pivot units."
+    },
+    {
+      "name": "legacyxform",
+      "type": "Toggle",
+      "note": "Use legacy transform behavior."
+    }
+  ],
+  "common_gotchas": [
+    "Input 1 is the foreground; swapping inputs changes the visual result.",
+    "Fully opaque Input 1 hides Input 2.",
+    "Fixed Layer chooses output dimensions but does not change Input 1 over Input 2 semantics.",
+    "Legacy Transform changes transform matrix behavior and should be explicit when matching older networks.",
+    "3D textures and 2D texture arrays should keep depth and array size consistent downstream."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Compositing_snippets"
+  ],
+  "build_relevance": "alpha_composite",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Alpha-composites Input 1 over Input 2.",
+    "Input 1 alpha controls how much of Input 2 remains visible.",
+    "Supports 3D textures and 2D texture arrays in addition to 2D textures.",
+    "Fixed Layer controls final resolution/aspect while transform parameters affect the overlay layer."
+  ]
+}

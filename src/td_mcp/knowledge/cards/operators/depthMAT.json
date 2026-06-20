@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "depthMAT",
+  "family": "MAT",
+  "display_name": "Depth MAT",
+  "docs_url": "https://docs.derivative.ca/Depth_MAT",
+  "summary": "Writes depth for geometry without drawing visible shaded color, useful for invisible occluders, depth masks, and Z-buffer control.",
+  "key_params": [
+    {"name": "dodeform", "type": "Toggle", "note": "Enable common MAT deform handling for skinned geometry"},
+    {"name": "depthtest", "type": "Toggle", "note": "Enable common MAT depth testing"},
+    {"name": "depthfunc", "type": "Menu", "note": "Depth comparison function"},
+    {"name": "depthwriting", "type": "Toggle", "note": "Write depth values to the depth buffer"},
+    {"name": "cullface", "type": "Menu", "note": "Cull front, back, both, or neither face set"},
+    {"name": "polygonoffset", "type": "Toggle", "note": "Push depth slightly to avoid Z-fighting"}
+  ],
+  "key_concepts": [
+    "Depth MAT is a depth-only material for creating invisible Z barriers, depth masks, and occluders without writing visible shaded color.",
+    "Depth testing decides whether a fragment passes against existing depth, while depth writing decides whether the passing fragment updates the depth buffer.",
+    "Cull Face settings are material to a depth-only occluder because culling one side can remove the expected barrier from that view direction.",
+    "Polygon depth offset is useful when an invisible depth surface is coplanar with visible geometry and would otherwise cause Z-fighting.",
+    "Deform settings still matter when the invisible depth object is skinned or driven by capture attributes."
+  ],
+  "common_gotchas": [
+    "Depth MAT is intentionally invisible in color output; use it when the object should occlude, mask, or reserve depth.",
+    "Depth writing and depth testing are separate states; disabling either can defeat the occlusion purpose.",
+    "Cull face settings can make the depth barrier disappear from one side.",
+    "Use polygon depth offset carefully when coplanar geometry causes Z-fighting."
+  ],
+  "related_snippets": ["MAT_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

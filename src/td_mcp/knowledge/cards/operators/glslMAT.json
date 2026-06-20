@@ -1,0 +1,269 @@
+{
+  "card_type": "operator",
+  "op_type": "glslMAT",
+  "family": "MAT",
+  "display_name": "GLSL MAT",
+  "docs_url": "https://docs.derivative.ca/GLSL_MAT",
+  "summary": "Custom GLSL material for SOP/POP geometry. Supports vertex, pixel, and optional geometry shader stages, TD-specific uniforms/functions, explicit shader attribute declarations for POP workflows, samplers, vectors, matrices, specialization constants, deformation data, and render-state controls such as blending, depth test, alpha test, wireframe, cull face, and polygon offset.",
+  "key_params": [
+    {
+      "name": "glslversion",
+      "type": "Menu",
+      "note": "GLSL language version used for compilation"
+    },
+    {
+      "name": "predat",
+      "type": "DAT",
+      "note": "Preprocess directives DAT for directives that must appear before TD-inserted shader declarations"
+    },
+    {
+      "name": "vdat",
+      "type": "DAT",
+      "note": "Vertex shader DAT"
+    },
+    {
+      "name": "pdat",
+      "type": "DAT",
+      "note": "Pixel/fragment shader DAT"
+    },
+    {
+      "name": "gdat",
+      "type": "DAT",
+      "note": "Optional geometry shader DAT"
+    },
+    {
+      "name": "inherit",
+      "type": "MAT",
+      "note": "GLSL MAT to inherit textures and uniforms from"
+    },
+    {
+      "name": "lightingspace",
+      "type": "Menu",
+      "note": "World Space or legacy Camera Space lighting"
+    },
+    {
+      "name": "inprim",
+      "type": "Menu",
+      "note": "Input primitive type for geometry shader stage"
+    },
+    {
+      "name": "outprim",
+      "type": "Menu",
+      "note": "Output primitive type for geometry shader stage"
+    },
+    {
+      "name": "numout",
+      "type": "Int",
+      "note": "Maximum number of vertices emitted by the geometry shader"
+    },
+    {
+      "name": "twocolor",
+      "type": "Toggle",
+      "note": "Enable two-sided coloring support"
+    },
+    {
+      "name": "attr0name",
+      "type": "String",
+      "note": "Attribute name exposed to shader accessors"
+    },
+    {
+      "name": "attr0type",
+      "type": "Menu",
+      "note": "Attribute vector/scalar type such as float, vec3, int, or uvec4"
+    },
+    {
+      "name": "attr0size",
+      "type": "Int",
+      "note": "Array size for the declared attribute; 1 means non-array"
+    },
+    {
+      "name": "sampler0name",
+      "type": "String",
+      "note": "Sampler uniform name used by the shader"
+    },
+    {
+      "name": "sampler0top",
+      "type": "TOP",
+      "note": "TOP referenced by the sampler"
+    },
+    {
+      "name": "sampler0extendu",
+      "type": "Menu",
+      "note": "Sampler U extend mode"
+    },
+    {
+      "name": "sampler0extendv",
+      "type": "Menu",
+      "note": "Sampler V extend mode"
+    },
+    {
+      "name": "sampler0extendw",
+      "type": "Menu",
+      "note": "Sampler W extend mode for 3D textures"
+    },
+    {
+      "name": "sampler0filter",
+      "type": "Menu",
+      "note": "Sampler filtering mode such as nearest, linear, or mipmap linear"
+    },
+    {
+      "name": "sampler0anisotropy",
+      "type": "Menu",
+      "note": "Sampler anisotropic filtering amount"
+    },
+    {
+      "name": "vec0name",
+      "type": "String",
+      "note": "Vector uniform name"
+    },
+    {
+      "name": "vec0value",
+      "type": "Float",
+      "note": "Vector uniform value tuple"
+    },
+    {
+      "name": "matrix0name",
+      "type": "String",
+      "note": "Matrix uniform name"
+    },
+    {
+      "name": "matrix0value",
+      "type": "Matrix",
+      "note": "Matrix uniform value"
+    },
+    {
+      "name": "rel0name",
+      "type": "String",
+      "note": "Relative transform matrix uniform name"
+    },
+    {
+      "name": "rel0from",
+      "type": "COMP",
+      "note": "Source Object COMP for relative transform"
+    },
+    {
+      "name": "rel0to",
+      "type": "COMP",
+      "note": "Destination Object COMP for relative transform"
+    },
+    {
+      "name": "const0name",
+      "type": "String",
+      "note": "Specialization constant name"
+    },
+    {
+      "name": "const0value",
+      "type": "Value",
+      "note": "Specialization constant value"
+    },
+    {
+      "name": "dodeform",
+      "type": "Toggle",
+      "note": "Enable deform support on this material"
+    },
+    {
+      "name": "deformdata",
+      "type": "Menu",
+      "note": "Source of deform bone data: SOP, another MAT, or Deform In MAT"
+    },
+    {
+      "name": "targetsop",
+      "type": "SOP",
+      "note": "SOP containing capture attributes"
+    },
+    {
+      "name": "pcaptpath",
+      "type": "String",
+      "note": "pCaptPath capture attribute name"
+    },
+    {
+      "name": "pcaptdata",
+      "type": "String",
+      "note": "pCaptData capture attribute name"
+    },
+    {
+      "name": "skelrootpath",
+      "type": "COMP",
+      "note": "Root component path for the skeleton"
+    },
+    {
+      "name": "mat",
+      "type": "MAT",
+      "note": "Source MAT when obtaining deform data from a MAT or Deform In MAT"
+    },
+    {
+      "name": "blending",
+      "type": "Toggle",
+      "note": "Enable blending/transparency render state"
+    },
+    {
+      "name": "depthtest",
+      "type": "Toggle",
+      "note": "Enable Depth Test"
+    },
+    {
+      "name": "depthwriting",
+      "type": "Toggle",
+      "note": "Write passing depth values into the Depth-Buffer"
+    },
+    {
+      "name": "alphatest",
+      "type": "Toggle",
+      "note": "Discard pixels based on alpha"
+    },
+    {
+      "name": "alphathreshold",
+      "type": "Float",
+      "note": "Alpha threshold used by alpha test"
+    },
+    {
+      "name": "wireframe",
+      "type": "Menu",
+      "note": "Wireframe render mode"
+    },
+    {
+      "name": "cullface",
+      "type": "Menu",
+      "note": "Cull face render-state override"
+    },
+    {
+      "name": "polygonoffset",
+      "type": "Toggle",
+      "note": "Enable polygon depth offset for z-fighting, shadow, or coplanar-surface cases"
+    }
+  ],
+  "key_concepts": [
+    "TDAttrib_<attribName>()",
+    "POP based workflows",
+    "Sampler Page",
+    "Texture Sampling Parameters",
+    "Uniform vectors",
+    "Relative transforms",
+    "Specialization Constants",
+    "Deform Page",
+    "pCaptPath",
+    "pCaptData",
+    "Blending",
+    "Depth Test",
+    "Alpha Test",
+    "Wire Frame",
+    "Cull Face",
+    "Polygon Depth Offset",
+    "Info CHOP"
+  ],
+  "common_gotchas": [
+    "Compile failures display a blue/red checkerboard material; inspect Errors or Info CHOP/Info DAT output for the shader compiler message.",
+    "For POP-compatible attributes, declare attributes on the Attributes page and access them with TDAttrib_<Name>() rather than raw in declarations.",
+    "Sampler declarations must match the TOP dimensionality, such as sampler2D for 2D TOPs and sampler3D for 3D TOPs; configure filtering and extend modes on the Samplers page.",
+    "Lighting Space defaults to World Space; legacy Camera Space is for older 088-era shader assumptions.",
+    "When geometry has been through Bone Group SOP, pCaptPath may be split into bone group attributes such as pCaptPath0, so match the group rendered by this material.",
+    "Depth Test controls whether fragments compare against the Depth-Buffer, while Depth Writing controls whether passing fragments update it.",
+    "Use Polygon Depth Offset for z-fighting, shadow, or coplanar-surface cases, not as a general position fix."
+  ],
+  "related_snippets": [
+    "GLSL_snippets",
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18"
+}

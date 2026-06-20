@@ -1,0 +1,53 @@
+{
+  "card_type": "operator",
+  "op_type": "kinectCHOP",
+  "family": "CHOP",
+  "display_name": "Kinect CHOP",
+  "docs_url": "https://docs.derivative.ca/Kinect_CHOP",
+  "summary": "Reads positional, skeletal, interaction, and optional face-tracking data from Kinect for Windows and Kinect 2 sensors.",
+  "key_concepts": [
+    "Reads positional and skeletal tracking data from Kinect for Windows or Kinect 2 hardware, with full/seated/off skeleton modes.",
+    "Kinect v1 can track up to two full skeletons while Kinect 2 can track up to six; additional center positions may still be tracked.",
+    "World Space, Color Space, Depth Space, face tracking, and interaction toggles choose which coordinate and interaction channels are emitted.",
+    "Bone rotation and length options support rigging workflows, and Unroll Bone Values avoids wraparound discontinuities before blending or filtering.",
+    "Joint smoothing, prediction, jitter radius, max deviation, and rotation smoothing trade raw responsiveness against noise and latency."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Capture data from the selected Kinect sensor"},
+    {"name": "hwversion", "type": "Menu", "note": "Choose Kinect v1 or Kinect v2 hardware"},
+    {"name": "sensor", "type": "Integer", "note": "Select Kinect v1 sensor index"},
+    {"name": "skeleton", "type": "Menu", "note": "Full, seated, or off skeletal tracking"},
+    {"name": "maxplayers", "type": "Integer", "note": "Maximum tracked player skeletons"},
+    {"name": "interactions", "type": "Toggle", "note": "Output Kinect interaction channels such as grip/press"},
+    {"name": "relbonerotations", "type": "Toggle", "note": "Output relative bone rotation channels"},
+    {"name": "absbonerotations", "type": "Toggle", "note": "Output absolute bone rotation channels"},
+    {"name": "bonelengths", "type": "Toggle", "note": "Output bone length channels"},
+    {"name": "unrollbones", "type": "Toggle", "note": "Avoid rotation discontinuities for filtering/blending"},
+    {"name": "worldspace", "type": "Toggle", "note": "Output tracked positions in world coordinates"},
+    {"name": "colorspace", "type": "Toggle", "note": "Output color image coordinates"},
+    {"name": "depthspace", "type": "Toggle", "note": "Output depth image coordinates"},
+    {"name": "facetracking", "type": "Toggle", "note": "Enable Kinect face tracking"},
+    {"name": "statuschans", "type": "Toggle", "note": "Output tracked and clipped status channels"},
+    {"name": "neardepthmode", "type": "Toggle", "note": "Enable near depth mode for skeleton tracking"},
+    {"name": "flipskelu", "type": "Toggle", "note": "Mirror skeleton U direction"},
+    {"name": "flipfaceu", "type": "Toggle", "note": "Mirror face U direction"},
+    {"name": "jointsmoothing", "type": "Toggle", "note": "Enable joint smoothing parameters"},
+    {"name": "smoothing", "type": "Float", "note": "Amount of skeleton position smoothing"},
+    {"name": "correction", "type": "Float", "note": "How quickly smoothed positions correct toward raw data"},
+    {"name": "prediction", "type": "Float", "note": "Predictive smoothing amount"},
+    {"name": "jitterrad", "type": "Float", "note": "Jitter-reduction radius in meters"},
+    {"name": "maxdevrad", "type": "Float", "note": "Maximum filtered deviation from raw data"},
+    {"name": "rotationsmoothing", "type": "Toggle", "note": "Apply Kinect smoothing to rotation channels"}
+  ],
+  "common_gotchas": [
+    "Official docs list this operator as Windows-only.",
+    "Only Kinect for Windows hardware and Kinect 2 are supported, not Kinect for Xbox hardware.",
+    "Kinect 2 requires the Kinect 2 SDK/runtime; Kinect v1 requires the Kinect runtime matching the TouchDesigner build era.",
+    "The Kinect 2 SDK does not allow multiple Kinect 2 devices on one system at the same time.",
+    "Interaction mode requires a 640x480 depth resolution and can affect the matching Kinect TOP depth output.",
+    "Unroll bone rotation values before blending/filtering skeletal rotations to avoid wraparound jumps."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ Windows device tracking",
+  "last_verified": "2026-06-18"
+}

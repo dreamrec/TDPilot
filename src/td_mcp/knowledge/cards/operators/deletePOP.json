@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "deletePOP",
+  "family": "POP",
+  "display_name": "Delete POP",
+  "docs_url": "https://docs.derivative.ca/Delete_POP",
+  "summary": "Deletes or keeps points or primitives using attribute, thin, pattern, group, and bounding methods. The logic can be built from sequential selection blocks and applied to points or primitives.",
+  "key_params": [
+    {"name": "invert", "type": "Menu", "note": "Delete selected or non-selected elements"},
+    {"name": "entity", "type": "Menu", "note": "Delete points or primitives"},
+    {"name": "linestripbehavior", "type": "Menu", "note": "Split or delete affected line strips"},
+    {"name": "cpureadback", "type": "Toggle", "note": "Copy point count and topology information back to CPU"},
+    {"name": "attr", "type": "Sequential", "note": "Attribute-based delete blocks"},
+    {"name": "pattern", "type": "Sequential", "note": "Pattern-matching delete blocks"},
+    {"name": "group", "type": "Sequential", "note": "Group-based delete blocks"},
+    {"name": "bound", "type": "Sequential", "note": "Bounding volume delete blocks"}
+  ],
+  "key_concepts": [
+    "Deletes or keeps selected points or primitives with the Operation menu.",
+    "Selection logic can come from attribute comparisons, thinning, index patterns, existing groups, or bounding volumes.",
+    "Sequential condition blocks combine with boolean operators such as and, or, xor, nand, and nor.",
+    "Topology changes cascade: deleting primitives can remove unused points, while deleting points affects vertices and primitives that reference them."
+  ],
+  "common_gotchas": [
+    "Deleting points can trim, split, or remove line strips depending on Line Strip Behavior.",
+    "When deleting primitives, unused points and vertices can also be removed.",
+    "Complex delete predicates are often easier to debug if a Math Mix POP creates a visible mask attribute first."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

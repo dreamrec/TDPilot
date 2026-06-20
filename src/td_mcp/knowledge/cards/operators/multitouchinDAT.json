@@ -1,0 +1,142 @@
+{
+  "card_type": "operator",
+  "op_type": "multitouchinDAT",
+  "family": "DAT",
+  "display_name": "Multi Touch In DAT",
+  "docs_url": "https://docs.derivative.ca/Multi_Touch_In_DAT",
+  "summary": "Receives Windows multi-touch events as either raw event FIFO rows or an ID table, with optional panel-relative coordinates, occlusion handling, mouse support, and callbacks.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable multi-touch input"
+    },
+    {
+      "name": "outputtype",
+      "type": "Menu",
+      "note": "Choose raw event FIFO or current ID table output"
+    },
+    {
+      "name": "panel",
+      "type": "COMP Path",
+      "note": "Panel used for relative touch coordinates and occlusion testing"
+    },
+    {
+      "name": "relativeid",
+      "type": "Toggle",
+      "note": "Report touch IDs relative to the selected panel"
+    },
+    {
+      "name": "relativepos",
+      "type": "Toggle",
+      "note": "Report touch positions relative to the selected panel"
+    },
+    {
+      "name": "occlusion",
+      "type": "Toggle",
+      "note": "Restrict touch events by panel hierarchy"
+    },
+    {
+      "name": "occbydepth",
+      "type": "Toggle",
+      "note": "Filter touch events by panel depth layer"
+    },
+    {
+      "name": "occdepthlayer",
+      "type": "Integer",
+      "note": "Ignore touch events above this panel depth layer"
+    },
+    {
+      "name": "mouse",
+      "type": "Toggle",
+      "note": "Include mouse input as touch-style rows"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT Path",
+      "note": "Callback DAT for received multi-touch messages"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose the execution context for callbacks"
+    },
+    {
+      "name": "fromop",
+      "type": "OP Path",
+      "note": "Operator path used when Execute from is set to Specified Operator"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Limit output message history"
+    },
+    {
+      "name": "maxlines",
+      "type": "Integer",
+      "note": "Maximum number of message rows to retain"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear accumulated output rows"
+    },
+    {
+      "name": "contactthresh",
+      "type": "Float",
+      "note": "Minimum contact amount for touch events"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "doubleclickthresh",
+      "type": "Float",
+      "note": "Maximum time between clicks for double-click detection"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "minrows",
+      "type": "Int",
+      "note": "Minimum number of rows always displayed"
+    },
+    {
+      "name": "posthresh",
+      "type": "Float",
+      "note": "Minimum position change before a new touch message is added"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "The operator uses the Windows standard multi-touch API and is not a portable macOS touch input solution.",
+    "Mouse emulation can share ID 1 with the first touch, so mixed mouse/touch logic needs guards.",
+    "Raw Events and ID Table outputs have different table shapes and should not be swapped without downstream changes.",
+    "Panel occlusion depends on hierarchy and depth-layer settings, so touch routing should be validated visually."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "windows-multitouch-event-tables",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Captures multitouch panel events into a DAT table.",
+    "Output can be raw FIFO events or one-row-per-finger ID table state.",
+    "Panel, relative id, relative position, and occlusion parameters scope the captured touch region.",
+    "Threshold, mouse, callback, and retention controls shape event volume and semantics."
+  ]
+}

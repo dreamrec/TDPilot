@@ -1,0 +1,76 @@
+{
+  "card_type": "operator",
+  "op_type": "polysplineSOP",
+  "family": "SOP",
+  "display_name": "Polyspline SOP",
+  "docs_url": "https://docs.derivative.ca/Polyspline_SOP",
+  "summary": "Fits splines to polygon or hull input and outputs polygonal approximations with several resampling and endpoint controls.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Input primitive group"
+    },
+    {
+      "name": "basis",
+      "type": "Menu",
+      "note": "Spline basis"
+    },
+    {
+      "name": "closure",
+      "type": "Menu",
+      "note": "Closure behavior"
+    },
+    {
+      "name": "divide",
+      "type": "Menu",
+      "note": "Division method"
+    },
+    {
+      "name": "segsize",
+      "type": "Float",
+      "note": "Segment size for even-length output"
+    },
+    {
+      "name": "polydivs",
+      "type": "Int",
+      "note": "Polygon divisions"
+    },
+    {
+      "name": "edgedivs",
+      "type": "Int",
+      "note": "Edge divisions"
+    },
+    {
+      "name": "first",
+      "type": "Int",
+      "note": "First CV count for open curve endpoints"
+    },
+    {
+      "name": "last",
+      "type": "Int",
+      "note": "Last CV count for open curve endpoints"
+    },
+    {
+      "name": "tension",
+      "type": "Float",
+      "note": "Cardinal tension"
+    }
+  ],
+  "common_gotchas": [
+    "Even-length mode is invalid when both output divisions and segment length are zero.",
+    "The output is still polygonal, so it is an approximation of the fitted spline.",
+    "Basis choice and closure mode can materially change endpoint and hull behavior."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "spline-fitting-to-polygon-output",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Polyspline SOP fits spline curves to polygon or hull inputs, then outputs polygonal approximations.",
+    "It can preserve original point divisions or create equal-length, axis, or edge-based divisions.",
+    "First and last CV counts affect open-curve endpoint behavior.",
+    "Viewport point display is useful for inspecting the generated divisions and endpoint handling."
+  ]
+}

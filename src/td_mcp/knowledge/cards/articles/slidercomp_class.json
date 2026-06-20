@@ -1,0 +1,50 @@
+{
+  "card_type": "article",
+  "article_id": "slidercomp_class",
+  "title": "sliderCOMP Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "COMP",
+    "PANEL"
+  ],
+  "summary": "Official Derivative Python API reference for Slider COMP instances, covering the operator-specific click() method for one-dimensional and UV sliders plus inherited PanelCOMP / COMP behavior.",
+  "source_url": "https://docs.derivative.ca/SliderCOMP_Class",
+  "docsbrain_page_id": "slidercomp_class",
+  "covered_operators": [
+    "sliderCOMP"
+  ],
+  "key_concepts": [
+    "sliderCOMP Class",
+    "Slider COMP",
+    "COMP class",
+    "PanelCOMP Class",
+    "No operator specific members",
+    "click()",
+    "uOrV",
+    "v",
+    "normalized coordinates",
+    "U slider",
+    "V slider",
+    "UV slider",
+    "vOnly",
+    "clickCount",
+    "force",
+    "left",
+    "middle",
+    "right",
+    "panel",
+    "PanelValue Class"
+  ],
+  "guidance": [
+    "Use this article when a script needs to simulate a Slider COMP click to update panel U, V, or UV state.",
+    "If one value is provided, it updates the slider's primary coordinate: U for U sliders and V for V sliders.",
+    "Use two normalized coordinates to update both U and V on a UV slider.",
+    "Use vOnly=True when one coordinate is supplied to a UV slider and only the V coordinate should change.",
+    "Use force carefully because it can click the slider even when it is disabled; specify left, middle, or right when the default left-button event is not the target."
+  ],
+  "related_snippets": [
+    "panel_ui"
+  ],
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "lookuptexturePOP",
+  "family": "POP",
+  "display_name": "Lookup Texture POP",
+  "docs_url": "https://docs.derivative.ca/Lookup_Texture_POP",
+  "summary": "Samples a TOP using POP attribute values as texture indices, reads RGBA values, and writes them into POP attributes. It can sample 2D textures through U/V attributes and 3D texture TOPs with W.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Point, vertex, or primitive class"},
+    {"name": "top", "type": "TOP", "note": "TOP to sample"},
+    {"name": "indexunit", "type": "Menu", "note": "Normalized or pixel-index lookup units"},
+    {"name": "cyclic", "type": "Toggle", "note": "Wrap lookup indices"},
+    {"name": "inputextend", "type": "Menu", "note": "Input extend behavior"},
+    {"name": "interpolate", "type": "Toggle", "note": "Interpolate TOP pixels"},
+    {"name": "channelmask", "type": "String/Menu", "note": "RGBA channel selection"},
+    {"name": "outputattrscope", "type": "String/Menu", "note": "Attribute to receive sampled values"}
+  ],
+  "key_concepts": [
+    "Uses POP attributes as U/V lookup coordinates to sample RGBA values from a TOP into POP attributes.",
+    "Normalized index mode maps 0-1 across the image while pixel-index mode uses explicit pixel coordinates.",
+    "Lookup Attribute W enables 3D Texture TOP sampling when a depth component is provided.",
+    "Pixel-centered sampling, input extend modes, interpolation, and Channel Mask control how texture samples become attribute values."
+  ],
+  "common_gotchas": [
+    "Normalized U/V values map 0 to the first pixel and 1 to the last pixel.",
+    "Pixel Index mode uses actual pixel coordinates, not normalized values.",
+    "Use W lookup only when sampling a 3D texture TOP."
+  ],
+  "related_snippets": ["POP_snippets", "TOP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

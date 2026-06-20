@@ -1,0 +1,98 @@
+{
+  "card_type": "operator",
+  "op_type": "boxSOP",
+  "family": "SOP",
+  "display_name": "Box SOP",
+  "docs_url": "https://docs.derivative.ca/Box_SOP",
+  "summary": "Creates cuboid geometry or, when connected to an input, generates a box that bounds the incoming geometry.",
+  "key_params": [
+    {
+      "name": "orientbounds",
+      "type": "Toggle",
+      "note": "Rotate the bounds box to match the input SOP orientation"
+    },
+    {
+      "name": "modifybounds",
+      "type": "Toggle",
+      "note": "Enable transform parameters to adjust input-derived bounds"
+    },
+    {
+      "name": "size",
+      "type": "XYZ",
+      "note": "Box size along X, Y, and Z"
+    },
+    {
+      "name": "t",
+      "type": "XYZ",
+      "note": "Box center"
+    },
+    {
+      "name": "r",
+      "type": "XYZ",
+      "note": "Box rotation"
+    },
+    {
+      "name": "rord",
+      "type": "Menu",
+      "note": "Rotation order"
+    },
+    {
+      "name": "s",
+      "type": "Float",
+      "note": "Uniform scale"
+    },
+    {
+      "name": "anchoru",
+      "type": "Float",
+      "note": "X anchor point for positioning, scale, and rotation"
+    },
+    {
+      "name": "anchorv",
+      "type": "Float",
+      "note": "Y anchor point for positioning, scale, and rotation"
+    },
+    {
+      "name": "anchorw",
+      "type": "Float",
+      "note": "Z anchor point for positioning, scale, and rotation"
+    },
+    {
+      "name": "dodivs",
+      "type": "Toggle",
+      "note": "Enable box divisions"
+    },
+    {
+      "name": "divs",
+      "type": "XYZ",
+      "note": "Division count on X, Y, and Z"
+    },
+    {
+      "name": "texture",
+      "type": "Menu",
+      "note": "Texture coordinate generation mode"
+    },
+    {
+      "name": "normals",
+      "type": "Toggle",
+      "note": "Compute normals"
+    }
+  ],
+  "common_gotchas": [
+    "With an input connected, size and transform parameters modify a bounds result rather than an independent primitive.",
+    "Orient Bounds only matters for input-derived bounds.",
+    "For dense editable meshes or deformations, a Box SOP may need subdivision or conversion downstream.",
+    "Divided boxes create open polygons rather than a closed-face solid.",
+    "Consolidating corners changes point topology and can affect downstream point operations."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Box SOP creates cuboid geometry or, with an input, a box representing the incoming geometry bounds.",
+    "Transform and anchor parameters modify either the generated primitive or the input-derived bounds depending on connection state.",
+    "Divisions create editable open polygonal sections rather than a single closed solid mesh.",
+    "Texture-coordinate modes and normal generation are built into the box primitive workflow."
+  ]
+}

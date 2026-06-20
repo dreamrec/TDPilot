@@ -1,0 +1,138 @@
+{
+  "card_type": "operator",
+  "op_type": "xmlDAT",
+  "family": "DAT",
+  "display_name": "XML DAT",
+  "docs_url": "https://docs.derivative.ca/XML_DAT",
+  "summary": "Parses XML or SGML/HTML text into an internal element tree, filters scoped elements, and outputs selected element summaries, tree views, attributes, or text for further processing.",
+  "key_params": [
+    {
+      "name": "sgml",
+      "type": "Toggle",
+      "note": "Parse input as SGML/HTML instead of strict XML"
+    },
+    {
+      "name": "merge",
+      "type": "Menu",
+      "note": "Merge a second XML input before, after, inside, or replacing an element"
+    },
+    {
+      "name": "mlabel",
+      "type": "String",
+      "note": "Element label where merge occurs"
+    },
+    {
+      "name": "label",
+      "type": "String",
+      "note": "Element label scope filter"
+    },
+    {
+      "name": "type",
+      "type": "String",
+      "note": "Element type scope filter"
+    },
+    {
+      "name": "text",
+      "type": "String",
+      "note": "Element text scope filter"
+    },
+    {
+      "name": "name",
+      "type": "String",
+      "note": "Attribute name scope filter"
+    },
+    {
+      "name": "value",
+      "type": "String",
+      "note": "Attribute value scope filter"
+    },
+    {
+      "name": "oaname",
+      "type": "String",
+      "note": "Output only attributes whose name matches"
+    },
+    {
+      "name": "oavalue",
+      "type": "String",
+      "note": "Output only attributes whose value matches"
+    },
+    {
+      "name": "show",
+      "type": "Menu",
+      "note": "Choose output presentation such as summary table or summary tree"
+    },
+    {
+      "name": "plabel",
+      "type": "String",
+      "note": "Parent label scope filter"
+    },
+    {
+      "name": "ptype",
+      "type": "String",
+      "note": "Parent type scope filter"
+    },
+    {
+      "name": "ptext",
+      "type": "String",
+      "note": "Parent text scope filter"
+    },
+    {
+      "name": "pname",
+      "type": "String",
+      "note": "Parent attribute name scope filter"
+    },
+    {
+      "name": "pvalue",
+      "type": "String",
+      "note": "Parent attribute value scope filter"
+    },
+    {
+      "name": "oclabel",
+      "type": "String",
+      "note": "Output only children whose labels match"
+    },
+    {
+      "name": "lprefix",
+      "type": "Toggle",
+      "note": "Control whether element labels are prefixed in table-style outputs"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language handling mode"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor file extension mode"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when extension mode uses a custom extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Node viewer word-wrap behavior"
+    }
+  ],
+  "common_gotchas": [
+    "XML DAT first builds an internal tree, then scope filters select elements for output.",
+    "Every parsed element gets labels such as n0, n1, with a reserved root element at level 0.",
+    "Tagged elements and text nodes are distinct element types, so filters must match the parsed type model.",
+    "The second input used for Merge must be XML formatted, not SGML/HTML.",
+    "Start broad with the default match-all scope, then narrow label/type/text/attribute filters iteratively."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2021.10000+ XML, SGML, and HTML parsing",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "XML DAT parses XML or SGML/HTML into an internal element tree before filtering output.",
+    "Element scope parameters filter labels, types, text, attributes, and parent element attributes.",
+    "Output parameters choose summary tables, summary trees, XML, attributes, children, or text output.",
+    "The second input can be merged into the first XML tree before, after, inside, or replacing a scoped element."
+  ]
+}

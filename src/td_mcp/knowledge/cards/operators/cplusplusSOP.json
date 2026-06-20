@@ -1,0 +1,47 @@
+{
+  "card_type": "operator",
+  "op_type": "cplusplusSOP",
+  "family": "SOP",
+  "display_name": "CPlusPlus SOP",
+  "docs_url": "https://docs.derivative.ca/CPlusPlus_SOP",
+  "summary": "Loads a custom C++ SOP plugin that generates CPU geometry or GPU-direct geometry through the plugin's SOP classes.",
+  "key_params": [
+    {
+      "name": "plugin",
+      "type": "File",
+      "note": "Compiled plugin file to load."
+    },
+    {
+      "name": "reinit",
+      "type": "Pulse",
+      "note": "Reinitialize the plugin class."
+    },
+    {
+      "name": "reinitpulse",
+      "type": "Pulse",
+      "note": "Pulse form of Re-Init Class."
+    },
+    {
+      "name": "unloadplugin",
+      "type": "Pulse",
+      "note": "Unload the plugin binary when all SOPs using it can release it."
+    }
+  ],
+  "common_gotchas": [
+    "GPU-direct SOP output cannot be accessed by SOP to DAT or SOP to CHOP style readback paths.",
+    "Unloading a plugin requires every SOP using the same plugin to release it.",
+    "The official operator name and docs URL use `CPlusPlus`, not `C++`."
+  ],
+  "related_snippets": [
+    "SOP_snippets",
+    "CPlusPlus_snippets"
+  ],
+  "build_relevance": "custom-plugin",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "CPlusPlus SOP loads a compiled custom C++ SOP plugin rather than scripted Python geometry.",
+    "Plugin code chooses CPU output or GPU-direct output through the SOP plugin implementation.",
+    "CPU mode can use wired SOP inputs and supports downstream SOP readback paths; GPU-direct mode writes VBO buffers for rendering.",
+    "A loaded plugin can create custom parameters and must be reinitialized or unloaded when plugin code changes."
+  ]
+}

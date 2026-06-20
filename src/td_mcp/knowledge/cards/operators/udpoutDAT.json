@@ -1,0 +1,128 @@
+{
+  "card_type": "operator",
+  "op_type": "udpoutDAT",
+  "family": "DAT",
+  "display_name": "UDP Out DAT",
+  "docs_url": "https://docs.derivative.ca/UDP_Out_DAT",
+  "summary": "Sends UDP or multicast UDP messages with the udpoutDAT send() or sendBytes() methods and can also display reply messages received from destinations.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable the UDP connection"
+    },
+    {
+      "name": "protocol",
+      "type": "Menu",
+      "note": "UDP messaging or multicast UDP"
+    },
+    {
+      "name": "address",
+      "type": "String",
+      "note": "Destination IP, host name, localhost, or multicast address"
+    },
+    {
+      "name": "port",
+      "type": "Integer",
+      "note": "Destination port"
+    },
+    {
+      "name": "shared",
+      "type": "Toggle",
+      "note": "Share the network connection with compatible DATs"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Parse received replies one row per byte, line, or message"
+    },
+    {
+      "name": "localaddress",
+      "type": "String",
+      "note": "Specific local NIC/IP to send from"
+    },
+    {
+      "name": "localportmode",
+      "type": "Menu",
+      "note": "Automatic or manual local port selection"
+    },
+    {
+      "name": "localport",
+      "type": "Integer",
+      "note": "Manual local source port"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "Callback DAT for received reply messages"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose the execution context for reply callbacks"
+    },
+    {
+      "name": "fromop",
+      "type": "OP Path",
+      "note": "Operator path used when Execute from is set to Specified Operator"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Limit received reply history"
+    },
+    {
+      "name": "maxlines",
+      "type": "Integer",
+      "note": "Maximum number of reply rows to retain"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear accumulated reply rows"
+    },
+    {
+      "name": "bytes",
+      "type": "Toggle",
+      "note": "Output raw bytes in a separate column"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language handling mode"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor file extension mode"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when extension mode uses a custom extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Node viewer word-wrap behavior"
+    }
+  ],
+  "common_gotchas": [
+    "Sending is done through Python methods such as send() and sendBytes(); wiring a DAT input does not automatically transmit rows.",
+    "UDP Out DAT can receive replies, so its table contents may include incoming data as well as status expectations.",
+    "Use Local Address and Local Port Mode when a host has multiple NICs or a protocol requires a stable source port.",
+    "Multicast destinations require multicast-compatible network configuration.",
+    "Windows firewall or OS network permissions can block outgoing or reply traffic."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2021.10000+ UDP and multicast message output",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "UDP Out DAT sends UDP or multicast UDP messages using DAT class send methods.",
+    "Although it is an output operator, replies from destinations can appear in its DAT contents.",
+    "Local address and local port controls help bind the outgoing socket on multi-NIC or protocol-sensitive systems.",
+    "Callbacks and clamp settings handle and bound any received reply rows."
+  ]
+}

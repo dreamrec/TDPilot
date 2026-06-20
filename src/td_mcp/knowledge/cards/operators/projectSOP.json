@@ -1,0 +1,162 @@
+{
+  "card_type": "operator",
+  "op_type": "projectSOP",
+  "family": "SOP",
+  "display_name": "Project SOP",
+  "docs_url": "https://docs.derivative.ca/Project_SOP",
+  "summary": "Projects faces onto spline surfaces to create profile or trim curves, using vector or parametric projection methods.",
+  "key_params": [
+    {
+      "name": "facegroup",
+      "type": "String",
+      "note": "Face group to project"
+    },
+    {
+      "name": "surfgroup",
+      "type": "String",
+      "note": "Surface group to receive profiles"
+    },
+    {
+      "name": "cycle",
+      "type": "Toggle",
+      "note": "Cycle projection across surfaces"
+    },
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "Projection method"
+    },
+    {
+      "name": "axis",
+      "type": "Menu",
+      "note": "Projection axis"
+    },
+    {
+      "name": "vector",
+      "type": "XYZ",
+      "note": "Projection vector"
+    },
+    {
+      "name": "vector1",
+      "type": "Float",
+      "note": "Projection vector X"
+    },
+    {
+      "name": "vector2",
+      "type": "Float",
+      "note": "Projection vector Y"
+    },
+    {
+      "name": "vector3",
+      "type": "Float",
+      "note": "Projection vector Z"
+    },
+    {
+      "name": "projside",
+      "type": "Menu",
+      "note": "Projection side"
+    },
+    {
+      "name": "rtolerance",
+      "type": "Float",
+      "note": "Ray tolerance"
+    },
+    {
+      "name": "ftolerance",
+      "type": "Float",
+      "note": "Face tolerance"
+    },
+    {
+      "name": "accurate",
+      "type": "Toggle",
+      "note": "Use accurate projection"
+    },
+    {
+      "name": "sdivs",
+      "type": "Int",
+      "note": "Surface divisions"
+    },
+    {
+      "name": "uvgap",
+      "type": "Float",
+      "note": "UV gap tolerance"
+    },
+    {
+      "name": "order",
+      "type": "Int",
+      "note": "Curve order"
+    },
+    {
+      "name": "csharp",
+      "type": "Float",
+      "note": "Corner sharpness"
+    },
+    {
+      "name": "ufrom",
+      "type": "Menu",
+      "note": "U source mapping"
+    },
+    {
+      "name": "vfrom",
+      "type": "Menu",
+      "note": "V source mapping"
+    },
+    {
+      "name": "userange",
+      "type": "Toggle",
+      "note": "Use explicit UV range"
+    },
+    {
+      "name": "urange",
+      "type": "Range",
+      "note": "U range"
+    },
+    {
+      "name": "urange1",
+      "type": "Float",
+      "note": "U range start"
+    },
+    {
+      "name": "urange2",
+      "type": "Float",
+      "note": "U range end"
+    },
+    {
+      "name": "vrange",
+      "type": "Range",
+      "note": "V range"
+    },
+    {
+      "name": "vrange1",
+      "type": "Float",
+      "note": "V range start"
+    },
+    {
+      "name": "vrange2",
+      "type": "Float",
+      "note": "V range end"
+    },
+    {
+      "name": "maptype",
+      "type": "Menu",
+      "note": "Profile mapping type"
+    }
+  ],
+  "common_gotchas": [
+    "Project SOP creates profiles; it does not by itself trim or bridge the resulting surface.",
+    "Parametric projection can distort or remap geometry compared with spatial vector projection.",
+    "Turn off explicit userange when reprojecting parametric extracts from Profile SOP unless that remap is intentional.",
+    "Invisible profiles may still exist and affect downstream profile-aware SOPs."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "surface-profile-projection",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Project SOP creates trim/profile curves by projecting a face onto a spline surface.",
+    "Projection can be vector-based along an axis/vector or parametric using source U/V ranges.",
+    "Project SOP is usually followed by Trim, Bridge, or Profile SOP to use or refine the created profiles.",
+    "Primitive SOP can later transform profiles, but profile rotations are effectively limited to Z."
+  ]
+}

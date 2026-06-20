@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "freedoutCHOP",
+  "family": "CHOP",
+  "display_name": "FreeD Out CHOP",
+  "docs_url": "https://docs.derivative.ca/FreeD_Out_CHOP",
+  "summary": "Sends camera tracking channels to external devices or software as FreeD D1 camera position and orientation packets once per frame.",
+  "key_concepts": [
+    "Sends camera tracking position and orientation to external software or devices over the device-independent FreeD protocol.",
+    "Emits one FreeD packet per frame based on the current input CHOP channels, using default values for expected channels that are missing.",
+    "Expected channels are camera_id, tx, ty, tz, rx, ry, rz, focus, zoom, and user.",
+    "The operator sends the FreeD D1 camera position and orientation message, with documented position and rotation encoding limits.",
+    "Network Address can target a domain, IP address, or localhost; Local Address selects the sending NIC on multi-adapter systems."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Send FreeD packets while on"},
+    {"name": "protocol", "type": "Menu", "note": "Network protocol, such as UDP messaging or multicast"},
+    {"name": "netaddress", "type": "String", "note": "Destination host, IP, domain, or localhost"},
+    {"name": "port", "type": "Integer", "note": "Destination network port"},
+    {"name": "localaddress", "type": "String", "note": "Local NIC/IP address to send from"}
+  ],
+  "common_gotchas": [
+    "The CHOP sends one packet per frame from the current input channels.",
+    "Expected channels include camera_id, tx, ty, tz, rx, ry, rz, focus, zoom, and user; missing channels use defaults.",
+    "FreeD position and rotation ranges are limited by the D1 protocol encoding.",
+    "Focus and zoom are arbitrary hardware-dependent 24-bit units.",
+    "Use explicit destination and local addresses on multi-NIC show networks."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ network tracking",
+  "last_verified": "2026-06-18"
+}

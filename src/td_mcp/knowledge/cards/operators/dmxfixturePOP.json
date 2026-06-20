@@ -1,0 +1,44 @@
+{
+  "card_type": "operator",
+  "op_type": "dmxfixturePOP",
+  "family": "POP",
+  "display_name": "DMX Fixture POP",
+  "docs_url": "https://docs.derivative.ca/DMX_Fixture_POP",
+  "summary": "Builds DMX universes from POP primitives treated as fixtures, using channel profile blocks and optional per-primitive routing attributes. It is designed to feed DMX Out POP for device output.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Actively update fixture/universe data for DMX Out POP"},
+    {"name": "autolayout", "type": "Toggle", "note": "Automatically assign channels/universes when no routing table is used"},
+    {"name": "routingtable", "type": "DAT", "note": "Assign net, subnet, universe, and optional netaddress per primitive"},
+    {"name": "net", "type": "Int", "note": "Starting Art-Net net"},
+    {"name": "subnet", "type": "Int", "note": "Starting subnet"},
+    {"name": "universe", "type": "Int", "note": "Starting universe"},
+    {"name": "channel", "type": "Int", "note": "Starting channel"},
+    {"name": "changap", "type": "Int", "note": "Channel gap between fixtures during auto layout"},
+    {"name": "quantizeuni", "type": "Menu", "note": "Controls whether fixtures or components can bridge universe boundaries"},
+    {"name": "dmxchan", "type": "Sequential", "note": "DMX profile channel sequence blocks"},
+    {"name": "dmxchan0name", "type": "Str", "note": "Unique identifier for a DMX channel block"},
+    {"name": "dmxchan0valuetype", "type": "Menu", "note": "How values are iterated and sourced"},
+    {"name": "dmxchan0group", "type": "Str", "note": "Optional point group for universe creation"},
+    {"name": "dmxchan0attr", "type": "Str", "note": "Attribute components interleaved into DMX channels"},
+    {"name": "dmxchan0valueres", "type": "Menu", "note": "8, 16, 24, or 32-bit channel value resolution"},
+    {"name": "dmxchan0normalized", "type": "Toggle", "note": "Treat 0-1 values as normalized before resolution scaling"},
+    {"name": "dmxchan0merge", "type": "Toggle", "note": "Interleave this block with the channel block above"},
+    {"name": "dmxchan0interleavebytes", "type": "Toggle", "note": "Interleave attribute components by byte order"},
+    {"name": "parmcolorspace", "type": "Menu", "note": "Color space for color parameters when a working color space is active"}
+  ],
+  "key_concepts": [
+    "DMX Fixture POP treats each input primitive as one fixture and builds DMX universe channel data for DMX Out POP.",
+    "Auto Layout walks fixtures in primitive order from the starting net, subnet, universe, and channel; routing tables or reserved primitive attributes can override fixture addressing.",
+    "Reserved unsigned primitive attributes such as DMXFixtureNet, DMXFixtureSubnet, DMXFixtureUniverse, DMXFixtureChannel, DMXFixtureNetAddress, and DMXFixtureGap provide per-fixture routing control.",
+    "The DMX Profile page is a sequential channel definition: attributes, constants, point groups, resolutions, normalized values, block merging, and byte interleaving determine final channel order.",
+    "Universe quantization controls whether channel data may bridge universe boundaries by fixture or by component, which matters for multi-component attributes and 512-channel DMX limits."
+  ],
+  "common_gotchas": [
+    "Each primitive is a fixture, so primitive order directly affects DMX fixture order.",
+    "Unsigned primitive attributes such as DMXFixtureUniverse and DMXFixtureChannel can override routing per fixture.",
+    "Interleaving multi-component attributes is profile-sensitive; separate channel blocks when byte/component order matters."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

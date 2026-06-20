@@ -1,0 +1,67 @@
+{
+  "card_type": "operator",
+  "op_type": "monitorsDAT",
+  "family": "DAT",
+  "display_name": "Monitors DAT",
+  "docs_url": "https://docs.derivative.ca/Monitors_DAT",
+  "summary": "Reports detected display monitors, resolution, desktop positioning, monitor names, GPU details, primary display status, and optional overall bounds.",
+  "key_params": [
+    {
+      "name": "callbacks",
+      "type": "DAT Path",
+      "note": "Callback DAT for monitor plug, unplug, resolution, or primary-display changes"
+    },
+    {
+      "name": "bounds",
+      "type": "Toggle",
+      "note": "Include an overall desktop bounds row"
+    },
+    {
+      "name": "monitors",
+      "type": "Menu",
+      "note": "Select which monitor rows to output"
+    },
+    {
+      "name": "units",
+      "type": "Menu",
+      "note": "Choose DPI-scaled or native pixel-style coordinate units"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Top and bottom coordinates are expressed in TouchDesigner's lower-left-origin coordinate convention.",
+    "DPI-scaled and native units can differ on high-DPI systems.",
+    "Monitor rows can change at runtime when displays are connected, disconnected, or reconfigured.",
+    "The bounds row has different semantics than an individual monitor row and should be handled separately."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "display-layout-diagnostics",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Lists detected display monitors and monitor bounds.",
+    "Bounds and Monitors controls choose which monitor information appears.",
+    "Units changes whether monitor coordinates are reported in pixels or another unit mode.",
+    "Callbacks can react when monitor layout information changes."
+  ]
+}

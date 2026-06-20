@@ -1,0 +1,78 @@
+{
+  "card_type": "operator",
+  "op_type": "remapTOP",
+  "family": "TOP",
+  "display_name": "Remap TOP",
+  "docs_url": "https://docs.derivative.ca/Remap_TOP",
+  "summary": "Warps Input 1 by sampling it with UV or UVW coordinates read from channels of Input 2.",
+  "key_params": [
+    {
+      "name": "resolutionsource",
+      "type": "Menu",
+      "note": "Input whose width/height define output resolution."
+    },
+    {
+      "name": "depthressource",
+      "type": "Menu",
+      "note": "Input whose depth defines output depth for 3D/array textures."
+    },
+    {
+      "name": "horzsource",
+      "type": "Menu",
+      "note": "Input 2 channel used for horizontal lookup."
+    },
+    {
+      "name": "vertsource",
+      "type": "Menu",
+      "note": "Input 2 channel used for vertical lookup."
+    },
+    {
+      "name": "zsource",
+      "type": "Menu",
+      "note": "Input 2 channel used for depth lookup."
+    },
+    {
+      "name": "fliphorz",
+      "type": "Toggle",
+      "note": "Reverse horizontal lookup direction."
+    },
+    {
+      "name": "flipvert",
+      "type": "Toggle",
+      "note": "Reverse vertical lookup direction."
+    },
+    {
+      "name": "flipz",
+      "type": "Toggle",
+      "note": "Reverse depth lookup direction."
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Sampling behavior outside the 0-1 coordinate range."
+    },
+    {
+      "name": "interp",
+      "type": "Menu",
+      "note": "Linear or cubic sampling interpolation."
+    }
+  ],
+  "common_gotchas": [
+    "Input 2 should usually be 16-bit-per-channel or 32-bit float; 8-bit UV maps produce jagged warps.",
+    "UV channels are normalized 0-1; out-of-range values are controlled by Extend.",
+    "The second input is an absolute lookup image, not a pixel displacement map.",
+    "Z lookup only matters when working with 3D textures or 2D texture arrays.",
+    "Official docs compare Remap TOP with Displace TOP; choose based on lookup-versus-displacement semantics."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "image_warping",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Warps Input 1 by sampling it with UV or UVW coordinates from Input 2.",
+    "Input 2 channels map to horizontal, vertical, and depth lookup coordinates.",
+    "Lookup values are normalized 0-1 coordinates, not pixel displacements.",
+    "Supports 3D textures and 2D texture arrays when Z and depth sources are configured."
+  ]
+}

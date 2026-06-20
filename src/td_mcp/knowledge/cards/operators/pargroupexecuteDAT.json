@@ -1,0 +1,142 @@
+{
+  "card_type": "operator",
+  "op_type": "pargroupexecuteDAT",
+  "family": "DAT",
+  "display_name": "ParGroup Execute DAT",
+  "docs_url": "https://docs.derivative.ca/ParGroup_Execute_DAT",
+  "summary": "Runs callbacks for parameter-group changes, letting scripts receive either individual ParGroup objects or combined lists of changed parameter groups.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable response to referenced parameter groups"
+    },
+    {
+      "name": "op",
+      "type": "OP Pattern",
+      "note": "Operators whose parameter groups are monitored"
+    },
+    {
+      "name": "pars",
+      "type": "Pattern",
+      "note": "Parameter names or groups to monitor"
+    },
+    {
+      "name": "callbackmode",
+      "type": "Menu",
+      "note": "Pass curr/prev as one ParGroup change or combined lists"
+    },
+    {
+      "name": "valuechange",
+      "type": "Toggle",
+      "note": "Run onValueChange() for parameter-group value changes"
+    },
+    {
+      "name": "onpulse",
+      "type": "Toggle",
+      "note": "Run onPulse() when a pulse parameter group is pulsed"
+    },
+    {
+      "name": "expressionchange",
+      "type": "Toggle",
+      "note": "Run onExpressionChange() when an expression changes"
+    },
+    {
+      "name": "exportchange",
+      "type": "Toggle",
+      "note": "Run onExportChange() when an export path changes"
+    },
+    {
+      "name": "enablechange",
+      "type": "Toggle",
+      "note": "Run onEnableChange() when enable state changes"
+    },
+    {
+      "name": "modechange",
+      "type": "Toggle",
+      "note": "Run onModeChange() when parameter mode changes"
+    },
+    {
+      "name": "custom",
+      "type": "Toggle",
+      "note": "Monitor custom parameters"
+    },
+    {
+      "name": "builtin",
+      "type": "Toggle",
+      "note": "Monitor built-in parameters"
+    },
+    {
+      "name": "file",
+      "type": "File",
+      "note": "External callback source file path"
+    },
+    {
+      "name": "syncfile",
+      "type": "Toggle",
+      "note": "Synchronize DAT contents with the external file"
+    },
+    {
+      "name": "loadonstart",
+      "type": "Toggle",
+      "note": "Reload the file when the project starts"
+    },
+    {
+      "name": "loadonstartpulse",
+      "type": "Pulse",
+      "note": "Reload the file immediately"
+    },
+    {
+      "name": "write",
+      "type": "Toggle",
+      "note": "Write DAT contents to disk when the project is saved"
+    },
+    {
+      "name": "writepulse",
+      "type": "Pulse",
+      "note": "Write DAT contents to disk immediately"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "edit",
+      "type": "Pulse",
+      "note": "Open the callback DAT text in an external editor"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Callback Mode changes callback argument shape, so generated callback templates must match either ParGroup objects or lists.",
+    "Parameter groups are tuple-style groups, not just individual scalar Par values.",
+    "Value-change callbacks can fire every frame for changing parameters; batch/list mode is safer for high-frequency changes.",
+    "As with Parameter Execute DAT, callbacks that write back to watched parameters need reentry guards."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "parameter-group-change-callbacks",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Runs callbacks for parameter groups rather than individual parameter tuples.",
+    "Callback Mode controls how parameter group changes are reported to the script.",
+    "Monitored callbacks include value, pulse, expression, export, enable, and mode changes.",
+    "Custom and built-in toggles constrain which parameter groups are watched."
+  ]
+}

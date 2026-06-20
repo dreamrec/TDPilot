@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "wrnchaiCHOP",
+  "family": "CHOP",
+  "display_name": "WrnchAI CHOP",
+  "docs_url": "https://docs.derivative.ca/WrnchAI_CHOP",
+  "summary": "Legacy Pro-only wrnchAI body/face/hand tracking CHOP removed in 2022.20000+ builds because new wrnchAI licenses are no longer obtainable.",
+  "key_concepts": [
+    "WrnchAI CHOP was a TouchDesigner Pro operator for body, face, and hand tracking from video streams.",
+    "Official docs state wrnchAI licenses are no longer obtainable and this CHOP was removed in 2022.20000+ builds.",
+    "Historical use required Windows, an NVIDIA GPU, cuDNN, the full TouchDesigner installer libraries, and a separate wrnchAI license.",
+    "The engine ran locally in realtime and could track multiple people with body, face, hand, bounds, and IK-oriented channels.",
+    "The Model Folder parameter points at extracted wrnchAI trained models, and initialization occurs when a new model folder is introduced.",
+    "This card should guide legacy diagnosis and migration, not new operator planning."
+  ],
+  "key_params": [
+    {"name": "license", "type": "String", "note": "wrnchAI Edge license key"},
+    {"name": "modelfolder", "type": "Folder", "note": "wrnchAI model folder"},
+    {"name": "gpu", "type": "Integer", "note": "NVIDIA GPU index"},
+    {"name": "default", "type": "MenuItem", "note": "Use the same GPU TouchDesigner is running on"},
+    {"name": "top", "type": "TOP", "note": "Video TOP source"},
+    {"name": "body3d", "type": "Toggle", "note": "Output 3D body tracking"},
+    {"name": "body2d", "type": "Toggle", "note": "Output 2D body tracking"},
+    {"name": "body3dik", "type": "Toggle", "note": "Output IK-oriented body channels"},
+    {"name": "facebounds", "type": "Toggle", "note": "Output face bounds"},
+    {"name": "face", "type": "Toggle", "note": "Output face landmarks"},
+    {"name": "handsbounds", "type": "Toggle", "note": "Output hand bounds"},
+    {"name": "hands", "type": "Toggle", "note": "Output hand landmarks"},
+    {"name": "maxplayers", "type": "Integer", "note": "Maximum tracked people"},
+    {"name": "aspectcorrectuv", "type": "Toggle", "note": "Aspect-correct UV coordinates"}
+  ],
+  "common_gotchas": [
+    "Official docs state wrnchAI was acquired and licenses are no longer obtainable.",
+    "The operator was removed in 2022.20000+ builds.",
+    "Historical requirements included TouchDesigner Pro, Windows, NVIDIA GPU, cuDNN, full installer libraries, and a separate wrnchAI license.",
+    "Generated plans should not create this operator in current builds; keep this card for legacy diagnosis and migration.",
+    "Prefer current body-tracking routes such as Kinect Azure, ZED, OAK/DepthAI, or other supported tracking operators."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "legacy removed wrnchAI tracking operator",
+  "last_verified": "2026-06-18"
+}

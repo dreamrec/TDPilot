@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "audiobinauralCHOP",
+  "family": "CHOP",
+  "display_name": "Audio Binaural CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_Binaural_CHOP",
+  "summary": "Converts speaker-based, custom, or ambisonic audio input into two-channel binaural output using Steam Audio HRTF rendering.",
+  "key_concepts": [
+    "Audio Binaural CHOP uses Steam Audio HRTF rendering to convert multichannel speaker layouts into two-channel binaural output.",
+    "Input Format determines the required input channel count for stereo, quadraphonic, 5.1, 7.1, custom, or ambisonic sources.",
+    "Ambisonics input uses Ambisonics Order, with higher orders requiring more input channels.",
+    "Custom speaker setups use a mapping DAT with x, y, and z columns describing speaker positions.",
+    "A listener COMP can provide orientation for ambisonics before binaural rendering."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable binaural processing"},
+    {"name": "inputformat", "type": "Menu", "note": "Incoming speaker or ambisonic layout"},
+    {"name": "ambisonicsorder", "type": "Int", "note": "Ambisonics order when using ambisonic input"},
+    {"name": "listener", "type": "COMP", "note": "Listener transform for binaural orientation"},
+    {"name": "mappingtable", "type": "DAT", "note": "Custom speaker/channel mapping table"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice behavior"}
+  ],
+  "common_gotchas": [
+    "Input audio must use a Steam Audio compatible sample rate, commonly 44100 or 48000 Hz.",
+    "Custom setups need a correct mapping table; channel order mistakes are spatially obvious but hard to debug visually.",
+    "Binaural output is two-channel and intended for headphones or VR-style monitoring.",
+    "Listener orientation matters; bind it to the same camera/head transform used by the visual scene when appropriate."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

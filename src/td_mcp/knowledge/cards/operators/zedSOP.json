@@ -1,0 +1,90 @@
+{
+  "card_type": "operator",
+  "op_type": "zedSOP",
+  "family": "SOP",
+  "display_name": "ZED SOP",
+  "docs_url": "https://docs.derivative.ca/ZED_SOP",
+  "summary": "Uses a ZED camera configured by a ZED TOP to spatially map a room or object into SOP geometry with optional normals, textures, filtering, and point consolidation.",
+  "key_params": [
+    {
+      "name": "zedtop",
+      "type": "OP Path",
+      "note": "Primary ZED TOP that configures the camera source."
+    },
+    {
+      "name": "sample",
+      "type": "Toggle",
+      "note": "Sample spatial points while enabled, then generate a surface when disabled."
+    },
+    {
+      "name": "reset",
+      "type": "Toggle",
+      "note": "Clear extracted geometry and reset spatial mapping."
+    },
+    {
+      "name": "resetpulse",
+      "type": "Pulse",
+      "note": "Pulse to clear extracted geometry and reset spatial mapping."
+    },
+    {
+      "name": "preview",
+      "type": "Menu",
+      "note": "No, limited, or full preview during sampling."
+    },
+    {
+      "name": "maxmemory",
+      "type": "Float",
+      "note": "Maximum memory used for spatial mapping."
+    },
+    {
+      "name": "resolution",
+      "type": "Float",
+      "note": "Spatial mapping resolution, trading detail for broader surface capture."
+    },
+    {
+      "name": "range",
+      "type": "Float",
+      "note": "Depth range of objects included in mapping."
+    },
+    {
+      "name": "normals",
+      "type": "Toggle",
+      "note": "Generate normals."
+    },
+    {
+      "name": "texture",
+      "type": "Toggle",
+      "note": "Generate texture and texture coordinates."
+    },
+    {
+      "name": "filter",
+      "type": "Menu",
+      "note": "Filter level for the generated mesh."
+    },
+    {
+      "name": "consolidatepts",
+      "type": "Toggle",
+      "note": "Merge close redundant points."
+    }
+  ],
+  "common_gotchas": [
+    "ZED SOP is only supported on Microsoft Windows.",
+    "The SOP depends on a primary ZED TOP; generated plans should create or ask for that camera source first.",
+    "Sampling is stateful: turning Sample off commits the scanned point set into surface geometry.",
+    "Smaller resolution creates more detailed geometry, while larger resolution keeps only broader variations.",
+    "Full preview, detailed resolution, and large range can be memory heavy; maxmemory should be planned explicitly.",
+    "Texture output is retrieved through the ZED TOP, not directly as a separate SOP texture output."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "windows-hardware-spatial-mapping",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "ZED SOP uses a ZED camera to spatially map a room or object into SOP geometry.",
+    "A primary ZED TOP configures which camera the SOP receives data from.",
+    "Sampling is stateful: while Sample is enabled the camera gathers spatial points, and disabling it generates the surface.",
+    "Preview, memory, resolution, range, normals, texture, filter, and point consolidation tune the generated mapping mesh."
+  ],
+  "platform_notes": "Official docs mark ZED SOP as Microsoft Windows only. The official ZED article notes TouchDesigner 2025.30000 and newer use ZED SDK 5.0.4 and no longer support Pascal GPUs, GeForce 1xxx, or P-series Quadros."
+}

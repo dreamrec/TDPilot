@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "abletonlinkCHOP",
+  "family": "CHOP",
+  "display_name": "Ableton Link CHOP",
+  "docs_url": "https://docs.derivative.ca/Ableton_Link_CHOP",
+  "summary": "Retrieves timing, tempo, phase, beat, and status channels from an Ableton Link session on the local network for sync-driven TouchDesigner systems.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Turn the CHOP output on or off"},
+    {"name": "enable", "type": "Toggle", "note": "Initialize the connection to the Ableton Link session"},
+    {"name": "startstopsync", "type": "Toggle", "note": "Share start and stop state with compatible Link peers"},
+    {"name": "signature", "type": "Tuple", "note": "Time signature numerator and denominator"},
+    {"name": "callbacks", "type": "DAT", "note": "Callbacks DAT for events received from the Link session"},
+    {"name": "status", "type": "Toggle", "note": "Output status channels such as numpeers, linked, waiting, and synced"},
+    {"name": "tempo", "type": "Toggle", "note": "Output the current Link tempo in BPM"},
+    {"name": "rampbar", "type": "Toggle", "note": "Output a normalized ramp over each bar"}
+  ],
+  "key_concepts": [
+    "Ableton Link network timing",
+    "Enable initializes the Link session connection",
+    "start/stop sync across peers",
+    "status channels: numpeers, linked, waiting, synced",
+    "tempo, phase, beat, bar, ramp, pulse, sine, and count outputs",
+    "TDAbleton for deeper Ableton Live integration"
+  ],
+  "common_gotchas": [
+    "The CHOP only reflects a Link session after Enable is initialized and network peers are discoverable.",
+    "Ableton Link timing can be affected by audio driver choice; the official docs call out DirectX driver issues on Ableton's side.",
+    "Output channels are opt-in, so downstream plans should enable the status, tempo, beat, phase, or ramp channels they intend to consume.",
+    "Start/stop sync is session-wide behavior, not a local transport button; only enable it when peers should share start and stop signals."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2018.24410+",
+  "last_verified": "2026-06-17"
+}

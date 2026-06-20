@@ -1,0 +1,46 @@
+{
+  "card_type": "article",
+  "article_id": "pop_filter_common_page",
+  "title": "POP Filter Common Page",
+  "family": "POP",
+  "families": [
+    "POP",
+    "PARAMETER",
+    "GPU"
+  ],
+  "summary": "Official Derivative common page for POP filter operators, covering Bypass, Free Extra GPU Memory, and Delete Input Attributes behavior for POPs that process incoming data.",
+  "source_url": "https://docs.derivative.ca/POP_Filter_Common_Page",
+  "docsbrain_page_id": "pop_filter_common_page",
+  "covered_operators": [
+    "deletePOP",
+    "limitPOP",
+    "lookupattributePOP",
+    "mathPOP",
+    "normalPOP",
+    "normalizePOP",
+    "transformPOP"
+  ],
+  "key_concepts": [
+    "Parameters - Common Page",
+    "Bypass",
+    "bypass",
+    "first input",
+    "Free Extra GPU Memory",
+    "freeextragpumem",
+    "Delete Input Attributes",
+    "delinputattrs",
+    "GPU memory",
+    "isolate attributes"
+  ],
+  "guidance": [
+    "Use this article when a POP filter plan needs common pass-through, memory-release, or attribute-pruning behavior.",
+    "Bypass passes through the first input unchanged, which is useful for safe toggles in generated POP networks.",
+    "Free Extra GPU Memory can release memory accumulated from changing output memory sizes.",
+    "Delete Input Attributes helps branch a POP stream with only the attributes explicitly specified by the filter."
+  ],
+  "related_snippets": [
+    "POP_snippets",
+    "POP_attribute_ontology"
+  ],
+  "last_verified": "2026-06-18"
+}

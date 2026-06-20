@@ -1,0 +1,52 @@
+{
+  "card_type": "article",
+  "article_id": "pop_class",
+  "title": "POP Class",
+  "family": "POP",
+  "families": [
+    "POP",
+    "PYTHON",
+    "GPU",
+    "GEOMETRY"
+  ],
+  "summary": "Official Derivative Python API reference for Point operators, covering POP dimensions, point/primitive/vertex attribute sets, changed-attribute sets, template/compare flags, bounds, and inherited OP behavior.",
+  "source_url": "https://docs.derivative.ca/POP_Class",
+  "docsbrain_page_id": "pop_class",
+  "covered_operators": [
+    "attributePOP",
+    "groupPOP",
+    "nullPOP",
+    "particlePOP",
+    "poptoCHOP",
+    "poptoDAT",
+    "poptoSOP",
+    "poptoTOP"
+  ],
+  "key_concepts": [
+    "POP",
+    "dimension",
+    "maxVertsPerLineStrip",
+    "pointAttributes",
+    "pointAttributesChanged",
+    "primAttributes",
+    "primAttributesChanged",
+    "vertAttributes",
+    "vertAttributesChanged",
+    "compare",
+    "template",
+    "bounds()",
+    "computeBounds()"
+  ],
+  "guidance": [
+    "Use this article when generated Python needs to inspect current POP geometry metadata or reason about point, primitive, and vertex attribute sets.",
+    "Use dimension for POP shape context and pointAttributes/primAttributes/vertAttributes for attribute-aware planning.",
+    "Use the changed-attribute sets to reason about what a POP modified when validating generated POP pipelines.",
+    "Use bounds(delayed=True) or computeBounds(..., delayed=True) when avoiding immediate GPU stalls matters.",
+    "Pair this class reference with Learning About POPs for broader POP data-shape concepts and rendering workflows."
+  ],
+  "related_snippets": [
+    "POP_snippets",
+    "POP_attribute_ontology"
+  ],
+  "last_verified": "2026-06-17"
+}

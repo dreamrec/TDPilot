@@ -1,0 +1,114 @@
+{
+  "card_type": "operator",
+  "op_type": "rampTOP",
+  "family": "TOP",
+  "display_name": "Ramp TOP",
+  "docs_url": "https://docs.derivative.ca/Ramp_TOP",
+  "summary": "Generates editable vertical, horizontal, radial, and circular color ramps whose keyframes can be stored in a DAT table.",
+  "key_params": [
+    {
+      "name": "dat",
+      "type": "DAT",
+      "note": "Table DAT containing ramp key positions and RGBA values."
+    },
+    {
+      "name": "color",
+      "type": "RGBA",
+      "note": "Selected ramp key color and alpha."
+    },
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "Vertical, horizontal, radial, or circular ramp."
+    },
+    {
+      "name": "position",
+      "type": "XY",
+      "note": "Center point for radial/circular ramps."
+    },
+    {
+      "name": "phase",
+      "type": "Float",
+      "note": "Offset the start of the ramp."
+    },
+    {
+      "name": "period",
+      "type": "Float",
+      "note": "Scale the ramp pattern in UV space."
+    },
+    {
+      "name": "extendleft",
+      "type": "Menu",
+      "note": "Behavior before the first ramp key."
+    },
+    {
+      "name": "extendright",
+      "type": "Menu",
+      "note": "Behavior after the last ramp key."
+    },
+    {
+      "name": "interp",
+      "type": "Menu",
+      "note": "Step, linear, ease, or Hermite interpolation between keys."
+    },
+    {
+      "name": "tension",
+      "type": "Float",
+      "note": "Hermite interpolation tension."
+    },
+    {
+      "name": "fitaspect",
+      "type": "Toggle",
+      "note": "Fit radial/circular ramp to output aspect."
+    },
+    {
+      "name": "antialias",
+      "type": "Toggle",
+      "note": "Antialias radial and circular ramps."
+    },
+    {
+      "name": "dither",
+      "type": "Toggle",
+      "note": "Reduce visible banding."
+    },
+    {
+      "name": "compoverinput",
+      "type": "Toggle",
+      "note": "Composite generated ramp over the input."
+    },
+    {
+      "name": "multrgbbyalpha",
+      "type": "Toggle",
+      "note": "Premultiply ramp RGB by alpha before compositing."
+    },
+    {
+      "name": "operand",
+      "type": "Menu",
+      "note": "Blend operation when compositing over input."
+    },
+    {
+      "name": "swaporder",
+      "type": "Toggle",
+      "note": "Swap input/ramp order for output-page compositing."
+    }
+  ],
+  "common_gotchas": [
+    "The ramp DAT stores key positions in 0-1 and RGBA values; malformed rows produce unexpected gradients.",
+    "Tension only applies when using Hermite interpolation.",
+    "Radial and circular ramps need center, aspect, and antialias settings tuned for clean output.",
+    "Dither helps reduce banding in smooth gradients, especially at low bit depth.",
+    "Extend Left Black uses the unusual official id blockclamptoblack while Extend Right Black uses black."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Compositing_snippets"
+  ],
+  "build_relevance": "procedural_texture_generator",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Generates editable vertical, horizontal, radial, and circular color ramps.",
+    "Ramp keys can be stored in a DAT table as position plus RGBA rows.",
+    "Radial and circular ramps use center, aspect-fit, and antialias controls.",
+    "Output-page controls can composite the generated ramp over the input TOP."
+  ]
+}

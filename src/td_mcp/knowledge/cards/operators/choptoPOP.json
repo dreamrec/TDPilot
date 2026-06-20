@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "choptoPOP",
+  "family": "POP",
+  "display_name": "CHOP to POP",
+  "docs_url": "https://docs.derivative.ca/CHOP_to_POP",
+  "summary": "Converts CHOP channel samples into POP points and attributes. Each CHOP sample can become one POP point, with manual channel-to-attribute mapping or automatic conversion using precise naming rules.",
+  "key_params": [
+    {"name": "chop", "type": "CHOP", "note": "CHOP reference to convert"},
+    {"name": "surftype", "type": "Menu", "note": "Connectivity for generated points: none, point primitives, line strip, or lines"},
+    {"name": "numpoints", "type": "Int", "note": "Override number of output points"},
+    {"name": "interpolate", "type": "Toggle", "note": "Interpolate when overriding point count"},
+    {"name": "specifypos", "type": "Toggle", "note": "Generate P from start/end position parameters"},
+    {"name": "chanssel", "type": "Menu", "note": "Specify channels or autoconvert precise names"},
+    {"name": "attr", "type": "Sequential", "note": "Channel-to-attribute mapping blocks"}
+  ],
+  "key_concepts": [
+    "CHOP samples become POP points",
+    "manual channel-to-attribute mapping",
+    "Autoconvert Precise Names",
+    "vector and array attribute channel naming",
+    "type suffix preservation",
+    "generated P position from CHOP or start/end positions",
+    "point primitives, line strips, lines, or no primitives"
+  ],
+  "common_gotchas": [
+    "Built-in attributes like P, N, Color, and Tex are treated as multi-component attributes.",
+    "Precise-name conversion preserves capitalization and uses suffixes for vector and array components.",
+    "When point count is overridden, interpolation settings change how CHOP samples become POP points."
+  ],
+  "related_snippets": ["POP_snippets", "CHOP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

@@ -18,7 +18,15 @@ class _SparseLiveClient:
 
     async def request(self, endpoint: str, params: dict | None = None):
         if endpoint == "families":
-            return {"families": {"TOP": ["null"], "CHOP": ["null"], "COMP": ["base"], "POP": ["null"], "DAT": ["text"]}}
+            return {
+                "families": {
+                    "TOP": ["null"],
+                    "CHOP": ["null"],
+                    "COMP": ["base"],
+                    "POP": ["null"],
+                    "DAT": ["text"],
+                }
+            }
         if endpoint == "nodes":
             return {"nodes": []}
         return {}
@@ -26,11 +34,7 @@ class _SparseLiveClient:
 
 class _AllScenarioCards:
     def __init__(self) -> None:
-        self.known = {
-            op
-            for scenario in live_smoke_scenarios()
-            for op in scenario.expected_ops
-        }
+        self.known = {op for scenario in live_smoke_scenarios() for op in scenario.expected_ops}
 
     def get_operator(self, op_type: str):
         if op_type in self.known:
@@ -52,8 +56,10 @@ async def test_live_smoke_dry_run_covers_required_visual_domains():
     expected = {
         "feedback_loop": ("feedback", "feedbackTOP"),
         "audio_reactive_top": ("audio_reactive", "audiofileinCHOP"),
-        "pop_particle_render": ("pop", "circlePOP"),
+        "pop_particle_render": ("pop", "rendersimpleTOP"),
         "glsl_shader_top": ("glsl", "glslTOP"),
+        "glsl_material_render": ("glsl_material", "glslMAT"),
+        "glsl_pop_attribute_render": ("glsl_pop", "glslPOP"),
         "render_pipeline": ("render_pipeline", "renderTOP"),
         "panel_ui_controls": ("panel_ui", "panelCHOP"),
         "custom_parameter_rig": ("control_rig", "baseCOMP"),
@@ -83,7 +89,9 @@ def test_live_smoke_scenario_catalog_is_explicit_about_live_td_requirement():
 
 @pytest.mark.asyncio
 async def test_live_smoke_uses_docs_evidence_when_live_family_list_is_sparse():
-    report = await build_live_smoke_report(mode="live", td_client=_SparseLiveClient(), card_index=_AllScenarioCards())
+    report = await build_live_smoke_report(
+        mode="live", td_client=_SparseLiveClient(), card_index=_AllScenarioCards()
+    )
 
     assert report["ok"] is True
     assert all(item["status"] == "planned" for item in report["scenarios"])

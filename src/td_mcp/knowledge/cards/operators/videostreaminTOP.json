@@ -1,0 +1,48 @@
+{
+  "card_type": "operator",
+  "op_type": "videostreaminTOP",
+  "family": "TOP",
+  "display_name": "Video Stream In TOP",
+  "docs_url": "https://docs.derivative.ca/Video_Stream_In_TOP",
+  "summary": "Receives network video and audio from RTSP, HLS, SRT, or WebRTC sources into TouchDesigner.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable stream reception"},
+    {"name": "mode", "type": "Menu", "note": "Stream source mode such as server URL or WebRTC"},
+    {"name": "url", "type": "String", "note": "RTSP, HLS/DASH m3u8, SRT, or other supported stream URL"},
+    {"name": "reload", "type": "Toggle", "note": "Reload the stream when the URL changes"},
+    {"name": "reloadpulse", "type": "Pulse", "note": "Reload/reconnect the stream"},
+    {"name": "play", "type": "Toggle", "note": "Play or pause received stream playback"},
+    {"name": "forcerebuffer", "type": "Pulse", "note": "Force the stream to rebuffer"},
+    {"name": "deinterlace", "type": "Menu", "note": "Deinterlace field handling"},
+    {"name": "precedence", "type": "Menu", "note": "Field precedence for deinterlacing"},
+    {"name": "bottomhalfalpha", "type": "Toggle", "note": "Treat the bottom half of the stream as alpha"},
+    {"name": "prereadframes", "type": "Integer", "note": "Frames read ahead for smoother playback"},
+    {"name": "videobufferframes", "type": "Integer", "note": "Video frames buffered ahead"},
+    {"name": "maxdecodecpus", "type": "Integer", "note": "Limit CPU decoding threads"},
+    {"name": "networkbuffersize", "type": "Integer", "note": "Network input buffer size in KB"},
+    {"name": "networkqueuesize", "type": "Integer", "note": "Network queue chunks"},
+    {"name": "disablebuffering", "type": "Toggle", "note": "Disable buffering for lower latency"},
+    {"name": "hwdecode", "type": "Toggle", "note": "Enable NVIDIA hardware decoding"},
+    {"name": "webrtc", "type": "DAT", "note": "WebRTC DAT peer source"},
+    {"name": "webrtcconnection", "type": "Menu", "note": "Selected WebRTC peer connection"},
+    {"name": "webrtctrack", "type": "Menu", "note": "Selected WebRTC video track"}
+  ],
+  "common_gotchas": [
+    "RTSP URLs often require port, stream name, and optional username/password in the URL.",
+    "HLS/DASH sources point to m3u8 manifests; SRT sources use srt:// URLs.",
+    "Lower latency settings such as Disable Buffering can increase stutter on unstable networks.",
+    "Hardware Decode requires compatible NVIDIA GPU/driver support.",
+    "WebRTC mode depends on a configured WebRTC DAT and available peer tracks.",
+    "Windows Firewall can block incoming network streams.",
+    "Audio extraction belongs in related Audio Stream In CHOP workflows rather than this TOP alone."
+  ],
+  "related_snippets": ["TOP_snippets", "DAT_snippets", "CHOP_snippets"],
+  "build_relevance": "network_video_input",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Video Stream In TOP receives network video through RTSP, HLS/DASH, SRT, or WebRTC workflows.",
+    "RTSP/HLS/SRT sources are configured through URLs, while WebRTC sources require a WebRTC DAT, connection, and video track.",
+    "Buffer, preread, queue, and hardware decode controls trade latency, smoothness, and CPU/GPU cost.",
+    "SRT streams can carry per-frame metadata and WebRTC track selection depends on peer configuration."
+  ]
+}

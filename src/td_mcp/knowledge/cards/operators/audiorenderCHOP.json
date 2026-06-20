@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "audiorenderCHOP",
+  "family": "CHOP",
+  "display_name": "Audio Render CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_Render_CHOP",
+  "summary": "Spatially renders audio from source channels using listener/source 3D transforms and Steam Audio modes. Outputs channel counts based on the selected output format, such as binaural, stereo, surround, or ambisonics.",
+  "key_concepts": [
+    "Audio Render CHOP uses Steam Audio SDK spatial rendering from listener and source transforms.",
+    "The source audio sample rate must be 44100 or 48000 Hz.",
+    "Simple Positional mode supports a mono source, while Simulation mode supports multiple sources and environmental simulation.",
+    "Output Format determines the number and meaning of output channels, including binaural, stereo, surround, custom, ambisonics, and direct-effect formats.",
+    "Custom speaker output uses a Mapping Table DAT with x, y, and z speaker-position columns."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable or disable audio rendering"},
+    {"name": "mode", "type": "Menu", "note": "Simple positional or simulation rendering mode"},
+    {"name": "outputformat", "type": "Menu", "note": "Binaural, stereo, surround, custom, ambisonics, or direct output"},
+    {"name": "attenuation", "type": "Toggle", "note": "Attenuate source audio by source/listener distance"},
+    {"name": "ambisonicsorder", "type": "Int", "note": "Ambisonics order for ambisonic output"},
+    {"name": "mappingtable", "type": "DAT", "note": "Speaker-position table for custom output format"},
+    {"name": "listenerobject", "type": "COMP", "note": "3D component used as the listener transform"},
+    {"name": "source0object", "type": "COMP", "note": "3D component used as the first source transform"},
+    {"name": "mesh", "type": "SOP", "note": "Simulation mesh source for occlusion/reflection workflows"}
+  ],
+  "common_gotchas": [
+    "Input audio must use a supported sample rate, commonly 44100 or 48000 Hz.",
+    "Apple Silicon support starts with TouchDesigner build 2022.33910.",
+    "Simulation and reflection workflows require valid meshes and may need explicit baking before the result is meaningful."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2022.33910+",
+  "last_verified": "2026-06-18"
+}

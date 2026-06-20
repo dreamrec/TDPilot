@@ -1,0 +1,67 @@
+{
+  "card_type": "operator",
+  "op_type": "sharedmemoutTOP",
+  "family": "TOP",
+  "display_name": "Shared Mem Out TOP",
+  "docs_url": "https://docs.derivative.ca/Shared_Mem_Out_TOP",
+  "summary": "Writes TOP image data to a named shared-memory block for another TouchDesigner process or third-party application to read.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Cook the input and write to shared memory while enabled."
+    },
+    {
+      "name": "name",
+      "type": "String",
+      "note": "Shared memory block name to write."
+    },
+    {
+      "name": "memtype",
+      "type": "Menu",
+      "note": "Memory scope: Local or Global."
+    },
+    {
+      "name": "local",
+      "type": "Menu Option",
+      "note": "Use a unique local shared memory segment."
+    },
+    {
+      "name": "global",
+      "type": "Menu Option",
+      "note": "Use the combined global shared memory segment."
+    },
+    {
+      "name": "downloadtype",
+      "type": "Menu",
+      "note": "Immediate slow transfer or next-frame fast transfer."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "Receiver name, memory type, resolution, and pixel format must be coordinated.",
+    "Use Local for applications other than TouchDesigner.",
+    "Only one Out process can safely own a Global shared-memory stream on a machine.",
+    "Next-frame download is faster but adds one-frame latency."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "shared_memory_io",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Shared Mem Out cooks its input and writes image data to a named shared-memory block while active.",
+    "Local and Global memory types determine whether the block is unique or part of the combined TouchDesigner shared segment.",
+    "Download Type trades immediate transfer latency against faster next-frame behavior.",
+    "Receivers must use the same name, memory type, and compatible image layout."
+  ]
+}

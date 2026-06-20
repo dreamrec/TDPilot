@@ -1,0 +1,65 @@
+{
+  "card_type": "operator",
+  "op_type": "analyzeTOP",
+  "family": "TOP",
+  "display_name": "Analyze TOP",
+  "docs_url": "https://docs.derivative.ca/Analyze_TOP",
+  "summary": "Calculates image statistics such as average, min, max, count, or sum over full images, rows, columns, slices, or channel scopes.",
+  "key_params": [
+    {
+      "name": "op",
+      "type": "Menu",
+      "note": "Statistic operation: average, minimum, maximum, count, sum, minrgb, minrgba, maxrgb, or maxrgba"
+    },
+    {
+      "name": "analyzechannel",
+      "type": "Menu",
+      "note": "Channel basis such as luminance, red, green, blue, alpha, rgbaverage, rgbmax, or independent"
+    },
+    {
+      "name": "scope",
+      "type": "Menu",
+      "note": "Analyze image, rows, columns, or slices"
+    },
+    {
+      "name": "excludenans",
+      "type": "Toggle",
+      "note": "Ignore NaN pixels during analysis"
+    },
+    {
+      "name": "mask",
+      "type": "Menu",
+      "note": "Optional mask channel: none, red, green, blue, alpha, or independent"
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution policy"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Minimum and maximum output the selected pixel values unless RGBA Independent-style analysis is used.",
+    "Exclude NaNs and Mask options add cost; leave them off unless bad pixels or masks are part of the design.",
+    "NaNs propagate through statistics unless excluded.",
+    "Use float pixel formats for Count Pixels and Sum to avoid precision loss."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "CHOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Analyze TOP reduces TOP pixels into statistics such as average, minimum, maximum, count, and sum.",
+    "Scope controls whether the output is one value for the image, one value per row, one per column, or one per slice.",
+    "Minimum and maximum can return the RGBA value of the selected pixel rather than independent per-channel extrema.",
+    "TOP to CHOP is the intended bridge when the resulting statistic needs to drive channels or parameters.",
+    "Count Pixels and Sum should use float output precision for large images or high values.",
+    "The official TOP supports 3D textures and 2D texture arrays."
+  ]
+}

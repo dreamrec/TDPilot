@@ -1,0 +1,102 @@
+{
+  "card_type": "operator",
+  "op_type": "raySOP",
+  "family": "SOP",
+  "display_name": "Ray SOP",
+  "docs_url": "https://docs.derivative.ca/Ray_SOP",
+  "summary": "Projects input points onto collision geometry by closest distance or by casting rays along point normals, with optional distance, normal, bounce, and group outputs.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Point group to project"
+    },
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "Minimum-distance or normal-ray projection"
+    },
+    {
+      "name": "dotrans",
+      "type": "Toggle",
+      "note": "Transform source points"
+    },
+    {
+      "name": "lookfar",
+      "type": "Toggle",
+      "note": "Intersect farthest surface"
+    },
+    {
+      "name": "normal",
+      "type": "Menu",
+      "note": "Source, collision, or reflected normal output"
+    },
+    {
+      "name": "bounces",
+      "type": "Int",
+      "note": "Number of ray bounces"
+    },
+    {
+      "name": "bouncegeo",
+      "type": "Toggle",
+      "note": "Save projected geometry for each bounce"
+    },
+    {
+      "name": "putdist",
+      "type": "Toggle",
+      "note": "Write intersection distance attribute"
+    },
+    {
+      "name": "scale",
+      "type": "Float",
+      "note": "Projection scale from source to intersection"
+    },
+    {
+      "name": "lift",
+      "type": "Float",
+      "note": "Offset in collision normal direction"
+    },
+    {
+      "name": "sample",
+      "type": "Int",
+      "note": "Number of rays per point"
+    },
+    {
+      "name": "jitter",
+      "type": "Float",
+      "note": "Perturbation scale for extra sample rays"
+    },
+    {
+      "name": "seed",
+      "type": "Int",
+      "note": "Random seed for jittered samples"
+    },
+    {
+      "name": "newgrp",
+      "type": "Toggle",
+      "note": "Create group from successful intersections"
+    },
+    {
+      "name": "hitgrp",
+      "type": "String",
+      "note": "Ray hit group name"
+    }
+  ],
+  "common_gotchas": [
+    "Project Rays mode needs point normals; Minimum Distance mode does not.",
+    "Points that miss collision geometry can receive zero normal or distance values.",
+    "Higher bounces and sample counts increase geometry and cook cost.",
+    "Leave Transform Points off when only intersection attributes are needed."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "surface-projection-and-collision",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Ray SOP projects one surface onto another for shrink-wrap, draping, and similar surface-conformance effects.",
+    "Minimum Distance mode ignores point normals, while Project Rays mode casts along source point normals.",
+    "It can move source points or only update intersection attributes such as normal and distance.",
+    "Bounce settings can re-project reflected rays and optionally save bounce geometry."
+  ]
+}

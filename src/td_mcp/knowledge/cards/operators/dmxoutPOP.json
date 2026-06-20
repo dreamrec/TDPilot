@@ -1,0 +1,43 @@
+{
+  "card_type": "operator",
+  "op_type": "dmxoutPOP",
+  "family": "POP",
+  "display_name": "DMX Out POP",
+  "docs_url": "https://docs.derivative.ca/DMX_Out_POP",
+  "summary": "Sends DMX data to DMX, Art-Net, sACN, KiNET, or FTDI devices by merging DMX Fixture POP inputs into output universes.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Actively send data to the selected DMX device/interface"},
+    {"name": "interface", "type": "Menu", "note": "Generic Serial, Enttec USB Pro, Art-Net, sACN, or KiNET output interface"},
+    {"name": "rate", "type": "Float", "note": "Output send rate per second"},
+    {"name": "fixture", "type": "Sequential", "note": "Sequential DMX Fixture POP input blocks"},
+    {"name": "fixture0active", "type": "Toggle", "note": "Merge and send this fixture block"},
+    {"name": "fixture0pop", "type": "POP Pattern", "note": "Referenced DMX Fixture POPs when no corresponding input is wired"},
+    {"name": "serialport", "type": "Menu", "note": "Serial COM port for Generic Serial interface"},
+    {"name": "dmxkingport", "type": "Menu", "note": "DMXking port selector"},
+    {"name": "device", "type": "Menu", "note": "DMX device selector"},
+    {"name": "multicast", "type": "Toggle", "note": "Enable multicast for sACN"},
+    {"name": "netaddress", "type": "Str", "note": "Target device IP address or broadcast address"},
+    {"name": "localaddress", "type": "Menu", "note": "Local network adapter/address to send from"},
+    {"name": "localport", "type": "Int", "note": "Custom local source port or OS-assigned default"},
+    {"name": "customport", "type": "Toggle", "note": "Enable custom target network port"},
+    {"name": "netport", "type": "Int", "note": "Custom target network port"},
+    {"name": "priority", "type": "Int", "note": "sACN/KiNET data priority"},
+    {"name": "sendartsync", "type": "Toggle", "note": "Send ArtSync packets after ArtDmx packets"},
+    {"name": "routingtable", "type": "DAT", "note": "Optional table of netaddress, source, cid, priority, and KiNET port per universe"}
+  ],
+  "key_concepts": [
+    "DMX Out POP sends merged DMX universes from DMX Fixture POP inputs to serial, USB, Art-Net, sACN, KiNET, or FTDI output paths.",
+    "Every wired or referenced input is expected to be a DMX Fixture POP; fixture sequence blocks can be active/inactive and can reference fixture POPs by OP pattern.",
+    "Multiple fixture sources can be merged into one output, but channel conflicts in the same universe produce warnings and should be debugged with DMX Map DAT.",
+    "Network output separates target addressing from universe layout: netaddress, local adapter, ports, priority, ArtSync, KiNET, and routing table rows control transmission behavior.",
+    "Broadcast is supported, but the docs recommend unicast for large universe counts to avoid overwhelming the network."
+  ],
+  "common_gotchas": [
+    "Every input should be a DMX Fixture POP, either wired or referenced by parameter.",
+    "Multiple fixture inputs writing the same channel in the same universe can conflict and produce warnings.",
+    "Unicast can be preferable to broadcast for large numbers of universes."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

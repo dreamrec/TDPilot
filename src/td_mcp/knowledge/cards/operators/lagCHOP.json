@@ -1,0 +1,50 @@
+{
+  "card_type": "operator",
+  "op_type": "lagCHOP",
+  "family": "CHOP",
+  "display_name": "Lag CHOP",
+  "docs_url": "https://docs.derivative.ca/Lag_CHOP",
+  "summary": "Adds lag, overshoot, velocity limits, and acceleration limits to CHOP channels for smoothed control motion.",
+  "key_concepts": [
+    "Adds lag and overshoot to channels and can also limit channel velocity and acceleration.",
+    "Separate up and down values allow fast-rise slow-fall behavior or the reverse.",
+    "Lag Method changes whether up/down means value direction, amplitude direction, vector magnitude, or quaternion rotation.",
+    "Lag time is approximately how long the output takes to follow 90 percent of an input change.",
+    "Snap forces output values back to the input when they are within Threshold.",
+    "Lag per Sample applies lag independently to each sample for multi-sample channels."
+  ],
+  "key_params": [
+    {"name": "lagmethod", "type": "Menu", "note": "Apply lag by value, amplitude, magnitude, or quaternion rotation"},
+    {"name": "lag", "type": "Float2", "note": "Separate lag values for rising and falling changes"},
+    {"name": "lag1", "type": "Float", "note": "Lagging-up value"},
+    {"name": "lag2", "type": "Float", "note": "Lagging-down value"},
+    {"name": "lagunit", "type": "Menu", "note": "Samples, frames, or seconds for lag values"},
+    {"name": "overshoot", "type": "Float2", "note": "Overshoot amount for rising/falling motion"},
+    {"name": "overshoot1", "type": "Float", "note": "Overshoot while moving up"},
+    {"name": "overshoot2", "type": "Float", "note": "Overshoot while moving down"},
+    {"name": "overshootunit", "type": "Menu", "note": "Units for overshoot timing"},
+    {"name": "clamp", "type": "Toggle", "note": "Enable slope/velocity clamp"},
+    {"name": "slope", "type": "Float2", "note": "Rising/falling slope limits"},
+    {"name": "slope1", "type": "Float", "note": "Maximum rising slope"},
+    {"name": "slope2", "type": "Float", "note": "Maximum decreasing slope"},
+    {"name": "aclamp", "type": "Toggle", "note": "Enable acceleration clamp"},
+    {"name": "accel", "type": "Float2", "note": "Rising/falling acceleration limits"},
+    {"name": "accel1", "type": "Float", "note": "Maximum rising acceleration"},
+    {"name": "accel2", "type": "Float", "note": "Maximum decreasing acceleration"},
+    {"name": "lagsamples", "type": "Toggle", "note": "Apply lag per sample for multi-sample channels"},
+    {"name": "snap", "type": "Toggle", "note": "Snap output when input/output difference is below threshold"},
+    {"name": "threshold", "type": "Float", "note": "Snap threshold"},
+    {"name": "reset", "type": "Toggle", "note": "Bypass lag and reset while on"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Pulse to reset state"}
+  ],
+  "common_gotchas": [
+    "Lag up/down are independent; asymmetric values create fast-rise/slow-fall behavior that planners should make intentional.",
+    "Lag Magnitude treats channels as one vector, so only the first Lag/Overshoot/Clamp value applies.",
+    "Quaternion Rotation mode is a Commercial feature and should be selected only for quaternion rotation channels.",
+    "Lag introduces temporal memory; provide a reset path for reusable rigs or stateful scene changes.",
+    "For a less abrupt smoothing effect, official docs point to Filter CHOP."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ smoothing/control",
+  "last_verified": "2026-06-18"
+}

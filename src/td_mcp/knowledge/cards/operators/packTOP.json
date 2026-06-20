@@ -1,0 +1,72 @@
+{
+  "card_type": "operator",
+  "op_type": "packTOP",
+  "family": "TOP",
+  "display_name": "Pack TOP",
+  "docs_url": "https://docs.derivative.ca/Pack_TOP",
+  "summary": "Packs 32-bit floating-point texture channel data into 8-bit RGBA pixels for lossless storage, or unpacks stored data back to float textures.",
+  "key_params": [
+    {
+      "name": "packtype",
+      "type": "Menu",
+      "note": "Direction and channel layout for packing or unpacking."
+    },
+    {
+      "name": "pack",
+      "type": "Menu Option",
+      "note": "Pack float channels into 8-bit RGBA pixels."
+    },
+    {
+      "name": "unpackr",
+      "type": "Menu Option",
+      "note": "Unpack a stored red channel."
+    },
+    {
+      "name": "unpackrg",
+      "type": "Menu Option",
+      "note": "Unpack stored red/green channels."
+    },
+    {
+      "name": "unpackrgb",
+      "type": "Menu Option",
+      "note": "Unpack stored RGB channels."
+    },
+    {
+      "name": "unpackrgbA",
+      "type": "Menu Option",
+      "note": "Unpack stored RGBA channels; official id uses a capital A."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "resolution",
+      "type": "XY",
+      "note": "Common TOP custom output width and height."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format for downstream storage or unpacking."
+    }
+  ],
+  "common_gotchas": [
+    "Use lossless file formats/codecs when storing packed data; lossy compression destroys packed float values.",
+    "Set Movie File Out output color space and Movie File In input color space to Passthrough.",
+    "Do not pass packed data through intermediate TOP processing before unpacking unless that operation is byte-preserving.",
+    "Pack mode works on any input pixel format but treats all channels as 32-bit floats for packing."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "float_texture_storage",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Packs 32-bit floating-point channel data into 8-bit RGBA pixels for lossless storage.",
+    "Unpack modes reconstruct R, RG, RGB, or RGBA 32-bit float textures from packed 8-bit pixels.",
+    "Packed output width is channel-count times input width while height remains unchanged.",
+    "Movie File Out and Movie File In color spaces must stay Passthrough so packed bytes are not modified."
+  ]
+}

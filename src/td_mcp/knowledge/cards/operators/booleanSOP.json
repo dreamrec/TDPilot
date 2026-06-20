@@ -1,0 +1,53 @@
+{
+  "card_type": "operator",
+  "op_type": "booleanSOP",
+  "family": "SOP",
+  "display_name": "Boolean SOP",
+  "docs_url": "https://docs.derivative.ca/Boolean_SOP",
+  "summary": "Performs union, intersection, difference, and edge guide operations on two closed polygonal input sets.",
+  "key_params": [
+    {
+      "name": "booleanop",
+      "type": "Menu",
+      "note": "Boolean operation: union, intersect, A minus B, B minus A, or edge outputs"
+    },
+    {
+      "name": "accattrib",
+      "type": "Toggle",
+      "note": "Attempt to transfer point attributes to the boolean output"
+    },
+    {
+      "name": "creategroup",
+      "type": "Toggle",
+      "note": "Create groups for result regions"
+    },
+    {
+      "name": "groupa",
+      "type": "String",
+      "note": "Group name for A-related output"
+    },
+    {
+      "name": "groupb",
+      "type": "String",
+      "note": "Group name for B-related output"
+    }
+  ],
+  "common_gotchas": [
+    "Inputs must be completely closed polygonal sets; open tubes or unbacked extrusions are invalid.",
+    "Polygons must be convex and coplanar; use Extrude convex faces or Divide/Facet cleanup before Boolean.",
+    "Point colors and UVs are not interpolated correctly, and normals may need a follow-up Facet SOP.",
+    "Boolean may reverse polygons or produce twisted edge outputs; use Facet cleanup when closure or shading is wrong.",
+    "For NURBS or Bezier surface boolean-style work, use Surfsect SOP instead."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Boolean SOP performs union, intersection, subtraction, and edge-guide operations on two polygonal input sets.",
+    "Inputs must be closed polygonal geometry with convex, coplanar polygons for reliable results.",
+    "Guide geometry can be generated for A-edge and B-edge operations to inspect intersection boundaries.",
+    "NURBS or Bezier boolean-style workflows should use surface-intersection tools rather than Boolean SOP."
+  ]
+}

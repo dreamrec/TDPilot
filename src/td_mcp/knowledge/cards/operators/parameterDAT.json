@@ -1,0 +1,192 @@
+{
+  "card_type": "operator",
+  "op_type": "parameterDAT",
+  "family": "DAT",
+  "display_name": "Parameter DAT",
+  "docs_url": "https://docs.derivative.ca/Parameter_DAT",
+  "summary": "Outputs parameter names, values, expressions, modes, exports, and definition metadata for one or more operators, including built-in and custom parameters.",
+  "key_params": [
+    {
+      "name": "ops",
+      "type": "OP Pattern",
+      "note": "Operators whose parameters are listed"
+    },
+    {
+      "name": "parameters",
+      "type": "Pattern",
+      "note": "Parameter names or wildcard patterns to include or exclude"
+    },
+    {
+      "name": "includeopname",
+      "type": "Toggle",
+      "note": "Prefix parameter names with operator names"
+    },
+    {
+      "name": "renamefrom",
+      "type": "Pattern",
+      "note": "Pattern-matching source for renamed output rows"
+    },
+    {
+      "name": "renameto",
+      "type": "Pattern Expansion",
+      "note": "Replacement pattern for renamed output rows"
+    },
+    {
+      "name": "custom",
+      "type": "Toggle",
+      "note": "Output custom parameters"
+    },
+    {
+      "name": "builtin",
+      "type": "Toggle",
+      "note": "Output built-in parameters"
+    },
+    {
+      "name": "header",
+      "type": "Toggle",
+      "note": "Output column headers"
+    },
+    {
+      "name": "name",
+      "type": "Toggle",
+      "note": "Output parameter name column"
+    },
+    {
+      "name": "value",
+      "type": "Toggle",
+      "note": "Output evaluated parameter value text"
+    },
+    {
+      "name": "eval",
+      "type": "Toggle",
+      "note": "Output evaluated parameter value as a Python object"
+    },
+    {
+      "name": "constant",
+      "type": "Toggle",
+      "note": "Output current constant value"
+    },
+    {
+      "name": "expression",
+      "type": "Toggle",
+      "note": "Output current Python expression"
+    },
+    {
+      "name": "export",
+      "type": "Toggle",
+      "note": "Output export path"
+    },
+    {
+      "name": "mode",
+      "type": "Toggle",
+      "note": "Output parameter mode"
+    },
+    {
+      "name": "style",
+      "type": "Toggle",
+      "note": "Output parameter style/type"
+    },
+    {
+      "name": "tupletname",
+      "type": "Toggle",
+      "note": "Output the parameter tuplet name"
+    },
+    {
+      "name": "size",
+      "type": "Toggle",
+      "note": "Output tuplet size"
+    },
+    {
+      "name": "path",
+      "type": "Toggle",
+      "note": "Output path to the node"
+    },
+    {
+      "name": "menuindex",
+      "type": "Toggle",
+      "note": "Output selected menu index for menu parameters"
+    },
+    {
+      "name": "minmax",
+      "type": "Toggle",
+      "note": "Output minimum and maximum values"
+    },
+    {
+      "name": "clampminmax",
+      "type": "Toggle",
+      "note": "Output clamp min/max state"
+    },
+    {
+      "name": "normminmax",
+      "type": "Toggle",
+      "note": "Output normalized min/max values"
+    },
+    {
+      "name": "default",
+      "type": "Toggle",
+      "note": "Output default value"
+    },
+    {
+      "name": "enabled",
+      "type": "Toggle",
+      "note": "Output current enable state"
+    },
+    {
+      "name": "readonly",
+      "type": "Toggle",
+      "note": "Output current read-only state"
+    },
+    {
+      "name": "section",
+      "type": "Toggle",
+      "note": "Output section divider state"
+    },
+    {
+      "name": "menunames",
+      "type": "Toggle",
+      "note": "Output menu names for menu parameters"
+    },
+    {
+      "name": "menulabels",
+      "type": "Toggle",
+      "note": "Output menu labels for menu parameters"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "The DAT can output up to many metadata columns; downstream table lookups should key by header names, not column positions.",
+    "Value and Eval columns differ: one is displayed/evaluated value text, the other is a Python object representation.",
+    "Wildcard and NOT patterns in Operators and Parameters can match more parameters than expected in large components.",
+    "Include Op Name and Rename settings change parameter names, which can break consumers expecting raw Par names."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "parameter-introspection-tables",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Outputs a table of parameter names and values from one or more operators.",
+    "Operator and parameter patterns select which OPs and parameters are represented.",
+    "Output-page toggles choose value, eval, expression, export, mode, style, tuplet, path, and menu-index columns.",
+    "Define-page toggles expose parameter metadata such as min/max, clamp, default, enabled, read-only, sections, and menu labels."
+  ]
+}

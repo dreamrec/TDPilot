@@ -1,0 +1,107 @@
+{
+  "card_type": "operator",
+  "op_type": "errorDAT",
+  "family": "DAT",
+  "display_name": "Error DAT",
+  "docs_url": "https://docs.derivative.ca/Error_DAT",
+  "summary": "Maintains a FIFO table of recent TouchDesigner errors, warnings, and messages with filters for severity, source type, node path, and message text.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Allow or inhibit new messages being added to the log"
+    },
+    {
+      "name": "severity",
+      "type": "String",
+      "note": "Filter message, warning, abort, or combinations"
+    },
+    {
+      "name": "type",
+      "type": "String",
+      "note": "Filter by source operator family or type"
+    },
+    {
+      "name": "source",
+      "type": "String",
+      "note": "Filter to specific project paths or nodes"
+    },
+    {
+      "name": "message",
+      "type": "String",
+      "note": "Filter by message text pattern"
+    },
+    {
+      "name": "logcurrent",
+      "type": "Pulse",
+      "note": "Traverse all nodes and capture current errors"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "Callback script DAT run once for each incoming message"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose where callback scripts execute from"
+    },
+    {
+      "name": "fromop",
+      "type": "OP path",
+      "note": "Operator context used when Execute From is set to Specified Operator"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Limit FIFO output to a bounded number of messages"
+    },
+    {
+      "name": "maxlines",
+      "type": "Int",
+      "note": "Maximum number of message rows retained when Clamp Output is on"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear all logged rows except the heading"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Error DAT is a recent-message FIFO; it is not a permanent project log unless clamping and export are configured.",
+    "The default clamp can hide older errors during noisy failures.",
+    "Filters use pattern matching, so generated diagnostics should expose severity/source filters rather than hard-coding one view.",
+    "Callbacks fire once for each incoming message; scripts should avoid creating additional recursive error spam."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "runtime-diagnostics-and-agent-feedback",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Collects recent TouchDesigner messages and errors in a FIFO DAT table.",
+    "Severity, type, source, and message filters narrow which log entries are captured.",
+    "Callbacks can run for incoming messages that pass the filters.",
+    "Log Current scans the current network state and appends existing operator errors."
+  ]
+}

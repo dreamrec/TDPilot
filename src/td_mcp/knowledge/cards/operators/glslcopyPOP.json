@@ -1,0 +1,348 @@
+{
+  "card_type": "operator",
+  "op_type": "glslcopyPOP",
+  "family": "POP",
+  "display_name": "GLSL Copy POP",
+  "docs_url": "https://docs.derivative.ca/GLSL_Copy_POP",
+  "summary": "Copies the first input POP geometry and runs GLSL compute shaders for each copy. Copy count comes from Number of Copies when no template POP is connected, or from the template input point count when the second input is connected; point shaders are required while vertex and primitive shaders can use default topology-copy behavior.",
+  "key_params": [
+    {
+      "name": "ncy",
+      "type": "Int",
+      "note": "Number of copies when no template input is connected."
+    },
+    {
+      "name": "ptcomputedat",
+      "type": "DAT",
+      "note": "Point compute shader source DAT; a valid point shader is required."
+    },
+    {
+      "name": "ptoutputattrs",
+      "type": "String",
+      "note": "Input point attributes modified by the point shader."
+    },
+    {
+      "name": "vertcomputemethod",
+      "type": "Menu",
+      "note": "Vertex compute shader method: default topology copy or custom shader."
+    },
+    {
+      "name": "vertcomputedat",
+      "type": "DAT",
+      "note": "Vertex compute shader source DAT when the vertex method is custom."
+    },
+    {
+      "name": "vertoutputattrs",
+      "type": "String",
+      "note": "Input vertex attributes modified by the vertex shader."
+    },
+    {
+      "name": "primcomputemethod",
+      "type": "Menu",
+      "note": "Primitive compute shader method: default primitive metadata copy or custom shader."
+    },
+    {
+      "name": "primcomputedat",
+      "type": "DAT",
+      "note": "Primitive compute shader source DAT when the primitive method is custom."
+    },
+    {
+      "name": "primoutputattrs",
+      "type": "String",
+      "note": "Input primitive attributes modified by the primitive shader."
+    },
+    {
+      "name": "dimension",
+      "type": "Menu",
+      "note": "Append Dimension mode: only when template points/copies exceed one, or always."
+    },
+    {
+      "name": "simplexnoise",
+      "type": "Menu",
+      "note": "TDSimplexNoise() implementation choice for shader code."
+    },
+    {
+      "name": "attr0class",
+      "type": "Menu",
+      "note": "Attribute class for a newly created point, vertex, or primitive attribute."
+    },
+    {
+      "name": "attr0name",
+      "type": "Menu",
+      "note": "Predefined name or semantic for a newly created attribute."
+    },
+    {
+      "name": "attr0customname",
+      "type": "String",
+      "note": "Custom name for a newly created attribute."
+    },
+    {
+      "name": "attr0type",
+      "type": "Menu",
+      "note": "Data type for a newly created attribute."
+    },
+    {
+      "name": "attr0numcomps",
+      "type": "Int",
+      "note": "Number of components for a newly created attribute."
+    },
+    {
+      "name": "attr0isarray",
+      "type": "Toggle",
+      "note": "Marks the new attribute as an array attribute."
+    },
+    {
+      "name": "attr0arraysize",
+      "type": "Int",
+      "note": "Array size for a newly created array attribute."
+    },
+    {
+      "name": "matattr0class",
+      "type": "Menu",
+      "note": "Attribute class where a new matrix attribute is created."
+    },
+    {
+      "name": "matattr0name",
+      "type": "String",
+      "note": "Custom name for a new matrix attribute."
+    },
+    {
+      "name": "matattr0numrows",
+      "type": "Int",
+      "note": "Matrix attribute row count."
+    },
+    {
+      "name": "matattr0numcols",
+      "type": "Int",
+      "note": "Matrix attribute column count."
+    },
+    {
+      "name": "matattr0isarray",
+      "type": "Toggle",
+      "note": "Marks the matrix attribute as an array."
+    },
+    {
+      "name": "matattr0arraysize",
+      "type": "Int",
+      "note": "Array size for a matrix attribute array."
+    },
+    {
+      "name": "matattr0qualifier",
+      "type": "Menu",
+      "note": "Qualifier such as transform matrix for a matrix attribute."
+    },
+    {
+      "name": "premultcolor",
+      "type": "Toggle",
+      "note": "Premultiplies RGB color uniform values by alpha."
+    },
+    {
+      "name": "color0name",
+      "type": "String",
+      "note": "Name of a color uniform."
+    },
+    {
+      "name": "color0rgb",
+      "type": "RGB",
+      "note": "RGB value for a color uniform."
+    },
+    {
+      "name": "color0alpha",
+      "type": "Float",
+      "note": "Alpha value for a color uniform."
+    },
+    {
+      "name": "vec0name",
+      "type": "String",
+      "note": "Name of a vector uniform."
+    },
+    {
+      "name": "vec0type",
+      "type": "Menu",
+      "note": "Vector uniform type such as float, vec2, ivec3, or uvec4."
+    },
+    {
+      "name": "vec0value",
+      "type": "Float",
+      "note": "Vector uniform value."
+    },
+    {
+      "name": "sampler0name",
+      "type": "String",
+      "note": "Name of a sampler uniform."
+    },
+    {
+      "name": "sampler0top",
+      "type": "TOP",
+      "note": "TOP source for a sampler uniform."
+    },
+    {
+      "name": "sampler0extendu",
+      "type": "Menu",
+      "note": "Texture extend mode for U coordinates."
+    },
+    {
+      "name": "sampler0extendv",
+      "type": "Menu",
+      "note": "Texture extend mode for V coordinates."
+    },
+    {
+      "name": "sampler0extendw",
+      "type": "Menu",
+      "note": "Texture extend mode for W coordinates."
+    },
+    {
+      "name": "sampler0filter",
+      "type": "Menu",
+      "note": "Texture filtering mode for the sampler TOP."
+    },
+    {
+      "name": "array0name",
+      "type": "String",
+      "note": "Name of a uniform array."
+    },
+    {
+      "name": "array0type",
+      "type": "Menu",
+      "note": "Uniform array component type."
+    },
+    {
+      "name": "array0chop",
+      "type": "CHOP",
+      "note": "CHOP source for the array uniform."
+    },
+    {
+      "name": "array0arraytype",
+      "type": "Menu",
+      "note": "Uniform array storage mode: uniform array or texture buffer."
+    },
+    {
+      "name": "matrix0name",
+      "type": "String",
+      "note": "Name of a matrix uniform."
+    },
+    {
+      "name": "matrix0value",
+      "type": "OP",
+      "note": "Matrix source passed to the shader."
+    },
+    {
+      "name": "tempbuffer0name",
+      "type": "String",
+      "note": "Name of a temporary shader buffer."
+    },
+    {
+      "name": "tempbuffer0initval",
+      "type": "Float",
+      "note": "Initial value for a temporary shader buffer."
+    },
+    {
+      "name": "const0name",
+      "type": "String",
+      "note": "Name of a specialization constant."
+    },
+    {
+      "name": "const0value",
+      "type": "Float",
+      "note": "Value of a specialization constant."
+    },
+    {
+      "name": "buffer0pop",
+      "type": "POP",
+      "note": "POP source used for an attribute buffer exposed to the shader."
+    },
+    {
+      "name": "buffer0attrclass",
+      "type": "Menu",
+      "note": "Point, vertex, or primitive attribute class for a POP buffer."
+    },
+    {
+      "name": "buffer0attr",
+      "type": "String",
+      "note": "Attribute name selected for a POP buffer."
+    },
+    {
+      "name": "buffer0name",
+      "type": "String",
+      "note": "Shader-side name for the selected POP attribute buffer."
+    },
+    {
+      "name": "freeextragpumem",
+      "type": "Pulse",
+      "note": "Frees accumulated GPU memory after output memory has grown and shrunk."
+    },
+    {
+      "name": "delinputattrs",
+      "type": "Toggle",
+      "note": "Outputs only attributes specified by this POP, isolating attributes into a branch."
+    },
+    {
+      "name": "parmcolorspace",
+      "type": "Menu",
+      "note": "Color space used to interpret color parameters before conversion to working color space."
+    },
+    {
+      "name": "parmreferencewhite",
+      "type": "Menu",
+      "note": "Reference-white handling for parameter color conversion."
+    }
+  ],
+  "key_concepts": [
+    "template input",
+    "Number of Copies",
+    "point compute shader required",
+    "optional vertex shader",
+    "optional primitive shader",
+    "Append Dimension",
+    "Output Attributes",
+    "TDNumPoints()",
+    "TDInputNumPoints()",
+    "TDNumVertsBatch()",
+    "TDInputNumVertsBatch()",
+    "TDVertIndex()",
+    "TDNumPrimsBatch()",
+    "TDPrimIndex()",
+    "TDInputIndex()",
+    "TDCopyIndex()",
+    "TDTemplateNumPoints()",
+    "TDIn_AttribName()",
+    "TDTemplate_AttribName()",
+    "cTDTemplateArraySize_Attrib",
+    "TDBuffer()",
+    "AttribName[]",
+    "TDUpdatePointGroups()",
+    "TDUpdateTopology()",
+    "TDUpdateLineStripsInfo()",
+    "TDUpdatePrimGroups()",
+    "cTDPrimIndexRestart",
+    "POP Buffers",
+    "Texture Buffer arrays",
+    "Specialization Constants",
+    "Create Attribs Page",
+    "Color uniforms",
+    "Vector uniforms",
+    "Sampler uniforms",
+    "Temp Buffers",
+    "Delete Input Attributes",
+    "Info CHOP"
+  ],
+  "common_gotchas": [
+    "A valid point compute shader is required; vertex and primitive compute shaders can stay on the default method when only topology and attributes need to be copied.",
+    "When a template input is connected, Number of Copies is ignored and one copy is created for each template point.",
+    "Custom vertex shaders that change or rely on topology should call TDUpdateTopology(); the default vertex shader performs topology and vertex attribute copy behavior.",
+    "Custom primitive shaders for line strips or primitive groups should use TDUpdateLineStripsInfo() and TDUpdatePrimGroups() when preserving those metadata buffers.",
+    "The GLSL Copy POP has only source and template inputs; attributes from any other POP must be exposed through POP Buffers and read with TDBuffer().",
+    "Use TDCopyIndex() for the current copy and TDInputIndex() for the source point, vertex, or primitive that the current output element corresponds to.",
+    "Template attributes use TDTemplate_AttribName() and cTDTemplateArraySize_Attrib constants; source input array attributes use cTDArraySize_Attrib.",
+    "Output attributes are written through AttribName[] arrays, so list every point, vertex, or primitive attribute to modify in the matching Output Attributes parameter.",
+    "Line-strip custom code must preserve primitive restart handling with cTDPrimIndexRestart when rebuilding index data.",
+    "Array uniforms can be backed by texture buffers; keep array type and CHOP channel layout aligned with the GLSL declaration."
+  ],
+  "related_snippets": [
+    "GLSL_snippets",
+    "POP_snippets",
+    "POP_attribute_ontology"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

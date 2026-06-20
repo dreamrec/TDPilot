@@ -1,0 +1,31 @@
+{
+  "card_type": "operator",
+  "op_type": "fileoutCHOP",
+  "family": "CHOP",
+  "display_name": "File Out CHOP",
+  "docs_url": "https://docs.derivative.ca/File_Out_CHOP",
+  "summary": "Writes CHOP channel data to raw ASCII .chan files, either on demand or at a frame interval.",
+  "key_concepts": [
+    "Writes CHOP channel data to .chan files, which are raw ASCII channel files with one row of numbers per frame.",
+    "Active writes repeatedly at the specified frame Interval, while Write records a single frame on demand.",
+    "The File parameter must be a valid output path before Active is enabled in generated plans.",
+    "Channel names are generated automatically in the .chan file, and Scope limits which channels are written."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Write automatically when enabled"},
+    {"name": "file", "type": "File", "note": "Output .chan file path"},
+    {"name": "interval", "type": "Integer", "note": "Number of frames between writes"},
+    {"name": "write", "type": "Pulse", "note": "Write one frame immediately"},
+    {"name": "scope", "type": "Pattern", "note": "Channel pattern to affect"}
+  ],
+  "common_gotchas": [
+    "File Out CHOP writes .chan channel files, not arbitrary audio or movie formats.",
+    "Active mode can append or overwrite frequently depending on file usage; check the target path before show playback.",
+    "Interval is in frames, so timeline frame rate affects write timing.",
+    "Writing every frame can create large log files quickly.",
+    "Use a stable filename and filesystem location before enabling Active in generated plans."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

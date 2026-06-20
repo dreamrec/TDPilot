@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "cacheSOP",
+  "family": "SOP",
+  "display_name": "Cache SOP",
+  "docs_url": "https://docs.derivative.ca/Cache_SOP",
+  "summary": "Stores input SOP geometry over time for faster random-access playback and scrubbing of otherwise expensive SOP chains.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable caching"},
+    {"name": "prefill", "type": "Int", "note": "Fill the cache immediately with this many cooks"},
+    {"name": "cachesize", "type": "Int", "note": "Number of geometry states to store"},
+    {"name": "step", "type": "Int", "note": "Frame interval between cached geometries"},
+    {"name": "outputindex", "type": "Int", "note": "Cached geometry index to output; 0 is most recent"},
+    {"name": "cachepoints", "type": "Toggle", "note": "Cache one topology and only point data for later entries"},
+    {"name": "blendpos", "type": "Toggle", "note": "Interpolate point positions between cached geometries"},
+    {"name": "reset", "type": "Toggle", "note": "Clear cached geometry while on"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Clear cached geometry immediately"}
+  ],
+  "common_gotchas": [
+    "Output Index is valid from 0 to Cache Size minus 1; out-of-range indexing cannot retrieve older geometry.",
+    "Cache Points Only assumes topology is stable across cached entries.",
+    "Caching speeds playback after data is collected but increases memory use.",
+    "Prefill greater than zero fills the cache immediately and behaves as though Active is off.",
+    "A saved nonzero Prefill value will pre-fill again when the file is reopened."
+  ],
+  "related_snippets": ["SOP_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Cache SOP stores SOP geometry states over time for random-access playback and scrubbing.",
+    "Output Index 0 is the newest cached geometry, with older entries addressed up to Cache Size minus one.",
+    "Point-only caching stores one topology and later point positions, so topology must stay stable.",
+    "Prefill can populate the cache immediately and has special behavior when opening saved files."
+  ]
+}

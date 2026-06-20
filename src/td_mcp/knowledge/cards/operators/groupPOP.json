@@ -1,0 +1,44 @@
+{
+  "card_type": "operator",
+  "op_type": "groupPOP",
+  "family": "POP",
+  "display_name": "Group POP",
+  "docs_url": "https://docs.derivative.ca/Group_POP",
+  "summary": "Creates, combines, converts, renames, and edits named point or primitive groups. Groups can be built from attribute tests, thinning rules, index pattern matching, existing groups, or bounding ranges, then used by downstream POPs to limit operations.",
+  "key_params": [
+    {"name": "grname", "type": "Str", "note": "Name of the group to create"},
+    {"name": "entity", "type": "Menu", "note": "Group points or primitives"},
+    {"name": "debugcolor", "type": "Toggle", "note": "Adds a color attribute for group debugging"},
+    {"name": "attr", "type": "Sequential", "note": "Attribute-condition blocks"},
+    {"name": "attr0inattr", "type": "Str", "note": "Attribute used by an attribute-condition block"},
+    {"name": "attr0func", "type": "Menu", "note": "Comparison function for attribute selection"},
+    {"name": "attr0value", "type": "Float", "note": "Comparison value for an attribute-condition block"},
+    {"name": "pattern", "type": "Sequential", "note": "Index-pattern selection blocks"},
+    {"name": "pattern0pattern", "type": "Str", "note": "Index pattern used by a pattern-selection block"},
+    {"name": "thinenabled", "type": "Toggle", "note": "Enable index thinning"},
+    {"name": "thinstep", "type": "Int", "note": "Selects every Nth element when thinning is enabled"},
+    {"name": "group", "type": "Sequential", "note": "Existing-group selection blocks"},
+    {"name": "bound", "type": "Sequential", "note": "Bounding-volume selection blocks"},
+    {"name": "cnvttype", "type": "Menu", "note": "Convert a group between point and primitive classes"},
+    {"name": "cnvtgroup", "type": "String", "note": "Group name to convert"},
+    {"name": "cnvtname", "type": "String", "note": "Converted group name"},
+    {"name": "preserve", "type": "Toggle", "note": "Preserve original group when converting"},
+    {"name": "oldname", "type": "String", "note": "Old group name when renaming"},
+    {"name": "newname", "type": "String", "note": "New group name when renaming"},
+    {"name": "deletename", "type": "String", "note": "Groups to delete"}
+  ],
+  "key_concepts": [
+    "Creates named point or primitive groups for downstream POPs that expose Group parameters.",
+    "Group membership can be built from attribute comparisons, thinning, pattern matching, existing groups, or bounding volumes.",
+    "Sequential condition blocks combine predicate logic while preserving order-sensitive generation structure.",
+    "The Edit page can rename, convert, or otherwise transform groups after initial creation."
+  ],
+  "common_gotchas": [
+    "Groups only affect downstream POPs that explicitly reference them; creating a group does not delete or transform data by itself.",
+    "Complex group logic is built from sequential parameter blocks, so preserve block order when generating plans.",
+    "Prefer authoring a helper attribute with Math Mix or GLSL POP when the grouping predicate is easier as math than as Group POP blocks."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

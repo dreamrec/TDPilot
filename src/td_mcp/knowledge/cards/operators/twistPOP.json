@@ -1,0 +1,39 @@
+{
+  "card_type": "operator",
+  "op_type": "twistPOP",
+  "family": "POP",
+  "display_name": "Twist POP",
+  "docs_url": "https://docs.derivative.ca/Twist_POP",
+  "summary": "Applies non-linear deformations such as twist, bend, shear, taper, linear taper, and squash/stretch to point, vertex, or primitive attributes. Deformation is controlled by axes, pivot, strength, rolloff, and optional per-point weights.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Attribute class to deform"},
+    {"name": "inputattrscope", "type": "Str", "note": "Input attribute or components to deform"},
+    {"name": "weightattr", "type": "Str", "note": "Weight attribute that scales strength per element"},
+    {"name": "op", "type": "Menu", "note": "Twist, bend, shear, taper, linear taper, or squash/stretch"},
+    {"name": "paxis", "type": "Menu", "note": "Primary deformation axis"},
+    {"name": "saxis", "type": "Menu", "note": "Secondary axis"},
+    {"name": "p", "type": "Float3", "note": "Pivot point"},
+    {"name": "strength", "type": "Float", "note": "Deformation strength"},
+    {"name": "rolloff", "type": "Float", "note": "Rolloff from pivot or axes"},
+    {"name": "outputattrscope", "type": "Str", "note": "Output attribute scope"},
+    {"name": "overrideautoattr", "type": "Toggle", "note": "Override automatic output attribute metadata"},
+    {"name": "attrtype", "type": "Menu", "note": "Output attribute data type"},
+    {"name": "attrnumcomps", "type": "Menu", "note": "Output attribute component count"},
+    {"name": "attrdefaultval", "type": "Float4", "note": "Default output attribute value"}
+  ],
+  "key_concepts": [
+    "Twist POP performs non-linear deformation operations: twist, bend, shear, taper, linear taper, and squash/stretch.",
+    "Attribute Class and Input Attribute Scope let it deform point, vertex, or primitive attributes, not only P.",
+    "Primary axis, secondary axis, and pivot define the local deformation frame for the selected operation.",
+    "Strength sets the amount of deformation, Rolloff shapes how deformation changes away from the pivot or axes, and Weight Attribute scales strength per element.",
+    "Output Attribute Scope and output metadata allow the result to overwrite P for visible geometry motion or write a separate deformed attribute."
+  ],
+  "common_gotchas": [
+    "Weight attributes multiply strength per element, so unexpected Weight values can make deformation appear missing or extreme.",
+    "Axes and pivot define the deformation frame; normalize or center geometry first when procedural inputs vary.",
+    "Deforming non-P attributes is valid, but downstream renderers usually need P changed for visible geometry motion."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

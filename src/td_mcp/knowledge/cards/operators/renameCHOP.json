@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "renameCHOP",
+  "family": "CHOP",
+  "display_name": "Rename CHOP",
+  "docs_url": "https://docs.derivative.ca/Rename_CHOP",
+  "summary": "Renames CHOP channels using pattern matching and replacement while leaving channel values and channel order unchanged.",
+  "key_params": [
+    {"name": "renamefrom", "type": "String", "note": "Channel-name pattern to match"},
+    {"name": "renameto", "type": "String", "note": "Replacement pattern for matched channel names"},
+    {"name": "scope", "type": "String", "note": "Common-page channel scope"},
+    {"name": "commonrenamefrom", "type": "String", "note": "Common-page rename source pattern"},
+    {"name": "commonrenameto", "type": "String", "note": "Common-page rename replacement pattern"}
+  ],
+  "key_concepts": [
+    "Rename CHOP changes channel names while leaving channel values and channel order untouched.",
+    "The From field uses CHOP pattern matching, and the To field uses pattern replacement.",
+    "Channels that do not match the From pattern pass through without name changes.",
+    "An optional second Name Reference input overrides From/To and names the first input channels from the second input order.",
+    "Rename CHOP is the focused tool for channel-name normalization; use Select CHOP when filtering or reordering is also required."
+  ],
+  "common_gotchas": [
+    "Only channel names change; samples, values, and channel order are not affected.",
+    "From uses CHOP pattern matching while To uses pattern replacement syntax.",
+    "If the optional second Name Reference input is connected, From and To are ignored and output names follow the second input channel order.",
+    "For simple zero-valued renames, adding a Constant CHOP through a Math CHOP can sometimes be enough.",
+    "Use Select CHOP when the planner needs to filter or reorder channels as well as rename them."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ channel-name normalization",
+  "last_verified": "2026-06-18"
+}

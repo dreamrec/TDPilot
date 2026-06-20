@@ -1,0 +1,192 @@
+{
+  "card_type": "operator",
+  "op_type": "torusSOP",
+  "family": "SOP",
+  "display_name": "Torus SOP",
+  "docs_url": "https://docs.derivative.ca/Torus_SOP",
+  "summary": "Generates complete or partial torus geometry as polygon, mesh, NURBS, or Bezier primitives with radius, wrapping, cap, texture, and normal controls.",
+  "key_params": [
+    {
+      "name": "type",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "surftype",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "orient",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "modifybounds",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "rad",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "radx",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "rady",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "t",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "tx",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "ty",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "tz",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "reverseanchors",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "anchoru",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "anchorv",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "anchorw",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "rows",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "cols",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "angleoffset",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "imperfect",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "orderu",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "orderv",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "angleu",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "beginangleu",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "endangleu",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "anglev",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "beginanglev",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "endanglev",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "closeu",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "closev",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "capu",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "capv",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "texture",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    },
+    {
+      "name": "normals",
+      "type": "Parameter",
+      "note": "Torus SOP official parameter"
+    }
+  ],
+  "common_gotchas": [
+    "Rows and Columns can look like quads in wireframe while still producing open polygon lines.",
+    "Cap toggles create simple faceted caps; use Cap SOP for more controlled capping.",
+    "Bezier/NURBS imperfect mode affects rational curve quality and editability.",
+    "modifybounds only matters when input bounds are connected."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "torus-primitive-geometry",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Torus SOP creates complete or partial torus sections.",
+    "It supports polygon, mesh, NURBS, and Bezier output.",
+    "radx controls torus radius and rady controls inner-ring radius.",
+    "Partial U/V sweeps require explicit wrap and cap choices."
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "card_type": "operator",
+  "op_type": "touchoutCHOP",
+  "family": "CHOP",
+  "display_name": "Touch Out CHOP",
+  "docs_url": "https://docs.derivative.ca/Touch_Out_CHOP",
+  "summary": "Sends CHOP data from one TouchDesigner process to one or more Touch In CHOP clients using TouchDesigner-optimized network transport.",
+  "key_concepts": [
+    "Touch Out CHOP is the server-side sender for high-speed TouchDesigner-to-TouchDesigner CHOP data consumed by Touch In CHOP.",
+    "Touch In clients connect using the Touch Out server address and network port.",
+    "Multiple Touch In clients can receive from a single Touch Out server.",
+    "Maximum queue size prevents unbounded outgoing queued data when receivers or connections are slow.",
+    "Cook Every Frame can keep a live stream updating even when downstream demand would not otherwise cook the sender.",
+    "Synced ports use a shared global pipe, so only one process on a machine can serve synced-port data."
+  ],
+  "key_params": [
+    {"name": "protocol", "type": "Menu", "note": "Streaming TCP/IP, messaging UDP, or multicast UDP"},
+    {"name": "address", "type": "String", "note": "Destination address when protocol requires one"},
+    {"name": "port", "type": "Integer", "note": "Network port to listen/send on"},
+    {"name": "active", "type": "Toggle", "note": "Enable sending"},
+    {"name": "maxsize", "type": "Float", "note": "Maximum outgoing queue size"},
+    {"name": "maxsizeunit", "type": "Menu", "note": "Queue size units"},
+    {"name": "cookalways", "type": "Toggle", "note": "Cook every frame even if downstream does not request it"},
+    {"name": "resendnames", "type": "Pulse", "note": "Resend channel names to clients"},
+    {"name": "syncports", "type": "Toggle", "note": "Synchronize port behavior with paired Touch In"}
+  ],
+  "common_gotchas": [
+    "Touch Out is optimized for TouchDesigner-to-TouchDesigner CHOP communication; use Pipe Out CHOP for non-TD software or devices.",
+    "The Touch In client must know the server address and port before receiving data.",
+    "Multiple Touch In clients can receive data from one Touch Out server.",
+    "Max Queue Size prevents unbounded outgoing events when a connection is slow.",
+    "Cook Every Frame can be necessary for live streams but raises cook cost.",
+    "Windows firewall can block communication.",
+    "For non-TouchDesigner receivers, use Pipe Out CHOP or DAT network operators instead."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ high-speed TD-to-TD CHOP output",
+  "last_verified": "2026-06-18"
+}

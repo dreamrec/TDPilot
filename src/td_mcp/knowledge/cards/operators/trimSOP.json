@@ -1,0 +1,58 @@
+{
+  "card_type": "operator",
+  "op_type": "trimSOP",
+  "family": "SOP",
+  "display_name": "Trim SOP",
+  "docs_url": "https://docs.derivative.ca/Trim_SOP",
+  "summary": "Uses profile curves on spline surfaces to hide, reveal, untrim, or change the altitude of regions without deleting the underlying surface.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Surface/profile group or profile pattern to trim"
+    },
+    {
+      "name": "optype",
+      "type": "Menu",
+      "note": "Keep outside, keep inside, keep natural, untrim, or change altitude"
+    },
+    {
+      "name": "individual",
+      "type": "Toggle",
+      "note": "Process trim profiles individually rather than as a combined region"
+    },
+    {
+      "name": "bigloop",
+      "type": "Toggle",
+      "note": "Explicitly build an outer trim loop for multi-step trim workflows"
+    },
+    {
+      "name": "trimtol",
+      "type": "Float",
+      "note": "Tolerance for treating trim curves and patch edges as intersecting"
+    },
+    {
+      "name": "altitude",
+      "type": "Float",
+      "note": "Altitude transition used by Change Altitude mode"
+    }
+  ],
+  "common_gotchas": [
+    "Trim hides surface regions instead of deleting the underlying surface, so hidden control points can still influence the visible surface.",
+    "Only surfaces that contain profile curves can be trimmed; use Project SOP or Carve SOP upstream to create profiles.",
+    "Open profiles outside a surface domain can make portions of the surface appear cut away.",
+    "Natural orientation depends on clockwise or counter-clockwise profile direction and may require an explicit outer trim loop.",
+    "When Process Profiles Individually is off, multiple loops may combine into only the first region the SOP can resolve."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "surface-profile-workflow",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Trim SOP uses profile curves on spline surfaces to keep, remove, untrim, or change altitude of surface regions.",
+    "Open and closed profiles are resolved in surface UV space and may be nested or extend outside the domain.",
+    "Overlapping trim loops use the winding rule, so overlapping commands accumulate rather than canceling out.",
+    "Project SOP or Carve SOP is usually needed upstream because only surfaces containing profile curves can be trimmed."
+  ]
+}

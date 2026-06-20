@@ -1,0 +1,89 @@
+{
+  "card_type": "operator",
+  "op_type": "blurTOP",
+  "family": "TOP",
+  "display_name": "Blur TOP",
+  "docs_url": "https://docs.derivative.ca/Blur_TOP",
+  "summary": "Blurs TOP images with kernel filters, pixel radii, multi-pass operation, and directional scaling across X, Y, or Z.",
+  "key_params": [
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "Kernel type: catmull, gaussian, box, bartlette, sinc, hanning, or blackman"
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Edge handling: hold, repeat, or mirror"
+    },
+    {
+      "name": "preshrink",
+      "type": "Toggle",
+      "note": "Pre-shrink texture before large blur for performance"
+    },
+    {
+      "name": "size",
+      "type": "Float",
+      "note": "Filter size in pixels"
+    },
+    {
+      "name": "scale",
+      "type": "XYZ",
+      "note": "Axis scale multiplied by filter size"
+    },
+    {
+      "name": "offset",
+      "type": "XYZ",
+      "note": "Sample step distance"
+    },
+    {
+      "name": "offsetunit",
+      "type": "Menu",
+      "note": "Units for sample step"
+    },
+    {
+      "name": "rotate",
+      "type": "XYZ",
+      "note": "Blur kernel rotation"
+    },
+    {
+      "name": "dither",
+      "type": "Toggle",
+      "note": "Dither 8-bit blur results to reduce banding"
+    },
+    {
+      "name": "npasses",
+      "type": "Int",
+      "note": "Common TOP pass repeat count"
+    },
+    {
+      "name": "chanmask",
+      "type": "String",
+      "note": "Common TOP channel mask"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Filter Size is in pixels, not normalized image units.",
+    "Large radii can be expensive; Pre-Shrink trades some quality for speed.",
+    "Extend mode strongly affects edge pixels during blur.",
+    "8-bit output can band unless dither or higher precision formats are used."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Blur TOP applies kernel filters such as Catmull-Rom, Gaussian, Box, Bartlette, Sinc, Hanning, and Blackman.",
+    "Filter Size is measured in pixels; expressions are needed for resolution-independent blur sizes.",
+    "Filter Scale and Sample Step can bias blur direction across X, Y, and Z axes.",
+    "Pre-Shrink improves large-blur performance by reducing texture resolution before blurring.",
+    "Dither can reduce visible banding in 8-bit blur results.",
+    "The official TOP supports 3D textures and 2D texture arrays."
+  ]
+}

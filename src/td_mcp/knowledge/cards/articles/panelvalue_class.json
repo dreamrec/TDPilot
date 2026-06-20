@@ -1,0 +1,49 @@
+{
+  "card_type": "article",
+  "article_id": "panelvalue_class",
+  "title": "PanelValue Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "PANEL",
+    "COMP",
+    "DAT",
+    "CHOP"
+  ],
+  "summary": "Official Derivative Python API reference for PanelValue objects, covering access through a component's panel member, Panel Execute DAT usage, basic members, validity, and implicit numeric/string casting.",
+  "source_url": "https://docs.derivative.ca/PanelValue_Class",
+  "docsbrain_page_id": "panelvalue_class",
+  "covered_operators": [
+    "panelexecuteDAT",
+    "panelCHOP",
+    "buttonCOMP",
+    "sliderCOMP",
+    "containerCOMP"
+  ],
+  "key_concepts": [
+    "PanelValue Class",
+    "Panel Value",
+    "Panel Execute DAT",
+    "panel member",
+    "name",
+    "owner",
+    "val",
+    "valid",
+    "Casting to a Value",
+    "eval() unnecessary",
+    "set() unnecessary",
+    "parameter expression",
+    "numeric expression",
+    "parent().panel.u",
+    "parent().panel.u.val"
+  ],
+  "guidance": [
+    "Use this article when scripting panel state through a component's panel member or when handling Panel Execute DAT callbacks.",
+    "Use name to identify which panel value is referenced and owner to reach the OP that owns the value.",
+    "Use val when explicit get/set readability matters, but plain PanelValue use in parameter or numeric expressions can get or set the value without explicit eval() or set().",
+    "Check valid before relying on a stored PanelValue reference; it becomes false when the referenced panel value has been deleted.",
+    "Use the Panel Value article for the complete list of available panel value names and their per-panel semantics."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,142 @@
+{
+  "card_type": "operator",
+  "op_type": "performDAT",
+  "family": "DAT",
+  "display_name": "Perform DAT",
+  "docs_url": "https://docs.derivative.ca/Perform_DAT",
+  "summary": "Logs performance timing benchmarks in table form, similar to Performance Monitor output, triggered by long frames or dropped frames.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Continuously log performance timings while on"
+    },
+    {
+      "name": "activepulse",
+      "type": "Pulse",
+      "note": "Capture a single-frame performance snapshot"
+    },
+    {
+      "name": "triggermode",
+      "type": "Menu",
+      "note": "Refresh logs when frame length exceeds threshold or when a frame is dropped"
+    },
+    {
+      "name": "triggerthreshold",
+      "type": "Milliseconds",
+      "note": "Frame length threshold that causes a log refresh"
+    },
+    {
+      "name": "logcook",
+      "type": "Toggle",
+      "note": "Log operator cook time"
+    },
+    {
+      "name": "logexport",
+      "type": "Toggle",
+      "note": "Log time spent exporting CHOP channels"
+    },
+    {
+      "name": "logviewport",
+      "type": "Toggle",
+      "note": "Log 3D geometry and SOP viewer draw time"
+    },
+    {
+      "name": "logmovie",
+      "type": "Toggle",
+      "note": "Log time reading video and audio from movie files"
+    },
+    {
+      "name": "logdrawchannels",
+      "type": "Toggle",
+      "note": "Log time drawing CHOP channels"
+    },
+    {
+      "name": "logobjectview",
+      "type": "Toggle",
+      "note": "Log object-view draw time"
+    },
+    {
+      "name": "logcustompanel",
+      "type": "Toggle",
+      "note": "Log custom panel timing"
+    },
+    {
+      "name": "logmidi",
+      "type": "Toggle",
+      "note": "Log MIDI timing"
+    },
+    {
+      "name": "loggraphics",
+      "type": "Toggle",
+      "note": "Log graphics system-call timing"
+    },
+    {
+      "name": "logframelength",
+      "type": "Toggle",
+      "note": "Log total frame time in milliseconds"
+    },
+    {
+      "name": "logmisc",
+      "type": "Toggle",
+      "note": "Log miscellaneous timing categories"
+    },
+    {
+      "name": "logscript",
+      "type": "Toggle",
+      "note": "Log time spent running scripts"
+    },
+    {
+      "name": "logrender",
+      "type": "Toggle",
+      "note": "Log Render or Render Pass TOP timing"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT Path",
+      "note": "Dynamically created callback DAT for log events"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear the logged table"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "When Active is on, logging is continuous and can add overhead during the performance problem being measured.",
+    "Trigger Threshold is in milliseconds; choose values that match the target FPS budget.",
+    "Enabling too many timing categories can create noisy tables and make root-cause scanning harder.",
+    "Perform DAT logs table diagnostics; it does not itself optimize or throttle the project."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "performance-diagnostics-table",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Logs performance timing information in a Table DAT format similar to Performance Monitor.",
+    "Active and Active Pulse control continuous logging versus one-shot snapshots.",
+    "Trigger Mode and Trigger Threshold determine whether logging refreshes on slow frames or dropped frames.",
+    "Individual log toggles select cook, export, viewport, movie, CHOP draw, object view, panel, MIDI, graphics, frame length, misc, script, and render timing categories."
+  ]
+}

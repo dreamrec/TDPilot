@@ -1,0 +1,97 @@
+{
+  "card_type": "operator",
+  "op_type": "bridgeSOP",
+  "family": "SOP",
+  "display_name": "Bridge SOP",
+  "docs_url": "https://docs.derivative.ca/Bridge_SOP",
+  "summary": "Builds a controllable NURBS skin between profile curves, curves on surfaces, holes, branches, or tube intersections with tangent and curvature control.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Profile group or face pattern to bridge; required for profile curves"
+    },
+    {
+      "name": "bridge",
+      "type": "Menu",
+      "note": "Bridge all primitives, groups of N primitives, or skip every Nth primitive"
+    },
+    {
+      "name": "inc",
+      "type": "Int",
+      "note": "Pattern count for grouped/skipped bridge operations"
+    },
+    {
+      "name": "order",
+      "type": "Int",
+      "note": "Spline order for profile extraction and skinning"
+    },
+    {
+      "name": "isodivs",
+      "type": "Int",
+      "note": "Number of cross sections in the bridged surface"
+    },
+    {
+      "name": "frenet",
+      "type": "Menu",
+      "note": "Normal orientation method for generated cross sections"
+    },
+    {
+      "name": "circular",
+      "type": "Toggle",
+      "note": "Enable circular fillet behavior"
+    },
+    {
+      "name": "rotatet",
+      "type": "XYZ",
+      "note": "Rotate tangent controls"
+    },
+    {
+      "name": "scalet",
+      "type": "XYZ",
+      "note": "Scale tangent controls"
+    },
+    {
+      "name": "sdivs",
+      "type": "Int",
+      "note": "Surface divisions/cross sections"
+    },
+    {
+      "name": "tolerance",
+      "type": "Float",
+      "note": "Profile extraction tolerance"
+    },
+    {
+      "name": "curvature",
+      "type": "Toggle",
+      "note": "Enable curvature control"
+    },
+    {
+      "name": "scalec",
+      "type": "Float",
+      "note": "Scale curvature influence"
+    },
+    {
+      "name": "csharp",
+      "type": "Toggle",
+      "note": "Close cracks by making bridge ends sharp"
+    }
+  ],
+  "common_gotchas": [
+    "Always specify curves on surface when bridging surface profiles, or Bridge may use free-floating curves instead.",
+    "Higher precision creates dense surfaces with more knots; order 4 cubic curves are the optimized sweet spot.",
+    "Bridging trimmed surfaces is more expensive than bridging carved surfaces.",
+    "Sharp-end crack fixing can add knots that create ripples in the bridged surface."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Bridge SOP builds NURBS skins between profile curves, faces, holes, branches, or tube intersections.",
+    "Profiles may come from curves on surfaces, and grouping determines which curves or faces are paired.",
+    "Bridge precision, order, tangent, and curvature controls trade surface quality against density and cook cost.",
+    "Trimmed-surface bridging is more expensive than carved-surface bridging and can need extra cleanup."
+  ]
+}

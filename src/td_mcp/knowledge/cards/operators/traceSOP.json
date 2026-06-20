@@ -1,0 +1,103 @@
+{
+  "card_type": "operator",
+  "op_type": "traceSOP",
+  "family": "SOP",
+  "display_name": "Trace SOP",
+  "docs_url": "https://docs.derivative.ca/Trace_SOP",
+  "summary": "Traces TOP brightness regions into SOP faces or outlines with threshold, border cleanup, resampling, smoothing, curve fitting, polygon conversion, normals, and hole controls.",
+  "key_params": [
+    {
+      "name": "top",
+      "type": "Parameter",
+      "note": "Trace SOP official parameter"
+    },
+    {
+      "name": "thresh",
+      "type": "Parameter",
+      "note": "Trace SOP official parameter"
+    },
+    {
+      "name": "addtexture",
+      "type": "Parameter",
+      "note": "Trace SOP official parameter"
+    },
+    {
+      "name": "delborder",
+      "type": "Parameter",
+      "note": "Trace SOP official parameter"
+    },
+    {
+      "name": "normals",
+      "type": "Parameter",
+      "note": "Trace SOP official parameter"
+    },
+    {
+      "name": "bordwidth",
+      "type": "Parameter",
+      "note": "Trace SOP official parameter"
+    },
+    {
+      "name": "doresample",
+      "type": "Parameter",
+      "note": "Trace SOP official parameter"
+    },
+    {
+      "name": "step",
+      "type": "Parameter",
+      "note": "Trace SOP official parameter"
+    },
+    {
+      "name": "dosmooth",
+      "type": "Parameter",
+      "note": "Trace SOP official parameter"
+    },
+    {
+      "name": "corner",
+      "type": "Parameter",
+      "note": "Trace SOP official parameter"
+    },
+    {
+      "name": "fitcurve",
+      "type": "Parameter",
+      "note": "Trace SOP official parameter"
+    },
+    {
+      "name": "error",
+      "type": "Parameter",
+      "note": "Trace SOP official parameter"
+    },
+    {
+      "name": "convpoly",
+      "type": "Parameter",
+      "note": "Trace SOP official parameter"
+    },
+    {
+      "name": "lod",
+      "type": "Parameter",
+      "note": "Trace SOP official parameter"
+    },
+    {
+      "name": "hole",
+      "type": "Parameter",
+      "note": "Trace SOP official parameter"
+    }
+  ],
+  "common_gotchas": [
+    "Noisy or high-resolution TOPs can create dense, fragmented geometry.",
+    "Smoothing or resampling before fitting can reduce curve-fitting quality.",
+    "hole behavior differs for Bezier versus polygonal output.",
+    "addtexture is useful only when downstream materials need coordinates from the traced image."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "top-image-to-sop-vector-trace",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Trace SOP converts TOP brightness regions into SOP faces or outlines.",
+    "Threshold controls where image regions become traced boundaries.",
+    "Border removal helps avoid dirty edge artifacts from source images.",
+    "Curve fitting works best when the original point detail is preserved before fitting.",
+    "Hole Faces may work better after conversion to polygonal output."
+  ]
+}

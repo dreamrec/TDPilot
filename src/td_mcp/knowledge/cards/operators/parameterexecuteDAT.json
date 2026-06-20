@@ -1,0 +1,152 @@
+{
+  "card_type": "operator",
+  "op_type": "parameterexecuteDAT",
+  "family": "DAT",
+  "display_name": "Parameter Execute DAT",
+  "docs_url": "https://docs.derivative.ca/Parameter_Execute_DAT",
+  "summary": "Runs Python callbacks when selected parameters on monitored operators change value, pulse, expression, export, enable state, or mode.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable response to referenced parameters"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose script execution context"
+    },
+    {
+      "name": "fromop",
+      "type": "OP Path",
+      "note": "Operator path used when Execute From is Specified Operator"
+    },
+    {
+      "name": "op",
+      "type": "OP Pattern",
+      "note": "Operators whose parameters are monitored"
+    },
+    {
+      "name": "pars",
+      "type": "Pattern",
+      "note": "Parameter names to monitor"
+    },
+    {
+      "name": "valuechange",
+      "type": "Toggle",
+      "note": "Run onValueChange() once per frame for individual value changes"
+    },
+    {
+      "name": "valueschanged",
+      "type": "Toggle",
+      "note": "Run onValuesChanged() at frame end with the complete change list"
+    },
+    {
+      "name": "onpulse",
+      "type": "Toggle",
+      "note": "Run onPulse() when a pulse parameter is pulsed"
+    },
+    {
+      "name": "expressionchange",
+      "type": "Toggle",
+      "note": "Run onExpressionChange() when a parameter expression changes"
+    },
+    {
+      "name": "exportchange",
+      "type": "Toggle",
+      "note": "Run onExportChange() when an export path changes"
+    },
+    {
+      "name": "enablechange",
+      "type": "Toggle",
+      "note": "Run onEnableChange() when enable state changes"
+    },
+    {
+      "name": "modechange",
+      "type": "Toggle",
+      "note": "Run onModeChange() when parameter mode changes"
+    },
+    {
+      "name": "custom",
+      "type": "Toggle",
+      "note": "Monitor custom parameters"
+    },
+    {
+      "name": "builtin",
+      "type": "Toggle",
+      "note": "Monitor built-in parameters"
+    },
+    {
+      "name": "file",
+      "type": "File",
+      "note": "External callback source file path"
+    },
+    {
+      "name": "syncfile",
+      "type": "Toggle",
+      "note": "Synchronize DAT contents with the external file"
+    },
+    {
+      "name": "loadonstart",
+      "type": "Toggle",
+      "note": "Reload the file when the project starts"
+    },
+    {
+      "name": "loadonstartpulse",
+      "type": "Pulse",
+      "note": "Reload the file immediately"
+    },
+    {
+      "name": "write",
+      "type": "Toggle",
+      "note": "Write DAT contents to disk when the project is saved"
+    },
+    {
+      "name": "writepulse",
+      "type": "Pulse",
+      "note": "Write DAT contents to disk immediately"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "edit",
+      "type": "Pulse",
+      "note": "Open the callback DAT text in an external editor"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Unlike other execute DATs, Parameter Execute DAT does not cook the watched node, reducing recursive update risk but also avoiding forced refresh.",
+    "onValueChange is called once per frame for changes; onValuesChanged batches complete changes at frame end.",
+    "Pulse callbacks only fire for pulse-type parameters pulsed by UI or Par.pulse(), not for every numeric transition.",
+    "Generated callbacks must avoid writing back to the same watched parameters without guards."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "parameter-change-callbacks",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Runs callbacks when selected parameters on selected operators change.",
+    "Callback toggles cover single value changes, grouped value changes, pulses, expression changes, export changes, enable changes, and mode changes.",
+    "Custom and built-in toggles constrain whether custom or built-in parameters are monitored.",
+    "File and execute-location controls define the callback script source and execution context."
+  ]
+}

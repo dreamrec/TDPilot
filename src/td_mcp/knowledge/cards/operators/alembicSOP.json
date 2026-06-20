@@ -1,0 +1,72 @@
+{
+  "card_type": "operator",
+  "op_type": "alembicSOP",
+  "family": "SOP",
+  "display_name": "Alembic SOP",
+  "docs_url": "https://docs.derivative.ca/Alembic_SOP",
+  "summary": "Loads and plays back Alembic geometry sequences, including polymeshes, curves, points, transforms, object-path selection, and standard or custom attributes.",
+  "key_params": [
+    {
+      "name": "file",
+      "type": "File",
+      "note": "Alembic archive path"
+    },
+    {
+      "name": "objectpath",
+      "type": "Menu",
+      "note": "Object or hierarchy inside the archive to load; can load all objects"
+    },
+    {
+      "name": "time",
+      "type": "Float",
+      "note": "Playback time into animated Alembic data"
+    },
+    {
+      "name": "timeunit",
+      "type": "Menu",
+      "note": "Interpret Time in frames, seconds, or other supported units"
+    },
+    {
+      "name": "xform",
+      "type": "Toggle",
+      "note": "Apply Alembic transformations"
+    },
+    {
+      "name": "interp",
+      "type": "Menu",
+      "note": "Interpolate dynamic geometry when transform information is present"
+    },
+    {
+      "name": "straightgpu",
+      "type": "Toggle",
+      "note": "Load directly to GPU for speed"
+    },
+    {
+      "name": "compnml",
+      "type": "Toggle",
+      "note": "Compute normals for loaded geometry"
+    },
+    {
+      "name": "loadfile",
+      "type": "Toggle",
+      "note": "Unload/reload the archive so external tools can overwrite it"
+    }
+  ],
+  "common_gotchas": [
+    "Straight to GPU mode is fast but prevents downstream SOP use and SOP-to-DAT/CHOP geometry access.",
+    "Bake normals and UVs into the Alembic file when using GPU direct mode, because downstream SOPs cannot add them.",
+    "When objects have different attribute sets in GPU direct mode, missing attributes receive default values.",
+    "The official xform menu uses repeated transform ids for several labels, so keep label context when documenting it."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Alembic SOP loads Alembic geometry sequences including polymeshes, curves, points, transforms, and attributes.",
+    "The objectpath parameter selects all geometry or a specific object/hierarchy inside the archive.",
+    "Animated archives are sampled with time and timeunit controls, with interpolation available for dynamic geometry that includes transform information.",
+    "Straight-to-GPU mode is faster but prevents normal downstream SOP access to the loaded geometry."
+  ]
+}

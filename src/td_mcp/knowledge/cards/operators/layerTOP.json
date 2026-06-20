@@ -1,0 +1,134 @@
+{
+  "card_type": "operator",
+  "op_type": "layerTOP",
+  "family": "TOP",
+  "display_name": "Layer TOP",
+  "docs_url": "https://docs.derivative.ca/Layer_TOP",
+  "summary": "Composites multiple TOP layers with fixed output reference, optional base/blank layers, per-layer transforms, opacity, luma, and blend operations.",
+  "key_params": [
+    {
+      "name": "fixedlayer",
+      "type": "Menu",
+      "note": "Output reference: basetop, blanklayer, or firstinput"
+    },
+    {
+      "name": "base",
+      "type": "TOP",
+      "note": "Optional base TOP"
+    },
+    {
+      "name": "blanklayer",
+      "type": "Toggle",
+      "note": "Use blank layer reference when selected"
+    },
+    {
+      "name": "layerres",
+      "type": "WH",
+      "note": "Blank layer resolution"
+    },
+    {
+      "name": "layercolor",
+      "type": "RGB",
+      "note": "Blank layer color"
+    },
+    {
+      "name": "layeralpha",
+      "type": "Float",
+      "note": "Blank layer alpha"
+    },
+    {
+      "name": "enblcrop",
+      "type": "Toggle",
+      "note": "Enable crop controls per layer"
+    },
+    {
+      "name": "prefit",
+      "type": "Menu",
+      "note": "Layer fit mode or prefitperlayer"
+    },
+    {
+      "name": "justifyh",
+      "type": "Menu",
+      "note": "Layer horizontal justification"
+    },
+    {
+      "name": "justifyv",
+      "type": "Menu",
+      "note": "Layer vertical justification"
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Layer extend mode or extperlayer"
+    },
+    {
+      "name": "enblrot",
+      "type": "Toggle",
+      "note": "Enable per-layer rotation"
+    },
+    {
+      "name": "enbltrans",
+      "type": "Toggle",
+      "note": "Enable per-layer translation"
+    },
+    {
+      "name": "enblscale",
+      "type": "Toggle",
+      "note": "Enable per-layer scale"
+    },
+    {
+      "name": "enbluniscale",
+      "type": "Toggle",
+      "note": "Enable per-layer uniform scale"
+    },
+    {
+      "name": "enblpivot",
+      "type": "Toggle",
+      "note": "Enable per-layer pivot"
+    },
+    {
+      "name": "enblopac",
+      "type": "Toggle",
+      "note": "Enable per-layer opacity"
+    },
+    {
+      "name": "enblluma",
+      "type": "Toggle",
+      "note": "Enable per-layer luma controls"
+    },
+    {
+      "name": "operand",
+      "type": "Menu",
+      "note": "Composite operation"
+    },
+    {
+      "name": "lay",
+      "type": "Int",
+      "note": "Layer parameter block index"
+    },
+    {
+      "name": "lay0top",
+      "type": "TOP",
+      "note": "TOP source for layer 0"
+    }
+  ],
+  "common_gotchas": [
+    "Per-layer toggles gate whether matching per-layer controls have any effect.",
+    "The official parameter is base; basetop is a fixedlayer menu value.",
+    "Operand blend modes are order-sensitive and can change alpha behavior.",
+    "Resolution and aspect choices matter when mixing differently sized sources."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Layer TOP performs multi-layer TOP compositing.",
+    "Fixed Layer can use a base TOP, a blank layer, or the first input as output reference.",
+    "Base and blank-layer controls establish output size and initial color/alpha.",
+    "Global controls can be overridden by per-layer fit, extend, transform, opacity, and luma settings.",
+    "Per-layer enable toggles decide whether crop, rotation, translation, scale, pivot, opacity, or luma controls matter.",
+    "Operand selects from a large composite-operation menu."
+  ]
+}

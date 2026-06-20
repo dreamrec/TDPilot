@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "analyzePOP",
+  "family": "POP",
+  "display_name": "Analyze POP",
+  "docs_url": "https://docs.derivative.ca/Analyze_POP",
+  "summary": "Analyzes point, vertex, or primitive attributes and outputs a single-point POP containing statistics such as average, centroid, minimum, maximum, size, index of min/max, sum, RMS power, dimension, or P attribute values.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Attribute class to analyze: point, vertex, or primitive"},
+    {"name": "group", "type": "String", "note": "Optional group scope"},
+    {"name": "numgroupelements", "type": "Toggle", "note": "Output the number of elements in the selected group"},
+    {"name": "inputattrs", "type": "String", "note": "Input attribute scope to analyze"},
+    {"name": "appendattrname", "type": "Toggle", "note": "Append input attribute names to output statistic names"},
+    {"name": "combine", "type": "Menu", "note": "Combine vector components before analysis"},
+    {"name": "avg", "type": "Toggle", "note": "Output average values"},
+    {"name": "centroid", "type": "Toggle", "note": "Output midpoint between minimum and maximum values"},
+    {"name": "min", "type": "Toggle", "note": "Output minimum values"},
+    {"name": "max", "type": "Toggle", "note": "Output maximum values"},
+    {"name": "size", "type": "Toggle", "note": "Output maximum minus minimum size"},
+    {"name": "minindex", "type": "Toggle", "note": "Output index of the minimum value"},
+    {"name": "maxindex", "type": "Toggle", "note": "Output index of the maximum value"},
+    {"name": "sum", "type": "Toggle", "note": "Output sum of selected values"},
+    {"name": "rmspower", "type": "Toggle", "note": "Output root-mean-square power"},
+    {"name": "numpointsvertsprims", "type": "Toggle", "note": "Output point, vertex, and primitive counts"},
+    {"name": "numprimsbatch", "type": "Toggle", "note": "Output primitive and vertex counts per primitive type"},
+    {"name": "dimension", "type": "Toggle", "note": "Output dimension metadata"},
+    {"name": "pattrvals", "type": "Menu", "note": "Choose analyzed result to place in the output P attribute"}
+  ],
+  "key_concepts": [
+    "Analyze POP reduces selected POP attributes into a single output point containing statistics such as average, bounds, size, indices, sums, counts, or dimension data.",
+    "Vector components are analyzed independently unless Combine Components first collapses each vector to a scalar.",
+    "Keeping the result in POPs is the fastest path; POP-to-CHOP or POP-to-DAT CPU readback is useful for inspection but adds delay or overhead."
+  ],
+  "common_gotchas": [
+    "The result is a single point on the GPU; pulling it to CPU parameters is slower than keeping it in POPs.",
+    "When analyzing multiple attributes or * scope, output names are expanded with source attribute names.",
+    "Vector attributes are analyzed per component unless Combine Components is used intentionally."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

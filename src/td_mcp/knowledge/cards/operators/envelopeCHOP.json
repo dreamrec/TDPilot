@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "envelopeCHOP",
+  "family": "CHOP",
+  "display_name": "Envelope CHOP",
+  "docs_url": "https://docs.derivative.ca/Envelope_CHOP",
+  "summary": "Computes an amplitude or power envelope around input samples using exponential decay or local maximum window methods.",
+  "key_params": [
+    {"name": "method", "type": "Menu", "note": "Envelope algorithm: exponential decay or local maximum window"},
+    {"name": "bounds", "type": "Menu", "note": "Magnitude, signal power, maximum, or minimum envelope bounds"},
+    {"name": "width", "type": "Float", "note": "Window width for local maximum envelope"},
+    {"name": "widthunit", "type": "Menu", "note": "Samples, frames, or seconds for width"},
+    {"name": "interp", "type": "Menu", "note": "None, linear, or cubic interpolation"},
+    {"name": "norm", "type": "Toggle", "note": "Normalize power envelope while adjusting width"},
+    {"name": "resample", "type": "Toggle", "note": "Resample output envelope"},
+    {"name": "samplerate", "type": "Float", "note": "Sample rate used when Resample Envelope is on"}
+  ],
+  "key_concepts": [
+    "Outputs an envelope from nearby input samples, commonly tracking amplitude or power around each sample.",
+    "Type selects Exponential Decay or Local Maximum Window, with different smoothness and enclosure tradeoffs.",
+    "Envelope Bounds chooses magnitude, signal power, maximum-value, or minimum-value analysis behavior.",
+    "Envelope Width and Width Unit define the local window size used for feature capture.",
+    "Interpolate controls how local maximum points are connected into the envelope.",
+    "Normalize Power Envelope and Resample Envelope can keep power behavior stable or change the output sample rate."
+  ],
+  "common_gotchas": [
+    "Exponential Decay always encloses data but can have discontinuous-looking slopes.",
+    "Local Maximum Window produces smoother shapes but signals can jump outside the envelope and pulses can be off by up to half the window.",
+    "Large envelope widths smooth more aggressively but add latency and hide fast transients.",
+    "For loudness leveling, divide the original signal by a wide envelope with Math CHOP rather than replacing the original signal.",
+    "Resampling changes output rate and can affect downstream timing."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

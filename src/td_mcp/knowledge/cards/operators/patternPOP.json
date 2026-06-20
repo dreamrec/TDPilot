@@ -1,0 +1,52 @@
+{
+  "card_type": "operator",
+  "op_type": "patternPOP",
+  "family": "POP",
+  "display_name": "Pattern POP",
+  "docs_url": "https://docs.derivative.ca/Pattern_POP",
+  "summary": "Generates simple mathematical line-strip shapes in X, Y, and Z or writes math-function values into attributes. Functions include sine, cosine, triangle, square, ease curves, and random, with controls for repeats, phase, bias, exponent, and reranging.",
+  "key_params": [
+    {"name": "numpoints", "type": "Int", "note": "Number of points generated"},
+    {"name": "cyclic", "type": "Toggle", "note": "Treats complete cycles as Number of Points + 1 values"},
+    {"name": "connectivity", "type": "Menu", "note": "Output none, line strip, lines, or point primitives"},
+    {"name": "parsize", "type": "Menu", "note": "Number of independently configured parameter lanes"},
+    {"name": "type", "type": "Menu", "note": "Pattern function type for each lane"},
+    {"name": "seed", "type": "Int", "note": "Seed for random pattern types"},
+    {"name": "numcycles", "type": "Float", "note": "Number of cycles over the pattern length"},
+    {"name": "steppercycle", "type": "Float", "note": "Step added to each cycle"},
+    {"name": "bias", "type": "Float", "note": "Bias for triangle and square pattern shapes"},
+    {"name": "phase", "type": "Float", "note": "Phase shift of the pattern"},
+    {"name": "exp", "type": "Float", "note": "Exponent applied to the internal pattern value"},
+    {"name": "fromlow", "type": "Float", "note": "Input low range for reranging pattern values"},
+    {"name": "fromhigh", "type": "Float", "note": "Input high range for reranging pattern values"},
+    {"name": "tolow", "type": "Float", "note": "Output low range for reranging pattern values"},
+    {"name": "tohigh", "type": "Float", "note": "Output high range for reranging pattern values"},
+    {"name": "reverse", "type": "Toggle", "note": "Reverse pattern order"},
+    {"name": "linebreakcycle", "type": "Toggle", "note": "Outputs breaks at each cycle"},
+    {"name": "closed", "type": "Toggle", "note": "Connect the last vertex to the first vertex"},
+    {"name": "outputlinebreakattr", "type": "Toggle", "note": "Output a LineBreak attribute"},
+    {"name": "texture", "type": "Menu", "note": "Output texture coordinates relative to cycles"},
+    {"name": "combineop", "type": "Menu", "note": "Set, add, or multiply when combining with an input attribute"},
+    {"name": "combineattrscope", "type": "Str", "note": "Input attribute scope used for combine operations"},
+    {"name": "outputattrscope", "type": "Str", "note": "Output attribute scope such as P, Color, Tex, PointScale, or custom"},
+    {"name": "overrideautoattr", "type": "Toggle", "note": "Override automatic output attribute typing"},
+    {"name": "attrtype", "type": "Menu", "note": "Output data type when overriding automatic typing"},
+    {"name": "attrnumcomps", "type": "Menu", "note": "Output component count"},
+    {"name": "attrdefaultval", "type": "Float4", "note": "Default output value if pattern evaluation cannot be computed"},
+    {"name": "attrclass", "type": "Menu", "note": "Attribute class to operate on when filtering an input"},
+    {"name": "group", "type": "Str", "note": "Optional group limiting which elements are affected"}
+  ],
+  "key_concepts": [
+    "Pattern POP can generate a point sequence or filter existing POP attributes with mathematical pattern functions.",
+    "Per-lane controls such as cycles, phase, bias, exponent, range mapping, and reverse make independent X/Y/Z or component curves possible.",
+    "Connectivity, closed-line, line-break, texture-coordinate, and combine controls turn generated values into usable line-strip geometry or attribute modulation."
+  ],
+  "common_gotchas": [
+    "Pattern POP can be a generator or a filter; connected inputs change whether it adds/modifies attributes instead of just making P.",
+    "Set Parameter Size deliberately when independent X, Y, Z, or attribute component curves are needed.",
+    "Use Output Line Break Attribute or linebreakcycle when later line operators must preserve per-cycle segmentation."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

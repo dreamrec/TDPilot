@@ -1,0 +1,50 @@
+{
+  "card_type": "operator",
+  "op_type": "transformCHOP",
+  "family": "CHOP",
+  "display_name": "Transform CHOP",
+  "docs_url": "https://docs.derivative.ca/Transform_CHOP",
+  "summary": "Combines, converts, and outputs transform channels across Euler, quaternion, matrix, and look-at workflows, including per-input operations and final transform controls.",
+  "key_concepts": [
+    "Transform CHOP converts and combines transform channel sets across Euler, quaternion, matrix, and position output formats.",
+    "Channel suffixes define input transform format, and multiple transform sets are matched by prefix and order.",
+    "Missing translate and rotate values default to 0, missing scale values default to 1, and missing quaternion values default to identity.",
+    "Matrix inputs require complete 3x3 or 4x4 channel sets and use column-major ordering.",
+    "Input combination happens before the Transform page combination, and the first input controls output sample count.",
+    "Output controls can change transform format, unmatched-channel handling, output order, rotation continuity, and hint vectors."
+  ],
+  "key_params": [
+    {"name": "custinputorders", "type": "Toggle", "note": "Use custom input transform orders"},
+    {"name": "inxord", "type": "Menu", "note": "Input transform order"},
+    {"name": "inrord", "type": "Menu", "note": "Input rotate order"},
+    {"name": "input0preop", "type": "Menu", "note": "Pre-operation for input 0"},
+    {"name": "input1preop", "type": "Menu", "note": "Pre-operation for input 1"},
+    {"name": "inputoperation", "type": "Menu", "note": "How input transforms are combined"},
+    {"name": "inputweight", "type": "Float", "note": "Blend or operation weight"},
+    {"name": "xord", "type": "Menu", "note": "Output transform order"},
+    {"name": "rord", "type": "Menu", "note": "Output rotate order"},
+    {"name": "t", "type": "XYZ", "note": "Translate transform"},
+    {"name": "r", "type": "XYZ", "note": "Rotate transform"},
+    {"name": "s", "type": "XYZ", "note": "Scale transform"},
+    {"name": "p", "type": "XYZ", "note": "Pivot transform"},
+    {"name": "xformmatrixop", "type": "OP", "note": "Optional matrix source from Matrix, CHOP, or DAT"},
+    {"name": "multiplyorder", "type": "Menu", "note": "Matrix multiply order"},
+    {"name": "lookat", "type": "Object", "note": "Look-at target"},
+    {"name": "upvector", "type": "Menu", "note": "Up-vector source"},
+    {"name": "forwarddir", "type": "Menu", "note": "Forward direction for look-at"},
+    {"name": "preop", "type": "Menu", "note": "Pre-operation before final transform"},
+    {"name": "operation", "type": "Menu", "note": "Final operation mode"},
+    {"name": "weight", "type": "Float", "note": "Final operation weight"},
+    {"name": "output", "type": "Menu", "note": "Output format: transform, quaternion transform, matrix, matrix 3x3, or position"},
+    {"name": "unmatchedchans", "type": "Menu", "note": "Warn, ignore, or delete unmatched channels"},
+    {"name": "continuousrotations", "type": "Toggle", "note": "Keep Euler rotations continuous using hint information"}
+  ],
+  "common_gotchas": [
+    "Rotation order and transform order materially change the result; copy them from the source system when matching external transforms.",
+    "Matrix, quaternion, and Euler channels are not interchangeable without choosing the right output mode.",
+    "Look-at and up-vector settings can introduce flips when the target and up vector align."
+  ],
+  "related_snippets": ["CHOP_snippets", "COMP_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18"
+}

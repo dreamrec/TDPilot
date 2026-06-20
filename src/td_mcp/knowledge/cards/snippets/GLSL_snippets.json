@@ -1,0 +1,316 @@
+{
+  "card_type": "snippet",
+  "snippet_id": "GLSL_snippets",
+  "family": "GLSL",
+  "summary": "TouchDesigner GLSL shader templates for GLSL TOP, GLSL MAT, GLSL POP, and GLSL Advanced POP with TD-safe output, attribute, and compute-dispatch idioms.",
+  "docs_url": "https://docs.derivative.ca/Category:GLSL",
+  "source_docs": [
+    "https://docs.derivative.ca/Write_a_GLSL_TOP",
+    "https://docs.derivative.ca/GLSL_TOP",
+    "https://docs.derivative.ca/Write_a_GLSL_MAT",
+    "https://docs.derivative.ca/GLSL_MAT",
+    "https://docs.derivative.ca/Write_a_GLSL_POP",
+    "https://docs.derivative.ca/GLSL_POP",
+    "https://docs.derivative.ca/GLSL_Advanced_POP",
+    "https://docs.derivative.ca/OP_Snippets"
+  ],
+    "examples": [
+        "glsl_top_pixel_template: Minimal GLSL TOP pixel shader using layout output and TDOutputSwizzle",
+        "glsl_top_compute_output_template: Minimal GLSL TOP compute shader using gl_GlobalInvocationID and TDImageStoreOutput/TDImageLoadOutput",
+        "glsl_top_nonuniform_sampler_template: GLSL TOP pixel shader showing nonuniformEXT sampler indexing and neighboring-pixel offsets",
+        "glsl_top_multi_buffer_vertex_template: GLSL TOP vertex/pixel pair showing custom UV varyings, TDSOPToProj, and multiple color buffers",
+        "glsl_mat_basic_template: Minimal GLSL MAT vertex/pixel pair using TDWorldToProj, TDDeform, TDPos, TDAttrib_* and TDOutputSwizzle",
+    "glsl_mat_world_space_lighting_template: GLSL MAT vertex/pixel pair using World-space normals, TDLightingPBR, OIT, fog, dithering, and specialization constants",
+    "glsl_mat_instance_texture_picking_template: GLSL MAT vertex/pixel pair for instance texture indices, flat varyings, and Render Pick guarded output",
+    "glsl_pop_attribute_template: Minimal GLSL POP compute shader with TDIndex and TDNumElements bounds guard",
+    "glsl_advanced_pop_template: Minimal GLSL Advanced POP compute shader writing point output attributes"
+  ],
+  "official_examples": [
+    {
+      "example_id": "op_snippets_glsl_top_pixel_shader",
+      "display_name": "GLSL TOP pixel shader OP Snippets",
+      "family": "GLSL",
+      "operators": [
+        "glslTOP"
+      ],
+      "topics": [
+        "pixel shader",
+        "fragColor",
+        "TDOutputSwizzle",
+        "sTD2DInputs",
+        "TDTexInfo"
+      ],
+      "source_url": "https://docs.derivative.ca/OP_Snippets",
+      "supporting_urls": [
+        "https://docs.derivative.ca/Write_a_GLSL_TOP",
+        "https://docs.derivative.ca/GLSL_TOP"
+      ],
+      "access_path": "Help > Operator Snippets > GLSL TOP",
+      "summary": "Use for official live examples of GLSL TOP pixel shaders, TD-safe output swizzling, and input TOP sampling idioms.",
+      "source_context": "Derivative documents OP Snippets as the in-app live example browser; Write a GLSL TOP documents pixel shader output and TD helper idioms."
+    },
+    {
+      "example_id": "op_snippets_glsl_top_compute_output",
+      "display_name": "GLSL TOP compute output OP Snippets",
+      "family": "GLSL",
+      "operators": [
+        "glslTOP"
+      ],
+      "topics": [
+        "compute shader",
+        "TDImageStoreOutput",
+        "TDImageLoadOutput",
+        "gl_GlobalInvocationID",
+        "output textures"
+      ],
+      "source_url": "https://docs.derivative.ca/OP_Snippets",
+      "supporting_urls": [
+        "https://docs.derivative.ca/Write_a_GLSL_TOP",
+        "https://docs.derivative.ca/GLSL_TOP"
+      ],
+      "access_path": "Help > Operator Snippets > GLSL TOP",
+      "summary": "Use for official live examples of GLSL TOP compute shaders, output image helpers, and dispatch-coordinate based writes.",
+      "source_context": "Write a GLSL TOP documents compute shader output helpers; OP Snippets is the documented live example browser."
+    },
+    {
+      "example_id": "op_snippets_glsl_mat_pop_attribute",
+      "display_name": "GLSL MAT POP attribute OP Snippets",
+      "family": "GLSL",
+      "operators": [
+        "glslMAT",
+        "glslPOP"
+      ],
+      "topics": [
+        "TDWorldToProj",
+        "TDDeform",
+        "TDAttrib_*",
+        "TDBuffer_*",
+        "POP buffers",
+        "attribute page"
+      ],
+      "source_url": "https://docs.derivative.ca/OP_Snippets",
+      "supporting_urls": [
+        "https://docs.derivative.ca/Write_a_GLSL_MAT",
+        "https://docs.derivative.ca/GLSL_MAT",
+        "https://docs.derivative.ca/Write_a_GLSL_POP"
+      ],
+      "access_path": "Help > Operator Snippets > GLSL MAT",
+      "summary": "Use for official live examples of GLSL MAT transforms, TDAttrib access, and POP attribute buffers declared on material pages.",
+      "source_context": "Write a GLSL MAT documents TDWorldToProj/TDDeform and POP attribute/buffer access; OP Snippets is the in-app live example surface."
+    },
+    {
+      "example_id": "op_snippets_glsl_pop_attribute_compute",
+      "display_name": "GLSL POP selected-class attribute compute OP Snippets",
+      "family": "GLSL",
+      "operators": [
+        "glslPOP"
+      ],
+      "topics": [
+        "GLSL POP attribute shader",
+        "TDIndex",
+        "TDNumElements",
+        "TDIn_P",
+        "P[id]",
+        "compute shader",
+        "Output Attributes"
+      ],
+      "source_url": "https://docs.derivative.ca/OP_Snippets",
+      "supporting_urls": [
+        "https://docs.derivative.ca/Write_a_GLSL_POP",
+        "https://docs.derivative.ca/GLSL_POP"
+      ],
+      "access_path": "Help > Operator Snippets > GLSL POP",
+      "summary": "Use for official live examples of guarded GLSL POP compute shaders that read and write one selected attribute class.",
+      "source_context": "GLSL POP docs say it modifies one attribute class without changing element counts; Write a GLSL POP documents TDIndex/TDNumElements guarded attribute access."
+    },
+    {
+      "example_id": "op_snippets_glsl_advanced_pop_compute",
+      "display_name": "GLSL Advanced POP output compute OP Snippets",
+      "family": "GLSL",
+      "operators": [
+        "glsladvancedPOP",
+        "topologyPOP"
+      ],
+      "topics": [
+        "GLSL Advanced POP",
+        "oTDPoint_P",
+        "output counts",
+        "index buffer",
+        "point output attributes",
+        "primitive batch"
+      ],
+      "source_url": "https://docs.derivative.ca/OP_Snippets",
+      "supporting_urls": [
+        "https://docs.derivative.ca/Write_a_GLSL_POP",
+        "https://docs.derivative.ca/GLSL_Advanced_POP"
+      ],
+      "access_path": "Help > Operator Snippets > GLSL Advanced POP",
+      "summary": "Use for official live examples of Advanced POP shaders that write point/vertex/primitive outputs, output counts, and index buffers.",
+      "source_context": "GLSL Advanced POP docs say it can read and write point, vertex, and primitive attributes simultaneously; Write a GLSL POP covers extra outputs and index buffers."
+    }
+  ],
+  "templates": [
+        {
+            "id": "glsl_top_pixel_template",
+            "op_type": "glslTOP",
+            "stage": "pixel",
+            "summary": "A safe starting pixel shader for a GLSL TOP. Assign this DAT to the GLSL TOP Pixel Shader parameter (`pixeldat`).",
+      "required_setup": [
+        "Use GLSL 4.60 when available.",
+        "Set GLSL TOP mode to Vertex/Pixel Shader.",
+        "Attach an Info DAT or inspect shader errors before judging black output."
+      ],
+      "code": "layout(location = 0) out vec4 fragColor;\n\nvoid main()\n{\n    vec2 uv = vUV.st;\n    vec3 color = vec3(uv, 0.5 + 0.5 * sin(absTime.seconds));\n    fragColor = TDOutputSwizzle(vec4(color, 1.0));\n}\n",
+      "gotchas": [
+        "Do not add a #version line; TouchDesigner inserts the version.",
+        "For pixel shader outputs, pass color through TDOutputSwizzle for cross-platform channel correctness.",
+                "If input TOPs are sampled, use the sTD*Inputs arrays and matching TDTexInfo uniforms instead of hand-declared samplers."
+            ]
+        },
+        {
+            "id": "glsl_top_compute_output_template",
+            "op_type": "glslTOP",
+            "stage": "compute",
+            "summary": "A safe starting compute shader for a GLSL TOP output texture. Assign this DAT to the GLSL TOP Compute Shader parameter (`computedat`).",
+            "required_setup": [
+                "Set GLSL TOP mode to Compute Shader.",
+                "Use GLSL 4.60 when available.",
+                "Set compute dispatch/workgroup parameters so gl_GlobalInvocationID covers the intended output resolution."
+            ],
+            "code": "void main()\n{\n    uvec3 gid = gl_GlobalInvocationID;\n    ivec3 coord = ivec3(gid);\n    ivec2 output_size = ivec2(uTDOutputInfo.res.zw);\n\n    if (coord.x >= output_size.x || coord.y >= output_size.y)\n        return;\n\n    vec2 uv = (vec2(coord.xy) + vec2(0.5)) / vec2(output_size);\n    vec4 previous = TDImageLoadOutput(0, coord);\n    vec4 color = vec4(uv, 0.5 + 0.5 * sin(absTime.seconds), 1.0);\n\n    TDImageStoreOutput(0, coord, mix(previous, color, 0.25));\n}\n",
+            "gotchas": [
+                "Do not declare output image uniforms yourself; TouchDesigner defines them for compute shaders.",
+                "Use TDImageStoreOutput()/TDImageLoadOutput() instead of direct imageStore()/imageLoad() so sRGB and output swizzle handling stays TouchDesigner-safe.",
+                "Do not wrap compute output colors with TDOutputSwizzle because TDImageStoreOutput() handles that internally.",
+                "For 3D Texture or 2D Texture Array outputs, include gl_GlobalInvocationID.z in coord and dispatch enough Z threads to cover the texture depth."
+            ]
+        },
+        {
+            "id": "glsl_top_nonuniform_sampler_template",
+            "op_type": "glslTOP",
+            "stage": "pixel",
+      "summary": "A GLSL TOP pixel shader for choosing from 2D input sampler arrays at runtime and sampling neighboring pixels.",
+      "required_setup": [
+        "Attach at least one 2D input TOP.",
+        "Use GLSL 4.60 so nonuniformEXT is available for non-uniform sampler indexing.",
+        "Use GLSL Multi TOP when the shader needs a large or changing number of inputs."
+      ],
+      "code": "layout(location = 0) out vec4 fragColor;\n\nvoid main()\n{\n    int input_index = int(floor(vUV.x * float(max(TD_NUM_2D_INPUTS, 1))));\n    input_index = clamp(input_index, 0, TD_NUM_2D_INPUTS - 1);\n\n    vec2 pixel_step = uTD2DInfos[input_index].res.xy;\n    vec4 center = texture(sTD2DInputs[nonuniformEXT(input_index)], vUV.st);\n    vec4 right = texture(sTD2DInputs[nonuniformEXT(input_index)], vUV.st + vec2(pixel_step.x, 0.0));\n    vec4 offset = textureOffset(sTD2DInputs[nonuniformEXT(input_index)], vUV.st, ivec2(0, 1));\n\n    fragColor = TDOutputSwizzle((center + right + offset) / 3.0);\n}\n",
+      "gotchas": [
+        "Use nonuniformEXT() when sampler array indices depend on per-pixel shader execution.",
+        "Use uTD2DInfos[index].res for pixel-size offsets; textureOffset() is convenient but limited to nearby offsets.",
+        "Guard production shaders for zero inputs before sampling, or require at least one input in the network plan."
+      ]
+    },
+    {
+      "id": "glsl_top_multi_buffer_vertex_template",
+      "op_type": "glslTOP",
+      "stage": "vertex_pixel",
+      "summary": "A GLSL TOP vertex/pixel pair for custom UV varyings and multiple color-buffer outputs.",
+      "required_setup": [
+        "Increase GLSL TOP # of Color Buffers when writing locations beyond 0.",
+        "Use Render Select TOP to view color buffers beyond the first output connector.",
+        "Keep the vertex shader's gl_Position aligned to the TOP quad."
+      ],
+      "code": "// Vertex shader\nout vec3 texCoord;\n\nvoid main()\n{\n    texCoord = uv[0];\n    gl_Position = TDSOPToProj(vec4(P, 1.0));\n}\n\n// Pixel shader\nin vec3 texCoord;\nlayout(location = 0) out vec4 fragColor;\nlayout(location = 1) out vec4 extraInfo;\n\nvoid main()\n{\n    vec4 color = texture(sTD2DInputs[0], texCoord.st);\n    fragColor = TDOutputSwizzle(TDDither(color));\n    extraInfo = TDOutputSwizzle(vec4(texCoord.st, float(uTDPass), 1.0));\n}\n",
+      "gotchas": [
+        "When providing a custom vertex shader, vUV is not automatically available in the pixel shader; pass uv[0] through your own varying.",
+        "Write every declared color-buffer output in all branches because unwritten output values are undefined.",
+        "Use Render Select TOP to inspect extra buffers because the GLSL TOP output connector shows buffer 0."
+      ]
+    },
+    {
+      "id": "glsl_mat_basic_template",
+      "op_type": "glslMAT",
+      "stage": "vertex_pixel",
+      "summary": "A minimal GLSL MAT vertex/pixel pair. Assign vertex code to `vdat`, pixel code to `pdat`, and declare Color on the Attributes page if using TDAttrib_Color().",
+      "required_setup": [
+        "Assign a vertex shader DAT to GLSL MAT `vdat`.",
+        "Assign a pixel shader DAT to GLSL MAT `pdat`.",
+        "Declare custom or POP attributes on the GLSL MAT Attributes page before calling TDAttrib_<Name>()."
+      ],
+      "code": "// Vertex shader\nout vec4 vColor;\n\nvoid main()\n{\n    vec4 world_pos = TDDeform(TDPos());\n    gl_Position = TDWorldToProj(world_pos);\n    vColor = TDAttrib_Color();\n}\n\n// Pixel shader\nin vec4 vColor;\nlayout(location = 0) out vec4 fragColor;\n\nvoid main()\n{\n    fragColor = TDOutputSwizzle(vColor);\n}\n",
+      "gotchas": [
+        "Compile errors show as a blue/red checkerboard material; inspect Errors or Info output for compiler details.",
+        "POP-compatible shader attributes must be declared on the Attributes page and accessed as TDAttrib_<Name>().",
+        "Use TDWorldToProj(TDDeform(TDPos())) as the default vertex transform unless the material intentionally overrides deformation."
+      ]
+    },
+    {
+      "id": "glsl_mat_world_space_lighting_template",
+      "op_type": "glslMAT",
+      "stage": "vertex_pixel",
+      "summary": "A GLSL MAT vertex/pixel pair for World-space lighting, normals, Order Independent Transparency, fog, dithering, and rarely changing specialization modes.",
+      "required_setup": [
+        "Assign vertex and pixel shader DATs to GLSL MAT `vdat` and `pdat`.",
+        "Use a Render TOP with a Camera COMP and Light COMP entries when lighting should be scene driven.",
+        "Use the Constants page for rarely changing specialization modes, not per-frame animation."
+      ],
+      "code": "layout(constant_id = 0) const int uLightingMode = 0;\n\n// Vertex shader\nout vec3 vWorldPos;\nout vec3 vWorldNorm;\nout vec4 vPointColor;\nflat out int vCameraIndex;\n\nvoid main()\n{\n    vec4 world_pos = TDDeform(vec4(TDPos(), 1.0));\n    vWorldPos = world_pos.xyz;\n    vWorldNorm = normalize(TDDeformNorm(TDNormal()));\n    vPointColor = TDPointColor();\n    vCameraIndex = TDCameraIndex();\n    gl_Position = TDWorldToProj(world_pos);\n}\n\n// Pixel shader\nin vec3 vWorldPos;\nin vec3 vWorldNorm;\nin vec4 vPointColor;\nflat in int vCameraIndex;\nlayout(location = 0) out vec4 fragColor;\n\nvoid main()\n{\n    TDCheckDiscard();\n    TDCheckOrderIndTrans();\n\n    vec3 normal = normalize(vWorldNorm);\n    vec3 camera_pos = uTDMats[vCameraIndex].camInverse[3].xyz;\n    vec3 view_dir = normalize(camera_pos - vWorldPos);\n    vec3 lit = vec3(0.0);\n\n    for (int i = 0; i < TD_NUM_LIGHTS; ++i)\n    {\n        TDPBRResult light = TDLightingPBR(i, vPointColor.rgb, vec3(1.0), vWorldPos, normal, 1.0, vec3(0.0), view_dir, 0.45);\n        lit += light.diffuse + light.specular;\n    }\n\n    vec4 color = vec4(lit, vPointColor.a);\n    TDAlphaTest(color.a);\n    color = TDFog(color, vWorldPos, vCameraIndex);\n    color = TDDither(color);\n    fragColor = TDOutputSwizzle(color);\n}\n",
+      "gotchas": [
+        "TDDeformNorm(TDNormal()) returns a World-space normal; keep lighting vectors in the same space.",
+        "Call TDCheckOrderIndTrans near the start of the pixel shader when Order Independent Transparency should work.",
+        "Specialization constants cache shader variants and are best for modes that change rarely."
+      ]
+    },
+    {
+      "id": "glsl_mat_instance_texture_picking_template",
+      "op_type": "glslMAT",
+      "stage": "vertex_pixel",
+      "summary": "A GLSL MAT vertex/pixel pair for instance texture selection and Render Pick DAT/CHOP guarded output.",
+      "required_setup": [
+        "Enable instancing on the Geometry COMP Instance page.",
+        "Configure instance textures on the Geometry COMP or GLSL MAT workflow before sampling TDInstanceTexture().",
+        "Use Render Pick DAT or Render Pick CHOP when TD_PICKING_ACTIVE paths need to be exercised."
+      ],
+      "code": "// Vertex shader\nflat out int vInstanceID;\nflat out uint vInstanceTexIndex;\nout vec3 vInstancedUV;\n\nvoid main()\n{\n    vInstanceID = TDInstanceID();\n    vInstanceTexIndex = TDInstanceTextureIndex();\n    vInstancedUV = TDInstanceTexCoord(TDTexCoord(0));\n    gl_Position = TDWorldToProj(TDDeform(TDPos()));\n}\n\n// Pixel shader\nflat in int vInstanceID;\nflat in uint vInstanceTexIndex;\nin vec3 vInstancedUV;\nlayout(location = 0) out vec4 fragColor;\n\nvoid main()\n{\n#ifndef TD_PICKING_ACTIVE\n    vec4 color = TDInstanceTexture(vInstanceTexIndex, vInstancedUV.st);\n    fragColor = TDOutputSwizzle(color);\n#else\n    TDWritePickingValues();\n    vTDPickVert.instanceId = vInstanceID;\n    vTDPickVert.color = TDPointColor();\n#endif\n}\n",
+      "gotchas": [
+        "Pass instance ids and texture indices through flat varyings so integer values are not interpolated.",
+        "TDInstanceTextureIndex() is commonly collected in the vertex shader, then TDInstanceTexture() samples in the pixel shader.",
+        "Call TDWritePickingValues() before overriding vTDPickVert or vTDCustomPickVert fields for custom Render Pick output."
+      ]
+    },
+    {
+      "id": "glsl_pop_attribute_template",
+      "op_type": "glslPOP",
+      "stage": "compute",
+      "summary": "A minimal GLSL POP compute shader for modifying a selected attribute class without changing element counts.",
+      "required_setup": [
+        "Assign this DAT to GLSL POP `computedat`.",
+        "Set Attribute Class to Point when writing P.",
+        "Add P to Output Attributes so P[id] is allocated and writable."
+      ],
+      "code": "void main()\n{\n    const uint id = TDIndex();\n    if (id >= TDNumElements())\n        return;\n\n    vec3 p = TDIn_P();\n    p.y += 0.05 * sin(float(id) * 0.17 + absTime.seconds);\n    P[id] = p;\n}\n",
+      "gotchas": [
+        "GLSL POP works on one attribute class at a time and does not change point, vertex, or primitive counts.",
+        "Always guard writes with TDIndex() and TDNumElements() because the actual dispatch may be rounded up to the workgroup size.",
+        "Use GLSL Advanced POP when the shader must write multiple classes, index buffers, or new output counts."
+      ]
+    },
+    {
+      "id": "glsl_advanced_pop_template",
+      "op_type": "glsladvancedPOP",
+      "stage": "compute",
+      "summary": "A minimal GLSL Advanced POP compute shader for copying point positions into the advanced point output namespace.",
+      "required_setup": [
+        "Assign this DAT to GLSL Advanced POP `computedat`.",
+        "Set Number of Threads to an input or max output mode that matches the intended output.",
+        "Add P to Point Output Attributes or keep wildcard output attributes enabled.",
+        "Use Topology POP when multiple advanced passes need combined topology."
+      ],
+      "code": "void main()\n{\n    const uint id = TDIndex();\n    if (id >= TDNumElements())\n        return;\n\n    vec3 p = TDInPoint_P();\n    p.x += 0.05 * cos(float(id) * 0.11 + absTime.seconds);\n    oTDPoint_P[id] = p;\n}\n",
+      "gotchas": [
+        "GLSL Advanced POP can write point, vertex, primitive, index-buffer, and output-count data; keep the output contract explicit.",
+        "When changing output counts, do not assume every input attribute still has a corresponding output element.",
+        "Per primitive batch dispatch is useful when all primitives in the current batch share a type."
+      ]
+    }
+  ],
+  "common_gotchas": [
+    "Do not add #version statements to TouchDesigner shader DATs; the operator inserts them.",
+    "Use Info DAT, Info CHOP, or operator errors to distinguish shader compile failures from intentionally black output.",
+    "For GLSL TOP compute shaders, use TDImageStoreOutput()/TDImageLoadOutput() for output textures; TDOutputSwizzle is handled internally by those helpers.",
+    "For GLSL POP and GLSL Advanced POP, guard compute writes with TDIndex() and TDNumElements() before writing SSBO-backed attributes."
+  ],
+  "last_verified": "2026-06-17"
+}

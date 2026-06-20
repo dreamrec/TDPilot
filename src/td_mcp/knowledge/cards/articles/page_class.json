@@ -1,0 +1,51 @@
+{
+  "card_type": "article",
+  "article_id": "page_class",
+  "title": "Page Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "PARAMETER",
+    "COMP"
+  ],
+  "summary": "Official Derivative Python API reference for custom parameter pages, covering page ownership, parameter and ParGroup lists, parameter-creation methods, vector/color helper constructors, menu setup, ordering, and replace semantics.",
+  "source_url": "https://docs.derivative.ca/Page_Class",
+  "docsbrain_page_id": "page_class",
+  "covered_operators": [
+    "baseCOMP",
+    "scriptCHOP",
+    "scriptDAT",
+    "scriptSOP",
+    "scriptTOP"
+  ],
+  "key_concepts": [
+    "Page",
+    "parGroups",
+    "pars",
+    "appendOP()",
+    "appendFloat()",
+    "appendInt()",
+    "appendToggle()",
+    "appendPulse()",
+    "appendMenu()",
+    "appendStrMenu()",
+    "appendRGB()",
+    "appendRGBA()",
+    "appendXYZ()",
+    "appendWH()",
+    "replace",
+    "order",
+    "ParGroup"
+  ],
+  "guidance": [
+    "Use this article when generating custom parameter pages rather than editing parameter JSON by hand.",
+    "Page methods create parameter groups and return a ParGroup, so generated code should capture that group before editing individual Par attributes.",
+    "Use vector and color helpers such as appendXYZ(), appendWH(), appendRGB(), and appendRGBA() when the UI should use standard TouchDesigner component naming.",
+    "After appendMenu() or appendStrMenu(), set actual choices through Par menuNames and menuLabels.",
+    "The replace argument defaults to replacing a parameter with fresh attributes; set replace=False when duplicate creation should fail loudly."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

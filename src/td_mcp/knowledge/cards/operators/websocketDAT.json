@@ -1,0 +1,103 @@
+{
+  "card_type": "operator",
+  "op_type": "websocketDAT",
+  "family": "DAT",
+  "display_name": "WebSocket DAT",
+  "docs_url": "https://docs.derivative.ca/WebSocket_DAT",
+  "summary": "Connects to WebSocket servers, receives and parses text or binary WebSocket messages, appends them to a FIFO DAT table, and can execute callbacks for each message.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable receiving from the WebSocket connection"
+    },
+    {
+      "name": "netaddress",
+      "type": "String",
+      "note": "Server host, IP, localhost, or wss:// address"
+    },
+    {
+      "name": "port",
+      "type": "Integer",
+      "note": "Network port; 443 implies secure WebSocket"
+    },
+    {
+      "name": "timeout",
+      "type": "Integer",
+      "note": "Connection timeout in milliseconds"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "Callback DAT executed for each message"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Where callback scripts execute from"
+    },
+    {
+      "name": "fromop",
+      "type": "OP",
+      "note": "Execution origin when Execute from is Specified Operator"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Limit retained output rows"
+    },
+    {
+      "name": "maxlines",
+      "type": "Integer",
+      "note": "Maximum retained rows when clamped"
+    },
+    {
+      "name": "bytes",
+      "type": "Toggle",
+      "note": "Output raw bytes in a separate column"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear accumulated WebSocket message rows"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language handling mode"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor file extension mode"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when extension mode uses a custom extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Node viewer word-wrap behavior"
+    }
+  ],
+  "common_gotchas": [
+    "This DAT is a WebSocket client; use Web Server DAT when TouchDesigner needs to host WebSocket clients.",
+    "Secure servers generally use port 443; non-443 secure connections need a wss:// prefix in Network Address.",
+    "Messages are appended to a FIFO table, so set Clamp Output and Maximum Lines for long-running connections.",
+    "Status and errors are printed to TouchDesigner's text console, which may need TOUCH_TEXT_CONSOLE=1 to inspect.",
+    "Use SocketIO DAT for Socket.IO protocol support rather than raw WebSocket DAT."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2021.10000+ WebSocket client messaging",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "WebSocket DAT is a WebSocket client that receives text and binary frames into a FIFO DAT table.",
+    "Callbacks handle connect, disconnect, text, binary, ping, pong, and monitor-message events.",
+    "Secure non-443 connections require a wss:// network address prefix.",
+    "Clamp and maximum line controls should be set for long-running message streams."
+  ]
+}

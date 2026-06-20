@@ -1,0 +1,53 @@
+{
+  "card_type": "article",
+  "article_id": "mat_deform_page",
+  "title": "MAT Deform Page",
+  "family": "PARAMETER",
+  "families": [
+    "MAT",
+    "SOP",
+    "COMP",
+    "PARAMETER",
+    "GLSL"
+  ],
+  "summary": "Official Derivative MAT Deform page reference for enabling material-side deforms and sourcing capture/bone data from SOPs, other MATs, Deform In MAT, capture attributes, and skeleton root paths.",
+  "source_url": "https://docs.derivative.ca/MAT_Deform_Page",
+  "docsbrain_page_id": "mat_deform_page",
+  "covered_operators": [
+    "phongMAT",
+    "glslMAT",
+    "bonegroupSOP",
+    "deformSOP",
+    "geometryCOMP"
+  ],
+  "key_concepts": [
+    "MAT Deform Page",
+    "Parameters - Deform Page",
+    "Deform Article",
+    "dodeform",
+    "deformdata",
+    "sop",
+    "mat",
+    "deformin",
+    "targetsop",
+    "pcaptpath",
+    "pcaptdata",
+    "skelrootpath",
+    "Bone Group SOP",
+    "capture attributes",
+    "deform bone data",
+    "root skeleton",
+    "Deform In MAT"
+  ],
+  "guidance": [
+    "Use this article when material-side deformation needs to be enabled or wired to capture and skeleton data.",
+    "Enable dodeform on the material before expecting material deformation to affect rendered geometry.",
+    "Use deformdata to choose whether bone data comes from a SOP, another MAT, or a Deform In MAT.",
+    "Set targetsop to the SOP containing deform capture attributes, then align pcaptpath and pcaptdata with the capture attributes produced by Bone Group SOP workflows.",
+    "Set skelrootpath to the COMP that contains the root of the skeleton used for deformation."
+  ],
+  "related_snippets": [
+    "GLSL_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

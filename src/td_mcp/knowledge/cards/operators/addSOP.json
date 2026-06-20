@@ -1,0 +1,66 @@
+{
+  "card_type": "operator",
+  "op_type": "addSOP",
+  "family": "SOP",
+  "display_name": "Add SOP",
+  "docs_url": "https://docs.derivative.ca/Add_SOP",
+  "summary": "Creates points and polygons from parameters, DAT tables, or an existing input, making it useful for explicit point extraction, hand-built connection lists, and procedural boundary stitching.",
+  "key_params": [
+    {
+      "name": "pointdat",
+      "type": "DAT",
+      "note": "Table DAT path for point data; unnamed first columns map to x, y, z, and w"
+    },
+    {
+      "name": "namedattribs",
+      "type": "Toggle",
+      "note": "Enable named point attributes such as P, N, Cd, uv, and extra single-float columns"
+    },
+    {
+      "name": "addpts",
+      "type": "Toggle",
+      "note": "Enable manually-added point sequence entries"
+    },
+    {
+      "name": "point0pos",
+      "type": "XYZ",
+      "note": "Position for a point entry; can use constants or expressions"
+    },
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "Choose group-based or pattern-based polygon creation"
+    },
+    {
+      "name": "polydat",
+      "type": "DAT",
+      "note": "Table DAT path for polygon point-number rows and closed/open flags"
+    },
+    {
+      "name": "poly0pattern",
+      "type": "String",
+      "note": "Connection-list pattern for polygon point order"
+    },
+    {
+      "name": "normals",
+      "type": "Toggle",
+      "note": "Compute normals after generating geometry"
+    }
+  ],
+  "common_gotchas": [
+    "Turn off Compute Normals when the point table supplies N(0), N(1), and N(2).",
+    "Connection-list patterns are point-number based, so reversed ranges, exclusions, and '*' can create surprising vertex order.",
+    "Points added to an existing source are appended to the end of the point list."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Add SOP creates or appends points and polygons from parameters, DAT tables, or an existing SOP input.",
+    "Point DATs can use named attributes such as P, N, Cd, and uv, while unnamed first columns map to x, y, z, and w.",
+    "Polygon DAT rows and pattern strings are point-number connection lists, so vertex order is explicit and pattern-driven.",
+    "Post-processing options such as removing unused points and computing normals should match whether the input tables already provide normals."
+  ]
+}

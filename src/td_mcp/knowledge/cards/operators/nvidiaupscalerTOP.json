@@ -1,0 +1,50 @@
+{
+  "card_type": "operator",
+  "op_type": "nvidiaupscalerTOP",
+  "family": "TOP",
+  "display_name": "NVIDIA Upscaler TOP",
+  "docs_url": "https://docs.derivative.ca/NVIDIA_Upscaler_TOP",
+  "summary": "Upscales input video with NVIDIA Maxine Video Effects using faster upscale modes or higher-quality super-resolution modes.",
+  "key_params": [
+    {
+      "name": "mode",
+      "type": "Menu",
+      "note": "Choose upscale or super-resolution factor/mode."
+    },
+    {
+      "name": "strength",
+      "type": "Float",
+      "note": "Enhancement amount for Upscale Filter modes."
+    },
+    {
+      "name": "artifactreduction",
+      "type": "Toggle",
+      "note": "Reduce artifacts for lossy-compressed input in Super Resolution modes."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    }
+  ],
+  "common_gotchas": [
+    "Official docs mark NVIDIA Upscaler TOP as Windows-only.",
+    "Requires a 20, 30, 40, or 50 series NVIDIA RTX card.",
+    "Models must be downloaded separately through the NVIDIA Video Effects SDK resources for the target GPU.",
+    "Cannot be used in the same project as ZED because of TensorRT version conflicts.",
+    "Fractional upscale modes require source dimensions divisible by 2 or 3 depending on the mode."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "NVIDIA_snippets",
+    "VideoEnhancement_snippets"
+  ],
+  "build_relevance": "ai_video_upscale",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Upscales input video with NVIDIA Maxine Video Effects models.",
+    "Provides faster Upscale Filter modes and higher-quality Super Resolution modes.",
+    "Strength applies to Upscale Filter modes; Artifact Reduction applies to Super Resolution modes.",
+    "Each mode has documented input-size and divisibility requirements."
+  ]
+}

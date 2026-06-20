@@ -1,0 +1,48 @@
+{
+  "card_type": "article",
+  "article_id": "shader",
+  "title": "Shader",
+  "family": "GLSL",
+  "families": [
+    "GLSL",
+    "TOP",
+    "MAT",
+    "GPU"
+  ],
+  "summary": "Official Derivative glossary page for TouchDesigner shaders, covering Vulkan-era GLSL code, Text DAT shader sources, GLSL TOP and GLSL Material references, shader stages, and the obsolescence of Geometry Shaders.",
+  "source_url": "https://docs.derivative.ca/Shader",
+  "docsbrain_page_id": "shader",
+  "covered_operators": [
+    "glslTOP",
+    "glslMAT",
+    "phongMAT",
+    "pbrMAT",
+    "textDAT"
+  ],
+  "key_concepts": [
+    "OpenGL (pre-2022)",
+    "Vulkan (2022-)",
+    "GLSL",
+    "Text DATs",
+    "Materials",
+    "GLSL Material",
+    "GLSL TOP",
+    "Vertex Shader",
+    "Pixel Shader",
+    "Compute Shader",
+    "Geometry Shaders are now obsolete",
+    "Phong MAT",
+    "PBR MAT"
+  ],
+  "guidance": [
+    "Use this article when a plan needs to decide whether shader source belongs in a GLSL TOP, GLSL Material, generated Phong/PBR shader output, or a Text DAT.",
+    "Treat TouchDesigner shader code as GLSL running on OpenGL in pre-2022 builds and Vulkan in 2022-era and newer builds.",
+    "Prefer Vertex Shader, Pixel Shader, or Compute Shader stages; avoid planning new Geometry Shader work because the official page marks them obsolete.",
+    "Use Phong MAT or PBR MAT generated shader code as a starting point when adapting surface-lighting behavior into a custom shader."
+  ],
+  "related_snippets": [
+    "GLSL_snippets",
+    "TOP_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

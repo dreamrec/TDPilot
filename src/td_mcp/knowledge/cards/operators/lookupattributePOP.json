@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "lookupattributePOP",
+  "family": "POP",
+  "display_name": "Lookup Attribute POP",
+  "docs_url": "https://docs.derivative.ca/Lookup_Attribute_POP",
+  "summary": "Uses attribute values from the first input as indices into attributes of a second lookup POP, then writes the looked-up values to existing or new output attributes.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Point, vertex, or primitive class"},
+    {"name": "group", "type": "String", "note": "Optional group scope"},
+    {"name": "lookupindexattr", "type": "String", "note": "Attribute values used as lookup indices"},
+    {"name": "indexunit", "type": "Menu", "note": "Normalized 0-1 or point index units"},
+    {"name": "cyclic", "type": "Toggle", "note": "Wrap index range cyclically"},
+    {"name": "interpolate", "type": "Toggle", "note": "Interpolate lookup values"},
+    {"name": "lookup", "type": "Sequential", "note": "Lookup output blocks"},
+    {"name": "lookup0valueattr", "type": "String", "note": "Value attribute on lookup POP"}
+  ],
+  "key_concepts": [
+    "Uses lookup index attributes on the first input to sample value attributes from a second POP input.",
+    "Normalized index mode maps 0 to the first lookup point and 1 to the last; point-index mode uses element numbers.",
+    "Extend, cyclic, and interpolation controls define how out-of-range or between-point lookup indices are sampled.",
+    "Sequential lookup blocks can fetch multiple value attributes and rerange them before writing output scopes."
+  ],
+  "common_gotchas": [
+    "Input index values are commonly normalized 0-1; Point Index mode changes semantics.",
+    "Extend Left and Extend Right determine out-of-range lookup behavior.",
+    "Sequential blocks can re-range each looked-up value before writing to output attributes."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

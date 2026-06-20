@@ -1,0 +1,92 @@
+{
+  "card_type": "operator",
+  "op_type": "screengrabTOP",
+  "family": "TOP",
+  "display_name": "Screen Grab TOP",
+  "docs_url": "https://docs.derivative.ca/Screen_Grab_TOP",
+  "summary": "Captures the desktop, a display, or a supported application/window into a TOP image for live screen sampling.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Continuously grab the screen contents while enabled."
+    },
+    {
+      "name": "activepulse",
+      "type": "Pulse",
+      "note": "Grab a single frame when Active is off."
+    },
+    {
+      "name": "source",
+      "type": "Menu",
+      "note": "Desktop, display, or supported application source."
+    },
+    {
+      "name": "refreshsource",
+      "type": "Pulse",
+      "note": "Refresh the source list after displays/windows change."
+    },
+    {
+      "name": "left",
+      "type": "Float",
+      "note": "Left capture edge."
+    },
+    {
+      "name": "leftunit",
+      "type": "Menu",
+      "note": "Units for the left edge."
+    },
+    {
+      "name": "right",
+      "type": "Float",
+      "note": "Right capture edge."
+    },
+    {
+      "name": "rightunit",
+      "type": "Menu",
+      "note": "Units for the right edge."
+    },
+    {
+      "name": "bottom",
+      "type": "Float",
+      "note": "Bottom capture edge; bottom equals 0."
+    },
+    {
+      "name": "bottomunit",
+      "type": "Menu",
+      "note": "Units for the bottom edge."
+    },
+    {
+      "name": "top",
+      "type": "Float",
+      "note": "Top capture edge."
+    },
+    {
+      "name": "topunit",
+      "type": "Menu",
+      "note": "Units for the top edge."
+    },
+    {
+      "name": "delayed",
+      "type": "Toggle",
+      "note": "Faster delayed capture mode."
+    }
+  ],
+  "common_gotchas": [
+    "Application/window capture is Windows-only in the official docs.",
+    "Refresh Sources after connecting displays or opening/closing application windows.",
+    "Delayed mode is faster but may fail on some systems, especially Optimus laptops.",
+    "Bottom uses bottom = 0, so crop coordinates need the screen-origin convention in mind."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "screen_capture",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Screen Grab converts the main screen output or a selected source into a TOP image.",
+    "Capture can run continuously with Active or grab a single frame with Active Pulse.",
+    "Source selection can target Full Desktop, a display, or an individual application on Windows.",
+    "The capture region is controlled by left/right/bottom/top bounds with per-edge unit selectors."
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "card_type": "operator",
+  "op_type": "monochromeTOP",
+  "family": "TOP",
+  "display_name": "Monochrome TOP",
+  "docs_url": "https://docs.derivative.ca/Monochrome_TOP",
+  "summary": "Converts an image toward greyscale using selectable RGB and alpha channel conversion methods.",
+  "key_params": [
+    {
+      "name": "mono",
+      "type": "Float",
+      "note": "Amount of greyscale conversion, 0 full color to 1 full greyscale"
+    },
+    {
+      "name": "rgb",
+      "type": "Menu",
+      "note": "luminance, rgba channels, rgbaverage, or average source for RGB"
+    },
+    {
+      "name": "alpha",
+      "type": "Menu",
+      "note": "luminance, rgba channels, rgbaverage, or average source for alpha"
+    }
+  ],
+  "common_gotchas": [
+    "mono=0 is full color, while mono=1 is full greyscale.",
+    "The alpha menu is independent from the RGB menu and can change transparency unexpectedly.",
+    "Using alpha as the RGB source can flatten the image if alpha is constant.",
+    "RGBA Average uses the official token average, not rgbaaverage."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Color_snippets"
+  ],
+  "build_relevance": "image_color_correction",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Converts image colors toward greyscale while preserving a blend amount through mono.",
+    "RGB conversion and alpha conversion have separate source menus.",
+    "Conversion sources include luminance, individual channels, RGB average, and RGBA average.",
+    "mono=0 leaves full color and mono=1 produces full greyscale.",
+    "The operator supports 3D Textures and 2D Texture Arrays."
+  ]
+}

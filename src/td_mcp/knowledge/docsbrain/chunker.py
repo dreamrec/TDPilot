@@ -51,13 +51,95 @@ def _extract_mentioned_operators(section: Tag) -> list[str]:
     return ops
 
 
-def _extract_parameter_names(text: str) -> list[str]:
-    """Extract bold parameter names from section text."""
-    # Pattern: lines starting with bold text that look like parameter names
+def _extract_parameter_names(section: Tag | str) -> list[str]:
+    """Extract operator parameter rows while ignoring menu-choice bullets."""
+    if isinstance(section, Tag):
+        params = _extract_parameter_names_from_html(section)
+        if params:
+            return params
+        text = section.get_text(separator="\n", strip=True)
+    else:
+        text = section
+    return _extract_parameter_names_from_text(text)
+
+
+def _extract_parameter_names_from_html(section: Tag) -> list[str]:
+    params: list[str] = []
+    seen: set[str] = set()
+    for element in section.find_all(["p", "div"], recursive=True):
+        if element.find_parent("li"):
+            continue
+        if _has_class(element, "mw-collapsible") or element.find_parent(class_="mw-collapsible"):
+            continue
+        text = element.get_text(separator="\n", strip=True)
+        if not text or not re.search(r"[-\u2013\u2014]", text):
+            continue
+
+        code = element.find("code", recursive=False)
+        if code is not None:
+            raw_name = code.get_text(strip=True)
+            if _looks_like_internal_param_name(raw_name):
+                label = _label_before_child(element, code)
+                param = _format_param_candidate(label, raw_name)
+                if param and param not in seen:
+                    params.append(param)
+                    seen.add(param)
+                    continue
+
+        bold = element.find(["b", "strong"], recursive=False)
+        if bold is not None:
+            param = _format_param_candidate(bold.get_text(" ", strip=True), None)
+            if param and param not in seen:
+                params.append(param)
+                seen.add(param)
+                continue
+
+        if not element.find(["p", "div", "ul", "ol"], recursive=False):
+            for param in _extract_parameter_names_from_text(text):
+                if param not in seen:
+                    params.append(param)
+                    seen.add(param)
+
+    return params
+
+
+def _has_class(element: Tag, class_name: str) -> bool:
+    classes = element.get("class") or []
+    return class_name in classes
+
+
+def _label_before_child(element: Tag, stop_child: Tag) -> str:
+    parts: list[str] = []
+    for child in element.children:
+        if child is stop_child:
+            break
+        if isinstance(child, Tag):
+            parts.append(child.get_text(" ", strip=True))
+        else:
+            parts.append(str(child))
+    return " ".join(part.strip() for part in parts if part.strip())
+
+
+def _format_param_candidate(label: str, raw_name: str | None) -> str | None:
+    label = re.sub(r"\s+", " ", label).strip(" -\u2013\u2014\t\n")
+    if not label or len(label) >= 80 or label[0].islower():
+        return None
+    if raw_name:
+        return f"{label}\n{raw_name}"
+    if len(label) < 40:
+        return label
+    return None
+
+
+def _looks_like_internal_param_name(name: str) -> bool:
+    return bool(re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name))
+
+
+def _extract_parameter_names_from_text(text: str) -> list[str]:
+    """Extract parameter-like rows from normalized section text."""
     params = []
     for match in re.finditer(r"(?:^|\n)\s*(\w[\w\s]*?)\s*[-\u2013\u2014]", text):
         candidate = match.group(1).strip()
-        # Simple heuristic: parameter names are short
         if len(candidate) < 40 and not candidate[0].islower():
             params.append(candidate)
     return params
@@ -199,7 +281,7 @@ def chunk_page(page: dict[str, Any], html_path: Path) -> list[dict[str, Any]]:
                 change_category = _CHANGE_CATEGORIES.get(clean_heading, "other")
 
             mentioned_ops = _extract_mentioned_operators(section_tag)
-            param_names = _extract_parameter_names(section_text) if doc_type == "operator" else []
+            param_names = _extract_parameter_names(section_tag) if doc_type == "operator" else []
 
             sequence += 1
             chunks.append(

@@ -1,0 +1,115 @@
+{
+  "card_type": "operator",
+  "op_type": "cornerpinTOP",
+  "family": "TOP",
+  "display_name": "Corner Pin TOP",
+  "docs_url": "https://docs.derivative.ca/Corner_Pin_TOP",
+  "summary": "Warps an extracted source quadrilateral into a pinned destination quadrilateral for projection mapping and image correction.",
+  "key_params": [
+    {
+      "name": "extractp1",
+      "type": "XY",
+      "note": "Source quad corner 1"
+    },
+    {
+      "name": "extractp2",
+      "type": "XY",
+      "note": "Source quad corner 2"
+    },
+    {
+      "name": "extractp3",
+      "type": "XY",
+      "note": "Source quad corner 3"
+    },
+    {
+      "name": "extractp4",
+      "type": "XY",
+      "note": "Source quad corner 4"
+    },
+    {
+      "name": "extractp1unit",
+      "type": "Menu",
+      "note": "Units for source corner 1"
+    },
+    {
+      "name": "extractp2unit",
+      "type": "Menu",
+      "note": "Units for source corner 2"
+    },
+    {
+      "name": "extractp3unit",
+      "type": "Menu",
+      "note": "Units for source corner 3"
+    },
+    {
+      "name": "extractp4unit",
+      "type": "Menu",
+      "note": "Units for source corner 4"
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Edge extend behavior: hold, repeat, or mirror"
+    },
+    {
+      "name": "extractmapping",
+      "type": "Menu",
+      "note": "Bilinear or perspective extraction mapping"
+    },
+    {
+      "name": "pinp1",
+      "type": "XY",
+      "note": "Destination quad corner 1"
+    },
+    {
+      "name": "pinp2",
+      "type": "XY",
+      "note": "Destination quad corner 2"
+    },
+    {
+      "name": "pinp3",
+      "type": "XY",
+      "note": "Destination quad corner 3"
+    },
+    {
+      "name": "pinp4",
+      "type": "XY",
+      "note": "Destination quad corner 4"
+    },
+    {
+      "name": "gridrefine",
+      "type": "Int",
+      "note": "Warp grid refinement"
+    },
+    {
+      "name": "bgcolor",
+      "type": "RGBA",
+      "note": "Background fill color"
+    },
+    {
+      "name": "premultrgbbyalpha",
+      "type": "Toggle",
+      "note": "Premultiply RGB by alpha"
+    }
+  ],
+  "common_gotchas": [
+    "Extract points define the source area; pin points define the destination area.",
+    "Bilinear and perspective mapping differ visibly on oblique quads.",
+    "Low Grid Refine values can reveal coarse warp deformation.",
+    "Background color appears only where the warp exposes image-free regions."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "projection_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Corner Pin TOP has two stages: extract a source quad, then pin it into a destination quad.",
+    "Extract points are source-space coordinates; pin points are destination-space coordinates.",
+    "Each corner has XY values and unit parameters, so units must match the intended coordinate space.",
+    "Extraction mapping can be bilinear or perspective, which changes oblique quad behavior.",
+    "Grid Refine subdivides the warp to reduce coarse deformation artifacts.",
+    "Background color fills regions revealed outside the pinned image."
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "card_type": "operator",
+  "op_type": "extrudeSOP",
+  "family": "SOP",
+  "display_name": "Extrude SOP",
+  "docs_url": "https://docs.derivative.ca/Extrude_SOP",
+  "summary": "Extrudes, bevels, cusps, and thickens text or other geometry by extending input faces along normals or a cross-section input.",
+  "key_params": [
+    {
+      "name": "sourcegrp",
+      "type": "String",
+      "note": "Source group to extrude."
+    },
+    {
+      "name": "xsectiongrp",
+      "type": "String",
+      "note": "Cross-section group from the second input."
+    },
+    {
+      "name": "dofuse",
+      "type": "Menu",
+      "note": "Fuse output parts."
+    },
+    {
+      "name": "fronttype",
+      "type": "Menu",
+      "note": "Front face output type."
+    },
+    {
+      "name": "backtype",
+      "type": "Menu",
+      "note": "Back face output type."
+    },
+    {
+      "name": "sidetype",
+      "type": "Menu",
+      "note": "Side output type."
+    },
+    {
+      "name": "initextrude",
+      "type": "Float",
+      "note": "Initial extrusion amount."
+    },
+    {
+      "name": "thickxlate",
+      "type": "Float",
+      "note": "Thickness translation."
+    },
+    {
+      "name": "thickscale",
+      "type": "Float",
+      "note": "Thickness scale."
+    },
+    {
+      "name": "depthxlate",
+      "type": "Float",
+      "note": "Depth translation."
+    },
+    {
+      "name": "depthscale",
+      "type": "Float",
+      "note": "Depth scale."
+    },
+    {
+      "name": "vertex",
+      "type": "Toggle",
+      "note": "Vertex extrusion behavior."
+    },
+    {
+      "name": "docusp",
+      "type": "Toggle",
+      "note": "Enable cusp handling."
+    },
+    {
+      "name": "cuspangle",
+      "type": "Float",
+      "note": "Cusp angle threshold."
+    },
+    {
+      "name": "sharefaces",
+      "type": "Toggle",
+      "note": "Share generated faces where possible."
+    },
+    {
+      "name": "removesharedsides",
+      "type": "Toggle",
+      "note": "Remove shared side faces."
+    },
+    {
+      "name": "newg",
+      "type": "Toggle",
+      "note": "Create output groups."
+    },
+    {
+      "name": "frontgrp",
+      "type": "String",
+      "note": "Front output group name."
+    },
+    {
+      "name": "backgrp",
+      "type": "String",
+      "note": "Back output group name."
+    },
+    {
+      "name": "sidegrp",
+      "type": "String",
+      "note": "Side output group name."
+    }
+  ],
+  "common_gotchas": [
+    "Unexpected normals produce unexpected extrusion direction; repair or reverse normals upstream when needed.",
+    "For Text SOP input, use Closed Polygons before extrusion to avoid artifacts.",
+    "The cross-section input uses X/Y only and is relative to its first vertex, not full 3D object space."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Extrude SOP extends faces along normals and can create front, back, and side geometry with independent output types.",
+    "The default extrusion direction is one unit backward from input normals, so source normals strongly affect results.",
+    "A second input can provide a cross-section curve; only its X/Y coordinates are used and they are relative to the first vertex.",
+    "Text SOP geometry should be Closed Polygons before extrusion to avoid common artifacts."
+  ]
+}

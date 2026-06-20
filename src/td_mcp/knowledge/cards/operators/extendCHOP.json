@@ -1,0 +1,37 @@
+{
+  "card_type": "operator",
+  "op_type": "extendCHOP",
+  "family": "CHOP",
+  "display_name": "Extend CHOP",
+  "docs_url": "https://docs.derivative.ca/Extend_CHOP",
+  "summary": "Sets the pre-interval and post-interval extend conditions for CHOP channels without changing the channel interval length.",
+  "key_params": [
+    {"name": "left", "type": "Menu", "note": "Extend behavior before the CHOP interval"},
+    {"name": "right", "type": "Menu", "note": "Extend behavior after the CHOP interval"},
+    {"name": "asis", "type": "MenuItem", "note": "Leave the channel as-is"},
+    {"name": "hold", "type": "MenuItem", "note": "Hold the current boundary value"},
+    {"name": "slope", "type": "MenuItem", "note": "Continue boundary slope"},
+    {"name": "cycle", "type": "MenuItem", "note": "Repeat the channel interval"},
+    {"name": "mirror", "type": "MenuItem", "note": "Repeat while mirroring every other cycle"},
+    {"name": "default", "type": "MenuItem", "note": "Use Default Value outside the interval"},
+    {"name": "defval", "type": "Float", "note": "Value used when Default Value extend mode is active"}
+  ],
+  "key_concepts": [
+    "Sets CHOP extend conditions, which determine sampled values before or after the channel interval.",
+    "Left Behavior and Right Behavior are independent, so pre-interval and post-interval sampling can use different modes.",
+    "Official extend modes are No Change, Hold, Slope, Cycle, Mirror, and Default Value.",
+    "Default Value only affects regions whose behavior is set to Default Value.",
+    "Extend CHOP does not shorten or lengthen the actual interval; Trim CHOP is the official tool for interval start/end edits.",
+    "Current extend conditions can be inspected from a CHOP's pop-up info."
+  ],
+  "common_gotchas": [
+    "Extend CHOP changes sampling behavior before and after the interval; it does not trim or lengthen the interval itself.",
+    "Use Trim CHOP when the start or end of the CHOP interval needs to change.",
+    "Default Value has no effect unless left or right behavior is set to Default Value.",
+    "Cycle and mirror behavior depends on a meaningful input interval; single-sample or empty-feeling inputs may not loop as expected.",
+    "Middle-click a CHOP to inspect its current extend conditions."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

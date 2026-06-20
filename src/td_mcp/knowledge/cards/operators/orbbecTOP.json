@@ -1,0 +1,104 @@
+{
+  "card_type": "operator",
+  "op_type": "orbbecTOP",
+  "family": "TOP",
+  "display_name": "Orbbec TOP",
+  "docs_url": "https://docs.derivative.ca/Orbbec_TOP",
+  "summary": "Connects to an Orbbec camera and retrieves available video streams such as color, depth, IR, and point cloud data, with Orbbec Select TOPs used for additional streams from the same primary camera.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable camera communication."
+    },
+    {
+      "name": "devicesource",
+      "type": "Menu",
+      "note": "Auto-detect device or connect by IP address."
+    },
+    {
+      "name": "device",
+      "type": "Menu/String",
+      "note": "Camera serial/device selection."
+    },
+    {
+      "name": "ip",
+      "type": "String",
+      "note": "Camera IP address when using IP source."
+    },
+    {
+      "name": "logconsole",
+      "type": "Menu",
+      "note": "Console log level."
+    },
+    {
+      "name": "logfile",
+      "type": "Menu",
+      "note": "File log level."
+    },
+    {
+      "name": "colorres",
+      "type": "Menu",
+      "note": "Color stream resolution."
+    },
+    {
+      "name": "colorfps",
+      "type": "Menu",
+      "note": "Color stream frame rate."
+    },
+    {
+      "name": "depthres",
+      "type": "Menu",
+      "note": "Depth stream resolution."
+    },
+    {
+      "name": "depthfps",
+      "type": "Menu",
+      "note": "Depth stream frame rate."
+    },
+    {
+      "name": "depthalignmode",
+      "type": "Menu",
+      "note": "Depth/color alignment mode: disabled, hardware, or software."
+    },
+    {
+      "name": "image",
+      "type": "Menu",
+      "note": "Primary image stream: color, depth, ir, or pointcloud."
+    },
+    {
+      "name": "gyro",
+      "type": "CHOP",
+      "note": "Optional gyroscope data output CHOP."
+    },
+    {
+      "name": "accel",
+      "type": "CHOP",
+      "note": "Optional accelerometer data output CHOP."
+    },
+    {
+      "name": "propschop",
+      "type": "CHOP",
+      "note": "Optional camera properties CHOP."
+    }
+  ],
+  "common_gotchas": [
+    "Only one Orbbec TOP can connect to a camera; use Orbbec Select TOPs for additional streams.",
+    "This node uses Orbbec SDK v1, so newer SDK v2-only models may not be supported.",
+    "On macOS, connecting to Orbbec cameras requires root privileges.",
+    "Newly plugged cameras can take up to 30 seconds to appear in the device menu.",
+    "Do not mix Kinect Azure nodes and Orbbec TOP for the same Orbbec hardware in one project.",
+    "Property CHOP channel names must be lowercase and omit the OB_PROP_ prefix."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Connects to an Orbbec camera over USB or ethernet depending on the model.",
+    "Retrieves camera streams such as color, depth, infrared, and point cloud data.",
+    "Only one Orbbec TOP controls a camera; Orbbec Select TOPs retrieve additional streams.",
+    "Can expose IMU and property data through gyro, accel, and property CHOP outputs."
+  ]
+}

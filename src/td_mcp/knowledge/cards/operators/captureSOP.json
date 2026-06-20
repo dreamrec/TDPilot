@@ -1,0 +1,78 @@
+{
+  "card_type": "operator",
+  "op_type": "captureSOP",
+  "family": "SOP",
+  "display_name": "Capture SOP",
+  "docs_url": "https://docs.derivative.ca/Capture_SOP",
+  "summary": "Weights geometry points to capture regions and carries the resulting region weights downstream as point and detail attributes for deformation.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Point group in input 0 to capture"
+    },
+    {
+      "name": "rootbone",
+      "type": "OP",
+      "note": "Top object of the hierarchy traversed for capture regions"
+    },
+    {
+      "name": "weightfrom",
+      "type": "Menu",
+      "note": "Compute weights from surface position or point/CV location"
+    },
+    {
+      "name": "captframe",
+      "type": "Int",
+      "note": "Frame at which capture computations run"
+    },
+    {
+      "name": "color",
+      "type": "Menu",
+      "note": "Color points by capture region or use default source color"
+    },
+    {
+      "name": "captfile",
+      "type": "File",
+      "note": "Override file containing point/region/weight entries"
+    },
+    {
+      "name": "savefile",
+      "type": "File",
+      "note": "Working file path for saving capture weights"
+    },
+    {
+      "name": "autoincr",
+      "type": "Toggle",
+      "note": "Auto-increment capture file names when saving"
+    },
+    {
+      "name": "savecaptfile",
+      "type": "Pulse",
+      "note": "Save all capture data to the working file"
+    },
+    {
+      "name": "savesel",
+      "type": "Pulse",
+      "note": "Save selected capture data from viewport editing"
+    }
+  ],
+  "common_gotchas": [
+    "Capture regions must be correctly keyed/evaluated at the Capture Frame before saving or loading a .toe.",
+    "A second input can provide extra capture regions after hierarchy regions, or replace hierarchy traversal entirely.",
+    "Override files are applied after computed weights, and duplicate point/region rows use the later value.",
+    "Disabling Auto Increment can overwrite capture files without confirmation.",
+    "Save Selected requires editing this SOP in the viewport."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "legacy-character-rig",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Capture SOP computes point weights from capture regions for later deformation.",
+    "Capture weights are stored downstream as point and detail attributes used by deform workflows.",
+    "The second input can add capture regions after hierarchy traversal or replace hierarchy traversal entirely.",
+    "The capture frame and optional override file determine repeatable weighting and saved capture data."
+  ]
+}

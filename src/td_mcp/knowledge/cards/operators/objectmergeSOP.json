@@ -1,0 +1,41 @@
+{
+  "card_type": "operator",
+  "op_type": "objectmergeSOP",
+  "family": "SOP",
+  "display_name": "Object Merge SOP",
+  "docs_url": "https://docs.derivative.ca/Object_Merge_SOP",
+  "summary": "Merges SOP geometry from paths that can span multiple components, baking source component transforms into a shared SOP space.",
+  "key_params": [
+    {
+      "name": "xform",
+      "type": "COMP Path",
+      "note": "Geometry COMP that merged geometry should be transformed relative to"
+    },
+    {
+      "name": "merge",
+      "type": "Sequence",
+      "note": "Sequence of source SOP entries to merge"
+    },
+    {
+      "name": "merge0sop",
+      "type": "SOP Path Pattern",
+      "note": "First SOP path or pattern to merge, including sources in other components"
+    }
+  ],
+  "common_gotchas": [
+    "Object Merge SOP bakes component transforms, so coordinates can differ from selecting geometry in-place inside the source COMP.",
+    "Wildcard SOP paths can merge more geometry than intended; prefer stable null/output SOP paths for planner-created systems.",
+    "The official parameter ids are xform, merge, and merge0sop; older objpath/createpath/group-style ids are not current page parameters."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "cross-component-sop-merge",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Merges geometry from one or more SOP paths, including SOPs that live inside different components.",
+    "Source component transforms are baked so the merged SOPs become relative to each other in one geometry stream.",
+    "The Transform Object parameter can remap the merged result relative to a target Geometry COMP.",
+    "Merge sequence entries accept SOP path patterns, including wildcards, so source selection should be explicit in production networks."
+  ]
+}

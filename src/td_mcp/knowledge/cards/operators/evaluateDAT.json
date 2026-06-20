@@ -1,0 +1,172 @@
+{
+  "card_type": "operator",
+  "op_type": "evaluateDAT",
+  "family": "DAT",
+  "display_name": "Evaluate DAT",
+  "docs_url": "https://docs.derivative.ca/Evaluate_DAT",
+  "summary": "Evaluates Python or Tscript expressions against DAT text or table cells, producing transformed strings, computed values, or a generated output table.",
+  "key_params": [
+    {
+      "name": "dat",
+      "type": "OP Path",
+      "note": "Optional DAT containing per-cell expressions"
+    },
+    {
+      "name": "datexpr",
+      "type": "Toggle",
+      "note": "Evaluate expressions from the DAT parameter instead of the Expression parameter"
+    },
+    {
+      "name": "output",
+      "type": "Menu",
+      "note": "Choose expression, input cells, or expression table output behavior"
+    },
+    {
+      "name": "expr",
+      "type": "Expr",
+      "note": "Python/Tscript expression used when no expression DAT drives the operator"
+    },
+    {
+      "name": "outputsize",
+      "type": "Menu",
+      "note": "Control whether output follows input or expression table dimensions"
+    },
+    {
+      "name": "dependency",
+      "type": "Toggle",
+      "note": "Track expression dependencies so upstream changes recook this DAT"
+    },
+    {
+      "name": "xfirstrow",
+      "type": "Toggle",
+      "note": "Exclude the first row from scoped evaluation"
+    },
+    {
+      "name": "xfirstcol",
+      "type": "Toggle",
+      "note": "Exclude the first column from scoped evaluation"
+    },
+    {
+      "name": "extractrows",
+      "type": "Menu",
+      "note": "Select which input rows are processed"
+    },
+    {
+      "name": "extractcols",
+      "type": "Menu",
+      "note": "Select which input columns are processed"
+    },
+    {
+      "name": "backslash",
+      "type": "Toggle",
+      "note": "Convert backslash escape sequences such as newlines and tabs"
+    },
+    {
+      "name": "rownamestart",
+      "type": "String",
+      "note": "Start row name for extracted/evaluated rows"
+    },
+    {
+      "name": "rowindexstart",
+      "type": "Int",
+      "note": "Start row index for extracted/evaluated rows"
+    },
+    {
+      "name": "rownameend",
+      "type": "String",
+      "note": "End row name for extracted/evaluated rows"
+    },
+    {
+      "name": "rowindexend",
+      "type": "Int",
+      "note": "End row index for extracted/evaluated rows"
+    },
+    {
+      "name": "rownames",
+      "type": "String",
+      "note": "Pattern of row names to include"
+    },
+    {
+      "name": "rowexpr",
+      "type": "Expression",
+      "note": "Expression that selects rows to include"
+    },
+    {
+      "name": "fromcol",
+      "type": "String",
+      "note": "Column used when evaluating row expressions"
+    },
+    {
+      "name": "colnamestart",
+      "type": "String",
+      "note": "Start column name for extracted/evaluated columns"
+    },
+    {
+      "name": "colindexstart",
+      "type": "Int",
+      "note": "Start column index for extracted/evaluated columns"
+    },
+    {
+      "name": "colnameend",
+      "type": "String",
+      "note": "End column name for extracted/evaluated columns"
+    },
+    {
+      "name": "colindexend",
+      "type": "Int",
+      "note": "End column index for extracted/evaluated columns"
+    },
+    {
+      "name": "colnames",
+      "type": "String",
+      "note": "Pattern of column names to include"
+    },
+    {
+      "name": "colexpr",
+      "type": "Expression",
+      "note": "Expression that selects columns to include"
+    },
+    {
+      "name": "fromrow",
+      "type": "String",
+      "note": "Row used when evaluating column expressions"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "With an input DAT, the default output size follows the input rows and columns unless Output Table Size overrides it.",
+    "Expression tables smaller than the input repeat their last row or column, which can silently reuse formulas.",
+    "Use me.inputCell, me.inputRow, me.inputCol, NR, and NC intentionally; generated expressions should be explicit about cell context.",
+    "Backslash conversion can replace newline and tab escape sequences with spaces in table output."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "expression-table-transforms",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Evaluates expressions over input DAT cells and writes the evaluated results to text or table output.",
+    "Expression evaluation can use local helpers such as input cells and row/column context.",
+    "Row and column extraction parameters restrict which table regions are evaluated.",
+    "An optional expression DAT can provide per-cell expressions, repeating the last available row or column when smaller."
+  ]
+}

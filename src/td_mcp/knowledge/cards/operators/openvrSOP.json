@@ -1,0 +1,30 @@
+{
+  "card_type": "operator",
+  "op_type": "openvrSOP",
+  "family": "SOP",
+  "display_name": "OpenVR SOP",
+  "docs_url": "https://docs.derivative.ca/OpenVR_SOP",
+  "summary": "Loads model geometry exposed by the installed OpenVR driver, such as controller, headset, or peripheral meshes.",
+  "key_params": [
+    {
+      "name": "model",
+      "type": "Menu",
+      "note": "Driver-provided OpenVR model to output"
+    }
+  ],
+  "common_gotchas": [
+    "Do not treat OpenVR SOP as a stable asset library; the driver controls which model names exist.",
+    "This SOP outputs geometry only and does not replace OpenVR CHOP/TOP tracking or rendering workflows.",
+    "Because it is Windows-only, keep a non-VR mesh fallback for portable networks."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "windows-openvr-driver-geometry",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "OpenVR SOP outputs meshes supplied by the active OpenVR driver.",
+    "The available models are driver-provided and can change between devices or driver versions.",
+    "The official page marks the operator as Microsoft Windows only."
+  ]
+}

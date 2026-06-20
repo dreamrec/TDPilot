@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "audiomovieCHOP",
+  "family": "CHOP",
+  "display_name": "Audio Movie CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_Movie_CHOP",
+  "summary": "Extracts and plays audio from a Movie File In TOP, with audio-track selection, sync offset, timeout, play, and volume controls.",
+  "key_concepts": [
+    "Audio Movie CHOP plays the audio from a Movie File In TOP source.",
+    "Movie File In TOP selects the video/movie source whose audio stream is read.",
+    "Play disables or enables audio output without changing the source TOP.",
+    "Pre-Read Length and Open Timeout control how much audio is cached and how long opening can wait before outputting silence.",
+    "Audio Sync Offset compensates for playback latency, such as buffering introduced by Audio Device Out CHOP."
+  ],
+  "key_params": [
+    {"name": "play", "type": "Toggle", "note": "Play or stop movie audio output"},
+    {"name": "moviefileintop", "type": "TOP", "note": "Movie File In TOP source"},
+    {"name": "prereadlength", "type": "Float", "note": "Read-ahead cache length for movie audio"},
+    {"name": "opentimeout", "type": "Float", "note": "Timeout while opening the source"},
+    {"name": "syncoffset", "type": "Float", "note": "Audio sync offset relative to movie playback"},
+    {"name": "syncoffsetunit", "type": "Menu", "note": "Units for sync offset"},
+    {"name": "audiotrack", "type": "Int", "note": "Audio track index to output"},
+    {"name": "volume", "type": "Float", "note": "Output volume"}
+  ],
+  "common_gotchas": [
+    "The Movie File In TOP must expose audio; image-only sources will not produce useful channels.",
+    "Audio track indexes are source dependent.",
+    "Sync offset is essential when video/audio latency or buffering differs.",
+    "Tie playback state to the source movie player when deterministic AV sync matters."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

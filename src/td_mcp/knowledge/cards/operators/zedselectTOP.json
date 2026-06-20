@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "zedselectTOP",
+  "family": "TOP",
+  "display_name": "ZED Select TOP",
+  "docs_url": "https://docs.derivative.ca/ZED_Select_TOP",
+  "summary": "Selects additional images from a ZED TOP, including depth, color, disparity, normals, point cloud, and spatial texture variants.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Receive selected ZED image"},
+    {"name": "zedtop", "type": "TOP", "note": "Primary ZED TOP"},
+    {"name": "perspective", "type": "Menu", "note": "Left or right perspective"},
+    {"name": "image", "type": "Menu", "note": "Image type to output"},
+    {"name": "maxdepth", "type": "Float", "note": "Maximum depth range"},
+    {"name": "toocloseval", "type": "Float", "note": "Output value for samples too close"},
+    {"name": "toofarval", "type": "Float", "note": "Output value for samples too far"},
+    {"name": "unknownval", "type": "Float", "note": "Output value for unknown depth"},
+    {"name": "rerange", "type": "Toggle", "note": "Rerange depth values"},
+    {"name": "mirrorimage", "type": "Toggle", "note": "Mirror output image"}
+  ],
+  "common_gotchas": [
+    "Requires a configured and active primary ZED TOP and camera support.",
+    "The primary zedtop controls the camera/device configuration; this node selects companion outputs.",
+    "Depth outputs use special values for too-close, too-far, and unknown samples; account for these before analysis.",
+    "Point-cloud and normal outputs are data images and may need float-preserving downstream formats.",
+    "The official page only lists left and right perspective ids, not a combined perspective option."
+  ],
+  "related_snippets": ["TOP_snippets"],
+  "build_relevance": "zed_companion_output",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "ZED Select TOP selects additional image outputs from a primary ZED TOP.",
+    "The zedtop parameter points to the primary ZED TOP, which must remain active and owns camera/device configuration.",
+    "Image selection can expose companion outputs such as depth, confidence, disparity, normals, point cloud, and spatial texture.",
+    "Depth-oriented outputs can rerange valid depth and assign explicit values for too-close, too-far, and unknown samples."
+  ]
+}

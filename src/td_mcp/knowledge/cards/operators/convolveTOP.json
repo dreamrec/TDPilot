@@ -1,0 +1,60 @@
+{
+  "card_type": "operator",
+  "op_type": "convolveTOP",
+  "family": "TOP",
+  "display_name": "Convolve TOP",
+  "docs_url": "https://docs.derivative.ca/Convolve_TOP",
+  "summary": "Applies a DAT-defined convolution kernel to combine neighboring pixels for blur, edge, emboss, sharpen, slope, and 3D convolution effects.",
+  "key_params": [
+    {
+      "name": "dat",
+      "type": "DAT",
+      "note": "DAT table containing convolution coefficients"
+    },
+    {
+      "name": "normalize",
+      "type": "Toggle",
+      "note": "Normalize coefficients by their sum when possible"
+    },
+    {
+      "name": "applytoalpha",
+      "type": "Toggle",
+      "note": "Convolve alpha channel too"
+    },
+    {
+      "name": "offset",
+      "type": "Float",
+      "note": "Offset added to convolved result"
+    },
+    {
+      "name": "scale",
+      "type": "Float",
+      "note": "Scale applied to convolved result"
+    },
+    {
+      "name": "convolvez",
+      "type": "Toggle",
+      "note": "Enable Z convolution for 3D textures"
+    }
+  ],
+  "common_gotchas": [
+    "Normalize has no effect when coefficient sum is zero.",
+    "Large kernels get expensive because every output pixel samples many neighbors.",
+    "Convolve Z requires a correctly arranged cubic 3D kernel table.",
+    "Example kernels often assume Normalize is enabled."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "DAT_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Convolve TOP uses a DAT table as convolution coefficients.",
+    "The DAT row and column count define the kernel size used around each pixel.",
+    "Normalization divides coefficients by their sum when the sum is nonzero.",
+    "Apply to Alpha includes alpha in the convolution rather than leaving it alone.",
+    "Convolve Z enables 3D texture convolution with a cubic kernel layout.",
+    "It is useful for blur, edge detect, emboss, sharpen, and slope-style filters."
+  ]
+}

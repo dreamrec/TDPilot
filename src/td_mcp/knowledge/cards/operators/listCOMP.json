@@ -1,0 +1,40 @@
+{
+  "card_type": "operator",
+  "op_type": "listCOMP",
+  "family": "COMP",
+  "display_name": "List COMP",
+  "docs_url": "https://docs.derivative.ca/List_COMP",
+  "summary": "Creates large customizable panel lists whose table, row, column, and cell appearance and interaction are driven by initialization callbacks, event callbacks, and optional drag/drop behavior.",
+  "key_params": [
+    {"name": "callbacks", "type": "DAT", "note": "Callback DAT that defines list initialize and event behavior"},
+    {"name": "rows", "type": "Integer", "note": "Number of rows in the list"},
+    {"name": "cols", "type": "Integer", "note": "Number of columns in the list"},
+    {"name": "lockfirstrow", "type": "Toggle", "note": "Locks the first row while scrolling vertically"},
+    {"name": "lockfirstcol", "type": "Toggle", "note": "Locks the first column while scrolling horizontally"},
+    {"name": "hscrollbar", "type": "Toggle", "note": "Enables the horizontal scroll bar"},
+    {"name": "vscrollbar", "type": "Toggle", "note": "Enables the vertical scroll bar"},
+    {"name": "offcellcallbacks", "type": "Toggle", "note": "Allows callbacks on list areas outside valid cells"},
+    {"name": "reset", "type": "Pulse", "note": "Re-runs the list initialize callbacks"},
+    {"name": "w", "type": "Pixels", "note": "Panel width"},
+    {"name": "h", "type": "Pixels", "note": "Panel height"},
+    {"name": "layer", "type": "Integer", "note": "Panel depth layer ordering"}
+  ],
+  "key_concepts": [
+    "List COMP builds large customizable panel lists through initialization and callback functions.",
+    "Every table, row, column, and cell is described by callback-assigned attributes.",
+    "Rows, columns, locked first row/column, scrollbars, off-cell callbacks, and reset define the list surface and interaction model.",
+    "Drag and drop callbacks expose ListCell information with owner, row, and column references.",
+    "The Build a List COMP guide is the practical companion for state management, callback ordering, and data-backed list content."
+  ],
+  "common_gotchas": [
+    "List COMP content and appearance are not automatic; initialize callbacks must describe cells, rows, columns, and table attributes.",
+    "The Build a List COMP article contains the practical callback patterns and should be reviewed for non-trivial lists.",
+    "Reset re-runs initialize callbacks, so callback code must be safe to execute repeatedly.",
+    "Drag/drop callbacks expose ListCell objects with owner, row, and column; validate indices before using them.",
+    "Off Cell Callbacks can generate events with no valid cell under the cursor, so callback code must handle those cases.",
+    "Large callback-driven lists can cook heavily if per-cell logic does expensive work."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ callback-driven panel list interfaces",
+  "last_verified": "2026-06-18"
+}

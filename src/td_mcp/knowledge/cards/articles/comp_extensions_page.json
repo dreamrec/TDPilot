@@ -1,0 +1,44 @@
+{
+  "card_type": "article",
+  "article_id": "comp_extensions_page",
+  "title": "COMP Extensions Page",
+  "family": "COMP",
+  "families": [
+    "COMP",
+    "PARAMETER",
+    "PYTHON"
+  ],
+  "summary": "Official Derivative common-parameter page reference for Component extension parameters, including reinitialization, initialization on start, extension object/name/promote fields, and direct versus .ext access.",
+  "source_url": "https://docs.derivative.ca/COMP_Extensions_Page",
+  "docsbrain_page_id": "comp_extensions_page",
+  "covered_operators": [
+    "baseCOMP",
+    "containerCOMP",
+    "textCOMP",
+    "widgetCOMP",
+    "windowCOMP"
+  ],
+  "key_concepts": [
+    "Extensions Page",
+    "reinitextensions",
+    "initextonstart",
+    "ext",
+    "ext0object",
+    "ext0name",
+    "ext0promote",
+    ".ext",
+    "Promote",
+    "component level"
+  ],
+  "guidance": [
+    "Use this article when generated Python or parameter plans need to configure the built-in Extensions page on a COMP.",
+    "Set ext0object to code that returns a Python object, ext0name when the extension should be searched by a custom name, and ext0promote when capitalized members should be visible directly on the component.",
+    "Pulse reinitextensions when extension objects must be rebuilt after code or object-parameter changes.",
+    "Use initextonstart when a component's extension objects should reinitialize automatically when TouchDesigner starts.",
+    "If ext0promote is off, access extension members through .ext instead of at component level."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

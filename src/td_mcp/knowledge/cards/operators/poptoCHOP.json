@@ -1,0 +1,38 @@
+{
+  "card_type": "operator",
+  "op_type": "poptoCHOP",
+  "family": "CHOP",
+  "display_name": "POP to CHOP",
+  "docs_url": "https://docs.derivative.ca/POP_to_CHOP",
+  "summary": "Converts POP point, vertex, or primitive attributes into CHOP channels, with naming, thinning, type-suffix, and group controls for large geometry datasets.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable POP attribute download and conversion"},
+    {"name": "pop", "type": "POP", "note": "POP source to convert"},
+    {"name": "downloadtype", "type": "Menu", "note": "GPU download mode"},
+    {"name": "extract", "type": "Menu", "note": "Extract points, vertices, or primitives"},
+    {"name": "nameformat", "type": "Menu", "note": "Basic or precise channel naming"},
+    {"name": "typesuffix", "type": "Toggle", "note": "Append data-type suffixes to preserve attribute type information"},
+    {"name": "attribscope", "type": "String", "note": "Attributes to convert"},
+    {"name": "renscope", "type": "String", "note": "Optional rename scope"},
+    {"name": "group", "type": "String", "note": "Optional POP group to convert"},
+    {"name": "invertgroup", "type": "Toggle", "note": "Invert group selection"},
+    {"name": "rate", "type": "Float", "note": "Output CHOP sample rate"}
+  ],
+  "key_concepts": [
+    "POP attributes to CHOP channels",
+    "point, vertex, and primitive extraction",
+    "one POP point as one CHOP sample",
+    "thin out by range, step, or random selection",
+    "Basic and Precise channel name formats",
+    "Type Suffix for POP data-type preservation",
+    "round-trip naming with CHOP to POP"
+  ],
+  "common_gotchas": [
+    "This operation downloads GPU data to CHOPs; large POPs can become expensive quickly.",
+    "Precise naming and Type Suffix help avoid collisions when attributes have multiple components or types.",
+    "Group and thinning settings are important when converting dense point clouds."
+  ],
+  "related_snippets": ["POP_snippets", "CHOP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

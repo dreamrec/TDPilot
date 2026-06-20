@@ -1,0 +1,89 @@
+{
+  "card_type": "operator",
+  "op_type": "bloomTOP",
+  "family": "TOP",
+  "display_name": "Bloom TOP",
+  "docs_url": "https://docs.derivative.ca/Bloom_TOP",
+  "summary": "Adds lens-style glow around bright image regions using preprocess, bloom-radius, threshold, fill, and intensity controls.",
+  "key_params": [
+    {
+      "name": "preblacklevel",
+      "type": "Float",
+      "note": "Preprocess black-level control before bloom extraction"
+    },
+    {
+      "name": "pregamma",
+      "type": "Float",
+      "note": "Preprocess gamma control"
+    },
+    {
+      "name": "prebrightness",
+      "type": "Float",
+      "note": "Preprocess brightness control"
+    },
+    {
+      "name": "minbloomradius",
+      "type": "Float",
+      "note": "Minimum bloom radius level"
+    },
+    {
+      "name": "maxbloomradius",
+      "type": "Float",
+      "note": "Maximum bloom radius level"
+    },
+    {
+      "name": "bloomthreshold",
+      "type": "Float",
+      "note": "Brightness threshold for bloom contribution"
+    },
+    {
+      "name": "bloomscurve",
+      "type": "Float",
+      "note": "S-curve shaping for bloom response"
+    },
+    {
+      "name": "bloomfill",
+      "type": "Float",
+      "note": "Fill level for bloom spread"
+    },
+    {
+      "name": "bloomintensity",
+      "type": "Float",
+      "note": "Final bloom intensity"
+    },
+    {
+      "name": "output",
+      "type": "Menu",
+      "note": "Output stage: input, preprocess, bloom, bloom with alpha, or input plus bloom"
+    },
+    {
+      "name": "inputimage0",
+      "type": "TOP",
+      "note": "Optional input image reference for the bloom pipeline"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Preview Preprocess when bright areas do not bloom as expected.",
+    "If Max Bloom Radius is below Min Bloom Radius, the effective max is forced up to the min.",
+    "Tune Fill and Intensity before fine-tuning threshold, radius, and S-curve.",
+    "Use Bloom with Alpha when the glow should be composited separately."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Bloom TOP isolates bright regions and builds a glow from downscaled blur levels.",
+    "Preprocess controls shape which pixels become bloom sources before the blur stage.",
+    "Minimum and maximum bloom radius select the blur-level range used for the final glow.",
+    "Threshold, S-curve, fill, and intensity tune how much glow appears and how it blends.",
+    "Output modes expose Input, Preprocess, Bloom, Bloom with Alpha, and Input plus Bloom for debugging or compositing.",
+    "Bloom with Alpha can be composited separately with Add TOP."
+  ]
+}

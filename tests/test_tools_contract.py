@@ -124,7 +124,9 @@ def test_manifest_surface_matches_registry():
             sources.append(sub.read_text())
     source = "\n".join(sources)
 
-    uris = re.findall(r'@mcp\.resource\("([^"]+)"', source)
+    # ``\s*`` so multi-line decorators (URI on the line after ``@mcp.resource(``,
+    # e.g. ui://tdpilot/cockpit.html) are counted, not just single-line ones.
+    uris = re.findall(r'@mcp\.resource\(\s*"([^"]+)"', source)
     assert uris, "No @mcp.resource decorators found across tool_registry.py + registry/*.py"
     templates = [u for u in uris if "{" in u]
     statics = [u for u in uris if "{" not in u]

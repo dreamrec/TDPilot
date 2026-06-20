@@ -1,0 +1,111 @@
+{
+  "card_type": "operator",
+  "op_type": "deleteSOP",
+  "family": "SOP",
+  "display_name": "Delete SOP",
+  "docs_url": "https://docs.derivative.ca/Delete_SOP",
+  "summary": "Deletes or keeps selected SOP points/primitives using number patterns, ranges, bounding volumes, normals, expressions, or backface tests.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Input group to consider."
+    },
+    {
+      "name": "negate",
+      "type": "Toggle",
+      "note": "Delete selected geometry or delete non-selected geometry."
+    },
+    {
+      "name": "entity",
+      "type": "Menu",
+      "note": "Delete points or primitives."
+    },
+    {
+      "name": "geotype",
+      "type": "Menu",
+      "note": "Primitive geometry type filter."
+    },
+    {
+      "name": "usenumber",
+      "type": "Toggle",
+      "note": "Enable number-based selection."
+    },
+    {
+      "name": "groupop",
+      "type": "Menu",
+      "note": "Number selection mode such as pattern, range, or filter."
+    },
+    {
+      "name": "pattern",
+      "type": "String",
+      "note": "Number pattern to select."
+    },
+    {
+      "name": "rangestart",
+      "type": "Int",
+      "note": "Range selection start."
+    },
+    {
+      "name": "rangeend",
+      "type": "Int",
+      "note": "Range selection end."
+    },
+    {
+      "name": "select1",
+      "type": "Int",
+      "note": "First range/filter selection value."
+    },
+    {
+      "name": "select2",
+      "type": "Int",
+      "note": "Second range/filter selection value."
+    },
+    {
+      "name": "filter",
+      "type": "String",
+      "note": "Expression/filter selection."
+    },
+    {
+      "name": "usebounds",
+      "type": "Toggle",
+      "note": "Enable bounds selection."
+    },
+    {
+      "name": "boundtype",
+      "type": "Menu",
+      "note": "Bounds shape/type."
+    },
+    {
+      "name": "usenormal",
+      "type": "Toggle",
+      "note": "Enable normal-angle selection."
+    },
+    {
+      "name": "removegrp",
+      "type": "Toggle",
+      "note": "Remove matching groups after deletion."
+    },
+    {
+      "name": "keeppoints",
+      "type": "Toggle",
+      "note": "Keep points when deleting primitives."
+    }
+  ],
+  "common_gotchas": [
+    "`negate` is the delete-selected/delete-non-selected control; `groupop` is only the number-selection mode.",
+    "Pattern syntax supports ranges, exclusions, and profile-style expressions, so literal strings can select much more than expected.",
+    "`keeppoints` can intentionally leave orphan points after primitive deletion."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Delete SOP deletes selected geometry or deletes everything except the selected geometry through `negate`.",
+    "`entity` selects whether deletion targets points or primitives, while `geotype` narrows primitive geometry type.",
+    "Selection can come from group patterns/ranges/expressions, bounds, normals, or backface camera tests.",
+    "`keeppoints` preserves points after primitive deletion for workflows that need orphan point data."
+  ]
+}

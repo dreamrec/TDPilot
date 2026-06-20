@@ -1,0 +1,40 @@
+{
+  "card_type": "operator",
+  "op_type": "polygonizePOP",
+  "family": "POP",
+  "display_name": "Polygonize POP",
+  "docs_url": "https://docs.derivative.ca/Polygonize_POP",
+  "summary": "Creates a closed 3D polygonal surface around pixels or points that exceed a threshold, using either a 3D texture TOP or a 3-dimensional POP grid as input.",
+  "key_params": [
+    {"name": "top", "type": "TOP", "note": "3D texture TOP input when using texture input"},
+    {"name": "inputattrscope", "type": "String", "note": "Attribute sampled from a 3D POP grid"},
+    {"name": "posattrib", "type": "Toggle", "note": "Use P attribute to position surface when using POP input"},
+    {"name": "channel", "type": "Menu", "note": "Texture channel or channel combination"},
+    {"name": "resmult", "type": "Float", "note": "Resolution multiplier to reduce output density"},
+    {"name": "inside", "type": "Menu", "note": "Choose signed-distance or density inside test and winding orientation"},
+    {"name": "threshold", "type": "Float", "note": "Surface threshold"},
+    {"name": "extend", "type": "Menu", "note": "Boundary behavior"},
+    {"name": "uniquepoints", "type": "Toggle", "note": "Create unique points per triangle instead of shared points"},
+    {"name": "rerangep", "type": "Toggle", "note": "Re-range generated P positions"},
+    {"name": "tolow", "type": "Float3", "note": "Low XYZ target range for P re-range"},
+    {"name": "tohigh", "type": "Float3", "note": "High XYZ target range for P re-range"},
+    {"name": "nmlmethod", "type": "Menu", "note": "Normal generation method"},
+    {"name": "nmlstepmul", "type": "Float", "note": "Field-gradient step multiplier for normal computation"},
+    {"name": "texture", "type": "Toggle", "note": "Output point texture coordinates"},
+    {"name": "allocfract", "type": "Float", "note": "Fraction of maximum GPU allocation to reserve"},
+    {"name": "cpureadback", "type": "Toggle", "note": "Copy topology information back to the CPU"}
+  ],
+  "key_concepts": [
+    "Polygonize POP extracts a closed 3D surface from a thresholded 3D texture or a 3-dimensional POP grid.",
+    "Inside mode, threshold, extend mode, and channel selection determine which sampled field values become surface triangles and how they are wound.",
+    "Allocation fraction, unique/shared points, P re-range, normals, texture coordinates, and CPU readback control output density, placement, shading, and diagnostics."
+  ],
+  "common_gotchas": [
+    "Current docs describe this as a 3D polygonization path; use Trace POP for 2D contour workflows.",
+    "A POP input must be arranged as a 3-dimensional grid.",
+    "3D texture input assumes cube-like pixels and outputs P(0) in a default -.5 to .5 range unless re-ranged."
+  ],
+  "related_snippets": ["POP_snippets", "TOP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,41 @@
+{
+  "card_type": "article",
+  "article_id": "write_a_cplusplus_chop",
+  "title": "Write a CPlusPlus CHOP",
+  "family": "CHOP",
+  "families": [
+    "CPLUSPLUS",
+    "CHOP"
+  ],
+  "summary": "Official Derivative guide for CPlusPlus CHOP authoring, covering custom CHOP input/output, getOutputInfo()-driven channel metadata, non-time-sliced startup behavior, and time-slice sample-count expectations.",
+  "source_url": "https://docs.derivative.ca/Write_a_CPlusPlus_CHOP",
+  "docsbrain_page_id": "write_a_cplusplus_chop",
+  "covered_operators": [
+    "cplusplusCHOP",
+    "timesliceCHOP",
+    "infoCHOP"
+  ],
+  "key_concepts": [
+    "CPlusPlus CHOP",
+    "getOutputInfo()",
+    "channel names",
+    "sample rate",
+    "non-time-sliced",
+    "Time Slice",
+    "skipped frames",
+    "Timeline",
+    "samples per channel",
+    "external sources"
+  ],
+  "guidance": [
+    "Use this article when a plan needs native CHOP data generation, external-source CHOP input/output, or plugin-side sample-rate semantics.",
+    "For simple startup, prefer non-time-sliced output where the plugin declares channel length and fills the same amount of data every frame.",
+    "A plugin can use an input CHOP to determine output channel count, channel names, sample rate, and related metadata, or specify them in getOutputInfo().",
+    "When outputting a Time Slice, the requested samples per channel depend on elapsed cook time, skipped frames, the CHOP sample rate, and the timeline rate.",
+    "Generated plans should not assume one sample per frame for time-sliced CPlusPlus CHOP output."
+  ],
+  "related_snippets": [
+    "CHOP_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

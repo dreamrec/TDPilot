@@ -1,0 +1,39 @@
+{
+  "card_type": "operator",
+  "op_type": "textPOP",
+  "family": "POP",
+  "display_name": "Text POP",
+  "docs_url": "https://docs.derivative.ca/Text_POP",
+  "summary": "Creates 3D text as POP geometry, including line-strip and triangle output workflows. Useful for text that needs to participate in POP attribute processing and rendering.",
+  "key_params": [
+    {"name": "connectivity", "type": "Menu", "note": "Choose triangles or line strips for generated text geometry"},
+    {"name": "mode", "type": "Menu", "note": "Use the Text parameter or Specification DAT/CHOP mode"},
+    {"name": "text", "type": "String", "note": "Text content"},
+    {"name": "specdat", "type": "DAT", "note": "Specification Table DAT for multi-block text"},
+    {"name": "specchop", "type": "CHOP", "note": "Specification CHOP with numeric per-block overrides"},
+    {"name": "font", "type": "File", "note": "Font file or font selection"},
+    {"name": "fontfile", "type": "File", "note": "Explicit TrueType/OpenType font file"},
+    {"name": "fontsize", "type": "Float2", "note": "Font size in X/Y units"},
+    {"name": "tracking", "type": "Float2", "note": "X/Y letter tracking offset"},
+    {"name": "linespacing", "type": "Float", "note": "Distance between text lines"},
+    {"name": "alignx", "type": "Menu", "note": "Horizontal text alignment"},
+    {"name": "aligny", "type": "Menu", "note": "Vertical text alignment"}
+  ],
+  "key_concepts": [
+    "3D text as POP geometry",
+    "line-strip outlines and triangle text output",
+    "Table DAT and CHOP text-block overrides",
+    "tracking, line spacing, word wrap, font size, and text color overrides",
+    "append positioning for sequential text blocks",
+    "local transforms and inherited transforms",
+    "CPU-heavy text generation"
+  ],
+  "common_gotchas": [
+    "Text POP arrived with TD 2025 POP releases; guard compatibility for earlier builds.",
+    "Font file behavior changed in later 2025 builds, so retest text projects after TD upgrades.",
+    "Dense triangle text can be heavier than line strips; validate cook time before using it for live typography."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.32460+",
+  "last_verified": "2026-06-17"
+}

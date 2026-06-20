@@ -1,0 +1,69 @@
+{
+  "card_type": "article",
+  "article_id": "mat_filter_common_page",
+  "title": "MAT Filter Common Page",
+  "family": "PARAMETER",
+  "families": [
+    "MAT",
+    "PARAMETER",
+    "TOP",
+    "RENDERING"
+  ],
+  "summary": "Official Derivative MAT Filter Common page reference for common render-state parameters on filter-style MATs, including blending, depth test/write, alpha test, wire frame, cull face, and polygon depth offset.",
+  "source_url": "https://docs.derivative.ca/MAT_Filter_Common_Page",
+  "docsbrain_page_id": "mat_filter_common_page",
+  "covered_operators": [
+    "phongMAT",
+    "pbrMAT",
+    "constantMAT",
+    "depthMAT",
+    "glslMAT",
+    "lineMAT",
+    "pointspriteMAT"
+  ],
+  "key_concepts": [
+    "MAT Filter Common Page",
+    "Parameters - Common Page",
+    "Blending",
+    "Transparency",
+    "blending",
+    "srcblend",
+    "destblend",
+    "separatealphafunc",
+    "srcblenda",
+    "destblenda",
+    "Depth Test",
+    "depthtest",
+    "depthfunc",
+    "depthwriting",
+    "Alpha Test",
+    "alphatest",
+    "alphafunc",
+    "alphathreshold",
+    "Wire Frame",
+    "wireframe",
+    "wirewidth",
+    "Cull Face",
+    "cullface",
+    "userender",
+    "neither",
+    "backfaces",
+    "frontfaces",
+    "bothfaces",
+    "Polygon Depth Offset",
+    "polygonoffset",
+    "polygonoffsetfactor",
+    "polygonoffsetunits"
+  ],
+  "guidance": [
+    "Use this article when a filter-style material exposes the common MAT render-state page and needs parameter-level grounding.",
+    "The filter common page covers the shared render states but does not include the generator-only blend operation and constant-color blend options.",
+    "Use depthtest/depthfunc/depthwriting together when diagnosing occlusion or depth-buffer surprises.",
+    "Use alphatest/alphafunc/alphathreshold for cutout-style alpha discard.",
+    "Cull Face can optimize rendering or remove artifacts; options include userender, neither, backfaces, frontfaces, and bothfaces."
+  ],
+  "related_snippets": [
+    "GLSL_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

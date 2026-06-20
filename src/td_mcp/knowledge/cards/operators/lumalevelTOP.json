@@ -1,0 +1,120 @@
+{
+  "card_type": "operator",
+  "op_type": "lumalevelTOP",
+  "family": "TOP",
+  "display_name": "Luma Level TOP",
+  "docs_url": "https://docs.derivative.ca/Luma_Level_TOP",
+  "summary": "Applies brightness, gamma, black level, range, step, and opacity adjustments while preserving hue and saturation more accurately than Level TOP for luma-focused work.",
+  "key_params": [
+    {
+      "name": "source",
+      "type": "Menu",
+      "note": "luminance, rgba channels, rgbaverage, or average source"
+    },
+    {
+      "name": "invert",
+      "type": "Toggle",
+      "note": "Invert selected source adjustment"
+    },
+    {
+      "name": "blacklevel",
+      "type": "Float",
+      "note": "Black level adjustment before range and step pages"
+    },
+    {
+      "name": "brightness1",
+      "type": "Float",
+      "note": "Pre brightness adjustment"
+    },
+    {
+      "name": "gamma1",
+      "type": "Float",
+      "note": "Pre gamma adjustment"
+    },
+    {
+      "name": "contrast",
+      "type": "Float",
+      "note": "Pre contrast adjustment"
+    },
+    {
+      "name": "inlow",
+      "type": "Float",
+      "note": "Input low range value"
+    },
+    {
+      "name": "inhigh",
+      "type": "Float",
+      "note": "Input high range value"
+    },
+    {
+      "name": "outlow",
+      "type": "Float",
+      "note": "Output low range value"
+    },
+    {
+      "name": "outhigh",
+      "type": "Float",
+      "note": "Output high range value"
+    },
+    {
+      "name": "stepsize",
+      "type": "Float",
+      "note": "Posterization band size"
+    },
+    {
+      "name": "threshold",
+      "type": "Float",
+      "note": "Step boundary offset"
+    },
+    {
+      "name": "clamplow",
+      "type": "Float",
+      "note": "Clamp low value"
+    },
+    {
+      "name": "clamphigh",
+      "type": "Float",
+      "note": "Clamp high value"
+    },
+    {
+      "name": "soften",
+      "type": "Float",
+      "note": "Blend step boundaries"
+    },
+    {
+      "name": "gamma2",
+      "type": "Float",
+      "note": "Post gamma adjustment"
+    },
+    {
+      "name": "opacity",
+      "type": "Float",
+      "note": "Final opacity adjustment"
+    },
+    {
+      "name": "brightness2",
+      "type": "Float",
+      "note": "Post brightness adjustment"
+    }
+  ],
+  "common_gotchas": [
+    "source=luminance adjusts luminance rather than independently changing raw RGB channels.",
+    "Range controls can crush blacks or whites if inlow/inhigh and outlow/outhigh are mismatched.",
+    "stepsize is inverse to the number of bands, so 0.25 gives four bands.",
+    "Post gamma and brightness are separate from the Pre page controls and happen later in the pipeline."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Luma_snippets",
+    "Color_snippets"
+  ],
+  "build_relevance": "image_color_correction",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Adjusts luminance-like levels while preserving hue and saturation better than Level TOP for some controls.",
+    "The source menu scopes the lookup to luminance, a color channel, alpha, or channel averages.",
+    "Pre, Range, Step, and Post pages form an ordered lookup-based adjustment pipeline.",
+    "Step Size posterizes the result into bands whose count is the inverse of the step value.",
+    "The operator supports 3D Textures and 2D Texture Arrays."
+  ]
+}

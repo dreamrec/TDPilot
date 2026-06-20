@@ -1,0 +1,31 @@
+{
+  "card_type": "operator",
+  "op_type": "touchoutTOP",
+  "family": "TOP",
+  "display_name": "Touch Out TOP",
+  "docs_url": "https://docs.derivative.ca/Touch_Out_TOP",
+  "summary": "Sends TOP image streams over TCP/IP to Touch In TOP receivers on the same machine or network.",
+  "key_params": [
+    {"name": "port", "type": "Integer", "note": "TCP/IP port to send on"},
+    {"name": "active", "type": "Toggle", "note": "Send while enabled"},
+    {"name": "fps", "type": "Integer", "note": "Frame step used to reduce output rate and bandwidth"},
+    {"name": "videocodec", "type": "Menu", "note": "Uncompressed, Hap Q, or Hap Q Alpha"},
+    {"name": "alwayscook", "type": "Toggle", "note": "Force cooking every frame"}
+  ],
+  "common_gotchas": [
+    "Windows Firewall can block TouchDesigner TCP/IP streams.",
+    "FPS is a frame-step reduction, not an arbitrary output framerate setting.",
+    "Hap Q Alpha preserves alpha but costs bandwidth/encoding compared with Hap Q.",
+    "Cook Always can keep streams live but increases workload.",
+    "The receiver port on Touch In TOP must match this output port."
+  ],
+  "related_snippets": ["TOP_snippets"],
+  "build_relevance": "touchdesigner_network_output",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Touch Out TOP sends TOP image data over TCP/IP to Touch In TOP receivers.",
+    "Streams can target receivers on the same machine or across the network.",
+    "The Video Codec menu selects Uncompressed, Hap Q, or Hap Q Alpha depending on bandwidth and alpha needs.",
+    "The fps parameter is a frame step used to reduce send rate, while alwayscook can force the output to cook every frame."
+  ]
+}

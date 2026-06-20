@@ -1,0 +1,203 @@
+{
+  "card_type": "operator",
+  "op_type": "lsystemSOP",
+  "family": "SOP",
+  "display_name": "LSystem SOP",
+  "docs_url": "https://docs.derivative.ca/LSystem_SOP",
+  "summary": "Generates procedural branching geometry from L-system string rewriting, turtle commands, stochastic rules, and tube/skeleton output controls.",
+  "key_params": [
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "Skeleton or tube output type."
+    },
+    {
+      "name": "generations",
+      "type": "Float",
+      "note": "Number of rewriting generations."
+    },
+    {
+      "name": "randscale",
+      "type": "Float",
+      "note": "Random scale amount."
+    },
+    {
+      "name": "randseed",
+      "type": "Int",
+      "note": "Random seed."
+    },
+    {
+      "name": "contangl",
+      "type": "Toggle",
+      "note": "Continuous angle for fractional generations."
+    },
+    {
+      "name": "contlength",
+      "type": "Toggle",
+      "note": "Continuous length for fractional generations."
+    },
+    {
+      "name": "contwidth",
+      "type": "Toggle",
+      "note": "Continuous width for fractional generations."
+    },
+    {
+      "name": "docolor",
+      "type": "Toggle",
+      "note": "Enable color mapping."
+    },
+    {
+      "name": "colormap",
+      "type": "TOP",
+      "note": "Color map TOP."
+    },
+    {
+      "name": "incu",
+      "type": "Float",
+      "note": "Texture U increment."
+    },
+    {
+      "name": "incv",
+      "type": "Float",
+      "note": "Texture V increment."
+    },
+    {
+      "name": "pointwidth",
+      "type": "Float",
+      "note": "Point width."
+    },
+    {
+      "name": "rows",
+      "type": "Int",
+      "note": "Tube rows."
+    },
+    {
+      "name": "cols",
+      "type": "Int",
+      "note": "Tube columns."
+    },
+    {
+      "name": "tension",
+      "type": "Float",
+      "note": "Tube smoothing tension."
+    },
+    {
+      "name": "smooth",
+      "type": "Toggle",
+      "note": "Smooth tube output."
+    },
+    {
+      "name": "thickinit",
+      "type": "Float",
+      "note": "Initial tube thickness."
+    },
+    {
+      "name": "thickscale",
+      "type": "Float",
+      "note": "Tube thickness scale."
+    },
+    {
+      "name": "dotexture",
+      "type": "Toggle",
+      "note": "Generate texture coordinates."
+    },
+    {
+      "name": "vertinc",
+      "type": "Float",
+      "note": "Vertical increment."
+    },
+    {
+      "name": "stepinit",
+      "type": "Float",
+      "note": "Initial turtle step length."
+    },
+    {
+      "name": "stepscale",
+      "type": "Float",
+      "note": "Step scale."
+    },
+    {
+      "name": "angleinit",
+      "type": "Float",
+      "note": "Initial turtle angle."
+    },
+    {
+      "name": "anglescale",
+      "type": "Float",
+      "note": "Angle scale."
+    },
+    {
+      "name": "varb",
+      "type": "Float",
+      "note": "Variable B."
+    },
+    {
+      "name": "varc",
+      "type": "Float",
+      "note": "Variable C."
+    },
+    {
+      "name": "vard",
+      "type": "Float",
+      "note": "Variable D."
+    },
+    {
+      "name": "gravity",
+      "type": "Float",
+      "note": "Gravity amount."
+    },
+    {
+      "name": "pictop",
+      "type": "TOP",
+      "note": "Pic Image TOP used by `pic()`."
+    },
+    {
+      "name": "grpprefix",
+      "type": "String",
+      "note": "Group prefix for generated groups."
+    },
+    {
+      "name": "chanprefix",
+      "type": "String",
+      "note": "Channel prefix for generated channels."
+    },
+    {
+      "name": "stampa",
+      "type": "Float",
+      "note": "Stamp variable A."
+    },
+    {
+      "name": "stampb",
+      "type": "Float",
+      "note": "Stamp variable B."
+    },
+    {
+      "name": "stampc",
+      "type": "Float",
+      "note": "Stamp variable C."
+    },
+    {
+      "name": "rules",
+      "type": "String",
+      "note": "L-system production rules."
+    }
+  ],
+  "common_gotchas": [
+    "Generations can expand strings and geometry exponentially; start with low values.",
+    "`pictop` is the Pic Image TOP for `pic()`, not a file path or rule source.",
+    "Tube controls are only meaningful when `type` outputs tubes.",
+    "Official rule limits include nesting depth, rule length, variable count, and rule count."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "procedural-growth",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "LSystem SOP rewrites strings through generations and interprets the result as turtle-style geometry.",
+    "Output can be skeleton or tube, and tube-specific controls only matter for tube output.",
+    "Non-integer generations use continuous angle, length, and width controls for smooth animation.",
+    "Rules can use context, conditions, probability, and explicit variables, but official rule-length/nesting/count limits still apply.",
+    "J/K/M source inputs support stamped/copy geometry in advanced rule workflows."
+  ]
+}

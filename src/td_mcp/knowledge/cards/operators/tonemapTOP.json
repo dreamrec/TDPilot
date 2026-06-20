@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "tonemapTOP",
+  "family": "TOP",
+  "display_name": "Tone Map TOP",
+  "docs_url": "https://docs.derivative.ca/Tone_Map_TOP",
+  "summary": "Maps HDR image values down to an SDR display range using selectable artistic tone-mapping curves.",
+  "key_params": [
+    {"name": "type", "type": "Menu", "note": "Tone-mapping curve such as ACES, Lottes, Filmic, Hable Filmic, Reinhard, or Extended Reinhard"},
+    {"name": "midinputnits", "type": "Float", "note": "Estimated input mid brightness in nits"},
+    {"name": "midoutputnits", "type": "Float", "note": "Desired relative output midpoint"},
+    {"name": "peakinputnits", "type": "Float", "note": "Estimated input peak brightness in nits"},
+    {"name": "exposurebias", "type": "Float", "note": "Artistic exposure bias for Hable Filmic"},
+    {"name": "format", "type": "Menu", "note": "Output pixel format"}
+  ],
+  "common_gotchas": [
+    "Do not use Tone Map TOP when outputting to an HDR display with HDR mode enabled.",
+    "There is no universally correct tone-map type; choose by content and visual preference.",
+    "Peak Input Nits can be estimated or measured with Analyze TOP for better control.",
+    "Mid Input Nits measured through Analyze or Monochrome TOP must account for Reference White scaling.",
+    "Tone mapping preserves visible differences for SDR output but does not preserve true physical brightness."
+  ],
+  "related_snippets": ["TOP_snippets"],
+  "build_relevance": "hdr_sdr_conversion",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Tone Map TOP maps HDR values above 1.0 into an SDR 0-1 range.",
+    "The Type menu chooses an artistic tone-mapping curve rather than a single physically correct conversion.",
+    "Mid and peak nit parameters describe the input and output brightness assumptions used by the selected curve.",
+    "The official docs warn that Tone Map TOP is not intended for HDR display output when HDR output mode is active."
+  ]
+}

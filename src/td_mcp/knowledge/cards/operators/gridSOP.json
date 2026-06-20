@@ -4,19 +4,122 @@
   "family": "SOP",
   "display_name": "Grid SOP",
   "docs_url": "https://docs.derivative.ca/Grid_SOP",
-  "summary": "Creates a flat rectangular grid mesh with configurable rows, columns, and size. One of the most common geometry primitives for 2D surfaces and instancing layouts.",
+  "summary": "Creates grids or rectangles as polygons, meshes, NURBS/Bezier surfaces, or open polygon lines with configurable connectivity, bounds, UVs, and normals.",
   "key_params": [
-    {"name": "rows", "type": "Int", "note": "Number of rows (subdivisions in Y)"},
-    {"name": "cols", "type": "Int", "note": "Number of columns (subdivisions in X)"},
-    {"name": "sizex", "type": "Float", "note": "Width of the grid"},
-    {"name": "sizey", "type": "Float", "note": "Height of the grid"},
-    {"name": "orient", "type": "Menu", "note": "Orientation plane: XY, XZ, or YZ"}
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "Output primitive type."
+    },
+    {
+      "name": "surftype",
+      "type": "Menu",
+      "note": "Connectivity for generated grid primitives."
+    },
+    {
+      "name": "orient",
+      "type": "Menu",
+      "note": "Grid orientation plane: XY, YZ, or ZX."
+    },
+    {
+      "name": "modifybounds",
+      "type": "Toggle",
+      "note": "Use input bounds or explicit bounds controls."
+    },
+    {
+      "name": "sizex",
+      "type": "Float",
+      "note": "Grid size X."
+    },
+    {
+      "name": "sizey",
+      "type": "Float",
+      "note": "Grid size Y."
+    },
+    {
+      "name": "tx",
+      "type": "Float",
+      "note": "Grid center X."
+    },
+    {
+      "name": "ty",
+      "type": "Float",
+      "note": "Grid center Y."
+    },
+    {
+      "name": "tz",
+      "type": "Float",
+      "note": "Grid center Z."
+    },
+    {
+      "name": "reverseanchors",
+      "type": "Toggle",
+      "note": "Reverse anchor interpretation."
+    },
+    {
+      "name": "anchoru",
+      "type": "Menu",
+      "note": "U anchor."
+    },
+    {
+      "name": "anchorv",
+      "type": "Menu",
+      "note": "V anchor."
+    },
+    {
+      "name": "rows",
+      "type": "Int",
+      "note": "Number of rows."
+    },
+    {
+      "name": "cols",
+      "type": "Int",
+      "note": "Number of columns."
+    },
+    {
+      "name": "orderu",
+      "type": "Int",
+      "note": "U spline order."
+    },
+    {
+      "name": "orderv",
+      "type": "Int",
+      "note": "V spline order."
+    },
+    {
+      "name": "interpu",
+      "type": "Menu",
+      "note": "U interpolation."
+    },
+    {
+      "name": "interpv",
+      "type": "Menu",
+      "note": "V interpolation."
+    },
+    {
+      "name": "texture",
+      "type": "Menu",
+      "note": "Texture coordinate generation mode."
+    },
+    {
+      "name": "normals",
+      "type": "Toggle",
+      "note": "Generate normals."
+    }
   ],
   "common_gotchas": [
-    "Default orientation is XZ (horizontal floor); switch to XY for a vertical screen-facing plane.",
-    "High row/col counts increase vertex count quadratically — 1000x1000 = 1M vertices."
+    "The official orientation menu uses ZX, not XZ.",
+    "For NURBS/Bezier grids, rows and columns must not be less than the U/V order.",
+    "Connectivity results are only directly visible for polygons and meshes.",
+    "High rows/columns increase vertex count multiplicatively."
   ],
   "related_snippets": [],
   "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Grid SOP can create polygon, mesh, NURBS, Bezier, or open-polygon grid primitives, not only simple polygon meshes.",
+    "`surftype` controls connectivity such as rows, columns, row/column grids, triangles, quadrilaterals, and alternating triangles.",
+    "`orient` chooses the XY, YZ, or ZX plane, while bounds, center, anchors, rows, and columns define placement and density.",
+    "Texture coordinates and normals can be generated directly on the grid output."
+  ]
 }

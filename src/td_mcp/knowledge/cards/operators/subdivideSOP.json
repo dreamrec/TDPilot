@@ -1,0 +1,78 @@
+{
+  "card_type": "operator",
+  "op_type": "subdivideSOP",
+  "family": "SOP",
+  "display_name": "Subdivide SOP",
+  "docs_url": "https://docs.derivative.ca/Subdivide_SOP",
+  "summary": "Divides polygon surfaces into smoother Catmull-Clark subdivision surfaces with crease, crack-closing, and output-crease controls.",
+  "key_params": [
+    {
+      "name": "subdivide",
+      "type": "Parameter",
+      "note": "Subdivide SOP official parameter"
+    },
+    {
+      "name": "creases",
+      "type": "Parameter",
+      "note": "Subdivide SOP official parameter"
+    },
+    {
+      "name": "iterations",
+      "type": "Parameter",
+      "note": "Subdivide SOP official parameter"
+    },
+    {
+      "name": "overridecrease",
+      "type": "Parameter",
+      "note": "Subdivide SOP official parameter"
+    },
+    {
+      "name": "creaseweight",
+      "type": "Parameter",
+      "note": "Subdivide SOP official parameter"
+    },
+    {
+      "name": "outputcrease",
+      "type": "Parameter",
+      "note": "Subdivide SOP official parameter"
+    },
+    {
+      "name": "outcreasegroup",
+      "type": "Parameter",
+      "note": "Subdivide SOP official parameter"
+    },
+    {
+      "name": "closeholes",
+      "type": "Parameter",
+      "note": "Subdivide SOP official parameter"
+    },
+    {
+      "name": "surroundpoly",
+      "type": "Parameter",
+      "note": "Subdivide SOP official parameter"
+    },
+    {
+      "name": "bias",
+      "type": "Parameter",
+      "note": "Subdivide SOP official parameter"
+    }
+  ],
+  "common_gotchas": [
+    "Creases match by point numbers, not proximity.",
+    "overridecrease and crease attribute defaults change how existing creases are interpreted.",
+    "bias applies only when pulling cracks closed.",
+    "No-edge-division disables bias when pulling cracks.",
+    "High iteration counts multiply geometry quickly."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "catmull-clark-polygon-subdivision",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Subdivide SOP applies Catmull-Clark smoothing to polygon surfaces.",
+    "Best results require convex, relatively even polygon distribution.",
+    "Creases can come from a second input or crease attributes; shared-edge crease weight uses the maximum value.",
+    "Crack closing can pull or stitch surrounding faces, with different edge behavior."
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "card_type": "operator",
+  "op_type": "udtinDAT",
+  "family": "DAT",
+  "display_name": "UDT In DAT",
+  "docs_url": "https://docs.derivative.ca/UDT_In_DAT",
+  "summary": "Legacy DAT for receiving messages over UDT fast streaming or reliable messaging connections, with callback support for received messages.",
+  "key_params": [
+    {
+      "name": "protocol",
+      "type": "Menu",
+      "note": "Fast Streaming or Reliable Messaging UDT protocol"
+    },
+    {
+      "name": "address",
+      "type": "String",
+      "note": "Address used by multicast-oriented protocols where applicable"
+    },
+    {
+      "name": "port",
+      "type": "Integer",
+      "note": "Network port to listen on"
+    },
+    {
+      "name": "shared",
+      "type": "Toggle",
+      "note": "Share the connection with compatible networking DATs"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Parse incoming data one row per byte, line, or message"
+    },
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable the UDT connection"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "Callback DAT executed for each message"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Limit retained output rows"
+    },
+    {
+      "name": "maxlines",
+      "type": "Integer",
+      "note": "Maximum retained rows when clamping"
+    },
+    {
+      "name": "bytes",
+      "type": "Toggle",
+      "note": "Output raw bytes in a separate column"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose the execution context for received-data callbacks"
+    },
+    {
+      "name": "fromop",
+      "type": "OP Path",
+      "note": "Operator path used when Execute from is set to Specified Operator"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear accumulated received-message rows"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language handling mode"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor file extension mode"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when extension mode uses a custom extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Node viewer word-wrap behavior"
+    }
+  ],
+  "common_gotchas": [
+    "UDT In DAT was removed from TouchDesigner 2021 Official builds and later; prefer current UDP/TCP/WebSocket DATs for new projects.",
+    "Fast Streaming and Reliable Messaging are UDT-specific choices, not the same as ordinary UDP In DAT behavior.",
+    "Handle received messages through the callback DAT or udtinDAT class methods when sending replies.",
+    "Row/Callback Format changes the table shape and callback frequency.",
+    "Windows firewall or OS network permissions can prevent UDT traffic from arriving."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "legacy UDT networking; removed in TouchDesigner 2021 Official builds and later",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "UDT In DAT is a legacy receiver for UDT fast streaming or reliable messaging connections.",
+    "Official docs mark it removed from TouchDesigner 2021 Official builds and later.",
+    "Callbacks handle received messages and class methods can send replies.",
+    "Protocol, address, port, and shared connection settings must match the UDT sender."
+  ],
+  "notes": "Official docs mark UDT In DAT as removed from TouchDesigner 2021 Official builds and later; keep it documented for legacy-file interpretation, not new-network planning."
+}

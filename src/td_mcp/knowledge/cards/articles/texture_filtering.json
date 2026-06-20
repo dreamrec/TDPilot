@@ -1,0 +1,52 @@
+{
+  "card_type": "article",
+  "article_id": "texture_filtering",
+  "title": "Texture Filtering",
+  "family": "TOP",
+  "families": [
+    "TOP",
+    "MAT",
+    "GLSL",
+    "GPU",
+    "PARAMETER"
+  ],
+  "summary": "Official Derivative texturing page for texture filtering, covering nearest, linear, and mipmap linear filtering, TOP Common page smoothness controls, MAT texture-sampling filter type, mipmap fallbacks, and anisotropic filtering.",
+  "source_url": "https://docs.derivative.ca/Texture_Filtering",
+  "docsbrain_page_id": "texture_filtering",
+  "covered_operators": [
+    "glslTOP",
+    "phongMAT",
+    "pbrMAT",
+    "glslMAT",
+    "texture3dTOP"
+  ],
+  "key_concepts": [
+    "Texture Filtering",
+    "Nearest",
+    "Linear",
+    "Mipmap Linear",
+    "Trilinear",
+    "Input Smoothness",
+    "Viewer Smoothness",
+    "Nearest Pixel",
+    "Interpolate Pixels",
+    "Mipmap Pixels",
+    "Filter Type",
+    "Anisotropic Filtering",
+    "+ button"
+  ],
+  "guidance": [
+    "Use this article when a plan needs to trade pixel-perfect sampling against smoother scaling in TOP viewers, MAT textures, or GLSL sampling.",
+    "Nearest filtering samples one closest pixel and is useful for pixel-perfect results.",
+    "Linear filtering blends nearby pixels, while Mipmap Linear blends between mipmap levels as well.",
+    "Input Smoothness affects how a TOP operation samples its input TOPs.",
+    "Viewer Smoothness only changes how the TOP viewer and network background display the texture; it does not change node texture data or MAT sampling.",
+    "For MAT texture parameters, open the + button controls and set Filter Type to Nearest, Linear, or Mipmap Linear.",
+    "Use Anisotropic Filtering when textured geometry quality depends on the angle of polygons relative to the camera."
+  ],
+  "related_snippets": [
+    "GLSL_snippets",
+    "TOP_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

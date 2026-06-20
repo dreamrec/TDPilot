@@ -1,0 +1,40 @@
+{
+  "card_type": "operator",
+  "op_type": "pointPOP",
+  "family": "POP",
+  "display_name": "Point POP",
+  "docs_url": "https://docs.derivative.ca/Point_POP",
+  "summary": "Creates explicit point lists with optional P and custom attributes, with one point primitive per point unless disabled. It is useful for single-point constants, specification POPs, fields, forces, and attribute-only POP data.",
+  "key_params": [
+    {"name": "createp", "type": "Toggle", "note": "Create the P position attribute"},
+    {"name": "createpointprim", "type": "Toggle", "note": "Create one point primitive for every point"},
+    {"name": "attr", "type": "Sequential", "note": "Sequential blocks for new attributes"},
+    {"name": "attr0name", "type": "Menu", "note": "Built-in or custom attribute name"},
+    {"name": "attr0customname", "type": "Str", "note": "Custom attribute name"},
+    {"name": "attr0type", "type": "Menu", "note": "Attribute data type"},
+    {"name": "attr0numcomps", "type": "Menu", "note": "Number of components in the new attribute"},
+    {"name": "pt", "type": "Sequential", "note": "Sequential point value blocks"},
+    {"name": "pt0pos", "type": "Float3", "note": "Position for the first point"},
+    {"name": "parmcolorspace", "type": "Menu", "note": "Interpret color parameters in a selected color space when a working color space is active"},
+    {"name": "parmreferencewhite", "type": "Menu", "note": "Reference-white treatment for converting parameter colors into the working color space"}
+  ],
+  "key_concepts": [
+    "explicit point list",
+    "P attribute optional",
+    "point primitive per point",
+    "single-point POP as uniform",
+    "attribute-only POP data",
+    "sequential attribute blocks",
+    "custom attributes",
+    "Parameter Color Space",
+    "Parameter Reference White"
+  ],
+  "common_gotchas": [
+    "Point POP can create data with no P attribute; that is valid for constants or specification data but not for spatial operators.",
+    "Single-point POPs behave like uniforms in Math Mix and Math Combine when combined with multi-point POPs.",
+    "Disable Create Point Primitives when a pure point list without primitive records is required."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

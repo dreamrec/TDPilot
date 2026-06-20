@@ -4,12 +4,35 @@
   "family": "SOP",
   "display_name": "Null SOP",
   "docs_url": "https://docs.derivative.ca/Null_SOP",
-  "summary": "A pass-through that marks a clean output point in a SOP chain. End every SOP network with a Null for stable referencing by Geometry COMPs.",
+  "summary": "No-effect SOP used as a stable reference endpoint. It passes through the input SOP geometry so upstream edits can be made without changing downstream references.",
   "key_params": [],
-  "common_gotchas": [
-    "Geometry COMPs should reference the Null SOP, not upstream operators, so restructuring does not break references."
+  "key_concepts": [
+    "No parameters",
+    "no effect on geometry",
+    "instance of input SOP",
+    "stable reference endpoint",
+    "upstream edits without reference updates",
+    "Geometry COMP",
+    "Select SOP",
+    "Object Merge SOP",
+    "Info CHOP",
+    "Common SOP Info Channels",
+    "num_points",
+    "num_prims",
+    "num_particles",
+    "last_vbo_update_time",
+    "last_meta_vbo_update_time"
   ],
-  "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "common_gotchas": [
+    "No parameters is intentionally true for Null SOP; do not invent controls when validating this card.",
+    "Geometry COMPs should reference the Null SOP, not upstream construction operators, so internal SOP edits do not break render references.",
+    "Select SOP and Object Merge SOP paths should target stable Null SOP endpoints when referencing geometry across networks.",
+    "A Null SOP does not fix invalid or empty upstream geometry; inspect Info CHOP channels such as num_points and num_prims when a render is blank.",
+    "Null SOP has no effect on geometry, so use explicit Convert, Fuse, Transform, or Attribute SOPs when the output needs actual modification."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
 }

@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "parameterCOMP",
+  "family": "COMP",
+  "display_name": "Parameter COMP",
+  "docs_url": "https://docs.derivative.ca/Parameter_COMP",
+  "summary": "Turns an operator's parameter dialog into an interactive panel, with controls for including headers, pages, labels, built-in/custom parameters, scoped page/parameter patterns, compression, and expansion permissions.",
+  "key_params": [
+    {"name": "op", "type": "OP path", "note": "Operator whose parameters are displayed"},
+    {"name": "header", "type": "Toggle", "note": "Show OP type, name, and header controls"},
+    {"name": "pagenames", "type": "Toggle", "note": "Show parameter page tabs"},
+    {"name": "labels", "type": "Toggle", "note": "Show parameter labels"},
+    {"name": "separators", "type": "Toggle", "note": "Show separator lines between parameter sections"},
+    {"name": "inputeditor", "type": "Toggle", "note": "Include multi-input editor UI when available"},
+    {"name": "allowexpand", "type": "Toggle", "note": "Allow users to expand parameters to see modes and expression editing"},
+    {"name": "builtin", "type": "Toggle", "note": "Include built-in parameters"},
+    {"name": "custom", "type": "Toggle", "note": "Include custom parameters"},
+    {"name": "combinescopes", "type": "Menu", "note": "Combine page and parameter scopes with Any or All behavior"},
+    {"name": "pagescope", "type": "Pattern", "note": "Page-name pattern selection, including quoted names with spaces"},
+    {"name": "parscope", "type": "Pattern", "note": "Parameter-name pattern selection"},
+    {"name": "syncpage", "type": "Toggle", "note": "Sync selected displayed page with the target parameter dialog"},
+    {"name": "scopeorder", "type": "Toggle", "note": "Order parameters by Parameter Scope when page names are hidden"}
+  ],
+  "key_concepts": [
+    "Parameter COMP turns another operator's parameter dialog into an interactive panel interface.",
+    "It can include the target header, page tabs, labels, separators, input editor, built-in parameters, and custom parameters.",
+    "Page Scope and Parameter Scope use pattern matching to expose a curated subset of controls.",
+    "Allow Expansion controls whether users can open parameter mode and expression editing fields from the panel.",
+    "Scope ordering and page synchronization determine whether the panel behaves like a focused control surface or a full parameter dialog."
+  ],
+  "common_gotchas": [
+    "Parameter Scope order matters when displaying parameters only; the UI follows the specified order.",
+    "Page and parameter scopes use pattern matching, so broad patterns such as * can expose more UI than intended.",
+    "Page names with spaces must be quoted or provided as a Python list.",
+    "Allow Expansion controls whether users can open parameter mode and expression editing fields.",
+    "Compressing the UI can make parameter panels fit smaller spaces but may reduce readability or edit affordance.",
+    "Built-In and Custom toggles are independent; include both when exposing a full operator parameter interface."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ interactive parameter panels",
+  "last_verified": "2026-06-18"
+}

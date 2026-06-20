@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "phongMAT",
+  "family": "MAT",
+  "display_name": "Phong MAT",
+  "docs_url": "https://docs.derivative.ca/Phong_MAT",
+  "summary": "Creates a classic Phong-shaded material with ambient, diffuse, specular, emission, texture-map, bump, rim-light, and environment-map controls.",
+  "key_params": [
+    {"name": "ambdiff", "type": "Toggle", "note": "Use diffuse color for ambient color"},
+    {"name": "diff", "type": "RGB", "note": "Diffuse material color"},
+    {"name": "amb", "type": "RGB", "note": "Ambient material color"},
+    {"name": "spec", "type": "RGB", "note": "Specular material color"},
+    {"name": "emit", "type": "RGB", "note": "Emission color"},
+    {"name": "shininess", "type": "Float", "note": "Specular highlight sharpness"},
+    {"name": "colormap", "type": "TOP", "note": "Color map texture"},
+    {"name": "normalmap", "type": "TOP", "note": "Normal map texture"},
+    {"name": "heightmap", "type": "TOP", "note": "Height or parallax map"},
+    {"name": "outputshader", "type": "Toggle", "note": "Output generated GLSL shaders to DATs for adaptation"}
+  ],
+  "key_concepts": [
+    "Phong MAT uses the classic Phong shading model, combining ambient, diffuse, and specular reflected light rather than a physically based material model.",
+    "Shininess controls the tightness of specular highlights, so it is a core artistic control for plastic, glossy, and matte-looking surfaces.",
+    "Color, normal, height, alpha, environment, and rim-light texture workflows multiply or modify the lighting calculation and require valid texture coordinates.",
+    "Phong shading is evaluated per pixel and depends on scene lights, geometry normals, and Render TOP settings for visible depth and highlight structure.",
+    "Output Shader can export the generated Phong shader variant into Text DATs and a GLSL MAT for custom shader adaptation."
+  ],
+  "common_gotchas": [
+    "Phong is light-dependent; without scene lights or suitable Render TOP settings it may look flat or dark.",
+    "Specular and shininess values can easily create harsh highlights that do not match PBR assets.",
+    "Texture maps need valid UVs or explicit coordinate modes, especially for normal and height maps.",
+    "Output Shader can seed custom GLSL MAT work, but generated shader code should be treated as derived material logic."
+  ],
+  "related_snippets": ["MAT_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

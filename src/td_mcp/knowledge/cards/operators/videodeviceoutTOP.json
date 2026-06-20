@@ -1,0 +1,46 @@
+{
+  "card_type": "operator",
+  "op_type": "videodeviceoutTOP",
+  "family": "TOP",
+  "display_name": "Video Device Out TOP",
+  "docs_url": "https://docs.derivative.ca/Video_Device_Out_TOP",
+  "summary": "Routes TOP video to native output hardware from Blackmagic, Bluefish444, AJA, or Deltacast devices.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable or disable output card transmission"},
+    {"name": "library", "type": "Menu", "note": "Native driver library such as Blackmagic, Bluefish444, AJA, or Deltacast"},
+    {"name": "device", "type": "Menu", "note": "Detected hardware output device"},
+    {"name": "signalformat", "type": "Menu", "note": "Resolution, frame rate, and progressive/interlaced output format"},
+    {"name": "outputpixelformat", "type": "Menu", "note": "Output bit depth and key/alpha format where supported"},
+    {"name": "outputcolorformat", "type": "Menu", "note": "YUV 4:2:2 or RGB 4:4:4 output format where supported"},
+    {"name": "chop", "type": "CHOP", "note": "Legacy audio CHOP parameter present in the official docs"},
+    {"name": "audiochop", "type": "CHOP", "note": "Time-sliced audio CHOP to embed in output"},
+    {"name": "audiobitdepth", "type": "Menu", "note": "Embedded audio bit depth"},
+    {"name": "bufferlength", "type": "Float", "note": "Audio buffer length to avoid crackles and pops"},
+    {"name": "referencesource", "type": "Menu", "note": "AJA reference input source"},
+    {"name": "manualfield", "type": "Toggle", "note": "Manual field control for interlaced output"},
+    {"name": "firstfield", "type": "Toggle", "note": "Current frame is first field for interlaced output"},
+    {"name": "timecodeop", "type": "OP", "note": "CHOP, DAT, or Timecode object to embed timecode"},
+    {"name": "transfermode", "type": "Menu", "note": "GPU-to-output-card transfer strategy"},
+    {"name": "syncoutputs", "type": "Toggle", "note": "Synchronize supported multiple output nodes"},
+    {"name": "syncgroupindex", "type": "Integer", "note": "Sync group for synchronized output nodes"},
+    {"name": "resetstats", "type": "Pulse", "note": "Reset attached Info CHOP statistics"},
+    {"name": "colorspace", "type": "Menu", "note": "Output color-space conversion"},
+    {"name": "outputreferencewhite", "type": "Menu", "note": "Reference-white treatment for SDR/HDR output"}
+  ],
+  "common_gotchas": [
+    "Choose Library before selecting Device because device menu contents depend on the driver library.",
+    "YUV 4:2:2 lowers bandwidth but loses color information compared with RGB 4:4:4.",
+    "Interlaced workflows need field parity control from an Info CHOP or matching source pipeline to avoid stutter.",
+    "Sync Outputs requires Pro and supported hardware; Blackmagic generally needs a connected Genlock source.",
+    "Color-space metadata support depends on the output form and device."
+  ],
+  "related_snippets": ["TOP_snippets", "CHOP_snippets"],
+  "build_relevance": "hardware_video_output",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Video Device Out TOP sends TOP video to native hardware output devices from Blackmagic, Bluefish444, AJA, or Deltacast.",
+    "Signal format defines output resolution, frame rate, and interlace mode while pixel and color format choose hardware encoding layout.",
+    "Audio and timecode can be embedded through CHOP, DAT, or timecode object workflows.",
+    "Synchronized output is a Pro-only workflow that depends on supported/genlocked hardware."
+  ]
+}

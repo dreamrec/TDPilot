@@ -1,0 +1,38 @@
+{
+  "card_type": "operator",
+  "op_type": "fanCHOP",
+  "family": "CHOP",
+  "display_name": "Fan CHOP",
+  "docs_url": "https://docs.derivative.ca/Fan_CHOP",
+  "summary": "Converts one indexed channel into many binary channels, or converts many binary channels back into one selected index channel.",
+  "key_params": [
+    {"name": "fanop", "type": "Menu", "note": "Operation: Fan Out or Fan In"},
+    {"name": "channame", "type": "String", "note": "Output channel names; also controls Fan Out channel count"},
+    {"name": "range", "type": "Menu", "note": "How Fan Out handles values outside 0 to N-1"},
+    {"name": "clamp", "type": "MenuItem", "note": "Clamp out-of-range indices"},
+    {"name": "loop", "type": "MenuItem", "note": "Loop out-of-range indices"},
+    {"name": "zero", "type": "MenuItem", "note": "Set all output channels to 0 for out-of-range indices"},
+    {"name": "alloff", "type": "Menu", "note": "Fan In output when all input channels are off"},
+    {"name": "set0", "type": "MenuItem", "note": "Return 0 when all channels are off"},
+    {"name": "setneg", "type": "MenuItem", "note": "Return -1 when all channels are off"},
+    {"name": "quantize", "type": "Toggle", "note": "Quantize Fan Out indices to integers"}
+  ],
+  "key_concepts": [
+    "Converts one indexed channel to many binary channels or converts many binary channels back to one selected index.",
+    "Fan Out sets exactly one output channel to 1 based on the input channel's 0-based index value.",
+    "The Channel Names parameter controls the generated Fan Out channel count.",
+    "Fan Out assumes one integer-like input channel; fractions are truncated or quantized and extra channels are ignored.",
+    "Outside Range controls whether bad Fan Out indices clamp, loop, or output all zeroes.",
+    "Fan In returns the first on channel when multiple binary inputs are on."
+  ],
+  "common_gotchas": [
+    "Fan Out expects one integer-like input channel; fractions are truncated or quantized and extra input channels are ignored.",
+    "Fan Out creates one binary output per channel name.",
+    "Fan In returns the first on channel when multiple inputs are on.",
+    "The first output/index is 0, not 1.",
+    "Use Outside Range deliberately so bad indices do not accidentally select a boundary channel."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

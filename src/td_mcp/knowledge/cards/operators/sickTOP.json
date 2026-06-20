@@ -1,0 +1,82 @@
+{
+  "card_type": "operator",
+  "op_type": "sickTOP",
+  "family": "TOP",
+  "display_name": "SICK TOP",
+  "docs_url": "https://docs.derivative.ca/SICK_TOP",
+  "summary": "Receives SICK lidar point-cloud data over Ethernet and exposes selected point fields as a floating-point TOP texture.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable the SICK sensor connection."
+    },
+    {
+      "name": "reinitialize",
+      "type": "Pulse",
+      "note": "Restart/reinitialize the sensor connection."
+    },
+    {
+      "name": "launchfile",
+      "type": "File",
+      "note": "sick_scan_xd launch file for the sensor model."
+    },
+    {
+      "name": "deviceaddress",
+      "type": "String",
+      "note": "Sensor IP/address override."
+    },
+    {
+      "name": "port",
+      "type": "Integer",
+      "note": "Sensor port override."
+    },
+    {
+      "name": "customargs",
+      "type": "String",
+      "note": "Additional launch arguments."
+    },
+    {
+      "name": "red",
+      "type": "Menu",
+      "note": "Point field routed to red."
+    },
+    {
+      "name": "green",
+      "type": "Menu",
+      "note": "Point field routed to green."
+    },
+    {
+      "name": "blue",
+      "type": "Menu",
+      "note": "Point field routed to blue."
+    },
+    {
+      "name": "alpha",
+      "type": "Menu",
+      "note": "Point field routed to alpha."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "Only one active SICK TOP can run in a TouchDesigner process.",
+    "Blank device address or port falls back to launch-file defaults.",
+    "Multiple sensors require the sickEngine palette/Engine COMP workflow.",
+    "TOUCH_TEXT_CONSOLE debug output applies only in the primary TouchDesigner process."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "windows_sick_lidar",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "SICK TOP connects to supported SICK lidar sensors over Ethernet and outputs point-cloud data as TOP pixels.",
+    "The output is a packed floating-point TOP where red/green/blue/alpha channels select point fields or constants.",
+    "The operator uses sick_scan_xd launch files, so launch file choice must match the sensor model and setup.",
+    "Only one active SICK TOP is supported per TouchDesigner process; multiple sensors require the palette/Engine workflow."
+  ]
+}

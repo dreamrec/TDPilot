@@ -1,0 +1,58 @@
+{
+  "card_type": "operator",
+  "op_type": "cacheselectTOP",
+  "family": "TOP",
+  "display_name": "Cache Select TOP",
+  "docs_url": "https://docs.derivative.ca/Cache_Select_TOP",
+  "summary": "Reads a selected frame from another Cache TOP using a relative cache index.",
+  "key_params": [
+    {
+      "name": "cachetop",
+      "type": "TOP",
+      "note": "Source Cache TOP to read from"
+    },
+    {
+      "name": "index",
+      "type": "Float",
+      "note": "Relative index into the source cache"
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution policy"
+    },
+    {
+      "name": "resolution",
+      "type": "WH",
+      "note": "Custom output resolution when enabled"
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Common TOP output aspect policy"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Cache TOP must be populated; reset or stale caches make valid-looking indices unavailable.",
+    "Index is relative to current cached image, not an absolute timeline frame.",
+    "Common output resolution or aspect settings can hide the source cache resolution.",
+    "Viewer smoothing and filtering can affect visual inspection of cached float textures."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Cache Select TOP reads frames from a named Cache TOP without owning the cache itself.",
+    "Index 0 means the current cached image; negative values address older cached images.",
+    "The output is only valid when the source Cache TOP contains the requested frame.",
+    "This operator is a random-access view into cached GPU frames.",
+    "Common TOP output settings can still resize, filter, or reformat the selected frame."
+  ]
+}

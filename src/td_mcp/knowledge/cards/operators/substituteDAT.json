@@ -1,0 +1,103 @@
+{
+  "card_type": "operator",
+  "op_type": "substituteDAT",
+  "family": "DAT",
+  "display_name": "Substitute DAT",
+  "docs_url": "https://docs.derivative.ca/Substitute_DAT",
+  "summary": "Replaces matching text in selected cells of an input DAT using pattern matching and substitution strings, preserving the input table dimensions.",
+  "key_params": [
+    {
+      "name": "before",
+      "type": "Pattern",
+      "note": "Search term; supports *, ?, and [] wildcards"
+    },
+    {
+      "name": "after",
+      "type": "String",
+      "note": "Replacement text, including spaces"
+    },
+    {
+      "name": "match",
+      "type": "Menu",
+      "note": "Match anywhere, exact, at start, or at end"
+    },
+    {
+      "name": "case",
+      "type": "Toggle",
+      "note": "Respect case sensitivity"
+    },
+    {
+      "name": "expand",
+      "type": "Toggle",
+      "note": "Expand variables and back quotes in the Before string"
+    },
+    {
+      "name": "expandto",
+      "type": "Toggle",
+      "note": "Expand variables and back quotes in the After string"
+    },
+    {
+      "name": "first",
+      "type": "Toggle",
+      "note": "Replace only the first matched instance"
+    },
+    {
+      "name": "xfirstrow",
+      "type": "Toggle",
+      "note": "Exclude the first row from substitutions"
+    },
+    {
+      "name": "xfirstcol",
+      "type": "Toggle",
+      "note": "Exclude the first column from substitutions"
+    },
+    {
+      "name": "extractrows",
+      "type": "Menu",
+      "note": "Scope rows by all, name, index, values, or condition"
+    },
+    {
+      "name": "extractcols",
+      "type": "Menu",
+      "note": "Scope columns by all, name, index, values, or condition"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Output keeps the same number of rows and columns as the input; Substitute DAT changes cell strings, not table shape.",
+    "The second input can provide before/after substitution pairs in two columns, which can override simple single-rule assumptions.",
+    "Wildcard characters *, ?, and [] must be escaped with backslash when they should match literally.",
+    "Scope expressions operate from selected cells; generated expressions should use me.inputCell deliberately.",
+    "For simple Python string replacement or computed replacements, Evaluate DAT or Script DAT may be clearer."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "scoped-table-string-substitution",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Substitutes matched text in an input DAT using before/after patterns.",
+    "Match and Case parameters control matching mode and case sensitivity.",
+    "Expand controls output expansion behavior and target expansion values.",
+    "First row/column and row/column extraction controls limit which cells are substituted."
+  ]
+}

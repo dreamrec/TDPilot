@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "audiofileoutCHOP",
+  "family": "CHOP",
+  "display_name": "Audio File Out CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_File_Out_CHOP",
+  "summary": "Records input CHOP audio channels to disk as WAV, OGG, MP3, AIFF, or other supported encoded audio files.",
+  "key_concepts": [
+    "Audio File Out CHOP records an input audio stream from CHOP channels to disk.",
+    "File Type selects the output container, including WAV, OGG, MP3, and AIFF.",
+    "Codec and bitrate options depend on the chosen file type and control compression or bit depth.",
+    "The output file extension must match the selected File Type.",
+    "Header Source DAT can write key-value metadata pairs into supported output files."
+  ],
+  "key_params": [
+    {"name": "filetype", "type": "Menu", "note": "Output audio container/format"},
+    {"name": "uniquesuff", "type": "Toggle", "note": "Append a unique suffix to avoid overwriting files"},
+    {"name": "file", "type": "File", "note": "Output audio file path"},
+    {"name": "codec", "type": "Menu", "note": "Encoding codec or bit depth where applicable"},
+    {"name": "bitrate", "type": "Int", "note": "Compressed audio bit rate"},
+    {"name": "record", "type": "Toggle", "note": "Record input audio"},
+    {"name": "pause", "type": "Toggle", "note": "Pause an active recording"},
+    {"name": "headerdat", "type": "DAT", "note": "DAT containing header/metadata source"}
+  ],
+  "common_gotchas": [
+    "Recording starts only when Record is enabled; set output paths before pulsing or toggling capture.",
+    "Compressed formats trade file size against quality and may introduce latency or codec availability constraints.",
+    "Unique suffix protects existing takes during automated runs.",
+    "Input sample rate and channel count determine the recorded stream; fix upstream routing before recording."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

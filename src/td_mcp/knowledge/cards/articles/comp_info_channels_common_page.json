@@ -1,0 +1,36 @@
+{
+  "card_type": "article",
+  "article_id": "comp_info_channels_common_page",
+  "title": "COMP Info Channels Common Page",
+  "family": "PARAMETER",
+  "families": [
+    "COMP",
+    "PARAMETER",
+    "CHOP"
+  ],
+  "summary": "Official Derivative common COMP Info Channels page. It documents the shared num_children channel and should not be expanded into operator-specific info-channel claims.",
+  "source_url": "https://docs.derivative.ca/COMP_Info_Channels_Common_Page",
+  "docsbrain_page_id": "comp_info_channels_common_page",
+  "covered_operators": [
+    "infoCHOP",
+    "baseCOMP",
+    "containerCOMP",
+    "geometryCOMP"
+  ],
+  "key_concepts": [
+    "COMP Info Channels Common Page",
+    "Common COMP Info Channels",
+    "Info CHOP",
+    "num_children",
+    "children",
+    "COMP",
+    "Object Component",
+    "Panel Component"
+  ],
+  "guidance": [
+    "The only common channel documented on this page is num_children; avoid inventing extra common COMP info channels.",
+    "Use operator-specific Info CHOP pages or live sampling when a specific COMP type needs more channels."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

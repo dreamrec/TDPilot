@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "outCHOP",
+  "family": "CHOP",
+  "display_name": "Out CHOP",
+  "docs_url": "https://docs.derivative.ca/Out_CHOP",
+  "summary": "Exposes CHOP data from inside a component as one of the parent component's CHOP output connectors.",
+  "key_concepts": [
+    "Out CHOP sends CHOP data from inside a component to an output connector on the parent component.",
+    "Each Out CHOP creates one CHOP output connector on its parent component.",
+    "The Label parameter controls the popup label shown on the parent component output connector.",
+    "Out CHOP is a component-interface operator, not a network or hardware output operator.",
+    "Common CHOP time-slice, sample-rate, scope, rename, and export behavior still affect data leaving the component."
+  ],
+  "key_params": [
+    {"name": "label", "type": "String", "note": "Popup label for the parent component output connector"},
+    {"name": "timeslice", "type": "Toggle", "note": "Force time-sliced channels"},
+    {"name": "scope", "type": "String", "note": "Restrict affected channel names"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate matching behavior"},
+    {"name": "exportmethod", "type": "Menu", "note": "CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root for Channel Name is Path:Parameter exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT export table for DAT-index/name export methods"},
+    {"name": "commonrenamefrom", "type": "String", "note": "Common CHOP rename-from pattern"},
+    {"name": "commonrenameto", "type": "String", "note": "Common CHOP rename-to pattern"}
+  ],
+  "common_gotchas": [
+    "Each Out CHOP creates one output connector on its parent component.",
+    "Out CHOP is for component interfaces, not network/protocol output.",
+    "The parent component's connector order depends on Out CHOP instances/order in the component.",
+    "Use a clear label when building reusable components so downstream users understand the output.",
+    "Sample-rate and time-slice settings still affect the data exported through the component connector."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ component interface",
+  "last_verified": "2026-06-18"
+}

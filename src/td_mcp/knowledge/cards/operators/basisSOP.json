@@ -1,0 +1,66 @@
+{
+  "card_type": "operator",
+  "op_type": "basisSOP",
+  "family": "SOP",
+  "display_name": "Basis SOP",
+  "docs_url": "https://docs.derivative.ca/Basis_SOP",
+  "summary": "Edits the parametric U/V basis of spline curves and surfaces, including knot parameterization, mapping, origin/length/scale changes, and order raising.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Spline primitive group; non-spline types are ignored"
+    },
+    {
+      "name": "ubasis",
+      "type": "Toggle",
+      "note": "Enable U basis editing"
+    },
+    {
+      "name": "uparmtype",
+      "type": "Menu",
+      "note": "U parameterization mode such as unchanged, uniform, chord length, centripetal, or manual"
+    },
+    {
+      "name": "uknots",
+      "type": "String",
+      "note": "Manual U knot sequence"
+    },
+    {
+      "name": "uorigin",
+      "type": "Float",
+      "note": "Set the U basis origin when origin editing is enabled"
+    },
+    {
+      "name": "ulength",
+      "type": "Float",
+      "note": "Set the U basis length when length editing is enabled"
+    },
+    {
+      "name": "orderu",
+      "type": "Int",
+      "note": "Raise the spline order in U"
+    },
+    {
+      "name": "vbasis",
+      "type": "Toggle",
+      "note": "Enable V basis editing for spline surfaces"
+    }
+  ],
+  "common_gotchas": [
+    "Ratio-preserving reparameterizations keep shape, while non-ratio-preserving changes can visibly reshape NURBS or Bezier primitives.",
+    "V operations only apply to spline surfaces and are ignored for curves.",
+    "Profiles on spline surfaces are affected when surface basis ratios change."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Basis SOP edits the parametric U and V domains of spline curves and surfaces.",
+    "Ratio-preserving parameterization changes keep NURBS shape, while non-ratio changes can reshape the primitive.",
+    "U controls affect curves and surfaces, while V controls apply only to spline surfaces.",
+    "Manual knot and order controls must respect spline knot-count and order constraints."
+  ]
+}

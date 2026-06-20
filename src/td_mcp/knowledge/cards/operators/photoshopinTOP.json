@@ -1,0 +1,77 @@
+{
+  "card_type": "operator",
+  "op_type": "photoshopinTOP",
+  "family": "TOP",
+  "display_name": "Photoshop In TOP",
+  "docs_url": "https://docs.derivative.ca/Photoshop_In_TOP",
+  "summary": "Streams the active or locked Photoshop document into TouchDesigner over Photoshop Remote Connections.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Receive image data from Photoshop while enabled."
+    },
+    {
+      "name": "address",
+      "type": "String",
+      "note": "Photoshop host address; localhost works on the same machine."
+    },
+    {
+      "name": "password",
+      "type": "String",
+      "note": "Password configured in Photoshop Remote Connections."
+    },
+    {
+      "name": "imageformat",
+      "type": "Menu",
+      "note": "JPEG for update rate or uncompressed RGB for quality."
+    },
+    {
+      "name": "lockeddocument",
+      "type": "String",
+      "note": "Specific Photoshop document to capture."
+    },
+    {
+      "name": "locktocurrent",
+      "type": "Pulse",
+      "note": "Fill Locked Document Name from the current Photoshop document."
+    },
+    {
+      "name": "unlock",
+      "type": "Pulse",
+      "note": "Clear Locked Document Name so the active Photoshop document is followed."
+    },
+    {
+      "name": "updatemode",
+      "type": "Menu",
+      "note": "Automatic or manual update behavior."
+    },
+    {
+      "name": "maxupdaterate",
+      "type": "Float",
+      "note": "Maximum update rate in automatic mode."
+    },
+    {
+      "name": "update",
+      "type": "Pulse",
+      "note": "Manual update pulse."
+    }
+  ],
+  "common_gotchas": [
+    "Photoshop must have Remote Connections enabled with a matching password before TouchDesigner can connect.",
+    "JPEG improves update rate but sacrifices image quality; uncompressed RGB is heavier but higher quality.",
+    "Manual update mode only refreshes when the Update pulse is clicked.",
+    "If Locked Document Name is empty, the TOP follows the active Photoshop document, which can change during editing."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "photoshop_stream_input",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Streams the output from Photoshop into TouchDesigner over Photoshop Remote Connections.",
+    "Photoshop may run on the same computer or another networked Windows or Mac computer.",
+    "Remote Connections must be enabled in Photoshop with a matching password before the TOP can connect.",
+    "An empty Locked Document Name follows whichever Photoshop document is currently active."
+  ]
+}

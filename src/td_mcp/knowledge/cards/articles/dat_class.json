@@ -1,0 +1,55 @@
+{
+  "card_type": "article",
+  "article_id": "dat_class",
+  "title": "DAT Class",
+  "family": "DAT",
+  "families": [
+    "DAT",
+    "PYTHON",
+    "TABLE",
+    "TEXT"
+  ],
+  "summary": "Official Derivative Python API reference for DAT operators, covering DAT modules, table dimensions, text and CSV access, save/write helpers, table resizing and mutation, row/column/cell lookup, and inherited OP behavior.",
+  "source_url": "https://docs.derivative.ca/DAT_Class",
+  "docsbrain_page_id": "dat_class",
+  "covered_operators": [
+    "convertDAT",
+    "evaluateDAT",
+    "insertDAT",
+    "jsonDAT",
+    "scriptDAT",
+    "tableDAT",
+    "textDAT",
+    "webclientDAT"
+  ],
+  "key_concepts": [
+    "DAT",
+    "module",
+    "numRows",
+    "numCols",
+    "text",
+    "csv",
+    "save()",
+    "write()",
+    "clear()",
+    "appendRow()",
+    "appendCol()",
+    "setSize()",
+    "cell()",
+    "cells()",
+    "findCell()",
+    "row()",
+    "col()"
+  ],
+  "guidance": [
+    "Use this article when generated Python needs to treat a DAT as text, table data, or an importable Python module.",
+    "Use module to call functions defined in a DAT directly, and reserve text/csv for content-level edits or exports.",
+    "Use numRows and numCols for table-shape validation before indexed cell access.",
+    "Use setSize() for exact table dimensions, appendRow()/appendCol() for growth, and clear() when preserving or removing first rows and columns matters.",
+    "Use cell()/findCell()/cells() for table lookup instead of ad hoc string parsing of DAT text."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

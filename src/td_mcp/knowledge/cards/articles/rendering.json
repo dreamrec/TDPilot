@@ -1,0 +1,57 @@
+{
+  "card_type": "article",
+  "article_id": "rendering",
+  "title": "Rendering",
+  "family": "TOP",
+  "families": [
+    "TOP",
+    "COMP",
+    "MAT",
+    "GLSL",
+    "RENDERING"
+  ],
+  "summary": "Official Derivative rendering overview for building 3D scenes with Render TOP, Render Pass TOP, Camera COMP, Geometry COMP, Light COMP, render flags, MAT assignment, GLSL shader/rasterization features, and linear Render Pass TOP chains that reuse one off-screen buffer.",
+  "source_url": "https://docs.derivative.ca/Rendering",
+  "docsbrain_page_id": "rendering",
+  "covered_operators": [
+    "renderTOP",
+    "renderpassTOP",
+    "cameraCOMP",
+    "geometryCOMP",
+    "lightCOMP",
+    "phongMAT",
+    "glslMAT"
+  ],
+  "key_concepts": [
+    "Rendering",
+    "Render TOP",
+    "Render Pass TOP",
+    "GLSL",
+    "rasterization",
+    "pixel shaders",
+    "vertex shaders",
+    "geometry shaders",
+    "Camera COMP",
+    "Geometry COMP",
+    "Render Flag",
+    "Light COMP",
+    "MATs",
+    "default material",
+    "multi-pass rendering",
+    "off-screen buffer",
+    "Depth Buffer",
+    "linear fashion",
+    "SSAO"
+  ],
+  "guidance": [
+    "Use this article when a plan needs to assemble or debug a conventional 3D render pipeline rather than only create a Render TOP.",
+    "A renderable scene needs a Camera COMP assigned to the Render TOP camera parameter, Geometry COMPs listed for rendering, render flags enabled on relevant SOPs and COMPs, lights assigned, and MATs on the geometry when non-default shading is required.",
+    "Rendering in TouchDesigner is grounded in GLSL rasterization, including pixel, vertex, and geometry shader stages plus GLSL-driven materials and deformation.",
+    "Use Render Pass TOPs for linear multi-pass render chains that reuse the Render TOP off-screen buffer and shared Depth Buffer.",
+    "Keep Render TOP and Render Pass TOP chains linear; branching multiple Render Pass TOPs from the same render source can pollute the shared buffer and produce incorrect results."
+  ],
+  "related_snippets": [
+    "GLSL_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

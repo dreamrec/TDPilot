@@ -1,0 +1,389 @@
+{
+  "card_type": "operator",
+  "op_type": "toptoPOP",
+  "family": "POP",
+  "display_name": "TOP to POP",
+  "docs_url": "https://docs.derivative.ca/TOP_to_POP",
+  "summary": "Converts TOP pixels into POP points, primitive topology, and attributes. The first RGBA input can be interpreted as color, position plus active mask, position only, depth maps, height maps, or custom attribute components.",
+  "key_params": [
+    {
+      "name": "rgba",
+      "type": "Menu",
+      "note": "First RGBA Contains; chooses Color (RGBA), Position and Active (RGBA), Position (RGB), Depth, Height (R), or Custom interpretation."
+    },
+    {
+      "name": "maxpointsenable",
+      "type": "Toggle",
+      "note": "Enables an explicit max point count when RGBA is interpreted as Position."
+    },
+    {
+      "name": "maxpoints",
+      "type": "Int",
+      "note": "Maximum number of points when the automatic count is overridden."
+    },
+    {
+      "name": "input0top",
+      "type": "TOP",
+      "note": "TOP source to convert in the first sequential TOP block."
+    },
+    {
+      "name": "input0chanscope",
+      "type": "String",
+      "note": "Channel Scope; selects which TOP color channels such as r, g, b, and a are sampled."
+    },
+    {
+      "name": "input0attrscope",
+      "type": "String",
+      "note": "Attribute Scope; maps sampled channels into POP attributes such as P and P.i01."
+    },
+    {
+      "name": "input0filter",
+      "type": "Menu",
+      "note": "TOP pixel filtering: Nearest Pixel, Interpolate Pixels, or High Quality Resize."
+    },
+    {
+      "name": "attr0name",
+      "type": "Menu",
+      "note": "New Attribute block name; chooses a predefined attribute or custom attribute."
+    },
+    {
+      "name": "attr0customname",
+      "type": "String",
+      "note": "Custom name for a new attribute in the sequential attribute block."
+    },
+    {
+      "name": "attr0type",
+      "type": "Menu",
+      "note": "Attribute type for the new custom attribute."
+    },
+    {
+      "name": "attr0numcomps",
+      "type": "Int",
+      "note": "Number of components in the new custom attribute."
+    },
+    {
+      "name": "attr0defaultval0",
+      "type": "Float",
+      "note": "Default value component 0 when the new attribute cannot be computed."
+    },
+    {
+      "name": "attr0defaultval1",
+      "type": "Float",
+      "note": "Default value component 1 when the new attribute cannot be computed."
+    },
+    {
+      "name": "attr0defaultval2",
+      "type": "Float",
+      "note": "Default value component 2 when the new attribute cannot be computed."
+    },
+    {
+      "name": "attr0defaultval3",
+      "type": "Float",
+      "note": "Default value component 3 when the new attribute cannot be computed."
+    },
+    {
+      "name": "surftype",
+      "type": "Menu",
+      "note": "Connectivity; chooses whether and how generated points are connected into point primitives, lines, line strips, triangles, alternating triangles, or quads."
+    },
+    {
+      "name": "linex",
+      "type": "Toggle",
+      "note": "Enables line connectivity along the X axis."
+    },
+    {
+      "name": "liney",
+      "type": "Toggle",
+      "note": "Enables line connectivity along the Y axis."
+    },
+    {
+      "name": "linez",
+      "type": "Toggle",
+      "note": "Enables line connectivity along the Z axis."
+    },
+    {
+      "name": "planex",
+      "type": "Toggle",
+      "note": "Enables XY plane orientation for primitive generation."
+    },
+    {
+      "name": "planey",
+      "type": "Toggle",
+      "note": "Enables YZ plane orientation for primitive generation."
+    },
+    {
+      "name": "planez",
+      "type": "Toggle",
+      "note": "Enables ZX plane orientation for primitive generation."
+    },
+    {
+      "name": "uniquepoints",
+      "type": "Toggle",
+      "note": "Prevents sharing points between generated primitives."
+    },
+    {
+      "name": "tx",
+      "type": "Float",
+      "note": "Center X for the output geometry."
+    },
+    {
+      "name": "ty",
+      "type": "Float",
+      "note": "Center Y for the output geometry."
+    },
+    {
+      "name": "tz",
+      "type": "Float",
+      "note": "Center Z for the output geometry."
+    },
+    {
+      "name": "overridesizex",
+      "type": "Toggle",
+      "note": "Override automatic X size, which otherwise uses 1 in X and preserves TOP aspect in Y."
+    },
+    {
+      "name": "overridesizey",
+      "type": "Toggle",
+      "note": "Override automatic Y size."
+    },
+    {
+      "name": "overridesizez",
+      "type": "Toggle",
+      "note": "Override automatic Z size."
+    },
+    {
+      "name": "sizex",
+      "type": "Float",
+      "note": "Output geometry size in X."
+    },
+    {
+      "name": "sizey",
+      "type": "Float",
+      "note": "Output geometry size in Y."
+    },
+    {
+      "name": "sizez",
+      "type": "Float",
+      "note": "Output geometry size in Z."
+    },
+    {
+      "name": "overrideresx",
+      "type": "Toggle",
+      "note": "Override automatic X resolution, which otherwise follows the input TOP resolution."
+    },
+    {
+      "name": "overrideresy",
+      "type": "Toggle",
+      "note": "Override automatic Y resolution."
+    },
+    {
+      "name": "overrideresz",
+      "type": "Toggle",
+      "note": "Override automatic Z resolution."
+    },
+    {
+      "name": "resx",
+      "type": "Int",
+      "note": "Overridden output resolution in X."
+    },
+    {
+      "name": "resy",
+      "type": "Int",
+      "note": "Overridden output resolution in Y."
+    },
+    {
+      "name": "resz",
+      "type": "Int",
+      "note": "Overridden output resolution in Z."
+    },
+    {
+      "name": "pixelsamplingloc",
+      "type": "Menu",
+      "note": "Pixel Sampling Location; chooses Edge to Edge or Pixel Centered sampling."
+    },
+    {
+      "name": "texture",
+      "type": "Menu",
+      "note": "Texture Coordinates; chooses whether texture coordinates are created on points or vertices."
+    },
+    {
+      "name": "dimension",
+      "type": "Menu",
+      "note": "Append Dimension; controls whether row, column, and slice dimension metadata is added."
+    },
+    {
+      "name": "rerangefromlow",
+      "type": "Float",
+      "note": "Depth page input low value for reranging depth data."
+    },
+    {
+      "name": "rerangefromhigh",
+      "type": "Float",
+      "note": "Depth page input high value for reranging depth data."
+    },
+    {
+      "name": "rerangetolow",
+      "type": "Float",
+      "note": "Depth page output low value for reranged depth data."
+    },
+    {
+      "name": "rerangetohigh",
+      "type": "Float",
+      "note": "Depth page output high value for reranged depth data."
+    },
+    {
+      "name": "camera",
+      "type": "COMP",
+      "note": "Camera component used when converting depth TOP data into points."
+    },
+    {
+      "name": "overridecamera",
+      "type": "Toggle",
+      "note": "Overrides view settings from the selected camera object."
+    },
+    {
+      "name": "viewanglemethod",
+      "type": "Menu",
+      "note": "View-angle method for depth conversion: horizontal FOV, vertical FOV, or focal lengths."
+    },
+    {
+      "name": "fov",
+      "type": "Float",
+      "note": "Camera field of view angle used for depth projection."
+    },
+    {
+      "name": "focallengthsx",
+      "type": "Float",
+      "note": "Depth projection focal length Fx."
+    },
+    {
+      "name": "focallengthsy",
+      "type": "Float",
+      "note": "Depth projection focal length Fy."
+    },
+    {
+      "name": "centerx",
+      "type": "Float",
+      "note": "Optical center Cx for depth projection."
+    },
+    {
+      "name": "centery",
+      "type": "Float",
+      "note": "Optical center Cy for depth projection."
+    },
+    {
+      "name": "deletenear",
+      "type": "Toggle",
+      "note": "Enables removal of points close to the camera."
+    },
+    {
+      "name": "depthnear",
+      "type": "Float",
+      "note": "Near depth threshold for deleting points."
+    },
+    {
+      "name": "deletefar",
+      "type": "Toggle",
+      "note": "Enables removal of points far from the camera."
+    },
+    {
+      "name": "depthfar",
+      "type": "Float",
+      "note": "Far depth threshold for deleting points."
+    },
+    {
+      "name": "linestripbehavior",
+      "type": "Menu",
+      "note": "Controls whether deleted points delete, split, or remove line strips."
+    },
+    {
+      "name": "dispscale",
+      "type": "Float",
+      "note": "Height page displacement scale when TOP pixels are interpreted as height values."
+    },
+    {
+      "name": "bypass",
+      "type": "Toggle",
+      "note": "Passes the first input through unchanged."
+    },
+    {
+      "name": "freeextragpumem",
+      "type": "Pulse",
+      "note": "Frees accumulated extra GPU memory after output memory has grown and shrunk."
+    },
+    {
+      "name": "delinputattrs",
+      "type": "Toggle",
+      "note": "Outputs only attributes specified by this POP, helping isolate attributes into a separate branch."
+    },
+    {
+      "name": "parmcolorspace",
+      "type": "Menu",
+      "note": "Color space for color parameters before conversion to the working color space."
+    },
+    {
+      "name": "parmreferencewhite",
+      "type": "Menu",
+      "note": "Reference white handling for converted parameter colors."
+    }
+  ],
+  "key_concepts": [
+    "TOP pixels to POP points",
+    "First RGBA Contains",
+    "Color (RGBA)",
+    "Position and Active (RGBA)",
+    "Position (RGB)",
+    "Depth maps",
+    "Height maps",
+    "Custom attribute mapping",
+    "P attribute",
+    "Color attribute",
+    "active pixels",
+    "unused fit-to-square pixels",
+    "Use Dimension",
+    "Channel Scope",
+    "Attribute Scope",
+    "TOP pixel filtering",
+    "Nearest Pixel",
+    "Interpolate Pixels",
+    "High Quality Resize",
+    "New Attribute block",
+    "Connectivity",
+    "Point Primitives",
+    "Line Strips",
+    "Triangles",
+    "Quadrilaterals",
+    "Line X/Y/Z",
+    "Plane XY/YZ/ZX",
+    "Unique Points",
+    "Pixel Sampling Location",
+    "Texture Coordinates",
+    "Append Dimension",
+    "POP Dimension metadata",
+    "rows/columns/slices",
+    "Camera projection",
+    "FOV Angle",
+    "Focal Lengths",
+    "Optical Center",
+    "Delete Near Points",
+    "Delete Far Points",
+    "Line Strip Behavior",
+    "Height displacement",
+    "Info CHOP"
+  ],
+  "common_gotchas": [
+    "Use Dimension keeps all pixels active because the POP dimensions match the TOP resolution; other modes may fit to square and leave unused pixels inactive.",
+    "Custom RGBA mapping can describe only 4 attribute components per TOP sample, so plan component assignments such as P(0), Color(2), N(1), or P(2) deliberately.",
+    "Use Nearest Pixel for exact data textures; Interpolate Pixels and High Quality Resize can be useful visually but will blend attribute values.",
+    "Depth conversion depends on Camera projection, FOV or Focal Lengths, Optical Center, and near/far deletion thresholds; line-strip deletion behavior changes topology when points are removed.",
+    "Connectivity choices such as Point Primitives, Line Strips, Triangles, and Quadrilaterals create different primitive and vertex counts, so downstream POPs should not assume only points.",
+    "Override Size and Override Resolution decouple output geometry from the input TOP aspect ratio and resolution; preserve Append Dimension when downstream lookup or POP-to-TOP workflows need row/column/slice structure."
+  ],
+  "related_snippets": [
+    "POP_snippets",
+    "TOP_snippets",
+    "POP_attribute_ontology"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

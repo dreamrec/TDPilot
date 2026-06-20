@@ -1,0 +1,75 @@
+{
+  "card_type": "operator",
+  "op_type": "audiodevicesDAT",
+  "family": "DAT",
+  "display_name": "Audio Devices DAT",
+  "docs_url": "https://docs.derivative.ca/Audio_Devices_DAT",
+  "summary": "Lists detected audio input and output devices by driver, direction, label, and name for use with Audio Device In and Audio Device Out CHOPs.",
+  "key_params": [
+    {
+      "name": "driver",
+      "type": "Menu",
+      "note": "Filter table to default, ASIO, DataPath, Blackmagic, AJA, or Deltacast devices"
+    },
+    {
+      "name": "alldrivers",
+      "type": "Toggle",
+      "note": "Show devices from all available drivers"
+    },
+    {
+      "name": "input",
+      "type": "Toggle",
+      "note": "Include input devices in the table"
+    },
+    {
+      "name": "output",
+      "type": "Toggle",
+      "note": "Include output devices in the table"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "Script run when the device table changes"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language setting"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor extension exposed by the DAT"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Device names and labels are machine-dependent; generated Audio Device CHOPs should reference current table values.",
+    "All Drivers can show duplicate-looking hardware across different driver backends.",
+    "Callbacks may fire for hotplug or driver-state changes, so scripts should debounce if they rebuild audio routing.",
+    "Some listed drivers depend on OS, hardware, or vendor drivers that may not be installed."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "audio-device-discovery-and-routing",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Lists detected audio devices with driver, direction, label, and name fields.",
+    "Can show one selected driver or all available audio-device drivers.",
+    "Runs a callback once for each table/device-state change and reports changed device names.",
+    "The listed names are intended for Audio Device In CHOP and Audio Device Out CHOP device references."
+  ],
+  "platform_notes": [
+    "Available driver choices are platform and hardware dependent; the default driver entry maps to DirectSound/CoreAudio in the official docs."
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "card_type": "operator",
+  "op_type": "ndioutTOP",
+  "family": "TOP",
+  "display_name": "NDI Out TOP",
+  "docs_url": "https://docs.derivative.ca/NDI_Out_TOP",
+  "summary": "Sends image, optional alpha, optional audio CHOP data, and optional metadata DAT data over IP as an NDI source for other NDI-enabled applications.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Advertise and send image data while enabled"
+    },
+    {
+      "name": "name",
+      "type": "String",
+      "note": "NDI source name"
+    },
+    {
+      "name": "failovername",
+      "type": "String",
+      "note": "Failover source name in MACHINENAME (SourceName) format"
+    },
+    {
+      "name": "fps",
+      "type": "Float",
+      "note": "Frame rate sent to NDI"
+    },
+    {
+      "name": "lowperformancebehavior",
+      "type": "Menu",
+      "note": "stallmainthread or skipframes"
+    },
+    {
+      "name": "outputpixelformat",
+      "type": "Menu",
+      "note": "fixed8 or fixed16"
+    },
+    {
+      "name": "includealpha",
+      "type": "Toggle",
+      "note": "Send alpha channel instead of forcing alpha to one"
+    },
+    {
+      "name": "grouptable",
+      "type": "DAT",
+      "note": "Table of NDI groups this output announces"
+    },
+    {
+      "name": "audiochop",
+      "type": "CHOP",
+      "note": "Audio CHOP sent with the NDI stream"
+    },
+    {
+      "name": "metadata",
+      "type": "DAT",
+      "note": "XML or table-format metadata sent with the stream"
+    },
+    {
+      "name": "outputcolorspace",
+      "type": "Menu",
+      "note": "Outgoing color-space conversion/metadata"
+    },
+    {
+      "name": "outputreferencewhite",
+      "type": "Menu",
+      "note": "default, sdr, or hdr output reference-white handling"
+    }
+  ],
+  "common_gotchas": [
+    "Windows firewall settings can prevent receivers from connecting.",
+    "Higher FPS can increase compression and reduce image quality.",
+    "stallmainthread may drop TouchDesigner frames, while skipframes may starve the NDI sender.",
+    "Metadata must be valid XML or table content that can be converted for NDI metadata use.",
+    "The official docs typo annouces appears near grouptable, but the parameter id is grouptable."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "NDI_snippets"
+  ],
+  "build_relevance": "network_video_io",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Publishes a TOP image as an NDI source on the network.",
+    "FPS guides NDI compression behavior and can affect quality versus throughput.",
+    "Low-performance behavior chooses between stalling the main thread and skipping sender frames.",
+    "The operator can send alpha, audio from an audiochop, metadata DAT content, and group membership.",
+    "Output color-space and reference-white controls describe or convert outgoing image data."
+  ]
+}

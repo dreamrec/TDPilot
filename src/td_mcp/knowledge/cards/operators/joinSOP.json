@@ -1,0 +1,91 @@
+{
+  "card_type": "operator",
+  "op_type": "joinSOP",
+  "family": "SOP",
+  "display_name": "Join SOP",
+  "docs_url": "https://docs.derivative.ca/Join_SOP",
+  "summary": "Connects a sequence of faces or surfaces into one primitive, optionally changing connected ends and converting simpler primitives to Bezier/NURBS as needed.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Primitive group to join."
+    },
+    {
+      "name": "blend",
+      "type": "Toggle",
+      "note": "Blend ends when joining."
+    },
+    {
+      "name": "tolerance",
+      "type": "Float",
+      "note": "Tolerance for matching ends."
+    },
+    {
+      "name": "bias",
+      "type": "Float",
+      "note": "Bias for join/blend behavior."
+    },
+    {
+      "name": "knotmult",
+      "type": "Toggle",
+      "note": "Use multiple knots where applicable."
+    },
+    {
+      "name": "proximity",
+      "type": "Toggle",
+      "note": "Use proximity to choose ends."
+    },
+    {
+      "name": "dir",
+      "type": "Menu",
+      "note": "Join direction."
+    },
+    {
+      "name": "joinop",
+      "type": "Menu",
+      "note": "Join operation mode."
+    },
+    {
+      "name": "all",
+      "type": "Toggle",
+      "note": "Join all primitives."
+    },
+    {
+      "name": "skip",
+      "type": "Int",
+      "note": "Skip count for grouped joins."
+    },
+    {
+      "name": "inc",
+      "type": "Int",
+      "note": "Increment for grouping primitives."
+    },
+    {
+      "name": "loop",
+      "type": "Toggle",
+      "note": "Loop joins."
+    },
+    {
+      "name": "prim",
+      "type": "Toggle",
+      "note": "Keep/input primitive handling."
+    }
+  ],
+  "common_gotchas": [
+    "Mixed face and surface primitive types cannot be joined together.",
+    "Conversion to Bezier or NURBS can surprise downstream type-specific SOPs.",
+    "`inc` and `skip` affect how primitives are grouped for joining."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Join SOP joins a sequence of faces or surfaces into one primitive.",
+    "It can join faces to faces or surfaces to surfaces, but mixed face/surface inputs are invalid.",
+    "Simpler primitives may be converted to Bezier or NURBS to perform the join.",
+    "Join differs from Fillet and Stitch because it turns multiple primitives into one and can change connected ends."
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "card_type": "operator",
+  "op_type": "renderstreamoutTOP",
+  "family": "TOP",
+  "display_name": "RenderStream Out TOP",
+  "docs_url": "https://docs.derivative.ca/RenderStream_Out_TOP",
+  "summary": "Sends TOP image data out over RenderStream. Connection setup and sync are handled by RenderStream In CHOP.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable sending image data."
+    },
+    {
+      "name": "streamindex",
+      "type": "Int",
+      "note": "RenderStream index to send to."
+    },
+    {
+      "name": "profilechop",
+      "type": "CHOP",
+      "note": "Optional profiling channels sent to the D3/Disguise UI."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP Filter output-resolution behavior."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "Only available in TouchDesigner Pro.",
+    "Only supported on Microsoft Windows.",
+    "This TOP sends data but does not own session setup or sync; use RenderStream In CHOP for control.",
+    "Stream Index must match the intended RenderStream stream.",
+    "Profile CHOP is profiling metadata for the D3/Disguise UI, not an image input."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "CHOP_snippets"
+  ],
+  "build_relevance": "2022.28040+ RenderStream r22+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Sends TOP image data out over Disguise RenderStream.",
+    "RenderStream In CHOP still owns setup and synchronization for the session.",
+    "Stream Index targets the intended RenderStream output stream.",
+    "Profile CHOP sends profiling metadata channels to the D3/Disguise UI rather than image data."
+  ]
+}

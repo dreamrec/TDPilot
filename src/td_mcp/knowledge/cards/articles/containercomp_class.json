@@ -1,0 +1,52 @@
+{
+  "card_type": "article",
+  "article_id": "containercomp_class",
+  "title": "containerCOMP Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "COMP",
+    "PANEL"
+  ],
+  "summary": "Official Derivative Python API reference for Container COMP instances, covering click() at a panel location, clickChild() for sub-panels, group labels, and inherited PanelCOMP / COMP behavior.",
+  "source_url": "https://docs.derivative.ca/ContainerCOMP_Class",
+  "docsbrain_page_id": "containercomp_class",
+  "covered_operators": [
+    "containerCOMP",
+    "buttonCOMP"
+  ],
+  "key_concepts": [
+    "containerCOMP Class",
+    "Container COMP",
+    "COMP class",
+    "PanelCOMP Class",
+    "No operator specific members",
+    "click()",
+    "clickChild()",
+    "u",
+    "v",
+    "childIndex",
+    "clickCount",
+    "force",
+    "left",
+    "middle",
+    "right",
+    "group",
+    "Button COMP",
+    "radio buttons",
+    "disabled",
+    "panel",
+    "PanelValue Class"
+  ],
+  "guidance": [
+    "Use this article when a script needs to simulate a click at a specific location inside a Container COMP panel.",
+    "Use click(u, v) to update the container's U and V interaction coordinates at a specific location.",
+    "Use clickChild(childIndex) to click a sub-panel by index, including radio buttons inside a single container.",
+    "Use group when the simulated click needs an optional panel group label compatible with Button COMP group behavior.",
+    "Use force carefully because it can click even when the container or child panel is disabled; specify left, middle, or right when the default left-button event is not the target."
+  ],
+  "related_snippets": [
+    "panel_ui"
+  ],
+  "last_verified": "2026-06-18"
+}

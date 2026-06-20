@@ -1,0 +1,47 @@
+{
+  "card_type": "operator",
+  "op_type": "syphonspoutinTOP",
+  "family": "TOP",
+  "display_name": "Syphon Spout In TOP",
+  "docs_url": "https://docs.derivative.ca/Syphon_Spout_In_TOP",
+  "summary": "Receives local shared-memory textures from Spout on Windows or Syphon on macOS.",
+  "key_params": [
+    {
+      "name": "usespoutactivesender",
+      "type": "Toggle",
+      "note": "Use the global Spout Active Sender instead of Sender Name."
+    },
+    {
+      "name": "sendername",
+      "type": "String",
+      "note": "Syphon/Spout sender name to receive."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "Spout on Windows requires an Nvidia or AMD GPU; Intel-only does not work.",
+    "Shared memory works only on the same computer and does not send textures over the network.",
+    "Use Spout Active Sender overrides the Sender Name parameter.",
+    "Windows Spout defaults to a 10-sender limit unless the registry setting is changed."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "local_texture_sharing",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Syphon Spout In receives texture images through local shared memory from Spout or Syphon senders.",
+    "Spout is the Windows path and Syphon is the macOS path; this is not a network transport.",
+    "Use Spout Active Sender can override the explicit Sender Name.",
+    "Network alternatives are Touch In/Out TOP or NDI In/Out TOP."
+  ]
+}

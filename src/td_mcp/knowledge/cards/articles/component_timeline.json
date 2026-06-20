@@ -1,0 +1,36 @@
+{
+  "card_type": "article",
+  "article_id": "component_timeline",
+  "title": "Component Timeline",
+  "family": "COMP",
+  "families": [
+    "COMP",
+    "TIME",
+    "UI"
+  ],
+  "summary": "Official Derivative reference for the Component Timeline UI shown for networks with Component Time, covering timecode/playhead display, Run Independently behavior, Scope behavior, and root-time scope indication.",
+  "source_url": "https://docs.derivative.ca/Component_Timeline",
+  "docsbrain_page_id": "component_timeline",
+  "covered_operators": [
+    "timeCOMP"
+  ],
+  "key_concepts": [
+    "Component Timeline",
+    "Component Time",
+    "network editor",
+    "timecode",
+    "playhead",
+    "Run Independently",
+    "Scope",
+    "Timeline",
+    "root time"
+  ],
+  "guidance": [
+    "Use this article when explaining or validating how local Component Time is controlled from the network editor timeline gadget.",
+    "Run Independently lets a Component Time keep its own play state instead of following parent timelines.",
+    "Scope loads the component time into TouchDesigner's main Timeline and changes the Timeline UI color away from root time.",
+    "Do not model Component Timeline as an operator; it is UI for a network with Component Time."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

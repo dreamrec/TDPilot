@@ -4,17 +4,120 @@
   "family": "TOP",
   "display_name": "Feedback TOP",
   "docs_url": "https://docs.derivative.ca/Feedback_TOP",
-  "summary": "Outputs the previous frame's result of a downstream TOP, enabling recursive visual feedback loops for trails, echoes, and iterative effects.",
+  "summary": "Creates TOP feedback effects by sourcing its output stream from a downstream Target TOP when feedback is active, or passing through its input while reset/bypass is active. Use it with filter TOPs between the Feedback TOP and Target TOP for trails, echoes, fake motion blur, and recursive image processing.",
   "key_params": [
-    {"name": "top", "type": "String", "note": "Path to the target TOP whose previous-frame output is fed back"},
-    {"name": "resetpulse", "type": "Toggle", "note": "Pulse to clear the feedback buffer to black"},
-    {"name": "resetcondition", "type": "Menu", "note": "When to auto-reset: None, On First Frame, On Parameter Change"}
+    {
+      "name": "top",
+      "type": "TOP Path",
+      "note": "Target TOP used as the feedback source when feedback is active."
+    },
+    {
+      "name": "reset",
+      "type": "Toggle",
+      "note": "Disables feedback and passes through the input when set to 1; activates feedback when set to 0."
+    },
+    {
+      "name": "resetpulse",
+      "type": "Pulse",
+      "note": "Resets feedback for a single frame."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP control for using, scaling, fitting, limiting, or overriding output resolution."
+    },
+    {
+      "name": "resolution",
+      "type": "Int2",
+      "note": "Custom output width and height when Output Resolution is Custom Resolution."
+    },
+    {
+      "name": "resmenu",
+      "type": "Menu",
+      "note": "Common resolution presets."
+    },
+    {
+      "name": "resmult",
+      "type": "Toggle",
+      "note": "Apply the global TOP resolution multiplier."
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Choose input, resolution-derived, or custom output aspect ratio."
+    },
+    {
+      "name": "aspect",
+      "type": "Float2",
+      "note": "Custom aspect ratio pair."
+    },
+    {
+      "name": "armenu",
+      "type": "Menu",
+      "note": "Common aspect-ratio presets."
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Input image filtering: nearest, linear, or mipmap."
+    },
+    {
+      "name": "fillmode",
+      "type": "Menu",
+      "note": "Controls how the TOP image fills the node viewer."
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Viewer filtering mode."
+    },
+    {
+      "name": "npasses",
+      "type": "Integer",
+      "note": "Repeats the TOP operation multiple times."
+    },
+    {
+      "name": "chanmask",
+      "type": "Mask",
+      "note": "Choose which RGBA channels the TOP operates on."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Pixel format used to store image channel data."
+    }
+  ],
+  "key_concepts": [
+    "feedback effects",
+    "fake motion blur",
+    "not clearing the color buffer",
+    "Bypass Feedback",
+    "Target TOP",
+    "downstream in the feedback network",
+    "filter TOPs between Feedback TOP and Target TOP",
+    "OP Snippets",
+    "3D Textures",
+    "2D Texture Arrays",
+    "Output Resolution",
+    "Pixel Format",
+    "Info CHOP",
+    "resx",
+    "resy",
+    "aspectx",
+    "aspecty",
+    "depth",
+    "gpu_memory_used"
   ],
   "common_gotchas": [
-    "The Target TOP parameter must point to a TOP *downstream* of this node; pointing upstream creates no loop.",
-    "Feedback runs one frame behind — combine with a Composite or Level TOP to decay or the image will saturate."
+    "Target TOP should point downstream in the feedback network; otherwise there is no closed feedback path for the accumulated image stream.",
+    "Reset disables feedback and passes through the connected input image, so a reset value of 1 is intentionally not a recursive feedback state.",
+    "Reset Pulse clears the feedback for a single frame; use it to initialize a loop without leaving reset held on.",
+    "Feedback loops usually need a Level TOP, Composite TOP, or other filter between the Feedback TOP and Target TOP to decay or transform the prior frame.",
+    "Use Info CHOP resx, resy, depth, and gpu_memory_used to confirm that a feedback loop is operating at the intended texture size and format."
   ],
-  "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
 }

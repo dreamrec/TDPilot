@@ -1,0 +1,51 @@
+{
+  "card_type": "article",
+  "article_id": "attribute_class",
+  "title": "Attribute Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "SOP",
+    "POP",
+    "GEOMETRY"
+  ],
+  "summary": "Official Derivative Python API reference for Attribute objects, covering geometric attribute metadata such as owner, name, component size, value type, defaults, array and matrix shape metadata, destruction, and delayed value readback.",
+  "source_url": "https://docs.derivative.ca/Attribute_Class",
+  "docsbrain_page_id": "attribute_class",
+  "covered_operators": [
+    "attributeSOP",
+    "attributecreateSOP",
+    "scriptSOP"
+  ],
+  "key_concepts": [
+    "Attribute Class",
+    "owner",
+    "name",
+    "size",
+    "type",
+    "default",
+    "isArray",
+    "arraySize",
+    "numMatCols",
+    "numMatRows",
+    "destroy()",
+    "vals(delayed=False)",
+    "AttributeData Class",
+    "Attributes Class",
+    "Prim Class",
+    "Point Class",
+    "Vertex Class"
+  ],
+  "guidance": [
+    "Use this article when generated Python needs attribute metadata rather than per-point, per-primitive, or per-vertex values.",
+    "Use size, type, default, isArray, arraySize, numMatCols, and numMatRows to reason about scalar, vector, array, and matrix attribute layouts before emitting attribute access code.",
+    "Use vals(delayed=True) when delayed GPU readback is safer than immediately stalling while waiting for attribute values in POP-oriented attribute workflows.",
+    "Use destroy() only when intentionally removing the referenced attribute from geometry authored by a compatible script workflow.",
+    "Pair this with Attributes Class for collection lookup and AttributeData Class for specific per-element values."
+  ],
+  "related_snippets": [
+    "POP_attribute_ontology",
+    "POP_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

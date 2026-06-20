@@ -1,0 +1,37 @@
+{
+  "card_type": "operator",
+  "op_type": "proximityPOP",
+  "family": "POP",
+  "display_name": "Proximity POP",
+  "docs_url": "https://docs.derivative.ca/Proximity_POP",
+  "summary": "Connects nearby points with 2-point line primitives, either within the first input or between a second input and the first. It can limit distance, line count, duplicate lines, and output line direction, line length, or matched endpoint attributes.",
+  "key_params": [
+    {"name": "maxdist", "type": "Float", "note": "Maximum distance for candidate connections"},
+    {"name": "mindist", "type": "Float", "note": "Minimum distance for candidate connections"},
+    {"name": "maxlinesperpoint", "type": "Int", "note": "Maximum lines generated from each point"},
+    {"name": "uniformdist", "type": "Toggle", "note": "Distributes selection more uniformly among nearby candidates"},
+    {"name": "maxtempneighbors", "type": "Int", "note": "Temporary candidate storage before pruning to max line count"},
+    {"name": "duplines", "type": "Menu", "note": "Do nothing, avoid, or delete duplicate line pairs"},
+    {"name": "numhashbuckets", "type": "Int", "note": "Spatial hash bucket count; often close to point count"},
+    {"name": "output", "type": "Menu", "note": "Output shared-point lines or point primitives"},
+    {"name": "linedir", "type": "Toggle", "note": "Output line direction attribute"},
+    {"name": "linelength", "type": "Toggle", "note": "Output line length attribute"},
+    {"name": "endptattrs", "type": "Toggle", "note": "Output endpoint attributes from connected points"},
+    {"name": "origin", "type": "Menu", "note": "Select which endpoint supplies origin-style attributes"},
+    {"name": "remunusedpoints", "type": "Toggle", "note": "Remove points that are not referenced by output primitives"},
+    {"name": "cpureadback", "type": "Toggle", "note": "Enable CPU readback for diagnostics or CPU consumers"}
+  ],
+  "key_concepts": [
+    "Proximity POP performs neighbor searches within minimum and maximum distance limits and emits 2-point line primitives for selected pairs.",
+    "One-input mode connects points within the same set, while a second input lets one point set query nearby points in another set.",
+    "Line direction, line length, endpoint attribute, duplicate-line, and unused-point controls turn the neighbor graph into usable downstream attributes."
+  ],
+  "common_gotchas": [
+    "Proximity outputs 2-point line primitives, not line strips; use Line Break or other line tools if strip topology is needed.",
+    "Spatial hashing performance depends on numhashbuckets; tune it for large point clouds.",
+    "When using two inputs, end point attribute output can duplicate substantial data, so scope the attributes carefully."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

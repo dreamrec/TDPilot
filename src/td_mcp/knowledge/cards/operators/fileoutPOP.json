@@ -1,0 +1,46 @@
+{
+  "card_type": "operator",
+  "op_type": "fileoutPOP",
+  "family": "POP",
+  "display_name": "File Out POP",
+  "docs_url": "https://docs.derivative.ca/File_Out_POP",
+  "summary": "Writes POP contents to geometry and point-cloud file formats such as OBJ, EXR, PLY, SPZ, and E57. It supports single-file writes, file sequences, recording, frame pulses, selected attributes, and primitive inclusion.",
+  "key_params": [
+    {"name": "type", "type": "Menu", "note": "File or file sequence output"},
+    {"name": "objectfiletype", "type": "Menu", "note": "OBJ, EXR, PLY, SPZ, or E57 output format"},
+    {"name": "uniquesuff", "type": "Toggle", "note": "Use a unique file suffix through me.fileSuffix"},
+    {"name": "n", "type": "Int", "note": "Starting index for unique suffix naming"},
+    {"name": "leadingzerosdigits", "type": "Int", "note": "Minimum suffix digit count for file sequences"},
+    {"name": "file", "type": "File", "note": "Output path with file extension"},
+    {"name": "fps", "type": "Float", "note": "File sequence frame rate"},
+    {"name": "limitlength", "type": "Toggle", "note": "Automatically stop recording after a specified length"},
+    {"name": "length", "type": "Float", "note": "Recording length limit"},
+    {"name": "lengthunit", "type": "Menu", "note": "Length unit"},
+    {"name": "record", "type": "Toggle", "note": "Enable recording"},
+    {"name": "recordpulse", "type": "Pulse", "note": "Write a file immediately"},
+    {"name": "pause", "type": "Toggle", "note": "Pause file sequence recording"},
+    {"name": "addframe", "type": "Pulse", "note": "Add one frame while paused"},
+    {"name": "maxactive", "type": "Int", "note": "Maximum active save tasks"},
+    {"name": "includeprim", "type": "Toggle", "note": "Include primitive data where supported"},
+    {"name": "texcoordattrib", "type": "Str", "note": "Texture coordinate attribute used when writing geometry UVs"},
+    {"name": "outputcolorspace", "type": "Menu", "note": "Color space for written color data"},
+    {"name": "attr", "type": "Sequential", "note": "Attribute-to-file-field sequence blocks"},
+    {"name": "attr0name", "type": "Str", "note": "Additional attribute name to write"},
+    {"name": "attr0fields", "type": "Str", "note": "Output field names for the selected attribute"}
+  ],
+  "key_concepts": [
+    "File Out POP writes POP contents to geometry and point-cloud formats including OBJ, EXR, PLY, SPZ, and E57.",
+    "Type selects single-file writes or file-sequence recording; Record, Record Pulse, Pause, Add Frame, length limits, suffix controls, and max active saves control the write lifecycle.",
+    "Format support differs: OBJ requires P(float3) and has specific normal/texture handling, SPZ requires P, Color, Scale, and Rot, and EXR/PLY can write arbitrary point attributes.",
+    "Primitive attributes are not written for any documented format, so planner output should bake critical primitive metadata into supported point or vertex attributes before export.",
+    "Attribute sequence blocks and output color-space controls let the card describe exactly which attributes become file fields."
+  ],
+  "common_gotchas": [
+    "OBJ requires P(float3), and only OBJ supports vertex Normal/Texture writing in the documented way.",
+    "SPZ requires specific attributes such as P, Color, Scale, and Rot.",
+    "Primitive attributes are not written for every format, so bake critical primitive data to supported point attributes when needed."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

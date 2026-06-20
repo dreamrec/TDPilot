@@ -6,8 +6,8 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from td_mcp import patch
-from td_mcp.brain.validators import build_validation_report_v2
-from td_mcp.models.brain import TransactionOptions, TransactionResult
+from td_mcp.brain.validators import build_validation_report_v2, validate_reference_params_for_plan
+from td_mcp.models.brain import TransactionOptions, TransactionResult, ValidationIssue, ValidationReportV2
 from td_mcp.models.patch import PatchPlan, PatchPreview
 from td_mcp.patch.undo_sentinel import UndoBlockSentinel
 
@@ -35,9 +35,22 @@ async def apply_transaction(
         return result
 
     if opts.preflight:
+        reference_issues = validate_reference_params_for_plan(plan)
+        if reference_issues:
+            result.failed_reason = "; ".join(issue.message for issue in reference_issues)
+            result.validation_failed = True
+            result.validation_report = _reference_param_report(
+                target_root=plan.target_root,
+                concept_profile=concept_profile,
+                issues=reference_issues,
+            )
+            return result
+
         preview_dict = await patch.preview_plan(td_client, plan)
         result.preview = PatchPreview(**preview_dict)
-        target_missing = [flag for flag in result.preview.live_risk_flags if flag.startswith("target-missing:")]
+        target_missing = [
+            flag for flag in result.preview.live_risk_flags if flag.startswith("target-missing:")
+        ]
         if target_missing:
             result.failed_reason = "; ".join(target_missing)
             return result
@@ -120,3 +133,25 @@ async def _rollback(
             result.rollback_error = str(exc)
 
     result.needs_manual_recovery = True
+
+
+def _reference_param_report(
+    *,
+    target_root: str,
+    concept_profile: str | None,
+    issues: list[ValidationIssue],
+) -> ValidationReportV2:
+    severity_counts: dict[str, int] = {}
+    for issue in issues:
+        severity_counts[issue.severity] = severity_counts.get(issue.severity, 0) + 1
+    return ValidationReportV2(
+        profile="structural_visual_safe",
+        concept_profile=concept_profile,
+        target_root=target_root,
+        ok=False,
+        checks=["reference_params"],
+        issues=issues,
+        severity_counts=severity_counts,
+        cheap_metrics={},
+        summary=f"{len(issues)} reference parameter issue(s)",
+    )

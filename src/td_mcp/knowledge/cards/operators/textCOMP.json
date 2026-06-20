@@ -1,0 +1,51 @@
+{
+  "card_type": "operator",
+  "op_type": "textCOMP",
+  "family": "COMP",
+  "display_name": "Text COMP",
+  "docs_url": "https://docs.derivative.ca/Text_COMP",
+  "summary": "Displays and optionally edits GPU-rendered 2D text in a panel, with direct Text mode, Specification DAT/CHOP multi-block mode, formatting codes, numeric/time formatting, wrapping, and callbacks.",
+  "key_params": [
+    {"name": "mode", "type": "Menu", "note": "Use the Text parameter or Specification DAT/CHOP mode"},
+    {"name": "text", "type": "String/bind", "note": "Source text value; editable panels can write back to this value or bound source"},
+    {"name": "specdat", "type": "Table DAT", "note": "Specification table with x, y, text, and optional formatting columns"},
+    {"name": "specchop", "type": "CHOP", "note": "Numeric per-row attributes matching Specification DAT rows"},
+    {"name": "type", "type": "Menu", "note": "String, Float, Integer, Multi Line, or Password interpretation"},
+    {"name": "formatting", "type": "Menu", "note": "Default, C++ Fmt, Python f-string, numeric, percentage, or time-code formatting"},
+    {"name": "customformatting", "type": "String", "note": "Format string used by custom formatting modes"},
+    {"name": "framerate", "type": "Float", "note": "Frames per second for integer time-code formatting"},
+    {"name": "formatcodes", "type": "Toggle", "note": "Enable inline Text Formatting Codes"},
+    {"name": "escapeseq", "type": "Toggle", "note": "Parse escape sequences in Specification DAT mode"},
+    {"name": "wordwrap", "type": "Toggle", "note": "Wrap multiline text to panel width"},
+    {"name": "editmode", "type": "Menu", "note": "Locked, editable, select-only, or continuous editable behavior"},
+    {"name": "fontfile", "type": "File", "note": "Explicit font file for fonts not registered with the operating system"},
+    {"name": "scaletofit", "type": "Menu", "note": "Shrink or fill text to fit the panel bounds"},
+    {"name": "fontsizeunits", "type": "Menu", "note": "Font sizing in panel units, fractions, points, or pixels depending on mode"},
+    {"name": "dragdropmode", "type": "Menu", "note": "Use panel drag/drop, insert, replace, or append text"},
+    {"name": "fieldfocus", "type": "Table DAT", "note": "Focus order table for Tab and Shift-Tab editing"},
+    {"name": "callbacks", "type": "Text DAT", "note": "Python callbacks for text and focus changes"}
+  ],
+  "key_concepts": [
+    "view-only and editable panel text",
+    "raw edit value with formatted display",
+    "string, numeric, percentage, and time-code formatting",
+    "inline Text Formatting Codes",
+    "Specification DAT text blocks",
+    "Specification CHOP numeric attributes",
+    "Slug GPU text rendering"
+  ],
+  "common_gotchas": [
+    "Editable mode writes back to the Text parameter or bound source, so bind targets can be changed by panel users.",
+    "Editable Continuous Update writes every key stroke and can create heavy recooking or premature validation side effects.",
+    "Specification DAT mode requires a text column and matching CHOP samples for per-row numeric overrides.",
+    "Text in Specification DAT mode is not directly editable through the panel.",
+    "Word Wrap only applies to Multi Line type and still depends on panel width and padding.",
+    "Escape sequence parsing is for Specification DAT mode; use Python expression mode for newlines in Text mode.",
+    "Password mode is only a visual display mode and should not be treated as secure secret handling.",
+    "Text COMP replaces Field COMP and adds features, so avoid planning deprecated Field COMP for new panels.",
+    "Fonts that have not been used before may incur setup delay when selected."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2025.30000+ Slug-based editable text panel and Field COMP replacement",
+  "last_verified": "2026-06-17"
+}

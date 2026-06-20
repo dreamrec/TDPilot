@@ -1,0 +1,59 @@
+{
+  "card_type": "article",
+  "article_id": "comp_generator_common_page",
+  "title": "COMP Generator Common Page",
+  "family": "PARAMETER",
+  "families": [
+    "COMP",
+    "PARAMETER",
+    "TOX",
+    "CLONE"
+  ],
+  "summary": "Official Derivative common Generator COMP page for node viewer, shortcuts, panel memory, clone, load-on-demand, external .tox, reload-on-start, parameter reload, backup, sub-component load, and re-init behavior.",
+  "source_url": "https://docs.derivative.ca/COMP_Generator_Common_Page",
+  "docsbrain_page_id": "comp_generator_common_page",
+  "covered_operators": [
+    "baseCOMP",
+    "timeCOMP",
+    "replicatorCOMP",
+    "engineCOMP",
+    "containerCOMP"
+  ],
+  "key_concepts": [
+    "COMP Generator Common Page",
+    "Generator Common Page",
+    "Parameters - Common Page",
+    "node viewer",
+    "clone relationships",
+    "parentshortcut",
+    "opshortcut",
+    "iop0shortcut",
+    "iop0op",
+    "nodeview",
+    "default",
+    "opviewer",
+    "keepmemory",
+    "enablecloning",
+    "enablecloningpulse",
+    "clone",
+    "loadondemand",
+    "externaltox",
+    "reloadtoxonstart",
+    "reloadcustom",
+    "reloadbuiltin",
+    "savebackup",
+    "subcompname",
+    "reinitnet",
+    ".tox",
+    ".toe"
+  ],
+  "guidance": [
+    "Use this article for generator-style COMPs where common viewer, shortcut, clone, external .tox, or re-init behavior affects planning.",
+    "Keep in Memory is panel-only even though it appears on this common page.",
+    "If an external .tox cannot be found, TouchDesigner loads whatever contents were saved in the .toe.",
+    "Reload Custom Parameters and Reload Built-In Parameters only affect top-level component parameters.",
+    "Use reloadtoxonstart to control startup loading from external .tox; Re-Init Network reloads the .tox if present and then re-initializes from the clone master."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

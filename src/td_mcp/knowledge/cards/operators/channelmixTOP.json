@@ -1,0 +1,69 @@
+{
+  "card_type": "operator",
+  "op_type": "channelmixTOP",
+  "family": "TOP",
+  "display_name": "Channel Mix TOP",
+  "docs_url": "https://docs.derivative.ca/Channel_Mix_TOP",
+  "summary": "Builds output RGBA channels from weighted mixes of input RGBA channels plus per-channel constants.",
+  "key_params": [
+    {
+      "name": "red",
+      "type": "RGBA",
+      "note": "Input RGBA weights used to build output red"
+    },
+    {
+      "name": "green",
+      "type": "RGBA",
+      "note": "Input RGBA weights used to build output green"
+    },
+    {
+      "name": "blue",
+      "type": "RGBA",
+      "note": "Input RGBA weights used to build output blue"
+    },
+    {
+      "name": "alpha",
+      "type": "RGBA",
+      "note": "Input RGBA weights used to build output alpha"
+    },
+    {
+      "name": "constant",
+      "type": "RGBA",
+      "note": "Per-output-channel constant offsets"
+    },
+    {
+      "name": "npasses",
+      "type": "Int",
+      "note": "Common TOP pass repeat count"
+    },
+    {
+      "name": "chanmask",
+      "type": "String",
+      "note": "Common TOP channel mask"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Weights are ordered by input R, G, B, A columns; they are not preset names.",
+    "Negative or large weights can produce values outside normal display range.",
+    "Constants can cause downstream clipping when output stays in low-precision formats.",
+    "Alpha is mixed independently and must be routed intentionally."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Channel Mix TOP is a matrix-style RGBA channel mixer.",
+    "Each output channel has four weights for input red, green, blue, and alpha.",
+    "Defaults pass input channels through unchanged.",
+    "Negative weights subtract channel values and can push results outside the 0-1 range.",
+    "Constants offset output channels independently.",
+    "Reorder TOP is the simpler choice for pure channel rearrangement."
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "mathPOP",
+  "family": "POP",
+  "display_name": "Math POP",
+  "docs_url": "https://docs.derivative.ca/Math_POP",
+  "summary": "Applies math operations to one input attribute and writes to the same attribute, an existing attribute, or a new attribute. It supports vector attributes, component swizzles, scalar/vector parameter sizes, trig/exponential/log/power functions, quantize, cast, and re-range style operations.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Point, vertex, or primitive class"},
+    {"name": "group", "type": "String", "note": "Optional group scope"},
+    {"name": "inputattrscope", "type": "String", "note": "Input attribute or component scope"},
+    {"name": "angleunit", "type": "Menu", "note": "Degrees, radians, or cycles"},
+    {"name": "parsize", "type": "Menu", "note": "Number of independent parameter values"},
+    {"name": "preoper", "type": "Menu", "note": "Pre operation"},
+    {"name": "postoper", "type": "Menu", "note": "Post operation"},
+    {"name": "outputattrscope", "type": "String/Menu", "note": "Output attribute or component scope"}
+  ],
+  "key_concepts": [
+    "Applies scalar or vector math to one input attribute and writes the result to an existing or new attribute.",
+    "Input Attribute Scope may target components or reorder them with scopes such as P(1) P(0).",
+    "Parameter Size gives independent per-component controls for vectors such as float3 P.",
+    "The math chain includes multiply/add stages, unary functions, rerange, quantize, and output type override controls."
+  ],
+  "common_gotchas": [
+    "Component order in Input Attribute Scope can swizzle values, such as P(1) P(0).",
+    "Parameter Size should match vector work when applying per-component operations.",
+    "For multi-input math, prefer Math Mix POP or Math Combine POP."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

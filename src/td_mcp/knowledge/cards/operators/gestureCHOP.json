@@ -1,0 +1,40 @@
+{
+  "card_type": "operator",
+  "op_type": "gestureCHOP",
+  "family": "CHOP",
+  "display_name": "Gesture CHOP",
+  "docs_url": "https://docs.derivative.ca/Gesture_CHOP",
+  "summary": "Records a short segment of CHOP input while a listen signal is on, then trims, blends, and loops the captured gesture in time.",
+  "key_concepts": [
+    "Records the first input while the listen input is above zero, passes input through during recording, then loops the captured segment once listening stops.",
+    "The second input is the listen gate and the third input is the reset trigger, so wiring order is part of the operator contract.",
+    "Fit to Nearest Cycle extends or trims the captured gesture to a multiple of Beats per Cycle; with it off, the loop length is the recorded duration.",
+    "Blend Time creates a loop crossfade between the segment end and start, while Interpolate Samples controls resampling during speed or duration changes.",
+    "Sequential Play Mode exposes reset behavior through Reset Condition, Reset, and Reset Pulse, while Locked to Timeline follows timeline position."
+  ],
+  "key_params": [
+    {"name": "playmode", "type": "Menu", "note": "Locked to timeline or sequential playback"},
+    {"name": "fitmethod", "type": "Toggle", "note": "Fit captured gesture to nearest beat cycle"},
+    {"name": "numbeats", "type": "Float", "note": "Beats per cycle"},
+    {"name": "step", "type": "Toggle", "note": "Step output each cycle to avoid jumps"},
+    {"name": "stepreset", "type": "Toggle", "note": "Reset step offset when re-recording"},
+    {"name": "blend", "type": "Float", "note": "Blend region length"},
+    {"name": "blendunit", "type": "Menu", "note": "Blend length unit"},
+    {"name": "interp", "type": "Toggle", "note": "Interpolate samples when scaling"},
+    {"name": "speed", "type": "Float", "note": "Playback speed scale"},
+    {"name": "speedunit", "type": "Menu", "note": "Speed unit"},
+    {"name": "resetcondition", "type": "Menu", "note": "How third input resets the gesture"},
+    {"name": "reset", "type": "Toggle", "note": "Hold reset on"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Reset immediately"}
+  ],
+  "common_gotchas": [
+    "Input 1 is the signal being recorded, input 2 is the listen gate, and input 3 resets.",
+    "While listen is on, the input passes through; once listen turns off, the captured segment loops.",
+    "Fit to Nearest Cycle uses beat-derived timing; with it off, the loop period is the actual recording duration.",
+    "Blend Time is needed for seamless loops but can smear sharp gestures.",
+    "Derivative recommends the gestureCapture palette component when a richer capture UI is needed."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,43 @@
+{
+  "card_type": "operator",
+  "op_type": "nvidiaflowemitterCOMP",
+  "family": "COMP",
+  "display_name": "NVIDIA Flow Emitter COMP",
+  "docs_url": "https://docs.derivative.ca/NVIDIA_Flow_Emitter_COMP",
+  "summary": "Defines fuel emitters or colliders for NVIDIA Flow volumetric fire/smoke simulations, controlling shape, fuel, temperature, smoke, velocity, and material behavior in the 3D scene.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Turns the emitter or collider on and off"},
+    {"name": "mode", "type": "Menu", "note": "Emitter injects fuel; Collider contributes a rigid obstacle"},
+    {"name": "type", "type": "Menu", "note": "Sphere, Box, Capsule, Shape TOP, or Shape SOP source"},
+    {"name": "size", "type": "XYZ", "note": "Emitter dimensions for Box and Shape TOP modes"},
+    {"name": "radius", "type": "Float", "note": "Radius for Sphere and Capsule modes"},
+    {"name": "length", "type": "Float", "note": "Capsule length"},
+    {"name": "shapeop", "type": "TOP/SOP", "note": "Shape source for Shape TOP or Shape SOP modes"},
+    {"name": "shapechannel", "type": "Menu", "note": "TOP channel used to determine shape"},
+    {"name": "shapethreshold", "type": "Float", "note": "Threshold for pixels included in Shape TOP emission"},
+    {"name": "centerofmass", "type": "XYZ", "note": "Emitter center of mass"},
+    {"name": "innerwidth", "type": "Float", "note": "Fills the shape inward from the surface"},
+    {"name": "outerwidth", "type": "Float", "note": "Extends the emission shape outward from the surface"},
+    {"name": "linearvel", "type": "XYZ", "note": "Target linear velocity of injected fuel"},
+    {"name": "angularvel", "type": "XYZ", "note": "Target angular velocity of injected fuel"},
+    {"name": "velcorrate", "type": "Float", "note": "Rate at which simulation velocity is corrected toward emitter velocity"}
+  ],
+  "key_concepts": [
+    "NVIDIA Flow Emitter COMP defines an emitter or collider for NVIDIA Flow fire and smoke simulations in the 3D scene.",
+    "The operator is Windows-only and requires NVIDIA GPU hardware.",
+    "Emitter mode injects fuel, temperature, and smoke into the simulation, while Collider mode provides a rigid collision object.",
+    "Sphere, box, capsule, Shape TOP, and Shape SOP types define the source volume; Shape TOP emitters are limited to 2048 by 2048.",
+    "Velocity, correction-rate, width, material color, alpha, burn, smoke, temperature, and fuel controls shape both simulation injection and rendered look."
+  ],
+  "common_gotchas": [
+    "NVIDIA Flow Emitter COMP is Windows-only and requires NVIDIA GPU hardware.",
+    "Shape TOP emitters are limited to 2048x2048 resolution.",
+    "Emitter mode injects fuel into the simulation; Collider mode does not behave as a fuel source.",
+    "Inner Width and Outer Width change the effective volume, so they can make a source much larger than the visible shape suggests.",
+    "Velocity Correction Rate controls how strongly the emitter forces simulation blocks toward its velocity; high values can be aggressive.",
+    "Use NVIDIA Flow TOP with matching Flow setup to render or inspect the simulation this emitter feeds."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ Windows NVIDIA Flow emitter and collider setup",
+  "last_verified": "2026-06-18"
+}

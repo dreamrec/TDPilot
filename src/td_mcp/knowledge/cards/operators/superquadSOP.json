@@ -1,0 +1,153 @@
+{
+  "card_type": "operator",
+  "op_type": "superquadSOP",
+  "family": "SOP",
+  "display_name": "Superquad SOP",
+  "docs_url": "https://docs.derivative.ca/Superquad_SOP",
+  "summary": "Generates polygonal or mesh isoquadric geometry with radius, anchor, pole, exponent, cusp, texture, and normal controls.",
+  "key_params": [
+    {
+      "name": "type",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "surftype",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "modifybounds",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "rad",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "radx",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "rady",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "radz",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "t",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "tx",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "ty",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "tz",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "reverseanchors",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "anchoru",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "anchorv",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "anchorw",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "orient",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "rows",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "cols",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "expxy",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "expz",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "upole",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "cusp",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "angle",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "texture",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    },
+    {
+      "name": "normals",
+      "type": "Parameter",
+      "note": "Superquad SOP official parameter"
+    }
+  ],
+  "common_gotchas": [
+    "modifybounds only matters when an input is connected.",
+    "surftype is for Mesh primitive type.",
+    "Rows and columns alter both resolution and topology.",
+    "upole changes whether pole points are shared.",
+    "cusp and angle can intentionally facet the shape."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "isoquadric-superquad-geometry",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Superquad SOP generates an isoquadric surface as polygonal or mesh geometry.",
+    "It can resemble a metaball but does not respond to neighboring fields.",
+    "Primitive type affects which options apply, and Mesh type uses the surftype connectivity menu.",
+    "Exponents, pole sharing, cusping, texture coordinates, and normals affect topology and rendering."
+  ]
+}

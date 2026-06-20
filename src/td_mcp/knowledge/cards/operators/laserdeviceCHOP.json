@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "laserdeviceCHOP",
+  "family": "CHOP",
+  "display_name": "Laser Device CHOP",
+  "docs_url": "https://docs.derivative.ca/Laser_Device_CHOP",
+  "summary": "Sends x/y/color laser point channels to supported DAC devices such as EtherDream, Helios, and ShowNET.",
+  "key_concepts": [
+    "Sends laser points to supported EtherDream, Helios, and ShowNET laser devices for computer-generated laser shapes and effects.",
+    "Expected input/output channels are x, y, r, g, b, i, and optional user fields, with x/y in -1 to 1 and color/intensity in 0 to 1.",
+    "Blanking occurs when incoming RGB channels are all zero or when Red, Green, and Blue Scale are all zero.",
+    "Device Type determines EtherDream network targeting versus Helios or ShowNET auto-populating device menus.",
+    "EtherDream IP discovery may require EtherDream DAT, while Helios scanning should not run with active Helios device connections.",
+    "Queue Time and Queue Units control the laser point buffer drain time and may need reduction for sparse point output."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Connect and send points to the selected laser device"},
+    {"name": "type", "type": "Menu", "note": "Choose EtherDream, Helios, or ShowNET device type"},
+    {"name": "device", "type": "Menu", "note": "Select auto-discovered Helios/ShowNET device"},
+    {"name": "netaddress", "type": "String", "note": "EtherDream network address"},
+    {"name": "port", "type": "Integer", "note": "Network port for EtherDream"},
+    {"name": "localaddress", "type": "String", "note": "Local NIC/IP to bind for networked device IO"},
+    {"name": "queuetime", "type": "Float", "note": "Device queue duration"},
+    {"name": "queueunits", "type": "Menu", "note": "Samples, frames, or seconds for queue time"},
+    {"name": "xscale", "type": "Float", "note": "Scale output x positions"},
+    {"name": "yscale", "type": "Float", "note": "Scale output y positions"},
+    {"name": "redscale", "type": "Float", "note": "Scale red channel"},
+    {"name": "greenscale", "type": "Float", "note": "Scale green channel"},
+    {"name": "bluescale", "type": "Float", "note": "Scale blue channel"}
+  ],
+  "common_gotchas": [
+    "Laser hardware is physically dangerous; do not auto-enable live output without explicit safety review.",
+    "Expected input/output channels include x, y, r, g, b, i, and optional user fields; x/y range is -1 to 1 and color/intensity is 0 to 1.",
+    "Blanking occurs when incoming RGB channels are all zero or RGB scale parameters are all zero.",
+    "EtherDream requires network/IP discovery; official docs point to EtherDream DAT for discovery help.",
+    "Helios and ShowNET expose auto-populating menus for attached devices.",
+    "Some user fields are not supported by EtherDream, so planner-generated channel schemas should match selected device type."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2022.20000+ laser output",
+  "last_verified": "2026-06-18"
+}

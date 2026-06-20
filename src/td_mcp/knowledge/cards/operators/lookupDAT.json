@@ -1,0 +1,72 @@
+{
+  "card_type": "operator",
+  "op_type": "lookupDAT",
+  "family": "DAT",
+  "display_name": "Lookup DAT",
+  "docs_url": "https://docs.derivative.ca/Lookup_DAT",
+  "summary": "Uses an index table to select, reorder, and duplicate rows or columns from a lookup table by numeric index or matching values.",
+  "key_params": [
+    {
+      "name": "index",
+      "type": "Menu",
+      "note": "Choose whether the index table selects rows or columns"
+    },
+    {
+      "name": "valueloction",
+      "type": "Menu",
+      "note": "Official parameter for where lookup values are found in the lookup table"
+    },
+    {
+      "name": "valuename",
+      "type": "String",
+      "note": "Row or column name used when matching by value"
+    },
+    {
+      "name": "valueindex",
+      "type": "Integer",
+      "note": "Numeric row or column index used when matching by value"
+    },
+    {
+      "name": "includeheader",
+      "type": "Toggle",
+      "note": "Include source headers in the output table"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Lookup DAT requires two inputs: an index table first and the lookup table second.",
+    "Index mode and value-matching mode have different semantics; generated networks should name the intent clearly.",
+    "Output order follows the index table, so the same lookup row or column can be selected multiple times.",
+    "Missing or duplicate keys need upstream validation when the output drives automation."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "table-index-lookup-and-reorder",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Looks up values from a table using an index table or column/row reference.",
+    "The official parameter id is spelled valueloction and must be preserved for compatibility.",
+    "Value Name and Value Index choose the row or column supplying looked-up values.",
+    "Include Header controls whether the output includes the source header row or column."
+  ]
+}

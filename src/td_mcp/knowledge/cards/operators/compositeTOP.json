@@ -4,17 +4,212 @@
   "family": "TOP",
   "display_name": "Composite TOP",
   "docs_url": "https://docs.derivative.ca/Composite_TOP",
-  "summary": "Combines two or more texture inputs using blend operations (Over, Add, Multiply, Screen, etc.). The workhorse for layering images and building visual composites.",
+  "summary": "Multi-input TOP that performs a selected composite/blend operation for each input pair. It can also pull additional TOPs by pattern, preview blend modes, pass through one selected input, transform the overlay relative to a fixed layer, and normalize output resolution/aspect/format through the Common page.",
   "key_params": [
-    {"name": "operand", "type": "Menu", "note": "Blend mode: Over, Under, Add, Subtract, Multiply, Screen, etc."},
-    {"name": "opacity", "type": "Float", "note": "Master opacity for the compositing operation (0-1)"},
-    {"name": "prefit", "type": "Menu", "note": "How to handle resolution mismatches between inputs"}
+    {
+      "name": "top",
+      "type": "TOP Pattern",
+      "note": "Additional TOPs to composite by path or pattern, such as ramp*."
+    },
+    {
+      "name": "previewgrid",
+      "type": "Toggle",
+      "note": "Outputs a grid preview of available operation types with swapped-input variants."
+    },
+    {
+      "name": "selectinput",
+      "type": "Toggle",
+      "note": "Pass through one input instead of performing composites."
+    },
+    {
+      "name": "inputindex",
+      "type": "Integer",
+      "note": "Input index passed through when Select Input is on."
+    },
+    {
+      "name": "operand",
+      "type": "Menu",
+      "note": "Composite operation such as Over, Add, Multiply, Screen, Inside, Outside, Maximum, or Subtract."
+    },
+    {
+      "name": "swaporder",
+      "type": "Toggle",
+      "note": "Swap input order for operations where A over B differs from B over A."
+    },
+    {
+      "name": "size",
+      "type": "Menu",
+      "note": "Fixed layer used for final resolution/aspect and overlay transform reference."
+    },
+    {
+      "name": "prefit",
+      "type": "Menu",
+      "note": "Fit, fill, or preserve the overlay layer relative to the fixed layer."
+    },
+    {
+      "name": "justifyh",
+      "type": "Menu",
+      "note": "Horizontal overlay alignment."
+    },
+    {
+      "name": "justifyv",
+      "type": "Menu",
+      "note": "Vertical overlay alignment."
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Overlay extend mode outside its bounds."
+    },
+    {
+      "name": "r",
+      "type": "Float",
+      "note": "Overlay rotation."
+    },
+    {
+      "name": "t",
+      "type": "Float2",
+      "note": "Overlay translation."
+    },
+    {
+      "name": "tunit",
+      "type": "Menu",
+      "note": "Translation units."
+    },
+    {
+      "name": "s",
+      "type": "Float2",
+      "note": "Overlay scale."
+    },
+    {
+      "name": "p",
+      "type": "Float2",
+      "note": "Overlay pivot."
+    },
+    {
+      "name": "punit",
+      "type": "Menu",
+      "note": "Pivot units."
+    },
+    {
+      "name": "tstep",
+      "type": "Float2",
+      "note": "Translation step offset for repeated/pass workflows."
+    },
+    {
+      "name": "tstepunit",
+      "type": "Menu",
+      "note": "Translation step units."
+    },
+    {
+      "name": "legacyxform",
+      "type": "Toggle",
+      "note": "Legacy transform compatibility mode."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution control."
+    },
+    {
+      "name": "resolution",
+      "type": "Int2",
+      "note": "Custom output resolution."
+    },
+    {
+      "name": "resmenu",
+      "type": "Menu",
+      "note": "Common resolution presets."
+    },
+    {
+      "name": "resmult",
+      "type": "Toggle",
+      "note": "Apply global TOP resolution multiplier."
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Output aspect mode."
+    },
+    {
+      "name": "aspect",
+      "type": "Float2",
+      "note": "Custom output aspect."
+    },
+    {
+      "name": "armenu",
+      "type": "Menu",
+      "note": "Aspect presets."
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Input filtering mode."
+    },
+    {
+      "name": "fillmode",
+      "type": "Menu",
+      "note": "Viewer fill mode."
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Viewer filtering mode."
+    },
+    {
+      "name": "npasses",
+      "type": "Integer",
+      "note": "Common TOP pass count."
+    },
+    {
+      "name": "chanmask",
+      "type": "Mask",
+      "note": "RGBA channel mask."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Output pixel format."
+    }
+  ],
+  "key_concepts": [
+    "multi-input TOP",
+    "composite operation for each input",
+    "Operation parameter",
+    "blendModes Palette component",
+    "OP Snippets",
+    "3D Textures",
+    "2D Texture Arrays",
+    "TOPs field",
+    "Pattern Matching",
+    "Preview Grid",
+    "Select Input",
+    "Input Index",
+    "Swap Operation Order",
+    "Fixed Layer",
+    "Overlay layer",
+    "final resolution and aspect ratio",
+    "Pre-Fit Overlay",
+    "Native Resolution",
+    "pixel accurate composites",
+    "Info CHOP",
+    "resx",
+    "resy",
+    "aspectx",
+    "aspecty",
+    "depth",
+    "gpu_memory_used"
   ],
   "common_gotchas": [
-    "Input order matters: the first input is the background, subsequent inputs composite on top.",
-    "Ensure both inputs have matching resolution and pixel format to avoid unexpected scaling or clamping."
+    "Swap Operation Order matters for non-commutative operations such as Over and Hard Light; Add and similar symmetric operations are less sensitive.",
+    "Fixed Layer chooses which layer defines transform reference and final resolution/aspect, but it does not change the underlying Input1 plus Input2 composite order.",
+    "Use Native Resolution for pixel accurate composites when the overlay must not be stretched or squashed to the fixed layer.",
+    "The TOPs field supports Pattern Matching, so broad patterns can unexpectedly add more layers than the wired inputs alone.",
+    "Preview Grid is for inspecting operations; turn it off before using the node as the actual composite output."
   ],
-  "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
 }

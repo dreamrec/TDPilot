@@ -76,7 +76,9 @@ async def replay_brain_trace(record: dict[str, Any]) -> dict[str, Any]:
 
 def _trace_operators(record: dict[str, Any]) -> list[str]:
     trace = record.get("trace") if isinstance(record.get("trace"), dict) else {}
-    operators = trace.get("operators") if isinstance(trace.get("operators"), list) else record.get("operators")
+    operators = (
+        trace.get("operators") if isinstance(trace.get("operators"), list) else record.get("operators")
+    )
     return [str(item) for item in operators or []]
 
 

@@ -1,0 +1,181 @@
+{
+  "card_type": "operator",
+  "op_type": "primitiveSOP",
+  "family": "SOP",
+  "display_name": "Primitive SOP",
+  "docs_url": "https://docs.derivative.ca/Primitive_SOP",
+  "summary": "Edits primitive-level transforms, color, alpha, custom attributes, closure, profile transforms, metaball weight, and particle rendering attributes.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Source primitive or profile group"
+    },
+    {
+      "name": "templategrp",
+      "type": "String",
+      "note": "Template point group"
+    },
+    {
+      "name": "doxform",
+      "type": "Toggle",
+      "note": "Enable transformations"
+    },
+    {
+      "name": "dorot",
+      "type": "Menu",
+      "note": "Rotate to template behavior"
+    },
+    {
+      "name": "xord",
+      "type": "Menu",
+      "note": "Transform order"
+    },
+    {
+      "name": "rord",
+      "type": "Menu",
+      "note": "Rotate order"
+    },
+    {
+      "name": "t",
+      "type": "XYZ",
+      "note": "Translate"
+    },
+    {
+      "name": "r",
+      "type": "XYZ",
+      "note": "Rotate"
+    },
+    {
+      "name": "s",
+      "type": "XYZ",
+      "note": "Scale"
+    },
+    {
+      "name": "attr",
+      "type": "Sequence",
+      "note": "Custom primitive attributes"
+    },
+    {
+      "name": "closeu",
+      "type": "Menu",
+      "note": "Close or unroll U"
+    },
+    {
+      "name": "closev",
+      "type": "Menu",
+      "note": "Close or unroll V"
+    },
+    {
+      "name": "vtxsort",
+      "type": "Menu",
+      "note": "Vertex sort mode"
+    },
+    {
+      "name": "vtxuoff",
+      "type": "Int",
+      "note": "Vertex U offset"
+    },
+    {
+      "name": "vtxvoff",
+      "type": "Int",
+      "note": "Vertex V offset"
+    },
+    {
+      "name": "p",
+      "type": "XYZ",
+      "note": "Pivot"
+    },
+    {
+      "name": "lookat",
+      "type": "COMP Path",
+      "note": "Lookat object"
+    },
+    {
+      "name": "upvector",
+      "type": "XYZ",
+      "note": "Lookat up vector"
+    },
+    {
+      "name": "doclr",
+      "type": "Menu",
+      "note": "Color attribute action"
+    },
+    {
+      "name": "diff",
+      "type": "RGB",
+      "note": "Diffuse color"
+    },
+    {
+      "name": "alpha",
+      "type": "Float",
+      "note": "Alpha value"
+    },
+    {
+      "name": "docrease",
+      "type": "Menu",
+      "note": "Crease attribute action"
+    },
+    {
+      "name": "crease",
+      "type": "Float",
+      "note": "Crease weight"
+    },
+    {
+      "name": "pshapeu",
+      "type": "Menu",
+      "note": "Preserve shape U"
+    },
+    {
+      "name": "pshapev",
+      "type": "Menu",
+      "note": "Preserve shape V"
+    },
+    {
+      "name": "clampu",
+      "type": "Menu",
+      "note": "Clamp U"
+    },
+    {
+      "name": "clampv",
+      "type": "Menu",
+      "note": "Clamp V"
+    },
+    {
+      "name": "metaweight",
+      "type": "Float",
+      "note": "Metaball weight"
+    },
+    {
+      "name": "doweight",
+      "type": "Toggle",
+      "note": "Enable particle weight"
+    },
+    {
+      "name": "doprender",
+      "type": "Toggle",
+      "note": "Enable particle render attributes"
+    },
+    {
+      "name": "prtype",
+      "type": "Menu",
+      "note": "Particle render type"
+    }
+  ],
+  "common_gotchas": [
+    "Use Primitive SOP for primitive-level edits; point positions and point attributes belong in Point SOP.",
+    "Profile transforms map X/Y to U/V and ignore Z translate/scale; profile rotations are effectively Z-only.",
+    "Rotate to Template transforms existing primitives and does not create duplicate copies."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "primitive-level-attribute-and-transform-editing",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Primitive SOP is the primitive-level complement to Point SOP.",
+    "It can transform primitives and profile curves, but profile Z translate/scale is ignored and profile rotation is only meaningful around Z.",
+    "Template transforms move existing primitives to template points rather than creating copies like Copy SOP.",
+    "Face/Hull controls handle primitive closure, clamping, vertex sorting, and texture-facing behavior."
+  ]
+}

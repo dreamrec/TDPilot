@@ -1,0 +1,83 @@
+{
+  "card_type": "operator",
+  "op_type": "pointtransformTOP",
+  "family": "TOP",
+  "display_name": "Point Transform TOP",
+  "docs_url": "https://docs.derivative.ca/Point_Transform_TOP",
+  "summary": "Treats RGB image values as XYZ point positions or vectors and applies 3D transforms, CHOP-driven transforms, look-at logic, alignment, and optional per-pixel weighting.",
+  "key_params": [
+    {
+      "name": "inputtype",
+      "type": "Menu",
+      "note": "Interpret RGB as positions or vectors."
+    },
+    {
+      "name": "innormalize",
+      "type": "Toggle",
+      "note": "Normalize input vectors before transform."
+    },
+    {
+      "name": "outnormalize",
+      "type": "Toggle",
+      "note": "Normalize vectors after transform."
+    },
+    {
+      "name": "xord",
+      "type": "Menu",
+      "note": "Transform order such as srt or trs."
+    },
+    {
+      "name": "rord",
+      "type": "Menu",
+      "note": "Rotation order such as xyz or zyx."
+    },
+    {
+      "name": "t",
+      "type": "XYZ",
+      "note": "Translation; ignored for vector input type."
+    },
+    {
+      "name": "chopinput",
+      "type": "CHOP",
+      "note": "Transform CHOP source."
+    },
+    {
+      "name": "multiplyorder",
+      "type": "Menu",
+      "note": "Order used when combining CHOP and parameter transforms."
+    },
+    {
+      "name": "weightchannel",
+      "type": "Menu",
+      "note": "Second-input channel used as transform weight."
+    },
+    {
+      "name": "weightrange",
+      "type": "Range",
+      "note": "Input weight range for partial transforms."
+    },
+    {
+      "name": "alignxformorder",
+      "type": "Menu",
+      "note": "Transform order used by the Align page."
+    }
+  ],
+  "common_gotchas": [
+    "Translations are ignored when input type is Vector.",
+    "Output Normalize removes scale magnitude by renormalizing vectors.",
+    "The alpha channel is passed through unchanged; do not expect it to carry transformed position data.",
+    "Align-page calculations have extra cost because point dimensions must be calculated.",
+    "Weight-map input controls partial transform blending, so verify second-input range."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Treats RGB image values as XYZ positions or vectors and transforms them in 3D.",
+    "Position input applies translation, rotation, and scale; vector input ignores translation.",
+    "Transforms can come from page parameters, CHOP transforms, Look At, alignment, or combinations.",
+    "A second input can weight how strongly the transform is applied per point."
+  ]
+}

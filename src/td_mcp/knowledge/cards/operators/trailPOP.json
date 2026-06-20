@@ -1,0 +1,44 @@
+{
+  "card_type": "operator",
+  "op_type": "trailPOP",
+  "family": "POP",
+  "display_name": "Trail POP",
+  "docs_url": "https://docs.derivative.ca/Trail_POP",
+  "summary": "Stores recent time-history slices of input POP points, then optionally connects those slices into primitives. It can trail fixed point counts by adding a new dimension or match changing point counts by an Id-like attribute.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Append incoming points while enabled"},
+    {"name": "alwayscook", "type": "Toggle", "note": "Force cooking every frame"},
+    {"name": "length", "type": "Float", "note": "Trail length"},
+    {"name": "lengthunit", "type": "Menu", "note": "Trail length unit"},
+    {"name": "inc", "type": "Float", "note": "Trail sampling increment"},
+    {"name": "reset", "type": "Toggle", "note": "Reset and hold one snapshot"},
+    {"name": "ageattr", "type": "Menu", "note": "Output Age attribute in seconds or frames"},
+    {"name": "oldestpointfirst", "type": "Toggle", "note": "Reverse slice order"},
+    {"name": "fillmissedframes", "type": "Toggle", "note": "Interpolate missing frame slices"},
+    {"name": "attrmatch", "type": "Toggle", "note": "Match changing points by attribute"},
+    {"name": "attrname", "type": "Str", "note": "Attribute name used to match changing point identities"},
+    {"name": "uintmax", "type": "Int", "note": "Maximum unsigned integer value for match attributes"},
+    {"name": "maxls", "type": "Int", "note": "Maximum line strips allocated for trailed output"},
+    {"name": "surftype", "type": "Menu", "note": "Output primitive type for connected trails"},
+    {"name": "closed", "type": "Toggle", "note": "Close generated trail primitives"},
+    {"name": "xord", "type": "Menu", "note": "Transform order for trail output"},
+    {"name": "rord", "type": "Menu", "note": "Rotate order for trail output"},
+    {"name": "t", "type": "Float3", "note": "Translate generated trail output"},
+    {"name": "r", "type": "Float3", "note": "Rotate generated trail output"},
+    {"name": "s", "type": "Float3", "note": "Scale generated trail output"},
+    {"name": "p", "type": "Float3", "note": "Pivot for trail output transforms"}
+  ],
+  "key_concepts": [
+    "Trail POP records recent input point slices over time and can output those history slices as points or connected primitives.",
+    "Stable point counts can be trailed by dimension, while changing point counts need Attribute Match with a stable identity attribute.",
+    "Length and increment units control temporal sampling, while surface, closed, max line strip, and transform controls shape the generated trail geometry."
+  ],
+  "common_gotchas": [
+    "Changing point counts require a stable match attribute such as particle Id; otherwise trail connectivity cannot follow identity.",
+    "Use seconds for trail length when moving components between projects with different frame rates.",
+    "maxls must be high enough when creating line strips from matched point histories."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

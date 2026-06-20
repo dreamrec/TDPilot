@@ -1,0 +1,62 @@
+{
+  "card_type": "operator",
+  "op_type": "art-netDAT",
+  "family": "DAT",
+  "display_name": "Art-Net DAT",
+  "docs_url": "https://docs.derivative.ca/Art-Net_DAT",
+  "summary": "Polls the network for Art-Net devices and lists discovered device information in a DAT table for DMX setup, inspection, and callbacks.",
+  "key_params": [
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "Script run while polling the network for devices"
+    },
+    {
+      "name": "columns",
+      "type": "Menu",
+      "note": "Choose which discovered-device columns appear in the table"
+    },
+    {
+      "name": "poll",
+      "type": "Pulse",
+      "note": "Poll the network for Art-Net devices"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language setting"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Choose the edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom extension used when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Art-Net DAT discovers devices; it does not send or receive DMX channel values by itself.",
+    "Network/firewall issues can make discovery incomplete; Wireshark is useful for comparing Art-Net packets.",
+    "Columns are selectable, so scripts should address output by header names rather than fixed column indexes.",
+    "Polling is an explicit action; generated diagnostic networks should expose a pulse or schedule it intentionally."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "dmx-network-device-discovery",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Polls the network and lists Art-Net devices in a DAT table.",
+    "Runs callbacks while polling, including poll-reply and poll-complete handling through the Art-Net DAT class.",
+    "Column selection controls which discovered device fields are present in the output table.",
+    "Use DMX In CHOP and DMX Out CHOP for DMX channel values; this DAT is for discovery and inspection."
+  ]
+}

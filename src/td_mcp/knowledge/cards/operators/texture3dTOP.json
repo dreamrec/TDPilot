@@ -1,0 +1,88 @@
+{
+  "card_type": "operator",
+  "op_type": "texture3dTOP",
+  "family": "TOP",
+  "display_name": "Texture 3D TOP",
+  "docs_url": "https://docs.derivative.ca/Texture_3D_TOP",
+  "summary": "Builds a 3D texture or 2D texture array from a sequence of TOP images, with controls for slice replacement, prefill, and cache depth.",
+  "key_params": [
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "Texture 3D or 2D texture array."
+    },
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Replace slices while enabled."
+    },
+    {
+      "name": "replacesingle",
+      "type": "Toggle",
+      "note": "Replace only the chosen slice."
+    },
+    {
+      "name": "replacesinglepulse",
+      "type": "Pulse",
+      "note": "Replace the selected slice once."
+    },
+    {
+      "name": "replaceindex",
+      "type": "Integer",
+      "note": "Slice index to replace."
+    },
+    {
+      "name": "prefill",
+      "type": "Toggle",
+      "note": "Fill slices from input over a frame sequence."
+    },
+    {
+      "name": "prefillpulse",
+      "type": "Pulse",
+      "note": "Run prefill once."
+    },
+    {
+      "name": "cachesize",
+      "type": "Integer",
+      "note": "Number of slices in the texture/cache."
+    },
+    {
+      "name": "step",
+      "type": "Integer",
+      "note": "Frame step used during prefill."
+    },
+    {
+      "name": "reset",
+      "type": "Toggle",
+      "note": "Reset behavior."
+    },
+    {
+      "name": "resetpulse",
+      "type": "Pulse",
+      "note": "Reset the texture/cache."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "Prefill cooks upstream inputs at frame-sequence values, so upstream animation or indexing affects slice contents.",
+    "Step changes which source frames become slices during prefill.",
+    "2D texture arrays do not blend along W and do not have W extend mode behavior like 3D textures.",
+    "GPU memory usage scales quickly with slice count, resolution, and pixel format."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "MAT_snippets"
+  ],
+  "build_relevance": "volume_texture_cache",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Texture 3D TOP stores a series of images as slices in a 3D texture or 2D texture array.",
+    "Active replacement writes one slice per frame and wraps through the cache.",
+    "3D textures use normalized W coordinates and can blend between slices; 2D texture arrays use non-normalized W and do not blend between slices.",
+    "Locking the operator preserves the full 3D/array data in saved .toe or .tox files."
+  ]
+}

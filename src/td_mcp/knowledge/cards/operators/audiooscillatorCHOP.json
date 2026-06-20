@@ -1,0 +1,38 @@
+{
+  "card_type": "operator",
+  "op_type": "audiooscillatorCHOP",
+  "family": "CHOP",
+  "display_name": "Audio Oscillator CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_Oscillator_CHOP",
+  "summary": "Generates audio-rate waveforms, white noise, or pitch-controlled playback of an incoming audio/motion clip, typically at audio sample rates.",
+  "key_concepts": [
+    "Audio Oscillator CHOP generates audio-rate waveforms such as sine, triangle, ramp, square, pulse, gaussian, or white noise.",
+    "Base Frequency gives cycles per second when Pitch Control is zero.",
+    "Units per Octave maps pitch-control values to octave changes, making MIDI-style pitch control possible.",
+    "A third Playback Source input can turn the operator into a pitch/time warper for audio or motion channels.",
+    "Unlike Wave CHOP or LFO CHOP, Audio Oscillator is designed for iterating audio-frequency output."
+  ],
+  "key_params": [
+    {"name": "wavetype", "type": "Menu", "note": "Sine, gaussian, triangle, ramp, square, pulse, or white noise"},
+    {"name": "frequency", "type": "Float", "note": "Base cycles per second when pitch input is zero"},
+    {"name": "octave", "type": "Float", "note": "Pitch-control units per octave"},
+    {"name": "offset", "type": "Float", "note": "Value offset applied to generated samples"},
+    {"name": "amp", "type": "Float", "note": "Generated sample amplitude"},
+    {"name": "bias", "type": "Float", "note": "Shape bias for triangle, gaussian, and square waves"},
+    {"name": "phase", "type": "Float", "note": "Waveform phase offset"},
+    {"name": "smooth", "type": "Toggle", "note": "Smooth pitch changes at audio-sample resolution"},
+    {"name": "resetcondition", "type": "Menu", "note": "How the reset input triggers oscillator reset"},
+    {"name": "reset", "type": "Toggle", "note": "Hold generated channels at reset value"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Immediately reset generated channels"},
+    {"name": "rate", "type": "Float", "note": "Output sample rate"}
+  ],
+  "common_gotchas": [
+    "Audio Oscillator runs at audio rates; use LFO CHOP for low-rate control signals unless audio-rate output is intentional.",
+    "Pitch-control input is logarithmic by octave, not linear Hz.",
+    "Smooth Pitch Changes costs more compute but prevents audible stepping from low-rate pitch inputs.",
+    "The third input can replace the waveform with a playback source, turning the operator into a pitch/time warper."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

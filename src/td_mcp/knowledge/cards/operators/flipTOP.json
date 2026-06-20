@@ -1,0 +1,59 @@
+{
+  "card_type": "operator",
+  "op_type": "flipTOP",
+  "family": "TOP",
+  "display_name": "Flip TOP",
+  "docs_url": "https://docs.derivative.ca/Flip_TOP",
+  "summary": "Flips or flops TOP axes, including X/Y image axes and Z or slice direction for 3D/array textures.",
+  "key_params": [
+    {
+      "name": "flipx",
+      "type": "Toggle",
+      "note": "Flip X axis"
+    },
+    {
+      "name": "flipy",
+      "type": "Toggle",
+      "note": "Flip Y axis"
+    },
+    {
+      "name": "flipz",
+      "type": "Toggle",
+      "note": "Flip Z or slice direction"
+    },
+    {
+      "name": "flop",
+      "type": "Menu",
+      "note": "Transpose/reorient mode such as noflop, bottomleft, topleft, rightbackdown, rightfrontup, backupleft, or frontupright"
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution policy"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Flip and flop are different operations; flop transposes axes.",
+    "2D flop changes output resolution orientation by swapping X and Y.",
+    "3D flop modes have orientation semantics and can remap depth into other axes.",
+    "Flip Z only matters for 3D textures or texture arrays."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Flip TOP flips image data horizontally, vertically, or along Z/slice direction.",
+    "Flop transposes rows and columns rather than simply mirroring an axis.",
+    "For 2D images, flop swaps X and Y resolution.",
+    "For 3D textures and 2D arrays, flop modes can remap depth into X/Y orientation.",
+    "The operator is useful for coordinate-system and capture-orientation correction.",
+    "The official TOP supports 3D textures and 2D texture arrays."
+  ]
+}

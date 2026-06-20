@@ -1,0 +1,77 @@
+{
+  "card_type": "operator",
+  "op_type": "resampleSOP",
+  "family": "SOP",
+  "display_name": "Resample SOP",
+  "docs_url": "https://docs.derivative.ca/Resample_SOP",
+  "summary": "Resamples polygon primitives into even-length or axis-based segments, converting NURBS or Bezier input to polygons using level of detail first.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Primitive group to resample"
+    },
+    {
+      "name": "lod",
+      "type": "Float",
+      "note": "Level of Detail for converting non-polygons"
+    },
+    {
+      "name": "edge",
+      "type": "Toggle",
+      "note": "Resample by polygon edge"
+    },
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "Even length, X, Y, or Z segmentation"
+    },
+    {
+      "name": "measure",
+      "type": "Menu",
+      "note": "Arc or chord measurement"
+    },
+    {
+      "name": "dolength",
+      "type": "Toggle",
+      "note": "Override maximum segment length"
+    },
+    {
+      "name": "length",
+      "type": "Float",
+      "note": "Segment length"
+    },
+    {
+      "name": "dosegs",
+      "type": "Toggle",
+      "note": "Override maximum segment count"
+    },
+    {
+      "name": "segs",
+      "type": "Int",
+      "note": "Segment count"
+    },
+    {
+      "name": "last",
+      "type": "Toggle",
+      "note": "Maintain last vertex"
+    }
+  ],
+  "common_gotchas": [
+    "Non-polygon inputs are converted before resampling, so LOD affects the final point distribution.",
+    "Per-edge mode preserves corners and disables the Measure method.",
+    "When both maximum length and maximum segments are enabled, the output may be constrained shorter than the original curve.",
+    "When neither length nor segment count is selected, the input curve is merely converted to a polygon."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "curve-and-polygon-resampling",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Resample SOP operates on polygons; NURBS and Bezier inputs are converted to polygons using Level of Detail first.",
+    "It can resample an entire polygon or preserve corners by resampling per polygon edge.",
+    "Segmenting can be even-length or axis-based, with arc or chord measurement for curved spline sections.",
+    "Maximum Segment Length and Maximum Segments interact to constrain segment count and segment length."
+  ]
+}

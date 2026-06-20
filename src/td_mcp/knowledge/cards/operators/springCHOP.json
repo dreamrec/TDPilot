@@ -1,0 +1,45 @@
+{
+  "card_type": "operator",
+  "op_type": "springCHOP",
+  "family": "CHOP",
+  "display_name": "Spring CHOP",
+  "docs_url": "https://docs.derivative.ca/Spring_CHOP",
+  "summary": "Simulates spring/mass vibration per channel, using input as desired position or applied force with spring, mass, damping, and reset controls.",
+  "key_concepts": [
+    "Spring CHOP creates vibration as if each channel were a mass attached to a spring.",
+    "In position mode, the input channel is the desired position and the previous output is the actual position.",
+    "In force mode, the input is applied as force to the spring/mass system rather than a target position.",
+    "Spring Constant, Mass, and Damping Constant determine oscillation frequency, amplitude, resistance, and settling behavior.",
+    "Initial conditions can come from the channel start or from explicit initial position and speed parameters.",
+    "The official docs recommend feeding step-like values and adjusting constants to understand and tune the response."
+  ],
+  "key_params": [
+    {"name": "springk", "type": "Float", "note": "Spring strength; higher values increase oscillation frequency"},
+    {"name": "mass", "type": "Float", "note": "Mass value; higher values lower frequency and resist damping"},
+    {"name": "dampingk", "type": "Float", "note": "Damping/resistance; higher values settle faster"},
+    {"name": "method", "type": "Menu", "note": "Interpret input as position or force"},
+    {"name": "disp", "type": "MenuItem", "note": "Treat input as desired position"},
+    {"name": "force", "type": "MenuItem", "note": "Treat input as force"},
+    {"name": "condfromchan", "type": "Toggle", "note": "Initialize position and velocity from the beginning of the channel"},
+    {"name": "initpos", "type": "Float", "note": "Initial spring position"},
+    {"name": "initspeed", "type": "Float", "note": "Initial spring velocity"},
+    {"name": "reset", "type": "Toggle", "note": "Hold reset"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Instant reset"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP channel scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Common CHOP sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"}
+  ],
+  "common_gotchas": [
+    "Position mode treats input as desired position; force mode treats input as an applied force.",
+    "In force mode, zero force tends to stabilize around zero rather than the previous target position.",
+    "Higher damping settles faster but can remove the desired bounce.",
+    "Initial conditions matter for repeatability when generating procedural motion.",
+    "Reset state before replaying deterministic generated animations.",
+    "Step-like Constant CHOP inputs are useful for tuning the spring response.",
+    "Higher mass can increase amplitude and resist damping, so mass and damping should be tuned together."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ procedural spring motion",
+  "last_verified": "2026-06-18"
+}

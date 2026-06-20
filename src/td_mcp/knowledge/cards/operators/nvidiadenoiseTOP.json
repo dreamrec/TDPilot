@@ -1,0 +1,48 @@
+{
+  "card_type": "operator",
+  "op_type": "nvidiadenoiseTOP",
+  "family": "TOP",
+  "display_name": "NVIDIA Denoise TOP",
+  "docs_url": "https://docs.derivative.ca/NVIDIA_Denoise_TOP",
+  "summary": "Uses NVIDIA Maxine Video Effects AI models to remove low-light camera noise or H264 compression artifacts from still images or movies while preserving detail.",
+  "key_params": [
+    {
+      "name": "mode",
+      "type": "Menu",
+      "note": "Choose denoise or artifactreduction model."
+    },
+    {
+      "name": "strength",
+      "type": "Menu",
+      "note": "Low or high removal strength."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "Official docs mark this TOP as Windows-only and requiring a 20/30/40/50 series NVIDIA RTX card.",
+    "The required Video Effects SDK models must be downloaded separately for the target GPU.",
+    "Do not combine this feature with ZED device workflows in one project because of TensorRT version conflicts.",
+    "Denoising supports 80x80 through 1920x1080; artifact reduction supports 160x90 through 1920x1080.",
+    "High strength can remove original detail along with noise, so expose strength as an artistic/runtime control when possible."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "ai_video_effect",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Uses NVIDIA Maxine AI models to remove low-light noise or H264 compression artifacts.",
+    "Works on still images or movies while attempting to preserve detail and crispness.",
+    "Mode chooses the noise class and Strength controls the cleanup/detail tradeoff.",
+    "Denoising and artifact-reduction engines have different supported input dimension ranges."
+  ]
+}

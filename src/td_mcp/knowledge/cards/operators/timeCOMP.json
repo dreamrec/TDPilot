@@ -1,0 +1,43 @@
+{
+  "card_type": "operator",
+  "op_type": "timeCOMP",
+  "family": "COMP",
+  "display_name": "Time COMP",
+  "docs_url": "https://docs.derivative.ca/Time_COMP",
+  "summary": "Provides a component-local timeline/clock that can drive timelines, Animation COMPs, or custom time systems, with playback rate, frame range, working range, looping, tempo, signature, and independent-clock controls.",
+  "key_params": [
+    {"name": "play", "type": "Toggle", "note": "Starts or stops the Time Component"},
+    {"name": "rate", "type": "Float", "note": "Frames per second for this time system"},
+    {"name": "start", "type": "Frame", "note": "Start frame of the full time range"},
+    {"name": "end", "type": "Frame", "note": "End frame of the full time range"},
+    {"name": "rangelimit", "type": "Menu", "note": "Loop or hold when playback reaches the range end"},
+    {"name": "rangestart", "type": "Frame", "note": "Start frame of the working range"},
+    {"name": "rangeend", "type": "Frame", "note": "End frame of the working range"},
+    {"name": "resetframe", "type": "Frame", "note": "Obsolete reset-frame placeholder"},
+    {"name": "signature", "type": "Pair", "note": "Time signature numerator and denominator"},
+    {"name": "tempo", "type": "Float", "note": "Beats per minute for beat-based timing"},
+    {"name": "independent", "type": "Toggle", "note": "Run independently of parent Time COMPs"},
+    {"name": "reinitextensions", "type": "Pulse", "note": "Recompile Python extension objects"},
+    {"name": "clone", "type": "COMP path", "note": "Clone-master source for the predefined Time COMP network"},
+    {"name": "enablecloning", "type": "Toggle", "note": "Enable active cloning from the clone master"}
+  ],
+  "key_concepts": [
+    "Time COMP gives a component its own timeline or clock for Timeline, Animation COMP, or custom time systems.",
+    "Component Time requires the Time COMP to live in the component's /local network, normally as /component/local/time.",
+    "Play, rate, start, end, range limit, working range, signature, and tempo define the local time behavior.",
+    "Run Independently prevents parent Time COMPs from starting or pausing this local time system.",
+    "The default Time COMP network is cloned from /sys/local/time, and removing the clone path allows custom internal edits."
+  ],
+  "common_gotchas": [
+    "For Component Time, the Time COMP must live in the component's /local network, usually /component/local/time.",
+    "Time COMP networks are cloned from /sys/local/time by default; remove the clone path before modifying the internal network.",
+    "Run Independently prevents parent Time COMPs from starting or pausing this time system.",
+    "Start and End define the overall length, while Range Start and Range End define the working playback subset.",
+    "Loop and Hold affect what happens at Range End, not necessarily the absolute End frame when the working range is smaller.",
+    "Reset Frame is obsolete and should not be used as a primary planner control.",
+    "Info CHOP channels expose fps, start/end, working range, bpm, signature, and play state for diagnostics."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ component-local timeline and Component Time control",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,72 @@
+{
+  "card_type": "operator",
+  "op_type": "outTOP",
+  "family": "TOP",
+  "display_name": "Out TOP",
+  "docs_url": "https://docs.derivative.ca/Out_TOP",
+  "summary": "Creates a TOP output connector on a Component so image results can be exposed outside the component network.",
+  "key_params": [
+    {
+      "name": "label",
+      "type": "String",
+      "note": "Hover label shown for the component output."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Output resolution policy for the exposed TOP image."
+    },
+    {
+      "name": "resolution",
+      "type": "XY",
+      "note": "Explicit width and height when using custom resolution."
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Aspect-ratio policy for the output image."
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Common TOP input smoothness/filtering mode."
+    },
+    {
+      "name": "fillmode",
+      "type": "Menu",
+      "note": "Common TOP viewer fill behavior."
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Common TOP viewer smoothness/filtering mode."
+    },
+    {
+      "name": "chanmask",
+      "type": "Menu",
+      "note": "Common TOP RGBA channel mask."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Pixel format for the output texture."
+    }
+  ],
+  "common_gotchas": [
+    "Component outputs are positioned alphanumerically; stable naming matters when exposing multiple outputs.",
+    "Out TOP has a single input and does not create image content by itself; it exposes the incoming TOP stream.",
+    "Use the label for UI clarity, but use node names and connection order for deterministic automation.",
+    "Common TOP resolution, aspect, filtering, and pixel-format overrides can silently change the component output contract."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "component_output",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Creates a TOP output connector on a Component.",
+    "Exposes the incoming TOP stream outside the component network.",
+    "Component outputs appear on the right side in alphanumeric order.",
+    "The unique Label parameter affects hover UI while Common TOP controls define the output texture contract."
+  ]
+}

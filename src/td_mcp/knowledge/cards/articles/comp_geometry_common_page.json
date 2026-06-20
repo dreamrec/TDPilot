@@ -1,0 +1,62 @@
+{
+  "card_type": "article",
+  "article_id": "comp_geometry_common_page",
+  "title": "COMP Geometry Common Page",
+  "family": "PARAMETER",
+  "families": [
+    "COMP",
+    "PARAMETER",
+    "TOX",
+    "CLONE"
+  ],
+  "summary": "Official Derivative common COMP page reference for node-view, shortcut, clone, load-on-demand, external .tox, parameter reload, backup, sub-component load, and relative-path behavior on geometry/object-style components.",
+  "source_url": "https://docs.derivative.ca/COMP_Geometry_Common_Page",
+  "docsbrain_page_id": "comp_geometry_common_page",
+  "covered_operators": [
+    "geometryCOMP",
+    "cameraCOMP",
+    "lightCOMP",
+    "nullCOMP",
+    "baseCOMP"
+  ],
+  "key_concepts": [
+    "COMP Geometry Common Page",
+    "Parameters - Common Page",
+    "shared common page",
+    "node viewer",
+    "clone relationships",
+    "parentshortcut",
+    "opshortcut",
+    "iop",
+    "iop0shortcut",
+    "iop0op",
+    "nodeview",
+    "default",
+    "opviewer",
+    "enablecloning",
+    "enablecloningpulse",
+    "clone",
+    "loadondemand",
+    "enableexternaltox",
+    "enableexternaltoxpulse",
+    "externaltox",
+    "reloadcustom",
+    "reloadbuiltin",
+    "savebackup",
+    "subcompname",
+    "relpath",
+    ".tox",
+    ".toe",
+    "Relative to Project File",
+    "Relative to External COMP File"
+  ],
+  "guidance": [
+    "Use this article as a shared common page for node viewer, clone, shortcut, and external .tox behavior; do not treat it as geometry transform or render-state guidance.",
+    "Use Parent Shortcut, Global OP Shortcut, and Internal OP parameters to create stable Python paths to components and internal operators.",
+    "Use nodeview/opviewer to decide whether the component shows its default viewer or another operator's viewer.",
+    "Use clone and enablecloning for master-clone relationships, and use loadondemand for components not always required in memory.",
+    "External .tox settings control startup loading, reload pulses, custom/built-in top-level parameter reload behavior, backups, sub-component extraction, and whether child paths are relative to the .toe or the external .tox."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

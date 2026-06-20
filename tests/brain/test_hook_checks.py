@@ -90,7 +90,9 @@ def test_release_stop_hook_runs_audits_for_relevant_files():
 
 def test_hooks_json_uses_deterministic_hook_module_and_is_mirrored():
     root_hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text(encoding="utf-8"))
-    plugin_hooks = json.loads((ROOT / "plugins" / "tdpilot" / "hooks" / "hooks.json").read_text(encoding="utf-8"))
+    plugin_hooks = json.loads(
+        (ROOT / "plugins" / "tdpilot" / "hooks" / "hooks.json").read_text(encoding="utf-8")
+    )
 
     assert plugin_hooks == root_hooks
     hook_text = json.dumps(root_hooks)

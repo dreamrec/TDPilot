@@ -1,0 +1,39 @@
+{
+  "card_type": "operator",
+  "op_type": "opviewerCOMP",
+  "family": "COMP",
+  "display_name": "OP Viewer COMP",
+  "docs_url": "https://docs.derivative.ca/OP_Viewer_COMP",
+  "summary": "Embeds another operator's viewer inside a Panel COMP with optional interactivity, panning, scaling, direct TOP drawing, and normal panel layout/look/drag-drop behavior.",
+  "key_params": [
+    {"name": "opviewer", "type": "OP path", "note": "Target operator whose node viewer is displayed"},
+    {"name": "interactive", "type": "Toggle", "note": "Allows mouse or touch interaction with the target viewer"},
+    {"name": "opcenter", "type": "XY", "note": "Pan center for the displayed viewer when scaled"},
+    {"name": "opcenterunit", "type": "Menu", "note": "Panel units, fraction, relative fraction, or display points for Center"},
+    {"name": "opscale", "type": "Float", "note": "Zoom factor for the embedded viewer"},
+    {"name": "topdirect", "type": "Toggle", "note": "For TOPs, draw the RGBA image directly instead of viewer overlays"},
+    {"name": "contentsize", "type": "Toggle", "note": "Use TOP texture size rather than panel size when calculating center"},
+    {"name": "w", "type": "Pixels", "note": "Panel width"},
+    {"name": "h", "type": "Pixels", "note": "Panel height"},
+    {"name": "enable", "type": "Toggle", "note": "Enables panel interaction"},
+    {"name": "display", "type": "Toggle", "note": "Shows or hides the panel"}
+  ],
+  "key_concepts": [
+    "OP Viewer COMP embeds any target operator viewer inside a Panel COMP.",
+    "Interactive mode optionally forwards mouse or touch interaction to the embedded operator viewer.",
+    "Center, center unit, scale, and content-size controls pan and zoom the displayed viewer region.",
+    "Draw TOP Directly displays a TOP's raw RGBA image instead of the normal viewer overlays.",
+    "Because it is a panel, layout size, enable, display, and panel interaction settings still control whether users can see or use it."
+  ],
+  "common_gotchas": [
+    "OP Viewer COMP embeds the target operator's viewer, not necessarily the target operator's raw output data.",
+    "For TOP inspection, Draw TOP Directly avoids viewer overlays and shows the RGBA image like a Select TOP would.",
+    "Interactive mode can pass mouse or touch behavior into the target viewer, which may be undesirable in dashboard-style panels.",
+    "Center and Content Size behave differently for TOPs because panel units may map to texture pixels.",
+    "Scaling magnifies the viewer; use Center parameters to keep the intended region visible.",
+    "Panel enable/display state can prevent expected interaction even when the OP Viewer parameter setup is correct."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ embedded operator viewers in panels",
+  "last_verified": "2026-06-18"
+}

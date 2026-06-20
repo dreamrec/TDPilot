@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "cachePOP",
+  "family": "POP",
+  "display_name": "Cache POP",
+  "docs_url": "https://docs.derivative.ca/Cache_POP",
+  "summary": "Caches recent frames of POP data in GPU memory and outputs a selected cached frame by Output Index. Cache Select POP and Cache Blend POP can read the held frames for multi-frame selection and blends.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable cache updates"},
+    {"name": "activepulse", "type": "Pulse", "note": "Capture one snapshot while otherwise inactive"},
+    {"name": "alwayscook", "type": "Toggle", "note": "Force the cache to cook every frame"},
+    {"name": "cachesize", "type": "Int", "note": "Maximum number of held frames"},
+    {"name": "step", "type": "Int", "note": "Step size between cached frames"},
+    {"name": "stepunit", "type": "Menu", "note": "Step size expressed in seconds or frames"},
+    {"name": "outputindex", "type": "Int", "note": "0 for current cached frame; negative values for older cached frames"},
+    {"name": "outputindexunit", "type": "Menu", "note": "Output index expressed as seconds, frames, or raw cache index"},
+    {"name": "interp", "type": "Toggle", "note": "Interpolate frames"},
+    {"name": "reset", "type": "Toggle", "note": "Clear and hold cache while on"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Clear cache and restart growth"}
+  ],
+  "key_concepts": [
+    "Stores recent POP snapshots in uncompressed GPU memory up to Cache Size.",
+    "Output Index selects cached history where 0 is the current snapshot and negative values address older snapshots.",
+    "Step Size spaces snapshots over time, extending history duration without storing every frame.",
+    "Cache Select POP and Cache Blend POP can reference the held snapshots for explicit retrieval or multi-frame blends."
+  ],
+  "common_gotchas": [
+    "Cached POP data is held uncompressed in GPU memory; large geometry and long cache sizes can be expensive.",
+    "The cache is cleared when the file restarts; cached frames are not saved into the .toe or .tox.",
+    "Dropped frames make cache time less regular; Trail POP handles missing frame time differently via Age."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

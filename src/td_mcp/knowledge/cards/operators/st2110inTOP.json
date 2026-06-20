@@ -1,0 +1,113 @@
+{
+  "card_type": "operator",
+  "op_type": "st2110inTOP",
+  "family": "TOP",
+  "display_name": "ST2110 In TOP",
+  "docs_url": "https://docs.derivative.ca/ST2110_In_TOP",
+  "summary": "Receives ST 2110 video essences through supported professional video hardware using an ST2110 Device CHOP.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable ST 2110 input."
+    },
+    {
+      "name": "st2110devicechop",
+      "type": "CHOP",
+      "note": "ST2110 Device CHOP reference."
+    },
+    {
+      "name": "device",
+      "type": "Menu",
+      "note": "Hardware device selection."
+    },
+    {
+      "name": "setupmode",
+      "type": "Menu",
+      "note": "SDP parameters or NMOS setup mode."
+    },
+    {
+      "name": "videosdp",
+      "type": "File/String",
+      "note": "Video SDP path or text."
+    },
+    {
+      "name": "audiosdp",
+      "type": "File/String",
+      "note": "Audio SDP path or text."
+    },
+    {
+      "name": "ancillarysdp",
+      "type": "File/String",
+      "note": "Ancillary SDP path or text."
+    },
+    {
+      "name": "setsourceipfromsdp",
+      "type": "Toggle",
+      "note": "Set source IP from supported SDP data."
+    },
+    {
+      "name": "mainstreamidentifier",
+      "type": "String",
+      "note": "NMOS main stream identifier."
+    },
+    {
+      "name": "spsstreamidentifier",
+      "type": "String",
+      "note": "NMOS SPS stream identifier."
+    },
+    {
+      "name": "deinterlace",
+      "type": "Menu",
+      "note": "Deinterlacing mode."
+    },
+    {
+      "name": "precedence",
+      "type": "Menu",
+      "note": "Field precedence for deinterlacing."
+    },
+    {
+      "name": "inputpixelformat",
+      "type": "Menu",
+      "note": "Input fixed pixel format."
+    },
+    {
+      "name": "inputcolorspace",
+      "type": "Menu",
+      "note": "Input color-space interpretation."
+    },
+    {
+      "name": "inputreferencewhite",
+      "type": "Menu",
+      "note": "SDR/HDR reference-white mode."
+    },
+    {
+      "name": "transfermode",
+      "type": "Menu",
+      "note": "Automatic, preupload, or on-demand transfer."
+    },
+    {
+      "name": "resetstats",
+      "type": "Pulse",
+      "note": "Reset ST 2110 input statistics."
+    }
+  ],
+  "common_gotchas": [
+    "A connected device status does not prove a valid incoming stream.",
+    "Frame repeat/drop/skip counters should be monitored during timing diagnosis.",
+    "Source-IP assignment from SDP only applies to supported devices.",
+    "The operator is Pro-only and hardware-dependent."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "CHOP_snippets"
+  ],
+  "build_relevance": "pro_st2110_input",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "ST2110 In TOP is a Pro-only ST 2110 video input that depends on an ST2110 Device CHOP.",
+    "Setup can come from SDP parameters or NMOS stream identifiers depending on device/workflow.",
+    "Supported hardware families include Blackmagic IP, AJA IP25, and Deltacast DELTA-ip-ST2110 devices.",
+    "Input pixel format, color space, reference white, and transfer mode affect HDR/SDR interpretation and upload behavior."
+  ]
+}

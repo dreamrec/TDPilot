@@ -1,0 +1,52 @@
+{
+  "card_type": "operator",
+  "op_type": "prefiltermapTOP",
+  "family": "TOP",
+  "display_name": "PreFilter Map TOP",
+  "docs_url": "https://docs.derivative.ca/PreFilter_Map_TOP",
+  "summary": "Uses spherical harmonics to generate pre-filtered diffuse or specular environment maps for Environment Light COMP.",
+  "key_params": [
+    {
+      "name": "output",
+      "type": "Menu",
+      "note": "Choose envlightdiffuse or envlightspecular output."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Resolution policy for the prefiltered map."
+    },
+    {
+      "name": "resolution",
+      "type": "XY",
+      "note": "Common TOP custom output resolution."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Pixel format used for the generated map."
+    },
+    {
+      "name": "chanmask",
+      "type": "Menu",
+      "note": "Common TOP channel mask."
+    }
+  ],
+  "common_gotchas": [
+    "The generated output is meant to feed Environment Light COMP directly.",
+    "Do not insert further image processing between PreFilter Map TOP and the Environment Light use path.",
+    "Choose diffuse versus specular output to match the Environment Light slot being driven.",
+    "Use appropriate texture resolution and float format for lighting quality and memory budget."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "environment_light_prefilter",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Uses spherical harmonics to generate pre-filtered environment maps.",
+    "Outputs either diffuse or specular maps intended for Environment Light COMP.",
+    "The generated map should feed Environment Light directly without intervening image processing.",
+    "Common TOP resolution and float-format choices affect lighting quality and GPU memory."
+  ]
+}

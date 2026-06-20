@@ -1,0 +1,46 @@
+{
+  "card_type": "operator",
+  "op_type": "syncoutCHOP",
+  "family": "CHOP",
+  "display_name": "Sync Out CHOP",
+  "docs_url": "https://docs.derivative.ca/Sync_Out_CHOP",
+  "summary": "Server-side CHOP for keeping timelines in multiple TouchDesigner processes within a frame of each other and optionally forwarding extra CHOP channels to Sync In clients.",
+  "key_concepts": [
+    "Sync Out CHOP is the server side of a TouchDesigner Pro Sync In/Sync Out setup for keeping multiple processes within a single frame.",
+    "A sync group has one Sync Out process and one or more Sync In client processes.",
+    "Sync clients should have Realtime off, and all client and server monitors should use the same refresh rate.",
+    "The Sync CHOPs pause their own timelines until all Sync In/Out CHOPs have cooked, with Sync Out ahead of the Sync In clients.",
+    "Client processes can come online or go offline, and Sync Out can time out, temporarily ignore, or permanently ban unreliable clients.",
+    "Sync Out can forward extra input CHOP channels to Sync In clients, and Info DAT/Info CHOP diagnostics expose client replies, timeout totals, include state, and sync delay."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Run the synchronization server"},
+    {"name": "multicastaddress", "type": "String", "note": "Multicast address used by the Sync group"},
+    {"name": "port", "type": "Integer", "note": "Network port for the Sync group"},
+    {"name": "localaddress", "type": "String", "note": "Local NIC address for multi-adapter machines"},
+    {"name": "localportmode", "type": "Menu", "note": "Automatic or manual local port"},
+    {"name": "automatic", "type": "MenuItem", "note": "Automatically select the local port"},
+    {"name": "manual", "type": "MenuItem", "note": "Use the Local Port parameter"},
+    {"name": "localport", "type": "Integer", "note": "Manual local port"},
+    {"name": "timeout", "type": "Integer", "note": "Maximum wait for synchronization signals in milliseconds"},
+    {"name": "clienttimeouts", "type": "Integer", "note": "Consecutive client timeouts before the client is ignored until it replies on time again"},
+    {"name": "banclients", "type": "Toggle", "note": "Allow clients to be banned after timeouts"},
+    {"name": "banclienttimeouts", "type": "Integer", "note": "Total timeouts before banning a client"},
+    {"name": "clearstats", "type": "Pulse", "note": "Clear client and timeout stats"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP channel scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Common CHOP sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"}
+  ],
+  "common_gotchas": [
+    "Official docs list Sync Out CHOP as TouchDesigner Pro only.",
+    "Sync Out waits for Sync In clients; failures or timeouts can slow every participating process.",
+    "Extra CHOP input channels sent through Sync Out are received by Sync In clients.",
+    "Use Info DAT on Sync Out to inspect clients, include flags, timeout totals, and client paths.",
+    "Client processes should disable Realtime, and all client/server monitors should use the same refresh rate.",
+    "Windows firewall can block discovery or communication."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2025.30000+ Pro multi-process timeline sync server",
+  "last_verified": "2026-06-18"
+}

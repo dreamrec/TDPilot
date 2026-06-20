@@ -1,0 +1,87 @@
+{
+  "card_type": "operator",
+  "op_type": "mergeDAT",
+  "family": "DAT",
+  "display_name": "Merge DAT",
+  "docs_url": "https://docs.derivative.ca/Merge_DAT",
+  "summary": "Merges text or table contents from multiple input DATs into one DAT for downstream table, script, or text processing.",
+  "key_params": [
+    {
+      "name": "merge",
+      "type": "Menu",
+      "note": "Merge method for combining input DAT contents"
+    },
+    {
+      "name": "align",
+      "type": "Menu",
+      "note": "How table rows or columns are aligned when merging"
+    },
+    {
+      "name": "fillcells",
+      "type": "String",
+      "note": "Fill value for missing cells in table-style merges"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT language setting for editor/script context"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT word-wrap display setting"
+    },
+    {
+      "name": "byname",
+      "type": "Toggle",
+      "note": "Append rows or columns by matching names"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "dat",
+      "type": "DAT path",
+      "note": "DAT or pattern of DATs to merge"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "how",
+      "type": "Menu",
+      "note": "Choose the table merge mode"
+    },
+    {
+      "name": "spacer",
+      "type": "String",
+      "note": "String used between concatenated cells"
+    },
+    {
+      "name": "unmatched",
+      "type": "Toggle",
+      "note": "Append unmatched rows or columns from subsequent tables"
+    }
+  ],
+  "common_gotchas": [
+    "Text and table DATs merge differently; inspect the output shape before driving expressions or exports from fixed cell positions.",
+    "Inputs with different row or column counts may require fill values or normalization upstream.",
+    "Merge DAT does not parse semantic keys by itself; use JSON DAT, Lookup DAT, or scripts when keys need meaning.",
+    "The common DAT language setting affects editor/script context, not the merge algorithm."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Merges text or table DAT inputs into a single DAT.",
+    "How selects append, collapse, or replace-cell merge behavior.",
+    "By Name changes append behavior to match row or column names instead of pure position.",
+    "Spacer and Append Unmatched control collapsed text and unmatched row/column handling."
+  ]
+}

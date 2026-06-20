@@ -1,0 +1,40 @@
+{
+  "card_type": "operator",
+  "op_type": "rasterSOP",
+  "family": "SOP",
+  "display_name": "Raster SOP",
+  "docs_url": "https://docs.derivative.ca/Raster_SOP",
+  "summary": "Converts TOP image pixels into SOP points by raster scanning the image for laser, oscilloscope, and similar point-output workflows.",
+  "key_params": [
+    {
+      "name": "top",
+      "type": "TOP Path",
+      "note": "TOP image source to rasterize"
+    },
+    {
+      "name": "direction",
+      "type": "Menu",
+      "note": "Horizontal or vertical scan direction"
+    },
+    {
+      "name": "downloadtype",
+      "type": "Menu",
+      "note": "Immediate slow download or faster next-frame GPU download"
+    }
+  ],
+  "common_gotchas": [
+    "Source image resolution directly controls output point count.",
+    "Use Trace SOP when contour paths are needed instead of one point per pixel.",
+    "Immediate GPU download can stall rendering; next-frame download is faster but adds a frame of latency."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "top-to-sop-raster-geometry",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Raster SOP scans TOP image data and outputs one SOP point for each pixel.",
+    "It is intended for point-output workflows such as laser devices and oscilloscopes, often feeding Laser CHOP-style systems.",
+    "Raster SOP differs from Trace SOP, which outputs contour shapes instead of every sampled pixel."
+  ]
+}

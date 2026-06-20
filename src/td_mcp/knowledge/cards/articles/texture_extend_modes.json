@@ -1,0 +1,47 @@
+{
+  "card_type": "article",
+  "article_id": "texture_extend_modes",
+  "title": "Texture Extend Modes",
+  "family": "TOP",
+  "families": [
+    "TOP",
+    "MAT",
+    "GLSL",
+    "PARAMETER"
+  ],
+  "summary": "Official Derivative reference for texture extend modes, covering how U, V, and W coordinates outside [0,1] are handled through Hold, Zero, Repeat, and Mirror behavior.",
+  "source_url": "https://docs.derivative.ca/Texture_Extend_Modes",
+  "docsbrain_page_id": "texture_extend_modes",
+  "covered_operators": [
+    "glslTOP",
+    "phongMAT",
+    "pbrMAT",
+    "glslMAT",
+    "texture3dTOP"
+  ],
+  "key_concepts": [
+    "Texture extend modes",
+    "[0,1]",
+    "U",
+    "V",
+    "W",
+    "Hold",
+    "Zero",
+    "Repeat",
+    "Mirror",
+    "aspect ratios"
+  ],
+  "guidance": [
+    "Use this article when a plan needs predictable texture behavior outside the [0,1] coordinate range.",
+    "Choose Hold to clamp outside coordinates to the nearest image edge color.",
+    "Choose Zero when samples outside the texture should become transparent black.",
+    "Choose Repeat when outside coordinates should wrap by removing the integer portion.",
+    "Choose Mirror when repeated regions should alternate flipped orientation for each odd or even integer span.",
+    "Set U, V, and W extend modes independently when the sampled texture type supports them."
+  ],
+  "related_snippets": [
+    "GLSL_snippets",
+    "TOP_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

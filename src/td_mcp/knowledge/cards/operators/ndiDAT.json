@@ -1,0 +1,62 @@
+{
+  "card_type": "operator",
+  "op_type": "ndiDAT",
+  "family": "DAT",
+  "display_name": "NDI DAT",
+  "docs_url": "https://docs.derivative.ca/NDI_DAT",
+  "summary": "Discovers and monitors NDI sources and streams on the network, outputting source rows and callbacks when sources or streams are added, removed, or changed.",
+  "key_params": [
+    {
+      "name": "callbacks",
+      "type": "DAT Path",
+      "note": "Callback DAT for NDI source and stream discovery changes"
+    },
+    {
+      "name": "extraips",
+      "type": "String",
+      "note": "Additional IP addresses to search when mDNS discovery is insufficient"
+    },
+    {
+      "name": "persistence",
+      "type": "Float",
+      "note": "Time to keep disappeared sources listed before removing them"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "NDI DAT discovers sources; it does not receive the video or audio stream itself.",
+    "mDNS discovery usually works on local networks only; use Extra IPs for routed or non-mDNS machines.",
+    "Persistence intentionally delays row removal, so disappeared sources can remain visible briefly.",
+    "Callbacks can fire repeatedly on source and stream churn, so generated handlers should be idempotent."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "ndi-network-discovery",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Lists NDI sources discovered on the network.",
+    "Extra IPs extends discovery beyond automatic local-network discovery.",
+    "Persistence controls how long missing sources remain listed.",
+    "Callbacks can react as the discovered source list changes."
+  ]
+}

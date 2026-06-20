@@ -71,7 +71,8 @@ async def td_resource_activity_recent() -> str:
     )
 
 
-@mcp.resource("ui://tdpilot/cockpit.html",
+@mcp.resource(
+    "ui://tdpilot/cockpit.html",
     name="tdpilot_cockpit",
     title="TDPilot Brain Cockpit",
     description="Render-only MCP Apps cockpit for BrainPlan, transaction, validation, and rollback state.",
@@ -160,7 +161,9 @@ async def td_resource_node(encoded_path: str) -> str:
     fallback = {"mode": "static"}
     path = decode_td_path(encoded_path)
     uri = f"td://node/path/{encoded_path}"
-    return _cached_or_note(uri, "Use td_get_node_detail to populate cached node context.", **fallback, path=path)
+    return _cached_or_note(
+        uri, "Use td_get_node_detail to populate cached node context.", **fallback, path=path
+    )
 
 
 @mcp.resource("td://top/path/{encoded_path}/frame", name="td_top_frame")

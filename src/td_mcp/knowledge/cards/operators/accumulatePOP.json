@@ -1,0 +1,31 @@
+{
+  "card_type": "operator",
+  "op_type": "accumulatePOP",
+  "family": "POP",
+  "display_name": "Accumulate POP",
+  "docs_url": "https://docs.derivative.ca/Accumulate_POP",
+  "summary": "Computes a running sum of an input attribute across points, vertices, or primitives and writes the result to a new or existing attribute. Inclusive scan includes the current element; exclusive scan starts from the previous accumulated value.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Point, vertex, or primitive attribute class"},
+    {"name": "inputattrscope", "type": "Str", "note": "Input attribute or components to accumulate"},
+    {"name": "scantype", "type": "Menu", "note": "Inclusive or exclusive scan"},
+    {"name": "outputattrscope", "type": "Str", "note": "Output attribute scope"},
+    {"name": "overrideautoattr", "type": "Toggle", "note": "Override automatic output attribute typing"},
+    {"name": "attrtype", "type": "Menu", "note": "Output data type when overriding automatic typing"},
+    {"name": "attrnumcomps", "type": "Menu", "note": "Output component count"},
+    {"name": "attrdefaultval", "type": "Float4", "note": "Default output value if accumulation cannot be computed"}
+  ],
+  "key_concepts": [
+    "Accumulate POP computes a running sum, or scan, over the selected point, vertex, or primitive attribute class.",
+    "Inclusive scan includes the current element in its output value, while exclusive scan reports the accumulated value before the current element.",
+    "Output attribute scope and override controls let scan results keep the input type shape or write into a manually typed attribute."
+  ],
+  "common_gotchas": [
+    "Accumulation depends on element order, so run Sort POP first if the running sum needs a specific traversal.",
+    "Exclusive scan intentionally leaves the first output at zero/default; use inclusive scan for cumulative totals including the current element.",
+    "Accumulating vector attributes preserves vector shape, which is useful but can hide per-component growth."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

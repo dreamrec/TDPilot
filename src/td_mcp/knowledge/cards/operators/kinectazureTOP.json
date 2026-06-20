@@ -1,0 +1,116 @@
+{
+  "card_type": "operator",
+  "op_type": "kinectazureTOP",
+  "family": "TOP",
+  "display_name": "Kinect Azure TOP",
+  "docs_url": "https://docs.derivative.ca/Kinect_Azure_TOP",
+  "summary": "Configures Kinect Azure or compatible Orbbec camera streams, body tracking, aligned outputs, and multi-camera sync on Windows.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable camera capture"
+    },
+    {
+      "name": "library",
+      "type": "Menu",
+      "note": "Camera library: microsoft or orbbec"
+    },
+    {
+      "name": "sensor",
+      "type": "Int",
+      "note": "Sensor index"
+    },
+    {
+      "name": "fps",
+      "type": "Menu",
+      "note": "Frame rate: fps5, fps15, or fps30"
+    },
+    {
+      "name": "colorres",
+      "type": "Menu",
+      "note": "Color camera resolution"
+    },
+    {
+      "name": "depthmode",
+      "type": "Menu",
+      "note": "Depth mode such as narrowunbinned, widebinned, narrowbinned, wideunbinned, or passiveir"
+    },
+    {
+      "name": "modelpath",
+      "type": "File",
+      "note": "Body-tracking model path"
+    },
+    {
+      "name": "proccessingmode",
+      "type": "Menu",
+      "note": "Body-tracking processing mode; official id is misspelled"
+    },
+    {
+      "name": "gpu",
+      "type": "Int",
+      "note": "GPU device for body tracking"
+    },
+    {
+      "name": "orientation",
+      "type": "Menu",
+      "note": "Sensor orientation: default, cw90, ccw90, or flipped"
+    },
+    {
+      "name": "image",
+      "type": "Menu",
+      "note": "Primary image stream"
+    },
+    {
+      "name": "remapimage",
+      "type": "Toggle",
+      "note": "Enable aligned/remapped image output"
+    },
+    {
+      "name": "bodyimage",
+      "type": "Toggle",
+      "note": "Enable body/player image output"
+    },
+    {
+      "name": "mirrorimage",
+      "type": "Toggle",
+      "note": "Mirror image output"
+    },
+    {
+      "name": "syncmode",
+      "type": "Menu",
+      "note": "Sync mode: standalone, master, or subordinate"
+    },
+    {
+      "name": "depthdelay",
+      "type": "Float",
+      "note": "Depth timing delay"
+    },
+    {
+      "name": "subdelay",
+      "type": "Float",
+      "note": "Subordinate timing delay"
+    }
+  ],
+  "common_gotchas": [
+    "4096x3072 color resolution is not supported at 30 FPS.",
+    "Passive IR and some depth modes are poor or unsupported for body tracking.",
+    "Player index may require CUDA-capable hardware and can desynchronize from image streams.",
+    "The official parameter id is misspelled as proccessingmode; preserve that spelling in guards."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Kinect_snippets",
+    "PointCloud_snippets"
+  ],
+  "build_relevance": "depth_camera_input",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Kinect Azure TOP is supported on Windows 10 April 2018 Update or later.",
+    "It configures Microsoft Kinect Azure cameras or compatible Orbbec cameras.",
+    "Only one primary Kinect Azure TOP should configure a physical camera; additional images come from Kinect Azure Select TOP.",
+    "Image modes include color, remapped color, depth, remapped depth, infrared, player index, and point clouds.",
+    "Body tracking depends on depth camera settings, model path, and processing mode.",
+    "Sync Mode and delay controls support wired multi-camera synchronization."
+  ]
+}

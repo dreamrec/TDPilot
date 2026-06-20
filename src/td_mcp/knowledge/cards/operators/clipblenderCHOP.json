@@ -1,0 +1,48 @@
+{
+  "card_type": "operator",
+  "op_type": "clipblenderCHOP",
+  "family": "CHOP",
+  "display_name": "Clip Blender CHOP",
+  "docs_url": "https://docs.derivative.ca/Clip_Blender_CHOP",
+  "summary": "Blends, sequences, and scripts animation clips from Clip CHOPs listed in a DAT, with root transform targeting and playback controls.",
+  "key_concepts": [
+    "Clip Blender CHOP is a TouchDesigner Pro engine for blending, sequencing, and scripting animation clips formatted as Clip CHOPs.",
+    "The operator reads Clip CHOP paths from a Table DAT list, pops each clip as it plays, and loops the last clip when the list becomes empty.",
+    "All Clip CHOPs loaded into one Clip Blender must have the same channel count, matching channel names, and the same sample rate to avoid animation glitches.",
+    "FBX and USD animation clips generally need to be extracted from the asset hierarchy and loaded separately into Clip CHOPs before blending.",
+    "The Target and root transform channel parameters work with Clip CHOP Blend To Target modes to steer root translation and rotation.",
+    "Info CHOP and Info DAT are the documented way to inspect current Clip Blender state."
+  ],
+  "key_params": [
+    {"name": "default", "type": "CHOP", "note": "Default Clip CHOP"},
+    {"name": "datlist", "type": "DAT", "note": "Table DAT list of Clip CHOP paths"},
+    {"name": "target", "type": "XYZ", "note": "Root-transform target used by Blend To Target clips"},
+    {"name": "playspeed", "type": "Float", "note": "Playback speed multiplier"},
+    {"name": "stepforward", "type": "Pulse", "note": "Step playback forward"},
+    {"name": "stepbackward", "type": "Pulse", "note": "Step playback backward"},
+    {"name": "aend", "type": "Menu", "note": "End behavior"},
+    {"name": "delay", "type": "Float", "note": "Playback delay"},
+    {"name": "reset", "type": "Toggle", "note": "Reset and hold ready to play the default Clip CHOP"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Instantly reset and start playing the default Clip CHOP"},
+    {"name": "timeremaining", "type": "Toggle", "note": "Output time remaining channel"},
+    {"name": "timechannel", "type": "String", "note": "Channel used for clip timing"},
+    {"name": "xtrans", "type": "String", "note": "Root translate X channel name"},
+    {"name": "ytrans", "type": "String", "note": "Root translate Y channel name"},
+    {"name": "ztrans", "type": "String", "note": "Root translate Z channel name"},
+    {"name": "xrot", "type": "String", "note": "Root rotate X channel name"},
+    {"name": "yrot", "type": "String", "note": "Root rotate Y channel name"},
+    {"name": "zrot", "type": "String", "note": "Root rotate Z channel name"},
+    {"name": "qenable", "type": "Toggle", "note": "Enable queue control"},
+    {"name": "qtrigger", "type": "Pulse", "note": "Trigger queue behavior"}
+  ],
+  "common_gotchas": [
+    "Official docs mark Clip Blender CHOP as TouchDesigner Pro-only.",
+    "Every Clip CHOP loaded into the same Clip Blender must have matching channel counts, channel names, and sample rates.",
+    "The DAT list is consumed as clips play; once empty, the last animation in the sequence loops.",
+    "FBX or USD animation clips generally need to be extracted into Clip CHOPs before blending.",
+    "Use Info CHOP or Info DAT for current playback state instead of inferring state from the DAT list alone."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ TouchDesigner Pro",
+  "last_verified": "2026-06-18"
+}

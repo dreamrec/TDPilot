@@ -1,0 +1,48 @@
+{
+  "card_type": "article",
+  "article_id": "anatomy_of_a_chop",
+  "title": "Anatomy of a CHOP",
+  "family": "CHOP",
+  "families": [
+    "CHOP",
+    "COMP",
+    "SOP",
+    "TOP"
+  ],
+  "summary": "Official Derivative conceptual article for CHOP internals, covering channels, clips, raw samples, sample rate, start/end intervals, CHOP flags, network cooking, imports/exports, channel expressions, and sample index/value semantics.",
+  "source_url": "https://docs.derivative.ca/Anatomy_of_a_CHOP",
+  "docsbrain_page_id": "anatomy_of_a_chop",
+  "covered_operators": [],
+  "key_concepts": [
+    "channels",
+    "clip",
+    "raw samples",
+    "sample rate",
+    "start-end interval",
+    "parameters",
+    "Local Variables",
+    "$I",
+    "$C",
+    "Graph flag",
+    "Export flag",
+    "Lock flag",
+    "Bypass flag",
+    "chop()",
+    "chopi()",
+    "i-axis",
+    "v-axis",
+    "32-bit floating point"
+  ],
+  "guidance": [
+    "Use this article when a plan needs CHOP data-shape grounding before choosing a specific CHOP operator.",
+    "A CHOP holds channels over a shared start-end interval; each channel is an array of raw samples with user-visible names.",
+    "If inputs and control parameters are static, a CHOP can be non-time-dependent and will not cook every advancing animation frame.",
+    "CHOP channels can drive parameters through exports; exporting is usually preferred over chop() or chopi() expressions when possible.",
+    "Export matching is channel-name based, so generated control rigs should plan channel names that match target parameter names.",
+    "Channel indexes and values are separate concepts; CHOP samples are index-value pairs and can be evaluated at integer or non-integer indexes."
+  ],
+  "related_snippets": [
+    "CHOP_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

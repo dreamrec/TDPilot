@@ -1,0 +1,90 @@
+{
+  "card_type": "operator",
+  "op_type": "displaceTOP",
+  "family": "TOP",
+  "display_name": "Displace TOP",
+  "docs_url": "https://docs.derivative.ca/Displace_TOP",
+  "summary": "Warps a source TOP using a displacement image, with channel source, midpoint, weight, UV, offset, and extend controls.",
+  "key_params": [
+    {
+      "name": "resolutionsource",
+      "type": "Menu",
+      "note": "Output resolution source: source or displace image"
+    },
+    {
+      "name": "horzsource",
+      "type": "Menu",
+      "note": "Channel used for horizontal displacement"
+    },
+    {
+      "name": "vertsource",
+      "type": "Menu",
+      "note": "Channel used for vertical displacement"
+    },
+    {
+      "name": "zsource",
+      "type": "Menu",
+      "note": "Channel used for Z displacement"
+    },
+    {
+      "name": "midpoint",
+      "type": "XYZ",
+      "note": "Neutral displacement midpoint"
+    },
+    {
+      "name": "displaceweight",
+      "type": "XYZ",
+      "note": "Displacement strength per axis"
+    },
+    {
+      "name": "aspectcorrect",
+      "type": "Toggle",
+      "note": "Correct displacement for source aspect"
+    },
+    {
+      "name": "uvweight",
+      "type": "Float",
+      "note": "Weight between UV-relative and offset-anchored displacement"
+    },
+    {
+      "name": "offset",
+      "type": "XYZ",
+      "note": "Offset point for displacement sampling"
+    },
+    {
+      "name": "offsetweight",
+      "type": "Float",
+      "note": "Blend weight for offset contribution"
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Out-of-bounds sampling: hold, zero, repeat, or mirror"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Black and white displacement maps are not neutral; 0.5 is neutral by default.",
+    "The documented green/vertical direction can feel inverted relative to screen-space expectations.",
+    "UV Weight 0 anchors displacement around the Offset point.",
+    "Aspect correction matters on non-square or ultrawide textures."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "GLSL_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Displace TOP uses the first input as the source image and the second input as the displacement image.",
+    "Red, green, blue, alpha, or none can drive horizontal, vertical, and Z displacement sources.",
+    "The neutral displacement midpoint is 0.5 by default, not black or white.",
+    "Displace Weight scales the warp independently across axes.",
+    "UV Weight changes whether displacement is relative to output UVs or anchored around the offset point.",
+    "The official TOP supports 3D textures and 2D texture arrays."
+  ]
+}

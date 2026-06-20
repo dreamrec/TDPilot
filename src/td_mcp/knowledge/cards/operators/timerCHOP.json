@@ -5,18 +5,44 @@
   "display_name": "Timer CHOP",
   "docs_url": "https://docs.derivative.ca/Timer_CHOP",
   "summary": "Multi-segment timer with callbacks for cue-based sequencing, countdowns, and timed events. Outputs normalized fraction, elapsed time, and segment info.",
+  "key_concepts": [
+    "Timer CHOP is an engine for running timed processes and emits fractions, counters, pulses, and timer-state channels.",
+    "Timers can be started by pulsing parameters or driving the input CHOPs, then counted in seconds, frames, or samples.",
+    "Python callbacks fire on timing events, allowing timed cues, playlists, timelines, state machines, and parameter or storage updates.",
+    "A single Timer CHOP can run multiple segments from a Table DAT, either serially or in parallel.",
+    "It can lock deterministically to the timeline or run sequentially with play/pause, speed control, cycle, break, and go-to behavior.",
+    "Info DAT and `.timecode` members expose segment timecodes and custom text while the CHOP outputs running/done/counter channels."
+  ],
   "key_params": [
+    {"name": "active", "type": "Menu", "note": "Cook never, always, while running, or while timeline is playing"},
+    {"name": "timecontrol", "type": "Menu", "note": "Locked timeline, sequential, CHOP, or timecode master"},
     {"name": "length", "type": "Float", "note": "Duration of the timer segment (in seconds or frames depending on units)"},
+    {"name": "lengthtype", "type": "Menu", "note": "Fixed or infinite timer length"},
+    {"name": "start", "type": "Pulse", "note": "Start the timer and initialize if needed"},
     {"name": "play", "type": "Toggle", "note": "Start/stop the timer"},
     {"name": "initialize", "type": "Toggle", "note": "Pulse to reset the timer to the beginning"},
+    {"name": "speed", "type": "Float", "note": "Timer speed multiplier"},
+    {"name": "runvalues", "type": "Menu", "note": "First-frame run value behavior"},
+    {"name": "cue", "type": "Toggle", "note": "Enable cue control"},
+    {"name": "cuepulse", "type": "Pulse", "note": "Jump to Cue Point"},
+    {"name": "cyclelimit", "type": "Toggle", "note": "Limit number of cycles"},
+    {"name": "ondone", "type": "Menu", "note": "Done action such as do nothing, reinitialize, restart, or restart without initialize"},
     {"name": "callbacks", "type": "String", "note": "Path to a DAT containing onDone, onSegmentEnter callbacks"},
-    {"name": "cycle", "type": "Toggle", "note": "Loop the timer when it reaches the end"}
+    {"name": "cycle", "type": "Toggle", "note": "Loop the timer when it reaches the end"},
+    {"name": "segdat", "type": "DAT", "note": "Segment table DAT"},
+    {"name": "segmethod", "type": "Menu", "note": "Serial or parallel segment timers"},
+    {"name": "subrange", "type": "Toggle", "note": "Limit timer output to a subrange"},
+    {"name": "outfraction", "type": "Menu", "note": "Output timer fraction channel"},
+    {"name": "outdone", "type": "Menu", "note": "Output done channel"},
+    {"name": "extchop", "type": "CHOP", "note": "External CHOP timing source"},
+    {"name": "exttcop", "type": "String", "note": "External timecode source"}
   ],
   "common_gotchas": [
-    "The timer will not start until you pulse 'initialize' then set 'play' to 1 — both are required.",
-    "Callback DATs must define the correct function signatures or they will be silently ignored."
+    "Start begins counting and initializes when needed; Play is a play/pause control rather than the only way to start the timer.",
+    "Callback DATs must define the correct function signatures or they will be silently ignored.",
+    "The first frame after Start can advance counters immediately; use Run Value style settings when a visible first frame must stay at zero."
   ],
   "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "build_relevance": "2020.20000+ timed processes and cue/state machines",
+  "last_verified": "2026-06-18"
 }

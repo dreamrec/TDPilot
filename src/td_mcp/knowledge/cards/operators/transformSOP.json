@@ -4,19 +4,227 @@
   "family": "SOP",
   "display_name": "Transform SOP",
   "docs_url": "https://docs.derivative.ca/Transform_SOP",
-  "summary": "Applies translate, rotate, and scale transformations to SOP geometry at the vertex level. Unlike COMP transforms, this bakes the transform into the point positions.",
+  "summary": "Applies translate, rotate, scale, pivot, look-at, and post-transform alignment to SOP geometry in object/local space by changing point positions rather than COMP world transforms.",
   "key_params": [
-    {"name": "tx", "type": "Float", "note": "Translate X"},
-    {"name": "ty", "type": "Float", "note": "Translate Y"},
-    {"name": "tz", "type": "Float", "note": "Translate Z"},
-    {"name": "rx", "type": "Float", "note": "Rotate X in degrees"},
-    {"name": "sx", "type": "Float", "note": "Scale X"}
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Restrict the transform to a point or primitive group."
+    },
+    {
+      "name": "xord",
+      "type": "Menu",
+      "note": "Overall transform order for scale, rotate, and translate."
+    },
+    {
+      "name": "rord",
+      "type": "Menu",
+      "note": "Rotation order for XYZ rotations."
+    },
+    {
+      "name": "t",
+      "type": "Float3",
+      "note": "Translate vector."
+    },
+    {
+      "name": "tx",
+      "type": "Float",
+      "note": "Translate X."
+    },
+    {
+      "name": "ty",
+      "type": "Float",
+      "note": "Translate Y."
+    },
+    {
+      "name": "tz",
+      "type": "Float",
+      "note": "Translate Z."
+    },
+    {
+      "name": "r",
+      "type": "Float3",
+      "note": "Rotate vector."
+    },
+    {
+      "name": "rx",
+      "type": "Float",
+      "note": "Rotate X."
+    },
+    {
+      "name": "ry",
+      "type": "Float",
+      "note": "Rotate Y."
+    },
+    {
+      "name": "rz",
+      "type": "Float",
+      "note": "Rotate Z."
+    },
+    {
+      "name": "s",
+      "type": "Float3",
+      "note": "Scale vector."
+    },
+    {
+      "name": "sx",
+      "type": "Float",
+      "note": "Scale X."
+    },
+    {
+      "name": "sy",
+      "type": "Float",
+      "note": "Scale Y."
+    },
+    {
+      "name": "sz",
+      "type": "Float",
+      "note": "Scale Z."
+    },
+    {
+      "name": "p",
+      "type": "Float3",
+      "note": "Transform pivot point."
+    },
+    {
+      "name": "px",
+      "type": "Float",
+      "note": "Pivot X."
+    },
+    {
+      "name": "py",
+      "type": "Float",
+      "note": "Pivot Y."
+    },
+    {
+      "name": "pz",
+      "type": "Float",
+      "note": "Pivot Z."
+    },
+    {
+      "name": "scale",
+      "type": "Float",
+      "note": "Uniform scale multiplier."
+    },
+    {
+      "name": "vlength",
+      "type": "Toggle",
+      "note": "Maintain vector attribute lengths when scaling geometry."
+    },
+    {
+      "name": "lookat",
+      "type": "OP Path",
+      "note": "Orient geometry toward another object origin."
+    },
+    {
+      "name": "upvector",
+      "type": "Float3",
+      "note": "Up vector used for look-at orientation."
+    },
+    {
+      "name": "upvectorx",
+      "type": "Float",
+      "note": "Up vector X."
+    },
+    {
+      "name": "upvectory",
+      "type": "Float",
+      "note": "Up vector Y."
+    },
+    {
+      "name": "upvectorz",
+      "type": "Float",
+      "note": "Up vector Z."
+    },
+    {
+      "name": "forwarddir",
+      "type": "Menu",
+      "note": "Forward axis used by look-at orientation."
+    },
+    {
+      "name": "postxord",
+      "type": "Menu",
+      "note": "Post-transform scale/translate order."
+    },
+    {
+      "name": "posttx",
+      "type": "Menu",
+      "note": "Post-transform X alignment target."
+    },
+    {
+      "name": "fromx",
+      "type": "Menu",
+      "note": "Input bounds point used for X alignment."
+    },
+    {
+      "name": "tox",
+      "type": "Menu",
+      "note": "Reference bounds point used for X alignment."
+    },
+    {
+      "name": "postty",
+      "type": "Menu",
+      "note": "Post-transform Y alignment target."
+    },
+    {
+      "name": "fromy",
+      "type": "Menu",
+      "note": "Input bounds point used for Y alignment."
+    },
+    {
+      "name": "toy",
+      "type": "Menu",
+      "note": "Reference bounds point used for Y alignment."
+    },
+    {
+      "name": "posttz",
+      "type": "Menu",
+      "note": "Post-transform Z alignment target."
+    },
+    {
+      "name": "fromz",
+      "type": "Menu",
+      "note": "Input bounds point used for Z alignment."
+    },
+    {
+      "name": "toz",
+      "type": "Menu",
+      "note": "Reference bounds point used for Z alignment."
+    },
+    {
+      "name": "postscale",
+      "type": "Menu",
+      "note": "Post-transform scale mode."
+    },
+    {
+      "name": "postscalex",
+      "type": "Menu",
+      "note": "Post-transform scale mode for X."
+    },
+    {
+      "name": "postscaley",
+      "type": "Menu",
+      "note": "Post-transform scale mode for Y."
+    },
+    {
+      "name": "postscalez",
+      "type": "Menu",
+      "note": "Post-transform scale mode for Z."
+    }
   ],
   "common_gotchas": [
-    "Transforms are baked into vertex positions — this is permanent within the SOP chain, unlike COMP-level transforms.",
-    "For animated transforms, prefer COMP-level xform parameters for better performance, unless vertex-level deformation is needed."
+    "Transforms are baked into SOP point positions within the chain, unlike COMP-level transforms.",
+    "Different transform or rotation orders can produce different geometry from the same numeric values.",
+    "Post alignment and reference scaling need a second input when Reference Input modes are used.",
+    "Use Normals Maintain Length when scaled geometry must preserve vector attribute lengths such as normals or velocity."
   ],
   "related_snippets": [],
   "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Transform SOP edits point positions in SOP object/local space; COMP transforms move the object in world space without changing geometry coordinates.",
+    "Transform order and rotation order change the result even when translate, rotate, and scale values are identical.",
+    "Pivot, look-at, up vector, and forward direction control orientation around geometry-space axes rather than camera or component space.",
+    "Post Transform parameters align or scale geometry after the main transform, optionally using a second input as the reference bounds."
+  ]
 }

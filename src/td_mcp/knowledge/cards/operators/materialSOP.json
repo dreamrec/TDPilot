@@ -1,0 +1,31 @@
+{
+  "card_type": "operator",
+  "op_type": "materialSOP",
+  "family": "SOP",
+  "display_name": "Material SOP",
+  "docs_url": "https://docs.derivative.ca/Material_SOP",
+  "summary": "Assigns a MAT path at SOP level so geometry can carry a material assignment into rendering.",
+  "key_params": [
+    {
+      "name": "mat",
+      "type": "MAT Path",
+      "note": "Material path assigned to the SOP geometry."
+    }
+  ],
+  "common_gotchas": [
+    "Object/Geometry COMP Material parameters override Material SOP assignments.",
+    "Use Material SOP for SOP-level assignment, not shader editing.",
+    "The MAT path must resolve in the component context where the geometry is rendered."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Material SOP assigns a MAT at SOP level.",
+    "The official page documents a single operator-specific parameter: `mat`.",
+    "A Geometry/Object COMP Material parameter overrides SOP-level material attributes.",
+    "Material SOP assigns materials; it does not edit MAT shader parameters."
+  ]
+}

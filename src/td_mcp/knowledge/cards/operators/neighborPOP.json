@@ -1,0 +1,44 @@
+{
+  "card_type": "operator",
+  "op_type": "neighborPOP",
+  "family": "POP",
+  "display_name": "Neighbor POP",
+  "docs_url": "https://docs.derivative.ca/Neighbor_POP",
+  "summary": "Finds nearest or connected neighboring points using P, writes neighbor index arrays such as Nebr and counts such as NumNebrs, and can also output averages, inverse-distance weighted averages, distances, hash debug attributes, or neighbor attributes.",
+  "key_params": [
+    {"name": "nebrtype", "type": "Menu", "note": "Find neighbors by distance or by connectivity"},
+    {"name": "maxdistance", "type": "Float", "note": "Maximum distance for by-distance neighbors"},
+    {"name": "distribution", "type": "Menu", "note": "Default, unique, or closest neighbor selection"},
+    {"name": "numhashbuckets", "type": "Int", "note": "Spatial hash bucket count; often close to point count"},
+    {"name": "outputhash", "type": "Toggle", "note": "Outputs spatial hash values for debugging and tuning"},
+    {"name": "nebroutput", "type": "Menu", "note": "Output neighbor arrays, average, or inverse-distance weighted average"},
+    {"name": "maxneighbors", "type": "Int", "note": "Array size for per-point neighbor outputs"},
+    {"name": "nebrs", "type": "Toggle", "note": "Output neighbor index array"},
+    {"name": "nebrattrname", "type": "Str", "note": "Neighbor index output attribute name"},
+    {"name": "numnebrs", "type": "Toggle", "note": "Output number of neighbors found"},
+    {"name": "numnbrsattrname", "type": "Str", "note": "Number-of-neighbors output attribute name"},
+    {"name": "dodist", "type": "Toggle", "note": "Output distance attribute"},
+    {"name": "distattrname", "type": "Str", "note": "Distance output attribute name"},
+    {"name": "maxnebrsavg", "type": "Int", "note": "Maximum neighbors considered for average outputs"},
+    {"name": "incquerypt", "type": "Toggle", "note": "Include the query point when averaging"},
+    {"name": "addprefix", "type": "Toggle", "note": "Add Nebr prefix to neighbor attributes"},
+    {"name": "castintstofloats", "type": "Toggle", "note": "Cast integer attributes to floats for averaging"},
+    {"name": "nebrptattrs", "type": "Str", "note": "Neighbor point attributes to output as arrays"}
+  ],
+  "key_concepts": [
+    "Neighbor POP uses P to find nearby points and can write neighbor index arrays, counts, distances, averages, or neighbor attribute arrays.",
+    "By Distance mode uses Max Neighbors Distance and spatial hashing; Connected mode uses one-step primitive edge connectivity.",
+    "The Nebr array has fixed size Max Neighbors, and missing entries use the uint sentinel 4294967295.",
+    "A second input can be used as the neighbor search set, comparing first-input query points against second-input points.",
+    "Output modes can produce raw neighbor indexes, average values, or inverse-distance weighted averages; Include Query Point changes average behavior.",
+    "Neighbor attribute output can create large array attributes, so planners should scope attributes and Max Neighbors deliberately."
+  ],
+  "common_gotchas": [
+    "Missing neighbors are represented with the uint sentinel 4294967295 in the neighbor index array.",
+    "maxneighbors fixes the array size; tune it before GLSL code indexes Nebr.",
+    "Outputting neighbor attributes can create large array data quickly, so scope only the attributes needed."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

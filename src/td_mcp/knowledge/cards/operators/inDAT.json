@@ -1,0 +1,52 @@
+{
+  "card_type": "operator",
+  "op_type": "inDAT",
+  "family": "DAT",
+  "display_name": "In DAT",
+  "docs_url": "https://docs.derivative.ca/In_DAT",
+  "summary": "Creates a DAT input connector on a Component so external DAT data can enter an encapsulated network through the component boundary.",
+  "key_params": [
+    {
+      "name": "label",
+      "type": "String",
+      "note": "Name shown on the Component input connector"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "In DAT is a component-boundary connector, not a standalone data generator.",
+    "Component DAT inputs are positioned in alphanumeric order along the left side of the parent Component.",
+    "Disconnecting an input can leave contents instanced to the original input, so generated cleanup should verify references.",
+    "Pair In DAT with matching external wiring or Out DAT structure when building reusable components."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "component-dat-input-boundaries",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Creates a DAT input connector on a component boundary.",
+    "Input connectors appear on the left side of the component and are ordered alphanumerically.",
+    "The Label parameter controls the connector label shown in the component UI.",
+    "Disconnected In DATs can retain instanced contents from the former input until the network is cleaned up."
+  ]
+}

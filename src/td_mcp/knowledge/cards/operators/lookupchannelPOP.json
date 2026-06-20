@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "lookupchannelPOP",
+  "family": "POP",
+  "display_name": "Lookup Channel POP",
+  "docs_url": "https://docs.derivative.ca/Lookup_Channel_POP",
+  "summary": "Samples CHOP channels using POP attribute values as lookup indices, then writes the sampled and optionally reranged values back into POP attributes. Lookup indices may be normalized 0-1 values or sample indices.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Attribute class to operate on"},
+    {"name": "group", "type": "Str", "note": "Optional group restriction"},
+    {"name": "chop", "type": "CHOP", "note": "CHOP whose channels are sampled"},
+    {"name": "lookupindexattr", "type": "Str", "note": "Attribute used as lookup index"},
+    {"name": "indexunit", "type": "Menu", "note": "Normalized 0-1 or sample-index lookup units"},
+    {"name": "cyclic", "type": "Toggle", "note": "Wraps lookup indices across the channel range"},
+    {"name": "interpolate", "type": "Toggle", "note": "Interpolate between CHOP samples instead of nearest sample"},
+    {"name": "extendleft", "type": "Menu", "note": "Behavior for out-of-range lookup indices"},
+    {"name": "lookup0chanscope", "type": "Str", "note": "Channel pattern sampled by the first lookup block"},
+    {"name": "lookup0outputattrscope", "type": "Str", "note": "Output POP attribute scope for sampled values"}
+  ],
+  "key_concepts": [
+    "Uses a POP lookup index attribute to sample values from channels in a referenced CHOP.",
+    "Normalized index mode spans first-to-last CHOP sample; sample-index mode addresses absolute sample numbers.",
+    "Channel Scope chooses which CHOP channels are sampled and Output Attribute Scope maps those values back into POP attributes.",
+    "Sequential lookup blocks can interpolate, extend, and rerange sampled channel values before output."
+  ],
+  "common_gotchas": [
+    "Normalized indices map 0 to the first CHOP sample and 1 to the last; switch to Sample Index for absolute sample addressing.",
+    "Out-of-range lookup behavior is controlled by extend menus; do not assume values clamp automatically.",
+    "Sequential lookup blocks can rerange channel values before writing, so inspect output scopes before stacking more math."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

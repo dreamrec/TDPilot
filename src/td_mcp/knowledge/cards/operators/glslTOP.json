@@ -4,18 +4,179 @@
   "family": "TOP",
   "display_name": "GLSL TOP",
   "docs_url": "https://docs.derivative.ca/GLSL_TOP",
-  "summary": "Renders a GLSL shader into a TOP image. Can run pixel shaders or compute shaders and should be paired with Info DAT or error checks for compile state.",
+  "summary": "Renders a GLSL shader into a TOP image. Can run vertex/pixel shaders or compute shaders, expose atomic counters, specialization constants, POP buffers, multiple color buffers, and 2D/2D-array/3D output textures, and should be paired with Info DAT or error checks for compile state.",
   "key_params": [
-    {"name": "pixelshader", "type": "DAT", "note": "DAT containing the pixel shader source"},
-    {"name": "compute shader", "type": "DAT", "note": "Compute shader source when using compute mode"},
-    {"name": "glslversion", "type": "Menu", "note": "GLSL language version"},
-    {"name": "resolutionw", "type": "Int", "note": "Output width when not inherited"}
+    {
+      "name": "glslversion",
+      "type": "Menu",
+      "note": "GLSL language version; compute shaders need GLSL 4.30 or later, with 4.60 the current main target"
+    },
+    {
+      "name": "mode",
+      "type": "Menu",
+      "note": "Choose Vertex/Pixel Shader or Compute Shader"
+    },
+    {
+      "name": "predat",
+      "type": "DAT",
+      "note": "Preprocess directives DAT for directives that must appear before TD-inserted declarations"
+    },
+    {
+      "name": "vertexdat",
+      "type": "DAT",
+      "note": "DAT containing optional vertex shader source"
+    },
+    {
+      "name": "pixeldat",
+      "type": "DAT",
+      "note": "DAT containing the pixel shader source"
+    },
+    {
+      "name": "computedat",
+      "type": "DAT",
+      "note": "Compute shader source when using compute mode"
+    },
+    {
+      "name": "compilebehavior",
+      "type": "Menu",
+      "note": "Stall or threaded compile behavior while shaders compile"
+    },
+    {
+      "name": "errorbehavior",
+      "type": "Menu",
+      "note": "Visual output behavior when shader compilation fails"
+    },
+    {
+      "name": "dispatchsizex",
+      "type": "Int",
+      "note": "Compute dispatch size X"
+    },
+    {
+      "name": "dispatchsizey",
+      "type": "Int",
+      "note": "Compute dispatch size Y"
+    },
+    {
+      "name": "dispatchsizez",
+      "type": "Int",
+      "note": "Compute dispatch size Z for 3D/array or custom compute workloads"
+    },
+    {
+      "name": "outputaccess",
+      "type": "Menu",
+      "note": "Write Only or Read-Write access for output textures used by compute shaders"
+    },
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "Output texture type: 2D Texture, 2D Texture Array, or 3D Texture"
+    },
+    {
+      "name": "customdepth",
+      "type": "Int",
+      "note": "Manual depth for 3D Texture or 2D Texture Array outputs when not inherited from input"
+    },
+    {
+      "name": "autodispatchsize",
+      "type": "Toggle",
+      "note": "Automatically sets compute dispatch from local size and output resolution so at least one thread per pixel runs"
+    },
+    {
+      "name": "clearoutputs",
+      "type": "Toggle",
+      "note": "Clear compute outputs at the start of cook or preserve previous cook data"
+    },
+    {
+      "name": "inputmapping",
+      "type": "Menu",
+      "note": "Map inputs to every 3D/array slice or use N inputs per slice"
+    },
+    {
+      "name": "nval",
+      "type": "Int",
+      "note": "Number of inputs per slice when Input Mapping uses N Input(s) per Slice"
+    },
+    {
+      "name": "numcolorbufs",
+      "type": "Int",
+      "note": "Number of RGBA color buffers allocated for multi-output shaders"
+    },
+    {
+      "name": "ac0name",
+      "type": "String",
+      "note": "Atomic counter uniform name on the Atomic Counters page"
+    },
+    {
+      "name": "const0name",
+      "type": "String",
+      "note": "Specialization constant name on the Constants page"
+    },
+    {
+      "name": "buffer0pop",
+      "type": "POP",
+      "note": "POP whose attribute buffer should be exposed to the shader"
+    },
+    {
+      "name": "buffer0attrclass",
+      "type": "Menu",
+      "note": "Point, Vertex, or Primitive attribute class for a POP buffer"
+    },
+    {
+      "name": "buffer0attr",
+      "type": "String",
+      "note": "POP attribute name to expose as a shader buffer"
+    },
+    {
+      "name": "buffer0name",
+      "type": "String",
+      "note": "Shader-side name used by the generated TDBuffer_* accessor"
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Output resolution behavior"
+    },
+    {
+      "name": "resolutionw",
+      "type": "Int",
+      "note": "Output width when not inherited"
+    },
+    {
+      "name": "resolutionh",
+      "type": "Int",
+      "note": "Output height when not inherited"
+    }
+  ],
+  "key_concepts": [
+    "Compute Shader",
+    "TDImageStoreOutput()",
+    "TDImageLoadOutput()",
+    "gl_GlobalInvocationID",
+    "Read-Write output access",
+    "Auto Dispatch Size",
+    "2D Texture Array",
+    "3D Texture",
+    "# of Color Buffers",
+    "Render Select TOP",
+    "Atomic Counters",
+    "Specialization Constants",
+    "POP Buffers",
+    "TDBuffer_AttribName",
+    "Info DAT"
   ],
   "common_gotchas": [
-    "Shader compile failures can produce black output; inspect errors or an Info DAT before declaring success.",
-    "Sampler names and uniforms must match TouchDesigner's GLSL conventions for TOP inputs."
+    "Shader compile failures can produce black output or checkerboard output; inspect compile errors with an Info DAT before declaring success.",
+    "Sampler names, output helpers, and uniforms must match TouchDesigner's GLSL conventions for TOP inputs and outputs.",
+    "Compute shader mode requires GLSL 4.30 or later; prefer current GLSL 4.60 templates unless compatibility forces otherwise.",
+    "When a compute shader reads output textures such as previous frame values, set Output Access to Read-Write instead of Write Only.",
+    "Auto Dispatch Size ensures at least one thread per pixel runs, but custom dispatch still needs explicit bounds guards around gl_GlobalInvocationID.",
+    "Use Render Select TOP to inspect color buffers beyond buffer 0 when # of Color Buffers is greater than one.",
+    "Use the Buffers page for POP attribute access rather than hand-declaring SSBOs; TouchDesigner generates TDBuffer_* helpers."
   ],
-  "related_snippets": ["glsl_shader"],
+  "related_snippets": [
+    "GLSL_snippets",
+    "TOP_snippets"
+  ],
   "build_relevance": "2020.20000+",
-  "last_verified": "2026-06-16"
+  "last_verified": "2026-06-18"
 }

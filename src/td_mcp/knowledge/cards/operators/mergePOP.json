@@ -1,0 +1,31 @@
+{
+  "card_type": "operator",
+  "op_type": "mergePOP",
+  "family": "POP",
+  "display_name": "Merge POP",
+  "docs_url": "https://docs.derivative.ca/Merge_POP",
+  "summary": "Merges the points, vertices, and primitives of all input POPs into one output. It tries to preserve groups and combined attributes and can merge subsets of each input with group controls.",
+  "key_params": [
+    {"name": "uniquegroupname", "type": "Toggle", "note": "Avoid group-name collisions while merging"},
+    {"name": "groupentity", "type": "Menu", "note": "Choose point or primitive group handling"},
+    {"name": "group", "type": "String", "note": "Shared group name to merge across all inputs"},
+    {"name": "input", "type": "Sequential", "note": "Input blocks for optional group-scoped merge controls"},
+    {"name": "input0pop", "type": "POP", "note": "Input POPs for a merge block"},
+    {"name": "input0groupentity", "type": "Menu", "note": "Point, vertex, or primitive group class for a merge block"},
+    {"name": "input0group", "type": "String", "note": "Group pattern for an input block"}
+  ],
+  "key_concepts": [
+    "Merges points, vertices, and primitives from multiple POP inputs into one output.",
+    "Output point and primitive counts are the sums of the contributing input point and primitive counts.",
+    "Attempts to preserve groups and combined attributes across merged inputs.",
+    "Input blocks can restrict each merged source to a point or primitive group."
+  ],
+  "common_gotchas": [
+    "Attribute schemas should be checked after merging inputs with different attributes.",
+    "Use unique group names when merging sources that may reuse group identifiers.",
+    "Merge POP sums point and primitive counts; downstream fixed-size GLSL or cache assumptions may need updates."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

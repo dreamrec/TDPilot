@@ -1,0 +1,52 @@
+{
+  "card_type": "operator",
+  "op_type": "linePOP",
+  "family": "POP",
+  "display_name": "Line POP",
+  "docs_url": "https://docs.derivative.ca/Line_POP",
+  "summary": "Generates one or more POP line strips from parameter-defined points, with optional subdivision and interpolation. It can output subdivided lines or control points and can attach custom point attributes.",
+  "key_params": [
+    {"name": "output", "type": "Menu", "note": "Choose subdivided lines or control points"},
+    {"name": "interpmethod", "type": "Menu", "note": "Interpolation method such as linear, BSpline, cubic Bezier, or quadratic Bezier"},
+    {"name": "multiplelinestrips", "type": "Toggle", "note": "Allows separate line strips in one POP"},
+    {"name": "interpmethodpersegment", "type": "Toggle", "note": "Use separate interpolation methods per segment"},
+    {"name": "tension", "type": "Float", "note": "Cardinal line-strip tension"},
+    {"name": "enableweights", "type": "Toggle", "note": "Enable control-point weights for spline interpolation"},
+    {"name": "enabletangent", "type": "Toggle", "note": "Enable control-point tangents for spline interpolation"},
+    {"name": "enablepointrepeat", "type": "Toggle", "note": "Enable repeated control points for B-Splines"},
+    {"name": "closed", "type": "Toggle", "note": "Close generated line strips"},
+    {"name": "pt", "type": "Sequential", "note": "Point blocks defining positions and optional attributes"},
+    {"name": "pt0pos", "type": "Float3", "note": "Position for a point block"},
+    {"name": "divmethod", "type": "Menu", "note": "Controls how divisions are applied"},
+    {"name": "divs", "type": "Int", "note": "Number of divisions for the selected division method"},
+    {"name": "dist", "type": "Float", "note": "Distance between points when dividing by segment distance"},
+    {"name": "addctrlpointattr", "type": "Toggle", "note": "Output control-point attributes with subdivided line strips"},
+    {"name": "resamplemethod", "type": "Menu", "note": "Second-stage post-resample method"},
+    {"name": "resampledivs", "type": "Int", "note": "Divisions for post-resampling"},
+    {"name": "resampledist", "type": "Float", "note": "Maximum point distance for distance-based post-resampling"},
+    {"name": "indvarattr", "type": "Menu", "note": "Independent variable attribute for resampling, such as P(0)"},
+    {"name": "indvarstep", "type": "Float", "note": "Step size for independent-variable resampling"},
+    {"name": "resamplemaxverts", "type": "Int", "note": "Maximum vertices allocated for resampling"},
+    {"name": "maxtries", "type": "Int", "note": "Binary-search iteration cap for linear resampling"}
+  ],
+  "key_concepts": [
+    "parameter-defined line strip",
+    "Subdivided Lines",
+    "Control Points",
+    "SegMethod attribute",
+    "per-segment interpolation",
+    "Cardinal and B-Spline interpolation",
+    "Bezier tangents",
+    "control-point weights",
+    "two-stage divisions",
+    "post-resample method"
+  ],
+  "common_gotchas": [
+    "The default is a two-point line with divisions, not a raw two-point output.",
+    "For later subdivision workflows, output control points and preserve the attributes Line Divide POP expects.",
+    "Line POP line strips are useful POP sources for trails, proximity, lookup, and GLSL displacement workflows."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

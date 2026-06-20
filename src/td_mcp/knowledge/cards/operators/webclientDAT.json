@@ -1,0 +1,163 @@
+{
+  "card_type": "operator",
+  "op_type": "webclientDAT",
+  "family": "DAT",
+  "display_name": "Web Client DAT",
+  "docs_url": "https://docs.derivative.ca/Web_Client_DAT",
+  "summary": "Sends HTTP requests from TouchDesigner, supports common HTTP methods and authentication modes, and outputs responses or streamed server data into the DAT.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable the web client"
+    },
+    {
+      "name": "reqmethod",
+      "type": "Menu",
+      "note": "GET, POST, PUT, DELETE, HEAD, OPTIONS, or PATCH"
+    },
+    {
+      "name": "url",
+      "type": "String",
+      "note": "HTTP or HTTPS URL to request"
+    },
+    {
+      "name": "uploadfile",
+      "type": "File",
+      "note": "File contents to upload as request body"
+    },
+    {
+      "name": "request",
+      "type": "Pulse",
+      "note": "Send the configured request"
+    },
+    {
+      "name": "stop",
+      "type": "Pulse",
+      "note": "Stop an active stream"
+    },
+    {
+      "name": "stream",
+      "type": "Toggle",
+      "note": "Enable streaming from a server that supports it"
+    },
+    {
+      "name": "verifycert",
+      "type": "Toggle",
+      "note": "Verify TLS certificates for HTTPS requests"
+    },
+    {
+      "name": "timeout",
+      "type": "Integer",
+      "note": "Request timeout in milliseconds"
+    },
+    {
+      "name": "includeheader",
+      "type": "Toggle",
+      "note": "Include HTTP response headers in output"
+    },
+    {
+      "name": "authtype",
+      "type": "Menu",
+      "note": "None, Basic, Digest, OAuth1, or OAuth2 authentication"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Clamp streamed output as rows to limit DAT size"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "Callbacks for response or request state handling"
+    },
+    {
+      "name": "username",
+      "type": "String",
+      "note": "Authentication username for supported auth modes"
+    },
+    {
+      "name": "pw",
+      "type": "Password",
+      "note": "Authentication password or secret value"
+    },
+    {
+      "name": "appkey",
+      "type": "String",
+      "note": "OAuth application key"
+    },
+    {
+      "name": "appsecret",
+      "type": "Password",
+      "note": "OAuth application secret"
+    },
+    {
+      "name": "oauthtoken",
+      "type": "String",
+      "note": "OAuth token value"
+    },
+    {
+      "name": "oauthsecret",
+      "type": "Password",
+      "note": "OAuth token secret"
+    },
+    {
+      "name": "clientid",
+      "type": "String",
+      "note": "OAuth2 client identifier"
+    },
+    {
+      "name": "token",
+      "type": "String",
+      "note": "OAuth2 token value"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear output contents"
+    },
+    {
+      "name": "maxlines",
+      "type": "Integer",
+      "note": "Maximum rows retained when clamping streamed output"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language handling mode"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor file extension mode"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when extension mode uses a custom extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Node viewer word-wrap behavior"
+    }
+  ],
+  "common_gotchas": [
+    "Input 0 supplies extra request headers as name/value pairs; Input 1 supplies request data or query parameters.",
+    "For GET and OPTIONS, table input data is appended to the URL as query parameters.",
+    "Enable Clamp Output as Rows for streaming so the DAT acts like a bounded FIFO table and cook times stay controlled.",
+    "Use https:// URLs and certificate verification for secure servers unless a controlled test environment requires otherwise.",
+    "Web Client DAT is the successor to the older Web DAT."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2020.20000+ HTTP client, auth, and streaming",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Web Client DAT sends HTTP requests and outputs responses or streamed data into a DAT.",
+    "It supports standard request methods plus Basic, Digest, OAuth1, and OAuth2 authentication modes.",
+    "Input tables can supply extra headers and request/query data as name/value pairs.",
+    "Streaming responses should use clamp-as-rows behavior to keep output size and cook time bounded."
+  ]
+}

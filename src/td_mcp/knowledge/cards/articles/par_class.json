@@ -1,0 +1,61 @@
+{
+  "card_type": "article",
+  "article_id": "par_class",
+  "title": "Par Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "PARAMETER",
+    "COMP",
+    "CHOP",
+    "DAT"
+  ],
+  "summary": "Official Derivative Python API reference for a single parameter object, covering constant values, expressions, bind/export metadata, menus, parameter modes, custom-parameter attributes, evaluation methods, pulse/reset/copy/destroy behavior, and parameter identity.",
+  "source_url": "https://docs.derivative.ca/Par_Class",
+  "docsbrain_page_id": "par_class",
+  "covered_operators": [
+    "parameterDAT",
+    "parameterexecuteDAT",
+    "pargroupexecuteDAT",
+    "scriptCHOP",
+    "scriptDAT",
+    "scriptSOP",
+    "scriptTOP"
+  ],
+  "key_concepts": [
+    "Par",
+    "val",
+    "expr",
+    "mode",
+    "bindExpr",
+    "bindMaster",
+    "bindReferences",
+    "bindRange",
+    "defaultMode",
+    "menuNames",
+    "menuLabels",
+    "menuIndex",
+    "menuSource",
+    "exportOP",
+    "exportSource",
+    "eval()",
+    "evalExpression()",
+    "evalExport()",
+    "evalOPs()",
+    "pulse()",
+    "reset()",
+    "destroy()"
+  ],
+  "guidance": [
+    "Use this article when generated Python needs to read, write, pulse, or inspect a specific parameter.",
+    "Set val for the constant-mode value only; use eval() for the current working value across constant, expression, export, and bind modes.",
+    "Setting expr or mode changes parameter evaluation state, so transaction validators should check intended mode changes explicitly.",
+    "For menu parameters, prefer menuNames/menuLabels for definitions and menuIndex when the target value is a numeric menu choice.",
+    "Use evalOPs() for OP parameters that can resolve multiple operators, because plain eval() may return one OP, a list, or None depending on matches.",
+    "Only custom and sequential parameters can be destroyed, and existing parameter objects should be re-fetched after destruction."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

@@ -1,0 +1,146 @@
+{
+  "card_type": "operator",
+  "op_type": "magnetSOP",
+  "family": "SOP",
+  "display_name": "Magnet SOP",
+  "docs_url": "https://docs.derivative.ca/Magnet_SOP",
+  "summary": "Deforms input geometry using a metaball-defined field of influence, with the SOP transform parameters supplying the actual displacement.",
+  "key_params": [
+    {
+      "name": "deformgrp",
+      "type": "String",
+      "note": "Geometry group to deform."
+    },
+    {
+      "name": "magnetgrp",
+      "type": "String",
+      "note": "Metaball/magnet group defining influence."
+    },
+    {
+      "name": "xord",
+      "type": "Menu",
+      "note": "Transform order."
+    },
+    {
+      "name": "rord",
+      "type": "Menu",
+      "note": "Rotate order."
+    },
+    {
+      "name": "t",
+      "type": "XYZ",
+      "note": "Translate deformation."
+    },
+    {
+      "name": "tx",
+      "type": "Float",
+      "note": "Translate X."
+    },
+    {
+      "name": "ty",
+      "type": "Float",
+      "note": "Translate Y."
+    },
+    {
+      "name": "tz",
+      "type": "Float",
+      "note": "Translate Z."
+    },
+    {
+      "name": "r",
+      "type": "XYZ",
+      "note": "Rotate deformation."
+    },
+    {
+      "name": "rx",
+      "type": "Float",
+      "note": "Rotate X."
+    },
+    {
+      "name": "ry",
+      "type": "Float",
+      "note": "Rotate Y."
+    },
+    {
+      "name": "rz",
+      "type": "Float",
+      "note": "Rotate Z."
+    },
+    {
+      "name": "s",
+      "type": "XYZ",
+      "note": "Scale deformation."
+    },
+    {
+      "name": "sx",
+      "type": "Float",
+      "note": "Scale X."
+    },
+    {
+      "name": "sy",
+      "type": "Float",
+      "note": "Scale Y."
+    },
+    {
+      "name": "sz",
+      "type": "Float",
+      "note": "Scale Z."
+    },
+    {
+      "name": "p",
+      "type": "XYZ",
+      "note": "Pivot."
+    },
+    {
+      "name": "px",
+      "type": "Float",
+      "note": "Pivot X."
+    },
+    {
+      "name": "py",
+      "type": "Float",
+      "note": "Pivot Y."
+    },
+    {
+      "name": "pz",
+      "type": "Float",
+      "note": "Pivot Z."
+    },
+    {
+      "name": "position",
+      "type": "Toggle",
+      "note": "Affect point positions."
+    },
+    {
+      "name": "color",
+      "type": "Toggle",
+      "note": "Affect point color."
+    },
+    {
+      "name": "nml",
+      "type": "Toggle",
+      "note": "Affect normals."
+    },
+    {
+      "name": "velocity",
+      "type": "Toggle",
+      "note": "Affect velocity."
+    }
+  ],
+  "common_gotchas": [
+    "A metaball field defines where the effect happens; transform parameters define what deformation happens.",
+    "Translate at 0,0,0 produces no positional deformation even with a valid metaball influence.",
+    "Rotating or scaling color attributes is officially not recommended."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Magnet SOP uses metaball fields to define deformation influence and falloff.",
+    "The actual deformation comes from Magnet SOP transform parameters; zero translate means no positional deformation.",
+    "Metaball weight scales how effective the transform is within the field.",
+    "It can affect position, color, normal, and velocity attributes."
+  ]
+}

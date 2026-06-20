@@ -1,0 +1,44 @@
+{
+  "card_type": "operator",
+  "op_type": "stypeoutCHOP",
+  "family": "CHOP",
+  "display_name": "Stype Out CHOP",
+  "docs_url": "https://docs.derivative.ca/Stype_Out_CHOP",
+  "summary": "Sends camera tracking, lens, and timecode channel data over the network using the Stype HF protocol, allowing TouchDesigner to emulate or feed a Stype camera-tracking source.",
+  "key_concepts": [
+    "Stype Out CHOP is a TouchDesigner Pro operator for sending camera tracking, orientation, lens, and timecode data over Stype HF.",
+    "It can emulate a physical Stype camera or feed another device or program that processes Stype tracking data.",
+    "Packets are sent once per frame from the current CHOP input channel values.",
+    "Expected input channels include recording, focus_distance, packet_number, hour/minute/second/frame timecode, transform, FOV, aspect, focus/zoom, sensor center, radial distortion, and sensor size values.",
+    "If an expected input channel is absent, the operator sends a default value, so missing channel names can look like valid but wrong tracking data.",
+    "Timecode can be referenced from a CHOP, DAT, or Timecode object, and packet numbers can either auto-increment each frame or come from an input channel."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable packet sending"},
+    {"name": "protocol", "type": "Menu", "note": "Messaging UDP or multicast messaging UDP"},
+    {"name": "msging", "type": "MenuItem", "note": "Messaging UDP protocol"},
+    {"name": "multicastmsging", "type": "MenuItem", "note": "Multicast messaging UDP protocol"},
+    {"name": "netaddress", "type": "String", "note": "Destination address, IP, hostname, or localhost"},
+    {"name": "port", "type": "Integer", "note": "Destination network port"},
+    {"name": "localaddress", "type": "String", "note": "Local NIC address to send from on multi-adapter machines"},
+    {"name": "timecodeop", "type": "OP", "note": "Timecode CHOP/DAT/object reference"},
+    {"name": "packetnumber", "type": "Menu", "note": "Auto-generate or read packet number from input"},
+    {"name": "generate", "type": "MenuItem", "note": "Auto-generate packet number, incrementing each frame"},
+    {"name": "input", "type": "MenuItem", "note": "Use packet number from the input CHOP"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP channel scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Common CHOP sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"}
+  ],
+  "common_gotchas": [
+    "Official docs list this operator as TouchDesigner Pro only.",
+    "Packets are sent once per frame from current input CHOP channels.",
+    "If an expected channel is absent, Stype Out sends a default value, which can hide upstream naming mistakes.",
+    "Input channels include recording, focus_distance, packet_number, timecode, camera transform, FOV, aspect, focus/zoom, sensor center, distortion, and sensor size values.",
+    "Use Timecode Object/CHOP/DAT when timecode should come from a trusted source rather than input channels.",
+    "Protocol, destination address, port, and local NIC must match the receiver."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2023.11280+ Pro virtual-production Stype output",
+  "last_verified": "2026-06-18"
+}

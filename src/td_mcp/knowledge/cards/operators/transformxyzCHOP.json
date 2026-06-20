@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "transformxyzCHOP",
+  "family": "CHOP",
+  "display_name": "Transform XYZ CHOP",
+  "docs_url": "https://docs.derivative.ca/Transform_XYZ_CHOP",
+  "summary": "Applies transforms to CHOP channel groups interpreted as XYZ positions or vectors, with optional normalization and second-input transform control.",
+  "key_concepts": [
+    "Transform XYZ CHOP applies transform data to input channel groups interpreted as XYZ positions or vectors.",
+    "Position mode applies translation, while vector mode ignores translation and applies only orientation/scale style effects.",
+    "The first input is grouped by channel names ending in `x`, `y`, and `z`.",
+    "The second input supplies transforms using Transform CHOP-supported transform formats.",
+    "The second-input transform and Transform page settings are combined before being applied to the XYZ data.",
+    "Multi-sample CHOP inputs allow many points or vectors to be transformed at once."
+  ],
+  "key_params": [
+    {"name": "input0type", "type": "Menu", "note": "Interpret input groups as positions or vectors"},
+    {"name": "innormalize", "type": "Toggle", "note": "Normalize incoming XYZ values"},
+    {"name": "custinputorder", "type": "Toggle", "note": "Use custom input transform orders"},
+    {"name": "inxord", "type": "Menu", "note": "Input transform order"},
+    {"name": "inrord", "type": "Menu", "note": "Input rotate order"},
+    {"name": "input1preop", "type": "Menu", "note": "Pre-operation for second-input transform"},
+    {"name": "xord", "type": "Menu", "note": "Transform order"},
+    {"name": "rord", "type": "Menu", "note": "Rotate order"},
+    {"name": "t", "type": "XYZ", "note": "Translate transform"},
+    {"name": "r", "type": "XYZ", "note": "Rotate transform"},
+    {"name": "s", "type": "XYZ", "note": "Scale transform"},
+    {"name": "p", "type": "XYZ", "note": "Pivot transform"},
+    {"name": "preop", "type": "Menu", "note": "Pre-operation"},
+    {"name": "multiplyorder", "type": "Menu", "note": "Matrix multiply order"},
+    {"name": "unmatchedchans", "type": "Menu", "note": "Warn, ignore, or delete unmatched channels"},
+    {"name": "normalize", "type": "Toggle", "note": "Normalize output XYZ values"}
+  ],
+  "common_gotchas": [
+    "Vector mode ignores translation; use position mode when translation should affect values.",
+    "Input channels must be grouped with expected x, y, z suffixes for reliable conversion.",
+    "Second-input transforms should follow Transform CHOP channel conventions."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,50 @@
+{
+  "card_type": "article",
+  "article_id": "export",
+  "title": "Export",
+  "family": "PARAMETER",
+  "families": [
+    "PARAMETER",
+    "CHOP",
+    "DAT",
+    "TOP"
+  ],
+  "summary": "Official Derivative reference for exporting CHOP channels or DAT data to operator parameters, covering CHOP exporting, DAT exporting, Export Flag behavior, mass-export channel naming, DAT text/path support, and expression-reference tradeoffs.",
+  "source_url": "https://docs.derivative.ca/Export",
+  "docsbrain_page_id": "export",
+  "covered_operators": [
+    "parameterCHOP",
+    "parameterDAT",
+    "bindCHOP",
+    "nullCHOP",
+    "outCHOP",
+    "tableDAT",
+    "textTOP",
+    "selectTOP"
+  ],
+  "key_concepts": [
+    "Export",
+    "CHOP Exporting",
+    "DAT Exporting",
+    "Export Flag",
+    "Channel Name is Path:Parameter",
+    "Export Method",
+    "Export Table",
+    "Expression References",
+    "text strings",
+    "operator paths"
+  ],
+  "guidance": [
+    "Use this article when planning a CHOP or DAT control signal that should override operator parameters.",
+    "CHOP exports drive number values, flags, and menus; DAT exports also support text strings and path-style parameters such as Text TOP text or Select TOP paths.",
+    "For mass-export workflows, channel names can use the documented path:parameter shape when the CHOP Export Method is Channel Name is Path:Parameter.",
+    "Export links depend on channel names and order, so stabilize exported control networks with named Null CHOPs before wiring them into parameters.",
+    "Expressions can add inline math and are often easier across component boundaries, while exports are useful for bulk parameter driving.",
+    "The Export Flag controls whether a CHOP's exporting is active, so generated plans should not assume an export works just because the mapping exists."
+  ],
+  "related_snippets": [
+    "CHOP_snippets",
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

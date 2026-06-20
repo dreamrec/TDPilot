@@ -1,0 +1,126 @@
+{
+  "card_type": "operator",
+  "op_type": "railsSOP",
+  "family": "SOP",
+  "display_name": "Rails SOP",
+  "docs_url": "https://docs.derivative.ca/Rails_SOP",
+  "summary": "Stretches cross-sections between rail curves with controls for rail pairing, scaling, rolling, vertex attachment, and flipping.",
+  "key_params": [
+    {
+      "name": "xsectgrp",
+      "type": "String",
+      "note": "Cross-section group"
+    },
+    {
+      "name": "railgrp",
+      "type": "String",
+      "note": "Rail group"
+    },
+    {
+      "name": "cycle",
+      "type": "Toggle",
+      "note": "Cycle cross-sections or rails"
+    },
+    {
+      "name": "pairs",
+      "type": "Menu",
+      "note": "Rail pairing mode"
+    },
+    {
+      "name": "firstl",
+      "type": "Toggle",
+      "note": "Use first rail behavior"
+    },
+    {
+      "name": "stretch",
+      "type": "Toggle",
+      "note": "Stretch cross-sections along rails"
+    },
+    {
+      "name": "scale",
+      "type": "Float",
+      "note": "Cross-section scale"
+    },
+    {
+      "name": "roll",
+      "type": "Float",
+      "note": "Cross-section roll"
+    },
+    {
+      "name": "usevtx",
+      "type": "Toggle",
+      "note": "Attach by vertices"
+    },
+    {
+      "name": "vertex",
+      "type": "Int Pair",
+      "note": "Connection vertex pair"
+    },
+    {
+      "name": "vertex1",
+      "type": "Int",
+      "note": "First connection vertex"
+    },
+    {
+      "name": "vertex2",
+      "type": "Int",
+      "note": "Second connection vertex"
+    },
+    {
+      "name": "noflip",
+      "type": "Toggle",
+      "note": "Prevent orientation flipping"
+    },
+    {
+      "name": "usedir",
+      "type": "Toggle",
+      "note": "Use explicit direction"
+    },
+    {
+      "name": "dir",
+      "type": "XYZ",
+      "note": "Direction vector"
+    },
+    {
+      "name": "dirx",
+      "type": "Float",
+      "note": "Direction X"
+    },
+    {
+      "name": "diry",
+      "type": "Float",
+      "note": "Direction Y"
+    },
+    {
+      "name": "dirz",
+      "type": "Float",
+      "note": "Direction Z"
+    },
+    {
+      "name": "newg",
+      "type": "Toggle",
+      "note": "Create output group"
+    },
+    {
+      "name": "railname",
+      "type": "String",
+      "note": "Output rail group name"
+    }
+  ],
+  "common_gotchas": [
+    "Cross-sections belong on input 0 and rails on input 1; swapped inputs produce confusing results.",
+    "Rail pairing changes surface spans, so planner-generated networks should choose it explicitly.",
+    "Use vertex attachment, direction, and no-flip controls when twisting appears along the rails."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "rail-surface-generation",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Rails SOP stretches cross-section geometry along one or more rail curves.",
+    "Input 0 provides cross-sections and input 1 provides rails; cross-sections are typically modeled in the XY plane.",
+    "Rail pairing controls how rails are matched into spans and can change surface layout.",
+    "Vertex attachment, direction vectors, and no-flip options stabilize orientation along rails."
+  ]
+}

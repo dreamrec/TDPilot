@@ -1,0 +1,85 @@
+{
+  "card_type": "operator",
+  "op_type": "lookupTOP",
+  "family": "TOP",
+  "display_name": "Lookup TOP",
+  "docs_url": "https://docs.derivative.ca/Lookup_TOP",
+  "summary": "Replaces input image color values with values from a lookup table sampled from a second TOP or generated from CHOP values.",
+  "key_params": [
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "secondinput or chop lookup-table source"
+    },
+    {
+      "name": "index",
+      "type": "Float2",
+      "note": "Index range components index1 and index2"
+    },
+    {
+      "name": "channel",
+      "type": "Menu",
+      "note": "luminance, rgba channels, averages, maxima, or independent"
+    },
+    {
+      "name": "independentalpha",
+      "type": "Toggle",
+      "note": "Lookup alpha independently for scalar RGB modes"
+    },
+    {
+      "name": "darkuv",
+      "type": "Float2",
+      "note": "Second-input UV coordinate for dark lookup endpoint"
+    },
+    {
+      "name": "darkuvunit",
+      "type": "Menu",
+      "note": "pixels, fraction, or fractionaspect"
+    },
+    {
+      "name": "lightuv",
+      "type": "Float2",
+      "note": "Second-input UV coordinate for light lookup endpoint"
+    },
+    {
+      "name": "lightuvunit",
+      "type": "Menu",
+      "note": "pixels, fraction, or fractionaspect"
+    },
+    {
+      "name": "chop",
+      "type": "CHOP",
+      "note": "CHOP used as RGBA lookup table in chop method"
+    },
+    {
+      "name": "clampchopvalues",
+      "type": "Toggle",
+      "note": "Clamp CHOP lookup values between 0 and 1"
+    },
+    {
+      "name": "displaylookup",
+      "type": "Toggle",
+      "note": "Output the lookup table instead of applying it"
+    }
+  ],
+  "common_gotchas": [
+    "Indices outside index1/index2 hold the first or last lookup value rather than extrapolating.",
+    "The CHOP method ignores the second TOP input and uses the referenced CHOP instead.",
+    "independentalpha has no effect for RGBA Independent or Alpha channel modes.",
+    "Second-input lookup samples only the line between Dark UV and Light UV."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "CHOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Uses the first input as an index image for color lookup replacement.",
+    "Lookup tables can come from a sampled line in the second TOP input or from CHOP RGBA values.",
+    "Index Range maps source values to lookup-table endpoints and holds out-of-range indices at the ends.",
+    "Index Channel selects scalar channel-derived lookup or independent RGBA lookup behavior.",
+    "Dark UV and Light UV define the sampled lookup line when using the second TOP input.",
+    "Output Lookup can emit the lookup table itself for diagnostics."
+  ]
+}

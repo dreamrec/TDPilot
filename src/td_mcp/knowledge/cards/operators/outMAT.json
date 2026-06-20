@@ -1,0 +1,31 @@
+{
+  "card_type": "operator",
+  "op_type": "outMAT",
+  "family": "MAT",
+  "display_name": "Out MAT",
+  "docs_url": "https://docs.derivative.ca/Out_MAT",
+  "summary": "Creates a MAT output connector on a Component so internal material networks can expose a named material result to the parent network.",
+  "key_params": [
+    {"name": "label", "type": "String", "note": "Popup label shown for this Component MAT output"},
+    {"name": "dodeform", "type": "Toggle", "note": "Enable deform handling on the output material"},
+    {"name": "blending", "type": "Toggle", "note": "Common MAT blending state"},
+    {"name": "depthtest", "type": "Toggle", "note": "Common MAT depth-test state"},
+    {"name": "cullface", "type": "Menu", "note": "Common MAT face-culling state"}
+  ],
+  "key_concepts": [
+    "Out MAT creates a material output connector on the right side of a Component so internal MAT networks can expose a named result.",
+    "Component MAT outputs are positioned alphanumerically, making output node names part of the reusable component API.",
+    "The Label parameter documents the output connector for parent-network users.",
+    "Out MAT can carry deform and common render-state behavior, so it should be treated as the intentional final material wrapper.",
+    "A Null MAT before Out MAT gives component authors a stable internal endpoint when the material network may be refactored."
+  ],
+  "common_gotchas": [
+    "Component MAT outputs are positioned alphanumerically, so use stable names for reusable component APIs.",
+    "Out MAT should be the intentional endpoint for a component's material output, not an incidental internal material.",
+    "Common MAT render-state pages still apply if edited on the Out MAT.",
+    "Expose a Null MAT before Out MAT when the internal material network may be refactored."
+  ],
+  "related_snippets": ["MAT_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

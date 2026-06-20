@@ -1,0 +1,47 @@
+{
+  "card_type": "operator",
+  "op_type": "posistagenetCHOP",
+  "family": "CHOP",
+  "display_name": "PosiStageNet CHOP",
+  "docs_url": "https://docs.derivative.ca/PosiStageNet_CHOP",
+  "summary": "Decodes PosiStageNet protocol data into CHOP channels for tracked object position, orientation, speed, acceleration, and target position.",
+  "key_concepts": [
+    "PosiStageNet CHOP receives PosiStageNet tracking data from a server, device, or software endpoint.",
+    "The default TCP port is 56565, and firewall settings may need adjustment for communication to work.",
+    "It can output position, Euler orientation, speed, acceleration, and target-position channels.",
+    "Any number of tracked objects can be represented, so downstream channel sets may grow as tracked objects appear.",
+    "Reset Pulse clears all data channels and removes untracked or stale data.",
+    "Use BlackTrax CHOP for BlackTrax-specific workflows rather than generic PosiStageNet protocol input."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Receive PosiStageNet data"},
+    {"name": "netaddress", "type": "String", "note": "PosiStageNet server/device/software address"},
+    {"name": "port", "type": "Integer", "note": "Network port, default TCP port is 56565"},
+    {"name": "samplerate", "type": "Float", "note": "Rate for sampling incoming data"},
+    {"name": "pos", "type": "Toggle", "note": "Include position channels"},
+    {"name": "ori", "type": "Toggle", "note": "Include orientation Euler channels"},
+    {"name": "speed", "type": "Toggle", "note": "Include speed channels"},
+    {"name": "accel", "type": "Toggle", "note": "Include acceleration channels"},
+    {"name": "targetpos", "type": "Toggle", "note": "Include target position channels"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Clear all data channels"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"},
+    {"name": "commonrenamefrom", "type": "String", "note": "Common CHOP rename-from pattern"},
+    {"name": "commonrenameto", "type": "String", "note": "Common CHOP rename-to pattern"}
+  ],
+  "common_gotchas": [
+    "PosiStageNet can track any number of objects, so downstream channel sets can grow with tracked object count.",
+    "Firewall settings may need adjustment for the default TCP port 56565.",
+    "Reset Pulse clears all data channels, removing untracked/stale data.",
+    "Orientation is output as Euler angles; generated plans should convert carefully if quaternion/continuous rotation is needed.",
+    "The protocol is common in stage lighting, sound, and projection mapping, so local network timing and coordinate conventions matter.",
+    "See BlackTrax CHOP when the tracking system is BlackTrax-specific rather than generic PosiStageNet."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ stage tracking/projection mapping",
+  "last_verified": "2026-06-18"
+}

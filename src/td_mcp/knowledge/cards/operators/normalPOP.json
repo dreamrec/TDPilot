@@ -1,0 +1,40 @@
+{
+  "card_type": "operator",
+  "op_type": "normalPOP",
+  "family": "POP",
+  "display_name": "Normal POP",
+  "docs_url": "https://docs.derivative.ca/Normal_POP",
+  "summary": "Computes or manages normal and tangent vectors for incoming triangle or quad geometry, writing N and optionally T attributes on point, vertex, or primitive classes.",
+  "key_params": [
+    {"name": "nml", "type": "Menu", "note": "Normal action: no action, compute, compute if missing, or remove"},
+    {"name": "inputposattrn", "type": "String", "note": "Position attribute used for normal calculation"},
+    {"name": "attrclass", "type": "Menu", "note": "Point, vertex, or primitive output class"},
+    {"name": "nmlweighting", "type": "Menu", "note": "Normal weighting strategy"},
+    {"name": "compnmltech", "type": "Menu", "note": "GPU technique for point normal computation"},
+    {"name": "maxprimsperpoint", "type": "Int", "note": "Temporary allocation limit for primitives attached to a point"},
+    {"name": "angle", "type": "Float", "note": "Vertex-normal cusp threshold angle"},
+    {"name": "outputattrscopen", "type": "Str", "note": "Output attribute scope for computed normals"},
+    {"name": "overrideautoattrn", "type": "Toggle", "note": "Override automatic normal attribute creation"},
+    {"name": "attrtypen", "type": "Menu", "note": "Normal output attribute type"},
+    {"name": "attrnumcompsn", "type": "Int", "note": "Normal output component count"},
+    {"name": "tang", "type": "Menu", "note": "Tangent action"},
+    {"name": "inputposattrt", "type": "String", "note": "Position attribute used for tangent calculation"},
+    {"name": "inputnormalattr", "type": "String", "note": "Normal attribute used for tangent calculation"},
+    {"name": "inputtexattrib", "type": "String", "note": "Texture coordinate attribute used for tangent calculation"},
+    {"name": "comptangtech", "type": "Menu", "note": "GPU technique for tangent computation"},
+    {"name": "outputattrscopet", "type": "Str", "note": "Output attribute scope for computed tangents"}
+  ],
+  "key_concepts": [
+    "Normal POP computes, removes, or preserves normal and tangent attributes for triangle or quad geometry.",
+    "Normals can be point, vertex, or primitive attributes, with weighting, technique, and angle controls determining how shared surfaces are shaded.",
+    "Tangent generation depends on position, normal, and texture-coordinate attributes, so it belongs after topology and texture-coordinate setup."
+  ],
+  "common_gotchas": [
+    "Normal and tangent calculations assume triangle or quad context.",
+    "Max primitives per point must be sufficient because GPU allocation needs predetermined sizes.",
+    "Existing normals or tangents can be left alone, recomputed, removed, warned, or errored depending on action settings."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

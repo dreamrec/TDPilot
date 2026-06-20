@@ -1,0 +1,99 @@
+{
+  "card_type": "operator",
+  "op_type": "limitTOP",
+  "family": "TOP",
+  "display_name": "Limit TOP",
+  "docs_url": "https://docs.derivative.ca/Limit_TOP",
+  "summary": "Constrains, normalizes, loops, zigzags, or quantizes pixel values and can also quantize pixel positions to create stepped image effects.",
+  "key_params": [
+    {
+      "name": "minop",
+      "type": "Menu",
+      "note": "off, clamp, loop, or zigzag for low values"
+    },
+    {
+      "name": "maxop",
+      "type": "Menu",
+      "note": "off, clamp, loop, or zigzag for high values"
+    },
+    {
+      "name": "min",
+      "type": "Float",
+      "note": "Minimum threshold value"
+    },
+    {
+      "name": "max",
+      "type": "Float",
+      "note": "Maximum threshold value"
+    },
+    {
+      "name": "positive",
+      "type": "Toggle",
+      "note": "Apply absolute-value behavior after other value operations"
+    },
+    {
+      "name": "norm",
+      "type": "Toggle",
+      "note": "Normalize final output after other limiting work"
+    },
+    {
+      "name": "normmin",
+      "type": "Float",
+      "note": "Normalized output low value"
+    },
+    {
+      "name": "normmax",
+      "type": "Float",
+      "note": "Normalized output high value"
+    },
+    {
+      "name": "quantvalue",
+      "type": "Menu",
+      "note": "off, ceiling, floor, or round value quantization"
+    },
+    {
+      "name": "vstep",
+      "type": "Float",
+      "note": "Value quantization step"
+    },
+    {
+      "name": "voffset",
+      "type": "Float",
+      "note": "Value quantization offset"
+    },
+    {
+      "name": "quantpos",
+      "type": "Menu",
+      "note": "off, ceiling, floor, or round position quantization"
+    },
+    {
+      "name": "posstep",
+      "type": "Float",
+      "note": "UV-space position quantization step"
+    },
+    {
+      "name": "posoffset",
+      "type": "Float",
+      "note": "UV-space position quantization offset"
+    }
+  ],
+  "common_gotchas": [
+    "Loop and zigzag are wrapping modes, not clamp variants, so out-of-range values can re-enter the interval.",
+    "Normalize is applied after other limiting and quantization work and can be more expensive.",
+    "Position quantization changes spatial sampling rather than channel values.",
+    "The official docs spell spatial as spacial in the position-quantization section, but the ids are posstep and posoffset."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Limits image pixel values by clamping, looping, or zigzagging below and above thresholds.",
+    "Minimum and maximum functions are independent, so low and high bounds can behave differently.",
+    "Value quantization snaps channel values to floor, ceiling, or round steps.",
+    "Position quantization groups pixels in UV space, similar to lowering resolution and scaling back without filtering.",
+    "Normalize runs after limiting and quantization and uses extra internal passes.",
+    "The operator supports 3D Textures and 2D Texture Arrays."
+  ]
+}

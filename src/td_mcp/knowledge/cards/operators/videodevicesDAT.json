@@ -1,0 +1,83 @@
+{
+  "card_type": "operator",
+  "op_type": "videodevicesDAT",
+  "family": "DAT",
+  "display_name": "Video Devices DAT",
+  "docs_url": "https://docs.derivative.ca/Video_Devices_DAT",
+  "summary": "Lists detected video input and output devices with driver, direction, label, and unique name fields for Video Device In TOP and Video Device Out TOP configuration.",
+  "key_params": [
+    {
+      "name": "driver",
+      "type": "Menu",
+      "note": "Filter table to devices from one video driver family"
+    },
+    {
+      "name": "alldrivers",
+      "type": "Toggle",
+      "note": "Show devices from all available drivers"
+    },
+    {
+      "name": "input",
+      "type": "Toggle",
+      "note": "Include input devices"
+    },
+    {
+      "name": "output",
+      "type": "Toggle",
+      "note": "Include output devices"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "Run when the video device table changes"
+    },
+    {
+      "name": "num_rows",
+      "type": "Info CHOP",
+      "note": "Number of listed devices plus header rows"
+    },
+    {
+      "name": "num_cols",
+      "type": "Info CHOP",
+      "note": "Number of metadata columns in the device table"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language handling mode"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor file extension mode"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when extension mode uses a custom extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Node viewer word-wrap behavior"
+    }
+  ],
+  "common_gotchas": [
+    "Video Devices DAT discovers devices; actual capture and output happen in Video Device In TOP and Video Device Out TOP.",
+    "The name column is a structured unique identifier, not just a human-readable label.",
+    "Device matching can fall back from unique ID to label/sub-index and then index/sub-index when moving projects between machines.",
+    "Driver availability is platform and hardware dependent, so tables can change across installs.",
+    "Use callbacks for hot-plug changes instead of assuming the table is static after project load."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2023.11280+ video device discovery and hot-plug metadata",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Video Devices DAT reports detected video devices with driver, direction, label, and name information.",
+    "It can show all available video devices or filter by input/output direction and driver.",
+    "Device change callbacks return names corresponding to changed devices.",
+    "Its output is commonly referenced by Video Device In TOP and Video Device Out TOP setup workflows."
+  ]
+}

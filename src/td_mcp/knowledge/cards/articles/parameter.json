@@ -1,0 +1,50 @@
+{
+  "card_type": "article",
+  "article_id": "parameter",
+  "title": "Parameter",
+  "family": "PARAMETER",
+  "families": [
+    "PARAMETER",
+    "COMP",
+    "CHOP",
+    "DAT",
+    "PYTHON"
+  ],
+  "summary": "Official Derivative reference for TouchDesigner parameters, covering parameter data types, parameter dialog access, evaluation modes, parameter attributes, custom parameters, internal parameters, and sequential parameters.",
+  "source_url": "https://docs.derivative.ca/Parameter",
+  "docsbrain_page_id": "parameter",
+  "covered_operators": [
+    "parameterCHOP",
+    "parameterDAT",
+    "parameterCOMP",
+    "parameterexecuteDAT",
+    "pargroupexecuteDAT",
+    "bindCHOP"
+  ],
+  "key_concepts": [
+    "Parameter",
+    "Parameter Dialog",
+    "Constant Mode",
+    "Expression Mode",
+    "Export Mode",
+    "Bind Mode",
+    "evaluated parameter",
+    "parameter attributes",
+    "custom parameters",
+    "internal parameters",
+    "sequential parameters",
+    ".eval()"
+  ],
+  "guidance": [
+    "Use this article when a plan needs parameter semantics before choosing Parameter CHOP, Parameter DAT, Parameter Execute DAT, binding, or export workflows.",
+    "Every operator has control parameters, including numeric values, toggles, menus, text strings, operator paths, pulse buttons, and self-contained Python objects.",
+    "Do not treat a parameter object as the final value in scripts; use .eval() when the working value may come from constant, expression, export, or bind mode.",
+    "Parameter attributes such as name, label, default, range, menu entries, enable state, read-only state, and section dividers affect generated control panels and validators.",
+    "Custom parameters are distinct from built-in parameters and belong on Components, Custom Operators, and Script Operators."
+  ],
+  "related_snippets": [
+    "CHOP_snippets",
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

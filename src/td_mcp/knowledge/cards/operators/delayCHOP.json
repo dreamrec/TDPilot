@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "delayCHOP",
+  "family": "CHOP",
+  "display_name": "Delay CHOP",
+  "docs_url": "https://docs.derivative.ca/Delay_CHOP",
+  "summary": "Delays CHOP channels by a fixed or expression-driven amount, with reset controls that clear the delay cache.",
+  "key_params": [
+    {"name": "delay", "type": "Float", "note": "Delay amount, often using me.chanIndex for per-channel delays"},
+    {"name": "delayunit", "type": "Menu", "note": "Units for delay amount"},
+    {"name": "reset", "type": "Toggle", "note": "Bypass delay and clear delay cache while on"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Instantly clear delay cache"},
+    {"name": "srselect", "type": "Menu", "note": "How mismatched sample rates are handled"},
+    {"name": "scope", "type": "Pattern", "note": "Channel pattern to affect"}
+  ],
+  "key_concepts": [
+    "Delays each input CHOP channel independently by the Delay amount.",
+    "Delay can be varied per channel using expressions such as me.chanIndex or a per-row table lookup.",
+    "Delay Unit controls whether the delay value is interpreted as samples, frames, seconds, or another supported unit.",
+    "Reset bypasses the delay and clears the delay cache while on; Reset Pulse clears the cache immediately for one action.",
+    "Echo-style feedback is not automatic; the official docs point to Delay plus Math chains or Feedback CHOP for echoes.",
+    "Sample-rate matching and delay units affect how seconds map to samples, so stable timing depends on deliberate rate handling."
+  ],
+  "common_gotchas": [
+    "Long delays on many high-rate channels increase memory and cache cost.",
+    "Use me.chanIndex or a table lookup in Delay for per-channel offsets.",
+    "Reset clears the delay cache, so output will jump or bypass until the cache rebuilds.",
+    "For echoes, official docs recommend chains of Delay and Math CHOPs or Feedback CHOP.",
+    "Delay amount units must match the intended timing domain: samples, frames, or seconds."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

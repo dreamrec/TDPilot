@@ -1,0 +1,96 @@
+{
+  "card_type": "operator",
+  "op_type": "metaballSOP",
+  "family": "SOP",
+  "display_name": "Metaball SOP",
+  "docs_url": "https://docs.derivative.ca/Metaball_SOP",
+  "summary": "Creates metaballs and meta-superquadric implicit surfaces whose fields can fuse, model organic blobs, or act as force fields for other SOP workflows.",
+  "key_params": [
+    {
+      "name": "modifybounds",
+      "type": "Toggle",
+      "note": "Use input bounds; only available when an input is connected."
+    },
+    {
+      "name": "rad",
+      "type": "XYZ",
+      "note": "Metaball radius."
+    },
+    {
+      "name": "radx",
+      "type": "Float",
+      "note": "Radius X."
+    },
+    {
+      "name": "rady",
+      "type": "Float",
+      "note": "Radius Y."
+    },
+    {
+      "name": "radz",
+      "type": "Float",
+      "note": "Radius Z."
+    },
+    {
+      "name": "t",
+      "type": "XYZ",
+      "note": "Center translate."
+    },
+    {
+      "name": "tx",
+      "type": "Float",
+      "note": "Translate X."
+    },
+    {
+      "name": "ty",
+      "type": "Float",
+      "note": "Translate Y."
+    },
+    {
+      "name": "tz",
+      "type": "Float",
+      "note": "Translate Z."
+    },
+    {
+      "name": "metaweight",
+      "type": "Float",
+      "note": "Metaball field weight."
+    },
+    {
+      "name": "kernel",
+      "type": "Menu",
+      "note": "Kernel function."
+    },
+    {
+      "name": "expxy",
+      "type": "Float",
+      "note": "XY exponent for meta-superquadric shape."
+    },
+    {
+      "name": "expz",
+      "type": "Float",
+      "note": "Z exponent for meta-superquadric shape."
+    },
+    {
+      "name": "normals",
+      "type": "Toggle",
+      "note": "Compute normals."
+    }
+  ],
+  "common_gotchas": [
+    "Implicit fields can fuse when metaballs are close together.",
+    "`modifybounds` depends on connected input bounds.",
+    "Conversion/display detail can become expensive with dense metaball surfaces."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Metaball SOP creates metaballs and meta-superquadrics as implicit density fields.",
+    "Nearby metaballs fuse or reshape each other when their densities combine.",
+    "Radius, weight, kernel, and exponent controls define field shape and falloff.",
+    "Normals should exist before polygon conversion when better converted shading is needed."
+  ]
+}

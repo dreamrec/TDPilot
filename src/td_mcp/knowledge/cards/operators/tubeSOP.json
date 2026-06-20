@@ -1,0 +1,178 @@
+{
+  "card_type": "operator",
+  "op_type": "tubeSOP",
+  "family": "SOP",
+  "display_name": "Tube SOP",
+  "docs_url": "https://docs.derivative.ca/Tube_SOP",
+  "summary": "Generates tubes, cones, or pyramids along a chosen axis as primitive, polygon, mesh, NURBS, or Bezier geometry with caps, UVs, and normals.",
+  "key_params": [
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "Primitive, polygon, mesh, NURBS, or Bezier output."
+    },
+    {
+      "name": "surftype",
+      "type": "Menu",
+      "note": "Connectivity for mesh output such as rows, columns, triangles, or quads."
+    },
+    {
+      "name": "orient",
+      "type": "Menu",
+      "note": "Primary long axis for the tube."
+    },
+    {
+      "name": "orientbounds",
+      "type": "Toggle",
+      "note": "Use input bounds orientation."
+    },
+    {
+      "name": "modifybounds",
+      "type": "Toggle",
+      "note": "Enable transforms that modify input bounds."
+    },
+    {
+      "name": "rord",
+      "type": "Menu",
+      "note": "Rotation order for tube rotation."
+    },
+    {
+      "name": "t",
+      "type": "Float3",
+      "note": "Tube center."
+    },
+    {
+      "name": "tx",
+      "type": "Float",
+      "note": "Center X."
+    },
+    {
+      "name": "ty",
+      "type": "Float",
+      "note": "Center Y."
+    },
+    {
+      "name": "tz",
+      "type": "Float",
+      "note": "Center Z."
+    },
+    {
+      "name": "r",
+      "type": "Float3",
+      "note": "Tube rotation."
+    },
+    {
+      "name": "rx",
+      "type": "Float",
+      "note": "Rotate X."
+    },
+    {
+      "name": "ry",
+      "type": "Float",
+      "note": "Rotate Y."
+    },
+    {
+      "name": "rz",
+      "type": "Float",
+      "note": "Rotate Z."
+    },
+    {
+      "name": "rad",
+      "type": "Float2",
+      "note": "Top and bottom radii."
+    },
+    {
+      "name": "rad1",
+      "type": "Float",
+      "note": "Top radius."
+    },
+    {
+      "name": "rad2",
+      "type": "Float",
+      "note": "Bottom radius."
+    },
+    {
+      "name": "height",
+      "type": "Float",
+      "note": "Tube height."
+    },
+    {
+      "name": "reverseanchors",
+      "type": "Toggle",
+      "note": "Invert anchor direction."
+    },
+    {
+      "name": "anchoru",
+      "type": "Float",
+      "note": "Anchor U."
+    },
+    {
+      "name": "anchorv",
+      "type": "Float",
+      "note": "Anchor V."
+    },
+    {
+      "name": "anchorw",
+      "type": "Float",
+      "note": "Anchor W."
+    },
+    {
+      "name": "imperfect",
+      "type": "Toggle",
+      "note": "Approximate Bezier or NURBS tube instead of perfect rational curve."
+    },
+    {
+      "name": "rows",
+      "type": "Int",
+      "note": "Number of rows."
+    },
+    {
+      "name": "cols",
+      "type": "Int",
+      "note": "Number of columns."
+    },
+    {
+      "name": "orderu",
+      "type": "Int",
+      "note": "Spline order in U."
+    },
+    {
+      "name": "orderv",
+      "type": "Int",
+      "note": "Spline order in V."
+    },
+    {
+      "name": "cap",
+      "type": "Toggle",
+      "note": "Add faceted end caps."
+    },
+    {
+      "name": "texture",
+      "type": "Menu",
+      "note": "Generate UV texture coordinates."
+    },
+    {
+      "name": "normals",
+      "type": "Toggle",
+      "note": "Compute surface normals."
+    }
+  ],
+  "common_gotchas": [
+    "The Primitive output type is not recommended for instancing workflows.",
+    "Different top and bottom radii create cones or pyramids; zero radii can collapse cap geometry.",
+    "Rows and Columns connectivity can create open line-like polygon structures rather than closed quads.",
+    "Bounds-driven tubes need an input SOP and explicit Orient Bounds or Modify Bounds settings.",
+    "Texture Coordinates text mentions sphere on the official page, but the parameter still belongs to Tube SOP UV generation."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "procedural-primitive-generation",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Tube SOP creates tubes, cones, or pyramids along a chosen X, Y, or Z axis.",
+    "Output can be a primitive, polygon, mesh, NURBS, or Bezier surface, with mesh connectivity controlling row, column, triangle, or quad structure.",
+    "Different top and bottom radii shape cylinders, cones, and pyramids.",
+    "Input bounds can orient and size the tube, then Modify Bounds enables center, rotation, radius, and height edits."
+  ]
+}

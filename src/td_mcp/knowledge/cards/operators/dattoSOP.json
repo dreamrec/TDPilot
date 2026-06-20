@@ -1,0 +1,97 @@
+{
+  "card_type": "operator",
+  "op_type": "dattoSOP",
+  "family": "SOP",
+  "display_name": "DAT to SOP",
+  "docs_url": "https://docs.derivative.ca/DAT_to_SOP",
+  "summary": "Builds or modifies SOP geometry from DAT tables describing points, vertices, primitives, and detail attributes.",
+  "key_params": [
+    {
+      "name": "pointsdat",
+      "type": "DAT",
+      "note": "DAT containing point rows and point attributes."
+    },
+    {
+      "name": "verticesdat",
+      "type": "DAT",
+      "note": "DAT containing vertex rows."
+    },
+    {
+      "name": "primsdat",
+      "type": "DAT",
+      "note": "DAT containing primitive rows."
+    },
+    {
+      "name": "detaildat",
+      "type": "DAT",
+      "note": "DAT containing detail attributes."
+    },
+    {
+      "name": "merge",
+      "type": "Menu",
+      "note": "Whether and how DAT data merges with existing geometry."
+    },
+    {
+      "name": "float",
+      "type": "Toggle",
+      "note": "Create float attributes from DAT columns."
+    },
+    {
+      "name": "int",
+      "type": "Toggle",
+      "note": "Create integer attributes from DAT columns."
+    },
+    {
+      "name": "string",
+      "type": "Toggle",
+      "note": "Create string attributes from DAT columns."
+    },
+    {
+      "name": "build",
+      "type": "Menu",
+      "note": "Primitive build mode."
+    },
+    {
+      "name": "n",
+      "type": "Int",
+      "note": "Count used by generated primitive construction."
+    },
+    {
+      "name": "closed",
+      "type": "Toggle",
+      "note": "Close generated primitives in U."
+    },
+    {
+      "name": "closedv",
+      "type": "Toggle",
+      "note": "Close generated primitives in V."
+    },
+    {
+      "name": "connect",
+      "type": "Menu",
+      "note": "Connectivity for generated surfaces/meshes."
+    },
+    {
+      "name": "prtype",
+      "type": "Menu",
+      "note": "Particle render type."
+    }
+  ],
+  "common_gotchas": [
+    "Vertex DATs need both point index and vertex index columns when modifying existing geometry.",
+    "Unnamed point DATs use a fixed column order, so headers are safer for durable cards and examples.",
+    "The official point-sprite particle render value uses legacy spelling; avoid silently correcting parameter ids."
+  ],
+  "related_snippets": [
+    "DAT_snippets",
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "DAT to SOP can build new geometry from DAT tables or merge DAT-authored attributes into existing SOP geometry.",
+    "Point, vertex, primitive, and detail DATs each define different geometry layers through their headers and rows.",
+    "Merge modes require index columns so incoming rows can target existing points, vertices, primitives, or detail records.",
+    "Primitive build controls create polygons, meshes, Bezier/NURBS primitives, particles, and point-render primitives from table data."
+  ]
+}

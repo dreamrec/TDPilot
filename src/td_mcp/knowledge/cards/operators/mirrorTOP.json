@@ -1,0 +1,60 @@
+{
+  "card_type": "operator",
+  "op_type": "mirrorTOP",
+  "family": "TOP",
+  "display_name": "Mirror TOP",
+  "docs_url": "https://docs.derivative.ca/Mirror_TOP",
+  "summary": "Mirrors part of an image over itself, using pivot, rotation, extend mode, and X/Y flips to build mirrored image effects.",
+  "key_params": [
+    {
+      "name": "pivot",
+      "type": "Float2",
+      "note": "Pivot point components pivotx and pivoty"
+    },
+    {
+      "name": "pivotunit",
+      "type": "Menu",
+      "note": "pixels, fraction, or fractionaspect"
+    },
+    {
+      "name": "rotate",
+      "type": "Float",
+      "note": "Rotation around the pivot point"
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "hold, zero, repeat, or mirror outside-source behavior"
+    },
+    {
+      "name": "flipx",
+      "type": "Toggle",
+      "note": "Flip image in X"
+    },
+    {
+      "name": "flipy",
+      "type": "Toggle",
+      "note": "Flip image in Y"
+    }
+  ],
+  "common_gotchas": [
+    "Pivot units change results across resolutions and aspect ratios.",
+    "An off-center pivot can move samples outside the source image, making Extend visible.",
+    "Flip X/Y are not the same as the rotated mirror-copy behavior.",
+    "The official unit token for Fraction Aspect is fractionaspect."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Transform_snippets"
+  ],
+  "build_relevance": "image_transform",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Mirrors part of an image over itself.",
+    "Pivot and Pivot Unit define the point around which the copied image rotates.",
+    "Rotate turns the copied/mirrored image around the pivot before compositing back over itself.",
+    "Extend controls how out-of-bounds samples are held, zeroed, repeated, or mirrored.",
+    "Flip X and Flip Y are independent axis flips distinct from rotation around the pivot.",
+    "The operator supports 3D Textures and 2D Texture Arrays."
+  ]
+}

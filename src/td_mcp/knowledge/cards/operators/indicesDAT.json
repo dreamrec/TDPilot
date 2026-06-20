@@ -1,0 +1,67 @@
+{
+  "card_type": "operator",
+  "op_type": "indicesDAT",
+  "family": "DAT",
+  "display_name": "Indices DAT",
+  "docs_url": "https://docs.derivative.ca/Indices_DAT",
+  "summary": "Generates a table of nicely spaced numeric indices between start and end values, commonly used for graph axes and labels.",
+  "key_params": [
+    {
+      "name": "start",
+      "type": "Float",
+      "note": "Start value of the index range"
+    },
+    {
+      "name": "end",
+      "type": "Float",
+      "note": "End value of the index range"
+    },
+    {
+      "name": "level",
+      "type": "Menu",
+      "note": "Coarse, medium, or fine spacing density"
+    },
+    {
+      "name": "origin",
+      "type": "Float",
+      "note": "Optional origin value to align or include in the generated series"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Indices DAT is for readable axis intervals, not arbitrary sequence generation.",
+    "The level setting changes spacing density and may change row count when ranges change.",
+    "Origin affects where the index sequence aligns, which can be useful for zero-centered axes.",
+    "Output is table data; convert or evaluate it before driving numeric CHOP channels."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "axis-label-table-generation",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Generates a DAT table of numeric index values for axis or helper-table workflows.",
+    "Start and End define the numeric range of the generated indices.",
+    "Level selects the density of generated values, from coarse to fine.",
+    "Origin specifies the first output number in the generated sequence."
+  ]
+}

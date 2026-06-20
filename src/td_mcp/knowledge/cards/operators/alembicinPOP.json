@@ -1,0 +1,48 @@
+{
+  "card_type": "operator",
+  "op_type": "alembicinPOP",
+  "family": "POP",
+  "display_name": "Alembic In POP",
+  "docs_url": "https://docs.derivative.ca/Alembic_In_POP",
+  "summary": "Loads Alembic .abc geometry, transforms, object paths, attributes, and multi-frame animation into POP GPU memory. Polymesh, curves, and points are converted to POP triangles, quads, line strips, point primitives, and attributes.",
+  "key_params": [
+    {"name": "file", "type": "File", "note": "Alembic .abc file path"},
+    {"name": "objectpath", "type": "Menu", "note": "Object path or all objects from the Alembic archive"},
+    {"name": "loadtype", "type": "Menu", "note": "Immediate or next-frame asynchronous loading"},
+    {"name": "xform", "type": "Menu", "note": "Transform handling from Alembic data"},
+    {"name": "interp", "type": "Menu", "note": "Interpolation between dynamic Alembic samples/keyframes"},
+    {"name": "loadfile", "type": "Toggle", "note": "Unload/reload the Alembic file handle"},
+    {"name": "sampleratemode", "type": "Menu", "note": "Use file FPS or custom sample rate for animation playback"},
+    {"name": "samplerate", "type": "Float", "note": "Custom playback sample rate"},
+    {"name": "playmode", "type": "Menu", "note": "Animation playback mode"},
+    {"name": "initialize", "type": "Pulse", "note": "Reset animation to its initial state"},
+    {"name": "start", "type": "Pulse", "note": "Start animation playback"},
+    {"name": "index", "type": "Float", "note": "Specified animation position"},
+    {"name": "indexunit", "type": "Menu", "note": "Index unit: index, frames, seconds, or fraction"},
+    {"name": "speed", "type": "Float", "note": "Playback speed for animated archives"},
+    {"name": "cue", "type": "Toggle", "note": "Cue/scrub animation state"},
+    {"name": "cuepulse", "type": "Pulse", "note": "Jump to the cue point"},
+    {"name": "trim", "type": "Toggle", "note": "Enable trim start and end controls"},
+    {"name": "tstart", "type": "Float", "note": "Trim start time"},
+    {"name": "tstartunit", "type": "Menu", "note": "Trim start unit"},
+    {"name": "tend", "type": "Float", "note": "Trim end time"},
+    {"name": "tendunit", "type": "Menu", "note": "Trim end unit"},
+    {"name": "textendleft", "type": "Menu", "note": "Hold, cycle, or mirror before trim start"},
+    {"name": "textendright", "type": "Menu", "note": "Hold, cycle, or mirror after trim end"}
+  ],
+  "key_concepts": [
+    "Alembic In POP imports Alembic geometry archives into POP GPU memory, including polymesh, curves, points, transforms, object paths, and multi-frame sequences.",
+    "Object Path can load one selected Alembic object or all objects; duplicate attribute names across selected objects may be promoted to vertex attributes when classes differ.",
+    "Transform mode separates no transform, static local, static world, and dynamic transform handling; interpolation only applies when the source geometry has dynamic samples and transform data.",
+    "The Play page supports timeline-locked playback, specified index playback, sequential playback, cueing, trim ranges, and left/right extension behavior for animated archives.",
+    "Alembic attribute scopes and types do not map one-to-one to POPs: supported scopes become point, vertex, or primitive attributes, while unsupported or oversized types are converted or omitted."
+  ],
+  "common_gotchas": [
+    "Some Alembic attribute types are converted or unsupported; strings, bools, chars, and 8/16-bit float colors do not map one-to-one.",
+    "Faces with more than four vertices become closed line strips rather than polygon meshes.",
+    "Duplicate attribute names across selected objects may be converted to vertex attributes when classes differ."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

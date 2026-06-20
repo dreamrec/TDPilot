@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "bindCHOP",
+  "family": "CHOP",
+  "display_name": "Bind CHOP",
+  "docs_url": "https://docs.derivative.ca/Bind_CHOP",
+  "summary": "Binds CHOP channels and parameters bidirectionally, matching multi-input channels by number or name and outputting the most recently changed value.",
+  "key_params": [
+    {"name": "match", "type": "Menu", "note": "Match input channels by channel number or channel name"},
+    {"name": "pickup", "type": "Toggle", "note": "Require channel pickup behavior before binding changes take effect"},
+    {"name": "callbacks", "type": "DAT", "note": "Callbacks DAT for bind/change events"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export/bind method"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table for export mapping when using table methods"}
+  ],
+  "key_concepts": [
+    "bidirectional CHOP channel and parameter binding",
+    "matched multi-input updates by channel number or name",
+    "most recently changed input wins",
+    "Export and Bind parameter modes",
+    "Channel Pickup to avoid jumps",
+    "Callbacks DAT for change-source handling"
+  ],
+  "common_gotchas": [
+    "Bind CHOP is bidirectional; changes can flow from channels to parameters and from parameters back to channels.",
+    "Match-by-name is safer than match-by-index when input channel order can change.",
+    "Pickup behavior helps avoid jumps when taking over a parameter value.",
+    "Prefer Bind CHOP or Binding for VST and UI control surfaces where two-way state matters."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-17"
+}

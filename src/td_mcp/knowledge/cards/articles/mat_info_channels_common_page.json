@@ -1,0 +1,38 @@
+{
+  "card_type": "article",
+  "article_id": "mat_info_channels_common_page",
+  "title": "MAT Info Channels Common Page",
+  "family": "MAT",
+  "families": [
+    "MAT",
+    "CHOP",
+    "INFO",
+    "PARAMETER"
+  ],
+  "summary": "Official Derivative common page marker for shared MAT Info CHOP channel documentation. The page is sparse, so use it as an index signal for common MAT info-channel coverage and pair it with specific MAT operator pages for operator-specific channels.",
+  "source_url": "https://docs.derivative.ca/MAT_Info_Channels_Common_Page",
+  "docsbrain_page_id": "mat_info_channels_common_page",
+  "covered_operators": [
+    "infoCHOP",
+    "phongMAT",
+    "glslMAT",
+    "pbrMAT"
+  ],
+  "key_concepts": [
+    "MAT Info Channels Common Page",
+    "Common MAT Info Channels",
+    "Info CHOP",
+    "MAT",
+    "operator-specific info channels",
+    "Common Operator Info Channels",
+    "sparse common page"
+  ],
+  "guidance": [
+    "Use this article as a lightweight common-page anchor when a material exposes Info CHOP channels.",
+    "The official page is sparse; do not invent channel names from this page alone.",
+    "For operator-specific info channels, inspect the specific MAT operator page and its Info CHOP Channels section.",
+    "Pair this card with individual MAT operator cards such as phongMAT, glslMAT, or pbrMAT when concrete channel names are needed."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,140 @@
+{
+  "card_type": "operator",
+  "op_type": "opencolorioTOP",
+  "family": "TOP",
+  "display_name": "OpenColorIO TOP",
+  "docs_url": "https://docs.derivative.ca/OpenColorIO_TOP",
+  "summary": "Uses OpenColorIO to apply color-space, file/LUT, CDL, and display/output transforms to TOP textures and images.",
+  "key_params": [
+    {
+      "name": "config",
+      "type": "File",
+      "note": "OCIO configuration containing color spaces, displays, views, transforms, and LUT references."
+    },
+    {
+      "name": "reloadconfig",
+      "type": "Pulse",
+      "note": "Reload the OCIO configuration file."
+    },
+    {
+      "name": "usecolorspacetransform",
+      "type": "Toggle",
+      "note": "Enable conversion from input to output color space."
+    },
+    {
+      "name": "incolorspace",
+      "type": "Menu/String",
+      "note": "Incoming image color space."
+    },
+    {
+      "name": "outcolorspace",
+      "type": "Menu/String",
+      "note": "Target color space."
+    },
+    {
+      "name": "usefiletransform",
+      "type": "Toggle",
+      "note": "Enable a file/LUT transform."
+    },
+    {
+      "name": "filesource",
+      "type": "File",
+      "note": "LUT or color-conversion file."
+    },
+    {
+      "name": "interpolation",
+      "type": "Menu",
+      "note": "File transform interpolation: nearest, linear, tetrahedral, or best."
+    },
+    {
+      "name": "filedirection",
+      "type": "Menu",
+      "note": "Apply file transform forward or inverse."
+    },
+    {
+      "name": "cdlmode",
+      "type": "Menu",
+      "note": "Disable CDL, use parameter values, or load a color correction file."
+    },
+    {
+      "name": "slope",
+      "type": "XYZ",
+      "note": "CDL gain."
+    },
+    {
+      "name": "offset",
+      "type": "XYZ",
+      "note": "CDL offset."
+    },
+    {
+      "name": "power",
+      "type": "XYZ",
+      "note": "CDL gamma/power."
+    },
+    {
+      "name": "saturation",
+      "type": "Float",
+      "note": "CDL saturation."
+    },
+    {
+      "name": "cdldirection",
+      "type": "Menu",
+      "note": "Apply CDL forward or inverse."
+    },
+    {
+      "name": "ccfile",
+      "type": "File",
+      "note": "Color correction file containing CDL values."
+    },
+    {
+      "name": "useoutput",
+      "type": "Toggle",
+      "note": "Enable display/output transform."
+    },
+    {
+      "name": "gain",
+      "type": "Float",
+      "note": "Exposure gain before display transform."
+    },
+    {
+      "name": "display",
+      "type": "Menu/String",
+      "note": "Target display color space."
+    },
+    {
+      "name": "view",
+      "type": "Menu/String",
+      "note": "View transform to apply."
+    },
+    {
+      "name": "colorspace",
+      "type": "Menu/String",
+      "note": "Input color space for the display transform."
+    },
+    {
+      "name": "gamma",
+      "type": "Float",
+      "note": "Gamma after display transform."
+    }
+  ],
+  "common_gotchas": [
+    "TouchDesigner TOPs are linear; non-linear source imagery generally needs conversion to linear before linear processing.",
+    "Default transform order is Color Space, File, CDL, then Output; chain multiple OpenColorIO TOPs if a different order is needed.",
+    "File transforms do not internally handle the source color space; feed the expected color space or results will be wrong.",
+    "Several sample configs live under the TouchDesigner installation Samples/OpenColorIO folder.",
+    "Reload the config after changing external OCIO files or LUTs."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Color_snippets",
+    "OpenColorIO_snippets"
+  ],
+  "build_relevance": "color_management",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Uses the OpenColorIO library to apply color-space, file/LUT, CDL, and output transforms.",
+    "Default transform order is Color Space, File, CDL, then Output/Display.",
+    "Multiple OpenColorIO TOPs can be chained when a different transform order is required.",
+    "TouchDesigner TOPs are linear, so non-linear imported imagery generally needs conversion to linear."
+  ]
+}

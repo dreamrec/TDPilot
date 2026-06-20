@@ -18,11 +18,17 @@ from td_mcp.brain.live_smoke import build_live_smoke_report  # noqa: E402
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--dry-run", action="store_true", help="Use deterministic fake TD state; never connect or mutate.")
-    mode.add_argument("--live", action="store_true", help="Connect to TouchDesigner and plan against live state.")
+    mode.add_argument(
+        "--dry-run", action="store_true", help="Use deterministic fake TD state; never connect or mutate."
+    )
+    mode.add_argument(
+        "--live", action="store_true", help="Connect to TouchDesigner and plan against live state."
+    )
     parser.add_argument("--host", default="127.0.0.1", help="TouchDesigner MCP host for --live.")
     parser.add_argument("--port", type=int, default=9981, help="TouchDesigner MCP port for --live.")
-    parser.add_argument("--timeout", type=float, default=15.0, help="TouchDesigner request timeout for --live.")
+    parser.add_argument(
+        "--timeout", type=float, default=15.0, help="TouchDesigner request timeout for --live."
+    )
     parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON output.")
     return parser.parse_args()
 

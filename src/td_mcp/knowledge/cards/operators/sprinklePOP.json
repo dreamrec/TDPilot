@@ -1,0 +1,37 @@
+{
+  "card_type": "operator",
+  "op_type": "sprinklePOP",
+  "family": "POP",
+  "display_name": "Sprinkle POP",
+  "docs_url": "https://docs.derivative.ca/Sprinkle_POP",
+  "summary": "Creates points on the surface of input triangles/quads or inside a closed input volume. It can create point primitives, interpolate selected input attributes, and use hardware ray tracing for volume point generation when supported.",
+  "key_params": [
+    {"name": "createpointprim", "type": "Toggle", "note": "Create point primitives for generated points"},
+    {"name": "seed", "type": "Int", "note": "Random seed"},
+    {"name": "method", "type": "Menu", "note": "Per primitive, volume, or deterministic/non-deterministic volume generation"},
+    {"name": "numpoints", "type": "Int", "note": "Approximate or maximum number of generated points"},
+    {"name": "attemptsperpoint", "type": "Int", "note": "Volume sampling attempts per point"},
+    {"name": "raydirmode", "type": "Menu", "note": "Constant or random ray direction for inside/outside tests"},
+    {"name": "raydir", "type": "Float3", "note": "Constant ray direction"},
+    {"name": "hwraytracing", "type": "Menu", "note": "Hardware ray tracing mode"},
+    {"name": "pointattrscope", "type": "Str", "note": "Point attributes to sample/interpolate"},
+    {"name": "primattrscope", "type": "Str", "note": "Primitive attributes to sample/interpolate"},
+    {"name": "vertattribscope", "type": "Str", "note": "Vertex attributes to sample/interpolate"}
+  ],
+  "key_concepts": [
+    "Sprinkle POP creates new points either on input primitive surfaces or inside an input volume.",
+    "Per Primitive mode distributes points approximately per primitive rather than per surface area, so large and small primitives can receive similar point counts.",
+    "Volume methods sample inside closed triangle/quad volumes; open meshes produce approximate or unreliable inside/outside results.",
+    "Number of Points is an approximate upper limit for volume methods, and Attempts per Point controls how hard the sampler tries to find valid interior points.",
+    "Create Point Primitives is useful for direct point rendering but can be disabled when the result is only a point list for copy, simulation, or attribute processing.",
+    "Point, primitive, and vertex attribute scopes decide which source attributes are interpolated or sampled onto the generated points."
+  ],
+  "common_gotchas": [
+    "Per-primitive distribution is not constant per surface area; it is approximately constant per primitive.",
+    "Volume methods expect closed volumes; open meshes produce approximate or unreliable inside tests.",
+    "Turn off Create Point Primitives when the result is a source for copying or simulation rather than direct point rendering."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

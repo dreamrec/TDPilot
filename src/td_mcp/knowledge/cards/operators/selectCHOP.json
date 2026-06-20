@@ -4,16 +4,114 @@
   "family": "CHOP",
   "display_name": "Select CHOP",
   "docs_url": "https://docs.derivative.ca/Select_CHOP",
-  "summary": "References channels from any CHOP in the project by path, with optional channel name filtering. Essential for routing data between components.",
+  "summary": "Selects, orders, filters, and renames channels from one or more CHOPs. Use it for explicit CHOP routing across networks, control-panel channel extraction, and pattern-based channel shaping.",
   "key_params": [
-    {"name": "chop", "type": "String", "note": "Path to the source CHOP to reference"},
-    {"name": "channames", "type": "String", "note": "Whitespace-separated channel name patterns to select (supports wildcards)"}
+    {
+      "name": "chop",
+      "type": "CHOP Path/Pattern",
+      "note": "Source CHOP or CHOP pattern to pull channels from when not using a wired input."
+    },
+    {
+      "name": "channames",
+      "type": "Pattern",
+      "note": "Channel name patterns to keep; order determines output order and repeated names are included multiple times."
+    },
+    {
+      "name": "renamefrom",
+      "type": "Pattern",
+      "note": "Channel pattern to rename using Pattern Matching."
+    },
+    {
+      "name": "renameto",
+      "type": "Pattern",
+      "note": "Replacement pattern used to generate output channel names."
+    },
+    {
+      "name": "filterbydigits",
+      "type": "Toggle",
+      "note": "Restricts selection to channels ending in the specified digits."
+    },
+    {
+      "name": "digits",
+      "type": "String",
+      "note": "Digits that selected channel names must end with when Filter by Digits is enabled."
+    },
+    {
+      "name": "stripdigits",
+      "type": "Toggle",
+      "note": "Removes the matching trailing digits from selected channel names."
+    },
+    {
+      "name": "align",
+      "type": "Menu",
+      "note": "Handles multiple input CHOPs with different start or end intervals."
+    },
+    {
+      "name": "autoprefix",
+      "type": "Toggle",
+      "note": "Prefixes duplicate channel names with source node names to avoid collisions."
+    },
+    {
+      "name": "timeslice",
+      "type": "Toggle",
+      "note": "Forces output channels to be time sliced on the Common page."
+    },
+    {
+      "name": "scope",
+      "type": "Pattern",
+      "note": "Restricts which channels are affected by Common-page CHOP operations."
+    },
+    {
+      "name": "srselect",
+      "type": "Menu",
+      "note": "Chooses how to handle mismatched input sample rates."
+    },
+    {
+      "name": "exportmethod",
+      "type": "Menu",
+      "note": "Chooses how selected channels connect to destination parameters for exports."
+    },
+    {
+      "name": "autoexportroot",
+      "type": "OP Path",
+      "note": "Root path for Channel Name is Path:Parameter export destinations."
+    },
+    {
+      "name": "exporttable",
+      "type": "DAT",
+      "note": "DAT table storing export information for DAT Table export methods."
+    }
+  ],
+  "key_concepts": [
+    "selects and renames CHOP channels",
+    "one or more CHOPs",
+    "specified output order",
+    "duplicate channel selections",
+    "CHOP and Channel Name parameters",
+    "wired input",
+    "Pattern Matching",
+    "Pattern Replacement",
+    "Pattern Expansion",
+    "Channel Naming Patterns",
+    "Rename CHOP",
+    "Filter by Digits",
+    "Align",
+    "Automatic Prefix",
+    "Info CHOP",
+    "start",
+    "length",
+    "sample_rate",
+    "num_channels",
+    "time_slice",
+    "export_sernum"
   ],
   "common_gotchas": [
-    "If the referenced CHOP is deleted or the path changes, the Select outputs zero channels silently.",
-    "Channel name patterns are case-sensitive — 'tx' will not match 'TX'."
+    "Channel Names determine output order, and specifying the same channel multiple times outputs duplicates in that order.",
+    "Rename and extraction options apply when using the CHOP and Channel Name parameters; verify behavior separately when routing from a wired input.",
+    "Automatic Prefix is useful when duplicate channel names from multiple sources would otherwise collide.",
+    "Use Align deliberately when selected CHOPs have different start/end intervals; the choice can trim, extend, shift, or stretch channels."
   ],
   "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "build_relevance": "2022.24140+",
+  "last_verified": "2026-06-18"
 }

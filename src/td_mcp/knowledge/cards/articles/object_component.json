@@ -1,0 +1,62 @@
+{
+  "card_type": "article",
+  "article_id": "object_component",
+  "title": "Object Component",
+  "family": "COMP",
+  "families": [
+    "COMP",
+    "RENDERING",
+    "OBJECT"
+  ],
+  "summary": "Official Derivative overview of Object Components as the Component subset used to create and render 3D scenes in TouchDesigner, including cameras, lights, geometry, nulls, FBX/USD imports, shared-memory objects, and the ObjectCOMP Python class anchor.",
+  "source_url": "https://docs.derivative.ca/Object_Component",
+  "docsbrain_page_id": "object_component",
+  "covered_operators": [
+    "ambientlightCOMP",
+    "blendCOMP",
+    "boneCOMP",
+    "cameraCOMP",
+    "camerablendCOMP",
+    "environmentlightCOMP",
+    "fbxCOMP",
+    "geometryCOMP",
+    "handleCOMP",
+    "lightCOMP",
+    "nullCOMP",
+    "nvidiaflowemitterCOMP",
+    "sharedmemoutCOMP",
+    "sharedmeminCOMP",
+    "usdCOMP"
+  ],
+  "key_concepts": [
+    "Object Component",
+    "Object Components",
+    "Components",
+    "3D scenes",
+    "Objects",
+    "Ambient Light COMP",
+    "Blend COMP",
+    "Bone COMP",
+    "Camera COMP",
+    "Camera Blend COMP",
+    "Environment Light COMP",
+    "FBX COMP",
+    "Geometry COMP",
+    "Handle COMP",
+    "Light COMP",
+    "Null COMP",
+    "Nvidia Flow Emitter COMP",
+    "Shared Mem Out COMP",
+    "Shared Mem In COMP",
+    "USD COMP",
+    "ObjectCOMP Class"
+  ],
+  "guidance": [
+    "Use this article when a plan needs to distinguish 3D Object Components from Panel or Misc components.",
+    "Object Components are the correct family context for cameras, lights, geometry, FBX/USD scene imports, object nulls, handles, and 3D render hierarchy work.",
+    "For specific creation or parameter behavior, pair this overview with the individual operator card such as geometryCOMP, cameraCOMP, lightCOMP, environmentlightCOMP, fbxCOMP, or usdCOMP.",
+    "Use ObjectCOMP Class for Python behavior shared by Object Components, then use the more specific COMP class or operator class when needed."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

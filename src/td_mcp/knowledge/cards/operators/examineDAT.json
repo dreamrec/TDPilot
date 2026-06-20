@@ -1,0 +1,127 @@
+{
+  "card_type": "operator",
+  "op_type": "examineDAT",
+  "family": "DAT",
+  "display_name": "Examine DAT",
+  "docs_url": "https://docs.derivative.ca/Examine_DAT",
+  "summary": "Inspects operator Python state such as storage, locals, globals, expressions, and extensions, returning filtered diagnostic tables for debugging.",
+  "key_params": [
+    {
+      "name": "op",
+      "type": "OP Path",
+      "note": "Operator whose Python state will be inspected"
+    },
+    {
+      "name": "source",
+      "type": "Menu",
+      "note": "Choose storage, locals, extensions, globals, or expression inspection"
+    },
+    {
+      "name": "subkey",
+      "type": "String",
+      "note": "Narrow storage or dictionary inspection to a specific key path"
+    },
+    {
+      "name": "expression",
+      "type": "Expr",
+      "note": "Expression to evaluate for expression-source inspection"
+    },
+    {
+      "name": "level",
+      "type": "Integer",
+      "note": "Depth level to include when expanding nested objects"
+    },
+    {
+      "name": "key",
+      "type": "String",
+      "note": "Filter results by key"
+    },
+    {
+      "name": "type",
+      "type": "String",
+      "note": "Filter results by Python object type"
+    },
+    {
+      "name": "value",
+      "type": "String",
+      "note": "Filter results by value"
+    },
+    {
+      "name": "expandclasses",
+      "type": "Toggle",
+      "note": "Expand complex class/object structures"
+    },
+    {
+      "name": "maxlevels",
+      "type": "Integer",
+      "note": "Maximum nested depth to expand"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Choose table or text output format"
+    },
+    {
+      "name": "outputheaders",
+      "type": "Toggle",
+      "note": "Include column headers in table output"
+    },
+    {
+      "name": "outputlevel",
+      "type": "Toggle",
+      "note": "Include nesting level in table output"
+    },
+    {
+      "name": "outputkey",
+      "type": "Toggle",
+      "note": "Include key names in table output"
+    },
+    {
+      "name": "outputtype",
+      "type": "Toggle",
+      "note": "Include value type names in table output"
+    },
+    {
+      "name": "outputvalue",
+      "type": "Toggle",
+      "note": "Include value text in table output"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Deep inspection of globals, project internals, or large storage dictionaries can produce large tables and expensive cooks.",
+    "DAT locals only apply to DAT module contexts; do not assume every operator exposes meaningful DAT local state.",
+    "Filtering by source, subkey, level, and columns is important before exposing inspection results to generated diagnostics.",
+    "Expansion of classes can reveal implementation details that are noisy for user-facing summaries."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "python-state-debugging",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Inspects Python objects such as operator storage, locals, globals, expressions, and extensions.",
+    "Source, subkey, and expression parameters choose which object or nested dictionary branch to inspect.",
+    "Filter fields constrain output by key, type, or value text.",
+    "Output format and column toggles determine whether level, key, type, and value fields are shown."
+  ]
+}

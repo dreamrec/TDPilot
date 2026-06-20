@@ -4,14 +4,100 @@
   "family": "CHOP",
   "display_name": "Null CHOP",
   "docs_url": "https://docs.derivative.ca/Null_CHOP",
-  "summary": "A pass-through that marks a clean output point in a CHOP chain. Best practice is to end CHOP networks with a Null for stable export referencing.",
+  "summary": "Placeholder CHOP that does not alter incoming channels. Use it as a stable CHOP export/reference endpoint so upstream CHOP networks can change without rewiring parameter exports.",
   "key_params": [
-    {"name": "cook", "type": "Menu", "note": "Cook behavior: Always, Off, or dependent on exports/viewers"}
+    {
+      "name": "cooktype",
+      "type": "Menu",
+      "note": "Controls how downstream nodes are triggered when the Null CHOP output changes: Automatic, Always, or Selective."
+    },
+    {
+      "name": "checkvalues",
+      "type": "Toggle",
+      "note": "In Selective cook mode, recook downstream when channel values change."
+    },
+    {
+      "name": "checknames",
+      "type": "Toggle",
+      "note": "In Selective cook mode, recook downstream when channel names change."
+    },
+    {
+      "name": "checkrange",
+      "type": "Toggle",
+      "note": "In Selective cook mode, recook downstream when the channel sample range changes."
+    },
+    {
+      "name": "timeslice",
+      "type": "Toggle",
+      "note": "Forces output channels to be time sliced on the Common page."
+    },
+    {
+      "name": "scope",
+      "type": "Pattern",
+      "note": "Restricts which channels are affected by Common-page CHOP operations."
+    },
+    {
+      "name": "srselect",
+      "type": "Menu",
+      "note": "Chooses how to handle mismatched input sample rates."
+    },
+    {
+      "name": "exportmethod",
+      "type": "Menu",
+      "note": "Chooses how CHOP channels connect to destination parameters for exports."
+    },
+    {
+      "name": "autoexportroot",
+      "type": "OP Path",
+      "note": "Root path for Channel Name is Path:Parameter export destinations."
+    },
+    {
+      "name": "exporttable",
+      "type": "DAT",
+      "note": "DAT table that stores export information for DAT Table export methods."
+    },
+    {
+      "name": "commonrenamefrom",
+      "type": "Pattern",
+      "note": "Pattern for renaming output channels on the Common page."
+    },
+    {
+      "name": "commonrenameto",
+      "type": "Pattern",
+      "note": "Replacement pattern for Common-page channel renaming."
+    }
+  ],
+  "key_concepts": [
+    "place-holder",
+    "does not alter CHOP data",
+    "stable CHOP export endpoint",
+    "Export channels to parameters",
+    "Cook Type",
+    "Automatic",
+    "Always",
+    "Selective",
+    "Check Values",
+    "Check Names",
+    "Check Range",
+    "Time Slice",
+    "Scope",
+    "Sample Rate Match",
+    "Export Method",
+    "Info CHOP",
+    "start",
+    "length",
+    "sample_rate",
+    "num_channels",
+    "time_slice",
+    "export_sernum"
   ],
   "common_gotchas": [
-    "Always name your Null CHOPs descriptively (e.g., null_audio_level) so exports and references remain clear."
+    "Selective cook mode can reduce downstream recooks for mostly static output, but upstream CHOPs still cook when their inputs change.",
+    "Pick the Export Method deliberately: DAT Table by Name is safer than index-based exports when channel names are stable and channel order may change.",
+    "Use an Info CHOP on export-heavy Null CHOPs; export_sernum tells you how often export connections have been updated.",
+    "Name Null CHOPs descriptively, such as null_audio_level, so parameter exports and references stay readable."
   ],
   "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
 }

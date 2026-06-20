@@ -1,0 +1,89 @@
+{
+  "card_type": "operator",
+  "op_type": "multiplyTOP",
+  "family": "TOP",
+  "display_name": "Multiply TOP",
+  "docs_url": "https://docs.derivative.ca/Multiply_TOP",
+  "summary": "Multiplies input 1 and input 2, with transform-page controls for fitting, aligning, extending, and transforming the overlay input before compositing.",
+  "key_params": [
+    {
+      "name": "size",
+      "type": "Menu",
+      "note": "input1 or input2 fixed layer"
+    },
+    {
+      "name": "prefit",
+      "type": "Menu",
+      "note": "fill, fithorz, fitvert, fitbest, fitoutside, or nativeres"
+    },
+    {
+      "name": "justifyh",
+      "type": "Menu",
+      "note": "left, center, or right overlay alignment"
+    },
+    {
+      "name": "justifyv",
+      "type": "Menu",
+      "note": "bottom, center, or top overlay alignment"
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "hold, zero, repeat, or mirror overlay sampling"
+    },
+    {
+      "name": "r",
+      "type": "Float",
+      "note": "Overlay rotation"
+    },
+    {
+      "name": "t",
+      "type": "Float2",
+      "note": "Overlay translation tx and ty"
+    },
+    {
+      "name": "tunit",
+      "type": "Menu",
+      "note": "Translation unit"
+    },
+    {
+      "name": "s",
+      "type": "Float2",
+      "note": "Overlay scale sx and sy"
+    },
+    {
+      "name": "p",
+      "type": "Float2",
+      "note": "Overlay pivot px and py"
+    },
+    {
+      "name": "punit",
+      "type": "Menu",
+      "note": "Pivot unit"
+    },
+    {
+      "name": "legacyxform",
+      "type": "Toggle",
+      "note": "Use legacy transform matrix behavior"
+    }
+  ],
+  "common_gotchas": [
+    "Fixed Layer does not change the multiply input order; it only chooses the fixed output shape.",
+    "Transform controls affect only the overlay input, not both inputs.",
+    "Multiplying by black drives output black, so masks and levels matter upstream.",
+    "legacyxform changes rotation and transform-order behavior in old networks."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Compositing_snippets"
+  ],
+  "build_relevance": "image_composite",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Multiplies Input1 and Input2 as a two-input image composite.",
+    "Fixed Layer chooses the output resolution/aspect source without changing the multiply input order.",
+    "The non-fixed input is the overlay affected by prefit, justify, extend, and transform controls.",
+    "Native Resolution prefit helps preserve pixel-accurate overlay sampling.",
+    "The operator supports 3D Textures and 2D Texture Arrays."
+  ]
+}

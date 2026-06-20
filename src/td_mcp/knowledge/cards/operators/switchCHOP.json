@@ -1,0 +1,28 @@
+{
+  "card_type": "operator",
+  "op_type": "switchCHOP",
+  "family": "CHOP",
+  "display_name": "Switch CHOP",
+  "docs_url": "https://docs.derivative.ca/Switch_CHOP",
+  "summary": "Selects one CHOP input by index, optionally using the first input as the index source for signal-driven switching.",
+  "key_params": [
+    {"name": "indexfirst", "type": "Toggle", "note": "Use the first input as the index signal"},
+    {"name": "index", "type": "Float", "note": "Input index when not using first-input indexing"},
+    {"name": "extend", "type": "Menu", "note": "Clamp, loop, or zigzag out-of-range indexes"}
+  ],
+  "key_concepts": [
+    "Switch CHOP controls CHOPnet flow by selecting exactly one input CHOP by index and copying it unchanged.",
+    "Input indices start at zero.",
+    "When First Input is Index is enabled, the first input becomes the switch control and the remaining inputs become selectable choices.",
+    "The switch index is read from the first channel at the current frame and fractional indices are rounded down to an integer.",
+    "Use Cross CHOP or Blend CHOP when the network should blend between inputs instead of hard-switching."
+  ],
+  "common_gotchas": [
+    "Fractional index values are floored to integers.",
+    "Out-of-range indexes clamp unless Extend is set to loop or zigzag.",
+    "When Index First Input is enabled, the first wired CHOP is control data, not a selectable source."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18"
+}

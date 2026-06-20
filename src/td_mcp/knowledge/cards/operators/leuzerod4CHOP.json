@@ -1,0 +1,49 @@
+{
+  "card_type": "operator",
+  "op_type": "leuzerod4CHOP",
+  "family": "CHOP",
+  "display_name": "Leuze ROD4 CHOP",
+  "docs_url": "https://docs.derivative.ca/Leuze_ROD4_CHOP",
+  "summary": "Receives TCP/IP data from Leuze ROD4 laser scanners and outputs raw distance data or blob-tracking interaction channels.",
+  "key_concepts": [
+    "Connects to Leuze ROD4 laser scanners over TCP/IP and receives scanner data while Active is on.",
+    "Raw Data mode outputs 529 samples of measured X/Y positions in meters.",
+    "Blob Tracking mode groups nearby measured points into blobs and assigns persistent IDs.",
+    "Area of Interest can be disabled, distance based, or bounding-box based for blob tracking.",
+    "Protocol and Input Coordinate must match the scanner setup utility; mismatches can produce random incorrect data.",
+    "The scanner can be paired with Blob Track CHOP after validating network, coordinate, and output-mode settings."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Open/close network receive connection"},
+    {"name": "netaddress", "type": "String", "note": "IP address of the ROD4 scanner"},
+    {"name": "port", "type": "Integer", "note": "Network port of the scanner"},
+    {"name": "rod4porotocol", "type": "Menu", "note": "Binary ROD4 or ROD4plus ASCII-Remote protocol"},
+    {"name": "inputcoordinate", "type": "Menu", "note": "Polar or Cartesian coordinates for ASCII-Remote mode"},
+    {"name": "outputmode", "type": "Menu", "note": "Raw Data or Blob Tracking mode"},
+    {"name": "maxblobs", "type": "Integer", "note": "Maximum tracked blobs"},
+    {"name": "maxpointdistance", "type": "Float", "note": "Maximum point distance within one blob"},
+    {"name": "maxblobmovement", "type": "Float", "note": "Maximum movement allowed when matching blobs"},
+    {"name": "areaofinterest", "type": "Menu", "note": "Mode for blob search bounds"},
+    {"name": "maxdistance", "type": "Float", "note": "Distance-based area of interest limit"},
+    {"name": "lowerleft", "type": "Float2", "note": "Bounding-box lower-left corner"},
+    {"name": "lowerleft1", "type": "Float", "note": "Bounding-box lower-left X"},
+    {"name": "lowerleft2", "type": "Float", "note": "Bounding-box lower-left Y"},
+    {"name": "upperright", "type": "Float2", "note": "Bounding-box upper-right corner"},
+    {"name": "upperright1", "type": "Float", "note": "Bounding-box upper-right X"},
+    {"name": "upperright2", "type": "Float", "note": "Bounding-box upper-right Y"},
+    {"name": "allowmovementoutside", "type": "Toggle", "note": "Continue tracking blobs after they move outside the area of interest"},
+    {"name": "boundingboxmask", "type": "TOP", "note": "Mask TOP for bounding-box area of interest"},
+    {"name": "rotate", "type": "Float", "note": "Rotate incoming coordinates around the z-axis"}
+  ],
+  "common_gotchas": [
+    "Official docs list this operator as unavailable in Non-Commercial licenses.",
+    "The ROD4 protocol and input coordinate parameters must match device setup utility settings; mismatches may still output random incorrect data.",
+    "Object detection mode on some Leuze models is not supported.",
+    "Raw Data mode outputs 529 samples of measured points; Blob Tracking mode changes the channel semantics.",
+    "Bounding Box Mask TOP is stretched to fit and can make the CHOP very slow if it cooks every frame.",
+    "Network/firewall/IP setup must be validated before assuming scanner data is live."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ Commercial/Educational/Pro device tracking",
+  "last_verified": "2026-06-18"
+}

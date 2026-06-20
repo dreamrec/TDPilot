@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "facetPOP",
+  "family": "POP",
+  "display_name": "Facet POP",
+  "docs_url": "https://docs.derivative.ca/Facet_POP",
+  "summary": "Changes point sharing between primitives. It can create unique points per vertex, cusp polygon edges by angle, consolidate nearby points, remove degenerate primitives, remove unused points, and compute point normals.",
+  "key_params": [
+    {"name": "group", "type": "Str", "note": "Optional group scope"},
+    {"name": "operation", "type": "Menu", "note": "No operation, unique points, cusp polygons, or consolidate points"},
+    {"name": "angle", "type": "Float", "note": "Cusp angle threshold between adjacent faces"},
+    {"name": "dist", "type": "Float", "note": "Distance tolerance for consolidating points"},
+    {"name": "maxtries", "type": "Int", "note": "Consolidation retry limit"},
+    {"name": "removedegenerate", "type": "Toggle", "note": "Remove primitives with repeated consecutive vertices"},
+    {"name": "removeunusedpoints", "type": "Toggle", "note": "Remove points no longer referenced by primitives"},
+    {"name": "technique", "type": "Menu", "note": "Point consolidation technique"},
+    {"name": "gridres", "type": "Int3", "note": "Voxel grid resolution for spatial-grid-per-voxel consolidation"},
+    {"name": "specifybbox", "type": "Toggle", "note": "Specify a bounding box for spatial-grid consolidation"},
+    {"name": "bbox", "type": "SOP", "note": "SOP used as the consolidation bounding box"},
+    {"name": "computenormals", "type": "Toggle", "note": "Compute point normals after faceting"},
+    {"name": "cpureadback", "type": "Toggle", "note": "Copy topology information back to the CPU"}
+  ],
+  "key_concepts": [
+    "Facet POP changes point sharing by making unique points, cusping polygon edges, consolidating nearby points, or leaving topology untouched.",
+    "Cusp and consolidate operations are threshold driven: angle controls shared-edge separation, while distance and technique control point merging.",
+    "Cleanup options can remove degenerate primitives and unused points, and optional normal computation refreshes shading after topology sharing changes."
+  ],
+  "common_gotchas": [
+    "Unique Points changes point counts and breaks shared-point assumptions downstream.",
+    "Consolidate Points can alter point indices; avoid it before index arrays, groups, or neighbor caches that depend on old indices.",
+    "Run Normal POP or enable normal computation after topology-sharing changes when shading needs updated normals."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

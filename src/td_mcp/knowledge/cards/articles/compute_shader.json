@@ -1,0 +1,46 @@
+{
+  "card_type": "article",
+  "article_id": "compute_shader",
+  "title": "Compute Shader",
+  "family": "GLSL",
+  "families": [
+    "GLSL",
+    "TOP",
+    "POP",
+    "GPU"
+  ],
+  "summary": "Official Derivative overview of compute shaders, covering general GPU thread dispatch, arbitrary texture reads and writes, the difference from vertex/pixel rasterization, GLSL version requirements, and GLSL TOP compute mode.",
+  "source_url": "https://docs.derivative.ca/Compute_Shader",
+  "docsbrain_page_id": "compute_shader",
+  "covered_operators": [
+    "glslTOP",
+    "glslmultiTOP",
+    "glslPOP",
+    "glsladvancedPOP",
+    "glslcopyPOP",
+    "textDAT"
+  ],
+  "key_concepts": [
+    "1000s of very light-weight threads",
+    "Compute Shader",
+    "vertex shader",
+    "pixel shader",
+    "rasterizing polygons",
+    "arbitrary locations",
+    "read values from textures",
+    "GLSL 4.30",
+    "GLSL TOP",
+    "Mode to Compute Shader"
+  ],
+  "guidance": [
+    "Use this article when a plan needs GPU work that is not naturally tied to one rasterized output pixel or one material fragment.",
+    "A pixel shader writes the hard-wired output pixel once per render pass, while a compute shader can read textures and write values at arbitrary locations.",
+    "Require GLSL 4.30 or later for compute-shader plans.",
+    "For TOP workflows, use GLSL TOP compute mode when the output should be written by dispatch threads instead of regular image rasterization."
+  ],
+  "related_snippets": [
+    "GLSL_snippets",
+    "POP_attribute_ontology"
+  ],
+  "last_verified": "2026-06-18"
+}

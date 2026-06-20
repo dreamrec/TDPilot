@@ -1,0 +1,45 @@
+{
+  "card_type": "article",
+  "article_id": "parameter_mode",
+  "title": "Parameter Mode",
+  "family": "PARAMETER",
+  "families": [
+    "PARAMETER",
+    "CHOP",
+    "DAT",
+    "PYTHON"
+  ],
+  "summary": "Official Derivative reference for the four parameter modes: Constant, Expression, Export, and Bind, including UI color cues, export-mode availability, bind-mode synchronization, and Python access through the Par class.",
+  "source_url": "https://docs.derivative.ca/Parameter_Mode",
+  "docsbrain_page_id": "parameter_mode",
+  "covered_operators": [
+    "parameterDAT",
+    "parameterexecuteDAT",
+    "pargroupexecuteDAT",
+    "bindCHOP"
+  ],
+  "key_concepts": [
+    "Constant Mode",
+    "Expression Mode",
+    "Export Mode",
+    "Bind Mode",
+    "Parameter Mode",
+    "Par.mode",
+    "ParMode.CONSTANT",
+    "ParMode.EXPRESSION",
+    "ParMode.EXPORT",
+    "ParMode.BIND"
+  ],
+  "guidance": [
+    "Use this article when deciding whether a generated controller should write a constant, expression, export, or bind relationship.",
+    "Constant and expression modes can keep separate values, so toggling modes during debugging can reveal stale expression or constant state.",
+    "Export mode can only be selected when an export connection already exists; creating an export normally switches the parameter into export mode automatically.",
+    "Bind mode is for bidirectional synchronization and should not be treated like a one-way expression or CHOP export.",
+    "Python mode changes should use the Par class mode member rather than string-editing the parameter dialog state."
+  ],
+  "related_snippets": [
+    "CHOP_snippets",
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

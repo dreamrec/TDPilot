@@ -1,0 +1,50 @@
+{
+  "card_type": "operator",
+  "op_type": "webrenderTOP",
+  "family": "TOP",
+  "display_name": "Web Render TOP",
+  "docs_url": "https://docs.derivative.ca/Web_Render_TOP",
+  "summary": "Renders a URL, local file, or DAT-provided webpage through Chromium Embedded Framework browser processes and returns the page image to TouchDesigner.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable or disable the browser render process"},
+    {"name": "source", "type": "Menu", "note": "URL/file or DAT source"},
+    {"name": "url", "type": "String", "note": "URL or file path when source is URL/file"},
+    {"name": "dat", "type": "DAT", "note": "HTML/text source DAT when source is DAT"},
+    {"name": "reloadsrc", "type": "Pulse", "note": "Reload source DAT, URL, or file"},
+    {"name": "reload", "type": "Pulse", "note": "Reload the current page"},
+    {"name": "resetcount", "type": "Pulse", "note": "Reset the Info CHOP update counter"},
+    {"name": "updatewhenloaded", "type": "Toggle", "note": "Only show the webpage after it is fully loaded"},
+    {"name": "alwayscook", "type": "Toggle", "note": "Cook every frame instead of briefly after received updates"},
+    {"name": "transparent", "type": "Toggle", "note": "Use transparent page background; restarts browser process"},
+    {"name": "audio", "type": "Menu", "note": "Disable, route to system audio, or route to Audio Web Render CHOP"},
+    {"name": "mediastream", "type": "Toggle", "note": "Allow microphone and camera access inside the browser process"},
+    {"name": "redirectpopups", "type": "Toggle", "note": "Redirect popups into the rendered URL instead of ignoring them"},
+    {"name": "maxrenderrate", "type": "Float", "note": "Maximum browser render frame rate"},
+    {"name": "numbuffers", "type": "Integer", "note": "Maximum cached frame buffers"},
+    {"name": "dpiscale", "type": "Float", "note": "DPI scaling factor for the webpage"},
+    {"name": "sharedtexture", "type": "Toggle", "note": "Use Windows Direct3D shared texture instead of shared memory"},
+    {"name": "userdir", "type": "Folder", "note": "Unique CEF cache/user-data directory"},
+    {"name": "headerdat", "type": "DAT", "note": "Request-header override table"},
+    {"name": "allowurls", "type": "DAT", "note": "URL allow-list table"},
+    {"name": "blockurls", "type": "DAT", "note": "URL block-list table"},
+    {"name": "options", "type": "String", "note": "Additional Chromium options; restarts browser process"},
+    {"name": "autorestart", "type": "Toggle", "note": "Automatically restart the browser process if it dies"},
+    {"name": "autorestartpulse", "type": "Pulse", "note": "Manually restart the browser process"}
+  ],
+  "common_gotchas": [
+    "Each Web Render TOP needs a unique user cache directory in current builds.",
+    "Transparent background, audio routing, and options changes restart the browser process.",
+    "Shared Texture is Windows-only and can fail unless TouchDesignerWebRender.exe uses the same GPU as TouchDesigner.",
+    "Use Info DAT/CHOP to inspect loaded status, process status, URL/title/error, and update counts.",
+    "Rendered targets can be internet URLs, local file:// pages, or DAT-provided pages, but Flash content is not supported."
+  ],
+  "related_snippets": ["TOP_snippets", "CHOP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Web Render TOP renders a URL, local file, or DAT-provided page through separate CEF browser processes.",
+    "Rendered frames return to TouchDesigner through shared memory or, on Windows, a Direct3D shared texture.",
+    "Info CHOP and Info DAT expose load state, browser process status, versions, current URL/title, errors, and update counts.",
+    "Multiple TouchDesigner Web Render processes may be spawned for a single Web Render TOP."
+  ]
+}

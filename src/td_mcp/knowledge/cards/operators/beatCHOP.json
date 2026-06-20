@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "beatCHOP",
+  "family": "CHOP",
+  "display_name": "Beat CHOP",
+  "docs_url": "https://docs.derivative.ca/Beat_CHOP",
+  "summary": "Generates BPM-synchronized ramps, pulses, counters, bar/beat/sixteenth channels, and related timing outputs for rhythmic control systems.",
+  "key_params": [
+    {"name": "op", "type": "OP", "note": "Reference operator for timing"},
+    {"name": "reftimeslice", "type": "Toggle", "note": "Use reference time-slice behavior"},
+    {"name": "playmode", "type": "Menu", "note": "Locked-to-timeline, locked-to-global, or local sequential timing"},
+    {"name": "period", "type": "Float", "note": "Beat period/multiplier base"},
+    {"name": "multiples", "type": "Float", "note": "Generate multiple delayed timing channels"},
+    {"name": "shiftoffset", "type": "Float", "note": "Timing offset"},
+    {"name": "resetcondition", "type": "Menu", "note": "Input edge/level condition that resets timing"},
+    {"name": "resetwait", "type": "Toggle", "note": "Wait after reset until next bar"},
+    {"name": "bpm", "type": "Toggle", "note": "Output BPM channel"}
+  ],
+  "key_concepts": [
+    "BPM-synchronized ramps, pulses, and counters",
+    "Beat Dialog and global tempo source",
+    "reference Component Time",
+    "Locked to Timeline, Locked to Global, and Local Sequential play modes",
+    "period and multiples for delayed ramps",
+    "Reset parameters for phase control"
+  ],
+  "common_gotchas": [
+    "Play mode determines whether timing follows the timeline, global beat, or local sequential state.",
+    "Reset behavior can hold channels at zero depending on Wait After Reset.",
+    "Generated ramps and pulses are control signals, not audio-rate oscillators.",
+    "Use Ableton Link CHOP when beat timing should follow external Link peers."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-17"
+}

@@ -1,0 +1,44 @@
+{
+  "card_type": "operator",
+  "op_type": "sortPOP",
+  "family": "POP",
+  "display_name": "Sort POP",
+  "docs_url": "https://docs.derivative.ca/Sort_POP",
+  "summary": "Sorts point and/or primitive lists by attribute, random seed, proximity to a point, along a vector, or relative to an object's Z axis. It can also reverse or circularly shift the sorted order.",
+  "key_params": [
+    {"name": "ptmethod", "type": "Menu", "note": "Point sorting method"},
+    {"name": "pointattr", "type": "Str", "note": "Attribute used for point sorting"},
+    {"name": "pointuint", "type": "Menu", "note": "Unsigned integer width hint for point attribute sorting"},
+    {"name": "pointseed", "type": "Int", "note": "Seed for random point sorting"},
+    {"name": "pointprox", "type": "Float3", "note": "Point used for proximity sorting"},
+    {"name": "pointdir", "type": "Float3", "note": "Vector used for along-vector sorting"},
+    {"name": "pointobj", "type": "COMP", "note": "Object used for relative Z-axis sorting"},
+    {"name": "pointrev", "type": "Toggle", "note": "Reverse sorted point order"},
+    {"name": "pointshift", "type": "Toggle", "note": "Enable circular point-order shift"},
+    {"name": "pointoffset", "type": "Int", "note": "Circular point-order shift offset"},
+    {"name": "primmethod", "type": "Menu", "note": "Primitive sorting method"},
+    {"name": "primattr", "type": "Str", "note": "Attribute used for primitive sorting"},
+    {"name": "primuint", "type": "Menu", "note": "Unsigned integer width hint for primitive attribute sorting"},
+    {"name": "primseed", "type": "Int", "note": "Seed for random primitive sorting"},
+    {"name": "primprox", "type": "Float3", "note": "Point used for primitive proximity sorting"},
+    {"name": "primdir", "type": "Float3", "note": "Vector used for primitive along-vector sorting"},
+    {"name": "primobj", "type": "COMP", "note": "Object used for primitive relative Z-axis sorting"},
+    {"name": "primrev", "type": "Toggle", "note": "Reverse sorted primitive order"},
+    {"name": "primshift", "type": "Toggle", "note": "Enable circular primitive-order shift"},
+    {"name": "primoffset", "type": "Int", "note": "Circular primitive-order shift offset"}
+  ],
+  "key_concepts": [
+    "Sorts the point list and/or primitive list by attributes, position, proximity, vector projection, object Z-axis, random order, or circular shift.",
+    "Point sorting and primitive sorting are configured separately on their own pages.",
+    "Sorting by unsigned integer attributes can use width hints to reduce GPU sorting passes.",
+    "Reverse and shift controls reorder already-sorted point or primitive lists without changing attribute values."
+  ],
+  "common_gotchas": [
+    "Sorting changes indices and invalidates assumptions in existing groups, neighbor arrays, and point-index attributes.",
+    "Unsigned-integer width hints reduce GPU sort passes only when the attribute truly fits the declared range.",
+    "Random sort is deterministic by seed, so preserve seed values in generated repeatable systems."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

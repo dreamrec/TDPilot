@@ -1,0 +1,149 @@
+{
+  "card_type": "operator",
+  "op_type": "circleTOP",
+  "family": "TOP",
+  "display_name": "Circle TOP",
+  "docs_url": "https://docs.derivative.ca/Circle_TOP",
+  "summary": "Generates circles, ellipses, arcs, and polygonal disks with independent fill, border, alpha, antialiasing, and compositing controls.",
+  "key_params": [
+    {
+      "name": "radius",
+      "type": "XY",
+      "note": "Circle or ellipse radius"
+    },
+    {
+      "name": "radiusunit",
+      "type": "Menu",
+      "note": "Units for radius"
+    },
+    {
+      "name": "rotate",
+      "type": "Float",
+      "note": "Shape rotation"
+    },
+    {
+      "name": "center",
+      "type": "XY",
+      "note": "Shape center"
+    },
+    {
+      "name": "centerunit",
+      "type": "Menu",
+      "note": "Units for center"
+    },
+    {
+      "name": "justifyh",
+      "type": "Menu",
+      "note": "Horizontal justification"
+    },
+    {
+      "name": "justifyv",
+      "type": "Menu",
+      "note": "Vertical justification"
+    },
+    {
+      "name": "fillcolor",
+      "type": "RGB",
+      "note": "Fill color"
+    },
+    {
+      "name": "fillalpha",
+      "type": "Float",
+      "note": "Fill alpha"
+    },
+    {
+      "name": "border",
+      "type": "RGB",
+      "note": "Border color"
+    },
+    {
+      "name": "borderalpha",
+      "type": "Float",
+      "note": "Border alpha"
+    },
+    {
+      "name": "bgcolor",
+      "type": "RGBA",
+      "note": "Background color"
+    },
+    {
+      "name": "bgalpha",
+      "type": "Float",
+      "note": "Background alpha"
+    },
+    {
+      "name": "multrgbbyalpha",
+      "type": "Toggle",
+      "note": "Premultiply RGB by alpha"
+    },
+    {
+      "name": "borderwidth",
+      "type": "Float",
+      "note": "Border width"
+    },
+    {
+      "name": "borderwidthunit",
+      "type": "Menu",
+      "note": "Units for border width"
+    },
+    {
+      "name": "arcangle",
+      "type": "XY",
+      "note": "Begin and end arc cut angles"
+    },
+    {
+      "name": "antialias",
+      "type": "Toggle",
+      "note": "Antialias shape edges"
+    },
+    {
+      "name": "softness",
+      "type": "Float",
+      "note": "Edge softness"
+    },
+    {
+      "name": "ispolygon",
+      "type": "Toggle",
+      "note": "Render as polygon"
+    },
+    {
+      "name": "sides",
+      "type": "Int",
+      "note": "Polygon side count"
+    },
+    {
+      "name": "compoverinput",
+      "type": "Toggle",
+      "note": "Composite over input image"
+    },
+    {
+      "name": "operand",
+      "type": "Menu",
+      "note": "Composite operation when using input"
+    },
+    {
+      "name": "swaporder",
+      "type": "Toggle",
+      "note": "Swap composite order"
+    }
+  ],
+  "common_gotchas": [
+    "Polygon mode uses only the X radius, so Y radius changes will not shape the polygon as expected.",
+    "Arc parameters describe the cut-out region, which can feel inverted during setup.",
+    "Premultiplying RGB by alpha changes downstream compositing results.",
+    "Operand and swap order matter whenever the generated shape composites over an input."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Circle TOP generates filled circles, ellipses, arcs, and N-sided polygons.",
+    "Radius and center units can be pixels, fraction, or fraction aspect depending on parameter choice.",
+    "Fill, border, background, and alpha controls are independent.",
+    "Arc angles cut out a region of the circle rather than only rotating a full disk.",
+    "Polygon mode uses the X radius to define the polygon and preserves the requested side count.",
+    "It can composite the generated shape over an input using blend operation controls."
+  ]
+}

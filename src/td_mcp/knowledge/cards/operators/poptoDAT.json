@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "poptoDAT",
+  "family": "DAT",
+  "display_name": "POP to DAT",
+  "docs_url": "https://docs.derivative.ca/POP_to_DAT",
+  "summary": "Converts POP point, vertex, primitive, or detail attributes into a table DAT for inspection, debugging, export, and CPU-side workflows.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable conversion from the referenced POP"},
+    {"name": "pop", "type": "POP", "note": "Source POP"},
+    {"name": "downloadtype", "type": "Menu", "note": "Immediate slow or next-frame fast GPU-to-CPU download"},
+    {"name": "extract", "type": "Menu", "note": "Points, vertices, primitives, or detail data"},
+    {"name": "attrib", "type": "String", "note": "Attribute names to include"},
+    {"name": "thinstep", "type": "Int", "note": "Display every Nth element for large datasets"},
+    {"name": "group", "type": "String", "note": "Optional group filter"}
+  ],
+  "key_concepts": [
+    "POP attributes to DAT table",
+    "points, vertices, primitives, or detail extraction",
+    "one row per element",
+    "one column per attribute component",
+    "primitive type column",
+    "Transpose table readability mode",
+    "GPU-to-CPU download timing"
+  ],
+  "common_gotchas": [
+    "GPU-to-CPU transfers can stall; prefer Next Frame download unless same-frame inspection is required.",
+    "Large POP datasets should be thinned or filtered before display to keep DATs responsive.",
+    "Attribute names and group filters must match POP attributes/groups exactly."
+  ],
+  "related_snippets": ["POP_snippets", "DAT_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

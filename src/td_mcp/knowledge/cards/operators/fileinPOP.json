@@ -1,0 +1,31 @@
+{
+  "card_type": "operator",
+  "op_type": "fileinPOP",
+  "family": "POP",
+  "display_name": "File In POP",
+  "docs_url": "https://docs.derivative.ca/File_In_POP",
+  "summary": "Reads geometry files into POP GPU memory, including OBJ, PLY, TOG, Houdini classic formats, and supported network URLs. It maps file geometry, colors, normals, texture coordinates, faces, line strips, and point data into POP attributes and primitives.",
+  "key_params": [
+    {"name": "file", "type": "File", "note": "Geometry file path or supported URL"},
+    {"name": "flipfacing", "type": "Toggle", "note": "Flip primitive face orientation"},
+    {"name": "refresh", "type": "Toggle", "note": "Enable refresh/reload behavior"},
+    {"name": "refreshpulse", "type": "Pulse", "note": "Force file reload"},
+    {"name": "inputcolorspace", "type": "Menu", "note": "Color space interpretation for incoming color data"},
+    {"name": "inputreferencewhite", "type": "Menu", "note": "Reference white for incoming color data"}
+  ],
+  "key_concepts": [
+    "File In POP reads supported geometry files or supported network URLs and converts the contents into a POP in GPU memory.",
+    "OBJ imports support faces and line strips with texture coordinates and normals; polygons with more than three sides are triangulated.",
+    "PLY imports map vertex color fields into point Color and convert three- or four-sided faces to triangles/quads, while larger faces become closed line strips.",
+    "Refresh and Refresh Pulse control explicit file reloads, which is important when external files change while the network is running.",
+    "Input color-space and reference-white controls define how imported color attributes are interpreted before downstream POP processing."
+  ],
+  "common_gotchas": [
+    "OBJ polygons with more than three sides are triangulated; PLY faces with more than four sides can become closed line strips.",
+    "Network URLs are supported only for supported file types and reachable paths.",
+    "Reload pulses are needed when external files change but the node does not automatically re-read them."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

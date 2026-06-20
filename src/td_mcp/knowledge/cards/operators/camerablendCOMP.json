@@ -1,0 +1,38 @@
+{
+  "card_type": "operator",
+  "op_type": "camerablendCOMP",
+  "family": "COMP",
+  "display_name": "Camera Blend COMP",
+  "docs_url": "https://docs.derivative.ca/Camera_Blend_COMP",
+  "summary": "Blends, sequences, or constrains camera/object transforms and camera viewing settings from multiple input Camera COMPs, letting a build animate between camera rigs without hand-copying transform channels.",
+  "key_params": [
+    {"name": "parenttype", "type": "Menu", "note": "Blend, Sequence, or Constrain method for combining input parent transforms"},
+    {"name": "sequence", "type": "Float", "note": "Selects the active input when using Sequence or Constrain mode"},
+    {"name": "reset", "type": "Integer", "note": "Frame at which constrain mode resets its relative transform"},
+    {"name": "blendw1", "type": "Float", "note": "Weight for the first input in Blend mode"},
+    {"name": "blendm1", "type": "Mask", "note": "Components of the first input transform used during blending"},
+    {"name": "blendw2", "type": "Float", "note": "Weight for the second input in Blend mode"},
+    {"name": "blendm2", "type": "Mask", "note": "Components of the second input transform used during blending"},
+    {"name": "noffset", "type": "Float", "note": "Normal offset when exactly three parents form a triangular plane"},
+    {"name": "axesorient", "type": "Toggle", "note": "Orient local axes from the first three input parents"},
+    {"name": "shortrot", "type": "Toggle", "note": "Use short quaternion rotation blending for two-input blends"}
+  ],
+  "key_concepts": [
+    "Camera Blend COMP blends object transforms and camera viewing settings from multiple Camera COMPs into one camera output.",
+    "Camera inputs are wired from Camera COMP bottom connectors into the Camera Blend COMP top inputs.",
+    "Blend mode combines up to the first four inputs using matching weight and mask parameters.",
+    "Sequence and Constrain modes select an input parent over time, with Constrain preserving relative transform until the reset frame.",
+    "When non-Camera COMPs are connected, the Camera Blend COMP uses its own View and Background pages for camera settings."
+  ],
+  "common_gotchas": [
+    "Inputs come from the bottom connector of Camera COMPs into the Camera Blend COMP top inputs.",
+    "Blend mode only uses up to the first four inputs with the corresponding weight and mask parameters.",
+    "When non-Camera COMPs are connected, the Camera Blend COMP uses its own View and Background parameter pages for camera settings.",
+    "In Sequence mode, values outside the input range can behave like unparenting the child.",
+    "Constrain mode maintains relative transform as the parent changes and depends on the reset frame for predictable reset behavior.",
+    "Short rotation only applies to two-input quaternion blending cases."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ camera transform blending and sequencing",
+  "last_verified": "2026-06-18"
+}

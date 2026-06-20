@@ -4,19 +4,35 @@
   "family": "COMP",
   "display_name": "Light COMP",
   "docs_url": "https://docs.derivative.ca/Light_COMP",
-  "summary": "Defines a light source for 3D rendering. Supports Point, Directional, Spot, and Cone light types with color, intensity, and shadow controls.",
+  "summary": "Defines a light source for 3D rendering, with point, cone, and distant light modes plus color, dimmer, attenuation, projector-map, shadow, and light-view controls.",
   "key_params": [
-    {"name": "lighttype", "type": "Menu", "note": "Light type: Point, Directional, Spot, Cone"},
-    {"name": "dimmer", "type": "Float", "note": "Light intensity multiplier (0-1+)"},
-    {"name": "lightcolorr", "type": "Float", "note": "Light color red channel"},
-    {"name": "tx", "type": "Float", "note": "Light position X"},
-    {"name": "shadowtype", "type": "Menu", "note": "Shadow mode: Off, Static, Dynamic"}
+    {"name": "c", "type": "RGB", "note": "Light color"},
+    {"name": "dimmer", "type": "Float", "note": "Light intensity multiplier; values below .001 are ignored by Render TOP lighting"},
+    {"name": "lighttype", "type": "Menu", "note": "Point, Cone, or Distant light behavior"},
+    {"name": "coneangle", "type": "Float", "note": "Full-intensity cone angle for cone lights"},
+    {"name": "conedelta", "type": "Float", "note": "Outer falloff angle for cone lights"},
+    {"name": "attenuated", "type": "Toggle", "note": "Enable distance-based attenuation"},
+    {"name": "projmap", "type": "TOP", "note": "Projector map TOP for light projection"},
+    {"name": "shadowtype", "type": "Menu", "note": "Off, hard mapped, soft mapped, or custom shadow map mode"},
+    {"name": "shadowcasters", "type": "COMP list", "note": "Geometry COMPs that cast shadows from this light"},
+    {"name": "projection", "type": "Menu", "note": "Projection mode when viewing through the light"}
+  ],
+  "key_concepts": [
+    "Light COMP casts light into 3D scenes and can also be used as a camera-like view into the scene.",
+    "Point lights radiate in all directions, cone lights behave like spotlights with cone and falloff controls, and distant lights use direction while ignoring position.",
+    "Dimmer changes intensity without changing hue, and values below .001 let Render TOP skip the light's compute cost.",
+    "Distance attenuation, projector maps, two-sided lighting options, and Light Mask controls shape how geometry receives the light.",
+    "Shadow settings render a depth-only shadow map used by Render TOP, with hard, soft, or custom shadow-map modes."
   ],
   "common_gotchas": [
     "Lights must be listed in the Render TOP's 'lights' parameter to take effect.",
-    "Dynamic shadows are expensive — use static shadows or limit shadow-casting geometry for performance."
+    "Distant lights ignore position and use direction only, which can surprise rigs that animate light translation.",
+    "Cone Angle and Cone Delta jointly control spotlight shape; outside the cone delta no more cone light is cast.",
+    "Dimmer values below .001 are ignored for compute, so a nearly off light may disappear from render contribution.",
+    "Shadow maps require shadow casters and matching Render TOP support; soft shadows increase sampling cost.",
+    "Projector maps use their own extend, filter, anisotropy, and projection settings, separate from ordinary material textures."
   ],
-  "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ 3D scene lights, projector maps, and shadows",
+  "last_verified": "2026-06-18"
 }

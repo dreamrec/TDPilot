@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "bulletsolverCHOP",
+  "family": "CHOP",
+  "display_name": "Bullet Solver CHOP",
+  "docs_url": "https://docs.derivative.ca/Bullet_Solver_CHOP",
+  "summary": "Outputs solved Bullet Dynamics transform, velocity, body, actor, active, and collision channels from a Bullet Solver COMP or Actor COMP.",
+  "key_concepts": [
+    "Reads solved results from a Bullet Dynamics system by referencing either a Bullet Solver COMP for the full system or an Actor COMP for one actor.",
+    "Outputs actor_id, body_id, active state, optional collision fields, transforms, scale, linear velocity, and angular velocity channels.",
+    "Collision Info adds colliding_actor_id, colliding_body_id, and total collision channels, and requires Perform Contact Test on the Bullet Solver COMP.",
+    "Transform Space chooses whether translation and rotation outputs are relative to world, the Bullet Solver COMP, or the Actor COMP.",
+    "The CHOP can be fed back through Bullet Solver COMP or Actor COMP feedback so modified channel values are injected at the next simulation step."
+  ],
+  "key_params": [
+    {"name": "comp", "type": "COMP", "note": "Bullet Solver COMP or Actor COMP to inspect"},
+    {"name": "xformspace", "type": "Menu", "note": "Transform space for output translation/rotation/scale"},
+    {"name": "collisioninfo", "type": "Toggle", "note": "Include collision-related output channels"},
+    {"name": "trans", "type": "Toggle", "note": "Output t[xyz] translation channels"},
+    {"name": "rot", "type": "Toggle", "note": "Output r[xyz] rotation channels"},
+    {"name": "scale", "type": "Toggle", "note": "Output s[xyz] scale channels"},
+    {"name": "linvel", "type": "Toggle", "note": "Output linear velocity channels"},
+    {"name": "angvel", "type": "Toggle", "note": "Output angular velocity channels"},
+    {"name": "rate", "type": "Float", "note": "Sample rate for output CHOP data"}
+  ],
+  "common_gotchas": [
+    "This CHOP is not a solver by itself; it reads a Bullet Solver COMP or Actor COMP.",
+    "Collision IDs map back to actor/body IDs, so downstream logic should keep those ID channels.",
+    "When used as Bullet feedback, modified CHOP values are injected at the start of the next simulation time step.",
+    "Choose world, solver, or actor transform space deliberately before exporting transforms.",
+    "Feedback loops can destabilize the simulation if rates, scopes, or body counts drift."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

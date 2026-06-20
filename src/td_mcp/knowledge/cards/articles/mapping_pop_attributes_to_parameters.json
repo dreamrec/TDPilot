@@ -1,0 +1,46 @@
+{
+  "card_type": "article",
+  "article_id": "mapping_pop_attributes_to_parameters",
+  "title": "Mapping POP Attributes to Parameters",
+  "family": "POP",
+  "families": [
+    "POP",
+    "PARAMETER",
+    "GPU"
+  ],
+  "summary": "Official Derivative page for POP Map pages, covering per-point attribute-driven parameters, Transform POP examples, Combine Operation modes, Sequential Blocks, and pulling mapped attributes from inputs such as _in0.",
+  "source_url": "https://docs.derivative.ca/Mapping_POP_Attributes_to_Parameters",
+  "docsbrain_page_id": "mapping_pop_attributes_to_parameters",
+  "covered_operators": [
+    "transformPOP",
+    "blendPOP",
+    "noisePOP",
+    "randomPOP",
+    "linesmoothPOP"
+  ],
+  "key_concepts": [
+    "Map page",
+    "Transform POP",
+    "Attributes",
+    "Combine Operation",
+    "Add",
+    "Multiply",
+    "Set",
+    "Sequential Blocks",
+    "_in0",
+    "per-point parameter value",
+    "attribute component"
+  ],
+  "guidance": [
+    "Use this article when a POP plan needs parameter values to vary per point from POP attributes rather than remain a single uniform value.",
+    "On supported POP parameters, use the Map page to choose an attribute or attribute component and drive that parameter per point.",
+    "Use Combine Operation to Add, Multiply, or Set the attribute-driven value relative to the dialog parameter value.",
+    "Use Sequential Blocks when multiple attributes should map to multiple parameters in the same POP.",
+    "By default, mapped attributes can come from input _in0, with supported POPs exposing menus for valid attributes and target parameters."
+  ],
+  "related_snippets": [
+    "POP_snippets",
+    "POP_attribute_ontology"
+  ],
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,51 @@
+{
+  "card_type": "operator",
+  "op_type": "deformSOP",
+  "family": "SOP",
+  "display_name": "Deform SOP",
+  "docs_url": "https://docs.derivative.ca/Deform_SOP",
+  "summary": "Deforms captured geometry using point weights from Capture SOP and animated capture regions or skeleton objects.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Point and/or primitive group to deform."
+    },
+    {
+      "name": "delcaptatr",
+      "type": "Toggle",
+      "note": "Delete capture attributes after deformation."
+    },
+    {
+      "name": "delcolatr",
+      "type": "Toggle",
+      "note": "Delete capture color attributes after deformation."
+    },
+    {
+      "name": "donormal",
+      "type": "Toggle",
+      "note": "Deform normals as well as positions."
+    },
+    {
+      "name": "skelrootpath",
+      "type": "String",
+      "note": "Skeleton root path used to resolve capture transforms."
+    }
+  ],
+  "common_gotchas": [
+    "The input must contain compatible capture attributes or rig data.",
+    "Deleting capture attributes saves memory but prevents later deformation stages from reusing the weights.",
+    "`group` can refer to point and/or primitive groups, not only point groups."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "legacy-character-rig",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Deform SOP applies Capture SOP weights and animated capture regions or skeleton transforms to captured geometry.",
+    "Procedural SOP edits can be inserted between Capture and Deform as long as required capture attributes survive.",
+    "`delcaptatr` and `delcolatr` are cleanup options for reducing downstream attribute clutter after deformation.",
+    "`donormal` deforms normals along with positions, and `skelrootpath` resolves skeleton object transforms."
+  ]
+}

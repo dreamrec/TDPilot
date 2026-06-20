@@ -1,0 +1,114 @@
+{
+  "card_type": "operator",
+  "op_type": "udtoutDAT",
+  "family": "DAT",
+  "display_name": "UDT Out DAT",
+  "docs_url": "https://docs.derivative.ca/UDT_Out_DAT",
+  "summary": "Legacy DAT for sending information over UDT connections, with support for fast streaming, reliable messaging, and received reply messages.",
+  "key_params": [
+    {
+      "name": "protocol",
+      "type": "Menu",
+      "note": "Fast Streaming or Reliable Messaging UDT protocol"
+    },
+    {
+      "name": "port",
+      "type": "Integer",
+      "note": "Network port to send to"
+    },
+    {
+      "name": "shared",
+      "type": "Toggle",
+      "note": "Share the connection with compatible networking DATs"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Parse received replies one row per byte, line, or message"
+    },
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable the UDT connection"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "Callback DAT executed for received reply messages"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Limit retained output rows"
+    },
+    {
+      "name": "maxlines",
+      "type": "Integer",
+      "note": "Maximum retained rows when clamping"
+    },
+    {
+      "name": "bytes",
+      "type": "Toggle",
+      "note": "Output raw bytes in a separate column"
+    },
+    {
+      "name": "address",
+      "type": "String",
+      "note": "Network address for outgoing UDT traffic when required"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose the execution context for reply callbacks"
+    },
+    {
+      "name": "fromop",
+      "type": "OP Path",
+      "note": "Operator path used when Execute from is set to Specified Operator"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear accumulated reply rows"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language handling mode"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor file extension mode"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when extension mode uses a custom extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Node viewer word-wrap behavior"
+    }
+  ],
+  "common_gotchas": [
+    "UDT Out DAT was removed from TouchDesigner 2021 Official builds and later; avoid it for new networks.",
+    "Although it is an Out DAT, replies from destinations appear in the DAT contents.",
+    "Use udtoutDAT class methods or the send command to initiate output rather than expecting table input to auto-send.",
+    "Protocol choice must match the receiving UDT In DAT.",
+    "Windows firewall or OS network permissions can block UDT traffic."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "legacy UDT networking; removed in TouchDesigner 2021 Official builds and later",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "UDT Out DAT is a legacy sender for UDT fast streaming or reliable messaging connections.",
+    "Official docs mark it removed from TouchDesigner 2021 Official builds and later.",
+    "It can receive reply messages even though it is an Out DAT.",
+    "Use current TCP/IP, UDP, WebSocket, or WebRTC operators for new network designs unless maintaining old files."
+  ],
+  "notes": "Official docs mark UDT Out DAT as removed from TouchDesigner 2021 Official builds and later; keep it documented for legacy-file interpretation, not new-network planning."
+}

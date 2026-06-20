@@ -1,0 +1,52 @@
+{
+  "card_type": "article",
+  "article_id": "panel",
+  "title": "Panel",
+  "family": "PANEL",
+  "families": [
+    "PANEL",
+    "COMP",
+    "CHOP",
+    "DAT",
+    "TOP"
+  ],
+  "summary": "Official Derivative overview of Panels, also called Control Panels, covering how TouchDesigner builds custom graphical user interfaces from Panel Components, Text COMPs, TOPs, Panel Values, Panel CHOP, Panel Execute DAT, extensions, and Window COMP display.",
+  "source_url": "https://docs.derivative.ca/Panel",
+  "docsbrain_page_id": "panel",
+  "covered_operators": [
+    "containerCOMP",
+    "textCOMP",
+    "panelCHOP",
+    "panelexecuteDAT",
+    "windowCOMP"
+  ],
+  "key_concepts": [
+    "Panel",
+    "Control Panel",
+    "custom graphical user interface",
+    "Panel Component",
+    "Text COMPs",
+    "TOPs",
+    "Panel Execute DAT",
+    "Extensions",
+    "panelCOMP Class",
+    "Panel Values",
+    "Panel CHOP",
+    "Window COMP",
+    "floating window",
+    "fixed-position window",
+    "Pane type",
+    "Panel pane",
+    "Pane Bar",
+    "Open Viewer",
+    "Node Viewer"
+  ],
+  "guidance": [
+    "Use this article when a plan needs to explain what a Panel is, how a custom UI is composed, or which supporting operators drive panel look, feel, values, scripts, and display.",
+    "Use Text COMPs and TOPs for the visual look of a panel, then use Panel Component settings, Panel Execute DAT callbacks, extensions, PanelCOMP API access, and Panel CHOP channels for behavior.",
+    "Use Window COMP when the panel must appear in a floating or fixed-position monitor window.",
+    "While editing a panel, view it from a Panel Component context menu, by changing a pane type to Panel, or by opening the viewer from the Pane Bar inside a Panel component."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

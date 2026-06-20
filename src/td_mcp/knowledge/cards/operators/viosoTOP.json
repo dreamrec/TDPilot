@@ -1,0 +1,29 @@
+{
+  "card_type": "operator",
+  "op_type": "viosoTOP",
+  "family": "TOP",
+  "display_name": "Vioso TOP",
+  "docs_url": "https://docs.derivative.ca/Vioso_TOP",
+  "summary": "Loads VIOSO 6 calibration data from .vwf files for calibrated projector output workflows.",
+  "key_params": [
+    {"name": "configfile", "type": "File", "note": ".vwf file exported from VIOSO 6"},
+    {"name": "projectorindex", "type": "Integer", "note": "Output projector index in the calibration file"},
+    {"name": "outputresolution", "type": "Menu", "note": "Output resolution policy"}
+  ],
+  "common_gotchas": [
+    "Available only in TouchDesigner Pro.",
+    "Calibration results saved from OEM versions of VIOSO cannot be used, including .vwf and MPCDI files.",
+    "Use MPCDI TOP for MPCDI files exported from VIOSO when that format is appropriate.",
+    "Projector Index must match the desired projector entry in the calibration data.",
+    "Export a Wings/VIOSO .vwf calibration from VIOSO 6 for this TOP rather than pointing it at arbitrary calibration data."
+  ],
+  "related_snippets": ["TOP_snippets"],
+  "build_relevance": "projection_calibration",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Vioso TOP loads VIOSO 6 .vwf calibration files for projector warping and blending.",
+    "The configfile parameter points to the calibration export while projectorindex selects which projector entry to output.",
+    "MPCDI exports from VIOSO belong in MPCDI TOP rather than Vioso TOP.",
+    "The operator is a TouchDesigner Pro workflow and rejects OEM VIOSO calibration results."
+  ]
+}

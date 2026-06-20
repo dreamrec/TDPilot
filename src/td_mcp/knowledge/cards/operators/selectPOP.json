@@ -1,0 +1,28 @@
+{
+  "card_type": "operator",
+  "op_type": "selectPOP",
+  "family": "POP",
+  "display_name": "Select POP",
+  "docs_url": "https://docs.derivative.ca/Select_POP",
+  "summary": "Selects individual point, primitive, and vertex attributes from one POP input while leaving selected attribute data unchanged. It is useful for processing attributes in separate branches before recombining them with Attribute Combine POP.",
+  "key_params": [
+    {"name": "pop", "type": "POP", "note": "POP reference to select from"},
+    {"name": "pointattrscope", "type": "String", "note": "Point attribute scope to pass through"},
+    {"name": "primattrscope", "type": "String", "note": "Primitive attribute scope to pass through"},
+    {"name": "vertattrscope", "type": "String", "note": "Vertex attribute scope to pass through"}
+  ],
+  "key_concepts": [
+    "Passes selected point, primitive, and vertex attributes from one input or referenced POP.",
+    "Does not change point counts, primitive topology, vertices, or the data values of selected attributes.",
+    "Attribute selection is mostly a workflow isolation tool rather than a performance or memory optimization.",
+    "Commonly pairs with Attribute Combine POP after separate branches process different attribute subsets."
+  ],
+  "common_gotchas": [
+    "Select POP does not change point counts, topology, or selected attribute values.",
+    "Use Attribute Combine POP downstream when branches process different attributes separately.",
+    "A too-narrow scope can silently remove attributes needed by render, GLSL, or conversion stages."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

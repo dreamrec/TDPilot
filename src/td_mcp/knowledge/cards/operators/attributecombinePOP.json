@@ -1,0 +1,30 @@
+{
+  "card_type": "operator",
+  "op_type": "attributecombinePOP",
+  "family": "POP",
+  "display_name": "Attribute Combine POP",
+  "docs_url": "https://docs.derivative.ca/Attribute_Combine_POP",
+  "summary": "Combines attributes from multiple POP inputs by name or pattern and sends selected attributes to the output, with optional renaming, duplicate-name handling, and length-mismatch notifications.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Point, vertex, or primitive attributes to combine"},
+    {"name": "lengthmismatchnotif", "type": "Menu", "note": "Notification behavior for input length mismatch"},
+    {"name": "duplicateattrs", "type": "Menu", "note": "How duplicate attribute names are resolved"},
+    {"name": "input", "type": "Sequential", "note": "Input blocks that select sources and attributes"},
+    {"name": "input0attrs", "type": "String", "note": "Attribute scope for an input block"},
+    {"name": "input0renameto", "type": "String", "note": "Optional renamed output attribute"}
+  ],
+  "key_concepts": [
+    "Combines attributes from multiple POP inputs by selecting source POPs and attribute patterns per sequential input block.",
+    "The first input contributes its attributes to the output while later inputs contribute the selected point, vertex, or primitive class.",
+    "Duplicate attribute names are resolved by policy: auto-rename, keep first, keep last, or replace only attributes from the first input.",
+    "Length mismatch handling defines both notification severity and how shorter inputs supply missing values."
+  ],
+  "common_gotchas": [
+    "All attributes of the first input are sent to output; later inputs contribute only the chosen attribute class.",
+    "Length mismatch handling can hold, zero, one, or omit values for shorter inputs, so validate element counts.",
+    "Duplicate attribute policy affects whether first, last, or auto-incremented names survive."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

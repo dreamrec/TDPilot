@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "audiofilterCHOP",
+  "family": "CHOP",
+  "display_name": "Audio Filter CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_Filter_CHOP",
+  "summary": "Filters audio channels with low-pass, high-pass, band-pass, or band-reject behavior using frequency, resonance, and rolloff controls.",
+  "key_concepts": [
+    "Audio Filter CHOP removes high frequencies, low frequencies, both outside a band, or a selected mid-frequency range.",
+    "Filter Type chooses low-pass, high-pass, band-pass, or band-reject behavior.",
+    "Cutoff frequency is the half-power point where the filtered wave is reduced to half power.",
+    "Rolloff controls how sharply frequencies outside the pass band are reduced.",
+    "The second input can provide cutoff modulation channels for dynamic filter movement."
+  ],
+  "key_params": [
+    {"name": "drywet", "type": "Float", "note": "Blend filtered output with the dry input"},
+    {"name": "filter", "type": "Menu", "note": "Low-pass, high-pass, band-pass, or band-reject filter type"},
+    {"name": "units", "type": "Menu", "note": "Cutoff frequency unit scale"},
+    {"name": "logarithmic", "type": "Toggle", "note": "Use logarithmic cutoff controls"},
+    {"name": "frequency", "type": "Float", "note": "Cutoff or center frequency"},
+    {"name": "resonance", "type": "Float", "note": "Filter resonance"},
+    {"name": "roll", "type": "Float", "note": "Filter rolloff/slope"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice behavior"}
+  ],
+  "common_gotchas": [
+    "Frequency values depend on the chosen unit mode and source sample rate.",
+    "High resonance can create sharp peaks or clipping.",
+    "Band-pass and band-reject workflows often need gain compensation after filtering.",
+    "For graphic or parametric EQ workflows, Audio Band EQ or Audio Para EQ may be a better fit."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

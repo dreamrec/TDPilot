@@ -1,0 +1,48 @@
+{
+  "card_type": "operator",
+  "op_type": "oculusriftTOP",
+  "family": "TOP",
+  "display_name": "Oculus Rift TOP",
+  "docs_url": "https://docs.derivative.ca/Oculus_Rift_TOP",
+  "summary": "Outputs separate left/right eye textures to an Oculus Rift device after applying device-calibrated distortion.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Output image data to the device."
+    },
+    {
+      "name": "debugperfhud",
+      "type": "Menu",
+      "note": "Show off, latency, or render debug HUD in the headset."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "Official docs mark Oculus Rift TOP as Windows-only.",
+    "Requires two input textures, one for each eye.",
+    "Input imagery should already be rendered for left and right eye views before device distortion is applied.",
+    "Debug HUD is useful for latency/render timing checks but should be disabled for final viewing."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "VR_snippets"
+  ],
+  "build_relevance": "vr_output",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Connects to an Oculus Rift device and outputs headset imagery.",
+    "Applies distortion based on the device calibration parameters.",
+    "Uses separate input textures for each eye.",
+    "Debug HUD modes expose latency or render timing while testing headset output."
+  ]
+}

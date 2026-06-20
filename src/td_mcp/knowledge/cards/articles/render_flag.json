@@ -1,0 +1,44 @@
+{
+  "card_type": "article",
+  "article_id": "render_flag",
+  "title": "Render Flag",
+  "family": "RENDERING",
+  "families": [
+    "RENDERING",
+    "SOP",
+    "COMP",
+    "TOP"
+  ],
+  "summary": "Official Derivative glossary page for the Render Flag, the purple SOP/Geometry COMP flag that must be enabled alongside Render TOP Geometry parameter inclusion for geometry to render.",
+  "source_url": "https://docs.derivative.ca/Render_Flag",
+  "docsbrain_page_id": "render_flag",
+  "covered_operators": [
+    "renderTOP",
+    "renderpassTOP",
+    "geometryCOMP",
+    "cameraCOMP",
+    "lightCOMP",
+    "nullCOMP"
+  ],
+  "key_concepts": [
+    "Render Flag",
+    "purple flag",
+    "flag",
+    "SOP nodes",
+    "Geometry components",
+    "Render TOP",
+    "Render Pass TOP",
+    "SOP Render flag",
+    "Geometry component Render flag",
+    "Geometry parameter",
+    "Display Flag"
+  ],
+  "guidance": [
+    "Use this article when Render TOP output is empty because renderability is unclear.",
+    "Ensure all three conditions align: the SOP Render flag must be on, the containing Geometry component Render flag must be on, and the Geometry component must match the Render TOP Geometry parameter.",
+    "The Render Flag also applies to Render Pass TOP rendering through the same geometry inclusion model.",
+    "Do not confuse Display Flag visibility in viewers with Render Flag visibility in Render TOP output."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

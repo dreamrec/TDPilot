@@ -1,0 +1,48 @@
+{
+  "card_type": "article",
+  "article_id": "component_editor_dialog",
+  "title": "Component Editor Dialog",
+  "family": "COMP",
+  "families": [
+    "COMP",
+    "PARAMETER",
+    "PYTHON",
+    "DAT"
+  ],
+  "summary": "Official Derivative dialog reference for customizing components and Script Operators, covering custom parameters, page/parameter editing, Extension Code, Shortcuts and Tags, Storage, dragged-parameter reference or bind choices, and clipboard JSON workflows.",
+  "source_url": "https://docs.derivative.ca/Component_Editor_Dialog",
+  "docsbrain_page_id": "component_editor_dialog",
+  "covered_operators": [
+    "baseCOMP",
+    "containerCOMP",
+    "scriptDAT",
+    "parameterCOMP"
+  ],
+  "key_concepts": [
+    "Component Editor",
+    "Customize Component",
+    "Custom Parameters",
+    "Add Page",
+    "Add Par",
+    "Extension Code",
+    "Shortcuts and Tags",
+    "Storage",
+    "human readable JSON",
+    "Reference",
+    "Bind",
+    "enableExpr",
+    "menuNames",
+    "menuLabels"
+  ],
+  "guidance": [
+    "Use this article when a plan needs UI-level grounding for customizing a COMP or Script Operator rather than direct Python-only parameter creation.",
+    "The Component Editor is opened from Customize Component and covers custom parameters, extension code, shortcuts and tags, and storage.",
+    "Copying parameters produces human readable JSON that can be edited and pasted back into the Component Editor.",
+    "Dragging an existing parameter into the parameter list can create a Reference or Bind relationship to the new parameter.",
+    "Use the Storage section for direct inspection and editing of a component's storage dictionary, but prefer custom parameters for user-facing controls."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

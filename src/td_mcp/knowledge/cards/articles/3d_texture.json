@@ -1,0 +1,47 @@
+{
+  "card_type": "article",
+  "article_id": "3d_texture",
+  "title": "3D Texture",
+  "family": "TOP",
+  "families": [
+    "TOP",
+    "GLSL",
+    "MAT",
+    "GPU"
+  ],
+  "summary": "Official Derivative texturing page for 3D Textures, covering normalized u/v/w sampling, layer blending, first-slice center coordinates, 2025.30000+ all-slice TOP processing, Texture 3D TOP POffset handling, and Time Machine TOP consumption.",
+  "source_url": "https://docs.derivative.ca/3D_Texture",
+  "docsbrain_page_id": "3d_texture",
+  "covered_operators": [
+    "texture3dTOP",
+    "timemachineTOP",
+    "phongMAT",
+    "glslMAT",
+    "glslTOP"
+  ],
+  "key_concepts": [
+    "3D Texture",
+    "normalized u/v/w",
+    "stack of 2D textures",
+    "blend between slices",
+    "0.5 / NumberOfSlices",
+    "2025.30000+",
+    "Texture 3D TOP",
+    "POffset",
+    "newest slice",
+    "Phong MAT",
+    "Time Machine TOP"
+  ],
+  "guidance": [
+    "Use this article when a plan needs continuous sampling through a stack of texture slices or a 3D volume-like TOP.",
+    "Remember that W coordinates are normalized; W=0 is not the first slice center, so use 0.5 / NumberOfSlices for the first slice.",
+    "Expect a 3D Texture to blend between neighboring slices when W falls between layers.",
+    "In 2025.30000+ builds, many TOP operations can apply to all slices of a 3D Texture.",
+    "Preserve Texture 3D TOP offset information when materials or Time Machine TOP need newest-slice behavior; downstream TOP processing can lose POffset metadata."
+  ],
+  "related_snippets": [
+    "GLSL_snippets",
+    "TOP_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

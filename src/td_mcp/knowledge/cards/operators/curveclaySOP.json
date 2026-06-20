@@ -1,0 +1,76 @@
+{
+  "card_type": "operator",
+  "op_type": "curveclaySOP",
+  "family": "SOP",
+  "display_name": "Curveclay SOP",
+  "docs_url": "https://docs.derivative.ca/Curveclay_SOP",
+  "summary": "Deforms spline surfaces by using one or more faces or profiles as surface-manipulation handles rather than directly editing CVs.",
+  "key_params": [
+    {
+      "name": "facegroup",
+      "type": "String",
+      "note": "Faces/profiles used as deformation handles."
+    },
+    {
+      "name": "surfgroup",
+      "type": "String",
+      "note": "Spline surface group to deform."
+    },
+    {
+      "name": "divs",
+      "type": "Int",
+      "note": "Number of divisions used for deformation resolution."
+    },
+    {
+      "name": "sharp",
+      "type": "Float",
+      "note": "Sharpness of the deformation effect."
+    },
+    {
+      "name": "refine",
+      "type": "Int",
+      "note": "Refinement amount around affected regions."
+    },
+    {
+      "name": "deformop",
+      "type": "Menu",
+      "note": "Displacement/deformation operation."
+    },
+    {
+      "name": "deformlen",
+      "type": "Float",
+      "note": "Deformation length for displacement modes."
+    },
+    {
+      "name": "deforminside",
+      "type": "Toggle",
+      "note": "Apply deformation inside the projected region."
+    },
+    {
+      "name": "projop",
+      "type": "Menu",
+      "note": "Projection operation."
+    },
+    {
+      "name": "individual",
+      "type": "Toggle",
+      "note": "Treat handles individually where supported."
+    }
+  ],
+  "common_gotchas": [
+    "Curveclay does not support polygonal mesh deformation; use spline surfaces/faces.",
+    "Projection controls only apply in modes with the required projection inputs connected.",
+    "Wrapped or seam-crossing surfaces may require higher `divs` or refinement and can broaden the affected region."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Curveclay SOP deforms spline surfaces with faces or profiles used as manipulation handles.",
+    "The number of connected inputs changes the working mode: displacement, projection, or combined face/surface deformation.",
+    "Curveclay is for spline surfaces and faces, not polygonal meshes.",
+    "`divs`, `sharp`, and `refine` trade deformation quality against cook cost and localized refinement."
+  ]
+}

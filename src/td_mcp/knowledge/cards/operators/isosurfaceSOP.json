@@ -1,0 +1,97 @@
+{
+  "card_type": "operator",
+  "op_type": "isosurfaceSOP",
+  "family": "SOP",
+  "display_name": "Iso Surface SOP",
+  "docs_url": "https://docs.derivative.ca/Iso_Surface_SOP",
+  "summary": "Generates polygonal 3D isosurfaces from implicit functions sampled inside configurable bounds and divisions.",
+  "key_params": [
+    {
+      "name": "func",
+      "type": "String",
+      "note": "Implicit function expression evaluated with `me.curPos`."
+    },
+    {
+      "name": "min",
+      "type": "XYZ",
+      "note": "Minimum bound."
+    },
+    {
+      "name": "minx",
+      "type": "Float",
+      "note": "Minimum X bound."
+    },
+    {
+      "name": "miny",
+      "type": "Float",
+      "note": "Minimum Y bound."
+    },
+    {
+      "name": "minz",
+      "type": "Float",
+      "note": "Minimum Z bound."
+    },
+    {
+      "name": "max",
+      "type": "XYZ",
+      "note": "Maximum bound."
+    },
+    {
+      "name": "maxx",
+      "type": "Float",
+      "note": "Maximum X bound."
+    },
+    {
+      "name": "maxy",
+      "type": "Float",
+      "note": "Maximum Y bound."
+    },
+    {
+      "name": "maxz",
+      "type": "Float",
+      "note": "Maximum Z bound."
+    },
+    {
+      "name": "divs",
+      "type": "XYZ Int",
+      "note": "Sampling divisions."
+    },
+    {
+      "name": "divsx",
+      "type": "Int",
+      "note": "X divisions."
+    },
+    {
+      "name": "divsy",
+      "type": "Int",
+      "note": "Y divisions."
+    },
+    {
+      "name": "divsz",
+      "type": "Int",
+      "note": "Z divisions."
+    },
+    {
+      "name": "normals",
+      "type": "Toggle",
+      "note": "Compute normals on the surface."
+    }
+  ],
+  "common_gotchas": [
+    "The desired surface must be where the expression crosses zero.",
+    "Bounds that are too small clip or entirely miss the surface.",
+    "High division counts increase cost in three dimensions."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Iso Surface SOP creates polygonal surfaces from implicit functions whose value equals zero.",
+    "Official examples use `me.curPos` expressions to sample positions inside the volume.",
+    "Minimum and maximum bounds define the 3D search/clipping volume for the sampled surface.",
+    "`divs` controls polygon density in X, Y, and Z; cost grows volumetrically.",
+    "`normals` adds normals to the generated surface."
+  ]
+}

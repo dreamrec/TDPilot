@@ -1,0 +1,39 @@
+{
+  "card_type": "operator",
+  "op_type": "cycleCHOP",
+  "family": "CHOP",
+  "display_name": "Cycle CHOP",
+  "docs_url": "https://docs.derivative.ca/Cycle_CHOP",
+  "summary": "Repeats CHOP channels before and after their original interval and can blend cycle seams to make animation or audio loops smoother.",
+  "key_params": [
+    {"name": "before", "type": "Float", "note": "Number of cycles before the original input"},
+    {"name": "after", "type": "Float", "note": "Number of cycles after the original input"},
+    {"name": "mirror", "type": "Toggle", "note": "Mirror every other cycle"},
+    {"name": "extremes", "type": "Toggle", "note": "Blend the end of the CHOP into the start"},
+    {"name": "blendmethod", "type": "Menu", "note": "Preserve length, overlap, or insert blend region"},
+    {"name": "blendfunc", "type": "Menu", "note": "Blend shape such as linear, ease, cubic, add, or hold"},
+    {"name": "blendregion", "type": "Float", "note": "Blend region duration"},
+    {"name": "blendregionunit", "type": "Menu", "note": "Units for blend region"},
+    {"name": "blendbias", "type": "Float", "note": "Bias inside the blend region"},
+    {"name": "step", "type": "Float", "note": "Shift next cycle to begin where prior cycle ended"},
+    {"name": "stepscope", "type": "Pattern", "note": "Channels affected by Step"}
+  ],
+  "key_concepts": [
+    "Repeats input CHOP channels before and after their original interval, with fractional Cycles Before and Cycles After supported.",
+    "Mirror Cycles reverses every other generated cycle while leaving the first cycle unmirrored.",
+    "Blend Start to End can smooth the loop boundary; the official smooth-forever case depends on zero before/after cycles, a nonzero blend region, and Cycle extend conditions.",
+    "Blend Method changes the timing topology between preserving length, overlapping cycles, or inserting a blend region.",
+    "Blend Shape selects the interpolation or audio-oriented Add behavior used across the blended region.",
+    "Step and Step Scope offset selected channels so a later cycle begins where the previous cycle ended, which is useful for root-motion walk cycles."
+  ],
+  "common_gotchas": [
+    "Cycle CHOP does not magically make bad endpoints loop; use blend region, extremes, or source cleanup for visible seams.",
+    "Blend Start to End is useful with Cycle extend conditions when before/after are zero and a nonzero region is set.",
+    "The Add blend shape is useful for looping audio but can increase amplitude.",
+    "Step should usually be scoped to root-motion channels, not every animated channel.",
+    "Fractional cycle counts can change output interval expectations for downstream CHOPs."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

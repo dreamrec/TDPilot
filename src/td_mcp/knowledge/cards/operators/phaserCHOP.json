@@ -1,0 +1,46 @@
+{
+  "card_type": "operator",
+  "op_type": "phaserCHOP",
+  "family": "CHOP",
+  "display_name": "Phaser CHOP",
+  "docs_url": "https://docs.derivative.ca/Phaser_CHOP",
+  "summary": "Generates staggered 0-to-1 easing phases across multiple samples for time-offset animation interpolation.",
+  "key_concepts": [
+    "Phaser CHOP generates staggered phaser values between 0 and 1 for groups of animated samples or channels.",
+    "The first input is a single 0-to-1 control channel that drives the start-to-end cycle.",
+    "The optional second input supplies explicit per-sample phase positions; otherwise phases are distributed uniformly.",
+    "Edge controls how sharply separated or cohesive the staggered group is, with small values making sharper transitions.",
+    "Output Format chooses between multiple samples in one channel and multiple output channels.",
+    "Lookup CHOP is commonly used after Phaser CHOP to map the 0-to-1 phase values into animated channel groups."
+  ],
+  "key_params": [
+    {"name": "edge", "type": "Float", "note": "Controls cohesiveness/transition width of staggered group"},
+    {"name": "nsamples", "type": "Integer", "note": "Number of animated samples/objects"},
+    {"name": "outputformat", "type": "Menu", "note": "Output as channels or samples"},
+    {"name": "samples", "type": "MenuItem", "note": "Output multiple samples in a channel"},
+    {"name": "channels", "type": "Integer", "note": "Number of output channels when relevant"},
+    {"name": "extend", "type": "Menu", "note": "Clamp, cycle, or mirror slope behavior"},
+    {"name": "clamp", "type": "MenuItem", "note": "Clamp outside cycle"},
+    {"name": "cycle", "type": "MenuItem", "note": "Cycle phase"},
+    {"name": "mirror", "type": "MenuItem", "note": "Mirror phase between 0 and 1"},
+    {"name": "mirrorslope", "type": "MenuItem", "note": "Mirror phase and flip the slope"},
+    {"name": "add", "type": "MenuItem", "note": "Continue increasing or decreasing outside the 0-to-1 input range"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"}
+  ],
+  "common_gotchas": [
+    "The first input is expected to be one channel with values between 0 and 1 controlling the start-to-end cycle.",
+    "The output is one channel with multiple samples by default; each sample has a staggered easing phase.",
+    "The second input optionally supplies irregular phase values, typically N samples between 0 and 1.",
+    "Without a phase input, per-sample phase is distributed uniformly as i/N.",
+    "Use Lookup CHOP after Phaser CHOP to map 0-1 phase values into groups of animated channels.",
+    "Edge values strongly affect whether objects transition quickly and separately or slowly/in unison."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ staggered animation/easing",
+  "last_verified": "2026-06-18"
+}

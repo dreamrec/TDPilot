@@ -1,0 +1,208 @@
+{
+  "card_type": "operator",
+  "op_type": "sortSOP",
+  "family": "SOP",
+  "display_name": "Sort SOP",
+  "docs_url": "https://docs.derivative.ca/Sort_SOP",
+  "summary": "Reorders SOP points, primitives, and particles with separate sort families for random, offset, proximity, vector, object distance, and traversal workflows.",
+  "key_params": [
+    {
+      "name": "ptsort",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "pointseed",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "pointoffset",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "pointprox",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "pointproxx",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "pointproxy",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "pointproxz",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "pointobj",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "pointdir",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "pointdirx",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "pointdiry",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "pointdirz",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "primsort",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "primseed",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "primoffset",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "primprox",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "primproxx",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "primproxy",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "primproxz",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "primobj",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "primdir",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "primdirx",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "primdiry",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "primdirz",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "partsort",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "partreverse",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "partoffset",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "partprox",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "partproxx",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "partproxy",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "partproxz",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "partobj",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "partdir",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "partdirx",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "partdiry",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    },
+    {
+      "name": "partdirz",
+      "type": "Parameter",
+      "note": "Sort SOP official parameter"
+    }
+  ],
+  "common_gotchas": [
+    "Sorting changes point and primitive numbers, which can break downstream number-based assumptions.",
+    "Point and primitive order are independent; changing one does not fix the other.",
+    "Use Primitive SOP to sort vertices.",
+    "Closest Neighbour modes are expensive compared with simple axis or offset sorts."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "geometry-numbering-and-order-control",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Sort SOP sorts points separately from primitives and particles.",
+    "Vertex sorting belongs in Primitive SOP, not Sort SOP.",
+    "Point, primitive, and particle sort pages use separate official parameter families.",
+    "Particle sorting is per particle system and does not expose the same random-seed controls as points/primitives.",
+    "Closest-neighbor sorting is a slow nearest-search mode."
+  ]
+}

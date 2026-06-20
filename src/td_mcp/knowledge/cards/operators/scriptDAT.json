@@ -1,0 +1,57 @@
+{
+  "card_type": "operator",
+  "op_type": "scriptDAT",
+  "family": "DAT",
+  "display_name": "Script DAT",
+  "docs_url": "https://docs.derivative.ca/Script_DAT",
+  "summary": "Runs Python callbacks each time the DAT cooks to build or modify its output table from optional input tables and arbitrary project state.",
+  "key_params": [
+    {
+      "name": "callbacks",
+      "type": "DAT Path",
+      "note": "DAT containing cook, onPulse, and setupParameters callbacks"
+    },
+    {
+      "name": "setuppars",
+      "type": "Pulse",
+      "note": "Run setupParameters() to create or update custom parameters"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Choose input or node script language behavior"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Choose the edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom extension used when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "The cook callback runs every time the Script DAT cooks, so output-building code must clear and refill intentionally.",
+    "Script DAT can access arbitrary project state; TouchDesigner tracks dependencies dynamically and resets that dependency list when the toe restarts.",
+    "Hidden dependencies can make generated Script DATs recook when unrelated referenced operators or parameters change.",
+    "Use Script DAT when procedural table construction is needed; simpler Evaluate, Substitute, Insert, Sort, or Reorder DATs are safer for basic transforms."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "procedural-dat-table-callbacks",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Generates DAT contents from Python callback code.",
+    "Callbacks DAT defines the cook/generation logic for table or text output.",
+    "Setup Parameters can create custom parameters used by the script generator.",
+    "Common DAT extension and language controls affect editing and script interpretation."
+  ]
+}

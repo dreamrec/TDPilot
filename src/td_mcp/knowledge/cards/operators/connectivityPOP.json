@@ -1,0 +1,30 @@
+{
+  "card_type": "operator",
+  "op_type": "connectivityPOP",
+  "family": "POP",
+  "display_name": "Connectivity POP",
+  "docs_url": "https://docs.derivative.ca/Connectivity_POP",
+  "summary": "Reconnects an input point set into new primitives based on POP dimensions. It can create point primitives, lines, line strips, per-plane strips, zig-zag or spiral strips, triangles, alternating triangles, or quads without changing the source point attributes.",
+  "key_params": [
+    {"name": "surftype", "type": "Menu", "note": "Primitive connectivity to generate"},
+    {"name": "firstdim", "type": "Int", "note": "First dimension index used for connectivity"},
+    {"name": "seconddim", "type": "Int", "note": "Second dimension index for two-dimensional mesh modes"},
+    {"name": "firstdimclosed", "type": "Toggle", "note": "Wrap first dimension"},
+    {"name": "seconddimclosed", "type": "Toggle", "note": "Wrap second dimension"},
+    {"name": "reorderpoints", "type": "Toggle", "note": "Reorder points by primitive/vertex order"}
+  ],
+  "key_concepts": [
+    "Reconnects existing points into new primitives without creating a new point source.",
+    "Uses dimension metadata to build point primitives, lines, line strips, triangles, quads, zig-zags, or spirals.",
+    "First and second dimension indices choose which dimensions drive line or mesh connectivity.",
+    "Closed-dimension toggles wrap rows, columns, or slices so generated primitives connect across boundaries."
+  ],
+  "common_gotchas": [
+    "Connectivity POP relies on valid dimension metadata; use Dimension POP first when the point layout is ambiguous.",
+    "Reorder Points changes point indices and can invalidate index-based attributes or neighbor arrays.",
+    "Line strip, zig-zag, spiral, triangle, and quad modes imply very different downstream operators."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

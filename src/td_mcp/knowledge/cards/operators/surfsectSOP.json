@@ -1,0 +1,114 @@
+{
+  "card_type": "operator",
+  "op_type": "surfsectSOP",
+  "family": "SOP",
+  "display_name": "Surfsect SOP",
+  "docs_url": "https://docs.derivative.ca/Surfsect_SOP",
+  "summary": "Performs boolean operations between NURBS or Bezier surface sets, or generates profile curves where those spline surfaces intersect.",
+  "key_params": [
+    {
+      "name": "groupa",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    },
+    {
+      "name": "groupb",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    },
+    {
+      "name": "tol3d",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    },
+    {
+      "name": "tol2d",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    },
+    {
+      "name": "step",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    },
+    {
+      "name": "boolop",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    },
+    {
+      "name": "insidea",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    },
+    {
+      "name": "insideb",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    },
+    {
+      "name": "outsidea",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    },
+    {
+      "name": "outsideb",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    },
+    {
+      "name": "target",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    },
+    {
+      "name": "creategroupa",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    },
+    {
+      "name": "profilesa",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    },
+    {
+      "name": "creategroupb",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    },
+    {
+      "name": "profilesb",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    },
+    {
+      "name": "mindholes",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    },
+    {
+      "name": "join",
+      "type": "Parameter",
+      "note": "Surfsect SOP official parameter"
+    }
+  ],
+  "common_gotchas": [
+    "Surfsect is not a polygon Boolean replacement.",
+    "Normal direction controls inside/outside trim behavior.",
+    "Open input topology yields open output even in boolean modes.",
+    "Profile-only mode usually needs downstream Trim, Profile, or Bridge SOP handling.",
+    "mindholes changes intersections by ignoring already trimmed-out regions."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "spline-surface-boolean-and-profile-intersection",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Surfsect SOP performs boolean operations with NURBS and Bezier surfaces.",
+    "It can also generate only the profiles where surfaces intersect.",
+    "Input 0 is surface set A and input 1 is surface set B.",
+    "Closed A/B surface sets can produce closed CSG results, while open topology remains open.",
+    "Inside/outside trimming depends on surface normal direction."
+  ]
+}

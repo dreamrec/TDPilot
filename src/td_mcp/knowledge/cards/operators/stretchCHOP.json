@@ -1,0 +1,47 @@
+{
+  "card_type": "operator",
+  "op_type": "stretchCHOP",
+  "family": "CHOP",
+  "display_name": "Stretch CHOP",
+  "docs_url": "https://docs.derivative.ca/Stretch_CHOP",
+  "summary": "Preserves channel shape and sample rate while stretching or compressing samples into a new interval, with optional reverse playback.",
+  "key_concepts": [
+    "Stretch CHOP preserves channel shape and sampling rate while resampling data into a new interval.",
+    "All data in the selected range is stretched or compressed to the new start and end positions.",
+    "Interpolation controls how values are reconstructed when interval length changes.",
+    "Pulse Preserve is intended to keep single-sample pulses at their height and one-sample width.",
+    "Constant Area scales values so the area under the channel stays constant.",
+    "Reverse Interval reverses the sample order of each channel after interval handling."
+  ],
+  "key_params": [
+    {"name": "interp", "type": "Menu", "note": "No interpolation, linear, cubic, pulse preserve, or repeat samples"},
+    {"name": "nointerp", "type": "MenuItem", "note": "Use nearest-sample values"},
+    {"name": "linear", "type": "MenuItem", "note": "Use linear interpolation or averaging"},
+    {"name": "cubic", "type": "MenuItem", "note": "Use cubic interpolation"},
+    {"name": "edge", "type": "MenuItem", "note": "Pulse Preserve interpolation"},
+    {"name": "repeat", "type": "MenuItem", "note": "Repeat samples for integer-multiple lengths"},
+    {"name": "constarea", "type": "Toggle", "note": "Preserve area under the channel by scaling values"},
+    {"name": "relative", "type": "Menu", "note": "Absolute, relative to start/end, or relative to current frame"},
+    {"name": "abs", "type": "MenuItem", "note": "Interpret start/end as new absolute positions"},
+    {"name": "rel", "type": "MenuItem", "note": "Interpret start/end as shifts from old start/end"},
+    {"name": "cur", "type": "MenuItem", "note": "Interpret interval relative to current frame"},
+    {"name": "start", "type": "Float", "note": "New start position"},
+    {"name": "startunit", "type": "Menu", "note": "Start units"},
+    {"name": "end", "type": "Float", "note": "New end position"},
+    {"name": "endunit", "type": "Menu", "note": "End units"},
+    {"name": "scale", "type": "Float", "note": "Length scale after interval selection"},
+    {"name": "reverse", "type": "Toggle", "note": "Reverse sample order"}
+  ],
+  "common_gotchas": [
+    "Stretch CHOP preserves the sample rate; it changes interval timing.",
+    "Use Resample CHOP when the sample rate itself must change.",
+    "Cubic interpolation can oversmooth or ring around sharp transitions.",
+    "Pulse Preserve is safer for trigger channels that must remain one-sample pulses.",
+    "Constant Area changes amplitude to preserve total area, which may be surprising for control signals.",
+    "Reverse Interval flips sample order after interval handling.",
+    "Stretch CHOP changes interval timing but not sample-rate metadata."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ interval stretching and reverse playback",
+  "last_verified": "2026-06-18"
+}

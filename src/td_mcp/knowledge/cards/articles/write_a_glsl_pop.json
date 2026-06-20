@@ -1,0 +1,73 @@
+{
+  "card_type": "article",
+  "article_id": "write_a_glsl_pop",
+  "title": "Write a GLSL POP",
+  "family": "GLSL",
+  "families": [
+    "GLSL",
+    "POP",
+    "MAT",
+    "TOP"
+  ],
+  "summary": "Official Derivative guide for GLSL POP, GLSL Advanced POP, GLSL Copy POP, and POP buffer access from GLSL TOP/MAT, covering compute thread indexing, selected-class access, output attribute allocation and initialization, array/extra-output helpers, dimensions, groups, and advanced topology outputs.",
+  "source_url": "https://docs.derivative.ca/Write_a_GLSL_POP",
+  "docsbrain_page_id": "write_a_glsl_pop",
+  "covered_operators": [
+    "glslPOP",
+    "glsladvancedPOP",
+    "glslcopyPOP",
+    "glslselectPOP",
+    "topologyPOP",
+    "glslTOP",
+    "glslMAT"
+  ],
+  "key_concepts": [
+    "TDIndex",
+    "TDNumElements",
+    "TDIn_P",
+    "P[id]",
+    "Output Attributes",
+    "TDInPoint_*",
+    "TDInPrim_*",
+    "TDInVert_*",
+    "oTDPoint_*",
+    "output counts",
+    "index buffer",
+    "Initialize Output Attributes",
+    "Output Access",
+    "Read-Write",
+    "writeonly SSBO",
+    "atomic operations",
+    "TDInputNumPoints()",
+    "TDInputNumPrims()",
+    "TDInputNumVerts()",
+    "TDInputPointIndex()",
+    "cTDArraySize_Attrib",
+    "cTDArraySizePoint_Attrib",
+    "TDInputNumPoints_OutputName()",
+    "oTDPoint_OutputName_AttribName[]",
+    "TDCopyIndex()",
+    "TDTemplate_Attrib()",
+    "TDUpdatePointGroups()",
+    "TDDimension",
+    "TDUpdatePointGroups"
+  ],
+  "guidance": [
+    "Use this article when a plan needs GLSL POP compute shader source, selected-class attribute mutation, GLSL Advanced POP topology/output-count work, or GLSL Copy POP source/template access.",
+    "For GLSL POP Auto and related thread modes, guard writes with TDIndex and TDNumElements because dispatches can be rounded up to the workgroup size.",
+    "For P[id] writes, P must exist in the input or be created, and P must be selected in Output Attributes so the output buffer is allocated.",
+    "Output attributes are uninitialized unless Initialize Output Attributes is enabled or the shader writes every value; reading uninitialized values downstream can cause unpredictable behavior and crashes.",
+    "Set Output Access to Read-Write when output attributes must be read back or used for atomic operations; otherwise writeonly SSBO access is usually the safer intent.",
+    "In Manual number-of-threads mode, TDIndex and TDNumElements are undefined and cause compile errors, so use explicit dispatch coordinates or another thread mode.",
+    "Use TDInputNumPoints(), TDInputNumPrims(), TDInputNumVerts(), and TDInputPointIndex() when shader logic needs input counts or index-buffer point lookup.",
+    "Use cTDArraySize_Attrib / cTDArraySizePoint_Attrib constants for array attributes, and generated extra-output names such as TDInputNumPoints_OutputName() and oTDPoint_OutputName_AttribName[] for GLSL Advanced POP extra outputs.",
+    "For GLSL Copy POP point shaders, use TDCopyIndex(), TDTemplate_Attrib(), and TDUpdatePointGroups() when template-driven copies need per-copy attributes or group preservation.",
+    "Use GLSL Advanced POP instead of GLSL POP when the shader must read or write multiple classes, output new element counts, write index buffers, or use per primitive batch dispatch.",
+    "Use class-prefixed reads such as TDInPoint_*, TDInPrim_*, and TDInVert_* when reading attributes from a class other than the selected class."
+  ],
+  "related_snippets": [
+    "GLSL_snippets",
+    "POP_attribute_ontology"
+  ],
+  "last_verified": "2026-06-17"
+}

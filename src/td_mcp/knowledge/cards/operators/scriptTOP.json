@@ -1,0 +1,53 @@
+{
+  "card_type": "operator",
+  "op_type": "scriptTOP",
+  "family": "TOP",
+  "display_name": "Script TOP",
+  "docs_url": "https://docs.derivative.ca/Script_TOP",
+  "summary": "Generates TOP image data from Python callbacks, commonly by copying compatible NumPy arrays into the output texture.",
+  "key_params": [
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "Callback DAT containing the Script TOP Python hooks."
+    },
+    {
+      "name": "setuppars",
+      "type": "Pulse",
+      "note": "Run setupParameters() to create/update custom parameters."
+    },
+    {
+      "name": "modoutsidecook",
+      "type": "Toggle",
+      "note": "Allow the operator to be modified outside its cook."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "The callback DAT is the execution contract; missing or stale callbacks mean no useful generated image.",
+    "The official id is setuppars, not setupparams.",
+    "copyNumpyArray expects compatible array channel layout, commonly 3 or 4 channels.",
+    "Outside-cook modification must be enabled when writing to the TOP outside the cook lifecycle."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "DAT_snippets"
+  ],
+  "build_relevance": "python_image_generation",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Script TOP creates image data from Python rather than from a fixed built-in image operation.",
+    "The core output workflow is the callback DAT using copyNumpyArray with compatible 3- or 4-channel arrays.",
+    "Setup Parameters runs only when the setup pulse is triggered, so custom parameters should be deliberately regenerated.",
+    "Modifying the TOP outside its cook requires the official outside-cook modification toggle."
+  ]
+}

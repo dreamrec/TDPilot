@@ -1,0 +1,93 @@
+{
+  "card_type": "operator",
+  "op_type": "sortDAT",
+  "family": "DAT",
+  "display_name": "Sort DAT",
+  "docs_url": "https://docs.derivative.ca/Sort_DAT",
+  "summary": "Sorts table DAT rows or columns by a selected row/column name or index, with alphabetical, alphanumeric, numeric, random, unique, preserve-first, and reverse options.",
+  "key_params": [
+    {
+      "name": "sortmethod",
+      "type": "Menu",
+      "note": "Sort rows or columns by name/index, or preserve input order for post-processing"
+    },
+    {
+      "name": "name",
+      "type": "String",
+      "note": "Row or column name selector used by name-based sort modes"
+    },
+    {
+      "name": "index",
+      "type": "Integer",
+      "note": "Row or column index selector used by index-based sort modes"
+    },
+    {
+      "name": "order",
+      "type": "Menu",
+      "note": "Alphabetical, alphanumeric, numeric, or random sort order"
+    },
+    {
+      "name": "seed",
+      "type": "Integer",
+      "note": "Random seed used for random sorting"
+    },
+    {
+      "name": "ignorecase",
+      "type": "Toggle",
+      "note": "Ignore case for alphabetic sorts"
+    },
+    {
+      "name": "preservefirst",
+      "type": "Toggle",
+      "note": "Keep the first row or column in place"
+    },
+    {
+      "name": "unique",
+      "type": "Menu",
+      "note": "Remove duplicate row/column entries by single cell or entire row/column"
+    },
+    {
+      "name": "reverse",
+      "type": "Toggle",
+      "note": "Reverse the final sorted output"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "If the sort name is not found, the output is unsorted; if the index is -1 or out of bounds, the output is unsorted.",
+    "Alphabetical sorting treats numbers as characters; use alphanumeric or numeric sorting for natural numeric order.",
+    "Numeric sorting treats non-numeric characters as 0 while preserving incoming order for ties.",
+    "Unique Output changes row or column count and can break downstream fixed-index lookups.",
+    "Preserve First is commonly needed for headers but changes the effective sort domain."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "table-sorting-and-deduplication",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Sorts table DAT rows or columns.",
+    "Sort mode chooses row versus column sorting by name, index, or preserved input order.",
+    "Order can be alphabetical, numeric, or shuffled/randomized depending on settings.",
+    "Preserve First, Unique Output, and Reverse Output alter sorted table shape and ordering."
+  ]
+}

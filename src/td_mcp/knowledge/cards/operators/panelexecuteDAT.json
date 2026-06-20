@@ -1,0 +1,132 @@
+{
+  "card_type": "operator",
+  "op_type": "panelexecuteDAT",
+  "family": "DAT",
+  "display_name": "Panel Execute DAT",
+  "docs_url": "https://docs.derivative.ca/Panel_Execute_DAT",
+  "summary": "Runs Python callbacks when selected panel values on monitored Panel COMPs change state, including on/off edges, while-on/off, and value-change events.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable response to monitored panel components"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose script execution context for callbacks"
+    },
+    {
+      "name": "fromop",
+      "type": "OP Path",
+      "note": "Operator path used when Execute From is Specified Operator"
+    },
+    {
+      "name": "panels",
+      "type": "Panel COMP Pattern",
+      "note": "Panel components whose panel values should be monitored"
+    },
+    {
+      "name": "panelvalue",
+      "type": "Pattern",
+      "note": "Panel value names that trigger callbacks"
+    },
+    {
+      "name": "offtoon",
+      "type": "Toggle",
+      "note": "Run onOffToOn() when the panel value switches from off to on"
+    },
+    {
+      "name": "whileon",
+      "type": "Toggle",
+      "note": "Run whileOn() while the panel value is on"
+    },
+    {
+      "name": "ontooff",
+      "type": "Toggle",
+      "note": "Run onOnToOff() when the panel value switches from on to off"
+    },
+    {
+      "name": "whileoff",
+      "type": "Toggle",
+      "note": "Run whileOff() while the panel value is off"
+    },
+    {
+      "name": "valuechange",
+      "type": "Toggle",
+      "note": "Run onValueChange() when the panel value changes"
+    },
+    {
+      "name": "file",
+      "type": "File",
+      "note": "External callback source file path"
+    },
+    {
+      "name": "syncfile",
+      "type": "Toggle",
+      "note": "Synchronize DAT contents with the external file"
+    },
+    {
+      "name": "loadonstart",
+      "type": "Toggle",
+      "note": "Reload the file when the project starts"
+    },
+    {
+      "name": "loadonstartpulse",
+      "type": "Pulse",
+      "note": "Reload the file immediately"
+    },
+    {
+      "name": "write",
+      "type": "Toggle",
+      "note": "Write DAT contents to disk when the project is saved"
+    },
+    {
+      "name": "writepulse",
+      "type": "Pulse",
+      "note": "Write DAT contents to disk immediately"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "edit",
+      "type": "Pulse",
+      "note": "Open the callback DAT text in an external editor"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "While On and While Off callbacks execute every frame while the condition is true, so generated scripts need cheap idempotent bodies.",
+    "Each panel event fires only one trigger even if several related toggles are enabled for the same value change.",
+    "Callback methods receive a panelValue object; use panelValue.name and panelValue.val rather than assuming a fixed row shape.",
+    "Sync to File can write DAT edits to disk immediately and should be enabled only for intentional external-script workflows."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "panel-value-callbacks",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Runs scripts when monitored panel values change on selected Panel COMPs.",
+    "Trigger toggles map to panel callback methods such as off-to-on, while-on, on-to-off, while-off, and value-change.",
+    "Callbacks receive the changed panelValue object so scripts can inspect its name and value.",
+    "File and execute-location controls define where callback script text lives and runs."
+  ]
+}

@@ -4,19 +4,153 @@
   "family": "TOP",
   "display_name": "Text TOP",
   "docs_url": "https://docs.derivative.ca/Text_TOP",
-  "summary": "Renders text strings into a texture with control over font, size, color, alignment, and word-wrapping. Supports expressions and dynamic text via DAT references.",
+  "summary": "Renders text into a TOP image from direct text, DAT/spec DAT sources, Field COMP text, or CHOP value replacement, with font, layout, and compositing controls.",
   "key_params": [
-    {"name": "text", "type": "String", "note": "The text string to render; supports Python expressions with backtick syntax"},
-    {"name": "fontfile", "type": "String", "note": "Path to a .ttf or .otf font file"},
-    {"name": "fontsizex", "type": "Float", "note": "Font size in pixels"},
-    {"name": "alignx", "type": "Menu", "note": "Horizontal alignment: Left, Center, Right"},
-    {"name": "aligny", "type": "Menu", "note": "Vertical alignment: Top, Center, Bottom"}
+    {
+      "name": "text",
+      "type": "String",
+      "note": "Text string to render."
+    },
+    {
+      "name": "field",
+      "type": "COMP",
+      "note": "Field COMP source."
+    },
+    {
+      "name": "dat",
+      "type": "DAT",
+      "note": "DAT text source."
+    },
+    {
+      "name": "rowindex",
+      "type": "Integer",
+      "note": "DAT row index."
+    },
+    {
+      "name": "colindex",
+      "type": "Integer",
+      "note": "DAT column index."
+    },
+    {
+      "name": "specdat",
+      "type": "DAT",
+      "note": "Specification DAT source."
+    },
+    {
+      "name": "legacyparsing",
+      "type": "Toggle",
+      "note": "Deprecated legacy parsing behavior."
+    },
+    {
+      "name": "appendvalue",
+      "type": "Toggle",
+      "note": "Append CHOP value text."
+    },
+    {
+      "name": "chopvaluereplace",
+      "type": "Toggle",
+      "note": "Replace text with CHOP values."
+    },
+    {
+      "name": "chop",
+      "type": "CHOP",
+      "note": "CHOP used for value replacement/append."
+    },
+    {
+      "name": "wordwrap",
+      "type": "Toggle",
+      "note": "Enable word wrapping."
+    },
+    {
+      "name": "fontfile",
+      "type": "File",
+      "note": "TrueType/OpenType font file; disables the font menu."
+    },
+    {
+      "name": "font",
+      "type": "Menu",
+      "note": "Installed font selection."
+    },
+    {
+      "name": "charset",
+      "type": "Menu",
+      "note": "Unicode or symbol character set."
+    },
+    {
+      "name": "dispmethod",
+      "type": "Menu",
+      "note": "Automatic, polygon, stroke, bitmap, or scalable rendering."
+    },
+    {
+      "name": "antialias",
+      "type": "Menu",
+      "note": "Font antialiasing quality."
+    },
+    {
+      "name": "fontautosize",
+      "type": "Menu",
+      "note": "Font auto-size behavior."
+    },
+    {
+      "name": "fontsizex",
+      "type": "Float",
+      "note": "Font size X."
+    },
+    {
+      "name": "alignx",
+      "type": "Menu",
+      "note": "Horizontal alignment."
+    },
+    {
+      "name": "aligny",
+      "type": "Menu",
+      "note": "Vertical alignment."
+    },
+    {
+      "name": "resolution",
+      "type": "XY",
+      "note": "Output/custom image resolution."
+    },
+    {
+      "name": "fontcolor",
+      "type": "RGBA",
+      "note": "Rendered font color."
+    },
+    {
+      "name": "bgcolor",
+      "type": "RGBA",
+      "note": "Background color."
+    },
+    {
+      "name": "compoverinput",
+      "type": "Toggle",
+      "note": "Composite generated text over the input."
+    },
+    {
+      "name": "operand",
+      "type": "Menu",
+      "note": "Output blend/composite operation."
+    },
+    {
+      "name": "swaporder",
+      "type": "Toggle",
+      "note": "Swap composite input order."
+    }
   ],
   "common_gotchas": [
-    "Large font sizes with word-wrap can be slow — consider caching via a Cache TOP for static text.",
-    "For dynamic text, reference a DAT or use expressions; hard-coded text does not update at runtime."
+    "Legacy Parsing is deprecated; use expression-mode Python strings for escapes such as newline and tab.",
+    "Font File disables the installed-font menu and should point directly at a .ttf or .otf when portability matters.",
+    "Word wrap and auto-fit interact in two stages, so text can resize or wrap differently than expected.",
+    "Specification DAT column headers must use parameter names and each row can override placement/layout values.",
+    "Comp Over Input exposes full compositing behavior, including operand and swap-order controls."
   ],
   "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "build_relevance": "text_rendering",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Text TOP renders strings into an image and supports TrueType/OpenType fonts, Unicode text, and scalable Slug rendering.",
+    "Text can come from the Text parameter, a DAT cell, a Field COMP, a Specification DAT, or CHOP value replacement.",
+    "Specification DAT workflows use parameter-name column headers and pixel-position style per-row settings.",
+    "Font display method, antialiasing, auto-fit, alignment, tracking, borders, and output compositing all affect the generated texture."
+  ]
 }

@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "audiodynamicsCHOP",
+  "family": "CHOP",
+  "display_name": "Audio Dynamics CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_Dynamics_CHOP",
+  "summary": "Applies compressor, limiter, pre, and post dynamics processing to audio channels for gain control, limiting, and musical dynamics shaping.",
+  "key_concepts": [
+    "Audio Dynamics CHOP applies pre gain, compression, limiting, and post dry/wet processing to audio channels.",
+    "The compressor can use automatic gain control or other compression behavior depending on Compression Type.",
+    "A second side-chain input can determine the gain changes applied to the first input channels.",
+    "Compressor and limiter channel-linking settings decide whether channels are processed together or independently.",
+    "Specific Info CHOP channels expose compressor and limiter gain reduction, dB values, and timing diagnostics."
+  ],
+  "key_params": [
+    {"name": "inputgain", "type": "Float", "note": "Pre-compressor input gain"},
+    {"name": "enablecompressor", "type": "Toggle", "note": "Enable compressor stage"},
+    {"name": "compressiontype", "type": "Menu", "note": "Compression behavior such as automatic gain control or musical dynamics"},
+    {"name": "chanlinkingcomp", "type": "Menu", "note": "Compress channels together or independently"},
+    {"name": "ratiocompressor", "type": "Float", "note": "Compressor ratio"},
+    {"name": "kneecompressor", "type": "Float", "note": "Compressor knee"},
+    {"name": "enablelimiter", "type": "Toggle", "note": "Enable limiter stage"},
+    {"name": "chanlinkinglim", "type": "Menu", "note": "Limit channels together or independently"},
+    {"name": "kneelimiter", "type": "Float", "note": "Limiter knee"},
+    {"name": "drywet", "type": "Float", "note": "Blend processed dynamics output with the input"}
+  ],
+  "common_gotchas": [
+    "Channel linking changes stereo/surround image behavior; equal processing preserves balance while independent processing can shift it.",
+    "Compression and limiting can alter audio-reactive envelopes, not just audible loudness.",
+    "Dynamics processors depend on input level; normalize or meter before expecting stable behavior.",
+    "Use limiter carefully as a safety stage before Audio Device Out, not as a substitute for gain staging."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

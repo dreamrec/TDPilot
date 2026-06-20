@@ -1,0 +1,46 @@
+{
+  "card_type": "article",
+  "article_id": "point_class",
+  "title": "Point Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "SOP",
+    "GEOMETRY"
+  ],
+  "summary": "Official Derivative Python API reference for Point objects, covering SOP.points access, point index, owner, position AttributeData, coordinate aliases, normalized bounding-box position, dynamic attributes, and scriptSOP point destruction.",
+  "source_url": "https://docs.derivative.ca/Point_Class",
+  "docsbrain_page_id": "point_class",
+  "covered_operators": [
+    "pointSOP",
+    "scriptSOP",
+    "boxSOP",
+    "geoCOMP"
+  ],
+  "key_concepts": [
+    "Point Class",
+    "SOP.points",
+    "index",
+    "owner",
+    "P",
+    "AttributeData",
+    "x",
+    "y",
+    "z",
+    "normP",
+    "Point.uv",
+    "Point.N",
+    "destroy()",
+    "scriptSOP"
+  ],
+  "guidance": [
+    "Use this article when generated Python code traverses SOP.points and needs point-level position or attribute access.",
+    "Use P for the point coordinates as AttributeData, or x, y, and z as aliases for P[0], P[1], and P[2].",
+    "Use normP when a point's normalized position within the SOP bounding box is needed.",
+    "Treat geometry attributes as dynamic Point members, such as Point.uv or Point.N, only after confirming the attribute exists.",
+    "Do not use Point Class as a POP point iteration API; POP geometry is GPU-oriented and should be handled with POP Class and POP operator cards.",
+    "Use destroy() only for points owned by scriptSOP workflows; existing Point objects in the same SOP may become invalid afterward."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

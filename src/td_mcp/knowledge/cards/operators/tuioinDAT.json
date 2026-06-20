@@ -1,0 +1,93 @@
+{
+  "card_type": "operator",
+  "op_type": "tuioinDAT",
+  "family": "DAT",
+  "display_name": "TUIO In DAT",
+  "docs_url": "https://docs.derivative.ca/TUIO_In_DAT",
+  "summary": "Receives TUIO network packets and parses TUIO 1.1 or 2.0 OSC bundle data into table columns for multitouch and tangible-interface workflows.",
+  "key_params": [
+    {
+      "name": "protocol",
+      "type": "Menu",
+      "note": "UDP messaging, multicast UDP, or reliable UDT messaging"
+    },
+    {
+      "name": "address",
+      "type": "String",
+      "note": "Multicast address when using multicast protocol"
+    },
+    {
+      "name": "port",
+      "type": "Integer",
+      "note": "Port that accepts TUIO packets"
+    },
+    {
+      "name": "shared",
+      "type": "Toggle",
+      "note": "Share the network connection with compatible DATs"
+    },
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable receiving; data sent while inactive is lost"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "Callback DAT for TUIO events"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Where callback code executes from"
+    },
+    {
+      "name": "messages_pending",
+      "type": "Info CHOP",
+      "note": "Pending message count for diagnostics"
+    },
+    {
+      "name": "fromop",
+      "type": "OP Path",
+      "note": "Operator path used when Execute from is set to Specified Operator"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language handling mode"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor file extension mode"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when extension mode uses a custom extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Node viewer word-wrap behavior"
+    }
+  ],
+  "common_gotchas": [
+    "TUIO packets are OSC bundles; use OSC In DAT when raw OSC inspection is more useful than parsed TUIO rows.",
+    "Protocol and port must match the sending TUIO application or tracker.",
+    "The output table represents parsed object/cursor state, so session IDs and lifetimes matter downstream.",
+    "Callbacks execute once events are received; choose Execute from carefully when callback code uses relative paths.",
+    "Multicast setups need matching multicast address and local network/firewall permissions."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2021.10000+ TUIO 1.1/2.0 multitouch network ingest",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "TUIO In DAT receives network TUIO messages and parses them into table columns.",
+    "TUIO packets are OSC bundles, so OSC In DAT can show a more raw view of the same traffic.",
+    "The operator supports TUIO 1.1 and 2.0 workflows through UDP, multicast, or reliable messaging protocols.",
+    "Callbacks can run for TUIO events from the configured execution context."
+  ]
+}

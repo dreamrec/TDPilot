@@ -1,0 +1,44 @@
+{
+  "card_type": "article",
+  "article_id": "parameter_reference",
+  "title": "Parameter Reference",
+  "family": "PARAMETER",
+  "families": [
+    "PARAMETER",
+    "PYTHON",
+    "COMP",
+    "CHOP",
+    "DAT"
+  ],
+  "summary": "Official Derivative reference for one-way parameter references, covering source and reference parameters, right-click Yank/Put workflows, Python expressions, and how references differ from wires, exports, and binding.",
+  "source_url": "https://docs.derivative.ca/Parameter_Reference",
+  "docsbrain_page_id": "parameter_reference",
+  "covered_operators": [
+    "parameterDAT",
+    "parameterexecuteDAT",
+    "nullCHOP",
+    "selectDAT"
+  ],
+  "key_concepts": [
+    "Parameter Reference",
+    "Source Parameter",
+    "Reference Parameter",
+    "Yank Parameter",
+    "Put Yanked References",
+    "op('pattern1').par.phase",
+    "Link",
+    "expression",
+    "constraint"
+  ],
+  "guidance": [
+    "Use this article when a one-way expression relationship is preferable to a CHOP export or bidirectional bind.",
+    "A parameter reference is created by putting an expression in the reference parameter that points at the source parameter.",
+    "Right-click Yank Parameter and Put Yanked References workflows create expression-style links that should be represented as references in planning notes.",
+    "Generated expressions should account for missing source operators when project state is dynamic, because the reference parameter evaluates the expression at runtime.",
+    "Do not confuse parameter references with same-family wires; references are dashed links across operator families and parameter expressions."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

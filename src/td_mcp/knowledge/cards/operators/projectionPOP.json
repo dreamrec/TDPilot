@@ -1,0 +1,43 @@
+{
+  "card_type": "operator",
+  "op_type": "projectionPOP",
+  "family": "POP",
+  "display_name": "Projection POP",
+  "docs_url": "https://docs.derivative.ca/Projection_POP",
+  "summary": "Converts float3 spatial attributes such as P between Cartesian, spherical, cylindrical, screen-space, and normalized-device-coordinate systems, with configurable angle units and optional camera perspective context.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Attribute class to operate on"},
+    {"name": "group", "type": "Str", "note": "Optional group restriction"},
+    {"name": "inputattrscope", "type": "Str", "note": "Input float3 attribute or components to project"},
+    {"name": "fromcoordsys", "type": "Menu", "note": "Source coordinate system"},
+    {"name": "tocoordsys", "type": "Menu", "note": "Destination coordinate system"},
+    {"name": "angunit", "type": "Menu", "note": "Degrees, radians, cycles, or normalized angle units"},
+    {"name": "camera", "type": "COMP", "note": "Camera used for screen-space or NDC conversions"},
+    {"name": "aspectcorrectuv", "type": "Toggle", "note": "Respect aspect ratio for projection UVs"},
+    {"name": "aspect", "type": "Float2", "note": "Aspect ratio for camera projection"},
+    {"name": "fov", "type": "Float", "note": "Horizontal field of view for screen-space or NDC conversion"},
+    {"name": "depthnear", "type": "Float", "note": "Near clipping depth for NDC/screen conversion"},
+    {"name": "depthfar", "type": "Float", "note": "Far clipping depth for NDC/screen conversion"},
+    {"name": "outputattrscope", "type": "Str", "note": "Output attribute scope"},
+    {"name": "overrideautoattr", "type": "Toggle", "note": "Override automatic output attribute metadata"},
+    {"name": "attrtype", "type": "Menu", "note": "Output attribute data type"},
+    {"name": "attrnumcomps", "type": "Menu", "note": "Output attribute component count"},
+    {"name": "attrdefaultval", "type": "Float4", "note": "Default output attribute value"}
+  ],
+  "key_concepts": [
+    "Projection POP converts float3 spatial attributes between Cartesian, spherical, cylindrical, screen-space, and normalized device coordinate systems.",
+    "From Coordinate System describes how to interpret the input attribute components; To Coordinate System describes the output representation.",
+    "Angle Units affect spherical and cylindrical angular components and can be degrees, radians, cycles, or normalized 0-1 values.",
+    "Screen Space and NDC conversions require camera/perspective context such as camera, aspect, FOV, and near/far depth.",
+    "Output Attribute Scope and attribute metadata let planners preserve the original P while writing converted coordinates to a separate attribute.",
+    "Projection changes coordinate representation, so downstream nodes should know whether an attribute is Cartesian geometry, spherical coordinates, or screen/NDC space."
+  ],
+  "common_gotchas": [
+    "Screen Space and NDC conversions need camera and perspective settings; Cartesian-to-spherical conversions do not.",
+    "Normalized angle units are useful for texture mapping but differ from degrees, radians, and cycles.",
+    "Projection changes coordinate representation, not just scale; label attributes clearly when keeping both spaces."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,45 @@
+{
+  "card_type": "operator",
+  "op_type": "limitCHOP",
+  "family": "CHOP",
+  "display_name": "Limit CHOP",
+  "docs_url": "https://docs.derivative.ca/Limit_CHOP",
+  "summary": "Limits channel values to a range and can quantize channel values or indices for stepped/sample-and-hold behavior.",
+  "key_concepts": [
+    "Limits input channel values to a minimum and maximum range using off, clamp, loop, or zigzag modes.",
+    "Clamp saturates values to the range, while Loop wraps and Zigzag mirrors values back through the interval.",
+    "Positive Only takes the absolute value of channels before other range handling.",
+    "Normalize scales and offsets channels into the -1 to 1 range, but it does not work with Time Slicing enabled.",
+    "Value quantization snaps samples to floor, ceiling, or rounded value steps with an optional offset.",
+    "Index quantization acts like time quantization or sample-and-hold, sampling at quantized indices and holding between them."
+  ],
+  "key_params": [
+    {"name": "type", "type": "Menu", "note": "Off, clamp, loop, or zigzag limiting mode"},
+    {"name": "min", "type": "Float", "note": "Minimum range value"},
+    {"name": "max", "type": "Float", "note": "Maximum range value"},
+    {"name": "positive", "type": "Toggle", "note": "Make values positive only by taking absolute value"},
+    {"name": "norm", "type": "Toggle", "note": "Normalize into -1 to 1"},
+    {"name": "underflow", "type": "Menu", "note": "Handling below minimum"},
+    {"name": "quantvalue", "type": "Menu", "note": "Value quantization mode"},
+    {"name": "vstep", "type": "Float", "note": "Value quantization step"},
+    {"name": "voffset", "type": "Float", "note": "Value quantization offset"},
+    {"name": "quantindex", "type": "Menu", "note": "Index quantization reference"},
+    {"name": "relstart", "type": "MenuItem", "note": "Quantize index relative to CHOP start"},
+    {"name": "relzero", "type": "MenuItem", "note": "Quantize index relative to zero"},
+    {"name": "istep", "type": "Float", "note": "Increment between quantized indices"},
+    {"name": "istepunit", "type": "Menu", "note": "Index step units"},
+    {"name": "ioffset", "type": "Float", "note": "Offset for quantized indices"},
+    {"name": "ioffsetunit", "type": "Menu", "note": "Index offset units"},
+    {"name": "scope", "type": "Pattern", "note": "Channel pattern to affect"}
+  ],
+  "common_gotchas": [
+    "Clamp cuts values to min/max, while Loop wraps and Zigzag mirrors values back into range.",
+    "Maximum is treated as the upper range boundary, so loop-style behavior may remain less than Max.",
+    "Normalize does not work with Time Slicing enabled.",
+    "Index quantization acts like sample-and-hold over time and can intentionally flatten fast changes.",
+    "Quantization by Floor/Ceiling/Round changes value semantics; use Math CHOP if arithmetic mapping is needed instead."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ control shaping",
+  "last_verified": "2026-06-18"
+}

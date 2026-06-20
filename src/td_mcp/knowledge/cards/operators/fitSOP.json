@@ -1,0 +1,106 @@
+{
+  "card_type": "operator",
+  "op_type": "fitSOP",
+  "family": "SOP",
+  "display_name": "Fit SOP",
+  "docs_url": "https://docs.derivative.ca/Fit_SOP",
+  "summary": "Fits spline curves to point sequences or spline surfaces to m by n meshes, producing approximate or interpolating NURBS/Bezier primitives.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Input group to fit."
+    },
+    {
+      "name": "tol",
+      "type": "Float",
+      "note": "Approximation tolerance."
+    },
+    {
+      "name": "smooth",
+      "type": "Float",
+      "note": "Approximation smoothing amount."
+    },
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "Approximation or interpolation method."
+    },
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "Output primitive type."
+    },
+    {
+      "name": "surftype",
+      "type": "Menu",
+      "note": "Surface connectivity/output mode."
+    },
+    {
+      "name": "orderu",
+      "type": "Int",
+      "note": "U spline order."
+    },
+    {
+      "name": "orderv",
+      "type": "Int",
+      "note": "V spline order."
+    },
+    {
+      "name": "multipleu",
+      "type": "Menu",
+      "note": "U multiple-knot handling."
+    },
+    {
+      "name": "multiplev",
+      "type": "Menu",
+      "note": "V multiple-knot handling."
+    },
+    {
+      "name": "scope",
+      "type": "Menu",
+      "note": "Interpolation scope."
+    },
+    {
+      "name": "dataparmu",
+      "type": "Menu",
+      "note": "U data parameterization."
+    },
+    {
+      "name": "dataparmv",
+      "type": "Menu",
+      "note": "V data parameterization."
+    },
+    {
+      "name": "closeu",
+      "type": "Toggle",
+      "note": "Close/wrap in U."
+    },
+    {
+      "name": "closev",
+      "type": "Toggle",
+      "note": "Close/wrap in V."
+    },
+    {
+      "name": "corners",
+      "type": "Toggle",
+      "note": "Preserve/interpolate corners."
+    }
+  ],
+  "common_gotchas": [
+    "Approximation endpoints pass through, but interior points may not.",
+    "Local and breakpoint interpolation modes are curve-only.",
+    "Uniform parameterization can produce unintuitive shapes when input point spacing is uneven."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Fit SOP fits spline curves to point sequences or spline surfaces to m by n point meshes.",
+    "Input spline bases are ignored; CVs are treated as data points for fitting.",
+    "Approximation can reduce or smooth dense data but may not pass through interior points.",
+    "Interpolation passes through points and is better for precise path reconstruction, with scope and parameterization controls."
+  ]
+}

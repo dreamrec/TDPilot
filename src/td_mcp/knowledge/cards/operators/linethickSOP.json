@@ -1,0 +1,96 @@
+{
+  "card_type": "operator",
+  "op_type": "linethickSOP",
+  "family": "SOP",
+  "display_name": "Line Thick SOP",
+  "docs_url": "https://docs.derivative.ca/Line_Thick_SOP",
+  "summary": "Extrudes a surface from a curved polygon, NURBS, or Bezier line with controllable start/end widths, rows, divisions, and curve domain.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Curve/line group to thicken."
+    },
+    {
+      "name": "startwidth",
+      "type": "Float Pair",
+      "note": "Start inside/outside widths."
+    },
+    {
+      "name": "startwidth1",
+      "type": "Float",
+      "note": "Start width component 1."
+    },
+    {
+      "name": "startwidth2",
+      "type": "Float",
+      "note": "Start width component 2."
+    },
+    {
+      "name": "endwidth",
+      "type": "Float Pair",
+      "note": "End inside/outside widths."
+    },
+    {
+      "name": "endwidth1",
+      "type": "Float",
+      "note": "End width component 1."
+    },
+    {
+      "name": "endwidth2",
+      "type": "Float",
+      "note": "End width component 2."
+    },
+    {
+      "name": "divisions",
+      "type": "Int",
+      "note": "Divisions along the curve."
+    },
+    {
+      "name": "rows",
+      "type": "Int",
+      "note": "Rows across the thickened surface."
+    },
+    {
+      "name": "domain",
+      "type": "Float Pair",
+      "note": "Curve domain to thicken."
+    },
+    {
+      "name": "domain1",
+      "type": "Float",
+      "note": "Domain start."
+    },
+    {
+      "name": "domain2",
+      "type": "Float",
+      "note": "Domain end."
+    },
+    {
+      "name": "shape",
+      "type": "Menu",
+      "note": "Width interpolation shape."
+    },
+    {
+      "name": "symmetric",
+      "type": "Toggle",
+      "note": "Use symmetric width interpretation."
+    }
+  ],
+  "common_gotchas": [
+    "This creates geometry, not only render-time line width.",
+    "The input must be a polygon, NURBS, or Bezier line/curve primitive.",
+    "`symmetric` changes how start/end width components are interpreted."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Line Thick SOP creates real surface geometry from polygon, NURBS, or Bezier curve lines.",
+    "Start and end widths each have inside/outside components.",
+    "`domain` trims the region of the input curve that is thickened.",
+    "`shape` controls interpolation between widths, and `symmetric` changes width placement semantics."
+  ]
+}

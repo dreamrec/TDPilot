@@ -1,0 +1,112 @@
+{
+  "card_type": "operator",
+  "op_type": "carveSOP",
+  "family": "SOP",
+  "display_name": "Carve SOP",
+  "docs_url": "https://docs.derivative.ca/Carve_SOP",
+  "summary": "Slices faces or surfaces, cuts them into sections, extracts points or iso-parametric cross sections, and creates profile curves directly from a surface.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Input group to carve"
+    },
+    {
+      "name": "firstu",
+      "type": "Toggle",
+      "note": "Enable first U carve location"
+    },
+    {
+      "name": "domainu1",
+      "type": "Float",
+      "note": "First U location in 0-1 parametric space"
+    },
+    {
+      "name": "secondu",
+      "type": "Toggle",
+      "note": "Enable second U carve location"
+    },
+    {
+      "name": "domainu2",
+      "type": "Float",
+      "note": "Second U location in 0-1 parametric space"
+    },
+    {
+      "name": "firstv",
+      "type": "Toggle",
+      "note": "Enable first V carve location"
+    },
+    {
+      "name": "domainv1",
+      "type": "Float",
+      "note": "First V location in 0-1 parametric space"
+    },
+    {
+      "name": "secondv",
+      "type": "Toggle",
+      "note": "Enable second V carve location"
+    },
+    {
+      "name": "domainv2",
+      "type": "Float",
+      "note": "Second V location in 0-1 parametric space"
+    },
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "Cut original geometry or extract derived geometry"
+    },
+    {
+      "name": "extractop",
+      "type": "Menu",
+      "note": "Extract 3D isoparms, points, or 2D profiles"
+    },
+    {
+      "name": "keepin",
+      "type": "Toggle",
+      "note": "Keep the inside portion when cutting"
+    },
+    {
+      "name": "keepout",
+      "type": "Toggle",
+      "note": "Keep the outside portion when cutting"
+    },
+    {
+      "name": "keeporiginal",
+      "type": "Toggle",
+      "note": "Keep the source primitive while extracting"
+    },
+    {
+      "name": "location",
+      "type": "Menu",
+      "note": "Use division locations or breakpoints"
+    },
+    {
+      "name": "divsu",
+      "type": "Int",
+      "note": "U divisions for extraction"
+    },
+    {
+      "name": "divsv",
+      "type": "Int",
+      "note": "V divisions for extraction"
+    }
+  ],
+  "common_gotchas": [
+    "Carve profile curves are iso-parametric 2D profiles from the surface, not projected 3D curves.",
+    "When carving a trimmed surface, the resulting trim curves cannot be filleted or joined.",
+    "For faces, only points can be extracted and V parameters have no effect.",
+    "Breakpoint location mode changes which controls define extraction boundaries."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Carve SOP cuts or extracts geometry from polygon, Bezier, or NURBS faces and surfaces using parametric U/V domains.",
+    "Cut mode keeps selected surface sections, while extract mode can output isoparms, points, or profile curves.",
+    "Profile extraction creates iso-parametric 2D profiles from the surface rather than projected 3D curves.",
+    "Faces ignore V parameters for point extraction, while surfaces can use both U and V domains."
+  ]
+}

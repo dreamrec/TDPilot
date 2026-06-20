@@ -338,10 +338,12 @@ async def server_lifespan(app: FastMCP):
             brain_dir = Path(__file__).resolve().parent.parent.parent / "data" / "normalized" / "derivative"
             db_path = brain_dir / "docsbrain.db"
             if db_path.exists():
+                cards_dir = Path(__file__).parent / "knowledge" / "cards"
                 card_index = DocsBrain(
                     db_path=db_path,
                     changelog_path=brain_dir / "operator_changelog.json",
                     manifest_path=brain_dir / "build_manifest.json",
+                    fallback_cards_dir=cards_dir,
                 )
                 logger.info("DocsBrain loaded (%d chunks)", card_index.count())
         except Exception as exc:

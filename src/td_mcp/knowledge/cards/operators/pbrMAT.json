@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "pbrMAT",
+  "family": "MAT",
+  "display_name": "PBR MAT",
+  "docs_url": "https://docs.derivative.ca/PBR_MAT",
+  "summary": "Creates a physically based material with texture-map inputs for color, roughness, metalness, normals, height, occlusion, reflections, rim lighting, and related render features.",
+  "key_params": [
+    {"name": "basecolor", "type": "RGBA", "note": "Base albedo color"},
+    {"name": "basecolormap", "type": "TOP", "note": "Base color texture map"},
+    {"name": "roughness", "type": "Float", "note": "Surface roughness for specular response"},
+    {"name": "roughnessmap", "type": "TOP", "note": "Roughness texture map"},
+    {"name": "metallic", "type": "Float", "note": "Metalness control"},
+    {"name": "metallicmap", "type": "TOP", "note": "Metalness texture map"},
+    {"name": "normalmap", "type": "TOP", "note": "Normal map for surface detail"},
+    {"name": "heightmap", "type": "TOP", "note": "Height/parallax map"},
+    {"name": "envmap", "type": "TOP", "note": "Environment map for reflection lighting"},
+    {"name": "outputshader", "type": "Toggle", "note": "Output generated GLSL shaders to DATs for adaptation"}
+  ],
+  "key_concepts": [
+    "PBR MAT uses a physically based lighting model driven by base color, roughness, metallic, normal, height, occlusion, alpha, rim, reflection, and environment inputs.",
+    "Substance TOP sources can auto-populate PBR texture maps, while manually assigned map parameters override the automatically unpacked material textures.",
+    "Texture sampling is part of the material contract: coordinate layers, POP texture attributes, screen-space sampling, triplanar mapping, filters, and map channel sources affect the final shader result.",
+    "The Output Shader workflow creates GLSL MAT and Text DAT shader sources from the material variant that has actually rendered or compiled in the current TouchDesigner session.",
+    "Lighting, Environment Light quality, Render TOP settings, and coherent asset color-space/channel conventions are central to predictable PBR output."
+  ],
+  "common_gotchas": [
+    "PBR needs coherent texture color spaces and map channel conventions; generated networks should not mix unknown asset pipelines blindly.",
+    "Normal, height, roughness, metalness, and occlusion maps need matching UV coordinates unless using an alternate coordinate mode.",
+    "Scene lights, environment maps, and Render TOP settings strongly affect the visible result.",
+    "Output Shader is useful for GLSL MAT adaptation, but the generated DATs become a shader-maintenance surface."
+  ],
+  "related_snippets": ["MAT_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

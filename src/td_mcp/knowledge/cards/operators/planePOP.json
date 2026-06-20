@@ -1,0 +1,43 @@
+{
+  "card_type": "operator",
+  "op_type": "planePOP",
+  "family": "POP",
+  "display_name": "Plane POP",
+  "docs_url": "https://docs.derivative.ca/Plane_POP",
+  "summary": "Creates a planar grid of rows and columns as POP points, with optional triangle, quad, line, line-strip, point-primitive, or points-only connectivity. It can orient the grid on XY, YZ, or ZX planes and outputs dimension metadata.",
+  "key_params": [
+    {"name": "surftype", "type": "Menu", "note": "Connectivity primitive type"},
+    {"name": "linetype", "type": "Menu", "note": "Line strip or independent line primitive output for line connectivity"},
+    {"name": "orient", "type": "Menu", "note": "XY, YZ, or ZX plane orientation"},
+    {"name": "modifybounds", "type": "Toggle", "note": "Use connected input POP bounds as the starting plane bounds"},
+    {"name": "size", "type": "Float2", "note": "Plane size along U and V"},
+    {"name": "cols", "type": "Int", "note": "Number of columns"},
+    {"name": "rows", "type": "Int", "note": "Number of rows"},
+    {"name": "anchoru", "type": "Menu", "note": "Anchor the U side at the origin"},
+    {"name": "anchorv", "type": "Menu", "note": "Anchor the V side at the origin"},
+    {"name": "t", "type": "Float3", "note": "Post-translate generated points"},
+    {"name": "r", "type": "Float3", "note": "Post-rotate generated points in degrees"},
+    {"name": "scale", "type": "Float", "note": "Uniform post-scale for generated points"},
+    {"name": "normal", "type": "Menu", "note": "Create point or vertex normals"},
+    {"name": "texture", "type": "Menu", "note": "Create point or vertex texture coordinates"}
+  ],
+  "key_concepts": [
+    "planar grid",
+    "rows and columns",
+    "dimension metadata",
+    "XY/YZ/ZX orientation",
+    "Rows and Columns connectivity",
+    "Line Type",
+    "Modify Bounds",
+    "Anchor U/V",
+    "Tex axis follows orientation"
+  ],
+  "common_gotchas": [
+    "Plane POP emits dimension metadata numCols by numRows; preserve it when GLSL or lookup logic depends on _Dim.",
+    "Rows and columns line connectivity differ from quad or triangle topology; choose based on downstream line vs surface processing.",
+    "Texture coordinate component meaning follows plane orientation, so YZ and ZX planes swap the intuitive axes."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

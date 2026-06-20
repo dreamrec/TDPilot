@@ -1,0 +1,28 @@
+{
+  "card_type": "operator",
+  "op_type": "audiowebrenderCHOP",
+  "family": "CHOP",
+  "display_name": "Audio Web Render CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_Web_Render_CHOP",
+  "summary": "Outputs audio from a Web Render TOP whose browser audio is routed to Audio Web Render CHOPs.",
+  "key_concepts": [
+    "Audio Web Render CHOP plays audio from a web page rendered by a Web Render TOP.",
+    "The source Web Render TOP must route its Audio Options to Audio Web Render CHOPs.",
+    "The Web Render TOP must also have its Active parameter enabled.",
+    "The Web Render TOP parameter selects which browser instance supplies the audio.",
+    "Info CHOP diagnostics expose buffer length and dropped buffer counts for unstable web audio."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable or disable audio input"},
+    {"name": "webrender", "type": "TOP", "note": "Web Render TOP that provides the browser audio"},
+    {"name": "timeslice", "type": "Toggle", "note": "Use time-sliced CHOP output for streaming audio"}
+  ],
+  "common_gotchas": [
+    "The source Web Render TOP must have Audio Options routed to Audio Web Render CHOPs.",
+    "The Web Render TOP must be active and actually playing page audio.",
+    "Use an Info CHOP to inspect buffer length and dropped buffers when audio is unstable."
+  ],
+  "related_snippets": ["CHOP_snippets", "TOP_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18"
+}

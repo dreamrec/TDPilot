@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "sequencerCHOP",
+  "family": "CHOP",
+  "display_name": "Sequencer CHOP",
+  "docs_url": "https://docs.derivative.ca/Sequencer_CHOP",
+  "summary": "Legacy CHOP for sequencing a DAT-listed set of CHOPs with blend/add scopes, queueing, trigger, and reset controls.",
+  "key_concepts": [
+    "Sequencer CHOP is a legacy timed-sequencing operator that has been replaced by Timer CHOP.",
+    "Current official docs say Sequencer CHOP has been removed for creation but still works in existing files.",
+    "DAT List points to a table of CHOP paths that the legacy sequencer will transition through.",
+    "Blend Scope and Add Scope decide which channels blend, add, or jump during transitions.",
+    "Queue, Trigger, Reset, and Reset Pulse control pausing, immediate transition, and reset-to-default behavior.",
+    "Use this card primarily for diagnosing or migrating legacy networks; new timed processes should use Timer CHOP and official OP Snippets."
+  ],
+  "key_params": [
+    {"name": "datlist", "type": "DAT", "note": "Table containing paths to CHOPs to sequence"},
+    {"name": "blendscope", "type": "String", "note": "Channels that blend during transitions"},
+    {"name": "addscope", "type": "String", "note": "Channels that add during transitions"},
+    {"name": "queue", "type": "String", "note": "Channel controlling queue/pause"},
+    {"name": "trigger", "type": "Toggle", "note": "Begin transition immediately"},
+    {"name": "reset", "type": "Toggle", "note": "Hold reset to default CHOP"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Instant reset"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP channel scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Common CHOP sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"}
+  ],
+  "common_gotchas": [
+    "Official docs say Timer CHOP replaces Sequencer CHOP.",
+    "Sequencer CHOP has been removed for new creation in current builds, though it may still work in existing files.",
+    "Generated plans should prefer Timer CHOP and Operator Snippets examples for timed processes.",
+    "Only use this card for legacy project diagnosis or migration planning.",
+    "If a legacy file still contains Sequencer CHOP, DAT List paths must resolve to the sequenced CHOPs.",
+    "Blend Scope and Add Scope decide transition behavior per channel, so broad scopes can change animation unexpectedly."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "legacy timed sequencing; prefer Timer CHOP",
+  "last_verified": "2026-06-18"
+}

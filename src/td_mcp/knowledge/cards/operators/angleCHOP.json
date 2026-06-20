@@ -1,0 +1,33 @@
+{
+  "card_type": "operator",
+  "op_type": "angleCHOP",
+  "family": "CHOP",
+  "display_name": "Angle CHOP",
+  "docs_url": "https://docs.derivative.ca/Angle_CHOP",
+  "summary": "Converts angle channels between degrees, radians, quaternions, and two-vector representations while respecting Euler rotation order.",
+  "key_params": [
+    {"name": "inunit", "type": "Menu", "note": "Input representation: degrees, radians, quaternions, or two vectors"},
+    {"name": "inorder", "type": "Menu", "note": "Euler rotation order assumed for incoming rotations"},
+    {"name": "outunit", "type": "Menu", "note": "Output representation to generate"},
+    {"name": "outorder", "type": "Menu", "note": "Euler rotation order for outgoing rotations"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice behavior"},
+    {"name": "srselect", "type": "Menu", "note": "Common CHOP sample-rate matching behavior"}
+  ],
+  "key_concepts": [
+    "angle representation conversion",
+    "degrees and radians",
+    "quaternion channels x, y, z, w",
+    "two-vector six-channel input",
+    "Euler input and output rotation order",
+    "Sample Rate Match and time slicing"
+  ],
+  "common_gotchas": [
+    "Quaternion input requires four channels in x, y, z, w order.",
+    "Two-vector mode expects six channels: one xyz vector followed by a second orthogonal xyz vector.",
+    "Euler conversions depend on input and output rotation order; mismatched orders can look like axis flips or gimbal artifacts.",
+    "Unit conversion is not a transform-space conversion; confirm channel naming and component order before exporting to COMP rotations."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-17"
+}

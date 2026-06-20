@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "keyframeCHOP",
+  "family": "CHOP",
+  "display_name": "Keyframe CHOP",
+  "docs_url": "https://docs.derivative.ca/Keyframe_CHOP",
+  "summary": "Reads channel/key data from an Animation COMP and outputs sampled CHOP channels for animation playback, lookup, or export workflows.",
+  "key_concepts": [
+    "Reads channel and key data stored inside an Animation COMP and outputs sampled CHOP channels.",
+    "The Animation COMP and Animation Editor are the authoring surface for creating, editing, and deleting keyframes.",
+    "Adding an input changes the Keyframe CHOP into lookup-index playback, and a time-sliced input produces time-sliced output.",
+    "Sample Rate controls CHOP samples per second independently of the TouchDesigner timeline frame rate.",
+    "Extend Left, Extend Right, and Default Value determine behavior outside the keyed range.",
+    "Specific Info CHOP channels expose start and end positions as index, frame, second, and fraction values."
+  ],
+  "key_params": [
+    {"name": "animation", "type": "COMP", "note": "Animation COMP containing keyframed channels"},
+    {"name": "rate", "type": "Float", "note": "Output sample rate"},
+    {"name": "left", "type": "Menu", "note": "Extend-left condition"},
+    {"name": "right", "type": "Menu", "note": "Extend-right condition"},
+    {"name": "defval", "type": "Float", "note": "Default extend value"},
+    {"name": "timeslice", "type": "Toggle", "note": "Output a time slice"},
+    {"name": "scope", "type": "Pattern", "note": "Channel pattern to affect"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate matching behavior"}
+  ],
+  "common_gotchas": [
+    "Requires a populated Animation COMP; the CHOP only exposes existing keyframed channel data.",
+    "Adding an input turns the input into a lookup index, so planners should not wire arbitrary modulation without intending lookup playback.",
+    "When the input is time-sliced, the Keyframe CHOP outputs a proper time slice rather than a static range.",
+    "Extend conditions determine values outside the keyed range and can produce cycles, mirrored cycles, slope continuation, or defaults.",
+    "Use the Animation Editor to create/edit/delete the underlying keyframed channels; this CHOP is not the editing UI."
+  ],
+  "related_snippets": ["CHOP_snippets", "COMP_snippets"],
+  "build_relevance": "2021.10000+ animation",
+  "last_verified": "2026-06-18"
+}

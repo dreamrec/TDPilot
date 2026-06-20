@@ -4,17 +4,168 @@
   "family": "TOP",
   "display_name": "Constant TOP",
   "docs_url": "https://docs.derivative.ca/Constant_TOP",
-  "summary": "Outputs a solid-color texture. Useful as backgrounds, masks, or as a base for further processing.",
+  "summary": "Generator TOP for solid color images and simple texture sources. It sets RGBA channels directly, can premultiply RGB by alpha, optionally composites over an input, and can produce 2D, 3D, or 2D texture-array outputs when no input is connected.",
   "key_params": [
-    {"name": "colorr", "type": "Float", "note": "Red channel value (0-1)"},
-    {"name": "colorg", "type": "Float", "note": "Green channel value (0-1)"},
-    {"name": "colorb", "type": "Float", "note": "Blue channel value (0-1)"},
-    {"name": "colora", "type": "Float", "note": "Alpha channel value (0-1)"}
+    {
+      "name": "color",
+      "type": "RGB",
+      "note": "Color group for red, green, and blue channels."
+    },
+    {
+      "name": "colorr",
+      "type": "Float",
+      "note": "Red channel."
+    },
+    {
+      "name": "colorg",
+      "type": "Float",
+      "note": "Green channel."
+    },
+    {
+      "name": "colorb",
+      "type": "Float",
+      "note": "Blue channel."
+    },
+    {
+      "name": "alpha",
+      "type": "Float",
+      "note": "Alpha channel value."
+    },
+    {
+      "name": "multrgbbyalpha",
+      "type": "Toggle",
+      "note": "Premultiply RGB channels by alpha."
+    },
+    {
+      "name": "rgbaunit",
+      "type": "Menu",
+      "note": "UI range for entering color values: 0-1, 0-255, or 0-65535."
+    },
+    {
+      "name": "compoverinput",
+      "type": "Toggle",
+      "note": "Composite the constant image over the input."
+    },
+    {
+      "name": "operand",
+      "type": "Menu",
+      "note": "Composite operation used when compositing over input."
+    },
+    {
+      "name": "swaporder",
+      "type": "Toggle",
+      "note": "Swap the order of the composite with the input."
+    },
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "Output texture type when the Constant TOP has no inputs."
+    },
+    {
+      "name": "slices",
+      "type": "Integer",
+      "note": "Depth of 3D texture or 2D texture array output."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution control."
+    },
+    {
+      "name": "resolution",
+      "type": "Int2",
+      "note": "Custom output resolution."
+    },
+    {
+      "name": "resmenu",
+      "type": "Menu",
+      "note": "Common resolution presets."
+    },
+    {
+      "name": "resmult",
+      "type": "Toggle",
+      "note": "Apply global TOP resolution multiplier."
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Output aspect mode."
+    },
+    {
+      "name": "aspect",
+      "type": "Float2",
+      "note": "Custom output aspect."
+    },
+    {
+      "name": "armenu",
+      "type": "Menu",
+      "note": "Aspect presets."
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Input filtering mode."
+    },
+    {
+      "name": "fillmode",
+      "type": "Menu",
+      "note": "Viewer fill mode."
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Viewer filtering mode."
+    },
+    {
+      "name": "npasses",
+      "type": "Integer",
+      "note": "Common TOP pass count."
+    },
+    {
+      "name": "chanmask",
+      "type": "Mask",
+      "note": "RGBA channel mask."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Output pixel format."
+    }
+  ],
+  "key_concepts": [
+    "solid color TOP image",
+    "red, green, blue, and alpha channels",
+    "RGB and HSV color picker",
+    "Multiply RGB by Alpha",
+    "RGBA Units",
+    "data values always use 0-1",
+    "Comp Over Input",
+    "Operation",
+    "Output Type",
+    "2D Texture",
+    "3D Texture",
+    "2D Texture Array",
+    "Slices",
+    "3D Textures",
+    "2D Texture Arrays",
+    "Info CHOP",
+    "resx",
+    "resy",
+    "aspectx",
+    "aspecty",
+    "depth",
+    "gpu_memory_used"
   ],
   "common_gotchas": [
-    "Alpha defaults to 1; set it to 0 if you need a transparent base for compositing."
+    "RGBA Units only changes the UI entry range; the TOP data values always use the 0-1 RGBA range internally.",
+    "Output Type can only be used when there are no inputs to the Constant TOP.",
+    "Multiply RGB by Alpha premultiplies the image, which changes how it behaves in Over/Under composites.",
+    "Comp Over Input uses the Output page Operation; without an input, the Constant TOP is just the generated color texture.",
+    "Use Info CHOP depth to confirm 3D Texture or 2D Texture Array output slice count."
   ],
-  "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
 }

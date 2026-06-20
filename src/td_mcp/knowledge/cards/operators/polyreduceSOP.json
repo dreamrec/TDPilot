@@ -1,0 +1,101 @@
+{
+  "card_type": "operator",
+  "op_type": "polyreduceSOP",
+  "family": "SOP",
+  "display_name": "Polyreduce SOP",
+  "docs_url": "https://docs.derivative.ca/Polyreduce_SOP",
+  "summary": "Reduces polygon count by percentage, target count, or distance while preserving chosen borders, creases, lengths, and original points.",
+  "key_params": [
+    {
+      "name": "reduce",
+      "type": "Toggle",
+      "note": "Enable reduction"
+    },
+    {
+      "name": "creases",
+      "type": "Toggle",
+      "note": "Use crease or feature edge input"
+    },
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "Reduction method"
+    },
+    {
+      "name": "percentage",
+      "type": "Float",
+      "note": "Target percentage"
+    },
+    {
+      "name": "numpolys",
+      "type": "Int",
+      "note": "Target polygon count"
+    },
+    {
+      "name": "obj",
+      "type": "COMP Path",
+      "note": "Object used by distance reduction"
+    },
+    {
+      "name": "distance",
+      "type": "Float",
+      "note": "Distance threshold"
+    },
+    {
+      "name": "minpercent",
+      "type": "Float",
+      "note": "Minimum percentage to preserve"
+    },
+    {
+      "name": "borderweight",
+      "type": "Float",
+      "note": "Border preservation weight"
+    },
+    {
+      "name": "creaseweight",
+      "type": "Float",
+      "note": "Crease preservation weight"
+    },
+    {
+      "name": "lengthweight",
+      "type": "Float",
+      "note": "Edge-length quality weight"
+    },
+    {
+      "name": "meshinvert",
+      "type": "Toggle",
+      "note": "Invert mesh-related selection"
+    },
+    {
+      "name": "triangulate",
+      "type": "Toggle",
+      "note": "Triangulate input or output"
+    },
+    {
+      "name": "keepedges",
+      "type": "Toggle",
+      "note": "Keep boundary edges to avoid cracks"
+    },
+    {
+      "name": "originalpoints",
+      "type": "Toggle",
+      "note": "Prefer original point positions"
+    }
+  ],
+  "common_gotchas": [
+    "Feature-edge matching uses point numbers, so copied or rebuilt geometry can break intended crease preservation.",
+    "Triangulation can increase polygon count before reduction, making the target count look surprising.",
+    "Keep Edges is important when reduced geometry must meet unreduced neighboring geometry without cracks."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "polygon-reduction-and-cleanup",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Polyreduce SOP simplifies polygonal geometry using percentage, polygon count, or distance-to-object methods.",
+    "The second input marks feature edges by point number, not just by spatial coincidence.",
+    "The reduction process works on triangular meshes, so input triangulation can change the starting polygon count.",
+    "Clean-page weights bias reduction to preserve borders, creases, edge length quality, and original points."
+  ]
+}

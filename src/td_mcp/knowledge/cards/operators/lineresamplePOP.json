@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "lineresamplePOP",
+  "family": "POP",
+  "display_name": "Line Resample POP",
+  "docs_url": "https://docs.derivative.ca/Line_Resample_POP",
+  "summary": "Resamples line strips without changing their shape, using divisions per strip, distance between points, curvature-based spacing, or points-as-keyframes along an independent variable attribute.",
+  "key_params": [
+    {"name": "resamplemethod", "type": "Menu", "note": "Resampling method"},
+    {"name": "resampledivs", "type": "Int", "note": "Number of divisions for per-line-strip resampling"},
+    {"name": "resamplemindist", "type": "Float", "note": "Minimum point spacing for curvature-based resampling"},
+    {"name": "resamplemaxdist", "type": "Float", "note": "Maximum point spacing for curvature-based resampling"},
+    {"name": "resampleminmaxbias", "type": "Float", "note": "Bias between min and max curvature spacing"},
+    {"name": "usectrlpoints", "type": "Toggle", "note": "Include exact control points from an attribute"},
+    {"name": "ctrlpointsattr", "type": "Str", "note": "Attribute identifying control points to preserve exactly"},
+    {"name": "indvarattr", "type": "Str", "note": "Independent variable attribute for points-as-keyframes"},
+    {"name": "indvarstep", "type": "Float", "note": "Step size for independent-variable resampling"},
+    {"name": "maxverts", "type": "Int", "note": "Preallocated maximum output vertex count"},
+    {"name": "maxtries", "type": "Int", "note": "Iteration limit used by adaptive resampling methods"},
+    {"name": "rmvunusedpts", "type": "Toggle", "note": "Remove points no longer referenced by output primitives"}
+  ],
+  "key_concepts": [
+    "Line Resample changes point density while preserving the input line-strip shape, unlike Line Smooth which changes attribute values.",
+    "Resampling modes cover fixed divisions, distance spacing, curvature-adaptive spacing, and points-as-keyframes along an independent variable.",
+    "Control point, max vertex, max tries, and remove-unused-points controls keep anchors exact while bounding adaptive output size."
+  ],
+  "common_gotchas": [
+    "Line Resample preserves shape; use Line Smooth when the goal is to actually smooth or relax the curve.",
+    "maxverts must be high enough for the generated vertices or output will be truncated.",
+    "ControlPoint attributes are useful for keeping anchor points exact while still resampling intermediate spans."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

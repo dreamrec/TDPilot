@@ -1,0 +1,46 @@
+{
+  "card_type": "article",
+  "article_id": "vulkan",
+  "title": "Vulkan",
+  "family": "GPU",
+  "families": [
+    "GPU",
+    "TOP",
+    "GLSL",
+    "MAT"
+  ],
+  "summary": "Official Derivative page for TouchDesigner's Vulkan graphics API, covering MoltenVK on macOS, reduced OpenGL driver overhead, lower CPU cook time for many TOP operations, Metal limitations around Geometry Shaders, and safer cross-platform Compute Shaders.",
+  "source_url": "https://docs.derivative.ca/Vulkan",
+  "docsbrain_page_id": "vulkan",
+  "covered_operators": [
+    "glslTOP",
+    "glslMAT",
+    "renderTOP",
+    "texture3dTOP",
+    "nvidiartxvideoTOP"
+  ],
+  "key_concepts": [
+    "Vulkan",
+    "MoltenVK",
+    "Metal",
+    "lower driver overhead",
+    "lower CPU cook time",
+    "threaded",
+    "video I/O",
+    "Compute Shaders",
+    "Geometry Shaders",
+    "macOS",
+    "HDR color space outputs"
+  ],
+  "guidance": [
+    "Use this article when a plan needs graphics-API assumptions for GLSL, TOP performance, Metal/macOS compatibility, or compute-shader portability.",
+    "Expect many TOP operations to have lower CPU cook time under Vulkan because of reduced OpenGL driver overhead.",
+    "On macOS, TouchDesigner reaches Metal through MoltenVK, so do not plan Geometry Shader workflows there.",
+    "Prefer Compute Shaders over Geometry Shaders for modern cross-platform GPU work inside TouchDesigner."
+  ],
+  "related_snippets": [
+    "GLSL_snippets",
+    "TOP_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

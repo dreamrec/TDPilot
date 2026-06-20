@@ -1,0 +1,54 @@
+{
+  "card_type": "operator",
+  "op_type": "openvrTOP",
+  "family": "TOP",
+  "display_name": "OpenVR TOP",
+  "docs_url": "https://docs.derivative.ca/OpenVR_TOP",
+  "summary": "Outputs left-eye and right-eye images to a connected OpenVR/SteamVR device.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable output to the OpenVR driver."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "resolution",
+      "type": "XY",
+      "note": "Explicit output width and height when using custom resolution."
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Common TOP output aspect-ratio policy."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "Official docs mark OpenVR TOP as Windows-only.",
+    "Requires two input textures, one for the left eye and one for the right eye.",
+    "SteamVR should usually be running so the connected VR device is available and functioning.",
+    "Common TOP resolution/aspect controls can resample images before headset submission.",
+    "Input render resolution and eye ordering must match the headset pipeline."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "VR_snippets"
+  ],
+  "build_relevance": "vr_output",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Outputs left-eye and right-eye images to a connected OpenVR/SteamVR device.",
+    "Uses separate input textures in the expected eye order.",
+    "Works alongside OpenVR CHOP/SOP and Audio Render CHOP for tracking, controller, and audio workflows.",
+    "The page exposes sparse unique params, so Common TOP resolution and format controls are part of the output contract."
+  ]
+}

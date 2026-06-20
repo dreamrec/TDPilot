@@ -1,0 +1,106 @@
+{
+  "card_type": "operator",
+  "op_type": "alignSOP",
+  "family": "SOP",
+  "display_name": "Align SOP",
+  "docs_url": "https://docs.derivative.ca/Align_SOP",
+  "summary": "Aligns primitive groups to each other or to an auxiliary input by translating and/or rotating primitives around chosen UV pivots.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Primitive group pattern to align; blank aligns the full input"
+    },
+    {
+      "name": "align",
+      "type": "Menu",
+      "note": "Align all primitives, groups of N primitives, or skip every Nth primitive"
+    },
+    {
+      "name": "inc",
+      "type": "Int",
+      "note": "Group or skip count for Align mode"
+    },
+    {
+      "name": "bias",
+      "type": "Float",
+      "note": "Controls which side remains fixed: 0 left, 1 right"
+    },
+    {
+      "name": "leftuv",
+      "type": "UV",
+      "note": "Pivot location on each left primitive"
+    },
+    {
+      "name": "rightuv",
+      "type": "UV",
+      "note": "Pivot location on each right primitive"
+    },
+    {
+      "name": "rightuvend",
+      "type": "UV",
+      "note": "Auxiliary-input end location used to distribute left primitives"
+    },
+    {
+      "name": "individual",
+      "type": "Toggle",
+      "note": "Align each primitive independently instead of aligning only the first and preserving relative layout"
+    },
+    {
+      "name": "dotrans",
+      "type": "Toggle",
+      "note": "Enable post-alignment translation"
+    },
+    {
+      "name": "dorotate",
+      "type": "Toggle",
+      "note": "Enable post-alignment rotation"
+    },
+    {
+      "name": "xord",
+      "type": "Menu",
+      "note": "Post-align transform order"
+    },
+    {
+      "name": "rord",
+      "type": "Menu",
+      "note": "Post-align rotation order"
+    },
+    {
+      "name": "t",
+      "type": "XYZ",
+      "note": "Post-align translation"
+    },
+    {
+      "name": "r",
+      "type": "XYZ",
+      "note": "Post-align rotation"
+    },
+    {
+      "name": "s",
+      "type": "XYZ",
+      "note": "Post-align scale"
+    },
+    {
+      "name": "p",
+      "type": "XYZ",
+      "note": "Post-align pivot"
+    }
+  ],
+  "common_gotchas": [
+    "Left/right primitive meaning changes when an auxiliary input is connected; the auxiliary input is always the right side.",
+    "Disable Individual Alignment when the relative spatial layout of the left primitives must be preserved.",
+    "Alignment works on primitives, not arbitrary point clouds; verify primitive grouping before planning a snap operation."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Align SOP translates and/or rotates primitive groups so left and right primitive UV pivots line up.",
+    "With an auxiliary input connected, the auxiliary primitive is always treated as the right-side target.",
+    "The align mode can process every primitive, grouped primitives, or skip patterns based on the increment.",
+    "Optional transform parameters can apply a post-align transform after the primitive alignment step."
+  ]
+}

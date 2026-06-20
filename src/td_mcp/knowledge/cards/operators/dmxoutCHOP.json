@@ -1,0 +1,44 @@
+{
+  "card_type": "operator",
+  "op_type": "dmxoutCHOP",
+  "family": "CHOP",
+  "display_name": "DMX Out CHOP",
+  "docs_url": "https://docs.derivative.ca/DMX_Out_CHOP",
+  "summary": "Sends CHOP channels to DMX, Art-Net, sACN, KiNET, FTDI, or ENTTEC-style outputs, with routing-table, serial, network, rate, and universe controls.",
+  "key_concepts": [
+    "Sends CHOP channels to DMX, Art-Net, sACN, KiNET, or FTDI targets using DMX values in the 0-255 range.",
+    "Input channel order maps directly to consecutive DMX addresses unless Packet Per Channel mode is used to pack samples into universe channels.",
+    "DMX512 output should respect the documented 44 Hz maximum refresh limit, so Rate above 44 is not reliable for physical DMX devices.",
+    "Art-Net Net, Subnet, and Universe are protocol addresses; Network Address selects the receiving IP or broadcast target.",
+    "A Routing Table can route packet-per-channel output by net, subnet, universe, and netaddress, falling back to the operator parameters when columns are missing.",
+    "ArtSync can synchronize multi-universe ArtDmx output by waiting for packets to send before emitting a sync packet."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Connect to output device or network"},
+    {"name": "interface", "type": "Menu", "note": "Enttec serial/USB, Art-Net, sACN, KiNET, or related output mode"},
+    {"name": "format", "type": "Menu", "note": "Packet-per-sample or packet-per-channel output mapping"},
+    {"name": "packetpersample", "type": "MenuItem", "note": "Each channel maps to a DMX address"},
+    {"name": "packetperchan", "type": "MenuItem", "note": "Each sample in a channel maps to a DMX address"},
+    {"name": "rate", "type": "Float", "note": "Send rate per second"},
+    {"name": "universe", "type": "Integer", "note": "DMX universe"},
+    {"name": "multicast", "type": "Toggle", "note": "Enable sACN multicast"},
+    {"name": "netaddress", "type": "String", "note": "Receiver IP or broadcast address"},
+    {"name": "localaddress", "type": "String", "note": "Local network address/interface"},
+    {"name": "localport", "type": "Integer", "note": "Local UDP port"},
+    {"name": "customport", "type": "Toggle", "note": "Use a custom network port"},
+    {"name": "netport", "type": "Integer", "note": "Network output port"},
+    {"name": "sendartsync", "type": "Toggle", "note": "Send ArtSync packets"},
+    {"name": "artsynctimeout", "type": "Float", "note": "ArtSync timeout"},
+    {"name": "cid", "type": "String", "note": "sACN component identifier"}
+  ],
+  "common_gotchas": [
+    "DMX values are 0-255 and channel order maps directly to consecutive DMX addresses unless packet-per-channel is used.",
+    "DMX512 devices have a maximum refresh rate of about 44 Hz; official docs recommend Rate <= 44 for reliability.",
+    "Packet Per Sample and Packet Per Channel imply different channel/sample layouts, so generated plans must choose deliberately.",
+    "On macOS, ENTTEC USB Pro may require unloading the AppleUSBFTDI kernel extension before connection.",
+    "Broadcast addresses are convenient but can flood networks; prefer explicit receiver IPs for show-critical systems."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ network/hardware I/O",
+  "last_verified": "2026-06-18"
+}

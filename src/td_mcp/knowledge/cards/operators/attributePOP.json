@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "attributePOP",
+  "family": "POP",
+  "display_name": "Attribute POP",
+  "docs_url": "https://docs.derivative.ca/Attribute_POP",
+  "summary": "Creates, renames, duplicates, deletes, and creates matrix attributes on POP point, vertex, primitive, or group data. It is the basic structured attribute-management operator for POP workflows.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Attribute class to operate on"},
+    {"name": "attr", "type": "Sequential", "note": "New attribute blocks"},
+    {"name": "attr0name", "type": "Menu/String", "note": "Predefined or custom attribute name"},
+    {"name": "attr0type", "type": "Menu", "note": "Numeric type for a new attribute"},
+    {"name": "deletepoint", "type": "String", "note": "Point attributes to delete"},
+    {"name": "ren0from", "type": "String", "note": "Attribute to rename from"},
+    {"name": "ren0to", "type": "String", "note": "Attribute to rename to"},
+    {"name": "matattr0name", "type": "String", "note": "Matrix attribute name"}
+  ],
+  "key_concepts": [
+    "Creates new POP attributes with explicit numeric type, component count, array size, and default values.",
+    "Renames, duplicates, and deletes attributes within the selected point, vertex, or primitive attribute class.",
+    "Supports matrix attributes with explicit row and column counts for transform-style data.",
+    "Can isolate a branch by deleting input attributes after authoring only the attributes needed downstream."
+  ],
+  "common_gotchas": [
+    "Attribute class must match where the data actually lives: point, vertex, primitive, or group.",
+    "Deleting input attributes can break render attributes such as P, N, Color, Tex, PointScale, or LineWidth.",
+    "Matrix attributes need explicit row and column counts."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

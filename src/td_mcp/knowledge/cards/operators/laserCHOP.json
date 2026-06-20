@@ -1,0 +1,45 @@
+{
+  "card_type": "operator",
+  "op_type": "laserCHOP",
+  "family": "CHOP",
+  "display_name": "Laser CHOP",
+  "docs_url": "https://docs.derivative.ca/Laser_CHOP",
+  "summary": "Converts POP, SOP, or CHOP point/line sources into high-sample-rate x/y/color channels suitable for laser projector output.",
+  "key_concepts": [
+    "Generates laser projector drive channels from POP, SOP, or CHOP point/line sources at high sample rates, typically 10000 to 96000 samples per second.",
+    "CHOP sources must provide x and y channels; id groups samples into shapes, while additional channels are interpreted as color channels for blanking and diode control.",
+    "SOP and POP sources use position, color, and laser-specific point attributes such as LasCorner and corner-hold attributes.",
+    "Corner points and guide points control interpolation, repeated hold points, and image sharpness around abrupt direction changes.",
+    "Blanking delay, blanking step size, and color timing controls compensate for mirror movement and help avoid visible tails between shapes.",
+    "Laser CHOP output routes to Laser Device CHOP for ILDA devices or to Audio Device Out CHOP for supported AVB laser hardware."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable laser channel generation"},
+    {"name": "source", "type": "Menu", "note": "Choose SOP, CHOP, or POP source"},
+    {"name": "sop", "type": "SOP", "note": "Source SOP with position/color attributes"},
+    {"name": "chop", "type": "CHOP", "note": "Source CHOP with x/y and optional z/r/g/b/id channels"},
+    {"name": "pop", "type": "POP", "note": "Source POP with position/color attributes"},
+    {"name": "outputrate", "type": "Float", "note": "Output sample rate for the laser signal"},
+    {"name": "updatemethod", "type": "Menu", "note": "Update source when all points are drawn or every frame"},
+    {"name": "swap", "type": "Toggle", "note": "Swap x/y output axes"},
+    {"name": "xscale", "type": "Float", "note": "Horizontal output scale"},
+    {"name": "yscale", "type": "Float", "note": "Vertical output scale"},
+    {"name": "rotate", "type": "Float", "note": "Rotate output pattern"},
+    {"name": "camera", "type": "COMP", "note": "Camera COMP for SOP view projection"},
+    {"name": "redscale", "type": "Float", "note": "Scale red laser channel"},
+    {"name": "greenscale", "type": "Float", "note": "Scale green laser channel"},
+    {"name": "bluescale", "type": "Float", "note": "Scale blue laser channel"},
+    {"name": "debugchan", "type": "Toggle", "note": "Output an additional point-state debug channel"}
+  ],
+  "common_gotchas": [
+    "Laser output is physically dangerous; generated plans should require user-side safety/legal/operator review before live output.",
+    "CHOP input must provide x and y channels; optional id groups points into shapes and color channels drive blanking/color.",
+    "Typical output rates are very high, often 10000 to 96000 samples per second, so sample count and cook cost matter.",
+    "The default update method waits until all points are drawn; Every Frame can cause flicker if the source changes faster than drawing completes.",
+    "For ILDA hardware routing, send Laser CHOP output to Laser Device CHOP; for AVB audio-based devices, route through Audio Device Out CHOP.",
+    "This operator replaces the legacy Scan CHOP."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2022.20000+ laser output",
+  "last_verified": "2026-06-18"
+}

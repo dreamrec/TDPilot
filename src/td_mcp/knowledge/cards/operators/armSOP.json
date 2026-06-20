@@ -1,0 +1,66 @@
+{
+  "card_type": "operator",
+  "op_type": "armSOP",
+  "family": "SOP",
+  "display_name": "Arm SOP",
+  "docs_url": "https://docs.derivative.ca/Arm_SOP",
+  "summary": "Generates arm geometry and deformation helpers for a character arm, controlled by inverse kinematics linked to a handprint/end-affector object.",
+  "key_params": [
+    {
+      "name": "capttype",
+      "type": "Menu",
+      "note": "Choose Ellipses for Skeleton SOP workflows or Capture Regions for Capture SOP workflows"
+    },
+    {
+      "name": "axis",
+      "type": "Menu",
+      "note": "Place the arm along +X or -X"
+    },
+    {
+      "name": "bonerad",
+      "type": "Float",
+      "note": "Scale the generated circle radii"
+    },
+    {
+      "name": "rotatehand",
+      "type": "Toggle",
+      "note": "Match wrist/hand orientation to the handprint object"
+    },
+    {
+      "name": "autoelbow",
+      "type": "Toggle",
+      "note": "Use a more natural default elbow twist"
+    },
+    {
+      "name": "elbowtwist",
+      "type": "Float",
+      "note": "Manual elbow twist rotation"
+    },
+    {
+      "name": "flipelbow",
+      "type": "Toggle",
+      "note": "Use the alternate elbow-position IK solution"
+    },
+    {
+      "name": "affector",
+      "type": "OP",
+      "note": "Handprint/end-affector object controlling the IK target"
+    }
+  ],
+  "common_gotchas": [
+    "This is a specialized legacy character-rig SOP; for modern rigs, prefer explicit capture/deform or imported skeletal data when possible.",
+    "Rotate Hand expects the end-affector scale transforms to remain at 1.",
+    "The capture type must match the rest of the rig: Ellipses for Skeleton SOP, Capture Regions for Capture SOP."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "legacy-character-rig",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Arm SOP generates arm geometry and deformation helpers controlled by an IK handprint or end-affector.",
+    "The capture type chooses whether the output matches Skeleton SOP ellipse capture or Capture SOP region workflows.",
+    "Axis, bone radius, limb lengths, elbow twist, and hand rotation controls shape the generated arm rig.",
+    "Joint-circle transform controls are intended for refining deformation around bent shoulder, elbow, and wrist regions."
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "card_type": "operator",
+  "op_type": "quantizePOP",
+  "family": "POP",
+  "display_name": "Quantize POP",
+  "docs_url": "https://docs.derivative.ca/Quantize_POP",
+  "summary": "Quantizes selected attribute values into discrete levels using floor, round, ceiling, comparison-to-zero logic, value steps, offsets, and optional type casting. It is the focused attribute-quantization counterpart to the quantize controls found in broader math operators.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Attribute class to operate on"},
+    {"name": "group", "type": "Str", "note": "Optional group limiting which elements are affected"},
+    {"name": "inputattrscope", "type": "Str", "note": "Input attribute or components to quantize"},
+    {"name": "parsize", "type": "Menu", "note": "Number of independently controlled component lanes"},
+    {"name": "quantize", "type": "Menu", "note": "Off, floor, round, ceiling, or logical comparison modes"},
+    {"name": "quantstep", "type": "Float", "note": "Step size for discrete levels"},
+    {"name": "quantoffset", "type": "Float", "note": "Offset applied to the quantization grid"},
+    {"name": "quantcompare", "type": "Float", "note": "Comparison value for logical quantize modes"},
+    {"name": "castto", "type": "Menu", "note": "Automatic, float, or int output casting"},
+    {"name": "outputattrscope", "type": "Str", "note": "Output attribute scope"},
+    {"name": "overrideautoattr", "type": "Toggle", "note": "Override automatic output attribute typing"},
+    {"name": "attrtype", "type": "Menu", "note": "Manual output attribute type when overriding automatic output"},
+    {"name": "attrnumcomps", "type": "Menu", "note": "Output component count"},
+    {"name": "attrdefaultval", "type": "Float4", "note": "Default output value if quantization cannot be computed"}
+  ],
+  "key_concepts": [
+    "Quantize POP converts continuous or arbitrary selected attribute values into discrete steps or comparison results.",
+    "Parameter Size, step, offset, and compare controls define independent component quantization lanes.",
+    "Output casting and output-attribute override controls let quantized data become integer masks, float attributes, or custom typed outputs."
+  ],
+  "common_gotchas": [
+    "Use Parameter Size to match the selected components; otherwise all components may share the same quantize settings.",
+    "Logical modes such as greater-than-zero produce binary-style attributes, which can be useful as masks but destructive for continuous data.",
+    "Quantize can introduce discontinuities; use it late in a signal chain or keep the original continuous attribute under a separate name."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

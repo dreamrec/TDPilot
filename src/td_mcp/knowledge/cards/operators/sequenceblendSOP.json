@@ -1,0 +1,56 @@
+{
+  "card_type": "operator",
+  "op_type": "sequenceblendSOP",
+  "family": "SOP",
+  "display_name": "Sequence Blend SOP",
+  "docs_url": "https://docs.derivative.ca/Sequence_Blend_SOP",
+  "summary": "Interpolates between consecutive geometry inputs for 3D metamorphosis, blending selected point and vertex attribute classes.",
+  "key_params": [
+    {
+      "name": "blend",
+      "type": "Float",
+      "note": "Sequential blend amount across inputs"
+    },
+    {
+      "name": "dopos",
+      "type": "Toggle",
+      "note": "Blend point positions"
+    },
+    {
+      "name": "doclr",
+      "type": "Toggle",
+      "note": "Blend colors"
+    },
+    {
+      "name": "donml",
+      "type": "Toggle",
+      "note": "Blend normals"
+    },
+    {
+      "name": "douvw",
+      "type": "Toggle",
+      "note": "Blend texture coordinates"
+    },
+    {
+      "name": "doup",
+      "type": "Toggle",
+      "note": "Blend up vectors"
+    }
+  ],
+  "common_gotchas": [
+    "Compatible topology and attribute layout are needed for meaningful interpolation.",
+    "Blend values cross input pairs sequentially rather than only between the first two inputs.",
+    "Attribute toggles are independent; disabled classes will not interpolate even when geometry positions blend."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "multi-input-geometry-morphing",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Sequence Blend SOP performs 3D metamorphosis between consecutive geometry inputs.",
+    "Blend ranges are sequential: 0-1 blends input 1 to 2, 1-2 blends input 2 to 3, and so on.",
+    "It can independently blend position, color, normals, texture coordinates, and up vectors.",
+    "Blend SOP and Switch SOP are related alternatives for simpler two-source or discrete changes."
+  ]
+}

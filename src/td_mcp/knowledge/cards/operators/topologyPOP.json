@@ -1,0 +1,37 @@
+{
+  "card_type": "operator",
+  "op_type": "topologyPOP",
+  "family": "POP",
+  "display_name": "Topology POP",
+  "docs_url": "https://docs.derivative.ca/Topology_POP",
+  "summary": "Provides low-level control over POP point counts, topology, vertices, primitives, and memory allocation. It can build topology from unsigned point-index attributes, from another POP, from manual topology info, or from GPU-resident count attributes.",
+  "key_params": [
+    {"name": "maxpointsmode", "type": "Menu", "note": "How maximum point allocation is determined"},
+    {"name": "maxpoints", "type": "Int", "note": "Manual maximum point count"},
+    {"name": "pointcountinfo", "type": "Menu", "note": "Point count source"},
+    {"name": "pointcountpop", "type": "POP", "note": "POP containing point-count data"},
+    {"name": "pointcountclass", "type": "Menu", "note": "Attribute class for point-count data"},
+    {"name": "pointcountattr", "type": "Str", "note": "Point count attribute name"},
+    {"name": "render", "type": "Toggle", "note": "Enable viewer rendering"},
+    {"name": "primsourcemode", "type": "Menu", "note": "Use input primitive source or specified POP"},
+    {"name": "primmode", "type": "Menu", "note": "Source topology or attribute/manual topology info"},
+    {"name": "pointindexattrname", "type": "Str", "note": "Unsigned point-index attribute used to describe topology"}
+  ],
+  "key_concepts": [
+    "POP point count and topology allocation",
+    "vertices and primitives memory control",
+    "unsigned point-index attributes as topology",
+    "manual Topology Info versus GPU attribute counts",
+    "primitive, vertex, and primitive-attribute source POPs",
+    "GLSL Advanced POP topology buffer handoff",
+    "CPU-known versus GPU-known counts"
+  ],
+  "common_gotchas": [
+    "Topology POP is for advanced/generated buffers; it can create invalid geometry if counts and index attributes disagree.",
+    "Disable render while intermediate topology is incomplete or non-renderable.",
+    "Manual count info can avoid GPU-to-CPU stalls, but only when exact counts are truly known."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

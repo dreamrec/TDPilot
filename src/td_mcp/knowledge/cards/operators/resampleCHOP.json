@@ -1,0 +1,41 @@
+{
+  "card_type": "operator",
+  "op_type": "resampleCHOP",
+  "family": "CHOP",
+  "display_name": "Resample CHOP",
+  "docs_url": "https://docs.derivative.ca/Resample_CHOP",
+  "summary": "Resamples an input CHOP to a new sample rate and/or interval, mapping the entire input interval onto the output interval.",
+  "key_params": [
+    {"name": "method", "type": "Menu", "note": "Same rate/new interval, new rate/same time range, new rate/same index range, or new rate/new interval"},
+    {"name": "rate", "type": "Float", "note": "New sample rate"},
+    {"name": "relative", "type": "Menu", "note": "Absolute, relative to start/end, or relative to current frame"},
+    {"name": "start", "type": "Float", "note": "New start position"},
+    {"name": "startunit", "type": "Menu", "note": "Start units"},
+    {"name": "end", "type": "Float", "note": "New end position"},
+    {"name": "endunit", "type": "Menu", "note": "End units"},
+    {"name": "quatrot", "type": "Toggle", "note": "Quaternion blending between samples"},
+    {"name": "interp", "type": "Menu", "note": "No interpolation, linear, cubic, pulse preserve, or repeat samples"},
+    {"name": "constarea", "type": "Toggle", "note": "Preserve area under the channel by scaling values"},
+    {"name": "correct", "type": "Toggle", "note": "Correct cyclic channels by shortest step"},
+    {"name": "cyclelen", "type": "Float", "note": "Cycle length for cyclic correction"},
+    {"name": "uselastframe", "type": "Toggle", "note": "Trim to input last frame before resampling"}
+  ],
+  "key_concepts": [
+    "Resample CHOP converts input channels to a new sample rate, a new interval, or both.",
+    "The full input interval is always mapped onto the output interval.",
+    "Method controls whether rate, interval, index range, or both rate and interval are changed.",
+    "Interpolation can use nearest sample, linear, cubic, pulse-preserve, or repeated-sample behavior depending on the data shape.",
+    "In Time Slice mode, Resample CHOP only changes sample rate and uses simple linear interpolation."
+  ],
+  "common_gotchas": [
+    "The entire input interval is resampled to match the output interval.",
+    "In Time Slice mode, Resample only changes sample rate and uses simple linear interpolation.",
+    "Cubic interpolation is smoother but not recommended for sharp changes.",
+    "Pulse Preserve is the safer mode for one-sample trigger pulses.",
+    "Correct for Cycles is important for angle-like channels such as 359-to-0 transitions.",
+    "Use Stretch CHOP when the sample rate should stay the same and only the interval should change."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2025.30000+ sample-rate and interval conversion",
+  "last_verified": "2026-06-18"
+}

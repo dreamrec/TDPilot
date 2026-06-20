@@ -1,0 +1,89 @@
+{
+  "card_type": "operator",
+  "op_type": "notchTOP",
+  "family": "TOP",
+  "display_name": "Notch TOP",
+  "docs_url": "https://docs.derivative.ca/Notch_TOP",
+  "summary": "Loads and renders a compiled Notch Block (.dfxdll), generating parameters for exposed Notch block properties and selecting output layers for TOP output.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Load/render or release the Notch block instance."
+    },
+    {
+      "name": "clearparams",
+      "type": "Toggle",
+      "note": "Clear exposed parameter values when the block file changes."
+    },
+    {
+      "name": "block",
+      "type": "File",
+      "note": "Path to the compiled .dfxdll Notch Block."
+    },
+    {
+      "name": "layer",
+      "type": "Menu",
+      "note": "Output layer rendered by the Notch TOP."
+    },
+    {
+      "name": "playmode",
+      "type": "Menu",
+      "note": "Playback mode: lockedtotimeline, specifyindex, or sequential."
+    },
+    {
+      "name": "init",
+      "type": "Pulse",
+      "note": "Initialize playback at the start without advancing."
+    },
+    {
+      "name": "start",
+      "type": "Pulse",
+      "note": "Reset to the start and begin playback."
+    },
+    {
+      "name": "play",
+      "type": "Toggle",
+      "note": "Enable or pause playback in sequential mode."
+    },
+    {
+      "name": "speed",
+      "type": "Float",
+      "note": "Playback speed multiplier."
+    },
+    {
+      "name": "index",
+      "type": "Float",
+      "note": "Playback position when using Specify Index mode."
+    },
+    {
+      "name": "indexunit",
+      "type": "Menu",
+      "note": "Units for index: samples, frames, or seconds."
+    },
+    {
+      "name": "purge",
+      "type": "Pulse",
+      "note": "Purge video memory used by the block."
+    }
+  ],
+  "common_gotchas": [
+    "Official docs mark Notch TOP as Windows-only and limited to Educational, Commercial, and Pro licenses.",
+    "Commercial and Educational licenses are limited to two active blocks at 1920x1080.",
+    "CodeMeter Runtime v7.60+ and the required Notch runtime DLLs must be installed for blocks to load.",
+    "Set TOUCH_NOTCH_LOGGING=1 in the Windows environment when diagnosing Notch block load failures.",
+    "Exposed CHOP arrays must match the block expected sample and channel layout or the node will warn."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Notch_snippets"
+  ],
+  "build_relevance": "vendor_runtime",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Loads a compiled Notch Block (.dfxdll) and renders a selected output layer as a TOP.",
+    "Generates custom TouchDesigner parameters from exposed Notch block properties, preferably using stable Unique Identifiers.",
+    "Playback can be locked to the timeline, driven by an explicit index, or run sequentially.",
+    "Exposed TOP, CHOP, object, and camera properties have strict data layout and pixel-format expectations."
+  ]
+}

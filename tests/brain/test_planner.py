@@ -59,7 +59,9 @@ async def test_vague_intent_returns_blocked_question_instead_of_empty_guess():
 
 @pytest.mark.asyncio
 async def test_missing_required_operator_blocks_execution_plan():
-    client = FakeTDClient(scripted={"families": {"families": {"TOP": ["noiseTOP", "nullTOP"]}}, "nodes": {"nodes": []}})
+    client = FakeTDClient(
+        scripted={"families": {"families": {"TOP": ["noiseTOP", "nullTOP"]}}, "nodes": {"nodes": []}}
+    )
 
     plan = await build_brain_plan(client, intent="build feedback loop", target_root="/project1")
 
@@ -74,8 +76,8 @@ async def test_pop_intent_builds_particle_concept_graph():
         scripted={
             "families": {
                 "families": {
-                    "POP": ["circlePOP", "noisePOP", "nullPOP"],
-                    "TOP": ["nullTOP"],
+                    "POP": ["circlePOP", "noisePOP", "mathmixPOP", "nullPOP"],
+                    "TOP": ["rendersimpleTOP", "nullTOP"],
                 }
             },
             "nodes": {"nodes": []},
@@ -86,8 +88,16 @@ async def test_pop_intent_builds_particle_concept_graph():
 
     assert plan.blocked_questions == []
     assert plan.concept_graph.profile == "pop"
-    assert {"circlePOP", "noisePOP", "nullPOP"}.issubset(set(plan.concept_graph.operators))
+    assert {"circlePOP", "noisePOP", "mathmixPOP", "nullPOP", "rendersimpleTOP", "nullTOP"}.issubset(
+        set(plan.concept_graph.operators)
+    )
     assert any(edge.kind == "data" for edge in plan.concept_graph.edges)
+    render_params = [
+        op.args["params"]
+        for op in plan.patch_plan.operations
+        if op.kind == "set_params" and op.target.endswith("/rendersimple")
+    ]
+    assert render_params and render_params[0]["pop"] == "/project1/out_pop"
     assert any(op.kind == "connect" for op in plan.patch_plan.operations)
 
 
@@ -107,7 +117,74 @@ async def test_glsl_uses_docs_operator_but_short_create_type():
     assert "glslTOP" in plan.concept_graph.operators
     create_ops = [op for op in plan.patch_plan.operations if op.kind == "create_node"]
     assert any(op.args["op_type"] == "glsl" for op in create_ops)
+    shader_params = [
+        op.args["params"]
+        for op in plan.patch_plan.operations
+        if op.kind == "set_params" and op.target.endswith("/glsl")
+    ]
+    assert shader_params and shader_params[0]["pixeldat"] == "/project1/text"
     assert any(edge.kind == "reference" for edge in plan.concept_graph.edges)
+
+
+@pytest.mark.asyncio
+async def test_glsl_material_intent_builds_rendered_material_graph():
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "COMP": ["geometryCOMP", "cameraCOMP"],
+                    "MAT": ["glslMAT"],
+                    "TOP": ["renderTOP", "nullTOP"],
+                    "DAT": ["textDAT"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client, intent="create a GLSL material with vertex shader", target_root="/project1"
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.concept_graph.profile == "glsl_material"
+    assert {"geometryCOMP", "glslMAT", "cameraCOMP", "renderTOP", "textDAT", "nullTOP"}.issubset(
+        set(plan.concept_graph.operators)
+    )
+    material_params = [
+        op.args["params"]
+        for op in plan.patch_plan.operations
+        if op.kind == "set_params" and "vdat" in op.args["params"]
+    ]
+    assert material_params
+    assert material_params[0]["vdat"] == "/project1/text"
+    assert material_params[0]["pdat"] == "/project1/text2"
+
+
+@pytest.mark.asyncio
+async def test_glsl_pop_intent_builds_attribute_shader_graph():
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "POP": ["circlePOP", "glslPOP", "nullPOP"],
+                    "TOP": ["rendersimpleTOP", "nullTOP"],
+                    "DAT": ["textDAT"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client, intent="create a GLSL POP attribute shader", target_root="/project1"
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.concept_graph.profile == "glsl_pop"
+    assert {"circlePOP", "glslPOP", "textDAT", "nullPOP", "rendersimpleTOP", "nullTOP"}.issubset(
+        set(plan.concept_graph.operators)
+    )
 
 
 @pytest.mark.asyncio
@@ -124,7 +201,9 @@ async def test_panel_ui_reference_edges_do_not_compile_to_fake_wires():
         }
     )
 
-    plan = await build_brain_plan(client, intent="build a panel UI with a slider and button", target_root="/project1")
+    plan = await build_brain_plan(
+        client, intent="build a panel UI with a slider and button", target_root="/project1"
+    )
 
     assert plan.blocked_questions == []
     assert plan.concept_graph.profile == "panel_ui"
@@ -138,12 +217,16 @@ async def test_panel_ui_reference_edges_do_not_compile_to_fake_wires():
 async def test_control_rig_plan_marks_custom_parameters_as_risk_to_validate():
     client = FakeTDClient(
         scripted={
-            "families": {"families": {"COMP": ["baseCOMP"], "CHOP": ["constantCHOP", "mathCHOP", "nullCHOP"]}},
+            "families": {
+                "families": {"COMP": ["baseCOMP"], "CHOP": ["constantCHOP", "mathCHOP", "nullCHOP"]}
+            },
             "nodes": {"nodes": [{"name": "ctrl"}]},
         }
     )
 
-    plan = await build_brain_plan(client, intent="make a custom parameter control rig", target_root="/project1")
+    plan = await build_brain_plan(
+        client, intent="make a custom parameter control rig", target_root="/project1"
+    )
 
     assert plan.blocked_questions == []
     assert plan.concept_graph.profile == "control_rig"

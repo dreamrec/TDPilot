@@ -1,0 +1,49 @@
+{
+  "card_type": "operator",
+  "op_type": "parameterCHOP",
+  "family": "CHOP",
+  "display_name": "Parameter CHOP",
+  "docs_url": "https://docs.derivative.ca/Parameter_CHOP",
+  "summary": "Fetches built-in, custom, and sequence parameter values from any OP type into CHOP channels.",
+  "key_concepts": [
+    "Parameter CHOP gets parameter values, including custom parameters, from all OP types.",
+    "It replaces the old Fetch CHOP and should be used for OP parameter values rather than CHOP output channels.",
+    "Operators, sequences, pargroups, and parameter names all support pattern matching and NOT selections with ^.",
+    "Fetch switches between normal parameter fetching and sequence fetching; sequences can create multisample channels by block index.",
+    "Name Format controls whether channel names are parameter-only, OP+parameter, or full path names for multi-export workflows.",
+    "Use node.par.Customname expressions for one-off reads and Parameter Execute DAT for parameter-change events."
+  ],
+  "key_params": [
+    {"name": "ops", "type": "String", "note": "Operator names/paths/patterns to read"},
+    {"name": "fetch", "type": "Menu", "note": "Fetch Parameters or Sequences"},
+    {"name": "partypes", "type": "MenuItem", "note": "Fetch Parameters mode"},
+    {"name": "sequencetypes", "type": "MenuItem", "note": "Fetch Sequences mode"},
+    {"name": "sequences", "type": "String", "note": "Sequence names/patterns to inspect"},
+    {"name": "pargroups", "type": "String", "note": "Parameter group patterns to fetch"},
+    {"name": "parameter", "type": "String", "note": "Parameter-name patterns to fetch"},
+    {"name": "custom", "type": "Toggle", "note": "Include custom parameters"},
+    {"name": "builtin", "type": "Toggle", "note": "Include built-in parameters"},
+    {"name": "nameformat", "type": "Menu", "note": "Parameter name, OP+parameter, or full-path channel naming"},
+    {"name": "op", "type": "MenuItem", "note": "Name channels using OP and parameter names"},
+    {"name": "path", "type": "MenuItem", "note": "Name channels using full path names"},
+    {"name": "renamefrom", "type": "String", "note": "Pattern to rename from"},
+    {"name": "renameto", "type": "String", "note": "Pattern replacement"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"}
+  ],
+  "common_gotchas": [
+    "Parameter CHOP replaces the old Fetch CHOP.",
+    "Operators, Sequences, ParGroups, and Parameter fields support pattern matching and NOT selections with ^.",
+    "When multiple sequence blocks are selected, the channel can become multisample; sequences with shorter block lengths use HOLD behavior.",
+    "Name Format matters for export workflows; full-path names are safer for multi-export but noisier for general control.",
+    "For one-off parameter access in expressions, node.par.Customname may be simpler; for event reactions, use Parameter Execute DAT.",
+    "Use Select CHOP to retrieve channels from CHOP outputs; Parameter CHOP is for OP parameter values."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ parameter introspection/control",
+  "last_verified": "2026-06-18"
+}

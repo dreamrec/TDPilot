@@ -1,0 +1,49 @@
+{
+  "card_type": "operator",
+  "op_type": "joystickCHOP",
+  "family": "CHOP",
+  "display_name": "Joystick CHOP",
+  "docs_url": "https://docs.derivative.ca/Joystick_CHOP",
+  "summary": "Reads game controllers, joysticks, driving wheels, and related HID-style devices into axis, rotation, slider, button, POV hat, and connection channels.",
+  "key_concepts": [
+    "Outputs controller axes, rotation axes, sliders, buttons, POV hats, and connection state from game controllers or joystick-style devices.",
+    "The documented channel surface supports up to 6 axes, 32 buttons, 2 sliders, and 4 POV hats, but actual output depends on the connected hardware.",
+    "Joystick Source selects the OS-presented controller slot or defaults to the first available device, which affects multi-controller projects.",
+    "Axis Range changes the expected centered value and output range, while Axis Dead Zone suppresses small movements around center.",
+    "Channel Page sample-rate and extend-condition controls determine how controller values behave outside the active sample interval."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Receive controller data while on"},
+    {"name": "source", "type": "Menu", "note": "Player/controller source, or default first controller"},
+    {"name": "axisrange", "type": "Menu", "note": "Axis range: -1..1 or 0..1"},
+    {"name": "xaxis", "type": "String", "note": "X-axis channel name"},
+    {"name": "yaxis", "type": "String", "note": "Y-axis channel name"},
+    {"name": "yaxisinvert", "type": "Toggle", "note": "Invert Y-axis"},
+    {"name": "zaxis", "type": "String", "note": "Z-axis channel name"},
+    {"name": "xrot", "type": "String", "note": "X-rotation channel name"},
+    {"name": "yrot", "type": "String", "note": "Y-rotation channel name"},
+    {"name": "yrotinvert", "type": "Toggle", "note": "Invert Y rotation"},
+    {"name": "zrot", "type": "String", "note": "Z-rotation channel name"},
+    {"name": "slider0", "type": "String", "note": "Slider 1 channel name"},
+    {"name": "slider1", "type": "String", "note": "Slider 2 channel name"},
+    {"name": "buttonarray", "type": "String", "note": "Button channel names"},
+    {"name": "povarrray", "type": "String", "note": "POV hat channel names as documented"},
+    {"name": "povstatearray", "type": "String", "note": "POV hat state channel names"},
+    {"name": "connected", "type": "Toggle", "note": "Output connected state"},
+    {"name": "axisdeadzone", "type": "Float", "note": "Axis dead zone"},
+    {"name": "rate", "type": "Float", "note": "Output sample rate"},
+    {"name": "left", "type": "Menu", "note": "Left extend condition"},
+    {"name": "right", "type": "Menu", "note": "Right extend condition"},
+    {"name": "defval", "type": "Float", "note": "Default extend value"}
+  ],
+  "common_gotchas": [
+    "The docs describe up to six axes, 32 buttons, two sliders, and four POV hats, but actual devices vary.",
+    "Default source adopts the first controller the OS presents; explicit player/source selection is safer.",
+    "Axis center/default values depend on the axis range and whether a physical axis exists.",
+    "Controller calibration and OS recognition affect output before TouchDesigner sees the device.",
+    "The documented POV Hat Array parameter token appears as povarrray; preserve the actual TD parameter spelling."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ input hardware",
+  "last_verified": "2026-06-18"
+}

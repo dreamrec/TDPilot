@@ -1,0 +1,40 @@
+{
+  "card_type": "operator",
+  "op_type": "dmxinCHOP",
+  "family": "CHOP",
+  "display_name": "DMX In CHOP",
+  "docs_url": "https://docs.derivative.ca/DMX_In_CHOP",
+  "summary": "Receives DMX, Art-Net, sACN, or KiNET data as CHOP channels, with serial, network, filtering, packet-format, queue, and resampling controls.",
+  "key_concepts": [
+    "Receives DMX, Art-Net, sACN, or KiNET into CHOP channels, with DMX channel values in the 0-255 range and physical DMX refresh limited to about 44 Hz.",
+    "Interface selects the protocol or device path, while Format determines whether packets become time-sliced samples or packet-per-channel Latest/All outputs.",
+    "Art-Net Net, Subnet, and Universe are protocol address fields, not IP networking fields; sACN universe 0 is reserved by the system.",
+    "A Filter Table can restrict packet-per-channel Art-Net or sACN reception by net, subnet, universe, and optional single-IP source/destination filters.",
+    "Queue Size smooths Art-Net or sACN packet arrival at the cost of latency, and Rate resamples incoming data for downstream CHOP timing."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Connect to the selected device or network interface"},
+    {"name": "interface", "type": "Menu", "note": "Enttec serial/USB, Art-Net, sACN, or KiNET"},
+    {"name": "device", "type": "Menu", "note": "Selected DMX device"},
+    {"name": "serialport", "type": "Menu", "note": "Serial COM port for generic serial mode"},
+    {"name": "format", "type": "Menu", "note": "Packet-per-sample or packet-per-channel input format"},
+    {"name": "net", "type": "Integer", "note": "Art-Net net address, not an IP address"},
+    {"name": "subnet", "type": "Integer", "note": "Art-Net subnet address"},
+    {"name": "universe", "type": "Integer", "note": "DMX universe"},
+    {"name": "filterdat", "type": "DAT", "note": "Filter table for packet-per-channel Art-Net or sACN"},
+    {"name": "startcodes", "type": "String", "note": "Accepted sACN start codes"},
+    {"name": "multicast", "type": "Toggle", "note": "Enable sACN multicast"},
+    {"name": "queuesize", "type": "Integer", "note": "Incoming packet queue size"},
+    {"name": "rate", "type": "Float", "note": "Resample incoming data to this rate"}
+  ],
+  "common_gotchas": [
+    "DMX channel values are 0-255 and physical DMX refresh is limited to about 44 Hz.",
+    "Art-Net net and subnet parameters are protocol addresses, not IP network or subnet-mask fields.",
+    "Filter table srcaddress and destaddress cells expect single IP addresses; pattern matching is not supported.",
+    "Queue Size can smooth packet arrival but adds latency and may create more packets per cook in All mode.",
+    "Use Wireshark or ENTTEC NMU when diagnosing Art-Net, DMX, or ENTTEC device discovery problems."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ network/hardware I/O",
+  "last_verified": "2026-06-18"
+}

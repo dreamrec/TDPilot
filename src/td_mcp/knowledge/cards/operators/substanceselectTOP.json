@@ -1,0 +1,48 @@
+{
+  "card_type": "operator",
+  "op_type": "substanceselectTOP",
+  "family": "TOP",
+  "display_name": "Substance Select TOP",
+  "docs_url": "https://docs.derivative.ca/Substance_Select_TOP",
+  "summary": "Selects one generated texture output from a referenced Substance TOP for independent routing and processing.",
+  "key_params": [
+    {
+      "name": "substance",
+      "type": "TOP",
+      "note": "Substance TOP source."
+    },
+    {
+      "name": "output",
+      "type": "Menu",
+      "note": "Generated Substance output texture to select."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "The selected outputs depend on the loaded Substance graph.",
+    "Use separate Substance Select TOPs for maps that need independent processing or material assignment.",
+    "Changing the Substance source can change the available Output menu entries.",
+    "The Output menu is dynamic, so saved names can go stale when the .sbsar changes."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "MAT_snippets"
+  ],
+  "build_relevance": "substance_texture_routing",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Substance Select TOP extracts one generated texture from a Substance TOP.",
+    "The available Output menu entries are dynamic and depend on the referenced Substance TOP graph.",
+    "Multiple Substance Select TOPs are useful when maps need independent filtering or material routing.",
+    "Changing the source Substance TOP can change which output names are valid."
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "card_type": "operator",
+  "op_type": "insertDAT",
+  "family": "DAT",
+  "display_name": "Insert DAT",
+  "docs_url": "https://docs.derivative.ca/Insert_DAT",
+  "summary": "Inserts a row or column into a table DAT, with optional name handling and duplicate replacement for table-building workflows.",
+  "key_params": [
+    {
+      "name": "insert",
+      "type": "Menu",
+      "note": "Choose whether to insert a row or column"
+    },
+    {
+      "name": "at",
+      "type": "Menu",
+      "note": "Insert by beginning, end, index, or name-style location"
+    },
+    {
+      "name": "index",
+      "type": "Integer/String",
+      "note": "Index or name target used by the At setting"
+    },
+    {
+      "name": "contents",
+      "type": "String/Expr",
+      "note": "Space-separated contents or list expression for the inserted cells"
+    },
+    {
+      "name": "includenames",
+      "type": "Toggle",
+      "note": "Treat first row or column names as part of insertion logic"
+    },
+    {
+      "name": "replaceduplicate",
+      "type": "Toggle",
+      "note": "Replace rows or columns when duplicate names are encountered"
+    },
+    {
+      "name": "replace",
+      "type": "Menu",
+      "note": "Choose replacement behavior for duplicate names"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "replace0expr",
+      "type": "Expression",
+      "note": "Cell expression used by the Replace multi-parameter block"
+    },
+    {
+      "name": "replace0names",
+      "type": "String",
+      "note": "Names used by the Replace multi-parameter block"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Non-table input DATs are converted to tables before insertion.",
+    "Space-separated contents split cells; quote cells with spaces or use a Python list expression.",
+    "Extra content entries beyond the table width or height are ignored.",
+    "Duplicate row or column name replacement only behaves as intended when name handling is configured deliberately."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "table-row-column-insertion",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Inserts a row or column into an input table DAT.",
+    "The At and Index parameters determine whether insertion happens at the start, end, or a numeric index.",
+    "Contents are parsed into cell entries, with quoted strings used when a cell includes spaces.",
+    "Replace controls can fill or replace cells using named replace blocks and expressions."
+  ]
+}

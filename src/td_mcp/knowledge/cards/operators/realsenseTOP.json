@@ -1,0 +1,101 @@
+{
+  "card_type": "operator",
+  "op_type": "realsenseTOP",
+  "family": "TOP",
+  "display_name": "RealSense TOP",
+  "docs_url": "https://docs.derivative.ca/RealSense_TOP",
+  "summary": "Connects to Intel RealSense devices and outputs color, depth, infrared, point-cloud, UV-map, and related camera images.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Capture the selected image stream from the camera."
+    },
+    {
+      "name": "model",
+      "type": "Menu",
+      "note": "Select RealSense model such as F200, R200, ZR300, SR300, SR305, D415, D435, D455, T265, or L515."
+    },
+    {
+      "name": "sensor",
+      "type": "Menu/String",
+      "note": "Select which connected device to use."
+    },
+    {
+      "name": "image",
+      "type": "Menu",
+      "note": "Choose color, depth, raw depth, aligned images, infrared, point cloud, UV maps, segmentation, or fisheye."
+    },
+    {
+      "name": "colorres",
+      "type": "Menu",
+      "note": "Color video resolution."
+    },
+    {
+      "name": "maxdepth",
+      "type": "Float",
+      "note": "Depth value mapped to pixel value 1."
+    },
+    {
+      "name": "mirrorimage",
+      "type": "Toggle",
+      "note": "Flip the output horizontally."
+    },
+    {
+      "name": "defaulttradeoff",
+      "type": "Toggle",
+      "note": "Use the device default Motion Range Tradeoff."
+    },
+    {
+      "name": "tradeoff",
+      "type": "Float",
+      "note": "Tradeoff between motion quality and range."
+    },
+    {
+      "name": "optionschop",
+      "type": "CHOP",
+      "note": "CHOP channels used to set RealSense SDK options by lower-case option name."
+    },
+    {
+      "name": "skeltracking",
+      "type": "Toggle",
+      "note": "Enable Cubemos skeleton tracking where supported."
+    },
+    {
+      "name": "usedefaultpaths",
+      "type": "Toggle",
+      "note": "Use default Cubemos license/model paths."
+    },
+    {
+      "name": "licensedir",
+      "type": "Folder",
+      "note": "Cubemos license directory for skeleton tracking."
+    },
+    {
+      "name": "modelfile",
+      "type": "File",
+      "note": "Cubemos model file for skeleton tracking."
+    }
+  ],
+  "common_gotchas": [
+    "Official docs note librealsense SDK v2.50.0 is not expected to be updated for Apple Silicon, so it is unavailable in those builds.",
+    "Visualized Depth is display-oriented because the SDK dynamically re-ranges it; do not treat it as actual depth measurement.",
+    "Fixed-point depth output clamps beyond 1 while floating-point output can exceed 1.",
+    "Several image modes are SDK/platform-specific, including Windows-only RealSense SDK outputs.",
+    "RealSense CHOP skeleton tracking is deprecated because Cubemos licenses are no longer available.",
+    "Options CHOP channel names should match RealSense option constants with RS2_OPTION_ removed and lowercased."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "DepthCamera_snippets",
+    "PointCloud_snippets"
+  ],
+  "build_relevance": "depth_camera_input",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Connects to Intel RealSense devices and outputs color, depth, infrared, UV, point-cloud, and related camera images.",
+    "Depth and raw-depth outputs are re-ranged by Max Depth; fixed-point formats clamp while floating formats can exceed 1.",
+    "Depth-to-color and color-to-depth UV outputs are RG 32-bit float textures intended for Remap TOP workflows.",
+    "Options CHOP channels set RealSense SDK options by lower-case names with RS2_OPTION_ removed."
+  ]
+}

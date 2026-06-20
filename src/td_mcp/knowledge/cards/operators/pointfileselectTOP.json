@@ -1,0 +1,62 @@
+{
+  "card_type": "operator",
+  "op_type": "pointfileselectTOP",
+  "family": "TOP",
+  "display_name": "Point File Select TOP",
+  "docs_url": "https://docs.derivative.ca/Point_File_Select_TOP",
+  "summary": "Selects additional point-file data images from a Point File In TOP, avoiding duplicate file loads when multiple attributes are needed.",
+  "key_params": [
+    {
+      "name": "pointfileintop",
+      "type": "TOP",
+      "note": "Primary Point File In TOP."
+    },
+    {
+      "name": "red",
+      "type": "Menu",
+      "note": "Point attribute assigned to output red."
+    },
+    {
+      "name": "green",
+      "type": "Menu",
+      "note": "Point attribute assigned to output green."
+    },
+    {
+      "name": "blue",
+      "type": "Menu",
+      "note": "Point attribute assigned to output blue."
+    },
+    {
+      "name": "alpha",
+      "type": "Menu",
+      "note": "Point attribute assigned to output alpha."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "resolution",
+      "type": "XY",
+      "note": "Common TOP custom output resolution."
+    }
+  ],
+  "common_gotchas": [
+    "Requires a valid Point File In TOP; this node does not load files by itself.",
+    "Channel selections should match attributes available in the source point file.",
+    "Still emits only RGBA per output, so multiple Select TOPs may be needed for many fields.",
+    "Treat output as point data texture unless it is explicitly mapped for display."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Creates additional output images from a Point File In TOP source.",
+    "Intended for point files with more than four channels or attributes.",
+    "Avoids loading the same point source again when multiple RGBA field groupings are needed.",
+    "Channel choices must match fields available in the source point data or official constant channels."
+  ]
+}

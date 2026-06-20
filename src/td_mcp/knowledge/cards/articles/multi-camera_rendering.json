@@ -1,0 +1,55 @@
+{
+  "card_type": "article",
+  "article_id": "multi-camera_rendering",
+  "title": "Multi-Camera Rendering",
+  "family": "RENDERING",
+  "families": [
+    "RENDERING",
+    "TOP",
+    "COMP",
+    "GPU",
+    "VR"
+  ],
+  "summary": "Official Derivative overview of rendering multiple cameras in a single render pass through Render TOP camera lists, including GPU support requirements, VR/cube-map use cases, light-mask limitations, Multi-Camera Hint, and Render Select TOP extraction.",
+  "source_url": "https://docs.derivative.ca/Multi-Camera_Rendering",
+  "docsbrain_page_id": "multi-camera_rendering",
+  "covered_operators": [
+    "renderTOP",
+    "renderselectTOP",
+    "cameraCOMP"
+  ],
+  "key_concepts": [
+    "Multi-Camera Rendering",
+    "multiple cameras",
+    "single rendering pass",
+    "scene-graph",
+    "graphics driver",
+    "lights",
+    "textures",
+    "material",
+    "draw calls",
+    "Nvidia Pascal",
+    "Geforce 1000",
+    "Quadro P-Series",
+    "AMD Polaris",
+    "Radeon R9",
+    "Radeon Pro WX",
+    "VR rendering",
+    "Cube Map",
+    "different light masks",
+    "Cameras parameter",
+    "Multi-Camera Hint",
+    "Render TOP",
+    "Render Select TOP",
+    "Simultaneous Multi-Projection"
+  ],
+  "guidance": [
+    "Use this article when a Render TOP should render several cameras looking at the same scene efficiently.",
+    "Multi-camera rendering traverses the scene graph once and avoids repeated driver work for shared lights, textures, materials, and draw calls.",
+    "Use it for VR-style camera pairs or cube-map rendering where a single pass is preferable to one pass per camera or cube side.",
+    "Multi-camera rendering will not function when cameras have different light masks; those cameras render one pass at a time.",
+    "In Render TOP, list multiple cameras in the Cameras parameter, tune behavior with Multi-Camera Hint, and use Render Select TOP to extract each camera result."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

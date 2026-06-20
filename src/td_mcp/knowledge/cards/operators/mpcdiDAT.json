@@ -1,0 +1,82 @@
+{
+  "card_type": "operator",
+  "op_type": "mpcdiDAT",
+  "family": "DAT",
+  "display_name": "MPCDI DAT",
+  "docs_url": "https://docs.derivative.ca/MPCDI_DAT",
+  "summary": "Loads MPCDI calibration data for projection workflows and exposes projection and camera transform members for use with Camera COMP setups.",
+  "key_params": [
+    {
+      "name": "file",
+      "type": "File",
+      "note": "MPCDI calibration file to load"
+    },
+    {
+      "name": "reloadpulse",
+      "type": "Pulse",
+      "note": "Reload calibration data from disk"
+    },
+    {
+      "name": "outputby",
+      "type": "Menu",
+      "note": "Select calibration output organization"
+    },
+    {
+      "name": "bufferid",
+      "type": "String",
+      "note": "MPCDI buffer ID to output"
+    },
+    {
+      "name": "regionid",
+      "type": "String",
+      "note": "MPCDI region ID to output"
+    },
+    {
+      "name": "near",
+      "type": "Float",
+      "note": "Near plane value used for projection data"
+    },
+    {
+      "name": "far",
+      "type": "Float",
+      "note": "Far plane value used for projection data"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Requires a valid .mpcdi calibration file; the DAT does not generate calibration from geometry.",
+    "Projection values normally need to be applied through MPCDI DAT Python members on a Camera COMP.",
+    "Buffer and region identifiers must match the calibration file or the desired region will not be selected.",
+    "Near and far settings affect projection data and should match the render camera's intended clipping range."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "projection-calibration-data",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Reads MPCDI calibration files and outputs buffer or region metadata.",
+    "Output By, Buffer ID, and Region ID choose which file section is extracted.",
+    "Near and Far parameters provide projection-depth context for calibration data.",
+    "Reload Pulse refreshes the parsed MPCDI file after path or file changes."
+  ]
+}

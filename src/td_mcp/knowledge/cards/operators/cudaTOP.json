@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "cudaTOP",
+  "family": "TOP",
+  "display_name": "CUDA TOP",
+  "docs_url": "https://docs.derivative.ca/CUDA_TOP",
+  "summary": "Legacy unsupported CUDA TOP page kept for old projects; official guidance is to use CPlusPlus TOP for CUDA plugins.",
+  "key_params": [
+    {
+      "name": "replacement",
+      "type": "Operator",
+      "note": "Use cplusplusTOP for CUDA plugin workflows"
+    }
+  ],
+  "common_gotchas": [
+    "CUDA TOP should not be generated in new atlas plans.",
+    "Treat existing CUDA TOP nodes as legacy migration targets.",
+    "The official page does not document active CUDA TOP parameters.",
+    "Use CPlusPlus TOP for supported CUDA plugin development."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "CPlusPlus_snippets"
+  ],
+  "build_relevance": "legacy-unsupported",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "CUDA TOP is officially no longer supported.",
+    "Derivative directs CUDA plugin workflows to CPlusPlus TOP instead.",
+    "Do not plan new TouchDesigner networks around CUDA TOP.",
+    "Keep the card only for recognizing and migrating old projects.",
+    "Any CUDA-specific implementation should be represented as a CPlusPlus TOP plugin workflow."
+  ]
+}

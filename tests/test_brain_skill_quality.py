@@ -47,7 +47,9 @@ def _brain_skill_paths(root: Path) -> dict[str, Path]:
 def test_root_and_plugin_brain_skills_are_complete_and_trigger_optimized():
     for skill_root in (ROOT / "skills", ROOT / ".agents" / "skills", ROOT / "plugins" / "tdpilot" / "skills"):
         skills = _brain_skill_paths(skill_root)
-        assert EXPECTED_BRAIN_SKILLS.issubset(skills), f"{skill_root} missing {EXPECTED_BRAIN_SKILLS - set(skills)}"
+        assert EXPECTED_BRAIN_SKILLS.issubset(skills), (
+            f"{skill_root} missing {EXPECTED_BRAIN_SKILLS - set(skills)}"
+        )
 
         for name in EXPECTED_BRAIN_SKILLS:
             meta = _frontmatter(skills[name])
@@ -66,9 +68,9 @@ def test_brain_explorer_is_packaged_for_codex_and_claude():
     assert (ROOT / ".codex" / "agents" / "td-brain-explorer.toml").exists()
     assert (ROOT / "agents" / "td-brain-explorer.md").exists()
     assert (ROOT / "plugins" / "tdpilot" / "agents" / "td-brain-explorer.md").exists()
-    assert "tdpilot-brain-explorer" in (ROOT / "plugins" / "tdpilot" / ".codex-plugin" / "plugin.json").read_text(
-        encoding="utf-8"
-    )
+    assert "tdpilot-brain-explorer" in (
+        ROOT / "plugins" / "tdpilot" / ".codex-plugin" / "plugin.json"
+    ).read_text(encoding="utf-8")
 
 
 def test_codex_repository_skills_match_canonical_root_skills():
@@ -76,6 +78,17 @@ def test_codex_repository_skills_match_canonical_root_skills():
         canonical = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
         codex = (ROOT / ".agents" / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
         assert codex == canonical
+
+
+def test_brain_builder_teaches_reviewed_atlas_concept_to_node_workflow():
+    for skill_root in (ROOT / "skills", ROOT / ".agents" / "skills", ROOT / "plugins" / "tdpilot" / "skills"):
+        text = (skill_root / "tdpilot-brain-builder" / "SKILL.md").read_text(encoding="utf-8")
+
+        assert "Concept-to-node Atlas Workflow" in text
+        assert "656-card reviewed operator atlas" in text
+        assert "zero-concept backlog" in text
+        assert "Official Derivative" in text
+        assert "choose the smallest operator chain" in text
 
 
 def test_agents_md_points_codex_to_brain_skills():

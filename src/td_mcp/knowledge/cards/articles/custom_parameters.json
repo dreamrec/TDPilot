@@ -1,0 +1,60 @@
+{
+  "card_type": "article",
+  "article_id": "custom_parameters",
+  "title": "Custom Parameters",
+  "family": "PARAMETER",
+  "families": [
+    "PARAMETER",
+    "COMP",
+    "DAT",
+    "CHOP",
+    "SOP",
+    "TOP",
+    "CPLUSPLUS",
+    "PYTHON"
+  ],
+  "summary": "Official Derivative guide for custom parameters on components, Script OPs, and CPlusPlus operators, covering naming conventions, custom pages, setupParameters(), Page and Par class workflows, access patterns, clone behavior, and style clone immunity.",
+  "source_url": "https://docs.derivative.ca/Custom_Parameters",
+  "docsbrain_page_id": "custom_parameters",
+  "covered_operators": [
+    "baseCOMP",
+    "scriptCHOP",
+    "scriptDAT",
+    "scriptSOP",
+    "scriptTOP",
+    "cplusplusCHOP",
+    "cplusplusTOP",
+    "cplusplusPOP",
+    "cplusplusSOP",
+    "cplusplusDAT",
+    "parameterCHOP",
+    "parameterexecuteDAT"
+  ],
+  "key_concepts": [
+    "Custom Parameters",
+    "Component Editor Dialog",
+    "appendCustomPage()",
+    "setupParameters()",
+    "onPulse()",
+    "customPars",
+    "customPages",
+    "styleCloneImmune",
+    "Page Class",
+    "Par Class",
+    "uppercase first letter",
+    "no underscores"
+  ],
+  "guidance": [
+    "Use this article when adding user-facing controls to COMPs, Script OPs, or CPlusPlus Custom Operators.",
+    "Custom parameter names should use an uppercase first letter, lowercase remaining letters, and no underscores; built-in parameter tokens remain fully lowercase.",
+    "Keep custom parameter names short enough to remain readable when parameter expansion UI is open.",
+    "On Script OPs, define custom parameters in setupParameters() and use onPulse() for pulse-button callbacks.",
+    "Use Parameter CHOP for channelized parameter values and Parameter Execute DAT for callbacks when custom parameter changes must drive Python.",
+    "Custom parameter definitions usually propagate to clones, but values and modes remain unique per clone; set styleCloneImmune when a clone should keep an independent parameter style."
+  ],
+  "related_snippets": [
+    "CHOP_snippets",
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

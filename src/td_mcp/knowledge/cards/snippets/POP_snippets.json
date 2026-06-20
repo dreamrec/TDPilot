@@ -3,10 +3,144 @@
   "snippet_id": "POP_snippets",
   "family": "POP",
   "summary": "Common POP (particle/point) workflow snippets for simulation, physics, and generative geometry.",
+  "docs_url": "https://docs.derivative.ca/OP_Snippets",
+  "source_docs": [
+    "https://docs.derivative.ca/OP_Snippets",
+    "https://docs.derivative.ca/Learning_About_POPs",
+    "https://docs.derivative.ca/Release_Notes/2025.30000/experimental",
+    "https://docs.derivative.ca/Release_Notes/2025.30000/next",
+    "https://docs.derivative.ca/Array_Attribute",
+    "https://docs.derivative.ca/Particle_POP",
+    "https://docs.derivative.ca/Force_Radial_POP"
+  ],
   "examples": [
     "pop_particle_basic: Basic particle system with emitter, forces, and rendering",
     "pop_strange_attractor: Strange attractor point cloud with color mapping",
     "pop_mesh_fill: Fill a mesh volume with evenly distributed points",
     "pop_soft_body: XPBD soft body simulation setup"
-  ]
+  ],
+  "official_examples": [
+    {
+      "example_id": "op_snippets_pop_concepts",
+      "display_name": "POP Concepts OP Snippets",
+      "family": "POP",
+      "operators": [
+        "attributePOP",
+        "dimensionPOP",
+        "groupPOP",
+        "particlePOP"
+      ],
+      "topics": [
+        "POP Concepts",
+        "attributes",
+        "dimensions",
+        "groups",
+        "GPU point workflows"
+      ],
+      "source_url": "https://docs.derivative.ca/OP_Snippets",
+      "supporting_urls": [
+        "https://docs.derivative.ca/Learning_About_POPs",
+        "https://docs.derivative.ca/Release_Notes/2025.30000/experimental"
+      ],
+      "access_path": "Help > Operator Snippets > POP Concepts",
+      "summary": "Start here when the user needs official live examples for POP fundamentals: attributes, dimensions, groups, and point workflows.",
+      "source_context": "Derivative documents that POP OP Snippets include POP Concepts plus snippets for every POP."
+    },
+    {
+      "example_id": "pop_concepts_array_attributes_math",
+      "display_name": "POP CONCEPTS array attributes math OP Snippets",
+      "family": "POP",
+      "operators": [
+        "mathcombinePOP",
+        "mathmixPOP",
+        "mathPOP",
+        "limitPOP",
+        "rerangePOP",
+        "lookupattributePOP",
+        "lookupchannelPOP",
+        "lookuptexturePOP",
+        "quantizePOP",
+        "normalizePOP",
+        "randomPOP",
+        "noisePOP"
+      ],
+      "topics": [
+        "POP Concepts",
+        "array attributes",
+        "array attributes math",
+        "name[:] syntax",
+        "Math Mix POP",
+        "Math Combine POP"
+      ],
+      "source_url": "https://docs.derivative.ca/OP_Snippets",
+      "supporting_urls": [
+        "https://docs.derivative.ca/Release_Notes/2025.30000/next",
+        "https://docs.derivative.ca/Array_Attribute"
+      ],
+      "access_path": "Help > Operator Snippets > POP Concepts > array attributes math",
+      "summary": "Use for the named official POP Concepts example covering array attributes and POP math operators that iterate with name[:] syntax.",
+      "source_context": "Derivative release notes explicitly point users to OP Snippets, including POP CONCEPTS \"array attributes math\", for array-attribute examples."
+    },
+    {
+      "example_id": "op_snippets_particle_pop_feedback",
+      "display_name": "Particle POP feedback and emitter OP Snippets",
+      "family": "POP",
+      "operators": [
+        "particlePOP",
+        "feedbackPOP",
+        "forceradialPOP",
+        "nullPOP"
+      ],
+      "topics": [
+        "particle emitter",
+        "feedback loop",
+        "Target Feedback Loop POP",
+        "PartForce",
+        "PartVel",
+        "Initialize Start"
+      ],
+      "source_url": "https://docs.derivative.ca/OP_Snippets",
+      "supporting_urls": [
+        "https://docs.derivative.ca/Particle_POP",
+        "https://docs.derivative.ca/Force_Radial_POP"
+      ],
+      "access_path": "Help > Operator Snippets > Particle POP",
+      "summary": "Use for official live examples of Particle POP birth/state feedback, finite emitters, PartForce/PartVel integration, and Null POP feedback targets.",
+      "source_context": "Particle POP documentation describes the feedback loop, target POP, PartForce, PartVel, and POP Examples/Overview references; OP Snippets are the live example browser."
+    },
+    {
+      "example_id": "op_snippets_force_radial_pop",
+      "display_name": "Force Radial POP force-field OP Snippets",
+      "family": "POP",
+      "operators": [
+        "forceradialPOP",
+        "particlePOP",
+        "fieldPOP",
+        "pointPOP"
+      ],
+      "topics": [
+        "PartForce",
+        "radial force",
+        "axial force",
+        "spiral force",
+        "Specification POP",
+        "Field POP Weight",
+        "GLSL POP force authoring"
+      ],
+      "source_url": "https://docs.derivative.ca/OP_Snippets",
+      "supporting_urls": [
+        "https://docs.derivative.ca/Force_Radial_POP",
+        "https://docs.derivative.ca/Particle_POP"
+      ],
+      "access_path": "Help > Operator Snippets > Force Radial POP",
+      "summary": "Use for official live examples around particle force accumulation, local radial/axial/spiral forces, specification POPs, and Field POP masking.",
+      "source_context": "Force Radial POP docs say it outputs or adds PartForce for Particle POP loops and can be replaced by Noise, Math Mix, Pattern, Lookup, or GLSL POP force authoring."
+    }
+  ],
+  "common_gotchas": [
+    "Official OP Snippets are launched in TouchDesigner rather than as individual public web pages; keep access_path explicit.",
+    "Particle POP examples should preserve feedback-loop state attributes such as PartForce and PartVel unless the snippet intentionally resets the simulation.",
+    "Force Radial POP accumulates PartForce when PartForce already exists, so stacked force nodes add together."
+  ],
+  "last_verified": "2026-06-17"
 }

@@ -1,0 +1,26 @@
+{
+  "card_type": "operator",
+  "op_type": "convertPOP",
+  "family": "POP",
+  "display_name": "Convert POP",
+  "docs_url": "https://docs.derivative.ca/Convert_POP",
+  "summary": "Keeps input points but reconnects them into different primitive structures, including deleting primitives, creating point primitives, converting line strips and lines, converting quads to triangles, opening or closing line strips, reversing vertex order, and unique/reordered point layout.",
+  "key_params": [
+    {"name": "convert", "type": "Menu", "note": "Primitive conversion operation"},
+    {"name": "delinputattrs", "type": "String", "note": "Optional common POP attribute isolation"}
+  ],
+  "key_concepts": [
+    "Point-preserving topology conversion",
+    "Line strip, line, quad, and point primitive conversion modes",
+    "Unique point flattening and primitive-vertex reorder workflow",
+    "Slow CPU topology readback as an exceptional conversion mode"
+  ],
+  "common_gotchas": [
+    "Convert POP changes topology but keeps the point data, so downstream primitive assumptions must be rechecked.",
+    "Unique and Reorder Points by Prim/Vertex Order flattens the POP into an orderly primitive-vertex point list.",
+    "Copy Topology Back to CPU is marked slow and should be used only when CPU-side topology info is required."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

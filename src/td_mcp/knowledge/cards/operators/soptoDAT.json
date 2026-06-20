@@ -1,0 +1,72 @@
+{
+  "card_type": "operator",
+  "op_type": "soptoDAT",
+  "family": "DAT",
+  "display_name": "SOP to DAT",
+  "docs_url": "https://docs.derivative.ca/SOP_to_DAT",
+  "summary": "Extracts SOP point, vertex, primitive, detail, group, and attribute data into DAT table columns for inspection, scripting, export, or round-trip data workflows.",
+  "key_params": [
+    {
+      "name": "sop",
+      "type": "SOP",
+      "note": "Source SOP path"
+    },
+    {
+      "name": "extract",
+      "type": "Menu",
+      "note": "Extract points, vertices, primitives, or detail data"
+    },
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Limit extraction to a point or primitive group"
+    },
+    {
+      "name": "attrib",
+      "type": "String",
+      "note": "Attribute names or patterns to include"
+    },
+    {
+      "name": "uvforpts",
+      "type": "Toggle",
+      "note": "Copy vertex UV attributes to point rows when extracting point data"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Large SOPs can produce very large DAT tables; use groups and attribute filters to keep the table bounded.",
+    "Multi-value attributes become multiple columns such as attrib(0), attrib(1), and attrib(2), so downstream code should not assume one column per attribute.",
+    "Point, vertex, primitive, and detail extraction modes expose different topology levels.",
+    "Copying vertex UVs to points can change data semantics when multiple vertices share one point."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Extracts point, vertex, primitive, or detail data from a SOP into DAT columns.",
+    "The first output column is an index for point or primitive number.",
+    "Attributes can be extracted by name and multi-value attributes expand to numbered columns.",
+    "Copy Vertex UV to Points copies vertex UV data to point UV columns when extracting point data."
+  ]
+}

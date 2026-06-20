@@ -4,16 +4,33 @@
   "family": "POP",
   "display_name": "Null POP",
   "docs_url": "https://docs.derivative.ca/Null_POP",
-  "summary": "Pass-through POP used as a stable output/reference point for POP chains. Helps keep downstream references stable while internal POP logic changes.",
+  "summary": "Pass-through POP that does nothing, passes its input unchanged, and does not consume CPU or GPU memory. Use it as a named, stable POP reference endpoint while building or refactoring POP chains.",
   "key_params": [
-    {"name": "cook", "type": "Menu", "note": "Cook behavior for the output"},
-    {"name": "display", "type": "Flag", "note": "Display flag should mark the intended POP output during debugging"}
+    {
+      "name": "bypass",
+      "type": "Toggle",
+      "note": "Bypass flag; bypassed operators output their first input unchanged."
+    }
+  ],
+  "key_concepts": [
+    "does nothing",
+    "passes input unchanged",
+    "no CPU or GPU memory",
+    "stable POP reference endpoint",
+    "meaningful Null POP name",
+    "unchanged attributes are references",
+    "middle-click popup info",
+    "(r) reference marker",
+    "Bypass",
+    "Info CHOP"
   ],
   "common_gotchas": [
-    "A Null POP with no input is not a meaningful particle output; ensure the upstream POP chain is connected.",
-    "Use POP inspection to validate point counts, attributes, and finite bounds."
+    "A Null POP itself does not consume CPU or GPU memory and passes unchanged data through, so performance issues usually belong upstream or downstream.",
+    "POP attributes that are not changed can remain references to the POP where they were last created or modified; check the middle-click popup info for the (r) marker.",
+    "Give the endpoint a meaningful Null POP name before referencing it downstream, so new POPs can be inserted upstream without reconnecting consumers.",
+    "Bypass is the only documented Null-page parameter; do not model generic cook or display controls as Null POP parameters."
   ],
-  "related_snippets": ["pop_particles"],
+  "related_snippets": ["POP_snippets", "POP_attribute_ontology"],
   "build_relevance": "2025.30000+",
-  "last_verified": "2026-06-16"
+  "last_verified": "2026-06-18"
 }

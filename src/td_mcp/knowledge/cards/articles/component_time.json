@@ -1,0 +1,40 @@
+{
+  "card_type": "article",
+  "article_id": "component_time",
+  "title": "Component Time",
+  "family": "COMP",
+  "families": [
+    "COMP",
+    "TIME",
+    "PYTHON"
+  ],
+  "summary": "Official Derivative reference for local Component Time, covering the local/time Time COMP pattern, independent component rate/start/end/range settings, Timepath inheritance, Add Component Time, and the mini-timeline shown in networks with component time.",
+  "source_url": "https://docs.derivative.ca/Component_Time",
+  "docsbrain_page_id": "component_time",
+  "covered_operators": [
+    "timeCOMP"
+  ],
+  "key_concepts": [
+    "Component Time",
+    "local/time",
+    "Time COMP",
+    "rate",
+    "start",
+    "end",
+    "range",
+    "Timepath",
+    "Root Time",
+    "timepath()",
+    "Add Component Time",
+    "mini-timeline"
+  ],
+  "guidance": [
+    "Use this article when a generated component needs its own local timing, loop range, or rate independent from the project root timeline.",
+    "Create component time by adding a Time COMP at local/time through Add Component Time.",
+    "Use the Time COMP parameters for rate, start, end, and range rather than inventing separate timing state.",
+    "Remember Component Time is inherited through the hierarchy by Timepath, so nested networks may use the first component time found above them.",
+    "Expect a mini-timeline in network editors viewing a network that has Component Time."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

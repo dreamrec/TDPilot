@@ -1,0 +1,30 @@
+{
+  "card_type": "operator",
+  "op_type": "revolvePOP",
+  "family": "POP",
+  "display_name": "Revolve POP",
+  "docs_url": "https://docs.derivative.ca/Revolve_POP",
+  "summary": "Sweeps line strips around an axis to generate surfaces of revolution. It can use an automatic pivot from each strip's first and last points, or explicit X/Y/Z axes and pivots, and outputs points, rows/columns, triangles, alternating triangles, or quads.",
+  "key_params": [
+    {"name": "axis", "type": "Menu", "note": "Auto, X, Y, or Z revolve axis"},
+    {"name": "autopivot", "type": "Toggle", "note": "Use the line strip endpoints as pivot axis"},
+    {"name": "p", "type": "Float3", "note": "Explicit pivot point"},
+    {"name": "surftype", "type": "Menu", "note": "Connectivity primitive type"},
+    {"name": "divs", "type": "Int", "note": "Number of revolve divisions"},
+    {"name": "texture", "type": "Menu", "note": "Create texture coordinates"},
+    {"name": "normal", "type": "Menu", "note": "Create normals"}
+  ],
+  "key_concepts": [
+    "Revolve POP sweeps each input line strip around an axis to create a separate surface of revolution.",
+    "Auto Pivot uses the first and last point of each line strip as that strip's axis, while X/Y/Z modes use explicit axes and pivot values.",
+    "Connectivity, division, texture, and normal controls decide whether the result is construction geometry, renderable triangles/quads, or attribute-rich surface data."
+  ],
+  "common_gotchas": [
+    "Input must be meaningful line strips; loose points often produce unexpected surfaces.",
+    "Auto Pivot changes per strip, so multiple input strips can revolve around different axes.",
+    "Quad output is the default renderable surface path; line outputs are better for construction/debug views."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

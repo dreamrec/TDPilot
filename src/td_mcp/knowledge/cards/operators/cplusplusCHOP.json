@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "cplusplusCHOP",
+  "family": "CHOP",
+  "display_name": "CPlusPlus CHOP",
+  "docs_url": "https://docs.derivative.ca/CPlusPlus_CHOP",
+  "summary": "Loads a compiled C++ plugin to implement a custom CHOP operator inside TouchDesigner.",
+  "key_concepts": [
+    "Creates custom CHOP operators by loading a compiled plugin written with TouchDesigner's C++ plugin API.",
+    "Plugin Path selects the binary to load, while Re-Init deletes the current plugin class instance and creates a new one.",
+    "Unload Plugin deletes the plugin class instance and unloads the binary when the parameter goes above 1.",
+    "If multiple CPlusPlus CHOPs load the same plugin, every instance must unload it before the plugin file is released.",
+    "The official page points to Write a CPlusPlus Plugin and the C++ category for plugin API contracts and examples.",
+    "Common CHOP controls still apply, including Time Slice, Scope, Sample Rate Match, export, and rename parameters."
+  ],
+  "key_params": [
+    {"name": "plugin", "type": "File", "note": "Compiled plugin path"},
+    {"name": "reinit", "type": "Toggle", "note": "Recreate the plugin class instance while on"},
+    {"name": "reinitpulse", "type": "Pulse", "note": "Instantly reinitialize the plugin class"},
+    {"name": "unloadplugin", "type": "Toggle", "note": "Delete the plugin class instance and unload the plugin when above 1"},
+    {"name": "timeslice", "type": "Toggle", "note": "Force time-sliced CHOP output"},
+    {"name": "scope", "type": "Pattern", "note": "Channel pattern to affect"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate match behavior for conflicting input rates"}
+  ],
+  "common_gotchas": [
+    "Plugin binaries are platform, compiler, and TouchDesigner SDK specific; validate availability before planning around them.",
+    "Re-init deletes and recreates the plugin class instance, which can reset plugin-side state.",
+    "If multiple CPlusPlus CHOPs load the same plugin, all must unload it before the file is released.",
+    "A crashing plugin can destabilize the TouchDesigner process, so prefer dry-run availability checks before loading unknown binaries.",
+    "Use the official C++ plugin examples and Write a CPlusPlus Plugin guide for API contracts."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ compiled plugin",
+  "last_verified": "2026-06-18"
+}

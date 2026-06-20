@@ -1,0 +1,71 @@
+{
+  "card_type": "article",
+  "article_id": "listcomp_class",
+  "title": "listCOMP Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "COMP",
+    "PANEL"
+  ],
+  "summary": "Official Derivative Python API reference for List COMP instances, covering table, row, column, cell, displayed, focus, selection, drag/drop members, list scrolling/focus/reset methods, callbacks, and inherited PanelCOMP / COMP behavior.",
+  "source_url": "https://docs.derivative.ca/ListCOMP_Class",
+  "docsbrain_page_id": "listcomp_class",
+  "covered_operators": [
+    "listCOMP"
+  ],
+  "key_concepts": [
+    "listCOMP Class",
+    "List COMP",
+    "COMP class",
+    "PanelCOMP Class",
+    "ListAttribute",
+    "ListAttributes",
+    "attribs",
+    "colAttribs",
+    "rowAttribs",
+    "cellAttribs",
+    "displayAttribs",
+    "focusCol",
+    "focusRow",
+    "radioCol",
+    "radioRow",
+    "rolloverCol",
+    "rolloverRow",
+    "selectCol",
+    "selectRow",
+    "selectionBorderColor",
+    "selectionColor",
+    "selections",
+    "dragRow",
+    "dragCol",
+    "dropRow",
+    "dropCol",
+    "scroll()",
+    "setKeyboardFocus()",
+    "reset()",
+    "Callbacks",
+    "onInitCell",
+    "onInitRow",
+    "onInitCol",
+    "onInitTable",
+    "onRollover",
+    "onSelect",
+    "onRadio",
+    "onFocus",
+    "onEdit",
+    "onHoverGetAccept",
+    "onDropGetAccept"
+  ],
+  "guidance": [
+    "Use this article when scripting List COMP table styling, cell state, selection overlays, rollover/radio/focus rows and columns, or drag/drop positions.",
+    "List attribute priority is table level first, then row and column, then cell; displayAttribs exposes the final displayed cell attributes after that priority is resolved.",
+    "Use scroll(row, col) to move the List COMP viewport to a target cell.",
+    "Use setKeyboardFocus(row, col, selectAll=True) only for editable field cells when a script needs keyboard focus or full text selection.",
+    "Use reset() when the List COMP should rerun its initialize callbacks, matching the Reset parameter callback path; callbacks such as onInitCell, onSelect, onEdit, and onDropGetAccept belong in the List COMP callback DAT."
+  ],
+  "related_snippets": [
+    "panel_ui"
+  ],
+  "last_verified": "2026-06-18"
+}

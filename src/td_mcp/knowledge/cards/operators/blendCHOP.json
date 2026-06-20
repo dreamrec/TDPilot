@@ -1,0 +1,33 @@
+{
+  "card_type": "operator",
+  "op_type": "blendCHOP",
+  "family": "CHOP",
+  "display_name": "Blend CHOP",
+  "docs_url": "https://docs.derivative.ca/Blend_CHOP",
+  "summary": "Combines two or more source CHOPs using blend-weight channels from the first input, with proportional, difference, quaternion, or additive blending.",
+  "key_params": [
+    {"name": "method", "type": "Menu", "note": "Blend mode: proportional, difference, quaternion, or additive"},
+    {"name": "firstweight", "type": "Toggle", "note": "Omit the base input's weight channel when using Difference mode"},
+    {"name": "underflow", "type": "Toggle", "note": "Replace tiny denormal values with zero to avoid performance issues"},
+    {"name": "srselect", "type": "Menu", "note": "How mismatched input sample rates are resolved"},
+    {"name": "scope", "type": "Pattern", "note": "Channel pattern to affect"}
+  ],
+  "key_concepts": [
+    "Input 1 blend-weight control",
+    "input 2 and later source CHOP blending",
+    "proportional, difference, quaternion, and additive methods",
+    "base input behavior in Difference mode",
+    "output interval follows the weight input",
+    "zero-weight source inputs do not cook"
+  ],
+  "common_gotchas": [
+    "Input 1 is the weight/control CHOP; blended source CHOPs begin at input 2.",
+    "There should be one blend channel for each source input, except when Difference mode omits the base weight.",
+    "The output interval follows the first input, not the blended source inputs.",
+    "Quaternion blending expects channels to be grouped as quaternion attributes, commonly via Attribute CHOP.",
+    "Zero-weight source inputs may not cook, so avoid relying on their side effects."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-17"
+}

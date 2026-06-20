@@ -1,0 +1,30 @@
+{
+  "card_type": "operator",
+  "op_type": "switchMAT",
+  "family": "MAT",
+  "display_name": "Switch MAT",
+  "docs_url": "https://docs.derivative.ca/Switch_MAT",
+  "summary": "Switches between multiple input materials by index, with clamp, loop, or zigzag behavior for out-of-range and negative indices.",
+  "key_params": [
+    {"name": "index", "type": "Float/Int", "note": "Input material index; first input is 0"},
+    {"name": "extend", "type": "Menu", "note": "Clamp, loop, or zigzag out-of-range index behavior"},
+    {"name": "dodeform", "type": "Toggle", "note": "Enable deform handling on the switched material"},
+    {"name": "blending", "type": "Toggle", "note": "Common MAT transparency/blending state"},
+    {"name": "depthtest", "type": "Toggle", "note": "Common MAT depth-test state"}
+  ],
+  "key_concepts": [
+    "Switch MAT chooses between multiple input materials using a zero-based Index parameter.",
+    "The Extend menu defines out-of-range behavior with clamp, loop, and zigzag modes, including behavior for negative indices.",
+    "Switch MAT is useful for look-dev and control-rig workflows where a CHOP or parameter selects between material variants.",
+    "Input order matters: index 0 is the first input, so generated networks should keep material inputs intentionally ordered and documented.",
+    "Common MAT render-state and deform pages still apply to the switch wrapper after the selected input is chosen."
+  ],
+  "common_gotchas": [
+    "Index 0 selects the first input; CHOP-driven switches often need explicit rounding or limiting.",
+    "Loop and zigzag allow negative indices, which can be useful but surprising in control rigs.",
+    "Common MAT render-state pages still apply after the selected input is chosen."
+  ],
+  "related_snippets": ["MAT_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18"
+}

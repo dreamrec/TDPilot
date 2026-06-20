@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "trimCHOP",
+  "family": "CHOP",
+  "display_name": "Trim CHOP",
+  "docs_url": "https://docs.derivative.ca/Trim_CHOP",
+  "summary": "Shortens, lengthens, preserves, or removes intervals from input channels, using channel extend conditions to fill lengthened regions.",
+  "key_params": [
+    {"name": "relative", "type": "Menu", "note": "Absolute, relative to start/end, relative to current frame, or current time slice"},
+    {"name": "start", "type": "Float", "note": "Start of trimmed range"},
+    {"name": "startunit", "type": "Menu", "note": "Start units"},
+    {"name": "end", "type": "Float", "note": "End of trimmed range"},
+    {"name": "endunit", "type": "Menu", "note": "End units"},
+    {"name": "discard", "type": "Menu", "note": "Discard exterior or interior region"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common-page time-slice behavior"},
+    {"name": "srselect", "type": "Menu", "note": "Common-page sample-rate matching behavior"}
+  ],
+  "key_concepts": [
+    "Trim CHOP shortens or lengthens input channels by preserving or removing a time/sample interval.",
+    "When channels are lengthened, the input channel extend conditions provide values for the new region.",
+    "Absolute and Relative to Start/End modes define the trim interval in seconds, frames, or samples.",
+    "Relative to Current Frame outputs one sample at the current frame.",
+    "Discard Exterior keeps the trim range, while Discard Interior removes the trim range and sequences the remaining intervals together."
+  ],
+  "common_gotchas": [
+    "Lengthening channels samples the input channel extend conditions for new values.",
+    "Relative to Current Frame outputs only one sample at the current frame.",
+    "Current Time Slice outputs the current time-slice region.",
+    "Interactive graph handles can adjust the Trim CHOP length, so parameter readback matters in reviewed networks.",
+    "Use Splice CHOP for insert/replace segment edits and Delete/Select CHOP for simpler removal/filtering."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ interval trim/extend",
+  "last_verified": "2026-06-18"
+}

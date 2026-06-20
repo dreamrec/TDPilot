@@ -1,0 +1,37 @@
+{
+  "card_type": "operator",
+  "op_type": "attributeSOP",
+  "family": "SOP",
+  "display_name": "Attribute SOP",
+  "docs_url": "https://docs.derivative.ca/Attribute_SOP",
+  "summary": "Renames and deletes point, vertex, primitive, and detail attributes on SOP geometry using explicit rename pairs and pattern-based delete fields.",
+  "key_params": [
+    {"name": "ptdel", "type": "String", "note": "Point attributes to delete; supports pattern matching"},
+    {"name": "pt", "type": "Sequence", "note": "Point attribute rename entries"},
+    {"name": "pt0from", "type": "String", "note": "Incoming point attribute name"},
+    {"name": "pt0to", "type": "String", "note": "New point attribute name"},
+    {"name": "vertdel", "type": "String", "note": "Vertex attributes to delete"},
+    {"name": "vert0from", "type": "String", "note": "Incoming vertex attribute name"},
+    {"name": "vert0to", "type": "String", "note": "New vertex attribute name"},
+    {"name": "primdel", "type": "String", "note": "Primitive attributes to delete"},
+    {"name": "prim0from", "type": "String", "note": "Incoming primitive attribute name"},
+    {"name": "prim0to", "type": "String", "note": "New primitive attribute name"},
+    {"name": "attrdel", "type": "String", "note": "Detail attributes to delete"},
+    {"name": "attr0from", "type": "String", "note": "Incoming detail attribute name"},
+    {"name": "attr0to", "type": "String", "note": "New detail attribute name"}
+  ],
+  "common_gotchas": [
+    "Delete patterns can match broad scopes; '*' removes all attributes of that class.",
+    "Keep capture/deform attributes together: pCapt, pCaptPath, and pCaptData are interdependent.",
+    "The rename pages are class-specific, so a point rename does not affect vertex or primitive attributes."
+  ],
+  "related_snippets": ["SOP_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Attribute SOP deletes and renames SOP attributes on point, vertex, primitive, and detail classes.",
+    "Delete fields use pattern matching, including broad wildcard patterns and exclusions.",
+    "Rename entries are class-specific, so a point attribute rename does not affect vertex, primitive, or detail attributes.",
+    "Capture/deform companion attributes such as pCapt, pCaptPath, and pCaptData should be treated as a related set."
+  ]
+}

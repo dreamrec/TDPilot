@@ -1,0 +1,60 @@
+{
+  "card_type": "article",
+  "article_id": "objectcomp_class",
+  "title": "ObjectCOMP Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "COMP",
+    "OBJECT",
+    "GEOMETRY",
+    "RENDER"
+  ],
+  "summary": "Official Derivative Python API reference for ObjectCOMP, the parent class of Object COMPs, covering local/world transform matrices, Xform and Pre-Xform matrix setters, relative transforms, Alembic and FBX import helpers, and inherited COMP behavior.",
+  "source_url": "https://docs.derivative.ca/ObjectCOMP_Class",
+  "docsbrain_page_id": "objectcomp_class",
+  "covered_operators": [
+    "objectCOMP",
+    "cameraCOMP",
+    "geometryCOMP",
+    "lightCOMP"
+  ],
+  "key_concepts": [
+    "ObjectCOMP Class",
+    "Object COMP",
+    "COMP class",
+    "parent class",
+    "localTransform",
+    "worldTransform",
+    "transform()",
+    "setTransform()",
+    "preTransform()",
+    "setPreTransform()",
+    "relativeTransform()",
+    "importABC()",
+    "importFBX()",
+    "Matrix",
+    "Alembic",
+    "FBX",
+    "Xform page",
+    "Pre-Xform page",
+    "target ObjectCOMP",
+    "lights",
+    "cameras",
+    "mergeGeometry",
+    "gpuDeform",
+    "rate",
+    "textureFolder",
+    "geometryFolder",
+    "animationFolder"
+  ],
+  "guidance": [
+    "Use this article when a script needs Object COMP transform matrices rather than channel-based Object CHOP output.",
+    "Read localTransform for the Object's Xform plus Pre-Xform matrix without parent or constraint transforms, and read worldTransform for the Object's current world transform.",
+    "Use transform() and setTransform(matrix) for Xform-page Translate, Rotate, Scale, and Pivot values; use preTransform() and setPreTransform(matrix) for the Pre-Xform page.",
+    "Use relativeTransform(target) when code needs the matrix that moves the called ObjectCOMP into the target ObjectCOMP space.",
+    "Use importABC() or importFBX() for Alembic or FBX import workflows; review lights, cameras, mergeGeometry, gpuDeform, rate, textureFolder, geometryFolder, and animationFolder options before generating an import plan."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

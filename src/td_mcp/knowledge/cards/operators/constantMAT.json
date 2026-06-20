@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "constantMAT",
+  "family": "MAT",
+  "display_name": "Constant MAT",
+  "docs_url": "https://docs.derivative.ca/Constant_MAT",
+  "summary": "Renders geometry with a constant material color or color map, independent of scene lighting, while still exposing common MAT render-state, deform, and texture sampling controls.",
+  "key_params": [
+    {"name": "applyprojmaps", "type": "Toggle", "note": "Apply projection maps from camera/light workflows"},
+    {"name": "color", "type": "RGBA", "note": "Constant material color"},
+    {"name": "alpha", "type": "Float", "note": "Constant material alpha"},
+    {"name": "applypointcolor", "type": "Toggle", "note": "Multiply or apply geometry point color"},
+    {"name": "colormap", "type": "TOP", "note": "Texture map used as material color"},
+    {"name": "colormapcoord", "type": "String", "note": "SOP texture coordinate attribute or coordinate source"},
+    {"name": "dodeform", "type": "Toggle", "note": "Enable common MAT deform handling"},
+    {"name": "blending", "type": "Toggle", "note": "Common MAT transparency blending state"},
+    {"name": "depthtest", "type": "Toggle", "note": "Common MAT depth-test state"}
+  ],
+  "key_concepts": [
+    "Constant MAT renders a material with constant color or texture color independent of scene lighting, making it useful for UI, masks, debug geometry, and projection-map looks.",
+    "Projection maps can be applied without having the projection color altered by the normal lighting model.",
+    "Point color and alpha can multiply the material result, so geometry attributes still matter even when the shader is light-independent.",
+    "Color maps use the same texture-sampling contract as other MATs, including SOP UV layers, POP texture coordinate attributes, screen-space coordinates, and triplanar mapping.",
+    "Common MAT pages still control deform, blending, depth test, alpha test, culling, wireframe, polygon offset, and color-parameter interpretation."
+  ],
+  "common_gotchas": [
+    "Constant MAT ignores scene lighting, which is useful for UI/projection/debug materials but wrong for lit physical surfaces.",
+    "Color maps need valid texture coordinates unless using screen-space or triplanar mapping.",
+    "Common MAT blending, depth test, cull face, and alpha test still affect render output even though the shading model is simple.",
+    "If geometry uses capture/deform attributes, the Deform page must be configured just like other MATs."
+  ],
+  "related_snippets": ["MAT_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

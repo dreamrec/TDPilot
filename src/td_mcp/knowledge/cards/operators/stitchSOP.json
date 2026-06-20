@@ -1,0 +1,143 @@
+{
+  "card_type": "operator",
+  "op_type": "stitchSOP",
+  "family": "SOP",
+  "display_name": "Stitch SOP",
+  "docs_url": "https://docs.derivative.ca/Stitch_SOP",
+  "summary": "Stretches curves or surfaces together over a smooth area, optionally stitching primitives from the first input to one target surface in the second input.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "stitchop",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "inc",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "loop",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "dir",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "tolerance",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "bias",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "leftuv",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "leftuv1",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "leftuv2",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "rightuv",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "rightuv1",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "rightuv2",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "lrwidth",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "lrwidth1",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "lrwidth2",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "dostitch",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "dotangent",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "sharp",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "fixed",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "lrscale",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "lrscale1",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    },
+    {
+      "name": "lrscale2",
+      "type": "Parameter",
+      "note": "Stitch SOP official parameter"
+    }
+  ],
+  "common_gotchas": [
+    "The second input must be exactly one stitch target surface.",
+    "Tolerance trades source preservation against successful stitching.",
+    "bias is a 0-1 control for which primitive stays less affected.",
+    "Tangent mode changes adjacent rows, not only the seam row.",
+    "Partial stitches need sharp enabled when hard ends are intended."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "surface-and-curve-stitching",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Stitch SOP stretches curves or surfaces to cover a smooth area.",
+    "When input 1 is connected, it must contain one target stitch surface.",
+    "First-input primitives are allocated equal parametric target regions on that second-input surface.",
+    "Primitive grouping, skip patterns, UV intervals, and tangent mode control how much source rows and neighboring rows are modified."
+  ]
+}

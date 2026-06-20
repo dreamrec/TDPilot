@@ -1,0 +1,41 @@
+{
+  "card_type": "article",
+  "article_id": "write_a_cplusplus_top",
+  "title": "Write a CPlusPlus TOP",
+  "family": "TOP",
+  "families": [
+    "CPLUSPLUS",
+    "TOP",
+    "GPU"
+  ],
+  "summary": "Official Derivative guide for CPlusPlus TOP authoring, covering multi-texture TOP output, CPU memory and CUDA execute modes, header/sample workflow, 2022.20000+ upgrade guidance, and CUDA main-thread operation boundaries.",
+  "source_url": "https://docs.derivative.ca/Write_a_CPlusPlus_TOP",
+  "docsbrain_page_id": "write_a_cplusplus_top",
+  "covered_operators": [
+    "cplusplusTOP"
+  ],
+  "key_concepts": [
+    "CPlusPlus TOP",
+    "multiple textures",
+    "TOP_ExecuteMode::CPUMem",
+    "TOP_ExecuteMode::CUDA",
+    "cudaArray",
+    "CudaTOP example",
+    "OP_Context::beginCUDAOperations()",
+    "OP_Context::endCUDAOperations()",
+    "CPlusPlus TOP Upgrades For 2022.20000 Builds",
+    "C++ API headers"
+  ],
+  "guidance": [
+    "Use this article when a plan needs native TOP plugin output semantics, CUDA-aware TOP generation, or CPlusPlus TOP upgrade guidance.",
+    "CPlusPlus TOP can output multiple textures and can fill either CPU memory or CUDA-backed buffers depending on the plugin execute mode.",
+    "CUDA work in the plugin should run on the main thread inside the documented begin/end CUDA operation window.",
+    "The CudaTOP sample is an example project for the CPlusPlus TOP workflow; do not treat this article as recommending the legacy CUDA TOP operator.",
+    "Header files and installed samples carry important API details, so plans should avoid inventing C++ method contracts beyond this article's scope.",
+    "Plugins compiled against headers from older TouchDesigner builds may need the 2022.20000+ upgrade path before they are safe to load."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

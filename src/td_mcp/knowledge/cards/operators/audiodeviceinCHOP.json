@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "audiodeviceinCHOP",
+  "family": "CHOP",
+  "display_name": "Audio Device In CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_Device_In_CHOP",
+  "summary": "Captures live audio channels from an input device using supported drivers such as system audio, ASIO, Blackmagic, or AJA.",
+  "key_concepts": [
+    "Audio Device In CHOP captures live audio from an input device into CHOP channels.",
+    "Driver selects the backend, including system audio, ASIO, DataPath, Blackmagic, or AJA where supported.",
+    "Device selection can use the operating-system default recording device or an explicit available device.",
+    "Format and input-channel controls determine whether mono, stereo, or multichannel channels are created.",
+    "Rate and Buffer Length trade sample-rate control, latency, and capture stability."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable device capture"},
+    {"name": "driver", "type": "Menu", "note": "Audio driver/backend"},
+    {"name": "device", "type": "Menu", "note": "Input audio device"},
+    {"name": "errormissing", "type": "Toggle", "note": "Raise an error if the selected device is missing"},
+    {"name": "inputs", "type": "Menu", "note": "Input channel layout"},
+    {"name": "format", "type": "Menu", "note": "Mono, stereo, or multichannel layout"},
+    {"name": "rate", "type": "Float", "note": "Capture sample rate"},
+    {"name": "bufferlength", "type": "Float", "note": "Input audio buffer length"}
+  ],
+  "common_gotchas": [
+    "Device names and driver availability are machine-specific; plans should handle missing devices explicitly.",
+    "Buffer length trades latency against stability.",
+    "Multichannel layouts require explicit channel mapping if downstream expects named speaker positions.",
+    "ASIO and professional capture drivers may have different sample-rate ownership than system audio."
+  ],
+  "related_snippets": ["audio_reactive", "CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

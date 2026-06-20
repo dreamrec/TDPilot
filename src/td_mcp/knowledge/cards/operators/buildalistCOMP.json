@@ -1,0 +1,39 @@
+{
+  "card_type": "operator",
+  "op_type": "buildalistCOMP",
+  "family": "COMP",
+  "display_name": "Build a List COMP",
+  "docs_url": "https://docs.derivative.ca/Build_a_List_COMP",
+  "summary": "Reference article for building List COMP interfaces with Python callbacks, table/row/column/cell attributes, DAT or dictionary-backed content, and explicit state management for rollover, select, radio, focus, and edit behavior.",
+  "key_params": [
+    {"name": "callbacks", "type": "Text DAT", "note": "Docked callback DAT that defines initialize and event functions for the List COMP"},
+    {"name": "onInitTable", "type": "Callback", "note": "Initializes table-wide attributes such as text justification or borders"},
+    {"name": "onInitCol", "type": "Callback", "note": "Initializes column attributes such as width and stretch behavior"},
+    {"name": "onInitRow", "type": "Callback", "note": "Initializes row attributes such as background color"},
+    {"name": "onInitCell", "type": "Callback", "note": "Initializes per-cell text and formatting from a DAT, dictionary, or other source"},
+    {"name": "onRollover", "type": "Callback", "note": "Updates visual state while the cursor moves across cells"},
+    {"name": "onSelect", "type": "Callback", "note": "Handles mouse down/up selection state and can run custom scripts"},
+    {"name": "storage", "type": "Python storage", "note": "Stores current list state, selected row, or dependent content dictionaries between callbacks"},
+    {"name": "rows", "type": "Integer", "note": "Usually driven from the source table or content collection length"},
+    {"name": "cols", "type": "Integer", "note": "Usually driven from source table width or header dictionary length"},
+    {"name": "reset", "type": "Pulse", "note": "Runs the initialize callbacks again after callback or data changes"}
+  ],
+  "key_concepts": [
+    "Build a List COMP is the official callback-construction guide for List COMP interfaces rather than a separate creatable operator.",
+    "List initialization runs in table, column, row, then cell order through onInitTable, onInitCol, onInitRow, and onInitCell.",
+    "Event callbacks such as onRollover, onSelect, onRadio, onFocus, and onEdit drive interactive list behavior.",
+    "Rollover and select workflows must restore prior visual state, often by saving row state in Python storage.",
+    "Folder DATs, Python lists, dictionaries, and dependency storage can feed data-backed cell text and dimensions."
+  ],
+  "common_gotchas": [
+    "Build a List COMP is a how-to article for List COMP, so promote it as callback knowledge rather than as a separate creatable operator when planning networks.",
+    "Initialize callbacks run on load or reset and must be kept deterministic because they rebuild table, row, column, and cell attributes.",
+    "Rollover and selection callbacks need to restore previous visual state; otherwise rows can stay highlighted after the cursor leaves.",
+    "When using dictionaries or Python lists as content, store them on the List COMP and provide safe fetch defaults for missing storage.",
+    "Cell, row, and column indices are zero-based; header-row logic needs explicit checks such as row == 0.",
+    "Large lists can become callback-heavy, so avoid doing expensive filesystem or network work directly in cell callbacks."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2025.30000+ List COMP callback construction guide",
+  "last_verified": "2026-06-18"
+}

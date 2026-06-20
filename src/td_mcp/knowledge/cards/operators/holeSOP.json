@@ -1,0 +1,51 @@
+{
+  "card_type": "operator",
+  "op_type": "holeSOP",
+  "family": "SOP",
+  "display_name": "Hole SOP",
+  "docs_url": "https://docs.derivative.ca/Hole_SOP",
+  "summary": "Creates or removes holes in enclosed polygonal or Bezier face regions by detecting interior faces and building/removing bridges.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Group to process."
+    },
+    {
+      "name": "unbridge",
+      "type": "Toggle",
+      "note": "Remove detected bridges from existing holes."
+    },
+    {
+      "name": "dist",
+      "type": "Float",
+      "note": "Distance tolerance for bridge/hole detection."
+    },
+    {
+      "name": "angle",
+      "type": "Float",
+      "note": "Angle tolerance."
+    },
+    {
+      "name": "snap",
+      "type": "Toggle",
+      "note": "Snap rotated or translated hole points onto the outline plane."
+    }
+  ],
+  "common_gotchas": [
+    "Hole SOP is polygonal/Bezier oriented; NURBS conversion can change downstream primitive assumptions.",
+    "`snap` can avoid twisted faces when hole points are off the outline plane.",
+    "`unbridge` changes topology and can disrupt later index-based SOP operations."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Hole SOP creates or removes holes by detecting enclosed faces and bridge geometry.",
+    "It supports polygonal and Bezier geometry; NURBS are internally converted to Beziers.",
+    "Interior faces do not need to be coplanar or share orientation with exterior faces.",
+    "`unbridge` removes bridge geometry rather than creating a new hole."
+  ]
+}

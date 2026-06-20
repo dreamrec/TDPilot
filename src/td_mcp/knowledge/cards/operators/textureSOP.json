@@ -1,0 +1,198 @@
+{
+  "card_type": "operator",
+  "op_type": "textureSOP",
+  "family": "SOP",
+  "display_name": "Texture SOP",
+  "docs_url": "https://docs.derivative.ca/Texture_SOP",
+  "summary": "Assigns UV and W texture coordinates to SOP geometry for texture, bump, projection, and multi-layer coordinate workflows.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "texlayer",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "type",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "axis",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "camera",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "coord",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "s",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "su",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "sv",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "sw",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "offset",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "offsetu",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "offsetv",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "offsetw",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "angle",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "fixseams",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "xord",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "rord",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "t",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "tx",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "ty",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "tz",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "r",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "rx",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "ry",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "rz",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "scaletwo",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "scaletwox",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "scaletwoy",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "scaletwoz",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "p",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "px",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "py",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    },
+    {
+      "name": "pz",
+      "type": "Parameter",
+      "note": "Texture SOP official parameter"
+    }
+  ],
+  "common_gotchas": [
+    "group accepts primitive groups, not point or vertex groups.",
+    "Face mapping often needs unique points from Facet SOP.",
+    "Perspective camera projection can output zero UVs for points outside clipping range.",
+    "MAT coordinate selectors must match the chosen texlayer."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "sop-uv-coordinate-generation",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Texture SOP assigns UV and W coordinates to geometry; it does not alter TOP pixels.",
+    "It supports multiple texture layers via texlayer.",
+    "Seam fixing may unroll wrapped primitives without changing point count.",
+    "Natural, Point, and Vertex coordinate modes change seam behavior.",
+    "Camera projection assumes a 1:1 projection aspect unless a custom camera projection is used."
+  ]
+}

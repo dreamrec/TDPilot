@@ -1,0 +1,44 @@
+{
+  "card_type": "operator",
+  "op_type": "bodytrackCHOP",
+  "family": "CHOP",
+  "display_name": "Body Track CHOP",
+  "docs_url": "https://docs.derivative.ca/Body_Track_CHOP",
+  "summary": "Uses Nvidia Maxine AR body tracking to output body bounding boxes, keypoints, confidence, rotations, and optional 3D body coordinates from a TOP image.",
+  "key_concepts": [
+    "Uses Nvidia Maxine AR SDK models to detect one or more human bodies from a supplied TOP image or video.",
+    "The operator can output bounding boxes, per-keypoint confidence, UV keypoints, optional XYZ body coordinates, and keypoint rotations.",
+    "Body 3D changes keypoint output from UV to XYZ and depends on the camera field-of-view parameter for meaningful 3D placement.",
+    "People Tracking assigns persistent body IDs, with Max Bodies, Shadow Tracking Age, and Probation Age controlling multi-person target lifecycle.",
+    "Windows, RTX GPU, and external AR SDK model-folder requirements are planner-critical prerequisites because the models are not bundled with TouchDesigner."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable body tracking"},
+    {"name": "modelfolder", "type": "Folder", "note": "Folder containing required AI model files"},
+    {"name": "top", "type": "TOP", "note": "Input image or video TOP to analyze"},
+    {"name": "highperformance", "type": "Toggle", "note": "Trade quality for speed when keypoints are enabled"},
+    {"name": "bbox", "type": "Toggle", "note": "Output body bounding-box channels"},
+    {"name": "bboxconfidence", "type": "Toggle", "note": "Output body detection confidence"},
+    {"name": "keypoints", "type": "Toggle", "note": "Output UV or XYZ body keypoints"},
+    {"name": "keypointsconfidence", "type": "Toggle", "note": "Output confidence per keypoint"},
+    {"name": "rotations", "type": "Toggle", "note": "Output rx, ry, rz values for keypoints"},
+    {"name": "body3d", "type": "Toggle", "note": "Output XYZ positions instead of UV positions"},
+    {"name": "fov", "type": "Float", "note": "Horizontal field of view used when Body 3D is enabled"},
+    {"name": "aspectcorrectuv", "type": "Toggle", "note": "Aspect-correct output UVs"},
+    {"name": "flipskelu", "type": "Toggle", "note": "Mirror U positions"},
+    {"name": "peopletracking", "type": "Toggle", "note": "Track multiple bodies with persistent IDs"},
+    {"name": "maxbodies", "type": "Integer", "note": "Maximum target bodies requested from the SDK"},
+    {"name": "shadowtrackingage", "type": "Integer", "note": "Frames before a lost body is discarded"},
+    {"name": "probationage", "type": "Integer", "note": "Frames before a new body is promoted to a valid tracked ID"}
+  ],
+  "common_gotchas": [
+    "Official docs list this operator as Windows-only.",
+    "It requires an Nvidia RTX 20, 30, 40, or 50 series GPU and the Nvidia Maxine AR SDK model files.",
+    "The model files are not bundled with TouchDesigner; plans should check the model folder before relying on output.",
+    "The current SDK can track up to 8 people even if the Max Bodies parameter is higher.",
+    "Body 3D output depends on the input camera field of view, so inaccurate FOV values produce misleading XYZ coordinates."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2025.30000+ Windows/Nvidia RTX",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,56 @@
+{
+  "card_type": "article",
+  "article_id": "component",
+  "title": "Component",
+  "family": "COMP",
+  "families": [
+    "COMP",
+    "NETWORK",
+    "TOP",
+    "CHOP",
+    "SOP",
+    "DAT"
+  ],
+  "summary": "Official Derivative overview of Component operators, covering component networks, Object and Panel Components, miscellaneous COMPs, component inputs and outputs through In/Out operators, component flags, and saving reusable components as .tox files.",
+  "source_url": "https://docs.derivative.ca/Component",
+  "docsbrain_page_id": "component",
+  "covered_operators": [
+    "baseCOMP",
+    "cameraCOMP",
+    "containerCOMP",
+    "engineCOMP",
+    "geometryCOMP",
+    "inTOP",
+    "outCHOP",
+    "replicatorCOMP",
+    "timeCOMP",
+    "windowCOMP"
+  ],
+  "key_concepts": [
+    "Component",
+    "Component networks",
+    "Object Components",
+    "Panel Components",
+    "Miscellaneous Components",
+    "Component Inputs and Outputs",
+    "In TOP",
+    "Out CHOP",
+    "Viewer Flag",
+    "Clone Immune Flag",
+    "Cooking Flag",
+    "Lock Flag",
+    "Save Component",
+    ".tox"
+  ],
+  "guidance": [
+    "Use this article when a plan needs to choose a COMP boundary, wrap a network, expose internal inputs or outputs, or save a reusable component.",
+    "Use Object Components for 3D scene hierarchy and Panel Components for interactive 2D panels.",
+    "Place In and Out operators inside a component to expose left-side inputs and right-side outputs to the parent network.",
+    "Use Base COMP when the goal is simply a new network shell without object or panel behavior.",
+    "Use Save Component to write reusable networks as .tox files, and consider VFS when embedded assets need to travel with the component."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

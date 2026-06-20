@@ -1,0 +1,103 @@
+{
+  "card_type": "operator",
+  "op_type": "rgbkeyTOP",
+  "family": "TOP",
+  "display_name": "RGB Key TOP",
+  "docs_url": "https://docs.derivative.ca/RGB_Key_TOP",
+  "summary": "Builds a key by including pixels whose red, green, and blue values fall inside configured channel ranges, with soft falloff controls.",
+  "key_params": [
+    {
+      "name": "redmin",
+      "type": "Float",
+      "note": "Minimum red value included in the key."
+    },
+    {
+      "name": "redmax",
+      "type": "Float",
+      "note": "Maximum red value included in the key."
+    },
+    {
+      "name": "rsoftlow",
+      "type": "Float",
+      "note": "Falloff below the red minimum."
+    },
+    {
+      "name": "rsofthigh",
+      "type": "Float",
+      "note": "Falloff above the red maximum."
+    },
+    {
+      "name": "greenmin",
+      "type": "Float",
+      "note": "Minimum green value included in the key."
+    },
+    {
+      "name": "greenmax",
+      "type": "Float",
+      "note": "Maximum green value included in the key."
+    },
+    {
+      "name": "gsoftlow",
+      "type": "Float",
+      "note": "Falloff below the green minimum."
+    },
+    {
+      "name": "gsofthigh",
+      "type": "Float",
+      "note": "Falloff above the green maximum."
+    },
+    {
+      "name": "bluemin",
+      "type": "Float",
+      "note": "Minimum blue value included in the key."
+    },
+    {
+      "name": "bluemax",
+      "type": "Float",
+      "note": "Maximum blue value included in the key."
+    },
+    {
+      "name": "bsoftlow",
+      "type": "Float",
+      "note": "Falloff below the blue minimum."
+    },
+    {
+      "name": "bsofthigh",
+      "type": "Float",
+      "note": "Falloff above the blue maximum."
+    },
+    {
+      "name": "invert",
+      "type": "Toggle",
+      "note": "Invert the newly generated alpha."
+    },
+    {
+      "name": "rgbout",
+      "type": "Menu",
+      "note": "RGB output behavior."
+    },
+    {
+      "name": "alphaout",
+      "type": "Menu",
+      "note": "Alpha output behavior."
+    }
+  ],
+  "common_gotchas": [
+    "A pixel must satisfy all RGB ranges to be included in the key.",
+    "Soft-low and soft-high values control edge falloff; hard ranges can create noisy mattes.",
+    "Invert New Alpha flips the generated matte but does not solve poor threshold choices.",
+    "RGB output and alpha output settings decide whether this TOP creates a matte, cutout, or diagnostic view."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Compositing_snippets"
+  ],
+  "build_relevance": "image_keying",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Builds a matte by testing whether red, green, and blue values fall inside configured ranges.",
+    "A pixel must pass all enabled RGB min/max tests to be included in the key.",
+    "Per-channel soft-low and soft-high controls shape matte falloff around thresholds.",
+    "RGB Output and Alpha Output controls decide whether the node returns a cutout, matte view, or alpha-only change."
+  ]
+}

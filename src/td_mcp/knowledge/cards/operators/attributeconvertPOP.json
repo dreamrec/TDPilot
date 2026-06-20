@@ -1,0 +1,29 @@
+{
+  "card_type": "operator",
+  "op_type": "attributeconvertPOP",
+  "family": "POP",
+  "display_name": "Attribute Convert POP",
+  "docs_url": "https://docs.derivative.ca/Attribute_Convert_POP",
+  "summary": "Copies POP attributes from one attribute class to another, such as point to vertex, primitive to point, or vertex to primitive. It can delete the original attribute and warn or error when the destination attribute already exists.",
+  "key_params": [
+    {"name": "convertop", "type": "Menu", "note": "Conversion direction between point, vertex, and primitive classes"},
+    {"name": "inputattrs", "type": "String", "note": "Input attributes to convert"},
+    {"name": "newattrs", "type": "String", "note": "Destination attribute name"},
+    {"name": "deleteorig", "type": "Toggle", "note": "Delete original attribute after conversion"},
+    {"name": "notificationifexists", "type": "Menu", "note": "Ignore, warn, or error when destination exists"}
+  ],
+  "key_concepts": [
+    "Copies selected attributes between point, vertex, and primitive classes with an explicit conversion direction.",
+    "Can create a renamed destination attribute while optionally deleting the original source attribute.",
+    "Existing destination attributes are controlled by notification and override policies.",
+    "Use it for attribute-class conversion; use Attribute POP when the operation stays inside one class."
+  ],
+  "common_gotchas": [
+    "Conversions can be ambiguous when a point is shared by multiple primitives or vertices; the POP chooses one value.",
+    "There are no attributes on the POP as a whole, only point, vertex, and primitive attributes.",
+    "Use Attribute POP for renaming or duplicating within the same attribute class."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

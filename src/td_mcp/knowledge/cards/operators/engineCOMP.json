@@ -1,0 +1,43 @@
+{
+  "card_type": "operator",
+  "op_type": "engineCOMP",
+  "family": "COMP",
+  "display_name": "Engine COMP",
+  "docs_url": "https://docs.derivative.ca/Engine_COMP",
+  "summary": "Runs a .tox component in a separate TouchEngine process, exposing the loaded component's supported top-level inputs, outputs, and custom parameters back to the main TouchDesigner project.",
+  "key_params": [
+    {"name": "file", "type": "File", "note": ".tox component file to load in TouchEngine"},
+    {"name": "unload", "type": "Pulse", "note": "Unload the currently loaded component"},
+    {"name": "reload", "type": "Pulse", "note": "Reload the currently loaded component"},
+    {"name": "reloadoncrash", "type": "Toggle", "note": "Restart TouchEngine if the instance quits unexpectedly"},
+    {"name": "assetpaths", "type": "Menu", "note": "Controls relative path resolution inside the loaded component"},
+    {"name": "callbacks", "type": "DAT", "note": "Callbacks for TouchEngine-related events"},
+    {"name": "clock", "type": "Menu", "note": "Synchronized or Independent timing for the TouchEngine instance"},
+    {"name": "matchrate", "type": "Toggle", "note": "Cook the loaded component at the Engine COMP rate"},
+    {"name": "wait", "type": "Toggle", "note": "Wait for late render output instead of dropping frames"},
+    {"name": "timeout", "type": "Milliseconds", "note": "Maximum wait time for a render frame"},
+    {"name": "inauto", "type": "Toggle", "note": "Automatically manage input buffer frames"},
+    {"name": "outauto", "type": "Toggle", "note": "Automatically manage output buffer frames"},
+    {"name": "readywhen", "type": "Menu", "note": "Condition that marks the loaded component ready"},
+    {"name": "startoninit", "type": "Toggle", "note": "Start playback as soon as initialization reaches ready state"},
+    {"name": "allowui", "type": "Toggle", "note": "Allow loaded components to open Window COMPs or Perform Mode"}
+  ],
+  "key_concepts": [
+    "Engine COMP loads a .tox component into a separate TouchEngine process and exposes its supported top-level interfaces to the host project.",
+    "Only top-level TOP, CHOP, and DAT inputs and outputs are supported through the Engine COMP interface.",
+    "Unload, Reload, Reload on Crash, and advanced launch/quit controls manage the lifetime of the loaded TouchEngine process.",
+    "Asset Paths and exposed file/folder parameters control whether relative paths resolve beside the .tox or relative to the main project.",
+    "TouchEngine lifetime differs from normal TouchDesigner startup: Execute DAT onStart/onExit do not run, so setup that must run on load belongs in onCreate."
+  ],
+  "common_gotchas": [
+    "Only TOP, CHOP, and DAT top-level inputs and outputs are supported through the Engine COMP interface.",
+    "Custom parameters exposed on the Engine COMP are one-way; the loaded .tox cannot set them from inside TouchEngine.",
+    "Custom parameters that refer to other nodes are not supported; pass those nodes through inputs instead.",
+    "Relative paths inside the loaded component can resolve relative to the .tox or project depending on Asset Paths, while exposed file/folder parameters resolve relative to the main project.",
+    "Execute DAT onStart() and onExit() do not run under TouchEngine; use onCreate() for setup that must happen when loaded.",
+    "Loaded components that open UI require Independent clock mode so UI events are serviced."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ TouchEngine external component execution",
+  "last_verified": "2026-06-18"
+}

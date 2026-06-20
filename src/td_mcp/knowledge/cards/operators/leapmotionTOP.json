@@ -1,0 +1,71 @@
+{
+  "card_type": "operator",
+  "op_type": "leapmotionTOP",
+  "family": "TOP",
+  "display_name": "Leap Motion TOP",
+  "docs_url": "https://docs.derivative.ca/Leap_Motion_TOP",
+  "summary": "Captures camera images from a Leap Motion/Ultraleap controller, with controls for API generation, library location, camera selection, image flipping, correction, and HMD mode.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Capture data from the cameras while enabled"
+    },
+    {
+      "name": "api",
+      "type": "Menu",
+      "note": "default for Version 2 Tracking, on for Orion/Gemini V4/V5"
+    },
+    {
+      "name": "libfolder",
+      "type": "Folder",
+      "note": "Folder containing Leap.dll or LeapC.dll for the selected SDK"
+    },
+    {
+      "name": "camera",
+      "type": "Menu",
+      "note": "Select camera image stream"
+    },
+    {
+      "name": "flipx",
+      "type": "Toggle",
+      "note": "Flip captured camera image horizontally"
+    },
+    {
+      "name": "flipy",
+      "type": "Toggle",
+      "note": "Flip captured camera image vertically"
+    },
+    {
+      "name": "correction",
+      "type": "Toggle",
+      "note": "Apply camera image correction"
+    },
+    {
+      "name": "hmd",
+      "type": "Menu",
+      "note": "default, on, or off head-mounted display mode"
+    }
+  ],
+  "common_gotchas": [
+    "Allow Images must be enabled outside TouchDesigner or the TOP will not receive camera images.",
+    "The library folder must match the selected SDK version; V2 uses Leap.dll and V4/V5 use LeapC.dll.",
+    "Gemini V5 tracking has different orientation behavior than legacy V2/V4 setups.",
+    "TouchDesigner does not include an Ultraleap hardware or software license.",
+    "api=on means Orion/Gemini tracking, not a generic active toggle."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "LeapMotion_snippets"
+  ],
+  "build_relevance": "tracking_camera_input",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Captures Leap Motion or Ultraleap camera images for tracking-camera workflows.",
+    "Requires Allow Images in the external Leap/Ultraleap Control Panel before images are available.",
+    "The api menu selects legacy V2 tracking or Orion/Gemini V4/V5 tracking behavior.",
+    "libfolder must point at the matching Leap.dll or LeapC.dll library location for the selected SDK.",
+    "flip and correction controls orient the camera image for the selected mounting setup.",
+    "TouchDesigner does not include Leap hardware or software licensing."
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "card_type": "operator",
+  "op_type": "alembicoutPOP",
+  "family": "POP",
+  "display_name": "Alembic Out POP",
+  "docs_url": "https://docs.derivative.ca/Alembic_Out_POP",
+  "summary": "Writes POP contents to Alembic .abc files, including points, triangle/quad meshes, line strips, lines, built-in attributes, selected custom attributes, and multi-frame animated output. Multiple POPs can be exported as separate Alembic objects.",
+  "key_params": [
+    {"name": "input", "type": "Sequential", "note": "Sequential blocks defining POP inputs to export"},
+    {"name": "input0pop", "type": "POP", "note": "POP source for the first exported object"},
+    {"name": "input0objname", "type": "Str", "note": "Alembic object name for the first input"},
+    {"name": "input0idname", "type": "Str", "note": "Point id attribute for point primitive exports"},
+    {"name": "input0velname", "type": "Str", "note": "Velocity attribute for animated point cloud exports"},
+    {"name": "input0ptattrname", "type": "Str", "note": "Pattern of custom point attributes to save"},
+    {"name": "input0vertattrname", "type": "Str", "note": "Pattern of custom vertex attributes to save"},
+    {"name": "input0primattrname", "type": "Str", "note": "Pattern of custom primitive attributes to save"},
+    {"name": "uniquesuff", "type": "Toggle", "note": "Use a unique file suffix through me.fileSuffix"},
+    {"name": "n", "type": "Int", "note": "Starting index for unique suffix naming"},
+    {"name": "leadingzerosdigits", "type": "Int", "note": "Minimum suffix digit count"},
+    {"name": "file", "type": "File", "note": "Output .abc path"},
+    {"name": "fps", "type": "Float", "note": "Frame rate of the Alembic file"},
+    {"name": "limitlength", "type": "Toggle", "note": "Automatically stop recording at a specified length"},
+    {"name": "length", "type": "Float", "note": "Recording length limit"},
+    {"name": "lengthunit", "type": "Menu", "note": "Length unit"},
+    {"name": "record", "type": "Toggle", "note": "Enable writing/recording"},
+    {"name": "recordpulse", "type": "Pulse", "note": "Write a file immediately"},
+    {"name": "pause", "type": "Toggle", "note": "Pause recording"},
+    {"name": "addframe", "type": "Pulse", "note": "Add a frame while paused"},
+    {"name": "maxactive", "type": "Int", "note": "Maximum active save tasks"},
+    {"name": "includeprim", "type": "Toggle", "note": "Enable primitive data writing"},
+    {"name": "texcoordattrib", "type": "Str", "note": "Texture coordinate attribute name"},
+    {"name": "unchangedtopology", "type": "Toggle", "note": "Write topology once when topology is unchanged"},
+    {"name": "abcfps", "type": "Float", "note": "Alembic library time sampling rate"}
+  ],
+  "key_concepts": [
+    "Alembic Out POP writes POP points, vertices, primitives, multi-frame animation, built-in attributes, and selected custom attributes into an Alembic .abc file.",
+    "Each input sequence block exports one POP as a separate Alembic object, but that input must contain exactly one supported primitive type.",
+    "Point primitives are written as OPoints, triangle and quad primitives as OPolyMesh, and line/line-strip primitives as linear OCurves with repeated endpoints for closed strips.",
+    "Built-in Color, N, and Tex attributes receive Alembic names and handling; custom point, vertex, and primitive attributes are controlled by per-input pattern parameters.",
+    "Recording controls cover unique suffixes, length limits, pause/add-frame workflows, maximum active saves, and unchanged topology optimization."
+  ],
+  "common_gotchas": [
+    "Each exported input must contain one primitive type; mixed triangles, lines, and points need separate POPs or cleanup.",
+    "Alembic uses reversed primitive winding compared with TouchDesigner, so vertex order is flipped when writing and reading.",
+    "POP groups are ignored by Alembic Out POP; encode needed grouping as attributes before export."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

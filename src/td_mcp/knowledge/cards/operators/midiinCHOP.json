@@ -1,0 +1,43 @@
+{
+  "card_type": "operator",
+  "op_type": "midiinCHOP",
+  "family": "CHOP",
+  "display_name": "MIDI In CHOP",
+  "docs_url": "https://docs.derivative.ca/MIDI_In_CHOP",
+  "summary": "Reads MIDI note, controller, program change, pitch wheel, timing, system, and file events into CHOP channels.",
+  "key_concepts": [
+    "Reads MIDI note, controller, program change, pitch wheel, timing, start/stop/continue, song position, and system-exclusive events from devices, internal sources, or MIDI files.",
+    "Simplified Output automatically creates channels for every received MIDI event type, so the channel set expands as a device is used.",
+    "Multiple MIDI CHOPs can read from the same or different sources, and Channel Prefix controls whether MIDI channel streams are split or merged.",
+    "Controller Format supports normal 7-bit controllers or paired 14-bit controller messages with documented MSB and LSB index rules.",
+    "MIDI values are saved in the .toe and restored on reload, which can cause jumps when physical controllers are in different positions.",
+    "Low Sample Rate settings can miss rapid on/off events; higher rates or Preserve Pulses help represent dense MIDI activity."
+  ],
+  "key_params": [
+    {"name": "source", "type": "Menu", "note": "Choose MIDI device, internal source, or file source"},
+    {"name": "device", "type": "Menu", "note": "MIDI input device"},
+    {"name": "file", "type": "File", "note": "MIDI file to read"},
+    {"name": "simplified", "type": "Toggle", "note": "Create channels for every MIDI event type received"},
+    {"name": "record", "type": "Toggle", "note": "Record incoming MIDI events"},
+    {"name": "start", "type": "Float", "note": "Output range start"},
+    {"name": "end", "type": "Float", "note": "Output range end"},
+    {"name": "rate", "type": "Float", "note": "Output sample rate"},
+    {"name": "controlname", "type": "String", "note": "Controller channel naming pattern"},
+    {"name": "controltype", "type": "Menu", "note": "Controller output mode"},
+    {"name": "notename", "type": "String", "note": "Note channel naming pattern"},
+    {"name": "timer", "type": "Toggle", "note": "Output MIDI timing/beat-related events"},
+    {"name": "sys", "type": "Toggle", "note": "Output system exclusive/system messages"},
+    {"name": "chan", "type": "Menu", "note": "MIDI channel filtering/mapping"}
+  ],
+  "common_gotchas": [
+    "Simplified Output dynamically expands channel count as event types are received; downstream schemas should tolerate changing channels.",
+    "MIDI values are saved into the .toe and restored on reload, but physical controller positions may differ and jump when moved.",
+    "Multiple MIDI CHOPs can read the same or different sources, so shared device access is possible but may duplicate events.",
+    "MIDI Start/Stop/Continue can control the Timeline/Beat Dialog when configured, which can affect global project timing.",
+    "Use MIDI In Map CHOP when portability through the MIDI Device Mapper matters more than direct channel/note/controller addressing.",
+    "For event-table workflows, consider MIDI In DAT or MIDI Event DAT instead of CHOP channels."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ MIDI/control",
+  "last_verified": "2026-06-18"
+}

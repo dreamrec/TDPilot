@@ -1,0 +1,43 @@
+{
+  "card_type": "operator",
+  "op_type": "phaserPOP",
+  "family": "POP",
+  "display_name": "Phaser POP",
+  "docs_url": "https://docs.derivative.ca/Phaser_POP",
+  "summary": "Creates staggered time-offset phase interpolation on POP attributes, similar to Phaser CHOP. Each point can output a Phase/Phaser-style value that moves from 0 to 1 over a cycle at different offsets.",
+  "key_params": [
+    {"name": "phaseattrscope", "type": "Str", "note": "Input attribute scope that drives phase staggering"},
+    {"name": "fract", "type": "Float", "note": "Phase fraction"},
+    {"name": "parsize", "type": "Menu", "note": "Independent component parameter count"},
+    {"name": "edge", "type": "Float", "note": "Separation edge between phased states"},
+    {"name": "reversephase", "type": "Toggle", "note": "Reverse staggered phase"},
+    {"name": "smoothstep", "type": "Toggle", "note": "Apply smoothstep remapping"},
+    {"name": "castto", "type": "Menu", "note": "Automatic, float, or int output casting"},
+    {"name": "outputattrscope", "type": "Str", "note": "Output phase attribute scope"},
+    {"name": "overrideautoattr", "type": "Toggle", "note": "Override automatic output attribute metadata"},
+    {"name": "attrtype", "type": "Menu", "note": "Output attribute data type"},
+    {"name": "attrnumcomps", "type": "Menu", "note": "Output attribute component count"},
+    {"name": "attrdefaultval", "type": "Float4", "note": "Default output attribute value"},
+    {"name": "attrclass", "type": "Menu", "note": "Attribute class for output"},
+    {"name": "fromlow", "type": "Float", "note": "Low input value for phase rerange"},
+    {"name": "fromhigh", "type": "Float", "note": "High input value for phase rerange"},
+    {"name": "tolow", "type": "Float", "note": "Low output value for phase rerange"},
+    {"name": "tohigh", "type": "Float", "note": "High output value for phase rerange"}
+  ],
+  "key_concepts": [
+    "Phaser POP performs staggered time-offset interpolation on a POP attribute, similar to Phaser CHOP.",
+    "Each point can output a Phaser/Phase-style value that rises from 0 to 1 over a cycle at different offsets.",
+    "Phase Attribute Scope controls the input staggering source; multi-component phase attributes produce multi-component phase output.",
+    "Fraction drives the phase cycle and can be smoothed, reversed, reranged, cast, and written to a chosen output attribute scope.",
+    "The output phase is intended as a downstream mask or blend driver for animation, not as automatic deformation of every target attribute.",
+    "Output attribute metadata controls type, component count, default value, and class when automatic inference is not enough."
+  ],
+  "common_gotchas": [
+    "Phase can be multi-component when the phase attribute scope is multi-component.",
+    "Extend behavior above 1 can clamp, cycle, mirror, mirror-slope, or add; choose deliberately for looping animations.",
+    "Use the output phase as a downstream blend/mask driver rather than expecting Phaser POP to animate every target directly."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

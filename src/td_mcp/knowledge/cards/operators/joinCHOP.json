@@ -1,0 +1,44 @@
+{
+  "card_type": "operator",
+  "op_type": "joinCHOP",
+  "family": "CHOP",
+  "display_name": "Join CHOP",
+  "docs_url": "https://docs.derivative.ca/Join_CHOP",
+  "summary": "Appends CHOP inputs one after another and optionally blends overlapping segments for animation, audio, and motion-channel sequencing.",
+  "key_params": [
+    {"name": "blendmethod", "type": "Menu", "note": "Preserve length, overlap sequences, or insert blend region"},
+    {"name": "blendfunc", "type": "Menu", "note": "Blend shape such as linear, ease, cubic, add, or hold previous"},
+    {"name": "blendbyinput", "type": "Toggle", "note": "Use first input channels to specify blend regions"},
+    {"name": "blendregion", "type": "Float", "note": "Blend region size"},
+    {"name": "blendregionunit", "type": "Menu", "note": "Blend region unit"},
+    {"name": "blendbias", "type": "Float", "note": "Favor previous or next segment during blending"},
+    {"name": "match", "type": "Menu", "note": "Match channels by number or name"},
+    {"name": "quatrot", "type": "Toggle", "note": "Quaternion rotation blending"},
+    {"name": "shortrot", "type": "Toggle", "note": "Shortest-path rotation blending"},
+    {"name": "rotscope", "type": "Pattern", "note": "Rotation channels for special blending"},
+    {"name": "cyclelen", "type": "Float", "note": "Rotation cycle length"},
+    {"name": "step", "type": "Float", "note": "Shift next segment to begin where previous ended"},
+    {"name": "stepscope", "type": "Pattern", "note": "Channels affected by Step"},
+    {"name": "blendscope", "type": "Pattern", "note": "Channels that should be blended"},
+    {"name": "transscopex", "type": "Pattern", "note": "X translation blend channel pattern"},
+    {"name": "transscopey", "type": "Pattern", "note": "Y translation blend channel pattern"},
+    {"name": "transscopez", "type": "Pattern", "note": "Z translation blend channel pattern"}
+  ],
+  "key_concepts": [
+    "Join CHOP appends multiple input CHOPs one after another and expects matching channel sets.",
+    "Later inputs are shifted so their start lines up with the end section of the previous input.",
+    "Blend Method controls whether lengths are preserved, sequences overlap, or an inserted blend region is created.",
+    "Blend Shape fades between adjacent segments or inserts interpolation curves between them.",
+    "Quaternion and translation blending provide special handling for rotation triplets and tx/ty/tz position channels."
+  ],
+  "common_gotchas": [
+    "Join CHOP expects inputs to have the same channels; mismatches should be handled before joining.",
+    "The second and later inputs are shifted to line up with the end of the previous input.",
+    "Quaternion rotation blending expects quaternion attributes from Attribute CHOP.",
+    "Translation blending is aimed at tx/ty/tz triplets and can shift segments; use cubic blending if shifting is undesirable.",
+    "Add blend shape can be useful for audio but may increase levels."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

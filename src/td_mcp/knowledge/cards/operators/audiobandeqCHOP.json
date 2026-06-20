@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "audiobandeqCHOP",
+  "family": "CHOP",
+  "display_name": "Audio Band EQ CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_Band_EQ_CHOP",
+  "summary": "Applies a fixed multi-band graphic equalizer to audio channels, with band parameters spanning low bass through high-frequency ranges.",
+  "key_concepts": [
+    "Audio Band EQ CHOP is a 16-band graphic equalizer for filtering audio input channels.",
+    "The fixed bands span from 25 Hz to 22 kHz, with one boost/cut parameter per band.",
+    "Each band's bandwidth is derived from neighboring bands, making it suitable for graphic-EQ shaping rather than arbitrary filter design.",
+    "Dry/Wet Mix blends the filtered result with the original input signal.",
+    "Use Audio Para EQ CHOP when variable center frequency or bandwidth is required instead of fixed band sliders."
+  ],
+  "key_params": [
+    {"name": "drywet", "type": "Float", "note": "Blend filtered output with the dry input"},
+    {"name": "band1", "type": "Float", "note": "25 Hz band gain"},
+    {"name": "band2", "type": "Float", "note": "40 Hz band gain"},
+    {"name": "band3", "type": "Float", "note": "60 Hz band gain"},
+    {"name": "band4", "type": "Float", "note": "90 Hz band gain"},
+    {"name": "band8", "type": "Float", "note": "590 Hz band gain"},
+    {"name": "band9", "type": "Float", "note": "930 Hz band gain"},
+    {"name": "band15", "type": "Float", "note": "14 kHz band gain"},
+    {"name": "band16", "type": "Float", "note": "22 kHz band gain"}
+  ],
+  "common_gotchas": [
+    "This is the current replacement for the older Band EQ CHOP.",
+    "Band gains are fixed-frequency controls, so use Audio Para EQ CHOP when variable center frequency or bandwidth is needed.",
+    "Audio-rate filtering expects sensible sample rates; mismatched input rates can change the perceived band positions.",
+    "Large boosts can clip downstream audio unless gain staging or limiting is applied."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

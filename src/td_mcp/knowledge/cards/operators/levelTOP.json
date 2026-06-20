@@ -4,18 +4,269 @@
   "family": "TOP",
   "display_name": "Level TOP",
   "docs_url": "https://docs.derivative.ca/Level_TOP",
-  "summary": "Adjusts brightness, contrast, opacity, gamma, black level, and related image levels. In feedback loops, opacity on the Post page is the canonical trail decay control.",
+  "summary": "Single-pass image-level adjustment TOP for contrast, brightness, gamma, black level, color range, posterization, opacity, and premultiplication. It is a common decay/control stage in feedback loops, but animated parameters rebuild a CPU lookup table each frame.",
   "key_params": [
-    {"name": "opacity", "type": "Float", "note": "Post-page opacity, commonly used as feedback decay"},
-    {"name": "brightness1", "type": "Float", "note": "Brightness multiplier"},
-    {"name": "blacklevel", "type": "Float", "note": "Input black level remapping"},
-    {"name": "gamma", "type": "Float", "note": "Gamma correction"}
+    {
+      "name": "clampinput",
+      "type": "Menu",
+      "note": "Clamp input to 0-1 automatically, force clamped, or leave floating formats unclamped."
+    },
+    {
+      "name": "invert",
+      "type": "Toggle",
+      "note": "Invert image colors."
+    },
+    {
+      "name": "blacklevel",
+      "type": "Float",
+      "note": "Pixels at or below this value become black."
+    },
+    {
+      "name": "brightness1",
+      "type": "Float",
+      "note": "Pre-range brightness offset."
+    },
+    {
+      "name": "gamma1",
+      "type": "Float",
+      "note": "Pre-range gamma correction."
+    },
+    {
+      "name": "contrast",
+      "type": "Float",
+      "note": "RGB gain/contrast adjustment."
+    },
+    {
+      "name": "inlow",
+      "type": "Float",
+      "note": "Input value mapped to black."
+    },
+    {
+      "name": "inhigh",
+      "type": "Float",
+      "note": "Input value mapped to white."
+    },
+    {
+      "name": "outlow",
+      "type": "Float",
+      "note": "Low output clamp value."
+    },
+    {
+      "name": "outhigh",
+      "type": "Float",
+      "note": "High output clamp value."
+    },
+    {
+      "name": "lowr",
+      "type": "Float",
+      "note": "Minimum red channel level."
+    },
+    {
+      "name": "highr",
+      "type": "Float",
+      "note": "Maximum red channel level."
+    },
+    {
+      "name": "lowg",
+      "type": "Float",
+      "note": "Minimum green channel level."
+    },
+    {
+      "name": "highg",
+      "type": "Float",
+      "note": "Maximum green channel level."
+    },
+    {
+      "name": "lowb",
+      "type": "Float",
+      "note": "Minimum blue channel level."
+    },
+    {
+      "name": "highb",
+      "type": "Float",
+      "note": "Maximum blue channel level."
+    },
+    {
+      "name": "lowa",
+      "type": "Float",
+      "note": "Minimum alpha channel level."
+    },
+    {
+      "name": "higha",
+      "type": "Float",
+      "note": "Maximum alpha channel level."
+    },
+    {
+      "name": "stepping",
+      "type": "Toggle",
+      "note": "Enable posterizing/stepping controls."
+    },
+    {
+      "name": "stepsize",
+      "type": "Float",
+      "note": "Posterization step size."
+    },
+    {
+      "name": "threshold",
+      "type": "Float",
+      "note": "Offset for step boundaries."
+    },
+    {
+      "name": "clamplow",
+      "type": "Float",
+      "note": "Step-page low clamp."
+    },
+    {
+      "name": "clamphigh",
+      "type": "Float",
+      "note": "Step-page high clamp."
+    },
+    {
+      "name": "soften",
+      "type": "Float",
+      "note": "Blend/soften step boundaries."
+    },
+    {
+      "name": "gamma2",
+      "type": "Float",
+      "note": "Post-adjustment gamma correction."
+    },
+    {
+      "name": "opacity",
+      "type": "Float",
+      "note": "Post-page opacity/transparency control."
+    },
+    {
+      "name": "brightness2",
+      "type": "Float",
+      "note": "Post-adjustment brightness offset."
+    },
+    {
+      "name": "clamp",
+      "type": "Float",
+      "note": "Post-page high clamp value."
+    },
+    {
+      "name": "clamplow2",
+      "type": "Float",
+      "note": "Post-page minimum clamp."
+    },
+    {
+      "name": "clamphigh2",
+      "type": "Float",
+      "note": "Post-page maximum clamp."
+    },
+    {
+      "name": "premultrgbbyalpha",
+      "type": "Toggle",
+      "note": "Premultiply color channels by alpha."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution control."
+    },
+    {
+      "name": "resolution",
+      "type": "Int2",
+      "note": "Custom output resolution."
+    },
+    {
+      "name": "resmenu",
+      "type": "Menu",
+      "note": "Resolution presets."
+    },
+    {
+      "name": "resmult",
+      "type": "Toggle",
+      "note": "Apply global TOP resolution multiplier."
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Output aspect mode."
+    },
+    {
+      "name": "aspect",
+      "type": "Float2",
+      "note": "Custom output aspect."
+    },
+    {
+      "name": "armenu",
+      "type": "Menu",
+      "note": "Aspect presets."
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Input filtering mode."
+    },
+    {
+      "name": "fillmode",
+      "type": "Menu",
+      "note": "Viewer fill mode."
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Viewer filtering mode."
+    },
+    {
+      "name": "npasses",
+      "type": "Integer",
+      "note": "Common TOP pass count."
+    },
+    {
+      "name": "chanmask",
+      "type": "Mask",
+      "note": "RGBA channel mask."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Output pixel format."
+    }
+  ],
+  "key_concepts": [
+    "contrast",
+    "brightness",
+    "gamma",
+    "black level",
+    "color range",
+    "quantization",
+    "opacity",
+    "Luma Level TOP",
+    "single pass",
+    "lookup table on the CPU",
+    "Clamp Input",
+    "floating pixel formats",
+    "Invert",
+    "Range Page",
+    "RGBA Page",
+    "Step Page",
+    "posterizing",
+    "Post Page",
+    "Pre-Multiply RGB by Alpha",
+    "3D Textures",
+    "2D Texture Arrays",
+    "Info CHOP",
+    "resx",
+    "resy",
+    "aspectx",
+    "aspecty",
+    "depth",
+    "gpu_memory_used"
   ],
   "common_gotchas": [
-    "For feedback trails, decay should usually use opacity, not brightness.",
-    "Extreme level changes can make a valid chain look black or clipped; verify luminance/entropy after applying."
+    "When animating Level TOP parameters, the CPU lookup table is rebuilt whenever a parameter changes, which can reduce performance in otherwise simple feedback loops.",
+    "Clamp Input should usually stay Auto, but choose Unclamped for higher bit-depth floating pixel formats when values outside 0-1 must survive.",
+    "Use opacity as the clean feedback decay control; brightness and clamp changes can make a valid feedback chain look clipped, black, or washed out.",
+    "Luma Level TOP preserves hue and saturation more accurately, but it is slower than Level TOP.",
+    "Use Info CHOP gpu_memory_used and pixel format checks when level operations are part of high-resolution or 3D texture feedback chains."
   ],
-  "related_snippets": ["feedback"],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-06-16"
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
 }

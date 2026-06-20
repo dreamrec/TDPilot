@@ -1,0 +1,33 @@
+{
+  "card_type": "operator",
+  "op_type": "feedbackPOP",
+  "family": "POP",
+  "display_name": "Feedback POP",
+  "docs_url": "https://docs.derivative.ca/Feedback_POP",
+  "summary": "Receives the previous-frame output of a target POP and feeds it back through a POP chain, allowing POP data to be incrementally modified over time.",
+  "key_params": [
+    {"name": "targetpop", "type": "POP", "note": "The downstream target POP whose previous output is fed back"},
+    {"name": "initializepulse", "type": "Pulse", "note": "Initialize feedback state"},
+    {"name": "startpulse", "type": "Pulse", "note": "Start playback"},
+    {"name": "play", "type": "Toggle", "note": "Enable feedback playback"},
+    {"name": "steppulse", "type": "Pulse", "note": "Advance one feedback step"},
+    {"name": "preroll", "type": "Float", "note": "Warm-up amount to run during initialization"},
+    {"name": "prerollunit", "type": "Menu", "note": "Time unit for pre-roll"},
+    {"name": "donepulse", "type": "Pulse", "note": "Immediately move the feedback loop to the done state"},
+    {"name": "usememlimit", "type": "Toggle", "note": "Use a memory limit"},
+    {"name": "inputmul", "type": "Float", "note": "Input multiplier for feedback contribution"}
+  ],
+  "key_concepts": [
+    "Feedback POP retrieves a downstream target POP's data one frame later to create temporal POP feedback loops.",
+    "Initialization, start, play, step, pre-roll, and done controls separate setup, warm-up, playback, single-frame stepping, and termination.",
+    "Memory limit controls bound how much target POP data can be copied back, which is essential for stable feedback networks."
+  ],
+  "common_gotchas": [
+    "The target POP reference is essential; feedback must close around the intended downstream POP.",
+    "Feedback loops need validation for bounded values and stable cook health.",
+    "Particle POP extends Feedback POP for particle-system workflows and is often a better specialized choice."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,31 @@
+{
+  "card_type": "operator",
+  "op_type": "nullMAT",
+  "family": "MAT",
+  "display_name": "Null MAT",
+  "docs_url": "https://docs.derivative.ca/Null_MAT",
+  "summary": "Passes through its input MAT unchanged, giving material networks a stable named endpoint for references, exports, and component interfaces.",
+  "key_params": [
+    {"name": "label", "type": "String", "note": "Optional label for network readability"},
+    {"name": "dodeform", "type": "Toggle", "note": "Common MAT deform state when exposed on the node"},
+    {"name": "blending", "type": "Toggle", "note": "Common MAT blending state if changed from inherited behavior"},
+    {"name": "depthtest", "type": "Toggle", "note": "Common MAT depth-test state if changed from inherited behavior"},
+    {"name": "cullface", "type": "Menu", "note": "Common MAT face-culling state if changed"}
+  ],
+  "key_concepts": [
+    "Null MAT has no effect on material data; it is an instance of the MAT connected to its input.",
+    "Use Null MAT as a stable named endpoint for Geometry COMP material parameters, Select MAT paths, and component-internal material references.",
+    "Although it is intended as a pass-through, deform and common MAT render-state pages can still affect rendering if explicitly changed.",
+    "Null MAT is useful at component boundaries where upstream material internals may change but the public material reference should remain stable.",
+    "Info CHOP diagnostics are available for monitoring common operator state such as cook timing, warnings, and errors."
+  ],
+  "common_gotchas": [
+    "Use Null MAT as the stable reference target for Geometry COMP material parameters.",
+    "Although intended as a no-op, common render-state pages can still affect behavior if they are explicitly changed.",
+    "Null MAT does not create a material without an input; make sure the upstream material path is valid.",
+    "It is useful at component boundaries where upstream material internals may change."
+  ],
+  "related_snippets": ["MAT_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

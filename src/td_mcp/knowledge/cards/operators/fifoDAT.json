@@ -1,0 +1,82 @@
+{
+  "card_type": "operator",
+  "op_type": "fifoDAT",
+  "family": "DAT",
+  "display_name": "FIFO DAT",
+  "docs_url": "https://docs.derivative.ca/FIFO_DAT",
+  "summary": "Maintains a first-in-first-out table for appended rows, automatically dropping the oldest rows once the configured maximum is reached.",
+  "key_params": [
+    {
+      "name": "callbacks",
+      "type": "DAT Path",
+      "note": "Callback DAT called for each newly appended row"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose the execution context for row-added callback scripts"
+    },
+    {
+      "name": "fromop",
+      "type": "OP Path",
+      "note": "Operator path used when Execute from is set to Specified Operator"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Limit row count to Max Lines"
+    },
+    {
+      "name": "maxlines",
+      "type": "Integer",
+      "note": "Maximum number of rows preserved when clamping"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Remove accumulated rows"
+    },
+    {
+      "name": "firstrow",
+      "type": "Toggle",
+      "note": "Preserve the first row as a header while FIFO rows roll underneath"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Rows are normally added by script with appendRow(); placing a DAT upstream is not the primary input pattern.",
+    "The default clamp is small enough for logs but may truncate long-running captures unless Max Lines is raised.",
+    "Callbacks fire once for each added row, so batch append operations can call user code many times.",
+    "Preserving the first row is useful for headers but changes which row is dropped when capacity is reached."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "rolling-table-logs",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Maintains a fixed-size FIFO table that receives rows through DAT methods.",
+    "Clamp and Max Lines control how many recent rows are retained.",
+    "Callbacks can run once for each row added to the FIFO table.",
+    "First Row preserves the header row while older data rows are discarded."
+  ]
+}

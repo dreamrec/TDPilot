@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "audiospectrumCHOP",
+  "family": "CHOP",
+  "display_name": "Audio Spectrum CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_Spectrum_CHOP",
+  "summary": "Transforms audio between time-domain samples and frequency-domain magnitude/phase data using FFT controls for analysis and visualization.",
+  "key_concepts": [
+    "Audio Spectrum CHOP calculates and displays the frequency spectrum of input audio channels.",
+    "Visualization mode emphasizes higher-frequency levels and lower-frequency ranges to make spectra easier to read.",
+    "Time to Magnitude and Phase mode creates magnitude and phase channels for each input signal.",
+    "Magnitude and Phase to Time mode reconstructs time-domain audio from compatible spectrum-domain channels.",
+    "FFT Size trades frequency accuracy against recency, cook cost, and temporal latency."
+  ],
+  "key_params": [
+    {"name": "mode", "type": "Menu", "note": "Spectrum operation mode"},
+    {"name": "visual", "type": "Toggle", "note": "Visualization-oriented output mode"},
+    {"name": "timetoraw", "type": "Menu", "note": "Convert time samples to magnitude and phase"},
+    {"name": "rawtotime", "type": "Menu", "note": "Convert magnitude and phase back to time samples"},
+    {"name": "fftsize", "type": "Menu", "note": "FFT window size"},
+    {"name": "frequencylog", "type": "Toggle", "note": "Use logarithmic frequency scaling for perceptual readability"},
+    {"name": "highfreqboost", "type": "Float", "note": "Boost higher frequencies for visual balance"},
+    {"name": "outputmenu", "type": "Menu", "note": "Output length behavior"},
+    {"name": "outlength", "type": "Int", "note": "Manual output length"}
+  ],
+  "common_gotchas": [
+    "FFT size trades time resolution against frequency resolution and latency.",
+    "Visualization boost is useful for graphics but can distort analytical amplitude interpretation.",
+    "Time-to-spectrum and spectrum-to-time modes expect different channel semantics.",
+    "Use a stable sample rate and window size before mapping bins to visual bands."
+  ],
+  "related_snippets": ["audio_reactive", "CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

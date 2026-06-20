@@ -1,0 +1,30 @@
+{
+  "card_type": "operator",
+  "op_type": "selectMAT",
+  "family": "MAT",
+  "display_name": "Select MAT",
+  "docs_url": "https://docs.derivative.ca/Select_MAT",
+  "summary": "References a material from elsewhere in the project while exposing common MAT render-state pages such as deform, blending, depth test, alpha test, wireframe, cull face, and polygon offset.",
+  "key_params": [
+    {"name": "selectmat", "type": "MAT", "note": "Material path to select"},
+    {"name": "dodeform", "type": "Toggle", "note": "Enable deform handling on the selected material wrapper"},
+    {"name": "blending", "type": "Toggle", "note": "Common MAT transparency/blending state"},
+    {"name": "depthtest", "type": "Toggle", "note": "Depth test state"},
+    {"name": "cullface", "type": "Menu", "note": "Face culling mode"}
+  ],
+  "key_concepts": [
+    "Select MAT gets a material from another location in the project using the Select MAT path parameter.",
+    "It is best used around stable Null MAT endpoints or explicit component material outputs so material internals can change without breaking references.",
+    "The selected material path must resolve at cook time, which makes relative versus absolute path strategy important in reusable components.",
+    "Select MAT exposes deform and common MAT render-state pages, so it can still modify depth, blending, culling, and deformation behavior around the selected material.",
+    "For skinned geometry, deform settings on the Select MAT wrapper must remain compatible with the selected material and geometry capture data."
+  ],
+  "common_gotchas": [
+    "The selected MAT path must resolve at cook time; use stable Null/Select-style references around reusable materials.",
+    "Common MAT states on the Select MAT can still affect rendering; do not assume it is a pure pointer.",
+    "For deformed geometry, make sure deform data settings match the selected material and geometry capture data."
+  ],
+  "related_snippets": ["MAT_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,33 @@
+{
+  "card_type": "operator",
+  "op_type": "sortCHOP",
+  "family": "CHOP",
+  "display_name": "Sort CHOP",
+  "docs_url": "https://docs.derivative.ca/Sort_CHOP",
+  "summary": "Reorders samples inside input channels by increasing values, decreasing values, or random order, optionally creating an index channel.",
+  "key_params": [
+    {"name": "method", "type": "Menu", "note": "Increasing values, decreasing values, or random"},
+    {"name": "seed", "type": "Float", "note": "Random sort seed"},
+    {"name": "select", "type": "Menu", "note": "Select sort reference by channel indices or names"},
+    {"name": "indices", "type": "String", "note": "Channel indices to sort by"},
+    {"name": "names", "type": "String", "note": "Channel names to sort by"},
+    {"name": "indexchannel", "type": "Toggle", "note": "Output original sample indices"}
+  ],
+  "key_concepts": [
+    "Sort CHOP reorders samples inside channels by increasing values, decreasing values, or random order.",
+    "Sorting by a selected channel makes all other channels follow that selected channel's new sample order.",
+    "If no selected sort channel is specified, channels are sorted independently.",
+    "Index Channel records the former sample indices before sorting.",
+    "Sort CHOP does not change channel order relative to other channels; use Reorder CHOP for that."
+  ],
+  "common_gotchas": [
+    "Sort CHOP reorders samples inside channels, not the order of channels relative to each other.",
+    "When a sort channel is specified, all other channels follow that channel's new sample order.",
+    "Leaving the selection empty sorts all channels independently.",
+    "Enable Index Channel when downstream logic needs to restore or inspect original sample positions.",
+    "Use Reorder CHOP to sort or rearrange channel order."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ sample sorting and ranked data",
+  "last_verified": "2026-06-18"
+}

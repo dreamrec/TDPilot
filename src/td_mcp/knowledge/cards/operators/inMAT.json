@@ -1,0 +1,33 @@
+{
+  "card_type": "operator",
+  "op_type": "inMAT",
+  "family": "MAT",
+  "display_name": "In MAT",
+  "docs_url": "https://docs.derivative.ca/In_MAT",
+  "summary": "Creates a MAT input connector on a Component so external material inputs can be wired into reusable component networks.",
+  "key_params": [
+    {"name": "label", "type": "String", "note": "Popup label shown for this Component MAT input"},
+    {"name": "dodeform", "type": "Toggle", "note": "Enable deform handling on the incoming material"},
+    {"name": "deformdata", "type": "Menu", "note": "Choose SOP, MAT, or Deform In MAT as bone-data source"},
+    {"name": "targetsop", "type": "SOP", "note": "SOP with capture data for deform workflows"},
+    {"name": "skelrootpath", "type": "COMP", "note": "Root component path for skeleton transforms"},
+    {"name": "blending", "type": "Toggle", "note": "Common MAT blending state"},
+    {"name": "depthtest", "type": "Toggle", "note": "Common MAT depth-test state"}
+  ],
+  "key_concepts": [
+    "In MAT creates a material input connector on the left side of a Component so parent networks can feed MATs into reusable components.",
+    "Component MAT inputs are positioned alphanumerically, making stable node names part of the public component interface.",
+    "The Label parameter documents the connector for users hovering over the Component input.",
+    "In MAT also exposes deform and common render-state pages, so it can change material behavior if those wrapper states are edited.",
+    "When the incoming material participates in skinned rendering, deform data source, capture SOP, and skeleton root settings must align with the geometry."
+  ],
+  "common_gotchas": [
+    "Component MAT inputs are ordered alphanumerically, so stable names matter for reusable components.",
+    "In MAT exposes common MAT state; it is not just a passive socket when render-state pages are changed.",
+    "Deform settings must match the geometry's capture attributes when the incoming material participates in skinned rendering.",
+    "Use labels to make component material inputs understandable in larger templates."
+  ],
+  "related_snippets": ["MAT_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

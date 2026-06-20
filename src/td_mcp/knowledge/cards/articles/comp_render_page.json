@@ -1,0 +1,51 @@
+{
+  "card_type": "article",
+  "article_id": "comp_render_page",
+  "title": "COMP Render Page",
+  "family": "COMP",
+  "families": [
+    "COMP",
+    "MAT",
+    "TOP",
+    "PARAMETER",
+    "RENDERING"
+  ],
+  "summary": "Official Derivative common COMP Render page reference for material assignment, Render TOP visibility, render flag interaction, draw and pick priority, wireframe color, and light masks on renderable components.",
+  "source_url": "https://docs.derivative.ca/COMP_Render_Page",
+  "docsbrain_page_id": "comp_render_page",
+  "covered_operators": [
+    "geometryCOMP",
+    "cameraCOMP",
+    "lightCOMP",
+    "renderTOP",
+    "renderpickCHOP",
+    "renderpickDAT"
+  ],
+  "key_concepts": [
+    "COMP Render Page",
+    "Display parameter page",
+    "material",
+    "render",
+    "Render TOP",
+    "Render Flag",
+    "logical AND",
+    "drawpriority",
+    "Transparency",
+    "pickpriority",
+    "Render Pick CHOP",
+    "Render Pick DAT",
+    "Search Area",
+    "wcolor",
+    "wireframe shading mode",
+    "lightmask"
+  ],
+  "guidance": [
+    "Use this article when a component is present but a render still misses geometry, material, draw-order, pick, or light-mask behavior.",
+    "The render parameter and the component Render Flag form a logical AND; both must allow rendering for component geometry to be visible in a Render TOP.",
+    "Use drawpriority to influence draw order among comparable components, especially transparent objects; smaller values draw after larger values.",
+    "Use pickpriority only for Render Pick CHOP/DAT search-area selection; it does not change draw order or per-pixel visibility.",
+    "A light must be listed both in the Render TOP and in the component lightmask when a mask is used."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

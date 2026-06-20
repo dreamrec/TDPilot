@@ -1,0 +1,49 @@
+{
+  "card_type": "operator",
+  "op_type": "linesmoothPOP",
+  "family": "POP",
+  "display_name": "Line Smooth POP",
+  "docs_url": "https://docs.derivative.ca/Line_Smooth_POP",
+  "summary": "Smooths line-strip attributes, usually P, by blending neighboring values along the strip. It can smooth by edge distance or point steps, use Gaussian or box weighting, optionally pre-divide curves, and map smoothing parameters per point.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Attribute class to smooth"},
+    {"name": "inputattrscope", "type": "Str", "note": "Input attribute or components to smooth"},
+    {"name": "prediv", "type": "Toggle", "note": "Pre-divide line strips before smoothing"},
+    {"name": "maxdivdist", "type": "Float", "note": "Maximum distance used during pre-divide"},
+    {"name": "maxverts", "type": "Int", "note": "Preallocated maximum output vertex count"},
+    {"name": "filtermethod", "type": "Menu", "note": "Smooth by edge distance or point steps"},
+    {"name": "filtertype", "type": "Menu", "note": "Gaussian or box smoothing kernel"},
+    {"name": "filterdist", "type": "Float", "note": "Edge-distance smoothing radius"},
+    {"name": "filtersize", "type": "Int", "note": "Point-step filter size"},
+    {"name": "effect", "type": "Float", "note": "Amount of smoothing applied"},
+    {"name": "endpointsfixed", "type": "Toggle", "note": "Keeps original line-strip endpoints fixed"},
+    {"name": "outputattrscope", "type": "Str", "note": "Output attribute scope for smoothed values"},
+    {"name": "overrideautoattr", "type": "Toggle", "note": "Override automatic output attribute creation"},
+    {"name": "attrtype", "type": "Menu", "note": "Output attribute type when overriding automatic creation"},
+    {"name": "attrnumcomps", "type": "Int", "note": "Number of output attribute components"},
+    {"name": "attrdefaultval", "type": "Float", "note": "Default value for generated output attributes"},
+    {"name": "resamplemethod", "type": "Menu", "note": "Optional resampling method after smoothing"},
+    {"name": "resamplemindist", "type": "Float", "note": "Minimum distance for adaptive resampling"},
+    {"name": "resamplemaxdist", "type": "Float", "note": "Maximum distance for adaptive resampling"},
+    {"name": "resampleminmaxbias", "type": "Float", "note": "Bias between min and max adaptive spacing"},
+    {"name": "maxtries", "type": "Int", "note": "Iteration limit used by adaptive resampling"},
+    {"name": "map", "type": "Sequential", "note": "Map attributes to smoothing parameters"},
+    {"name": "map0op", "type": "Menu", "note": "Map operation for the first parameter-mapping block"},
+    {"name": "map0element", "type": "Str", "note": "Source element for the first parameter-mapping block"},
+    {"name": "map0parm", "type": "Str", "note": "Target parameter for the first parameter-mapping block"},
+    {"name": "map0combineop", "type": "Menu", "note": "Combine operation for mapped parameter values"}
+  ],
+  "key_concepts": [
+    "Line Smooth filters attributes along each line strip, usually P, and therefore can change the visible curve shape.",
+    "Edge-distance filtering gives spatially consistent smoothing on uneven samples, while point-step filtering uses neighboring vertex counts.",
+    "Pre-divide, endpoint locking, optional resampling, and parameter maps let smoothing preserve anchors while varying strength along the strip."
+  ],
+  "common_gotchas": [
+    "Smoothing by point steps can include far-away points on unevenly sampled curves; use edge distance for spatially consistent smoothing.",
+    "End Points Fixed is important for curves that must stay attached to anchors or input endpoints.",
+    "Pre-divide increases density before smoothing, so maxverts must be sized for the pre-divided result."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

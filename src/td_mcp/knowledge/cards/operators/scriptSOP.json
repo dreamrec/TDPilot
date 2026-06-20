@@ -1,0 +1,37 @@
+{
+  "card_type": "operator",
+  "op_type": "scriptSOP",
+  "family": "SOP",
+  "display_name": "Script SOP",
+  "docs_url": "https://docs.derivative.ca/Script_SOP",
+  "summary": "Runs Python callbacks on every cook to procedurally create, delete, and edit SOP points, primitives, vertices, and attributes.",
+  "key_params": [
+    {
+      "name": "callbacks",
+      "type": "DAT Path",
+      "note": "DAT containing Script SOP callbacks"
+    },
+    {
+      "name": "setuppars",
+      "type": "Pulse",
+      "note": "Run setupParameters() to create custom parameters"
+    }
+  ],
+  "common_gotchas": [
+    "cook() can run often, so generated geometry should be deterministic and bounded.",
+    "Procedural dependencies can be broad because the script can access operators, parameters, and nodes from anywhere.",
+    "setuppars only runs setupParameters(); custom pulse parameters trigger onPulse().",
+    "Callback names are case-sensitive Python method names."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "procedural-python-sop-geometry",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Script SOP runs Python each time the SOP cooks.",
+    "It can create, delete, and modify points, primitives, vertices, and built-in or custom attributes such as Cd, uv, and N.",
+    "The default docked callbacks DAT contains cook(), onPulse(), and setupParameters().",
+    "Because dependencies can be discovered dynamically, TouchDesigner rebuilds the Script OP dependency list after it runs."
+  ]
+}

@@ -4,16 +4,118 @@
   "family": "TOP",
   "display_name": "Switch TOP",
   "docs_url": "https://docs.derivative.ca/Switch_TOP",
-  "summary": "Selects one of multiple texture inputs based on an index value, with optional blending between adjacent inputs for smooth transitions.",
+  "summary": "Multi-input TOP that routes one texture input to the output using the Index parameter. Fractional indices can blend between inputs, and Extend controls out-of-range or negative index behavior.",
   "key_params": [
-    {"name": "index", "type": "Float", "note": "Which input to pass through (0-based); fractional values blend between adjacent inputs"},
-    {"name": "blend", "type": "Toggle", "note": "Enable smooth cross-fade between inputs when index is fractional"}
+    {
+      "name": "index",
+      "type": "Float",
+      "note": "Selects which input is passed through; the first input is 0."
+    },
+    {
+      "name": "blend",
+      "type": "Toggle",
+      "note": "Blends input images when using floating point values in the Index parameter."
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Controls out-of-range and negative index behavior: Clamp, Loop, or ZigZag."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP control for using, scaling, fitting, limiting, or overriding the selected input resolution."
+    },
+    {
+      "name": "resolution",
+      "type": "Int2",
+      "note": "Custom output width and height when Output Resolution is Custom Resolution."
+    },
+    {
+      "name": "resmenu",
+      "type": "Menu",
+      "note": "Common resolution presets."
+    },
+    {
+      "name": "resmult",
+      "type": "Toggle",
+      "note": "Applies the global TOP resolution multiplier from preferences."
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Chooses input, resolution-derived, or custom output aspect ratio."
+    },
+    {
+      "name": "aspect",
+      "type": "Float2",
+      "note": "Custom aspect ratio pair used when Output Aspect is Custom Aspect."
+    },
+    {
+      "name": "armenu",
+      "type": "Menu",
+      "note": "Common aspect-ratio presets."
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Input image filtering: nearest, linear, or mipmap."
+    },
+    {
+      "name": "fillmode",
+      "type": "Menu",
+      "note": "Controls how the TOP image fills the node viewer."
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Viewer filtering: nearest, linear, or mipmap."
+    },
+    {
+      "name": "npasses",
+      "type": "Integer",
+      "note": "Repeats the TOP operation multiple times by feeding each pass back into the first input."
+    },
+    {
+      "name": "chanmask",
+      "type": "Mask",
+      "note": "Chooses which RGBA channels the TOP operates on."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Pixel format used to store image channel data."
+    }
+  ],
+  "key_concepts": [
+    "multi-input TOP switch",
+    "Index parameter",
+    "first input is 0",
+    "Blend between Inputs",
+    "floating point index",
+    "Extend",
+    "out-of-range index",
+    "negative indices",
+    "Clamp",
+    "Loop",
+    "ZigZag",
+    "Output Resolution",
+    "Pixel Format",
+    "Info CHOP",
+    "resx",
+    "resy",
+    "aspectx",
+    "aspecty",
+    "depth",
+    "gpu_memory_used"
   ],
   "common_gotchas": [
-    "Index is 0-based: the first input is 0, not 1.",
-    "When blend is off, fractional index values are rounded — enable blend for smooth transitions."
+    "Index is 0-based: the first input is selected with 0, not 1.",
+    "Blend between Inputs only creates smooth crossfades when the Index parameter uses floating point values.",
+    "Extend controls negative and out of range indices; Clamp, Loop, and ZigZag can produce very different source selection behavior.",
+    "Use Input for resolution, aspect, and pixel format when the switch should preserve the selected texture metadata exactly."
   ],
   "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
 }

@@ -1,0 +1,111 @@
+{
+  "card_type": "operator",
+  "op_type": "profileSOP",
+  "family": "SOP",
+  "display_name": "Profile SOP",
+  "docs_url": "https://docs.derivative.ca/Profile_SOP",
+  "summary": "Extracts, remaps, smooths, and deletes profile curves, usually after projecting trim curves onto spline surfaces.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Profile group or pattern"
+    },
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "Profile operation method"
+    },
+    {
+      "name": "parametric",
+      "type": "Toggle",
+      "note": "Extract in parametric domain"
+    },
+    {
+      "name": "smooth",
+      "type": "Toggle",
+      "note": "Smooth resulting profile"
+    },
+    {
+      "name": "sdivs",
+      "type": "Int",
+      "note": "Subdivision count"
+    },
+    {
+      "name": "tolerance",
+      "type": "Float",
+      "note": "Curve tolerance"
+    },
+    {
+      "name": "keepsurf",
+      "type": "Toggle",
+      "note": "Keep source surface"
+    },
+    {
+      "name": "delprof",
+      "type": "Toggle",
+      "note": "Delete original profiles"
+    },
+    {
+      "name": "urange",
+      "type": "Range",
+      "note": "U range"
+    },
+    {
+      "name": "urange1",
+      "type": "Float",
+      "note": "U range start"
+    },
+    {
+      "name": "urange2",
+      "type": "Float",
+      "note": "U range end"
+    },
+    {
+      "name": "vrange",
+      "type": "Range",
+      "note": "V range"
+    },
+    {
+      "name": "vrange1",
+      "type": "Float",
+      "note": "V range start"
+    },
+    {
+      "name": "vrange2",
+      "type": "Float",
+      "note": "V range end"
+    },
+    {
+      "name": "order",
+      "type": "Int",
+      "note": "Curve order"
+    },
+    {
+      "name": "csharp",
+      "type": "Float",
+      "note": "Corner sharpness"
+    },
+    {
+      "name": "maptype",
+      "type": "Menu",
+      "note": "Profile mapping type"
+    }
+  ],
+  "common_gotchas": [
+    "Profile SOP ignores non-profile primitives, so the group pattern must name the intended profile curves.",
+    "Parametric extracts are useful for editing but should not be assumed to sit on the source surface in 3D space.",
+    "Invisible profiles outside the active domain can still affect later trim/bridge/profile workflows unless removed."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "surface-profile-curve-editing",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Profile SOP operates on profile curves, commonly after Project SOP creates profiles on a spline surface.",
+    "Extract and Remap are distinct operations: extraction can create planar analytical geometry, while remap changes profile parameterization.",
+    "Parametric extraction produces XY-domain geometry and does not guarantee spatial coincidence with the original surface location.",
+    "Profiles outside a 0-1 surface range can be invisible while still existing unless deleted."
+  ]
+}

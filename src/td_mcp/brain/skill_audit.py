@@ -20,7 +20,9 @@ REQUIRED_SECTIONS = ("Core Rule", "Pressure Scenarios", "Common Mistakes")
 def audit_brain_skills(root: str | Path) -> dict[str, Any]:
     """Return a JSON-serializable audit report for canonical brain skills."""
     repo_root = Path(root)
-    skills = [_audit_one_skill(repo_root / "skills" / name / "SKILL.md", name) for name in EXPECTED_BRAIN_SKILLS]
+    skills = [
+        _audit_one_skill(repo_root / "skills" / name / "SKILL.md", name) for name in EXPECTED_BRAIN_SKILLS
+    ]
     pressure_count = sum(item["pressure_scenarios"] for item in skills)
     missing = [item["name"] for item in skills if item["missing"]]
     return {

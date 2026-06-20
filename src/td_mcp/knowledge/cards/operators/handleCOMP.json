@@ -1,0 +1,39 @@
+{
+  "card_type": "operator",
+  "op_type": "handleCOMP",
+  "family": "COMP",
+  "display_name": "Handle COMP",
+  "docs_url": "https://docs.derivative.ca/Handle_COMP",
+  "summary": "Defines inverse-kinematics handles for Bone COMP rigs, allowing one or more handles per bone and working with Handle CHOP to solve rotations for chains, branches, or mocap-style marker targets.",
+  "key_params": [
+    {"name": "target", "type": "COMP path", "note": "Target object that the handle pulls the bone toward"},
+    {"name": "t", "type": "XYZ", "note": "Offset from the bone origin where the handle is anchored"},
+    {"name": "weight", "type": "Float", "note": "Relative influence when multiple handles affect a bone"},
+    {"name": "twistonly", "type": "Toggle", "note": "Restricts the handle contribution to the bone's Z rotation"},
+    {"name": "falloff", "type": "Float", "note": "Controls how much parent bones are affected while reaching a target"},
+    {"name": "dorxlimit", "type": "Toggle", "note": "Enable rotation limits around X"},
+    {"name": "lrx", "type": "Min/Max", "note": "Allowed X rotation range"},
+    {"name": "dorylimit", "type": "Toggle", "note": "Enable rotation limits around Y"},
+    {"name": "lry", "type": "Min/Max", "note": "Allowed Y rotation range"},
+    {"name": "dorzlimit", "type": "Toggle", "note": "Enable rotation limits around Z"},
+    {"name": "lrz", "type": "Min/Max", "note": "Allowed Z rotation range"}
+  ],
+  "key_concepts": [
+    "Handle COMP defines IK handle targets for Bone COMP rigs and is solved in tandem with Handle CHOP.",
+    "A rig can attach one or more Handle COMPs to locations on each Bone COMP, allowing multiple end-affectors per bone.",
+    "The Target parameter identifies the object the handle pulls toward, while Translate offsets the handle from the bone origin.",
+    "Weight resolves competing handles on the same bone, and Falloff controls how strongly parent bones participate in the reach.",
+    "Twist Only and per-axis rotation limits constrain the solved bone rotations before Handle CHOP channels are exported back to the rig."
+  ],
+  "common_gotchas": [
+    "Handle COMP is designed to work with Handle CHOP; it defines constraints but does not by itself export solved rotations to bones.",
+    "Unlike older IK tools, bones do not need to be a single chain, but the rig still needs coherent hierarchy and targets.",
+    "Multiple handles on one bone compete through weight, so weak handles may appear ignored when stronger handles dominate.",
+    "Twist Only affects only Z rotation; disable it when the handle should point the bone in X/Y as well.",
+    "Rotation limits are relative to the parent bone and can overconstrain the solve if set too tightly.",
+    "Mocap setups need stable target objects before Handle CHOP export is trusted."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ Handle CHOP inverse-kinematics rigs",
+  "last_verified": "2026-06-18"
+}

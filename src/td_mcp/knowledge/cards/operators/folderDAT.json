@@ -1,0 +1,182 @@
+{
+  "card_type": "operator",
+  "op_type": "folderDAT",
+  "family": "DAT",
+  "display_name": "Folder DAT",
+  "docs_url": "https://docs.derivative.ca/Folder_DAT",
+  "summary": "Lists files and subfolders from a root folder, optionally monitoring changes and outputting selected metadata columns such as name, path, size, type, and dates.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable folder scanning and monitoring"
+    },
+    {
+      "name": "rootfolder",
+      "type": "Folder",
+      "note": "Directory to scan"
+    },
+    {
+      "name": "refresh",
+      "type": "Toggle",
+      "note": "Monitor the filesystem folder for changes"
+    },
+    {
+      "name": "refreshpulse",
+      "type": "Pulse",
+      "note": "Read folder contents once on demand"
+    },
+    {
+      "name": "async",
+      "type": "Toggle",
+      "note": "Perform folder updates asynchronously from the main thread"
+    },
+    {
+      "name": "nameformat",
+      "type": "Menu",
+      "note": "Choose whether output names include filename extensions"
+    },
+    {
+      "name": "dateformat",
+      "type": "Menu",
+      "note": "Choose the date format for date columns"
+    },
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "Include files, folders, or both"
+    },
+    {
+      "name": "folders",
+      "type": "String",
+      "note": "Pattern filter for included folder paths"
+    },
+    {
+      "name": "names",
+      "type": "String",
+      "note": "Pattern filter for included item names"
+    },
+    {
+      "name": "allextensions",
+      "type": "Toggle",
+      "note": "Include all file extensions"
+    },
+    {
+      "name": "imageextensions",
+      "type": "Toggle",
+      "note": "Include TouchDesigner-supported image extensions"
+    },
+    {
+      "name": "movieextensions",
+      "type": "Toggle",
+      "note": "Include TouchDesigner-supported movie extensions"
+    },
+    {
+      "name": "audioextensions",
+      "type": "Toggle",
+      "note": "Include TouchDesigner-supported audio extensions"
+    },
+    {
+      "name": "extensions",
+      "type": "String",
+      "note": "Custom extension pattern filter without leading periods"
+    },
+    {
+      "name": "subfolders",
+      "type": "Toggle",
+      "note": "Include subfolders below the root folder"
+    },
+    {
+      "name": "mindepth",
+      "type": "Int",
+      "note": "Minimum recursive depth for subfolder scanning"
+    },
+    {
+      "name": "limitdepth",
+      "type": "Toggle",
+      "note": "Enable a maximum recursive scan depth"
+    },
+    {
+      "name": "maxdepth",
+      "type": "Int",
+      "note": "Maximum recursive depth when Limit Depth is on"
+    },
+    {
+      "name": "namecol",
+      "type": "Toggle",
+      "note": "Include the item name column"
+    },
+    {
+      "name": "basenamecol",
+      "type": "Toggle",
+      "note": "Include the base name column without file extension"
+    },
+    {
+      "name": "extensioncol",
+      "type": "Toggle",
+      "note": "Include the file extension column"
+    },
+    {
+      "name": "typecol",
+      "type": "Toggle",
+      "note": "Include the operating-system file type column"
+    },
+    {
+      "name": "sizecol",
+      "type": "Toggle",
+      "note": "Include file size in bytes"
+    },
+    {
+      "name": "depthcol",
+      "type": "Toggle",
+      "note": "Include recursive depth from the root folder"
+    },
+    {
+      "name": "foldercol",
+      "type": "Toggle",
+      "note": "Include containing-folder path"
+    },
+    {
+      "name": "pathcol",
+      "type": "Toggle",
+      "note": "Include full item path"
+    },
+    {
+      "name": "relpathcol",
+      "type": "Toggle",
+      "note": "Include path relative to the root folder"
+    },
+    {
+      "name": "datecreatedcol",
+      "type": "Toggle",
+      "note": "Include creation date"
+    },
+    {
+      "name": "datemodifiedcol",
+      "type": "Toggle",
+      "note": "Include last modification date"
+    },
+    {
+      "name": "dateaccessedcol",
+      "type": "Toggle",
+      "note": "Include most recent access date"
+    }
+  ],
+  "common_gotchas": [
+    "Recursive scans over large media folders can cook slowly; limit depth and extensions for generated asset browsers.",
+    "Custom extension patterns exclude the period, so use values like txt or jpg rather than .txt or .jpg.",
+    "When Active is off, the DAT may output only headings rather than a populated listing.",
+    "Date and file metadata columns vary by operating system and filesystem."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "asset-folder-indexing",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Lists files and subfolders below a root folder in a DAT table.",
+    "Name, extension, type, folder, and recursive-depth parameters filter which items are included.",
+    "Column toggles choose which metadata fields are emitted, including path, size, depth, and date fields.",
+    "Asynchronous scanning can avoid main-thread stalls while delaying when updates appear."
+  ]
+}

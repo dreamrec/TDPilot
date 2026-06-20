@@ -1,0 +1,47 @@
+{
+  "card_type": "operator",
+  "op_type": "pantiltCHOP",
+  "family": "CHOP",
+  "display_name": "Pan Tilt CHOP",
+  "docs_url": "https://docs.derivative.ca/Pan_Tilt_CHOP",
+  "summary": "Calculates pan/tilt rotation values for one or more moving-head style platforms so they point toward target-relative positions while minimizing flips.",
+  "key_concepts": [
+    "Pan Tilt CHOP calculates pan and tilt rotations for moving-head-style platforms aiming at target-relative positions.",
+    "The operator minimizes frame-to-frame flipping by choosing the closest equivalent angular rotation.",
+    "Multiple rigs can be calculated in one CHOP when channels are ordered consistently per target or fixture.",
+    "Input 0 can provide tx, ty, tz relative position channels, or a full Object CHOP transform channel set when rotation is included.",
+    "The optional second input can supply pan and tilt reset channels, while Reset Values provide default reset angles in degrees.",
+    "Pan and tilt clamp ranges are degree limits and should match the physical fixture's safe travel."
+  ],
+  "key_params": [
+    {"name": "reset", "type": "Pulse", "note": "Discard current rig orientation and use reset values"},
+    {"name": "resetvals", "type": "Float2", "note": "Initial pan/tilt reset values in degrees"},
+    {"name": "resetvals1", "type": "Float", "note": "Initial pan reset value in degrees"},
+    {"name": "resetvals2", "type": "Float", "note": "Initial tilt reset value in degrees"},
+    {"name": "clamppan", "type": "Toggle", "note": "Clamp pan output"},
+    {"name": "panrange", "type": "Float2", "note": "Lower/upper pan limits in degrees"},
+    {"name": "panrangemin", "type": "Float", "note": "Minimum pan value in degrees"},
+    {"name": "panrangemax", "type": "Float", "note": "Maximum pan value in degrees"},
+    {"name": "clamptilt", "type": "Toggle", "note": "Clamp tilt output"},
+    {"name": "tiltrange", "type": "Float2", "note": "Lower/upper tilt limits in degrees"},
+    {"name": "tiltrangemin", "type": "Float", "note": "Minimum tilt value in degrees"},
+    {"name": "tiltrangemax", "type": "Float", "note": "Maximum tilt value in degrees"},
+    {"name": "timeslice", "type": "Toggle", "note": "Time-sliced output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate matching behavior"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"}
+  ],
+  "common_gotchas": [
+    "Input 0 must include tx, ty, tz platform/target-relative channels, or a full standard transform channel set if rotation is included.",
+    "The optional reset input must include pan and tilt channels to override reset values per rig.",
+    "Use Object CHOP and its DAT table mode when calculating target-to-fixture transforms for multiple rigs.",
+    "Clamp ranges are expressed in degrees and should match the physical fixture's safe movement limits.",
+    "Pan Tilt CHOP minimizes frame-to-frame flipping, but reset state influences which equivalent orientation is chosen.",
+    "Multiple rigs can be calculated per CHOP, so generated channel naming/order must stay consistent with fixture order."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2025.30000+ show-control/moving-head aiming",
+  "last_verified": "2026-06-18"
+}

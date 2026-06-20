@@ -1,0 +1,41 @@
+{
+  "card_type": "operator",
+  "op_type": "blendCOMP",
+  "family": "COMP",
+  "display_name": "Blend COMP",
+  "docs_url": "https://docs.derivative.ca/Blend_COMP",
+  "summary": "Blends, sequences, or constrains attached 3D object transforms from multiple parent inputs, enabling animated parenting, partial transform inheritance, and three-parent orientation setups.",
+  "key_params": [
+    {"name": "parenttype", "type": "Menu", "note": "Blend, Sequence, or Constrain parent transform mode"},
+    {"name": "sequence", "type": "Float", "note": "Selects which input parent contributes in Sequence or Constrain modes"},
+    {"name": "reset", "type": "Integer", "note": "Frame where constrain mode resets to the original transform"},
+    {"name": "blendw1", "type": "Float", "note": "Weight for input parent 1"},
+    {"name": "blendm1", "type": "XYZ/RST mask", "note": "Transform components inherited from input parent 1"},
+    {"name": "blendw2", "type": "Float", "note": "Weight for input parent 2"},
+    {"name": "blendm2", "type": "XYZ/RST mask", "note": "Transform components inherited from input parent 2"},
+    {"name": "blendw3", "type": "Float", "note": "Weight for input parent 3"},
+    {"name": "blendm3", "type": "XYZ/RST mask", "note": "Transform components inherited from input parent 3"},
+    {"name": "blendw4", "type": "Float", "note": "Weight for input parent 4"},
+    {"name": "blendm4", "type": "XYZ/RST mask", "note": "Transform components inherited from input parent 4"},
+    {"name": "noffset", "type": "Float", "note": "Offset normal to the plane formed by exactly three parents"},
+    {"name": "axesorient", "type": "Toggle", "note": "Orient local axes from exactly three parent inputs"},
+    {"name": "shortrot", "type": "Toggle", "note": "Use quaternion short rotation when blending two inputs"}
+  ],
+  "key_concepts": [
+    "Blend COMP combines attached 3D object parent transforms for animated parenting and partial transform inheritance.",
+    "It affects the object transform only, not the internal contents of the blended components.",
+    "Blend mode combines up to the first four input parents using weights and transform masks.",
+    "Sequence and Constrain modes switch or constrain the child to a selected input parent while preserving the appropriate transform behavior.",
+    "Normal offset, axis orientation, and short-rotation options handle three-parent orientation and quaternion blending cases."
+  ],
+  "common_gotchas": [
+    "Blend COMP affects object transforms only, not the contents of blended components.",
+    "The visual effect is visible through a Camera COMP or Render TOP rendering the camera view.",
+    "Blend mode only blends up to the first four inputs using the corresponding weights and masks.",
+    "A Sequence value outside the input range is interpreted as unparenting the child.",
+    "Constrain mode preserves relative transform when the constrained parent changes, with Reset Frame controlling reset behavior."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ object transform blending and animated parenting",
+  "last_verified": "2026-06-18"
+}

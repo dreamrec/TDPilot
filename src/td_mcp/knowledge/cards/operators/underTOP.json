@@ -1,0 +1,39 @@
+{
+  "card_type": "operator",
+  "op_type": "underTOP",
+  "family": "TOP",
+  "display_name": "Under TOP",
+  "docs_url": "https://docs.derivative.ca/Under_TOP",
+  "summary": "Places Input 1 under Input 2, using Input 2 alpha to determine which parts of Input 1 remain visible.",
+  "key_params": [
+    {"name": "size", "type": "Menu", "note": "Fixed layer that defines final resolution/aspect"},
+    {"name": "prefit", "type": "Menu", "note": "Fit behavior for the overlay before compositing"},
+    {"name": "justifyh", "type": "Menu", "note": "Horizontal placement of the overlay"},
+    {"name": "justifyv", "type": "Menu", "note": "Vertical placement of the overlay"},
+    {"name": "extend", "type": "Menu", "note": "Overlay sampling beyond image edges"},
+    {"name": "r", "type": "Float", "note": "Overlay rotation"},
+    {"name": "t", "type": "XY", "note": "Overlay translation"},
+    {"name": "tunit", "type": "Menu", "note": "Overlay translation units"},
+    {"name": "s", "type": "XY", "note": "Overlay scale"},
+    {"name": "p", "type": "XY", "note": "Overlay pivot"},
+    {"name": "punit", "type": "Menu", "note": "Overlay pivot units"},
+    {"name": "legacyxform", "type": "Toggle", "note": "Use legacy transform matrix behavior"}
+  ],
+  "common_gotchas": [
+    "Input 2 alpha controls visibility of Input 1; this is not equivalent to swapping inputs on Over TOP in every pipeline.",
+    "Fixed Layer chooses output dimensions and which layer is adjustable, but it does not change compositing order.",
+    "Transform parameters affect only the overlay layer, not the fixed layer.",
+    "Input 2 with fully opaque alpha will hide the corresponding Input 1 areas.",
+    "Legacy Transform uses older rotation and transform-order behavior.",
+    "Supports 3D textures and 2D texture arrays."
+  ],
+  "related_snippets": ["TOP_snippets", "Compositing_snippets"],
+  "build_relevance": "alpha_composite",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Under TOP composites Input 1 beneath Input 2, using Input 2 alpha to reveal or hide Input 1.",
+    "Fixed Layer controls final resolution/aspect and which input is transformed, not the core under compositing order.",
+    "Prefit, justify, extend, and transform parameters are applied to the overlay layer only.",
+    "The operator supports 3D textures and 2D texture arrays."
+  ]
+}

@@ -4,19 +4,491 @@
   "family": "COMP",
   "display_name": "Geometry COMP",
   "docs_url": "https://docs.derivative.ca/Geometry_COMP",
-  "summary": "Holds SOP geometry and a material for 3D rendering. Place SOPs inside it, assign a MAT, and reference it from a Render TOP to display 3D objects.",
+  "summary": "3D Object COMP that contains POP/SOP-style shape networks and is rendered by a Render TOP. It combines object transforms, material assignment, render flags, light masks, and GPU instancing controls for polygons, points, particles, line strips, and custom shader-driven instance attributes.",
   "key_params": [
-    {"name": "material", "type": "String", "note": "Path to the MAT operator for surface material"},
-    {"name": "tx", "type": "Float", "note": "Translate X in world space"},
-    {"name": "ty", "type": "Float", "note": "Translate Y in world space"},
-    {"name": "tz", "type": "Float", "note": "Translate Z in world space"},
-    {"name": "instanceop", "type": "String", "note": "Path to CHOP/DAT for GPU instancing data"}
+    {
+      "name": "xord",
+      "type": "Menu",
+      "note": "Transform order for applying scale, rotate, and translate."
+    },
+    {
+      "name": "rord",
+      "type": "Menu",
+      "note": "Rotate order for composing X/Y/Z rotations."
+    },
+    {
+      "name": "t",
+      "type": "Float3",
+      "note": "Translate group for object position."
+    },
+    {
+      "name": "r",
+      "type": "Float3",
+      "note": "Rotate group for object orientation."
+    },
+    {
+      "name": "s",
+      "type": "Float3",
+      "note": "Non-uniform object scale group."
+    },
+    {
+      "name": "p",
+      "type": "Float3",
+      "note": "Pivot point used for scale and rotation."
+    },
+    {
+      "name": "scale",
+      "type": "Float",
+      "note": "Uniform scale applied to the object."
+    },
+    {
+      "name": "parentxformsrc",
+      "type": "Menu",
+      "note": "Parent transform source: hierarchy, specified object, or world origin."
+    },
+    {
+      "name": "parentobject",
+      "type": "COMP Path",
+      "note": "Object used as the parent transform when parent source is specified."
+    },
+    {
+      "name": "lookat",
+      "type": "COMP Path",
+      "note": "3D component whose origin this geometry should face."
+    },
+    {
+      "name": "forwarddir",
+      "type": "Menu",
+      "note": "Axis and direction considered forward for Look At and path orientation."
+    },
+    {
+      "name": "lookup",
+      "type": "Float3",
+      "note": "Up-vector used by Look At orientation."
+    },
+    {
+      "name": "pathsop",
+      "type": "SOP Path",
+      "note": "Path SOP used to animate or orient the geometry along a curve."
+    },
+    {
+      "name": "roll",
+      "type": "Float",
+      "note": "Roll angle around the forward axis."
+    },
+    {
+      "name": "pos",
+      "type": "Float",
+      "note": "Position along the Path SOP."
+    },
+    {
+      "name": "pathorient",
+      "type": "Toggle",
+      "note": "Orient the object along the path direction."
+    },
+    {
+      "name": "up",
+      "type": "Float3",
+      "note": "Up vector used when orienting along a path."
+    },
+    {
+      "name": "bank",
+      "type": "Float",
+      "note": "Auto-bank amount based on path curvature."
+    },
+    {
+      "name": "instancing",
+      "type": "Toggle",
+      "note": "Enable hardware instancing for this Geometry COMP."
+    },
+    {
+      "name": "instancecountmode",
+      "type": "Menu",
+      "note": "Choose Manual or Instance OP(s) Length to determine instance count."
+    },
+    {
+      "name": "numinstances",
+      "type": "Integer",
+      "note": "Manual number of instances."
+    },
+    {
+      "name": "instanceop",
+      "type": "OP Path",
+      "note": "Default CHOP/DAT/SOP/TOP source for instance attributes."
+    },
+    {
+      "name": "instancefirstrow",
+      "type": "Menu",
+      "note": "How to treat the first row of a DAT used for instance data."
+    },
+    {
+      "name": "instxord",
+      "type": "Menu",
+      "note": "Transform order for per-instance transforms."
+    },
+    {
+      "name": "instrord",
+      "type": "Menu",
+      "note": "Rotate order for per-instance transforms."
+    },
+    {
+      "name": "instancetop",
+      "type": "OP Path",
+      "note": "Source OP for per-instance translation attributes."
+    },
+    {
+      "name": "instanceactive",
+      "type": "Attribute",
+      "note": "Attribute/channel/column controlling whether each instance is active."
+    },
+    {
+      "name": "instancetx",
+      "type": "Attribute",
+      "note": "Per-instance translate X source."
+    },
+    {
+      "name": "instancety",
+      "type": "Attribute",
+      "note": "Per-instance translate Y source."
+    },
+    {
+      "name": "instancetz",
+      "type": "Attribute",
+      "note": "Per-instance translate Z source."
+    },
+    {
+      "name": "instancerop",
+      "type": "OP Path",
+      "note": "Source OP for per-instance rotation attributes."
+    },
+    {
+      "name": "instancerx",
+      "type": "Attribute",
+      "note": "Per-instance rotate X source."
+    },
+    {
+      "name": "instancery",
+      "type": "Attribute",
+      "note": "Per-instance rotate Y source."
+    },
+    {
+      "name": "instancerz",
+      "type": "Attribute",
+      "note": "Per-instance rotate Z source."
+    },
+    {
+      "name": "instancesop",
+      "type": "OP Path",
+      "note": "Source OP for per-instance scale attributes."
+    },
+    {
+      "name": "instancesx",
+      "type": "Attribute",
+      "note": "Per-instance scale X source."
+    },
+    {
+      "name": "instancesy",
+      "type": "Attribute",
+      "note": "Per-instance scale Y source."
+    },
+    {
+      "name": "instancesz",
+      "type": "Attribute",
+      "note": "Per-instance scale Z source."
+    },
+    {
+      "name": "instancepop",
+      "type": "OP Path",
+      "note": "Source OP for per-instance pivot attributes."
+    },
+    {
+      "name": "instancepx",
+      "type": "Attribute",
+      "note": "Per-instance pivot X source."
+    },
+    {
+      "name": "instancepy",
+      "type": "Attribute",
+      "note": "Per-instance pivot Y source."
+    },
+    {
+      "name": "instancepz",
+      "type": "Attribute",
+      "note": "Per-instance pivot Z source."
+    },
+    {
+      "name": "instancerottoorder",
+      "type": "Menu",
+      "note": "Where the Rotate To Vector operation is applied in the instance transform equation."
+    },
+    {
+      "name": "instancerottoforward",
+      "type": "Menu",
+      "note": "Forward direction for per-instance Rotate To Vector."
+    },
+    {
+      "name": "instancerottoop",
+      "type": "OP Path",
+      "note": "Source OP for per-instance Rotate To Vector attributes."
+    },
+    {
+      "name": "instancerottox",
+      "type": "Attribute",
+      "note": "Rotate To Vector X attribute source."
+    },
+    {
+      "name": "instancerottoy",
+      "type": "Attribute",
+      "note": "Rotate To Vector Y attribute source."
+    },
+    {
+      "name": "instancerottoz",
+      "type": "Attribute",
+      "note": "Rotate To Vector Z attribute source."
+    },
+    {
+      "name": "instancerotupop",
+      "type": "OP Path",
+      "note": "Source OP for per-instance Rotate Up Vector attributes."
+    },
+    {
+      "name": "instancerotupx",
+      "type": "Attribute",
+      "note": "Rotate Up Vector X attribute source."
+    },
+    {
+      "name": "instancerotupy",
+      "type": "Attribute",
+      "note": "Rotate Up Vector Y attribute source."
+    },
+    {
+      "name": "instancerotupz",
+      "type": "Attribute",
+      "note": "Rotate Up Vector Z attribute source."
+    },
+    {
+      "name": "instanceorder",
+      "type": "Menu",
+      "note": "Controls order of per-instance attribute application."
+    },
+    {
+      "name": "instancetexmode",
+      "type": "Menu",
+      "note": "Per-instance texture-coordinate mode."
+    },
+    {
+      "name": "instancetexcoordop",
+      "type": "OP Path",
+      "note": "Source OP for per-instance texture-coordinate attributes."
+    },
+    {
+      "name": "instanceu",
+      "type": "Attribute",
+      "note": "Per-instance U texture-coordinate source."
+    },
+    {
+      "name": "instancev",
+      "type": "Attribute",
+      "note": "Per-instance V texture-coordinate source."
+    },
+    {
+      "name": "instancew",
+      "type": "Attribute",
+      "note": "Per-instance W texture-coordinate source."
+    },
+    {
+      "name": "instancecolormode",
+      "type": "Menu",
+      "note": "Per-instance color mode."
+    },
+    {
+      "name": "instancecolorop",
+      "type": "OP Path",
+      "note": "Source OP for per-instance color attributes."
+    },
+    {
+      "name": "instancer",
+      "type": "Attribute",
+      "note": "Per-instance red channel source."
+    },
+    {
+      "name": "instanceg",
+      "type": "Attribute",
+      "note": "Per-instance green channel source."
+    },
+    {
+      "name": "instanceb",
+      "type": "Attribute",
+      "note": "Per-instance blue channel source."
+    },
+    {
+      "name": "instancea",
+      "type": "Attribute",
+      "note": "Per-instance alpha channel source."
+    },
+    {
+      "name": "instancetexs",
+      "type": "TOP Pattern",
+      "note": "Multiple TOPs available as arbitrary per-instance textures."
+    },
+    {
+      "name": "instancetexindexop",
+      "type": "OP Path",
+      "note": "Source OP for the texture-index instance attribute."
+    },
+    {
+      "name": "instancetexindex",
+      "type": "Attribute",
+      "note": "Per-instance index selecting which texture from Instance Textures to use."
+    },
+    {
+      "name": "instance",
+      "type": "Sequence",
+      "note": "Sequence of custom instance attributes."
+    },
+    {
+      "name": "instance0customop",
+      "type": "OP Path",
+      "note": "Source OP for a custom instance attribute."
+    },
+    {
+      "name": "instance0customx",
+      "type": "Attribute",
+      "note": "Custom instance X component source."
+    },
+    {
+      "name": "instance0customy",
+      "type": "Attribute",
+      "note": "Custom instance Y component source."
+    },
+    {
+      "name": "instance0customz",
+      "type": "Attribute",
+      "note": "Custom instance Z component source."
+    },
+    {
+      "name": "instance0customw",
+      "type": "Attribute",
+      "note": "Custom instance W component source."
+    },
+    {
+      "name": "material",
+      "type": "MAT Path",
+      "note": "Material applied to the geometry inside this component."
+    },
+    {
+      "name": "render",
+      "type": "Toggle",
+      "note": "Whether this component's geometry is visible to Render TOPs, combined with the Render Flag."
+    },
+    {
+      "name": "drawpriority",
+      "type": "Integer",
+      "note": "Draw ordering priority; smaller values draw after larger values."
+    },
+    {
+      "name": "pickpriority",
+      "type": "Integer",
+      "note": "Priority used by Render Pick CHOP/DAT search-area picks."
+    },
+    {
+      "name": "wcolor",
+      "type": "RGB",
+      "note": "Wireframe viewer color."
+    },
+    {
+      "name": "lightmask",
+      "type": "Pattern",
+      "note": "Subset of lights used by this geometry; lights must also be listed in the Render TOP."
+    },
+    {
+      "name": "reinitextensions",
+      "type": "Pulse",
+      "note": "Recompile extension objects attached to this component."
+    },
+    {
+      "name": "initextonstart",
+      "type": "Toggle",
+      "note": "Automatically re-initialize extensions when TouchDesigner starts."
+    },
+    {
+      "name": "ext",
+      "type": "Sequence",
+      "note": "Sequence of extension definitions for this component."
+    },
+    {
+      "name": "ext0object",
+      "type": "Python Object",
+      "note": "Class instance attached as an extension object."
+    },
+    {
+      "name": "ext0name",
+      "type": "String",
+      "note": "Optional extension lookup name."
+    },
+    {
+      "name": "ext0promote",
+      "type": "Toggle",
+      "note": "Expose extension members directly on the component instead of only through .ext."
+    }
+  ],
+  "key_concepts": [
+    "3D surface",
+    "3D Object",
+    "Render TOP",
+    "Lights and Cameras affect scene",
+    "POP network",
+    "SOP network",
+    "Point Operators",
+    "polygons",
+    "Point primitives",
+    "Line Strips",
+    "Render Flag",
+    "Display Flag",
+    "Geometry Viewer",
+    "Texture Map POP",
+    "Material MAT",
+    "hardware instances",
+    "instance ID",
+    "Render Pick CHOP",
+    "Render Pick DAT",
+    "TOP RGBA channels",
+    "CHOP channels",
+    "DAT rows",
+    "SOP attributes",
+    "Instance Count Mode",
+    "Manual",
+    "Instance OP(s) Length",
+    "First Row is",
+    "Rotate To Vector",
+    "Instance Textures",
+    "Texture Index",
+    "PBR MAT",
+    "Phong MAT",
+    "Custom Instance",
+    "TDInstanceCustomAttrib0()",
+    "GLSL MAT",
+    "Render flag logical AND",
+    "Draw Priority",
+    "Pick Priority",
+    "Light Mask",
+    "Info CHOP",
+    "num_children"
   ],
   "common_gotchas": [
-    "Geometry COMP must contain at least one SOP (ending in a Null SOP) and have a material assigned to render.",
-    "For instancing, the instance CHOP/DAT must have channels named tx, ty, tz (and optionally rx, ry, rz, sx, sy, sz)."
+    "Most Geometry workflows keep the internal POP/SOP Render Flag and Display Flag together; a shape can appear in the Geometry Viewer yet not be rendered if only the Display Flag is on.",
+    "Every Geometry component needs a Material assigned for shaded rendering; Render TOPs draw the geometry, but the Geometry COMP owns the material binding.",
+    "Light Mask filters only lights that are also listed in the Render TOP, so a light must match both the Geometry COMP Light Mask and the Render TOP Lights parameter.",
+    "Instance attributes can come from TOP RGBA channels, CHOP channels, DAT rows, or SOP attributes; mismatched row/sample/attribute choices are a common cause of wrong instance counts or transforms.",
+    "Instance Textures select among multiple TOPs by Texture Index; this is different from selecting a slice in a 3D Texture or 2D Texture Array.",
+    "Custom instance attributes are for GLSL MAT access through TDInstanceCustomAttrib0() and related functions; those custom attributes are ignored by other materials such as the PBR MAT.",
+    "Render visibility is the logical AND of this component's Render parameter and its Render Flag, so both must allow rendering."
   ],
-  "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "related_snippets": [
+    "POP_snippets",
+    "POP_attribute_ontology",
+    "GLSL_snippets"
+  ],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
 }

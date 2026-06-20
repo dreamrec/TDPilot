@@ -30,7 +30,9 @@ from td_mcp.tool_registry import mcp
         "Use this when the user asks TDPilot to build or debug a real TouchDesigner visual "
         "system and you need a grounded, non-mutating concept graph plus typed patch plan."
     ),
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True),
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
     meta={"anthropic/alwaysLoad": True},
     structured_output=True,
 )
@@ -50,7 +52,10 @@ async def td_brain_plan(
     ] = None,
     constraints: Annotated[
         dict[str, Any] | None,
-        Field(default=None, description="Optional hard constraints, e.g. palette, FPS, node count, or operators."),
+        Field(
+            default=None,
+            description="Optional hard constraints, e.g. palette, FPS, node count, or operators.",
+        ),
     ] = None,
     preferred_domains: Annotated[
         list[str] | None,
@@ -66,7 +71,10 @@ async def td_brain_plan(
     ] = True,
     include_docs: Annotated[
         bool,
-        Field(default=True, description="Use loaded DocsBrain/CardIndex operator knowledge while grounding the plan."),
+        Field(
+            default=True,
+            description="Use loaded DocsBrain/CardIndex operator knowledge while grounding the plan.",
+        ),
     ] = True,
 ) -> dict[str, Any]:
     """Build a grounded BrainPlan without mutating TouchDesigner."""
@@ -115,7 +123,9 @@ async def td_brain_plan(
         "Use this when you already have a BrainPlan from td_brain_plan and need TDPilot "
         "to apply it transactionally with validation, rollback, and optional local learning."
     ),
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True),
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+    ),
     structured_output=True,
 )
 async def td_brain_execute(
@@ -137,7 +147,10 @@ async def td_brain_execute(
     ] = False,
     confirm_visual_payload: Annotated[
         bool,
-        Field(default=False, description="Reserved for future image payload confirmation; currently no large images returned."),
+        Field(
+            default=False,
+            description="Reserved for future image payload confirmation; currently no large images returned.",
+        ),
     ] = False,
 ) -> dict[str, Any]:
     """Execute a BrainPlan through the transaction layer."""
@@ -157,7 +170,9 @@ async def td_brain_execute(
             }
 
         options = _options_for_policy(transaction_policy, brain_plan.validation_profile)
-        tx_result = await _run_transaction(ctx, brain_plan.patch_plan, options, concept_profile=brain_plan.concept_graph.profile)
+        tx_result = await _run_transaction(
+            ctx, brain_plan.patch_plan, options, concept_profile=brain_plan.concept_graph.profile
+        )
         learned_id = None
         if learn_on_success and tx_result.status in {"clean", "warnings"}:
             learned_id = await _learn_brain_trace(ctx, brain_plan, tx_result.model_dump(mode="json"))
@@ -214,7 +229,9 @@ async def td_brain_execute(
         "Use this when you need to apply an existing PatchPlan or BrainPlan with preflight, "
         "snapshot, validation, dry-run, max-op, and rollback controls."
     ),
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True),
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+    ),
     structured_output=True,
 )
 async def td_transaction_apply(
@@ -245,7 +262,10 @@ async def td_transaction_apply(
             "td_transaction_apply",
             {"plan_id": patch_plan.id, "status": result.status, "rollback": result.rollback_performed},
         )
-        return {"success": result.status in {"clean", "warnings", "dry_run"}, "result": result.model_dump(mode="json")}
+        return {
+            "success": result.status in {"clean", "warnings", "dry_run"},
+            "result": result.model_dump(mode="json"),
+        }
     except ValueError as exc:
         return {"success": False, "error": str(exc)}
     except Exception as exc:  # noqa: BLE001
@@ -263,7 +283,9 @@ async def td_transaction_apply(
         "the optional local cockpit UI. This is read-only presentation; call td_brain_plan "
         "or td_brain_execute first for authoritative data."
     ),
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False),
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
     meta={
         "ui": {"resourceUri": COCKPIT_RESOURCE_URI},
         "openai/outputTemplate": COCKPIT_RESOURCE_URI,

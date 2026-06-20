@@ -1,0 +1,144 @@
+{
+  "card_type": "operator",
+  "op_type": "layermixTOP",
+  "family": "TOP",
+  "display_name": "Layer Mix TOP",
+  "docs_url": "https://docs.derivative.ca/Layer_Mix_TOP",
+  "summary": "Composites unlimited image layers in one generated-shader TOP with configurable per-input controls and composite order.",
+  "key_params": [
+    {
+      "name": "background",
+      "type": "Menu",
+      "note": "Background mode: off, backgroundtop, or constlayer"
+    },
+    {
+      "name": "size",
+      "type": "Menu",
+      "note": "Output size source: firstinput, bgtopsize, or outputres"
+    },
+    {
+      "name": "bgtop",
+      "type": "TOP",
+      "note": "Background TOP"
+    },
+    {
+      "name": "bgcolor",
+      "type": "RGBA",
+      "note": "Constant background color"
+    },
+    {
+      "name": "enablecrop",
+      "type": "Toggle",
+      "note": "Enable layer crop controls"
+    },
+    {
+      "name": "cropunit",
+      "type": "Menu",
+      "note": "Crop units: pixels, fraction, or fractionaspect"
+    },
+    {
+      "name": "prefit",
+      "type": "Menu",
+      "note": "Layer fit mode or prefitperlayer"
+    },
+    {
+      "name": "enablejust",
+      "type": "Toggle",
+      "note": "Enable layer justification controls"
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Layer extend mode or extperlayer"
+    },
+    {
+      "name": "scalemode",
+      "type": "Menu",
+      "note": "Scale control mode: off, uniform, xy, or xyuniform"
+    },
+    {
+      "name": "enabler",
+      "type": "Toggle",
+      "note": "Enable layer rotation controls"
+    },
+    {
+      "name": "enablet",
+      "type": "Toggle",
+      "note": "Enable layer translation controls"
+    },
+    {
+      "name": "enablep",
+      "type": "Toggle",
+      "note": "Enable layer pivot controls"
+    },
+    {
+      "name": "transpvtunit",
+      "type": "Menu",
+      "note": "Translation/pivot unit mode"
+    },
+    {
+      "name": "enableopac",
+      "type": "Toggle",
+      "note": "Enable opacity controls"
+    },
+    {
+      "name": "enablebright",
+      "type": "Toggle",
+      "note": "Enable brightness controls"
+    },
+    {
+      "name": "enablelevels",
+      "type": "Toggle",
+      "note": "Enable levels controls"
+    },
+    {
+      "name": "operand",
+      "type": "Menu",
+      "note": "Layer composite operation"
+    },
+    {
+      "name": "swaporder",
+      "type": "Toggle",
+      "note": "Swap composite order for operation"
+    },
+    {
+      "name": "comporder",
+      "type": "Menu",
+      "note": "Composite order: fronttoback or backtofront"
+    },
+    {
+      "name": "lay",
+      "type": "Int",
+      "note": "Layer parameter block index"
+    },
+    {
+      "name": "lay0top",
+      "type": "TOP",
+      "note": "TOP source for layer 0"
+    },
+    {
+      "name": "lay0bypass",
+      "type": "Toggle",
+      "note": "Bypass layer 0"
+    }
+  ],
+  "common_gotchas": [
+    "With Background Off, at least two layer sources are required.",
+    "Size controls output resolution, not which layers are composited.",
+    "Opacity and bypass can prevent hidden wired inputs from cooking.",
+    "Generated shader complexity grows with enabled controls and layer count."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Layer Mix TOP composites unlimited image layers in one node.",
+    "Each input has a parameter block, and users choose which per-layer controls appear.",
+    "The node generates a single-pass shader based on enabled controls and layer count.",
+    "Background can be off, a TOP, or a constant color layer.",
+    "Composite order can be front-to-back or back-to-front.",
+    "Layer sources can be wired inputs plus TOP references in layer parameter blocks."
+  ]
+}

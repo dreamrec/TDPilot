@@ -1,0 +1,57 @@
+{
+  "card_type": "article",
+  "article_id": "comp_drag_page",
+  "title": "COMP Drag Page",
+  "family": "PARAMETER",
+  "families": [
+    "COMP",
+    "PANEL",
+    "PARAMETER",
+    "DAT"
+  ],
+  "summary": "Official Derivative common Drag/Drop page for Panel COMP drag enablement, legacy scripts, callback workflow, drop types, alternate dropped operator, drop destination processing, and table-based drop routing.",
+  "source_url": "https://docs.derivative.ca/COMP_Drag_Page",
+  "docsbrain_page_id": "comp_drag_page",
+  "covered_operators": [
+    "containerCOMP",
+    "widgetCOMP",
+    "textCOMP",
+    "sliderCOMP",
+    "buttonCOMP",
+    "listCOMP",
+    "tableCOMP",
+    "textDAT",
+    "tableDAT"
+  ],
+  "key_concepts": [
+    "COMP Drag Page",
+    "Drag/Drop Page",
+    "Drag-and-Drop",
+    "Panel Component",
+    "drag",
+    "dragparent",
+    "legacy",
+    "dragno",
+    "usecallbacks",
+    "dragscript",
+    "droptypescript",
+    "Drop Types",
+    "dropdestscript",
+    "temporary network",
+    "paneldragop",
+    "drop",
+    "dropparent",
+    "dropno",
+    "dropscript",
+    "Table DAT"
+  ],
+  "guidance": [
+    "Use this article when a Panel COMP should initiate drag, accept drops, inherit parent drag/drop settings, or route drops through scripts.",
+    "Prefer the callback workflow for exact behavior; legacy drag/drop uses Drag Script, Drop Destination Script, Dropped Operator, and Drop Script fields.",
+    "Drop Types can advertise return values such as OP family names, channels, or supported file types.",
+    "The Drop Destination Script runs against a temporary network containing the dragged component or its alternate dropped operator.",
+    "The alternative operator must exist; otherwise the component itself is dropped, and text/file drops still use the original."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

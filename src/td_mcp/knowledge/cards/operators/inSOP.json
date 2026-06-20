@@ -1,0 +1,31 @@
+{
+  "card_type": "operator",
+  "op_type": "inSOP",
+  "family": "SOP",
+  "display_name": "In SOP",
+  "docs_url": "https://docs.derivative.ca/In_SOP",
+  "summary": "Creates a SOP input connector inside a component so external SOP geometry can feed the component's internal network.",
+  "key_params": [
+    {
+      "name": "label",
+      "type": "String",
+      "note": "Pop-up hover label shown on the component input."
+    }
+  ],
+  "common_gotchas": [
+    "Component input order is alphanumeric, so naming changes can reorder ports.",
+    "In SOP does not create geometry; it only exposes geometry entering the component boundary.",
+    "Use clear labels when a component has multiple SOP inputs."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "In SOP creates a SOP input connector inside a component.",
+    "Component inputs are ordered alphanumerically on the left side of the parent component.",
+    "The only documented custom parameter is `label`, used as the component input hover label.",
+    "In SOP exposes boundary geometry input; it does not generate geometry by itself."
+  ]
+}

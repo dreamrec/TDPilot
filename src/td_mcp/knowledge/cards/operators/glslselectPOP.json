@@ -1,0 +1,72 @@
+{
+  "card_type": "operator",
+  "op_type": "glslselectPOP",
+  "family": "POP",
+  "display_name": "GLSL Select POP",
+  "docs_url": "https://docs.derivative.ca/GLSL_Select_POP",
+  "summary": "Selects one named Extra Output POP made available by a GLSL Advanced POP. It is the downstream branch point for extra outputs declared on the GLSL Advanced POP Extra Outputs page.",
+  "key_params": [
+    {
+      "name": "pop",
+      "type": "POP",
+      "note": "Reference to the GLSL Advanced POP whose Extra Output POP should be selected."
+    },
+    {
+      "name": "name",
+      "type": "String",
+      "note": "Output Name matching one extra output configured on the selected GLSL Advanced POP."
+    },
+    {
+      "name": "bypass",
+      "type": "Toggle",
+      "note": "Passes the first input through unchanged when bypassed."
+    },
+    {
+      "name": "freeextragpumem",
+      "type": "Pulse",
+      "note": "Frees accumulated GPU memory after output memory has grown and shrunk."
+    },
+    {
+      "name": "delinputattrs",
+      "type": "Toggle",
+      "note": "Outputs only attributes specified by this POP, useful for isolating selected-output attributes into a branch."
+    }
+  ],
+  "key_concepts": [
+    "GLSL Advanced POP",
+    "Extra Outputs",
+    "extra output POP",
+    "Output Name",
+    "named extra output",
+    "branchable outputs",
+    "extraout0name",
+    "extraout0pop",
+    "extraout0ptattrs",
+    "extraout0primattrs",
+    "extraout0vertattrs",
+    "extraout0outputaccess",
+    "extraout0prevpassoutput",
+    "extraout0copyinputattrs",
+    "GLSL Select POP",
+    "selected output",
+    "Delete Input Attributes",
+    "Free Extra GPU Memory",
+    "Info CHOP"
+  ],
+  "common_gotchas": [
+    "Output Name must exactly match an Extra Output name configured on the referenced GLSL Advanced POP.",
+    "GLSL Select POP does not create extra outputs; it selects one named extra output that the GLSL Advanced POP already exposes.",
+    "Keep extra-output names stable in builder templates because downstream GLSL Select POP nodes reference those names as strings.",
+    "The selected output's point, primitive, and vertex attribute availability comes from the matching extra-output attribute scopes on GLSL Advanced POP.",
+    "Delete Input Attributes can prune attributes from the selected output branch, so verify render, convert, or downstream GLSL stages still receive the attributes they expect.",
+    "Use Free Extra GPU Memory after changing extra-output capacities or topology-heavy branches during iterative development.",
+    "Use an Info CHOP to inspect cook, warning, and error channels when an expected extra output name does not appear downstream."
+  ],
+  "related_snippets": [
+    "GLSL_snippets",
+    "POP_snippets",
+    "POP_attribute_ontology"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

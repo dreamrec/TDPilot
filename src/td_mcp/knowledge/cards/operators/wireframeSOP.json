@@ -1,0 +1,57 @@
+{
+  "card_type": "operator",
+  "op_type": "wireframeSOP",
+  "family": "SOP",
+  "display_name": "Wireframe SOP",
+  "docs_url": "https://docs.derivative.ca/Wireframe_SOP",
+  "summary": "Converts input edges into tubes and optionally points into spheres, producing renderable wireframe, pipe, and structural geometry.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Restrict wire conversion to selected geometry"
+    },
+    {
+      "name": "radius",
+      "type": "Float",
+      "note": "Tube radius for each converted edge"
+    },
+    {
+      "name": "corners",
+      "type": "Toggle",
+      "note": "Add spherical rounded corners at point locations"
+    },
+    {
+      "name": "caps",
+      "type": "Toggle",
+      "note": "Add end caps to generated wire geometry"
+    },
+    {
+      "name": "remove",
+      "type": "Toggle",
+      "note": "Remove original polygons and keep only generated wires"
+    },
+    {
+      "name": "fast",
+      "type": "Toggle",
+      "note": "Use faster wire calculation with lower accuracy"
+    }
+  ],
+  "common_gotchas": [
+    "Wireframe SOP generates real tube and sphere geometry, so dense meshes can become very heavy.",
+    "Round Corners add spheres at points and can multiply polygon count quickly.",
+    "Remove Polygons is needed when the desired output is only the tube structure.",
+    "Fast Wire trades accuracy for speed; avoid it when wires must meet cleanly at complex corners."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "renderable-structure-geometry",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Wireframe SOP converts edges into tube geometry and can convert points into spheres at rounded corners.",
+    "Wire Radius controls the generated wire thickness.",
+    "Round Corners, End Caps, and Remove Polygons decide whether output is pipe-like, capped, and wire-only.",
+    "Fast Wire improves speed at the expense of join accuracy."
+  ]
+}

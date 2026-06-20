@@ -1,0 +1,31 @@
+{
+  "card_type": "operator",
+  "op_type": "inCHOP",
+  "family": "CHOP",
+  "display_name": "In CHOP",
+  "docs_url": "https://docs.derivative.ca/In_CHOP",
+  "summary": "Creates an external CHOP input connector on the parent component and passes incoming channels into the component network.",
+  "key_concepts": [
+    "Each In CHOP inside a component adds one CHOP input connector to that parent component.",
+    "It passes channels connected to the parent component input into the internal component network.",
+    "Label controls the connector hover label shown on the parent COMP.",
+    "Num Channels validates incoming channel count and can intentionally raise an error on mismatch.",
+    "Names filters incoming channels when Num Channels is used, but renames channels when Num Channels is not used."
+  ],
+  "key_params": [
+    {"name": "label", "type": "String", "note": "Connector label shown on the parent COMP"},
+    {"name": "numchannels", "type": "Integer", "note": "Expected channel count; can error if mismatched"},
+    {"name": "channames", "type": "String", "note": "Expected or replacement channel names"},
+    {"name": "scope", "type": "Pattern", "note": "Channel pattern to affect"}
+  ],
+  "common_gotchas": [
+    "Each In CHOP inside a component adds one input connector to the parent component.",
+    "Num Channels can intentionally error when incoming channel counts are wrong.",
+    "When used with Num Channels, Names filters to matching channels and ignores the rest.",
+    "When used without Num Channels, Names acts as a channel rename pattern.",
+    "Use In CHOP for component interfaces rather than direct relative references when building reusable COMPs."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ component interfaces",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,297 @@
+{
+  "card_type": "operator",
+  "op_type": "groupSOP",
+  "family": "SOP",
+  "display_name": "Group SOP",
+  "docs_url": "https://docs.derivative.ca/Group_SOP",
+  "summary": "Creates, combines, edits, orders, and filters point or primitive groups for downstream SOP operations.",
+  "key_params": [
+    {
+      "name": "crname",
+      "type": "String",
+      "note": "Name of the group to create."
+    },
+    {
+      "name": "entity",
+      "type": "Menu",
+      "note": "Create primitive or point groups."
+    },
+    {
+      "name": "geotype",
+      "type": "Menu",
+      "note": "Geometry type filter for grouping."
+    },
+    {
+      "name": "usenumber",
+      "type": "Toggle",
+      "note": "Enable number-based grouping."
+    },
+    {
+      "name": "ordered",
+      "type": "Toggle",
+      "note": "Create an ordered group."
+    },
+    {
+      "name": "groupop",
+      "type": "Menu",
+      "note": "Number grouping mode: pattern, range, or expression."
+    },
+    {
+      "name": "pattern",
+      "type": "String",
+      "note": "Pattern used for number grouping."
+    },
+    {
+      "name": "transfer",
+      "type": "Pulse",
+      "note": "Transfer viewport selection into the Pattern field."
+    },
+    {
+      "name": "range",
+      "type": "Int Pair",
+      "note": "Range selection values."
+    },
+    {
+      "name": "rangestart",
+      "type": "Int",
+      "note": "Start of number range."
+    },
+    {
+      "name": "rangeend",
+      "type": "Int",
+      "note": "End of number range."
+    },
+    {
+      "name": "select",
+      "type": "Int Pair",
+      "note": "Select nth of mth values."
+    },
+    {
+      "name": "select1",
+      "type": "Int",
+      "note": "Select count."
+    },
+    {
+      "name": "select2",
+      "type": "Int",
+      "note": "Select period."
+    },
+    {
+      "name": "filter",
+      "type": "String",
+      "note": "Expression evaluated for each point or primitive."
+    },
+    {
+      "name": "usebounds",
+      "type": "Toggle",
+      "note": "Enable bounding-volume grouping."
+    },
+    {
+      "name": "boundtype",
+      "type": "Menu",
+      "note": "Bounding type."
+    },
+    {
+      "name": "size",
+      "type": "XYZ",
+      "note": "Bounding size."
+    },
+    {
+      "name": "sizex",
+      "type": "Float",
+      "note": "Bounding size X."
+    },
+    {
+      "name": "sizey",
+      "type": "Float",
+      "note": "Bounding size Y."
+    },
+    {
+      "name": "sizez",
+      "type": "Float",
+      "note": "Bounding size Z."
+    },
+    {
+      "name": "t",
+      "type": "XYZ",
+      "note": "Bounding center."
+    },
+    {
+      "name": "tx",
+      "type": "Float",
+      "note": "Bounding center X."
+    },
+    {
+      "name": "ty",
+      "type": "Float",
+      "note": "Bounding center Y."
+    },
+    {
+      "name": "tz",
+      "type": "Float",
+      "note": "Bounding center Z."
+    },
+    {
+      "name": "usenormal",
+      "type": "Toggle",
+      "note": "Enable normal-angle grouping."
+    },
+    {
+      "name": "dir",
+      "type": "XYZ",
+      "note": "Normal direction axis."
+    },
+    {
+      "name": "dirx",
+      "type": "Float",
+      "note": "Normal direction X."
+    },
+    {
+      "name": "diry",
+      "type": "Float",
+      "note": "Normal direction Y."
+    },
+    {
+      "name": "dirz",
+      "type": "Float",
+      "note": "Normal direction Z."
+    },
+    {
+      "name": "angle",
+      "type": "Float",
+      "note": "Normal spread angle."
+    },
+    {
+      "name": "camera",
+      "type": "COMP",
+      "note": "Object/camera used for backface grouping."
+    },
+    {
+      "name": "useedges",
+      "type": "Toggle",
+      "note": "Enable edge-based grouping."
+    },
+    {
+      "name": "doangle",
+      "type": "Toggle",
+      "note": "Enable edge angle grouping."
+    },
+    {
+      "name": "edgeangle",
+      "type": "Float",
+      "note": "Edge angle threshold."
+    },
+    {
+      "name": "dodepth",
+      "type": "Toggle",
+      "note": "Enable edge depth grouping."
+    },
+    {
+      "name": "edgestep",
+      "type": "Int",
+      "note": "Edge depth step."
+    },
+    {
+      "name": "point",
+      "type": "String",
+      "note": "Specific point numbers."
+    },
+    {
+      "name": "unshared",
+      "type": "Toggle",
+      "note": "Select unshared edge points."
+    },
+    {
+      "name": "boundarygroups",
+      "type": "Toggle",
+      "note": "Create boundary groups from unshared edges."
+    },
+    {
+      "name": "grpequal",
+      "type": "String",
+      "note": "Base group for Combine page."
+    },
+    {
+      "name": "not1",
+      "type": "Toggle",
+      "note": "Invert Group 1."
+    },
+    {
+      "name": "grp1",
+      "type": "String",
+      "note": "First input group for boolean combine."
+    },
+    {
+      "name": "op1",
+      "type": "Menu",
+      "note": "Boolean operation after Group 1."
+    },
+    {
+      "name": "not2",
+      "type": "Toggle",
+      "note": "Invert Group 2."
+    },
+    {
+      "name": "grp2",
+      "type": "String",
+      "note": "Second input group for boolean combine."
+    },
+    {
+      "name": "op2",
+      "type": "Menu",
+      "note": "Boolean operation after Group 2."
+    },
+    {
+      "name": "cnvtype",
+      "type": "Menu",
+      "note": "Convert point group to primitive group or reverse."
+    },
+    {
+      "name": "convertg",
+      "type": "String",
+      "note": "Group to convert."
+    },
+    {
+      "name": "cnvtname",
+      "type": "String",
+      "note": "Converted group name."
+    },
+    {
+      "name": "preserve",
+      "type": "Toggle",
+      "note": "Preserve original group during conversion."
+    },
+    {
+      "name": "oldname",
+      "type": "String",
+      "note": "Group to rename."
+    },
+    {
+      "name": "newname",
+      "type": "String",
+      "note": "New group name."
+    },
+    {
+      "name": "destroyname",
+      "type": "String",
+      "note": "Group to delete."
+    }
+  ],
+  "common_gotchas": [
+    "Pattern syntax can mix primitives, profiles, ranges, reverse ranges, exclusions, and wildcards.",
+    "Ordered groups preserve selection traversal order, which matters for path-like downstream operations.",
+    "Bounding Object grouping is points-only and expects well-formed polygonal geometry.",
+    "Combine operations are boolean set operations; name the intended union/intersection/xor/subtraction explicitly."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Group SOP creates named point or primitive groups for downstream SOP operations.",
+    "Elements can belong to multiple groups, so group membership is not exclusive by default.",
+    "Create modes include number patterns, ranges, expressions, bounds, normal angle tests, and edge tests.",
+    "Combine and Edit pages support boolean set operations, conversion between point and primitive groups, renaming, and deletion."
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "card_type": "operator",
+  "op_type": "slopeCHOP",
+  "family": "CHOP",
+  "display_name": "Slope CHOP",
+  "docs_url": "https://docs.derivative.ca/Slope_CHOP",
+  "summary": "Calculates first, second, or third derivatives of input channels, commonly converting position to speed or acceleration.",
+  "key_concepts": [
+    "Slope CHOP calculates the slope or derivative of input channels.",
+    "When the input represents position, the default slope output can be interpreted as speed.",
+    "Type selects first derivative slope, second derivative acceleration, or acceleration of slope.",
+    "Method chooses previous/current, current/next, or previous/next sample pairs; previous/current is the realtime-safe method.",
+    "Slope per Sample applies derivative calculation to each sample of multi-sample channels.",
+    "Slope CHOP can pair with Speed CHOP to edit speed or acceleration and reconstruct position, but the original starting position must be restored separately."
+  ],
+  "key_params": [
+    {"name": "type", "type": "Menu", "note": "Slope, acceleration, or acceleration of slope"},
+    {"name": "slope", "type": "MenuItem", "note": "Calculate first derivative slope"},
+    {"name": "accel", "type": "MenuItem", "note": "Calculate acceleration"},
+    {"name": "slacc", "type": "MenuItem", "note": "Calculate acceleration of slope"},
+    {"name": "method", "type": "Menu", "note": "Previous/current, current/next, or previous/next sample method"},
+    {"name": "pc", "type": "MenuItem", "note": "Use previous and current samples"},
+    {"name": "cn", "type": "MenuItem", "note": "Use current and next samples"},
+    {"name": "pn", "type": "MenuItem", "note": "Use previous and next samples"},
+    {"name": "slopesamples", "type": "Toggle", "note": "Apply slope per sample for multi-sample channels"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common-page time-slice behavior"},
+    {"name": "scope", "type": "String", "note": "Common CHOP channel scope pattern"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"},
+    {"name": "srselect", "type": "Menu", "note": "Common-page sample-rate matching behavior"}
+  ],
+  "common_gotchas": [
+    "Default use converts position-like channels to speed-like channels.",
+    "Previous/current is the only method applicable in realtime applications because it does not require future samples.",
+    "Previous/next is smoother for offline curves but needs samples on both sides.",
+    "Slope removes absolute starting position information; use Speed CHOP constants or offsets when integrating back.",
+    "Units can be interpreted per sample, frame, or second based on CHOP settings.",
+    "Use with Speed CHOP to edit speed or acceleration and reconstruct position.",
+    "Current/next and previous/next methods use future samples, so they are not appropriate for realtime-only analysis."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ derivative/speed/acceleration analysis",
+  "last_verified": "2026-06-18"
+}

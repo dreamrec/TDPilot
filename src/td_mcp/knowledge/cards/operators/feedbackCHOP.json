@@ -1,0 +1,30 @@
+{
+  "card_type": "operator",
+  "op_type": "feedbackCHOP",
+  "family": "CHOP",
+  "display_name": "Feedback CHOP",
+  "docs_url": "https://docs.derivative.ca/Feedback_CHOP",
+  "summary": "Stores CHOP channels from the current cook for use on a later frame or time slice, allowing stable CHOP feedback loops without infinite recursion.",
+  "key_params": [
+    {"name": "output", "type": "Menu", "note": "Previous channels, shifted channels, or last sample output mode"},
+    {"name": "delta", "type": "Toggle", "note": "Adds a dt channel with elapsed time between cooks"},
+    {"name": "reset", "type": "Toggle", "note": "Disable feedback and pass through input while reset is on"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Reset feedback for one frame"}
+  ],
+  "key_concepts": [
+    "Stores CHOP channels from the current frame for use in a later frame or time slice.",
+    "Supports recursive control chains that need the previous output of a CHOP chain as the current input.",
+    "Breaks circular CHOP loops without infinite recursion by copying input state without forcing an upstream recook.",
+    "Output mode selects previous channels at previous time, previous channels at current time, or only the last sample at current time.",
+    "Delta Time adds a dt channel with elapsed time since the last cook.",
+    "Reset set to 0 activates feedback; reset set to 1 disables feedback and passes input through."
+  ],
+  "common_gotchas": [
+    "Reset must be off for feedback to accumulate previous-frame state.",
+    "Feedback CHOP copies input without forcing upstream recook, so verify loop timing with Info CHOP or channel inspection.",
+    "Use explicit damping or limiting downstream when feeding values back into motion or simulation controls."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18"
+}

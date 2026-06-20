@@ -1,0 +1,289 @@
+{
+  "card_type": "snippet",
+  "snippet_id": "POP_attribute_ontology",
+  "family": "POP",
+  "summary": "POP attribute ontology covering core point/primitive/vertex classes, particle attributes, groups, dimension helpers, array attributes, and GLSL access idioms.",
+  "source_docs": [
+    "https://docs.derivative.ca/Attribute",
+    "https://docs.derivative.ca/Attribute_POP",
+    "https://docs.derivative.ca/Array_Attribute",
+    "https://docs.derivative.ca/Particle_POP",
+    "https://docs.derivative.ca/Force_Radial_POP",
+    "https://docs.derivative.ca/Group_POP",
+    "https://docs.derivative.ca/Write_a_GLSL_POP",
+    "https://docs.derivative.ca/Write_a_GLSL_MAT",
+    "https://docs.derivative.ca/GLSL_MAT",
+    "https://docs.derivative.ca/Texture_Map_POP"
+  ],
+  "attribute_precedence": ["vertex", "point", "primitive"],
+  "component_syntax": ["P(0)", "P.y", "P.i2", "Color.rgb", "Color.a"],
+  "attribute_classes": [
+    {
+      "name": "point",
+      "description": "Point attributes are lists with one value per POP point. The built-in P attribute is the point position and most particle state lives on point attributes.",
+      "glsl_selected_class_prefix": "TDIn_",
+      "glsl_cross_class_prefix": "TDInPoint_",
+      "advanced_output_prefix": "oTDPoint_"
+    },
+    {
+      "name": "primitive",
+      "description": "Primitive attributes are lists with one value per primitive, such as per-face Color or N data.",
+      "glsl_selected_class_prefix": "TDIn_",
+      "glsl_cross_class_prefix": "TDInPrim_",
+      "advanced_output_prefix": "oTDPrim_"
+    },
+    {
+      "name": "vertex",
+      "description": "Vertex attributes are lists with one value per vertex across all primitives and are used when data must vary per vertex rather than per shared point.",
+      "glsl_selected_class_prefix": "TDIn_",
+      "glsl_cross_class_prefix": "TDInVert_",
+      "advanced_output_prefix": "oTDVert_"
+    }
+  ],
+  "attributes": {
+    "P": {
+      "class": "point",
+      "type": "float3",
+      "kind": "built_in_reserved",
+      "role": "Point position in XYZ space.",
+      "components": ["x", "y", "z"],
+      "swizzle_examples": ["P.x", "P.y", "P.z", "P.xy"],
+      "glsl_read": "TDIn_P() or TDIn_P(inputIndex, elementId, arrayIndex)",
+      "glsl_write": "P[id]",
+      "planning_note": "Treat P as the primary point position; generators and particle systems expect it to exist on point data."
+    },
+    "N": {
+      "class": "point_or_vertex_or_primitive",
+      "type": "vec3",
+      "kind": "built_in_reserved",
+      "role": "Surface normal or direction vector associated with points, vertices, or primitives.",
+      "components": ["x", "y", "z"],
+      "swizzle_examples": ["N.x", "N.y", "N.z", "N.xyz"],
+      "glsl_read": "TDIn_N(), TDInPoint_N(), TDInVert_N(), or TDInPrim_N() depending on selected class",
+      "glsl_write": "N[id] for selected-class GLSL POP or oTDPoint_N[id]/oTDVert_N[id]/oTDPrim_N[id] in GLSL Advanced POP"
+    },
+    "Color": {
+      "class": "point_or_vertex_or_primitive",
+      "type": "float4",
+      "kind": "built_in_optional",
+      "role": "Surface color and alpha, with RGBA values typically normalized from 0 to 1.",
+      "components": ["r", "g", "b", "a"],
+      "swizzle_examples": ["Color.rgb", "Color.a"],
+      "glsl_read": "TDIn_Color(), TDInPoint_Color(), TDInVert_Color(), or TDInPrim_Color()",
+      "glsl_write": "Color[id] or oTDPoint_Color[id]/oTDVert_Color[id]/oTDPrim_Color[id]"
+    },
+    "Tex": {
+      "class": "point_or_vertex",
+      "type": "float3",
+      "kind": "built_in_reserved",
+      "role": "Texture coordinate attribute used for image and procedural texture mapping.",
+      "components": ["u", "v", "w"],
+      "swizzle_examples": ["Tex.x", "Tex.y", "Tex.z", "Tex.xy"],
+      "glsl_read": "TDIn_Tex(), TDInPoint_Tex(), or TDInVert_Tex()",
+      "glsl_write": "Tex[id] or oTDPoint_Tex[id]/oTDVert_Tex[id]"
+    },
+    "Weight": {
+      "class": "point",
+      "type": "float",
+      "kind": "common",
+      "role": "Point weight used by Field POP and masking workflows.",
+      "components": ["value"],
+      "swizzle_examples": [],
+      "glsl_read": "TDIn_Weight()",
+      "glsl_write": "Weight[id]"
+    },
+    "PointScale": {
+      "class": "point",
+      "type": "float",
+      "kind": "built_in_reserved",
+      "role": "Per-point scale for point rendering.",
+      "components": ["value"],
+      "swizzle_examples": [],
+      "glsl_read": "TDIn_PointScale()",
+      "glsl_write": "PointScale[id]"
+    },
+    "LineWidth": {
+      "class": "point",
+      "type": "float",
+      "kind": "built_in_optional",
+      "role": "Per-point or per-line width attribute exposed as a predefined Attribute POP create option.",
+      "components": ["value"],
+      "swizzle_examples": [],
+      "glsl_read": "TDIn_LineWidth()",
+      "glsl_write": "LineWidth[id]"
+    },
+    "PartVel": {
+      "class": "point",
+      "type": "vec3",
+      "kind": "particle_reserved",
+      "role": "Particle velocity in units per second.",
+      "components": ["x", "y", "z"],
+      "swizzle_examples": ["PartVel.x", "PartVel.y", "PartVel.z"],
+      "glsl_read": "TDIn_PartVel()",
+      "glsl_write": "PartVel[id]",
+      "planning_note": "Particle POP reads PartVel while updating P; preserve it in feedback loops."
+    },
+    "PartForce": {
+      "class": "point",
+      "type": "vec3",
+      "kind": "particle_reserved",
+      "role": "Cumulative particle force applied before the next particle integration step.",
+      "components": ["x", "y", "z"],
+      "swizzle_examples": ["PartForce.x", "PartForce.y", "PartForce.z"],
+      "glsl_read": "TDIn_PartForce()",
+      "glsl_write": "PartForce[id]",
+      "planning_note": "Force Radial POP writes or adds to PartForce, but Math Mix, Noise, Pattern, Lookup, and GLSL POPs may author it directly."
+    },
+    "PartMass": {
+      "class": "point",
+      "type": "float",
+      "kind": "particle_reserved",
+      "role": "Particle mass.",
+      "components": ["value"],
+      "swizzle_examples": [],
+      "glsl_read": "TDIn_PartMass()",
+      "glsl_write": "PartMass[id]"
+    },
+    "PartDrag": {
+      "class": "point",
+      "type": "float",
+      "kind": "particle_reserved",
+      "role": "Particle drag factor used for deceleration during integration.",
+      "components": ["value"],
+      "swizzle_examples": [],
+      "glsl_read": "TDIn_PartDrag()",
+      "glsl_write": "PartDrag[id]"
+    },
+    "PartLife": {
+      "class": "point",
+      "type": "float",
+      "kind": "particle_common",
+      "role": "Life expectancy name used by the general Attribute page point-attribute table.",
+      "components": ["value"],
+      "swizzle_examples": [],
+      "glsl_read": "TDIn_PartLife()",
+      "glsl_write": "PartLife[id]",
+      "source_context": "Attribute page point-attribute table lists PartLife, while Particle POP lists the particle lifespan attribute as PartLifeSpan."
+    },
+    "PartLifeSpan": {
+      "class": "point",
+      "type": "float",
+      "kind": "particle_reserved",
+      "role": "Particle lifespan in seconds.",
+      "components": ["value"],
+      "swizzle_examples": [],
+      "canonical_attribute": "PartLife",
+      "glsl_read": "TDIn_PartLifeSpan()",
+      "glsl_write": "PartLifeSpan[id]",
+      "source_context": "Particle POP names the lifespan attribute PartLifeSpan; the general Attribute page point table names the related life expectancy field PartLife. Keep both tokens searchable and verify the live operator build before normalizing user patches."
+    },
+    "PartAge": {
+      "class": "point",
+      "type": "float",
+      "kind": "particle_reserved",
+      "role": "Particle age in seconds.",
+      "components": ["value"],
+      "swizzle_examples": [],
+      "glsl_read": "TDIn_PartAge()",
+      "glsl_write": "PartAge[id]"
+    },
+    "PartId": {
+      "class": "point",
+      "type": "uint",
+      "kind": "particle_reserved",
+      "role": "Unique particle identifier.",
+      "components": ["value"],
+      "swizzle_examples": [],
+      "glsl_read": "TDIn_PartId()",
+      "glsl_write": "PartId[id]",
+      "doc_conflict": "Particle POP lists PartId as uint, while the Attribute page point-attribute table lists PartId as float. Prefer the Particle POP type for particle simulations and preserve the conflict note for live-build validation."
+    },
+    "PartDeath": {
+      "class": "point",
+      "type": "uint",
+      "kind": "particle_optional",
+      "role": "Optional particle-death control attribute used by Particle POP feedback workflows.",
+      "components": ["value"],
+      "swizzle_examples": [],
+      "optional": true,
+      "glsl_read": "TDIn_PartDeath()",
+      "glsl_write": "PartDeath[id]"
+    },
+    "PartInitP": {
+      "class": "point",
+      "type": "vec3",
+      "kind": "particle_common",
+      "role": "Particle rest or initial position.",
+      "components": ["x", "y", "z"],
+      "swizzle_examples": ["PartInitP.xyz"],
+      "glsl_read": "TDIn_PartInitP()",
+      "glsl_write": "PartInitP[id]"
+    }
+  },
+  "glsl_access_patterns": [
+    "TDIndex()",
+    "TDNumElements()",
+    "TDInputNumPoints()",
+    "TDInputNumPrims()",
+    "TDInputNumVerts()",
+    "TDIn_AttribName(inputIndex, elementId, arrayIndex)",
+    "TDInPoint_",
+    "TDInPrim_",
+    "TDInVert_",
+    "AttribName[id]",
+    "oTDPoint_AttribName[id]",
+    "oTDPrim_AttribName[id]",
+    "oTDVert_AttribName[id]",
+    "TDUpdatePointGroups()",
+    "TDUpdatePrimGroups()"
+  ],
+  "glsl_mat_pop_access": [
+    "TDAttrib_AttribName()",
+    "TDAttrib_AttribName(arrayIndex, vertIndex)",
+    "cTDAttribArraySize_AttribName",
+    "TDBuffer_AttribName(elementIndex, arrayIndex)",
+    "TDBufferLength_AttribName()",
+    "cTDBufferArraySize_AttribName"
+  ],
+  "groups": {
+    "entity_classes": ["point", "primitive"],
+    "created_by": "Group POP",
+    "selection_methods": ["attribute", "thin", "pattern", "group", "bounding"],
+    "downstream_scope": "Group parameter fields on POPs restrict the operation to matching point or primitive groups when such groups exist.",
+    "glsl_notes": [
+      "GLSL Copy POP exposes TDUpdatePointGroups() and TDUpdatePrimGroups() helpers for preserving input group membership through copy shaders.",
+      "Group POP sequential blocks can combine attribute, thin, pattern, group, and bounding logic; preserve block order when generating patches."
+    ]
+  },
+  "dimensions": {
+    "scope": "GLSL POP and GLSL Advanced POP dimension helpers map point indices to dimension coordinates and back.",
+    "helpers": [
+      "cTDDimSize",
+      "TDDimension()",
+      "TDDimCoords(uint pointIndex)",
+      "TDDimPointIndex(coords)",
+      "cTDDimSizeN",
+      "TDDimensionN()",
+      "TDDimCoordsN(uint pointIndex)",
+      "TDDimPointIndexN(coords)"
+    ],
+    "planning_note": "Use dimension helpers when a POP represents grid-like or higher-dimensional point layout; do not infer 2D/3D coordinates from point indices without checking dimensions."
+  },
+  "array_attributes": {
+    "definition": "An array attribute stores multiple elements of a chosen POP attribute data type per point, primitive, or vertex.",
+    "naming_examples": ["MonthTempC[12]", "MyArrayAttribute[3]"],
+    "creation_notes": [
+      "Attribute POP creates arrays by enabling Array and setting Array Size.",
+      "DAT to POP can collect similarly named columns into an array attribute when the column heading uses a name like MyArrayAttribute[3]."
+    ],
+    "glsl_input_access": "TDIn_AttribName(inputIndex, elementId, arrayIndex); arrayIndex is optional and defaults to 0.",
+    "glsl_array_size_constant": "const uint cTDArraySize_Attrib for GLSL POP; GLSL Advanced POP uses class-prefixed constants such as cTDArraySizePoint_Attrib, cTDArraySizePrim_Attrib, and cTDArraySizeVert_Attrib.",
+    "planning_note": "Prefer GLSL POP or GLSL Advanced POP when array attributes require per-element loops; Math Mix and Math Combine operate one array element per block in current docs."
+  },
+  "planning_gotchas": [
+    "Output attributes created or selected in GLSL POPs are allocated for writing; initialize every output element before downstream reads.",
+    "Guard compute writes with TDIndex() and TDNumElements() because dispatches can be rounded up to the workgroup size.",
+    "Attribute class matters: P on points, N or Color on vertices/primitives, and particle attributes are not interchangeable without explicit class-prefixed access.",
+    "Particle feedback loops must preserve reserved particle attributes and point counts unless Particle POP itself is responsible for birth/death."
+  ]
+}

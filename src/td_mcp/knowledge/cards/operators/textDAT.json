@@ -4,17 +4,101 @@
   "family": "DAT",
   "display_name": "Text DAT",
   "docs_url": "https://docs.derivative.ca/Text_DAT",
-  "summary": "Stores free-form text such as GLSL source, Python callbacks, JSON, notes, or generated configuration. Useful as a stable source DAT for shader and script operators.",
+  "summary": "Free-form, multi-line ASCII DAT for scripts, GLSL shaders, notes, XML, configuration, and other text sources. It can edit text in-node or externally, load from disk or web paths, sync bidirectionally with files, and provide script-language/editor-extension metadata for consuming operators.",
   "key_params": [
-    {"name": "text", "type": "DAT contents", "note": "Text body stored in the DAT"},
-    {"name": "language", "type": "Menu", "note": "Editor language/highlighting when available"},
-    {"name": "syncfile", "type": "Toggle", "note": "Optional file sync behavior for external source files"}
+    {
+      "name": "edit",
+      "type": "Pulse",
+      "note": "Open an external text editor for this DAT."
+    },
+    {
+      "name": "file",
+      "type": "File",
+      "note": "Filesystem path and filename to load; accepts .txt and .dat files."
+    },
+    {
+      "name": "syncfile",
+      "type": "Toggle",
+      "note": "Synchronize the DAT and file contents immediately and while either changes."
+    },
+    {
+      "name": "loadonstart",
+      "type": "Toggle",
+      "note": "Reload the file from disk when the project starts."
+    },
+    {
+      "name": "loadonstartpulse",
+      "type": "Pulse",
+      "note": "Reload the file immediately."
+    },
+    {
+      "name": "write",
+      "type": "Toggle",
+      "note": "Write DAT contents to disk when the .toe is saved."
+    },
+    {
+      "name": "writepulse",
+      "type": "Pulse",
+      "note": "Write the file immediately."
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Choose whether the DAT uses its input script language or its own node language."
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "File extension exposed to external editors."
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor/file extension."
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Word Wrap setting for node display."
+    }
+  ],
+  "key_concepts": [
+    "free-form multi-line ASCII text",
+    "scripts",
+    "GLSL shaders",
+    "notes",
+    "XML",
+    "free-form text",
+    "Table DAT",
+    "Viewer Active",
+    "external text editor",
+    "file on disk",
+    "file on the web",
+    "http://",
+    "Execute DATs",
+    "Web DAT",
+    ".txt and .dat files",
+    "Sync to File",
+    "Load on Start",
+    "Write on Toe Save",
+    "Language",
+    "Edit/View Extension",
+    "Custom Extension",
+    "Word Wrap",
+    "Info CHOP",
+    "num_rows",
+    "num_cols"
   ],
   "common_gotchas": [
-    "Writing code into a Text DAT does not execute it by itself; connect or reference it from the consuming operator.",
-    "For GLSL source, validate compile state on the consuming GLSL TOP/MAT after edits."
+    "Text DAT stores text but does not execute it by itself; use the relevant Execute DAT or consuming GLSL/Python operator to run or compile the contents.",
+    "Sync to File loads the file immediately, creates a missing file on first DAT update, and keeps the file monitored so DAT and file edits update each other.",
+    "If the synced file is removed, the Text DAT retains its current contents rather than going blank.",
+    "Use http:// paths to load remote text, but use Web DAT when you need URL query/fetch workflow control.",
+    "Set Language and Edit/View Extension intentionally for shader or Python source so external editors and consuming operators interpret the text correctly."
   ],
-  "related_snippets": ["glsl_shader"],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-06-16"
+  "related_snippets": [
+    "GLSL_snippets"
+  ],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
 }

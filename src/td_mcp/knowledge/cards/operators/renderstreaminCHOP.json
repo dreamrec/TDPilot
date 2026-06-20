@@ -1,0 +1,41 @@
+{
+  "card_type": "operator",
+  "op_type": "renderstreaminCHOP",
+  "family": "CHOP",
+  "display_name": "RenderStream In CHOP",
+  "docs_url": "https://docs.derivative.ca/RenderStream_In_CHOP",
+  "summary": "Primary RenderStream control and sync node for Disguise integration. It receives control channels, drives frame sync, and can expose schema-defined parameters.",
+  "key_concepts": [
+    "RenderStream In CHOP is the primary TouchDesigner node for controlling and configuring a Disguise RenderStream connection.",
+    "The node is Pro-only and acts as the sync point for the start of RenderStream frame rendering.",
+    "RenderStream workflows usually turn off TouchDesigner's Real-Time flag so this CHOP, rather than normal timeline advancement, drives frames.",
+    "The node brings in control channels and can build sequencable Disguise parameters from a schema DAT.",
+    "Schema DAT rows require group, label, name, and type columns; default, min, max, and step are optional.",
+    "Schema float data arrives as CHOP channels, image data is handled through RenderStream In TOP, and text data is read through an Info DAT."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable the RenderStream session"},
+    {"name": "timeout", "type": "Float", "note": "Sync wait timeout in milliseconds"},
+    {"name": "streamindex", "type": "Int", "note": "RenderStream index to sync with"},
+    {"name": "schemadat", "type": "DAT", "note": "Schema table for controllable parameters in Disguise"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP channel scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Common CHOP sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"},
+    {"name": "commonrenamefrom", "type": "String", "note": "Common CHOP rename-from pattern"},
+    {"name": "commonrenameto", "type": "String", "note": "Common CHOP rename-to pattern"}
+  ],
+  "common_gotchas": [
+    "RenderStream tools require TouchDesigner Pro.",
+    "Real-Time is usually turned off so the RenderStream CHOP drives frame advancement.",
+    "The schema DAT needs the required group, label, name, and type columns.",
+    "Only float schema data appears as CHOP channels; image and text schema data require RenderStream In TOP or Info DAT.",
+    "Timeout controls how long the node stalls waiting for sync before giving up, so it directly affects frame-wait behavior.",
+    "Stream Index must match the intended RenderStream stream when multiple streams are available."
+  ],
+  "related_snippets": ["CHOP_snippets", "TOP_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18"
+}

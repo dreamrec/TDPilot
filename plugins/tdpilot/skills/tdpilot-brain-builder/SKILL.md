@@ -46,6 +46,25 @@ Do not mutate TouchDesigner directly from free text. Turn intent into a
 - Use machine-readable hints as constraints, not as decorative prose.
 - Preserve local-first behavior. Do not require hosted LLMs, accounts, embeddings, or cloud services.
 
+## Concept-to-node Atlas Workflow
+
+The packaged 656-card reviewed operator atlas has a zero-concept backlog across
+CHOP, COMP, DAT, MAT, POP, SOP, and TOP. Treat it as the first stop for turning
+an abstract visual idea into concrete TouchDesigner nodes.
+
+When intent is abstract:
+
+1. Name the data domains involved: texture/TOP, channel/CHOP, table/DAT,
+   geometry/SOP, particle/POP, material/MAT, or component/COMP.
+2. Use the atlas/card-index, docsbrain, and Official Derivative docs URLs to
+   choose candidate operators and parameters before inventing a node chain.
+3. choose the smallest operator chain that expresses the concept, then add
+   controls, diagnostics, and outputs around it.
+4. Carry atlas `key_concepts`, `key_params`, and `common_gotchas` into the
+   BrainPlan risks, validation checks, and parameter choices.
+5. If the atlas cannot ground the concept in real operators for the current TD
+   build, stop with `blocked_questions` instead of improvising.
+
 ## Valid Networks
 
 A good BrainPlan states:

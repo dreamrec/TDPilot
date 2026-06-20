@@ -1,0 +1,137 @@
+{
+  "card_type": "operator",
+  "op_type": "midiinDAT",
+  "family": "DAT",
+  "display_name": "MIDI In DAT",
+  "docs_url": "https://docs.derivative.ca/MIDI_In_DAT",
+  "summary": "Receives and logs MIDI messages from a selected MIDI device into table rows with message type, channel, index, value, optional bytes, filters, and callbacks.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable input from the selected MIDI device"
+    },
+    {
+      "name": "device",
+      "type": "DAT path",
+      "note": "Path to the MIDI device Table DAT"
+    },
+    {
+      "name": "id",
+      "type": "DAT path",
+      "note": "MIDI device ID table path used by the device mapper workflow"
+    },
+    {
+      "name": "value14",
+      "type": "Toggle",
+      "note": "Combine paired MIDI controller messages into 14-bit values"
+    },
+    {
+      "name": "skipsense",
+      "type": "Toggle",
+      "note": "Do not log MIDI active sensing messages"
+    },
+    {
+      "name": "skiptiming",
+      "type": "Toggle",
+      "note": "Do not report MIDI timing messages"
+    },
+    {
+      "name": "filter",
+      "type": "Toggle",
+      "note": "Enable MIDI message filter parameters"
+    },
+    {
+      "name": "message",
+      "type": "String",
+      "note": "Filter by MIDI message content"
+    },
+    {
+      "name": "channel",
+      "type": "String",
+      "note": "Filter by MIDI channel in the 1-16 range"
+    },
+    {
+      "name": "index",
+      "type": "String",
+      "note": "Filter by MIDI message index in the 1-128 range"
+    },
+    {
+      "name": "value",
+      "type": "String",
+      "note": "Filter by MIDI value in the 0-127 range"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT Path",
+      "note": "Callback DAT called for each received packet"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose where callback scripts execute from"
+    },
+    {
+      "name": "fromop",
+      "type": "OP path",
+      "note": "Operator context used when Execute From is set to Specified Operator"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Limit FIFO output to a bounded number of messages"
+    },
+    {
+      "name": "maxlines",
+      "type": "Int",
+      "note": "Maximum retained message rows when Clamp Output is on"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear all logged rows except the heading"
+    },
+    {
+      "name": "bytes",
+      "type": "Toggle",
+      "note": "Output raw MIDI bytes in a separate column"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Device setup usually depends on the MIDI Device Mapper before the DAT receives messages.",
+    "Controller indices are documented as 1-based values from 1 to 128.",
+    "14-bit mode only outputs when matching MSB and LSB controller pairs are received.",
+    "High-rate MIDI streams can overflow small FIFO settings or call callbacks very frequently."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "midi-device-table-input",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Receives MIDI messages from a selected MIDI input device into a DAT table.",
+    "Device and ID parameters choose the source device and connection id.",
+    "Value 14-bit output combines MIDI value bytes for higher-resolution controller data.",
+    "Message, channel, index, and value filters constrain captured MIDI traffic."
+  ]
+}

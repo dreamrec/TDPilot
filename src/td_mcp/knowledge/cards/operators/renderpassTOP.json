@@ -1,0 +1,109 @@
+{
+  "card_type": "operator",
+  "op_type": "renderpassTOP",
+  "family": "TOP",
+  "display_name": "Render Pass TOP",
+  "docs_url": "https://docs.derivative.ca/Render_Pass_TOP",
+  "summary": "Builds multipass rendering on top of a Render TOP or another Render Pass TOP, optionally preserving or clearing color/depth buffers and rendering additional cameras, geometry, lights, or material overrides.",
+  "key_params": [
+    {
+      "name": "renderinput",
+      "type": "TOP",
+      "note": "Render or Render Pass source."
+    },
+    {
+      "name": "camera",
+      "type": "COMP/String",
+      "note": "Camera path or pattern."
+    },
+    {
+      "name": "geometry",
+      "type": "COMP/String",
+      "note": "Geometry COMP path or pattern."
+    },
+    {
+      "name": "lights",
+      "type": "COMP/String",
+      "note": "Light path or pattern."
+    },
+    {
+      "name": "render",
+      "type": "Pulse",
+      "note": "Manual render pulse where applicable."
+    },
+    {
+      "name": "cleartocamcolor",
+      "type": "Toggle",
+      "note": "Clear incoming color buffer to camera color."
+    },
+    {
+      "name": "cleardepth",
+      "type": "Toggle",
+      "note": "Clear incoming depth buffer."
+    },
+    {
+      "name": "overridemat",
+      "type": "MAT",
+      "note": "Material applied to all rendered geometry."
+    },
+    {
+      "name": "posside",
+      "type": "XYZ toggles",
+      "note": "Positive cube-map sides to render."
+    },
+    {
+      "name": "negside",
+      "type": "XYZ toggles",
+      "note": "Negative cube-map sides to render."
+    },
+    {
+      "name": "transparency",
+      "type": "Menu",
+      "note": "Transparency mode such as sorted blending, order-independent, or alpha-to-coverage."
+    },
+    {
+      "name": "dither",
+      "type": "Toggle",
+      "note": "Dither final rendered output."
+    },
+    {
+      "name": "coloroutputneeded",
+      "type": "Toggle",
+      "note": "Control whether color output is copied/resolved for downstream use."
+    },
+    {
+      "name": "drawdepthonly",
+      "type": "Toggle",
+      "note": "Draw only depth without color output."
+    },
+    {
+      "name": "allowbufblending",
+      "type": "Menu",
+      "note": "Allow color-buffer blending: off, on, or use input."
+    },
+    {
+      "name": "cullface",
+      "type": "Menu",
+      "note": "Face culling mode."
+    }
+  ],
+  "common_gotchas": [
+    "Render Pass TOP depends on an upstream Render/Render Pass source for multipass state.",
+    "Clearing color or depth changes whether a pass builds on or replaces previous buffers.",
+    "Color Output Needed can intentionally avoid copying/resolving color output, so downstream color may disappear.",
+    "Draw Depth Only writes no color and should be paired with depth-oriented downstream selection.",
+    "Geometry and light patterns can include exclusions, so automated paths should be explicit."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "MAT_snippets"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Builds multipass rendering from a Render TOP or another Render Pass TOP input.",
+    "Can preserve or clear upstream color and depth buffers before rendering another pass.",
+    "Camera, geometry, and light parameters accept paths or pattern matching for selective rendering.",
+    "Advanced, Crop, Samplers, and Vectors pages expose render-state, crop, GLSL sampler, and uniform controls."
+  ]
+}

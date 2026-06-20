@@ -1,0 +1,89 @@
+{
+  "card_type": "operator",
+  "op_type": "blobtrackTOP",
+  "family": "TOP",
+  "display_name": "Blob Track TOP",
+  "docs_url": "https://docs.derivative.ca/Blob_Track_TOP",
+  "summary": "Tracks image blobs with OpenCV and exposes blob ids, coordinates, sizes, and counts through Info DAT/CHOP outputs.",
+  "key_params": [
+    {
+      "name": "reset",
+      "type": "Toggle",
+      "note": "Reset tracking state while enabled"
+    },
+    {
+      "name": "resetpulse",
+      "type": "Pulse",
+      "note": "Pulse reset tracking state"
+    },
+    {
+      "name": "monosource",
+      "type": "Menu",
+      "note": "Monochrome source channel such as luminance, RGBA channels, or rgb average"
+    },
+    {
+      "name": "drawblobs",
+      "type": "Toggle",
+      "note": "Draw tracked blob overlays into the TOP output"
+    },
+    {
+      "name": "blobcolor",
+      "type": "RGB",
+      "note": "Color used for drawn blob overlays"
+    },
+    {
+      "name": "threshold",
+      "type": "Float",
+      "note": "Detection threshold for blob extraction"
+    },
+    {
+      "name": "downloadtype",
+      "type": "Menu",
+      "note": "GPU download mode: immediate or delayed"
+    },
+    {
+      "name": "minblobsize",
+      "type": "Float",
+      "note": "Minimum accepted blob size"
+    },
+    {
+      "name": "maxblobsize",
+      "type": "Float",
+      "note": "Maximum accepted blob size"
+    },
+    {
+      "name": "maxmovedistance",
+      "type": "Float",
+      "note": "Maximum distance to match a blob across frames"
+    },
+    {
+      "name": "deletenearby",
+      "type": "Toggle",
+      "note": "Delete blobs that are too close to another blob"
+    },
+    {
+      "name": "reviveblobs",
+      "type": "Toggle",
+      "note": "Revive recently lost blobs when matching data returns"
+    }
+  ],
+  "common_gotchas": [
+    "SimpleBlobDetector can be slow and reports square-style bounds for detected regions.",
+    "Background-subtraction tracking needs a stable background input but is much faster.",
+    "Delayed download avoids GPU stalls but reports previous-frame tracking output.",
+    "Non-Commercial license limits blob tracking to two blobs."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Blob Track TOP uses OpenCV to detect and track blobs in image input.",
+    "The first input path uses SimpleBlobDetector; adding a second input enables background-subtraction tracking.",
+    "Tracking results are read from Info DAT and Info CHOP channels such as num_blobs rather than from image pixels alone.",
+    "Monochrome TOP and Luma Level TOP are common preprocessors for producing clean blob masks.",
+    "Download Type controls immediate GPU readback versus delayed previous-frame data.",
+    "Non-Commercial licenses are limited to tracking two blobs; Commercial and Pro can track unlimited blobs."
+  ]
+}

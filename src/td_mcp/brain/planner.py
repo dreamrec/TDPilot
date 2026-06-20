@@ -25,7 +25,13 @@ _PROFILE_SPECS: dict[str, _ProfileSpec] = {
         topic="feedback",
         primary_op="feedbackTOP",
         concepts=(
-            {"id": "source", "label": "Noise source", "role": "source", "domain": "TOP", "op_type": "noiseTOP"},
+            {
+                "id": "source",
+                "label": "Noise source",
+                "role": "source",
+                "domain": "TOP",
+                "op_type": "noiseTOP",
+            },
             {
                 "id": "feedback",
                 "label": "Feedback buffer",
@@ -33,7 +39,13 @@ _PROFILE_SPECS: dict[str, _ProfileSpec] = {
                 "domain": "TOP",
                 "op_type": "feedbackTOP",
             },
-            {"id": "decay", "label": "Decay and level", "role": "process", "domain": "TOP", "op_type": "levelTOP"},
+            {
+                "id": "decay",
+                "label": "Decay and level",
+                "role": "process",
+                "domain": "TOP",
+                "op_type": "levelTOP",
+            },
             {
                 "id": "composite",
                 "label": "Composite merge",
@@ -41,7 +53,13 @@ _PROFILE_SPECS: dict[str, _ProfileSpec] = {
                 "domain": "TOP",
                 "op_type": "compositeTOP",
             },
-            {"id": "output", "label": "Stable output", "role": "output", "domain": "TOP", "op_type": "nullTOP"},
+            {
+                "id": "output",
+                "label": "Stable output",
+                "role": "output",
+                "domain": "TOP",
+                "op_type": "nullTOP",
+            },
         ),
         edges=(
             ("source", "composite", 0, 0, "data"),
@@ -62,11 +80,33 @@ _PROFILE_SPECS: dict[str, _ProfileSpec] = {
                 "domain": "CHOP",
                 "op_type": "audiofileinCHOP",
             },
-            {"id": "analyze", "label": "Signal analysis", "role": "process", "domain": "CHOP", "op_type": "analyzeCHOP"},
-            {"id": "math", "label": "Range shaping", "role": "process", "domain": "CHOP", "op_type": "mathCHOP"},
-            {"id": "output", "label": "Control output", "role": "output", "domain": "CHOP", "op_type": "nullCHOP"},
+            {
+                "id": "analyze",
+                "label": "Signal analysis",
+                "role": "process",
+                "domain": "CHOP",
+                "op_type": "analyzeCHOP",
+            },
+            {
+                "id": "math",
+                "label": "Range shaping",
+                "role": "process",
+                "domain": "CHOP",
+                "op_type": "mathCHOP",
+            },
+            {
+                "id": "output",
+                "label": "Control output",
+                "role": "output",
+                "domain": "CHOP",
+                "op_type": "nullCHOP",
+            },
         ),
-        edges=(("audio", "analyze", 0, 0, "data"), ("analyze", "math", 0, 0, "data"), ("math", "output", 0, 0, "data")),
+        edges=(
+            ("audio", "analyze", 0, 0, "data"),
+            ("analyze", "math", 0, 0, "data"),
+            ("math", "output", 0, 0, "data"),
+        ),
     ),
     "render_pipeline": _ProfileSpec(
         topic="render_pipeline",
@@ -74,8 +114,20 @@ _PROFILE_SPECS: dict[str, _ProfileSpec] = {
         concepts=(
             {"id": "geo", "label": "Geometry", "role": "render", "domain": "COMP", "op_type": "geometryCOMP"},
             {"id": "camera", "label": "Camera", "role": "render", "domain": "COMP", "op_type": "cameraCOMP"},
-            {"id": "render", "label": "Render output", "role": "output", "domain": "TOP", "op_type": "renderTOP"},
-            {"id": "output", "label": "Stable output", "role": "output", "domain": "TOP", "op_type": "nullTOP"},
+            {
+                "id": "render",
+                "label": "Render output",
+                "role": "output",
+                "domain": "TOP",
+                "op_type": "renderTOP",
+            },
+            {
+                "id": "output",
+                "label": "Stable output",
+                "role": "output",
+                "domain": "TOP",
+                "op_type": "nullTOP",
+            },
         ),
         edges=(("render", "output", 0, 0, "data"),),
     ),
@@ -83,18 +135,71 @@ _PROFILE_SPECS: dict[str, _ProfileSpec] = {
         topic="pop",
         primary_op="circlePOP",
         concepts=(
-            {"id": "emit", "label": "Particle emitter", "role": "source", "domain": "POP", "op_type": "circlePOP"},
-            {"id": "motion", "label": "Particle motion field", "role": "process", "domain": "POP", "op_type": "noisePOP"},
-            {"id": "output", "label": "Finite POP output", "role": "output", "domain": "POP", "op_type": "nullPOP"},
+            {
+                "id": "emit",
+                "label": "Particle emitter",
+                "role": "source",
+                "domain": "POP",
+                "op_type": "circlePOP",
+            },
+            {
+                "id": "motion",
+                "label": "Particle motion field",
+                "role": "process",
+                "domain": "POP",
+                "op_type": "noisePOP",
+            },
+            {
+                "id": "shape",
+                "label": "Attribute shaping",
+                "role": "process",
+                "domain": "POP",
+                "op_type": "mathmixPOP",
+            },
+            {
+                "id": "pop_out",
+                "label": "Finite POP output",
+                "role": "output",
+                "domain": "POP",
+                "op_type": "nullPOP",
+            },
+            {
+                "id": "preview",
+                "label": "POP render preview",
+                "role": "render",
+                "domain": "TOP",
+                "op_type": "rendersimpleTOP",
+                "create_type": "rendersimple",
+                "params": {"pop": "${path:pop_out}", "normalizegeo": True},
+            },
+            {
+                "id": "output",
+                "label": "Stable rendered output",
+                "role": "output",
+                "domain": "TOP",
+                "op_type": "nullTOP",
+            },
         ),
-        edges=(("emit", "motion", 0, 0, "data"), ("motion", "output", 0, 0, "data")),
-        risk_flags=("validate-finite-pop-bounds",),
+        edges=(
+            ("emit", "motion", 0, 0, "data"),
+            ("motion", "shape", 0, 0, "data"),
+            ("shape", "pop_out", 0, 0, "data"),
+            ("pop_out", "preview", 0, 0, "reference"),
+            ("preview", "output", 0, 0, "data"),
+        ),
+        risk_flags=("validate-finite-pop-bounds", "validate-pop-render-preview"),
     ),
     "glsl": _ProfileSpec(
         topic="glsl",
         primary_op="glslTOP",
         concepts=(
-            {"id": "source", "label": "Input texture", "role": "source", "domain": "TOP", "op_type": "constantTOP"},
+            {
+                "id": "source",
+                "label": "Input texture",
+                "role": "source",
+                "domain": "TOP",
+                "op_type": "constantTOP",
+            },
             {
                 "id": "shader",
                 "label": "GLSL shader TOP",
@@ -102,22 +207,194 @@ _PROFILE_SPECS: dict[str, _ProfileSpec] = {
                 "domain": "TOP",
                 "op_type": "glslTOP",
                 "create_type": "glsl",
+                "params": {"pixeldat": "${path:source_code}", "glslversion": "glsl460"},
             },
-            {"id": "source_code", "label": "Shader source DAT", "role": "validator", "domain": "DAT", "op_type": "textDAT"},
-            {"id": "output", "label": "Stable shader output", "role": "output", "domain": "TOP", "op_type": "nullTOP"},
+            {
+                "id": "source_code",
+                "label": "Shader source DAT",
+                "role": "validator",
+                "domain": "DAT",
+                "op_type": "textDAT",
+            },
+            {
+                "id": "output",
+                "label": "Stable shader output",
+                "role": "output",
+                "domain": "TOP",
+                "op_type": "nullTOP",
+            },
         ),
-        edges=(("source", "shader", 0, 0, "data"), ("source_code", "shader", 0, 0, "reference"), ("shader", "output", 0, 0, "data")),
+        edges=(
+            ("source", "shader", 0, 0, "data"),
+            ("source_code", "shader", 0, 0, "reference"),
+            ("shader", "output", 0, 0, "data"),
+        ),
         risk_flags=("validate-glsl-compile-state",),
+    ),
+    "glsl_material": _ProfileSpec(
+        topic="glsl",
+        primary_op="glslMAT",
+        concepts=(
+            {
+                "id": "geo",
+                "label": "Geometry container",
+                "role": "render",
+                "domain": "COMP",
+                "op_type": "geometryCOMP",
+                "params": {"material": "${path:material}"},
+            },
+            {"id": "camera", "label": "Camera", "role": "render", "domain": "COMP", "op_type": "cameraCOMP"},
+            {
+                "id": "material",
+                "label": "GLSL material",
+                "role": "material",
+                "domain": "MAT",
+                "op_type": "glslMAT",
+                "create_type": "glslMAT",
+                "params": {
+                    "vdat": "${path:vertex_code}",
+                    "pdat": "${path:pixel_code}",
+                    "glslversion": "glsl460",
+                },
+            },
+            {
+                "id": "vertex_code",
+                "label": "Vertex shader DAT",
+                "role": "validator",
+                "domain": "DAT",
+                "op_type": "textDAT",
+            },
+            {
+                "id": "pixel_code",
+                "label": "Pixel shader DAT",
+                "role": "validator",
+                "domain": "DAT",
+                "op_type": "textDAT",
+            },
+            {
+                "id": "render",
+                "label": "Rendered material output",
+                "role": "output",
+                "domain": "TOP",
+                "op_type": "renderTOP",
+                "params": {"camera": "${path:camera}", "geometry": "${path:geo}"},
+            },
+            {
+                "id": "output",
+                "label": "Stable render output",
+                "role": "output",
+                "domain": "TOP",
+                "op_type": "nullTOP",
+            },
+        ),
+        edges=(
+            ("material", "geo", 0, 0, "reference"),
+            ("vertex_code", "material", 0, 0, "reference"),
+            ("pixel_code", "material", 0, 0, "reference"),
+            ("geo", "render", 0, 0, "reference"),
+            ("camera", "render", 0, 0, "reference"),
+            ("render", "output", 0, 0, "data"),
+        ),
+        risk_flags=("validate-glsl-compile-state", "validate-material-assignment"),
+    ),
+    "glsl_pop": _ProfileSpec(
+        topic="glsl",
+        primary_op="glslPOP",
+        concepts=(
+            {
+                "id": "source",
+                "label": "POP source",
+                "role": "source",
+                "domain": "POP",
+                "op_type": "circlePOP",
+            },
+            {
+                "id": "shader",
+                "label": "GLSL POP attribute shader",
+                "role": "process",
+                "domain": "POP",
+                "op_type": "glslPOP",
+                "params": {"computedat": "${path:source_code}", "attrclass": "point"},
+            },
+            {
+                "id": "source_code",
+                "label": "Compute shader DAT",
+                "role": "validator",
+                "domain": "DAT",
+                "op_type": "textDAT",
+            },
+            {
+                "id": "pop_out",
+                "label": "Stable POP output",
+                "role": "output",
+                "domain": "POP",
+                "op_type": "nullPOP",
+            },
+            {
+                "id": "preview",
+                "label": "Rendered POP preview",
+                "role": "render",
+                "domain": "TOP",
+                "op_type": "rendersimpleTOP",
+                "create_type": "rendersimple",
+                "params": {"pop": "${path:pop_out}", "normalizegeo": True},
+            },
+            {
+                "id": "output",
+                "label": "Stable rendered output",
+                "role": "output",
+                "domain": "TOP",
+                "op_type": "nullTOP",
+            },
+        ),
+        edges=(
+            ("source", "shader", 0, 0, "data"),
+            ("source_code", "shader", 0, 0, "reference"),
+            ("shader", "pop_out", 0, 0, "data"),
+            ("pop_out", "preview", 0, 0, "reference"),
+            ("preview", "output", 0, 0, "data"),
+        ),
+        risk_flags=("validate-glsl-compile-state", "validate-finite-pop-bounds"),
     ),
     "panel_ui": _ProfileSpec(
         topic="panel_ui",
         primary_op="panelCOMP",
         concepts=(
-            {"id": "panel", "label": "Panel container", "role": "ui", "domain": "COMP", "op_type": "containerCOMP"},
-            {"id": "slider", "label": "Continuous control", "role": "ui", "domain": "COMP", "op_type": "sliderCOMP"},
-            {"id": "button", "label": "Discrete trigger", "role": "ui", "domain": "COMP", "op_type": "buttonCOMP"},
-            {"id": "panel_chop", "label": "Panel state reader", "role": "control", "domain": "CHOP", "op_type": "panelCHOP"},
-            {"id": "output", "label": "UI control output", "role": "output", "domain": "CHOP", "op_type": "nullCHOP"},
+            {
+                "id": "panel",
+                "label": "Panel container",
+                "role": "ui",
+                "domain": "COMP",
+                "op_type": "containerCOMP",
+            },
+            {
+                "id": "slider",
+                "label": "Continuous control",
+                "role": "ui",
+                "domain": "COMP",
+                "op_type": "sliderCOMP",
+            },
+            {
+                "id": "button",
+                "label": "Discrete trigger",
+                "role": "ui",
+                "domain": "COMP",
+                "op_type": "buttonCOMP",
+            },
+            {
+                "id": "panel_chop",
+                "label": "Panel state reader",
+                "role": "control",
+                "domain": "CHOP",
+                "op_type": "panelCHOP",
+            },
+            {
+                "id": "output",
+                "label": "UI control output",
+                "role": "output",
+                "domain": "CHOP",
+                "op_type": "nullCHOP",
+            },
         ),
         edges=(
             ("slider", "panel_chop", 0, 0, "reference"),
@@ -130,10 +407,34 @@ _PROFILE_SPECS: dict[str, _ProfileSpec] = {
         topic="custom_parameters",
         primary_op="baseCOMP",
         concepts=(
-            {"id": "ctrl", "label": "Custom parameter control COMP", "role": "control", "domain": "COMP", "op_type": "baseCOMP"},
-            {"id": "values", "label": "Default control values", "role": "source", "domain": "CHOP", "op_type": "constantCHOP"},
-            {"id": "scale", "label": "Range scaling", "role": "process", "domain": "CHOP", "op_type": "mathCHOP"},
-            {"id": "output", "label": "Rig control output", "role": "output", "domain": "CHOP", "op_type": "nullCHOP"},
+            {
+                "id": "ctrl",
+                "label": "Custom parameter control COMP",
+                "role": "control",
+                "domain": "COMP",
+                "op_type": "baseCOMP",
+            },
+            {
+                "id": "values",
+                "label": "Default control values",
+                "role": "source",
+                "domain": "CHOP",
+                "op_type": "constantCHOP",
+            },
+            {
+                "id": "scale",
+                "label": "Range scaling",
+                "role": "process",
+                "domain": "CHOP",
+                "op_type": "mathCHOP",
+            },
+            {
+                "id": "output",
+                "label": "Rig control output",
+                "role": "output",
+                "domain": "CHOP",
+                "op_type": "nullCHOP",
+            },
         ),
         edges=(
             ("ctrl", "values", 0, 0, "reference"),
@@ -144,7 +445,13 @@ _PROFILE_SPECS: dict[str, _ProfileSpec] = {
     ),
     "generic": _ProfileSpec(
         concepts=(
-            {"id": "output", "label": "Stable output", "role": "output", "domain": "TOP", "op_type": "nullTOP"},
+            {
+                "id": "output",
+                "label": "Stable output",
+                "role": "output",
+                "domain": "TOP",
+                "op_type": "nullTOP",
+            },
         )
     ),
 }
@@ -317,7 +624,13 @@ async def _read_existing_names(td_client, target_root: str) -> set[str]:
         response = await td_client.request("nodes", {"path": target_root, "limit": 500})
     except Exception:
         return set()
-    nodes = response if isinstance(response, list) else response.get("nodes", []) if isinstance(response, dict) else []
+    nodes = (
+        response
+        if isinstance(response, list)
+        else response.get("nodes", [])
+        if isinstance(response, dict)
+        else []
+    )
     return {str(node.get("name", "")) for node in nodes if isinstance(node, dict) and node.get("name")}
 
 
@@ -407,11 +720,12 @@ def _compile_patch_plan(task: VisualTaskSpec, graph: ConceptGraph, existing_name
         }
         operations.append(PatchOperation(kind="create_node", target=task.target_root, args=args))
         if concept.params:
+            resolved_params = _resolve_param_refs(concept.params, concept_names, task.target_root)
             operations.append(
                 PatchOperation(
                     kind="set_params",
                     target=_join_path(task.target_root, name),
-                    args={"params": concept.params},
+                    args={"params": resolved_params},
                 )
             )
 
@@ -467,6 +781,8 @@ def _assign_node_names(concepts: list[ConceptNode], existing_names: set[str]) ->
 
 def _base_name_for(concept: ConceptNode) -> str:
     if concept.role == "output":
+        if concept.domain == "POP":
+            return "out_pop"
         return "out1"
     if concept.role in {"control", "ui"}:
         return concept.id
@@ -483,6 +799,20 @@ def _base_name_for(concept: ConceptNode) -> str:
 
 def _join_path(parent: str, name: str) -> str:
     return f"{parent.rstrip('/')}/{name}".replace("//", "/")
+
+
+def _resolve_param_refs(value: Any, concept_names: dict[str, str], target_root: str) -> Any:
+    """Resolve small `${path:concept_id}` placeholders inside concept params."""
+    if isinstance(value, dict):
+        return {key: _resolve_param_refs(item, concept_names, target_root) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_resolve_param_refs(item, concept_names, target_root) for item in value]
+    if isinstance(value, str) and value.startswith("${path:") and value.endswith("}"):
+        concept_id = value[len("${path:") : -1]
+        node_name = concept_names.get(concept_id)
+        if node_name:
+            return _join_path(target_root, node_name)
+    return value
 
 
 def _empty_graph(task: VisualTaskSpec, *, profile: str) -> ConceptGraph:

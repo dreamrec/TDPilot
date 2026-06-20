@@ -18,7 +18,9 @@ def build_cockpit_payload(
     """Return compact, widget-friendly state for the optional cockpit UI."""
     brain_plan = _unwrap(plan, "plan")
     tx_result = _unwrap(transaction_result, "result")
-    validation_report = _first_dict(tx_result.get("validation_report"), transaction_result.get("validation_report"))
+    validation_report = _first_dict(
+        tx_result.get("validation_report"), transaction_result.get("validation_report")
+    )
 
     return {
         "schema_version": 1,

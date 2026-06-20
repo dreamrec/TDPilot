@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "forceCOMP",
+  "family": "COMP",
+  "display_name": "Force COMP",
+  "docs_url": "https://docs.derivative.ca/Force_COMP",
+  "summary": "Defines physics forces for solvers: continuous Bullet linear/torque forces, Bullet impulse-style usage through related impulse controls, and Flex spherical force fields.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enables the continuous active force or force field"},
+    {"name": "force", "type": "XYZ", "note": "Linear force in Newtons"},
+    {"name": "relpos", "type": "XYZ", "note": "Application point relative to the physical center of the body"},
+    {"name": "torque", "type": "XYZ", "note": "Rotational force in Newtons"},
+    {"name": "ffactive", "type": "Toggle", "note": "Enables Flex force-field behavior"},
+    {"name": "radius", "type": "Float", "note": "Spherical force-field radius"},
+    {"name": "strength", "type": "Float", "note": "Force-field push or pull strength"},
+    {"name": "falloff", "type": "Float", "note": "Controls force-field strength decay across the radius"}
+  ],
+  "key_concepts": [
+    "Force COMP adds physics forces to Bullet simulations and spherical force fields to NVIDIA Flex simulations.",
+    "Active Bullet forces apply over time each frame, either globally through Bullet Solver COMP or locally through Actor COMP.",
+    "Force and Torque values are in Newtons, so actor mass affects acceleration from the same force value.",
+    "Relative Position applies linear force away from the physical center and can introduce rotation through added torque.",
+    "Force Field mode is spherical: positive Strength pushes bodies outward, negative Strength pulls inward, and Radius/Falloff shape the field."
+  ],
+  "common_gotchas": [
+    "A Bullet Force COMP must be referenced by a Bullet Solver COMP for global force, or by an Actor COMP for local force.",
+    "Active force is applied over time each frame, while impulse force behavior changes velocity instantly for one frame.",
+    "Force values are in Newtons; mass changes acceleration, so equal forces move lighter actors more quickly.",
+    "A non-zero Relative Position can add torque and cause rotation even when the force vector is linear.",
+    "For per-body force/torque control, use feedback channels on Actor COMP or Bullet Solver COMP.",
+    "Flex force fields are spherical; positive strength pushes outward and negative strength pulls inward."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2020.20000+ Bullet and Flex physics forces",
+  "last_verified": "2026-06-18"
+}

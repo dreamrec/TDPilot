@@ -1,0 +1,48 @@
+{
+  "card_type": "operator",
+  "op_type": "stypeTOP",
+  "family": "TOP",
+  "display_name": "Stype TOP",
+  "docs_url": "https://docs.derivative.ca/Stype_TOP",
+  "summary": "Uses Stype/RedSpy tracker channels to apply simulated lens distortion to an input image.",
+  "key_params": [
+    {
+      "name": "chop",
+      "type": "CHOP",
+      "note": "CHOP containing Stype lens distortion channels."
+    },
+    {
+      "name": "padding",
+      "type": "Toggle",
+      "note": "Crop/correct for padding when the source is not a Stype CHOP."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "The operator requires TouchDesigner Pro.",
+    "Custom CHOP sources need exact channel names: k1, k2, centerx, centery, pawidth, paheight.",
+    "Padding is only enabled when the referenced CHOP is not a Stype CHOP.",
+    "The official page says \u201cThis CHOP works\u201d even though the operator is a TOP."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "CHOP_snippets"
+  ],
+  "build_relevance": "pro_camera_tracking_lens_distortion",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Stype TOP is a Pro-only TOP for Stype/RedSpy camera-tracker lens distortion workflows.",
+    "The TOP is driven by a CHOP, usually Stype CHOP.",
+    "Custom CHOP sources must provide k1, k2, centerx, centery, pawidth, and paheight channels.",
+    "Padding correction is only enabled when the CHOP source is not a Stype CHOP."
+  ]
+}

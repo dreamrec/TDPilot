@@ -1,0 +1,137 @@
+{
+  "card_type": "operator",
+  "op_type": "mqttclientDAT",
+  "family": "DAT",
+  "display_name": "MQTT Client DAT",
+  "docs_url": "https://docs.derivative.ca/MQTT_Client_DAT",
+  "summary": "Connects to an MQTT broker to subscribe, publish, log, and callback on topic messages for IoT, sensor, control, and network messaging workflows.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable the MQTT client connection"
+    },
+    {
+      "name": "netaddress",
+      "type": "String",
+      "note": "Broker host or network address"
+    },
+    {
+      "name": "specifyid",
+      "type": "Toggle",
+      "note": "Enable a custom MQTT client identifier"
+    },
+    {
+      "name": "usercid",
+      "type": "String",
+      "note": "Client identifier used when Specify ID is on"
+    },
+    {
+      "name": "keepalive",
+      "type": "Int",
+      "note": "Maximum idle time in seconds before sending broker ping messages"
+    },
+    {
+      "name": "maxinflight",
+      "type": "Int",
+      "note": "Maximum number of MQTT messages in flight at once"
+    },
+    {
+      "name": "cleansession",
+      "type": "Toggle",
+      "note": "Control whether the broker preserves client session state for the specified ID"
+    },
+    {
+      "name": "verifycert",
+      "type": "Toggle",
+      "note": "Verify broker TLS certificates for ssl or wss connections"
+    },
+    {
+      "name": "username",
+      "type": "String",
+      "note": "Broker authentication username"
+    },
+    {
+      "name": "password",
+      "type": "String",
+      "note": "Broker authentication password"
+    },
+    {
+      "name": "reconnect",
+      "type": "Toggle",
+      "note": "Automatically reconnect after connection loss"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "Callback DAT for connection, loss, and published-data events"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose where callback scripts execute from"
+    },
+    {
+      "name": "fromop",
+      "type": "OP path",
+      "note": "Operator context used when Execute From is set to Specified Operator"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Limit FIFO output to a bounded number of messages"
+    },
+    {
+      "name": "maxlines",
+      "type": "Int",
+      "note": "Maximum retained message rows when Clamp Output is on"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear all logged rows except the heading"
+    },
+    {
+      "name": "bytes",
+      "type": "Toggle",
+      "note": "Output raw message bytes in a separate column"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "An MQTT broker is required; this DAT is a client, not a broker/server.",
+    "Clean session and custom client ID settings affect whether broker subscriptions and queued messages persist.",
+    "TLS certificate verification can fail against self-signed brokers unless configured deliberately.",
+    "Pending message limits and callbacks matter for bursty sensor topics or unreliable networks."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "mqtt-topic-client-messaging",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Connects to an MQTT broker and logs MQTT client events/messages in a DAT.",
+    "Network address, client id, keepalive, max inflight, and clean session define connection behavior.",
+    "Certificate verification and username/password parameters handle broker authentication.",
+    "Reconnect, callbacks, and FIFO retention controls manage live message handling."
+  ]
+}

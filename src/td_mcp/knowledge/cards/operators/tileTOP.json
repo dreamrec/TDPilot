@@ -1,0 +1,46 @@
+{
+  "card_type": "operator",
+  "op_type": "tileTOP",
+  "family": "TOP",
+  "display_name": "Tile TOP",
+  "docs_url": "https://docs.derivative.ca/Tile_TOP",
+  "summary": "Repeats an image in a tiled pattern and can crop the image bounds before tiling.",
+  "key_params": [
+    {"name": "cropleft", "type": "Float", "note": "Left crop edge"},
+    {"name": "cropleftunit", "type": "Menu", "note": "Units for the left crop edge"},
+    {"name": "cropright", "type": "Float", "note": "Right crop edge"},
+    {"name": "croprightunit", "type": "Menu", "note": "Units for the right crop edge"},
+    {"name": "cropbottom", "type": "Float", "note": "Bottom crop edge"},
+    {"name": "cropbottomunit", "type": "Menu", "note": "Units for the bottom crop edge"},
+    {"name": "croptop", "type": "Float", "note": "Top crop edge"},
+    {"name": "croptopunit", "type": "Menu", "note": "Units for the top crop edge"},
+    {"name": "extend", "type": "Menu", "note": "Hold, zero, repeat, or mirror tile edges"},
+    {"name": "flop", "type": "Toggle", "note": "Transpose tile orientation"},
+    {"name": "repeatx", "type": "Integer", "note": "Number of tiles in X"},
+    {"name": "repeaty", "type": "Integer", "note": "Number of tiles in Y"},
+    {"name": "flipx", "type": "Toggle", "note": "Flip tiles horizontally"},
+    {"name": "flipy", "type": "Toggle", "note": "Flip tiles vertically"},
+    {"name": "reflectx", "type": "Toggle", "note": "Reflect tiles in X; requires Tile/Repeat Y set to 2"},
+    {"name": "reflecty", "type": "Toggle", "note": "Reflect tiles in Y; requires Tile/Repeat X set to 2"},
+    {"name": "overlapu", "type": "Float", "note": "Horizontal tile overlap"},
+    {"name": "overlapuunit", "type": "Menu", "note": "Units for horizontal overlap"},
+    {"name": "overlapv", "type": "Float", "note": "Vertical tile overlap"},
+    {"name": "overlapvunit", "type": "Menu", "note": "Units for vertical overlap"}
+  ],
+  "common_gotchas": [
+    "Crop units decide whether edges are interpreted as pixels or normalized fractions.",
+    "Reflect X requires Tile/Repeat Y set to 2, and Reflect Y requires Tile/Repeat X set to 2.",
+    "Extend controls sampling at tile edges and is separate from repeat count.",
+    "The UI label Transpose maps to the official parameter id flop and does not change resolution.",
+    "Overlap blends neighboring tiles and can soften repeated seams."
+  ],
+  "related_snippets": ["TOP_snippets"],
+  "build_relevance": "image_tiling",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Tile TOP repeats a cropped source region across the output image.",
+    "Crop parameters define the left, right, bottom, and top bounds of the source region before it is tiled.",
+    "Extend and reflection controls decide what happens at tile boundaries and whether alternating tiles mirror.",
+    "Overlap controls blend adjacent repeats to reduce visible tile seams."
+  ]
+}

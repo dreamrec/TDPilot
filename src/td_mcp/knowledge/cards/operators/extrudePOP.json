@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "extrudePOP",
+  "family": "POP",
+  "display_name": "Extrude POP",
+  "docs_url": "https://docs.derivative.ca/Extrude_POP",
+  "summary": "Adds apparent thickness to line strips, triangles, or quads by copying geometry at a separation distance, optionally tapering or insetting it, and creating side quads.",
+  "key_params": [
+    {"name": "group", "type": "String", "note": "Optional input group scope"},
+    {"name": "axis", "type": "Menu", "note": "Extrude along normal, X, Y, or Z"},
+    {"name": "distance", "type": "Float", "note": "Extrusion distance"},
+    {"name": "taper", "type": "Float", "note": "Scaling factor for extruded geometry"},
+    {"name": "peredge", "type": "Toggle", "note": "Extrude faces as a group instead of individually"},
+    {"name": "maxprimsperpoint", "type": "Int", "note": "Temporary allocation limit when keeping faces connected"},
+    {"name": "normal", "type": "Menu", "note": "Generate no, point, or vertex normals"},
+    {"name": "cpureadback", "type": "Toggle", "note": "Copy topology information back to the CPU"},
+    {"name": "map", "type": "Sequential", "note": "Map attributes to distance or taper"},
+    {"name": "map0op", "type": "Menu", "note": "Map operation for the first mapping block"},
+    {"name": "map0element", "type": "Str", "note": "Source element for the first mapping block"},
+    {"name": "map0parm", "type": "Menu", "note": "Target parameter for the first mapping block"},
+    {"name": "map0combineop", "type": "Menu", "note": "Combine operation for mapped values"}
+  ],
+  "key_concepts": [
+    "Extrude POP gives line strips, triangles, or quads apparent thickness by offsetting copied geometry and creating side quads.",
+    "Axis, distance, taper, and per-edge settings decide whether faces extrude individually or as connected groups.",
+    "The Map page can vary distance or taper per point, while normal and CPU-readback controls prepare the result for shading and diagnostics."
+  ],
+  "common_gotchas": [
+    "The docs recommend passing extruded output through Normal POP for faceted shading.",
+    "Mapped distance attributes can vary extrusion per point, so validate bounds and face connectivity.",
+    "Keep Faces Connected requires enough temporary storage for max primitives per point."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

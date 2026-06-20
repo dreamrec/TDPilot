@@ -1,0 +1,76 @@
+{
+  "card_type": "operator",
+  "op_type": "depthTOP",
+  "family": "TOP",
+  "display_name": "Depth TOP",
+  "docs_url": "https://docs.derivative.ca/Depth_TOP",
+  "summary": "Reads depth data from a Render TOP and outputs camera-depth imagery for shadow maps, depth effects, and precision workflows.",
+  "key_params": [
+    {
+      "name": "rendertop",
+      "type": "TOP",
+      "note": "Render TOP whose depth buffer is read"
+    },
+    {
+      "name": "cameraindex",
+      "type": "Int",
+      "note": "Camera index to read for multi-camera renders"
+    },
+    {
+      "name": "peellayerindex",
+      "type": "Int",
+      "note": "Depth peel layer index"
+    },
+    {
+      "name": "pixelformat",
+      "type": "Menu",
+      "note": "Output depth pixel format"
+    },
+    {
+      "name": "depthspace",
+      "type": "Menu",
+      "note": "Depth space: input, cameraspace, or reranged"
+    },
+    {
+      "name": "rangefrom",
+      "type": "XY",
+      "note": "Input rerange source range"
+    },
+    {
+      "name": "rangeto",
+      "type": "XY",
+      "note": "Output rerange target range"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Clamp reranged depth output"
+    },
+    {
+      "name": "gamma",
+      "type": "Float",
+      "note": "Gamma applied to depth output"
+    }
+  ],
+  "common_gotchas": [
+    "A white-looking depth image may mean near/far planes are too loose, not that depth is missing.",
+    "Render TOP depth-buffer and camera-space settings affect the data Depth TOP can output.",
+    "Reranging through 8-bit formats destroys depth precision.",
+    "Multi-camera or depth-peel renders require the correct camera and peel layer index."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "rendering_snippets",
+    "GLSL_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Depth TOP reads the depth buffer from a specified Render TOP.",
+    "Default visualization maps camera near plane toward black and far plane toward white.",
+    "Loose near/far planes can make the image appear white even when depth data exists.",
+    "Depth Space can preserve input depth, output camera-space depth, or rerange values.",
+    "Depth output is single-channel style data treated downstream as replicated depth with alpha.",
+    "Use 16-bit or 32-bit formats when depth precision matters."
+  ]
+}

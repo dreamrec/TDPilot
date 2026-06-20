@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "cacheblendPOP",
+  "family": "POP",
+  "display_name": "Cache Blend POP",
+  "docs_url": "https://docs.derivative.ca/Cache_Blend_POP",
+  "summary": "References a Cache POP and outputs a weighted blend of cached POP data sets. It can blend indexed cached frames through sequential parameter blocks or CHOP channels.",
+  "key_params": [
+    {"name": "cachepop", "type": "POP", "note": "Cache POP to retrieve cached snapshots from"},
+    {"name": "chop", "type": "CHOP", "note": "Optional CHOP for index and weight channels"},
+    {"name": "indexchan", "type": "String", "note": "CHOP channel containing cache indices"},
+    {"name": "indexchanunit", "type": "Menu", "note": "Unit of the CHOP-driven cache index channel"},
+    {"name": "weightchan", "type": "String", "note": "CHOP channel containing weights"},
+    {"name": "interp", "type": "Toggle", "note": "Interpolate between frames when compatible"},
+    {"name": "cache", "type": "Sequential", "note": "Weighted cache index blocks"},
+    {"name": "cache0index", "type": "Int/Float", "note": "Cache index for a blend block"},
+    {"name": "cache0indexunit", "type": "Menu", "note": "Cache index unit for a blend block"},
+    {"name": "cache0weight", "type": "Float", "note": "Weight for a cache index block"}
+  ],
+  "key_concepts": [
+    "References a Cache POP and blends multiple cached snapshots selected by cache-index blocks.",
+    "Each point is blended independently, making it useful for time blur, speed, or slope-like geometry trails.",
+    "Cache indices follow Cache POP history semantics: 0 is current and negative values move backward through cached data.",
+    "A CHOP can provide dynamic index and weight channels instead of fixed sequential block parameters."
+  ],
+  "common_gotchas": [
+    "Cache indices are 0 and negative integers; 0 is current cached data and -1 is the previous cached data.",
+    "Interpolation only works when cached snapshots have compatible point counts.",
+    "Weights are normalized, which is useful for time blur but can surprise direct weighted-sum assumptions."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

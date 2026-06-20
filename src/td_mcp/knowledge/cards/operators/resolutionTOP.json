@@ -1,0 +1,98 @@
+{
+  "card_type": "operator",
+  "op_type": "resolutionTOP",
+  "family": "TOP",
+  "display_name": "Resolution TOP",
+  "docs_url": "https://docs.derivative.ca/Resolution_TOP",
+  "summary": "Changes the resolution of a TOP image with optional high-quality downsampling.",
+  "key_params": [
+    {
+      "name": "highqualresize",
+      "type": "Toggle",
+      "note": "Use weighted averages of multiple pixels when scaling down."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Use input, scale factor, fit, limit, or custom resolution."
+    },
+    {
+      "name": "resolution",
+      "type": "XY",
+      "note": "Custom width and height."
+    },
+    {
+      "name": "resolutionw",
+      "type": "Pixels",
+      "note": "Custom output width."
+    },
+    {
+      "name": "resolutionh",
+      "type": "Pixels",
+      "note": "Custom output height."
+    },
+    {
+      "name": "resmenu",
+      "type": "Menu",
+      "note": "Preset resolution menu."
+    },
+    {
+      "name": "resmult",
+      "type": "Toggle",
+      "note": "Apply global TOP resolution multiplier."
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Aspect-ratio policy."
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Input filtering for resizing."
+    },
+    {
+      "name": "fillmode",
+      "type": "Menu",
+      "note": "Viewer fill behavior."
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Viewer filtering behavior."
+    },
+    {
+      "name": "npasses",
+      "type": "Int",
+      "note": "Common TOP pass repetition count."
+    },
+    {
+      "name": "chanmask",
+      "type": "Menu",
+      "note": "Common TOP channel mask."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Output pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "Use Resolution TOP when an explicit resize stage is clearer than hiding resize on a Common page.",
+    "High Quality Resize is specifically for scaling down.",
+    "Fit and Limit preserve aspect ratio; Custom directly sets width and height.",
+    "Global resolution multiplier can silently change output size when enabled.",
+    "Changing aspect or pixel format can affect downstream compositing and shader assumptions."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "resolution_management",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Changes TOP image resolution as an explicit pipeline stage.",
+    "Most TOPs can also change resolution on the Common page, but this node makes resizing intentional in the graph.",
+    "High Quality Resize uses weighted averages when scaling down.",
+    "Fit, Limit, and Custom modes define whether aspect is preserved or exact dimensions are used."
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "card_type": "article",
+  "article_id": "comp_shortcuts_page",
+  "title": "COMP Shortcuts Page",
+  "family": "PARAMETER",
+  "families": [
+    "COMP",
+    "PARAMETER",
+    "PYTHON"
+  ],
+  "summary": "Official Derivative common Shortcuts page for parent shortcuts, global OP shortcuts, and internal OP shortcut/path pairs on components.",
+  "source_url": "https://docs.derivative.ca/COMP_Shortcuts_Page",
+  "docsbrain_page_id": "comp_shortcuts_page",
+  "covered_operators": [
+    "baseCOMP",
+    "containerCOMP",
+    "geometryCOMP",
+    "widgetCOMP"
+  ],
+  "key_concepts": [
+    "COMP Shortcuts Page",
+    "Shortcuts Page",
+    "parentshortcut",
+    "opshortcut",
+    "iopshortcut1",
+    "iop1",
+    "Parent Shortcut",
+    "Parent Shortcuts",
+    "Global OP Shortcut",
+    "Global OP Shortcuts",
+    "Internal Operators",
+    "parent.Name",
+    "parent.Effect.width",
+    "Python objects",
+    "operators",
+    "parameters"
+  ],
+  "guidance": [
+    "Use Parent Shortcut for names accessible inside the component, such as parent.Name.",
+    "Use Global OP Shortcut only when project-wide access to a unique component is intentional.",
+    "Use Internal OP shortcut and path pairs to expose stable internal operator references inside the component.",
+    "Operator shortcuts are Python objects that usually return operators and can sometimes return parameters."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

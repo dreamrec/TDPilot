@@ -1,0 +1,162 @@
+{
+  "card_type": "operator",
+  "op_type": "opexecuteDAT",
+  "family": "DAT",
+  "display_name": "OP Execute DAT",
+  "docs_url": "https://docs.derivative.ca/OP_Execute_DAT",
+  "summary": "Runs Python callback methods when monitored operators cook, are deleted, change flags, are rewired, renamed, moved, or have component child/extension changes.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable monitoring of the referenced operators"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose script execution context for callbacks"
+    },
+    {
+      "name": "fromop",
+      "type": "OP Path",
+      "note": "Operator path used when Execute From is Specified Operator"
+    },
+    {
+      "name": "op",
+      "type": "OP Pattern",
+      "note": "Operators whose state changes trigger callback methods"
+    },
+    {
+      "name": "precook",
+      "type": "Toggle",
+      "note": "Run onPreCook() before the monitored operator cooks"
+    },
+    {
+      "name": "postcook",
+      "type": "Toggle",
+      "note": "Run onPostCook() after the monitored operator cooks"
+    },
+    {
+      "name": "opdelete",
+      "type": "Toggle",
+      "note": "Run onDestroy() when the operator is deleted"
+    },
+    {
+      "name": "flagchange",
+      "type": "Toggle",
+      "note": "Run onFlagChange() when a monitored flag changes"
+    },
+    {
+      "name": "wirechange",
+      "type": "Toggle",
+      "note": "Run onWireChange() when inputs are rewired"
+    },
+    {
+      "name": "namechange",
+      "type": "Toggle",
+      "note": "Run onNameChange() when the operator name changes"
+    },
+    {
+      "name": "pathchange",
+      "type": "Toggle",
+      "note": "Run onPathChange() when the operator path changes"
+    },
+    {
+      "name": "uichange",
+      "type": "Toggle",
+      "note": "Run onUIChange() when the operator is moved or resized in the network editor"
+    },
+    {
+      "name": "numchildrenchange",
+      "type": "Toggle",
+      "note": "Run onNumChildrenChange() when a component's child count changes"
+    },
+    {
+      "name": "childrename",
+      "type": "Toggle",
+      "note": "Run onChildRename() when a child operator is renamed"
+    },
+    {
+      "name": "currentchildchange",
+      "type": "Toggle",
+      "note": "Run onCurrentChildChange() when a component current child changes"
+    },
+    {
+      "name": "extensionchange",
+      "type": "Toggle",
+      "note": "Run onExtensionChange() when an extension changes"
+    },
+    {
+      "name": "file",
+      "type": "File",
+      "note": "External callback source file path"
+    },
+    {
+      "name": "syncfile",
+      "type": "Toggle",
+      "note": "Synchronize DAT contents with the external file"
+    },
+    {
+      "name": "loadonstart",
+      "type": "Toggle",
+      "note": "Reload the file when the project starts"
+    },
+    {
+      "name": "loadonstartpulse",
+      "type": "Pulse",
+      "note": "Reload the file immediately"
+    },
+    {
+      "name": "write",
+      "type": "Toggle",
+      "note": "Write DAT contents to disk when the project is saved"
+    },
+    {
+      "name": "writepulse",
+      "type": "Pulse",
+      "note": "Write DAT contents to disk immediately"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "edit",
+      "type": "Pulse",
+      "note": "Open the callback DAT text in an external editor"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Pre-cook and post-cook callbacks can run very frequently and can create recursive or expensive behavior if they mutate watched networks.",
+    "Each enabled condition has a matching callback method; toggling a condition on without a safe method body can still execute template code.",
+    "Component-only triggers such as child rename and current child change do not apply meaningfully to every operator family.",
+    "Sync to File writes DAT edits to disk immediately and can create or overwrite callback files."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "operator-state-callbacks",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Runs callbacks when watched operators cook, delete, change flags, rewire, rename, move path, or change UI state.",
+    "The OP parameter selects the operator or operator pattern being monitored.",
+    "Child-count, current-child, and extension callbacks cover component hierarchy and extension changes.",
+    "Execute-location and file-sync controls mirror other callback DAT script surfaces."
+  ]
+}

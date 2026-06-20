@@ -1,0 +1,50 @@
+{
+  "card_type": "operator",
+  "op_type": "linedividePOP",
+  "family": "POP",
+  "display_name": "Line Divide POP",
+  "docs_url": "https://docs.derivative.ca/Line_Divide_POP",
+  "summary": "Subdivides line strips using per-strip, per-segment, distance, or curvature methods, then can optionally resample the result. It interpolates attributes and supports linear and spline interpolation methods.",
+  "key_params": [
+    {"name": "divmethod", "type": "Menu", "note": "Division mode: none, per line strip, per segment, distance, or curvature"},
+    {"name": "divs", "type": "Int", "note": "Number of divisions"},
+    {"name": "mindist", "type": "Float", "note": "Minimum distance for curvature-based division"},
+    {"name": "maxdist", "type": "Float", "note": "Maximum distance between generated points"},
+    {"name": "byedge", "type": "Toggle", "note": "Restart distance division at each edge"},
+    {"name": "addctrlpointattr", "type": "Toggle", "note": "Outputs a ControlPoint attribute for original control points"},
+    {"name": "maxverts", "type": "Int", "note": "Preallocated maximum vertex count on the GPU"},
+    {"name": "interpmethodpersegment", "type": "Toggle", "note": "Read interpolation method from segment attributes"},
+    {"name": "segmethodattr", "type": "Str", "note": "Attribute containing per-segment interpolation method values"},
+    {"name": "interpmethod", "type": "Menu", "note": "Interpolation mode such as linear, cardinal, B-spline, Bezier, or quadratic"},
+    {"name": "useweight", "type": "Toggle", "note": "Use a Weight attribute for spline interpolation"},
+    {"name": "weightattr", "type": "Str", "note": "Attribute supplying spline weights"},
+    {"name": "usetanin", "type": "Toggle", "note": "Use incoming tangent attributes for spline segments"},
+    {"name": "taninattr", "type": "Str", "note": "Attribute supplying incoming tangents"},
+    {"name": "usetanout", "type": "Toggle", "note": "Use outgoing tangent attributes for spline segments"},
+    {"name": "tanoutattr", "type": "Str", "note": "Attribute supplying outgoing tangents"},
+    {"name": "usetaninconst", "type": "Toggle", "note": "Use tangent constraint attributes"},
+    {"name": "taninconstattr", "type": "Str", "note": "Attribute supplying tangent constraints"},
+    {"name": "clamped", "type": "Toggle", "note": "Clamp cardinal interpolation at line ends"},
+    {"name": "tension", "type": "Float", "note": "Cardinal spline tension"},
+    {"name": "resamplemethod", "type": "Menu", "note": "Optional post-divide resampling method"},
+    {"name": "resampledivs", "type": "Int", "note": "Division count for optional resampling"},
+    {"name": "indvarattr", "type": "Str", "note": "Independent variable attribute for keyframe-style resampling"},
+    {"name": "indvarstep", "type": "Float", "note": "Step size for independent-variable resampling"},
+    {"name": "resamplemaxverts", "type": "Int", "note": "Preallocated maximum vertex count for the resample stage"},
+    {"name": "maxtries", "type": "Int", "note": "Iteration limit used by adaptive resampling methods"},
+    {"name": "rmvunusedpts", "type": "Toggle", "note": "Remove points no longer referenced by output primitives"}
+  ],
+  "key_concepts": [
+    "Division can be specified per line strip, per segment, by target distance, or adaptively from curvature.",
+    "Spline interpolation can consume Weight, TanIn, TanOut, tangent constraint, and segment method attributes when those controls are enabled.",
+    "The optional resampling stage is a second density-control pass, so both divide allocation and resample allocation must be sized for the generated vertices."
+  ],
+  "common_gotchas": [
+    "maxverts must exceed the generated vertex count; undersizing truncates output because the GPU allocation is fixed.",
+    "Spline methods depend on attributes such as Weight, TanIn, TanOut, or segment method metadata when present.",
+    "Line Divide changes point density; follow with Line Metrics if later stages depend on distances, tangents, or strip indices."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

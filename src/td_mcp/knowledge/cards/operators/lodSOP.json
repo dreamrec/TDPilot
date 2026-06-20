@@ -1,0 +1,66 @@
+{
+  "card_type": "operator",
+  "op_type": "lodSOP",
+  "family": "SOP",
+  "display_name": "LOD SOP",
+  "docs_url": "https://docs.derivative.ca/LOD_SOP",
+  "summary": "Builds a level-of-detail cache for drawing an input object at reduced detail based on camera distance without directly changing the source geometry.",
+  "key_params": [
+    {
+      "name": "steppercent",
+      "type": "Float",
+      "note": "Percent step between LOD levels."
+    },
+    {
+      "name": "distance",
+      "type": "Float",
+      "note": "Distance threshold."
+    },
+    {
+      "name": "minpercent",
+      "type": "Float",
+      "note": "Minimum reduction percent."
+    },
+    {
+      "name": "borderweight",
+      "type": "Float",
+      "note": "Weight for preserving borders."
+    },
+    {
+      "name": "lengthweight",
+      "type": "Float",
+      "note": "Weight for preserving long edges."
+    },
+    {
+      "name": "triangulate",
+      "type": "Toggle",
+      "note": "Triangulate for reduction."
+    },
+    {
+      "name": "tstrips",
+      "type": "Toggle",
+      "note": "Optimize rendering with triangle strips."
+    },
+    {
+      "name": "polysonly",
+      "type": "Toggle",
+      "note": "Limit LOD to polygons only."
+    }
+  ],
+  "common_gotchas": [
+    "LOD SOP is not a replacement for Polyreduce SOP when downstream reduced geometry is needed.",
+    "Triangulation matters because reduction works on triangles.",
+    "The second input is rest geometry for reduction, not an arbitrary blend target."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "LOD SOP builds a draw cache for level-of-detail display rather than emitting reduced geometry in the SOP stream.",
+    "Cache selection is based on camera distance thresholds and reduction percentages.",
+    "An optional second input can provide rest geometry for expensive polygon reduction while the first input supplies points.",
+    "Reduction requires triangles, and `polysonly` limits affected geometry types."
+  ]
+}

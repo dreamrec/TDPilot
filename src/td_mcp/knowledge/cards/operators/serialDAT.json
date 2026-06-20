@@ -1,0 +1,128 @@
+{
+  "card_type": "operator",
+  "op_type": "serialDAT",
+  "family": "DAT",
+  "display_name": "Serial DAT",
+  "docs_url": "https://docs.derivative.ca/Serial_DAT",
+  "summary": "Communicates with external serial devices over RS-232-style ports, logging received bytes, lines, or messages and sending bytes through Python or Tscript methods.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable the serial connection"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Append one row per byte, per line, or per full message"
+    },
+    {
+      "name": "port",
+      "type": "String/Menu",
+      "note": "COM or serial port name used for the connection"
+    },
+    {
+      "name": "baudrate",
+      "type": "Menu",
+      "note": "Serial baud rate for the device connection"
+    },
+    {
+      "name": "databits",
+      "type": "Menu",
+      "note": "Number of data bits sent in each serial packet"
+    },
+    {
+      "name": "parity",
+      "type": "Menu",
+      "note": "Serial parity bit mode"
+    },
+    {
+      "name": "stopbits",
+      "type": "Menu",
+      "note": "Number of serial stop bits"
+    },
+    {
+      "name": "dtr",
+      "type": "Menu",
+      "note": "Windows-only DTR flow-control mode"
+    },
+    {
+      "name": "rts",
+      "type": "Menu",
+      "note": "Windows-only RTS flow-control mode"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT Path",
+      "note": "Callback DAT executed once for each received message"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose where callback scripts execute from"
+    },
+    {
+      "name": "fromop",
+      "type": "OP path",
+      "note": "Operator context used when Execute From is set to Specified Operator"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Limit FIFO output to a bounded number of messages"
+    },
+    {
+      "name": "maxlines",
+      "type": "Int",
+      "note": "Maximum retained message rows when Clamp Output is on"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear all logged rows except the heading"
+    },
+    {
+      "name": "bytes",
+      "type": "Toggle",
+      "note": "Output raw message bytes in a separate column"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "USB serial adapters require OS drivers and correct port names before the DAT can connect.",
+    "Per Line mode does not append a row until newline, carriage return, or null termination arrives.",
+    "Baud rate, data bits, parity, stop bits, DTR, and RTS must match the device or data can appear corrupt or absent.",
+    "Callbacks execute once per received message and can be high frequency in per-byte mode.",
+    "The output table is a receive log; outgoing data is sent with serialDAT Python/Tscript send methods."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "serial-device-dat-io",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Reads and writes serial-port data into a DAT event table.",
+    "Port, baud rate, data bits, parity, stop bits, DTR, and RTS configure the serial connection.",
+    "Format and Bytes controls determine how received serial data is represented.",
+    "Callbacks and FIFO retention controls manage incoming serial messages."
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "card_type": "article",
+  "article_id": "texture_coordinates_and_texture_sampling",
+  "title": "Texture Coordinates and Texture Sampling",
+  "family": "TOP",
+  "families": [
+    "TOP",
+    "SOP",
+    "MAT",
+    "COMP",
+    "GPU"
+  ],
+  "summary": "Official Derivative texturing page explaining how TOP images are applied to SOP geometry through MATs on Geometry COMPs, how uv attributes are assigned, and how nearest or linear filtering samples texels from a TOP.",
+  "source_url": "https://docs.derivative.ca/Texture_Coordinates_and_Texture_Sampling",
+  "docsbrain_page_id": "texture_coordinates_and_texture_sampling",
+  "covered_operators": [
+    "textureSOP",
+    "tubeSOP",
+    "gridSOP",
+    "torusSOP",
+    "sphereSOP",
+    "geometryCOMP",
+    "phongMAT",
+    "pbrMAT"
+  ],
+  "key_concepts": [
+    "Texturing",
+    "TOP",
+    "SOP",
+    "MAT",
+    "Geometry COMP",
+    "uv",
+    "Texture SOP",
+    "Tube",
+    "Grid",
+    "Torus",
+    "Sphere",
+    "texels",
+    "Nearest",
+    "Linear",
+    "3D Texture"
+  ],
+  "guidance": [
+    "Use this article when a plan needs to connect SOP texture coordinates, MAT texture parameters, and TOP sampling behavior.",
+    "Apply a TOP to SOP geometry by assigning the TOP to a MAT parameter on the Geometry COMP that renders the SOP.",
+    "Ensure the SOP has uv texture coordinates; Texture SOP and primitives such as Tube, Grid, Torus, and Sphere can assign them.",
+    "Nearest filtering returns the closest texel, while Linear filtering blends nearby texels based on the sample coordinate.",
+    "For 3D Texture sampling, the blend can involve eight neighboring texels rather than four."
+  ],
+  "related_snippets": [
+    "SOP_snippets",
+    "TOP_snippets",
+    "GLSL_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

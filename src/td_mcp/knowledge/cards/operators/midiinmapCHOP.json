@@ -1,0 +1,44 @@
+{
+  "card_type": "operator",
+  "op_type": "midiinmapCHOP",
+  "family": "CHOP",
+  "display_name": "MIDI In Map CHOP",
+  "docs_url": "https://docs.derivative.ca/MIDI_In_Map_CHOP",
+  "summary": "Reads slider and button channels prepared by the MIDI Device Mapper, giving mapped MIDI controls portable CHOP channel names.",
+  "key_params": [
+    {"name": "device", "type": "DAT", "note": "MIDI device Table DAT"},
+    {"name": "id", "type": "Integer", "note": "Device ID to read from"},
+    {"name": "sliders", "type": "String", "note": "Slider controller pattern such as s[1-16] s20"},
+    {"name": "buttons", "type": "String", "note": "Button pattern such as b[1-16] b20"},
+    {"name": "bvelocity", "type": "Toggle", "note": "Include velocity on button inputs when available"},
+    {"name": "squeue", "type": "Toggle", "note": "Queue slider events"},
+    {"name": "rate", "type": "Float", "note": "Output sample rate"},
+    {"name": "left", "type": "Menu", "note": "Left extend condition"},
+    {"name": "right", "type": "Menu", "note": "Right extend condition"},
+    {"name": "defval", "type": "Float", "note": "Default extend value"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"}
+  ],
+  "key_concepts": [
+    "MIDI In Map CHOP reads channels created by the MIDI Device Mapper.",
+    "Mapped slider channels use names such as s1 and s2.",
+    "Mapped button channels use names such as b1 and b2.",
+    "The Sliders and Buttons parameters select mapped channel patterns rather than raw note or controller numbers.",
+    "Compared with MIDI In CHOP, MIDI In Map CHOP is more portable because remapping can happen in the Device Mapper dialog.",
+    "Button velocity can be included when the mapped button input provides velocity."
+  ],
+  "common_gotchas": [
+    "This operator depends on mappings prepared in the MIDI Device Mapper Dialog.",
+    "The device table and device ID must match the intended MIDI device.",
+    "Slider and button patterns select mapper names, not raw MIDI note/controller addresses.",
+    "Button velocity only appears when the mapped control provides velocity data.",
+    "Use MIDI In DAT or MIDI Event DAT when the event stream itself is the desired data model."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2020.20000+ mapped MIDI controls",
+  "last_verified": "2026-06-18"
+}

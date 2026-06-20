@@ -1,0 +1,93 @@
+{
+  "card_type": "operator",
+  "op_type": "subtractTOP",
+  "family": "TOP",
+  "display_name": "Subtract TOP",
+  "docs_url": "https://docs.derivative.ca/Subtract_TOP",
+  "summary": "Subtracts the overlay layer from the fixed layer, clamping negative output values to zero.",
+  "key_params": [
+    {
+      "name": "size",
+      "type": "Menu",
+      "note": "Fixed Layer selection: Input 1 or Input 2."
+    },
+    {
+      "name": "prefit",
+      "type": "Menu",
+      "note": "Overlay fitting mode before transform."
+    },
+    {
+      "name": "justifyh",
+      "type": "Menu",
+      "note": "Horizontal overlay alignment."
+    },
+    {
+      "name": "justifyv",
+      "type": "Menu",
+      "note": "Vertical overlay alignment."
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Overlay extend behavior."
+    },
+    {
+      "name": "r",
+      "type": "Float",
+      "note": "Overlay rotation."
+    },
+    {
+      "name": "t",
+      "type": "XY",
+      "note": "Overlay translation."
+    },
+    {
+      "name": "tunit",
+      "type": "Menu",
+      "note": "Units for overlay translation."
+    },
+    {
+      "name": "s",
+      "type": "XY",
+      "note": "Overlay scale."
+    },
+    {
+      "name": "p",
+      "type": "XY",
+      "note": "Overlay pivot."
+    },
+    {
+      "name": "punit",
+      "type": "Menu",
+      "note": "Units for overlay pivot."
+    },
+    {
+      "name": "legacyxform",
+      "type": "Toggle",
+      "note": "Use the legacy transform matrix behavior."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "Negative differences are clamped to zero, so signed difference data needs a different workflow.",
+    "Fixed Layer changes output resolution/aspect and transform target, not Input1-minus-Input2 order.",
+    "Transform parameters affect the overlay/floating layer only.",
+    "Legacy Transform changes rotation and transform-order behavior."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Compositing_snippets"
+  ],
+  "build_relevance": "compositing_difference",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Subtract TOP subtracts pixels as Input1 minus Input2, then clamps negative results to zero.",
+    "Fixed Layer selects which input defines output resolution and aspect without changing subtraction order.",
+    "Transform parameters affect only the overlay layer.",
+    "The operator supports 3D textures and 2D texture arrays."
+  ]
+}

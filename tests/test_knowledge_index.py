@@ -95,8 +95,50 @@ def sample_cards_dir(tmp_path: Path) -> Path:
         )
     )
 
-    # -- snippets (empty for now) --
-    (tmp_path / "snippets").mkdir()
+    # -- snippets --
+    snip_dir = tmp_path / "snippets"
+    snip_dir.mkdir()
+
+    (snip_dir / "GLSL_snippets.json").write_text(
+        json.dumps(
+            {
+                "card_type": "snippet",
+                "snippet_id": "GLSL_snippets",
+                "family": "GLSL",
+                "summary": "TouchDesigner GLSL shader templates.",
+                "official_examples": [
+                    {
+                        "example_id": "op_snippets_glsl_pop_attribute_compute",
+                        "display_name": "GLSL POP selected-class attribute compute OP Snippets",
+                        "family": "GLSL",
+                        "operators": ["glslPOP"],
+                        "topics": ["GLSL POP attribute shader", "TDIndex", "TDNumElements"],
+                        "source_url": "https://docs.derivative.ca/OP_Snippets",
+                    }
+                ],
+            }
+        )
+    )
+
+    # -- articles --
+    articles_dir = tmp_path / "articles"
+    articles_dir.mkdir()
+
+    (articles_dir / "write_a_glsl_pop.json").write_text(
+        json.dumps(
+            {
+                "card_type": "article",
+                "article_id": "write_a_glsl_pop",
+                "title": "Write a GLSL POP",
+                "family": "GLSL",
+                "families": ["GLSL", "POP"],
+                "summary": "Official guide to GLSL POP and GLSL Advanced POP compute shaders.",
+                "source_url": "https://docs.derivative.ca/Write_a_GLSL_POP",
+                "covered_operators": ["glslPOP", "glsladvancedPOP"],
+                "key_concepts": ["TDIndex", "TDNumElements", "Output Attributes"],
+            }
+        )
+    )
 
     return tmp_path
 
@@ -128,6 +170,24 @@ class TestCardIndex:
         results = idx.search("wave", family="CHOP")
         assert len(results) >= 1
         assert any(c["op_type"] == "waveCHOP" for c in results)
+
+    def test_search_matches_nested_snippet_metadata_with_related_family(
+        self,
+        sample_cards_dir: Path,
+    ) -> None:
+        idx = CardIndex(sample_cards_dir)
+        results = idx.search("GLSL POP attribute shader", card_types=["snippets"], family="POP")
+
+        assert results
+        assert results[0]["snippet_id"] == "GLSL_snippets"
+
+    def test_search_and_lookup_article_cards(self, sample_cards_dir: Path) -> None:
+        idx = CardIndex(sample_cards_dir)
+        results = idx.search("TDIndex output attributes", card_types=["articles"], family="POP")
+
+        assert results
+        assert results[0]["article_id"] == "write_a_glsl_pop"
+        assert idx.get_article("write_a_glsl_pop")["title"] == "Write a GLSL POP"
 
     def test_get_operator_found(self, sample_cards_dir: Path) -> None:
         idx = CardIndex(sample_cards_dir)

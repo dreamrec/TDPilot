@@ -1,0 +1,47 @@
+{
+  "card_type": "operator",
+  "op_type": "nullDAT",
+  "family": "DAT",
+  "display_name": "Null DAT",
+  "docs_url": "https://docs.derivative.ca/Null_DAT",
+  "summary": "Passes DAT data through unchanged, giving generated networks a stable reference point while upstream DAT chains are edited or extended.",
+  "key_params": [
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Use input or node script language for DAT editing behavior"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Choose the edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom extension used when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Control node-viewer word wrapping without changing DAT data"
+    }
+  ],
+  "common_gotchas": [
+    "The Null DAT has no operator-specific data parameters; it is an instance of the DAT connected to its input.",
+    "Use it as the stable output reference for generated DAT chains, not as a table generator.",
+    "Common page language, extension, and word wrap settings affect editing/display behavior rather than the table or text payload.",
+    "If the input is removed, downstream references may point at an empty or stale endpoint depending on the surrounding network."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "stable-dat-chain-output",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Passes DAT input through as a terminal or organizational DAT node.",
+    "Null DAT is commonly used as a stable named output for text or table chains.",
+    "The operator-specific surface is intentionally sparse and mostly Common DAT parameters.",
+    "Common DAT settings still control language, editor extension, custom extension, and word wrap."
+  ]
+}

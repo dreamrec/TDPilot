@@ -1,0 +1,67 @@
+{
+  "card_type": "operator",
+  "op_type": "choptoDAT",
+  "family": "DAT",
+  "display_name": "CHOP to DAT",
+  "docs_url": "https://docs.derivative.ca/CHOP_to_DAT",
+  "summary": "Converts CHOP channel values into DAT table rows or columns so channel data can be inspected, serialized, scripted, or joined with other DAT workflows.",
+  "key_params": [
+    {
+      "name": "chop",
+      "type": "CHOP",
+      "note": "CHOP path used as the source of channel values"
+    },
+    {
+      "name": "names",
+      "type": "Toggle",
+      "note": "Include an additional column or row with channel names"
+    },
+    {
+      "name": "latestsample",
+      "type": "Toggle",
+      "note": "Use only the latest sample when the source CHOP is time sliced"
+    },
+    {
+      "name": "output",
+      "type": "Menu",
+      "note": "Choose row-per-channel or column-per-channel output layout"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT language setting for editor/script context"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "When the source is time sliced, leaving latestsample off can make the DAT table size change as frame timing changes.",
+    "Row-per-channel and column-per-channel layouts imply different lookup expressions; choose deliberately before downstream DAT logic depends on cell positions.",
+    "The CHOP parameter is an explicit source path, so generated networks should reference a stable Null CHOP instead of a volatile upstream node.",
+    "This is a table conversion, not a resampling operator; fix CHOP sample rates and channel scope before converting to DAT."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Converts CHOP channel samples into a DAT table.",
+    "Can include channel names as an output row or column.",
+    "Latest Sample keeps time-sliced CHOP input from changing the table size every cook.",
+    "Output orientation determines whether channels become rows or columns."
+  ]
+}

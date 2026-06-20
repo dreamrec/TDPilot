@@ -1,0 +1,46 @@
+{
+  "card_type": "operator",
+  "op_type": "primitivePOP",
+  "family": "POP",
+  "display_name": "Primitive POP",
+  "docs_url": "https://docs.derivative.ca/Primitive_POP",
+  "summary": "Manually creates or rebuilds primitives from existing or newly added points. It can delete input primitives while keeping points, add new points and attributes, then create points, lines, line strips, triangles, or quads by set or pattern.",
+  "key_params": [
+    {"name": "keep", "type": "Toggle", "note": "Delete input primitives while keeping input points"},
+    {"name": "addpts", "type": "Toggle", "note": "Enable manually adding new points"},
+    {"name": "premultcolor", "type": "Toggle", "note": "Pre-multiply RGB by alpha for created colors"},
+    {"name": "attr", "type": "Sequential", "note": "Sequential blocks for new point attributes"},
+    {"name": "attr0name", "type": "Menu", "note": "Predefined or custom attribute name for the first attribute block"},
+    {"name": "attr0customname", "type": "Str", "note": "Custom attribute name for the first attribute block"},
+    {"name": "attr0type", "type": "Menu", "note": "Data type for the first created attribute"},
+    {"name": "attr0numcomps", "type": "Int", "note": "Component count for the first created attribute"},
+    {"name": "attr0value", "type": "Float4", "note": "Default value for the first created attribute"},
+    {"name": "pt", "type": "Sequential", "note": "Sequential blocks for point values"},
+    {"name": "pt0pos", "type": "Float3", "note": "Position for the first manually created point block"},
+    {"name": "method", "type": "Menu", "note": "Create primitives by set or by pattern"},
+    {"name": "setprimtype", "type": "Menu", "note": "Primitive type for by-set generation"},
+    {"name": "set", "type": "Menu", "note": "Point grouping strategy for by-set primitive generation"},
+    {"name": "n", "type": "Int", "note": "Point count or skip interval used by set generation"},
+    {"name": "prim", "type": "Sequential", "note": "Sequential blocks for explicit primitive creation"},
+    {"name": "prim0type", "type": "Menu", "note": "Primitive type for the first primitive block"},
+    {"name": "pattern", "type": "Str", "note": "Pattern used for by-pattern primitive generation"},
+    {"name": "prim0pattern", "type": "Str", "note": "Point index pattern for the first primitive block"},
+    {"name": "unusedpointsop", "type": "Menu", "note": "Do nothing, remove unused points, or turn them into point primitives"},
+    {"name": "cpureadback", "type": "Toggle", "note": "Copy topology information back to the CPU"},
+    {"name": "parmcolorspace", "type": "Menu", "note": "Color space for color parameters when working color space is active"},
+    {"name": "parmreferencewhite", "type": "Menu", "note": "Reference white handling for parameter color conversion"}
+  ],
+  "key_concepts": [
+    "Primitive POP can rebuild connectivity by deleting input primitives while keeping their points and attributes.",
+    "Point and attribute sequential blocks create new geometry data before primitive blocks connect points into points, lines, line strips, triangles, or quads.",
+    "Post operations decide what happens to unused points, which is important because removal changes point indices and point-attribute alignment."
+  ],
+  "common_gotchas": [
+    "Use Delete Primitives and Keep Points to rebuild connectivity from an existing point cloud without losing attributes.",
+    "By Set groups points by fixed primitive size; By Pattern uses pattern matching and is better for custom line strips.",
+    "Removing unused points changes point indices, so do it only after any index-based attributes or groups are no longer needed."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

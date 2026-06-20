@@ -1,0 +1,51 @@
+{
+  "card_type": "operator",
+  "op_type": "spliceCHOP",
+  "family": "CHOP",
+  "display_name": "Splice CHOP",
+  "docs_url": "https://docs.derivative.ca/Splice_CHOP",
+  "summary": "Trims a section from first-input channels and inserts second-input channels, with stretch/trim/interpolate options and name or index matching.",
+  "key_concepts": [
+    "Splice CHOP inserts channels from the second input into channels from the first input.",
+    "Start and Trim Length define where samples are removed from the first input before insertion.",
+    "Output Trimmed Section reverses the result and outputs the removed portion instead of the spliced result.",
+    "Inserted second-input data can be kept at natural length, stretched to the trim region, trimmed/cycled to insert length, or stretched to insert length.",
+    "Channels can be matched by number or name; unmatched channels can fill gaps with none, linear, or cubic interpolation.",
+    "The official docs call out edit-and-replace workflows where one Splice extracts a section and another inserts the modified section back at the original index."
+  ],
+  "key_params": [
+    {"name": "outputtrimmed", "type": "Toggle", "note": "Output trimmed-out section instead of spliced result"},
+    {"name": "direction", "type": "Menu", "note": "Measure start/trim from first-to-last or last-to-first"},
+    {"name": "firsttolast", "type": "MenuItem", "note": "Measure Start/Trim from the beginning toward the end"},
+    {"name": "lasttofirst", "type": "MenuItem", "note": "Measure Start/Trim from the end toward the beginning"},
+    {"name": "start", "type": "Float", "note": "Trim/insert start position"},
+    {"name": "startunits", "type": "Menu", "note": "Samples, frames, or seconds"},
+    {"name": "trimmethod", "type": "Menu", "note": "Use explicit trim length or second-input length"},
+    {"name": "trimlength", "type": "Float", "note": "Trimmed region length"},
+    {"name": "trimlengthunits", "type": "Menu", "note": "Trim length units"},
+    {"name": "insertmethod", "type": "Menu", "note": "No insert, input length, stretch to trim, trim to insert length, or stretch to insert length"},
+    {"name": "none", "type": "MenuItem", "note": "Do not insert second-input data"},
+    {"name": "natural", "type": "MenuItem", "note": "Insert the second input at its full length"},
+    {"name": "stretchtrim", "type": "MenuItem", "note": "Stretch second input to fill the trimmed section"},
+    {"name": "stretchinsert", "type": "MenuItem", "note": "Stretch second input to the Insert Length"},
+    {"name": "insertlength", "type": "Float", "note": "Explicit insert length"},
+    {"name": "insertunits", "type": "Menu", "note": "Insert length units"},
+    {"name": "insertinterp", "type": "Menu", "note": "Interpolation for stretched inserted data"},
+    {"name": "match", "type": "Menu", "note": "Match channels by number or name"},
+    {"name": "index", "type": "MenuItem", "note": "Match channels by channel number"},
+    {"name": "name", "type": "MenuItem", "note": "Match channels by channel name"},
+    {"name": "unmatchedinterp", "type": "Menu", "note": "Fill gaps for unmatched channels with none, linear, or cubic interpolation"}
+  ],
+  "common_gotchas": [
+    "First input supplies the original channels; second input supplies inserted data.",
+    "Output Trimmed Section flips the output to the removed region, useful for edit/replace workflows.",
+    "Match by name when inserting a modified subset back into a multi-channel CHOP.",
+    "Unmatched second-input channels can leave gaps unless interpolation is set deliberately.",
+    "Stretching inserted material can smooth or distort timing depending on interpolation mode.",
+    "For simple remove-only operations, Delete CHOP or Trim CHOP may be clearer.",
+    "For smoothing a region, the docs recommend using an unmatched second input and setting Insert Method plus Insert Interpolate deliberately."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ channel segment editing",
+  "last_verified": "2026-06-18"
+}

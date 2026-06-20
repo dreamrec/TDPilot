@@ -1,0 +1,53 @@
+{
+  "card_type": "article",
+  "article_id": "comp_class",
+  "title": "COMP Class",
+  "family": "COMP",
+  "families": [
+    "COMP",
+    "PYTHON",
+    "NETWORK"
+  ],
+  "summary": "Official Derivative Python API reference for Component operators, covering child operators, extensions, internal shortcuts, component layout, creating and copying operators, recursive searches, connection helpers, and child memory management.",
+  "source_url": "https://docs.derivative.ca/COMP_Class",
+  "docsbrain_page_id": "comp_class",
+  "covered_operators": [
+    "nullCOMP",
+    "replicatorCOMP",
+    "selectCOMP",
+    "tableCOMP",
+    "textCOMP",
+    "timeCOMP",
+    "widgetCOMP",
+    "windowCOMP"
+  ],
+  "key_concepts": [
+    "COMP",
+    "children",
+    "extensions",
+    "extensionsReady",
+    "internalOPs",
+    "internalPars",
+    "create()",
+    "copy()",
+    "copyOPs()",
+    "layout()",
+    "findChildren()",
+    "selectedChildren",
+    "connectChildren()",
+    "progressiveUnload()",
+    "childrenCPUMemory()",
+    "childrenGPUMemory()"
+  ],
+  "guidance": [
+    "Use this article when a plan needs to build, copy, search, connect, or arrange operators inside a component.",
+    "Use create() for new child operators and copy()/copyOPs() when duplicating existing operators while preserving local network structure.",
+    "Use layout() after generated node placement when deterministic manual coordinates are unnecessary or after a bulk network edit.",
+    "Use findChildren() with type, name, tags, or parameter filters for recursive component searches instead of manual tree walks.",
+    "Check extensionsReady before accessing promoted extension members during initialization-sensitive workflows."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-17"
+}

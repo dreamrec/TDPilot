@@ -4,19 +4,254 @@
   "family": "TOP",
   "display_name": "Noise TOP",
   "docs_url": "https://docs.derivative.ca/Noise_TOP",
-  "summary": "Generates procedural noise patterns (Perlin, Simplex, Sparse, etc.) as a texture. Commonly used for driving displacements, masks, or generative visual effects.",
+  "summary": "Procedural noise texture generator with Perlin, Simplex, Sparse, Random, Alligator, and harmonic-style noise controls. It can sample transformed 2D/3D/4D noise space, combine noise with an input texture, accept a coordinate-map input, and output alpha or gradient information for masks, displacement, feedback, and shader inputs.",
   "key_params": [
-    {"name": "type", "type": "Menu", "note": "Noise algorithm: Perlin, Simplex, Sparse, Alligator, etc."},
-    {"name": "amp", "type": "Float", "note": "Overall amplitude/brightness of the noise output"},
-    {"name": "period", "type": "Float", "note": "Spatial frequency of noise — smaller values yield coarser patterns"},
-    {"name": "t", "type": "Float", "note": "Time offset for animating noise; link to absTime.seconds for smooth motion"},
-    {"name": "monochrome", "type": "Toggle", "note": "When on, outputs greyscale noise; off gives per-channel RGB noise"}
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "Noise function such as Perlin, Simplex, Random GPU, Sparse, Hermite, Harmonic Summation, Random, or Alligator."
+    },
+    {
+      "name": "seed",
+      "type": "Float",
+      "note": "Random seed that changes the generated pattern."
+    },
+    {
+      "name": "period",
+      "type": "Float",
+      "note": "Approximate spatial period of the noise; inverse of frequency."
+    },
+    {
+      "name": "harmon",
+      "type": "Integer",
+      "note": "Number of harmonics/layers in the noise."
+    },
+    {
+      "name": "spread",
+      "type": "Float",
+      "note": "Frequency spread between harmonics."
+    },
+    {
+      "name": "gain",
+      "type": "Float",
+      "note": "Amplitude gain applied across harmonics."
+    },
+    {
+      "name": "rough",
+      "type": "Float",
+      "note": "Roughness of the generated noise."
+    },
+    {
+      "name": "exp",
+      "type": "Float",
+      "note": "Exponent applied to the generated noise."
+    },
+    {
+      "name": "amp",
+      "type": "Float",
+      "note": "Output amplitude scale."
+    },
+    {
+      "name": "offset",
+      "type": "Float",
+      "note": "Output value offset."
+    },
+    {
+      "name": "mono",
+      "type": "Toggle",
+      "note": "Generate monochrome noise rather than separate channel noise."
+    },
+    {
+      "name": "aspectcorrect",
+      "type": "Toggle",
+      "note": "Aspect-correct the sampling space."
+    },
+    {
+      "name": "xord",
+      "type": "Menu",
+      "note": "Transform order for sampling plane transforms."
+    },
+    {
+      "name": "rord",
+      "type": "Menu",
+      "note": "Rotate order for sampling plane transforms."
+    },
+    {
+      "name": "t",
+      "type": "Float3",
+      "note": "Translate the sampling plane through noise space."
+    },
+    {
+      "name": "r",
+      "type": "Float3",
+      "note": "Rotate the sampling plane in noise space."
+    },
+    {
+      "name": "s",
+      "type": "Float3",
+      "note": "Scale the sampling plane."
+    },
+    {
+      "name": "p",
+      "type": "Float3",
+      "note": "Pivot for sampling-plane transforms."
+    },
+    {
+      "name": "t4d",
+      "type": "Float",
+      "note": "Translate the fourth coordinate for 4D noise."
+    },
+    {
+      "name": "s4d",
+      "type": "Float",
+      "note": "Scale the fourth coordinate for 4D noise."
+    },
+    {
+      "name": "rgb",
+      "type": "Menu",
+      "note": "Output or combine input and noise as noise-only, multiply, add, or subtract."
+    },
+    {
+      "name": "inputscale",
+      "type": "Float",
+      "note": "Amount of input image added to the output."
+    },
+    {
+      "name": "noisescale",
+      "type": "Float",
+      "note": "Amount of noise added to the output."
+    },
+    {
+      "name": "alpha",
+      "type": "Menu",
+      "note": "Alpha output source such as zero, one, noise, input, or input/noise combinations."
+    },
+    {
+      "name": "dither",
+      "type": "Toggle",
+      "note": "Dither output to reduce 8-bit banding artifacts."
+    },
+    {
+      "name": "gradient",
+      "type": "Toggle",
+      "note": "Output gradient/slope of supported noise functions."
+    },
+    {
+      "name": "mode",
+      "type": "Menu",
+      "note": "Performance or Quality noise mode."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution control."
+    },
+    {
+      "name": "resolution",
+      "type": "Int2",
+      "note": "Custom output resolution."
+    },
+    {
+      "name": "resmenu",
+      "type": "Menu",
+      "note": "Resolution presets."
+    },
+    {
+      "name": "resmult",
+      "type": "Toggle",
+      "note": "Apply global TOP resolution multiplier."
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Output aspect mode."
+    },
+    {
+      "name": "aspect",
+      "type": "Float2",
+      "note": "Custom output aspect."
+    },
+    {
+      "name": "armenu",
+      "type": "Menu",
+      "note": "Aspect presets."
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Input filtering mode."
+    },
+    {
+      "name": "fillmode",
+      "type": "Menu",
+      "note": "Viewer fill mode."
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Viewer filtering mode."
+    },
+    {
+      "name": "npasses",
+      "type": "Integer",
+      "note": "Common TOP pass count."
+    },
+    {
+      "name": "chanmask",
+      "type": "Mask",
+      "note": "RGBA channel mask."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Output pixel format."
+    }
+  ],
+  "key_concepts": [
+    "Perlin noise",
+    "Simplex noise",
+    "Sparse Convolution",
+    "Random (GPU)",
+    "Alligator",
+    "Seed",
+    "Period",
+    "Harmonics",
+    "Roughness",
+    "Monochrome",
+    "Aspect Correct",
+    "sampling plane",
+    "noise space",
+    "Translate 4D",
+    "Scale 4D",
+    "Noise Coordinate Map",
+    "3D Texture",
+    "Texture 3D TOP",
+    "GLSL TOP",
+    "Input * Noise",
+    "Alpha",
+    "Gradient",
+    "Performance mode",
+    "Quality mode",
+    "Info CHOP",
+    "resx",
+    "resy",
+    "aspectx",
+    "aspecty",
+    "depth",
+    "gpu_memory_used"
   ],
   "common_gotchas": [
-    "Forgetting to animate the 't' parameter results in a static image — wire absTime.seconds or a CHOP to it.",
-    "Resolution defaults to 256x256; set it explicitly or use an input to inherit resolution."
+    "Period is the opposite of frequency: larger Period values make broader, slower-changing noise features.",
+    "The second input is a Noise Coordinate Map; its RGBA channels provide 2D, 3D, or 4D lookup coordinates rather than a normal image layer.",
+    "For 3D Texture output, use a 3D texture input from Texture 3D TOP or GLSL TOP so the output can inherit the needed texture type and depth.",
+    "Gradient output is currently supported for Performance mode Simplex and Perlin noise types, and it is the derivative of the noise function, not image-space derivatives.",
+    "Quality mode reduces certain Simplex artifacts and axis alignment issues at a speed cost.",
+    "The Transform page t parameter moves the sampling plane in noise space; use it intentionally for animation rather than treating it as a generic time parameter."
   ],
-  "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "related_snippets": [
+    "TOP_snippets",
+    "GLSL_snippets"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
 }

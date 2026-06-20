@@ -1,0 +1,66 @@
+{
+  "card_type": "operator",
+  "op_type": "captureregionSOP",
+  "family": "SOP",
+  "display_name": "Capture Region SOP",
+  "docs_url": "https://docs.derivative.ca/Capture_Region_SOP",
+  "summary": "Creates a capture-region primitive, shaped like a capped tube, used to define volume-based weights for Capture SOP deformation workflows.",
+  "key_params": [
+    {
+      "name": "orient",
+      "type": "Menu",
+      "note": "Region axis; Z is typical inside a bone object"
+    },
+    {
+      "name": "t",
+      "type": "XYZ",
+      "note": "Region center"
+    },
+    {
+      "name": "theight",
+      "type": "Float",
+      "note": "Height from center to the top cap"
+    },
+    {
+      "name": "tcap",
+      "type": "XYZ",
+      "note": "Top cap radii"
+    },
+    {
+      "name": "bheight",
+      "type": "Float",
+      "note": "Height from center to the bottom cap"
+    },
+    {
+      "name": "bcap",
+      "type": "XYZ",
+      "note": "Bottom cap radii"
+    },
+    {
+      "name": "weight",
+      "type": "Pair",
+      "note": "Max/min weights at the center line and edge of the region"
+    },
+    {
+      "name": "color",
+      "type": "RGB",
+      "note": "Display color used for the capture region"
+    }
+  ],
+  "common_gotchas": [
+    "Capture regions are always wireframe so the influenced geometry stays visible.",
+    "Weight falloff blends between center-line and edge weights; size and cap shape directly change capture influence.",
+    "Use the same orientation convention as the bone hierarchy; Z axis is the expected region axis inside bone objects."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "legacy-character-rig",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Capture Region SOP creates a capped-tube capture volume used by Capture SOP weighting.",
+    "Top and bottom halves have separate height and cap-shape controls around the center line.",
+    "Weights blend from center-line maximum to edge minimum based on distance through the region.",
+    "Capture-region primitives remain wireframe so influenced geometry can be seen while editing."
+  ]
+}

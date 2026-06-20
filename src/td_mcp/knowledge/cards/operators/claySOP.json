@@ -1,0 +1,143 @@
+{
+  "card_type": "operator",
+  "op_type": "claySOP",
+  "family": "SOP",
+  "display_name": "Clay SOP",
+  "docs_url": "https://docs.derivative.ca/Clay_SOP",
+  "summary": "Deforms faces and surfaces by pulling target points or isoparametric curves directly on primitive contours instead of editing CVs directly.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Face/surface group to deform"
+    },
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "Warp method: matrix, vector, point, or primitive target mode"
+    },
+    {
+      "name": "xord",
+      "type": "Menu",
+      "note": "Transform order for Clay deformation"
+    },
+    {
+      "name": "rord",
+      "type": "Menu",
+      "note": "Rotation order"
+    },
+    {
+      "name": "t",
+      "type": "XYZ",
+      "note": "Translation applied by the Clay transform"
+    },
+    {
+      "name": "r",
+      "type": "XYZ",
+      "note": "Rotation applied by the Clay transform"
+    },
+    {
+      "name": "s",
+      "type": "XYZ",
+      "note": "Scale applied by the Clay transform"
+    },
+    {
+      "name": "p",
+      "type": "XYZ",
+      "note": "Pivot for scale/rotate operations"
+    },
+    {
+      "name": "dist",
+      "type": "Float",
+      "note": "Distance for vector deformation"
+    },
+    {
+      "name": "normal",
+      "type": "Toggle",
+      "note": "Use primitive normal direction"
+    },
+    {
+      "name": "dir",
+      "type": "XYZ",
+      "note": "Vector deformation direction"
+    },
+    {
+      "name": "coord",
+      "type": "XYZ",
+      "note": "Target coordinate"
+    },
+    {
+      "name": "uvsnap",
+      "type": "UV",
+      "note": "Target U/V snapping coordinate"
+    },
+    {
+      "name": "uwarp",
+      "type": "Toggle",
+      "note": "Enable U deformation"
+    },
+    {
+      "name": "u",
+      "type": "Float",
+      "note": "U target value"
+    },
+    {
+      "name": "uusebias",
+      "type": "Toggle",
+      "note": "Enable U bias"
+    },
+    {
+      "name": "ubias",
+      "type": "Float",
+      "note": "U deformation bias"
+    },
+    {
+      "name": "usharp",
+      "type": "Float",
+      "note": "U sharpness"
+    },
+    {
+      "name": "vwarp",
+      "type": "Toggle",
+      "note": "Enable V deformation"
+    },
+    {
+      "name": "v",
+      "type": "Float",
+      "note": "V target value"
+    },
+    {
+      "name": "vusebias",
+      "type": "Toggle",
+      "note": "Enable V bias"
+    },
+    {
+      "name": "vbias",
+      "type": "Float",
+      "note": "V deformation bias"
+    },
+    {
+      "name": "vsharp",
+      "type": "Float",
+      "note": "V sharpness"
+    }
+  ],
+  "common_gotchas": [
+    "Clay partially deforms primitives, while Align translates or rotates whole primitives.",
+    "Clay does not refine faces or surfaces automatically; add Refine SOP detail around the target for more local control.",
+    "With a second input, the destination primitive is the first primitive in that input; without one, primitives snap to themselves.",
+    "Faces do nothing when U deform is off, while V deform does not affect face primitives.",
+    "Sharpness jumps to valid discrete knot insertion positions on NURBS surfaces."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Clay SOP deforms faces and surfaces by pulling points on primitive contours instead of directly editing CVs.",
+    "Matrix, vector, point, and primitive modes define different target deformation workflows.",
+    "U and V warp controls act in parametric surface space and have different effects on faces versus surfaces.",
+    "Sharpness and bias controls can insert knots or localize deformation but may jump to valid discrete positions."
+  ]
+}

@@ -1,0 +1,228 @@
+{
+  "card_type": "operator",
+  "op_type": "particleSOP",
+  "family": "SOP",
+  "display_name": "Particle SOP",
+  "docs_url": "https://docs.derivative.ca/Particle_SOP",
+  "summary": "Legacy CPU SOP particle simulator that births particles from input geometry points and evolves velocity, life, collision, and force attributes.",
+  "key_params": [
+    {
+      "name": "sourcegrp",
+      "type": "String",
+      "note": "Source point group used for emission"
+    },
+    {
+      "name": "prtype",
+      "type": "Menu",
+      "note": "Particle primitive representation such as lines, point sprites, or particle system"
+    },
+    {
+      "name": "behave",
+      "type": "Menu",
+      "note": "How existing particles are reused or modified"
+    },
+    {
+      "name": "normals",
+      "type": "Toggle",
+      "note": "Use point normals as initial velocity"
+    },
+    {
+      "name": "ptreuse",
+      "type": "Toggle",
+      "note": "Reuse source points for particle emission"
+    },
+    {
+      "name": "timepreroll",
+      "type": "Float",
+      "note": "Preroll simulation time before output"
+    },
+    {
+      "name": "timeinc",
+      "type": "Float",
+      "note": "Simulation time increment per cook"
+    },
+    {
+      "name": "maxsteps",
+      "type": "Int",
+      "note": "Maximum integration steps"
+    },
+    {
+      "name": "jitter",
+      "type": "Float",
+      "note": "Randomized emission jitter"
+    },
+    {
+      "name": "accurate",
+      "type": "Toggle",
+      "note": "Use more accurate particle integration"
+    },
+    {
+      "name": "rmunused",
+      "type": "Toggle",
+      "note": "Remove unused particles"
+    },
+    {
+      "name": "attractmode",
+      "type": "Menu",
+      "note": "Surface-attractor mode"
+    },
+    {
+      "name": "reset",
+      "type": "Toggle",
+      "note": "Reset particle simulation"
+    },
+    {
+      "name": "resetpulse",
+      "type": "Pulse",
+      "note": "Pulse to reset simulation state"
+    },
+    {
+      "name": "external",
+      "type": "Float",
+      "note": "External force scaling"
+    },
+    {
+      "name": "wind",
+      "type": "XYZ",
+      "note": "Wind force vector"
+    },
+    {
+      "name": "turb",
+      "type": "Float",
+      "note": "Turbulence amount"
+    },
+    {
+      "name": "period",
+      "type": "Float",
+      "note": "Turbulence period"
+    },
+    {
+      "name": "seed",
+      "type": "Int",
+      "note": "Random seed"
+    },
+    {
+      "name": "doid",
+      "type": "Toggle",
+      "note": "Create particle id attribute"
+    },
+    {
+      "name": "domass",
+      "type": "Toggle",
+      "note": "Create or modify mass attribute"
+    },
+    {
+      "name": "mass",
+      "type": "Float",
+      "note": "Particle mass"
+    },
+    {
+      "name": "dodrag",
+      "type": "Toggle",
+      "note": "Create or modify drag attribute"
+    },
+    {
+      "name": "drag",
+      "type": "Float",
+      "note": "Particle drag"
+    },
+    {
+      "name": "birth",
+      "type": "Float",
+      "note": "Birth probability or rate control"
+    },
+    {
+      "name": "life",
+      "type": "Float",
+      "note": "Particle life value"
+    },
+    {
+      "name": "lifevar",
+      "type": "Float",
+      "note": "Particle life variation"
+    },
+    {
+      "name": "alpha",
+      "type": "Float",
+      "note": "Particle alpha attribute"
+    },
+    {
+      "name": "subattract",
+      "type": "Toggle",
+      "note": "Use surface-attractor substep handling"
+    },
+    {
+      "name": "birthcount",
+      "type": "Int",
+      "note": "Number of particles born by pulse/count mode"
+    },
+    {
+      "name": "birthpulse",
+      "type": "Pulse",
+      "note": "Manual birth pulse"
+    },
+    {
+      "name": "limitpos",
+      "type": "XYZ",
+      "note": "Positive limit plane controls"
+    },
+    {
+      "name": "limitneg",
+      "type": "XYZ",
+      "note": "Negative limit plane controls"
+    },
+    {
+      "name": "hit",
+      "type": "Menu",
+      "note": "Limit-plane hit behavior"
+    },
+    {
+      "name": "gaintan",
+      "type": "Float",
+      "note": "Tangential collision gain"
+    },
+    {
+      "name": "gainnorm",
+      "type": "Float",
+      "note": "Normal collision gain"
+    },
+    {
+      "name": "splittype",
+      "type": "Menu",
+      "note": "Particle split behavior"
+    },
+    {
+      "name": "split",
+      "type": "Int",
+      "note": "Split count"
+    },
+    {
+      "name": "splitvel",
+      "type": "Float",
+      "note": "Split velocity scale"
+    },
+    {
+      "name": "splitvar",
+      "type": "Float",
+      "note": "Split velocity variation"
+    }
+  ],
+  "common_gotchas": [
+    "Source normals matter because they define initial particle velocity when normal-based emission is enabled.",
+    "The time increment should stay at or below one over the project frame rate for predictable stepping.",
+    "The id attribute created by doid appears only after reset or first load, so downstream id logic needs an initialized sim.",
+    "Wind is velocity-sensitive and differs from a plain external force."
+  ],
+  "related_snippets": [
+    "SOP_snippets",
+    "POP_snippets"
+  ],
+  "build_relevance": "legacy-sop-particles-and-attributes",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Particles are emitted from input geometry points, and initial velocity comes from point normals.",
+    "Velocity, life, age, id, mass, drag, and related particle attributes must persist through the SOP chain for later simulation steps.",
+    "Optional external, force, metaball, and surface-attractor inputs can alter the simulation beyond the source geometry.",
+    "Modern large particle systems should usually prefer POPs or GPU-friendly workflows over the legacy CPU Particle SOP."
+  ]
+}

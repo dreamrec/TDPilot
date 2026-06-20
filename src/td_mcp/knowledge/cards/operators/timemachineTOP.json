@@ -1,0 +1,30 @@
+{
+  "card_type": "operator",
+  "op_type": "timemachineTOP",
+  "family": "TOP",
+  "display_name": "Time Machine TOP",
+  "docs_url": "https://docs.derivative.ca/Time_Machine_TOP",
+  "summary": "Warps through time by sampling different depth slices from a Texture 3D TOP sequence according to a second input image.",
+  "key_params": [
+    {"name": "blackoffset", "type": "Float", "note": "Time offset used where the control input is black"},
+    {"name": "blackoffsetunit", "type": "Menu", "note": "Units for black offset"},
+    {"name": "whiteoffset", "type": "Float", "note": "Time offset used where the control input is white"},
+    {"name": "whiteoffsetunit", "type": "Menu", "note": "Units for white offset"},
+    {"name": "outputresolution", "type": "Menu", "note": "Output resolution policy"}
+  ],
+  "common_gotchas": [
+    "Input 1 must be a Texture 3D TOP containing the image sequence over depth.",
+    "Input 2 controls time offset and is expected to be monochrome; non-mono input uses the red channel.",
+    "Black and white offsets define the sampled time range, with gray values interpolating between them.",
+    "This warps time only, not spatial XY coordinates."
+  ],
+  "related_snippets": ["TOP_snippets"],
+  "build_relevance": "temporal_image_warp",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Time Machine TOP samples through the depth of a Texture 3D TOP to create per-pixel time offsets.",
+    "Input 2 is a time-control image: black and white values map to the configured black and white offsets, with gray values interpolating.",
+    "The operator changes which temporal slice is read for each pixel while preserving the input XY location.",
+    "Unit controls let offsets be expressed in index, frame, second, or fractional terms as described by the official page."
+  ]
+}

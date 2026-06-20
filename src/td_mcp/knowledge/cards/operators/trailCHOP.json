@@ -1,0 +1,39 @@
+{
+  "card_type": "operator",
+  "op_type": "trailCHOP",
+  "family": "CHOP",
+  "display_name": "Trail CHOP",
+  "docs_url": "https://docs.derivative.ca/Trail_CHOP",
+  "summary": "Records and outputs a sliding or growing history window of input channel values, with the last sample representing the current frame.",
+  "key_concepts": [
+    "Trail CHOP outputs the history of input channel values over a sliding or growing window.",
+    "The history window runs backward from the current frame, and the last sample is the current input value.",
+    "Grow Length records an arbitrary increasing history instead of a fixed-size window.",
+    "Capture can record a continuous time slice every cook or only when the input cooks, which is useful for sparse events.",
+    "Resample and Set Rate can reshape the output sample count and output sample rate.",
+    "Changing input channel count or names clears the stored trail history and starts recording again."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Record incoming values"},
+    {"name": "growlength", "type": "Toggle", "note": "Let recording length grow with timeline"},
+    {"name": "wlength", "type": "Float", "note": "History window length"},
+    {"name": "wlengthunit", "type": "Menu", "note": "Window units: samples, frames, or seconds"},
+    {"name": "capture", "type": "Menu", "note": "Capture time slice every cook or only when input cooks"},
+    {"name": "resample", "type": "Toggle", "note": "Resample output length"},
+    {"name": "samples", "type": "Integer", "note": "Resampled output sample count"},
+    {"name": "setrate", "type": "Toggle", "note": "Override output sample rate"},
+    {"name": "rate", "type": "Float", "note": "Output sample rate"},
+    {"name": "reset", "type": "Toggle", "note": "Hold reset"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Clear trail instantly"}
+  ],
+  "common_gotchas": [
+    "If input channel count or names change, Trail CHOP clears its stored trails and starts over.",
+    "Use Replace CHOP upstream to create stand-in values when names may disappear temporarily.",
+    "Time Slice capture records a continuous sliding log; Only When Input Cooks is better for sparse events.",
+    "Grow Length can create very long histories in long-running systems.",
+    "Use Record CHOP when explicit gated recording and storage control is needed."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ rolling channel history/trails",
+  "last_verified": "2026-06-18"
+}

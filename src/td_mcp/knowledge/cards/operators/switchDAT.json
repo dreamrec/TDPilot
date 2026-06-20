@@ -1,0 +1,58 @@
+{
+  "card_type": "operator",
+  "op_type": "switchDAT",
+  "family": "DAT",
+  "display_name": "Switch DAT",
+  "docs_url": "https://docs.derivative.ca/Switch_DAT",
+  "summary": "Selects one input DAT from multiple inputs by index, with clamp, loop, or zigzag behavior for out-of-range indices.",
+  "key_params": [
+    {
+      "name": "index",
+      "type": "Float",
+      "note": "Input index to pass through; first input is 0"
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Clamp, loop, or zigzag out-of-range index behavior"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT language behavior"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor/viewer extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Node display word wrap behavior"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    }
+  ],
+  "common_gotchas": [
+    "The first input is index 0, not 1.",
+    "Extend mode controls out-of-range and negative indices; pick clamp for predictable UI selection.",
+    "Switch DAT passes through one full DAT; it does not merge or blend rows.",
+    "Use Select DAT when selecting rows/columns inside one table, not switching between entire DATs.",
+    "Language and extension can follow input or node settings; this matters for script DAT workflows."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2021.10000+ DAT routing/switching",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Selects one input DAT by index.",
+    "Extend controls how out-of-range indices resolve across available inputs.",
+    "Switch DAT is useful for stable table/text routing between multiple DAT sources.",
+    "Common DAT language and editor-extension controls still apply to the selected output."
+  ]
+}

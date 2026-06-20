@@ -1,0 +1,71 @@
+{
+  "card_type": "operator",
+  "op_type": "jsonDAT",
+  "family": "DAT",
+  "display_name": "JSON DAT",
+  "docs_url": "https://docs.derivative.ca/JSON_DAT",
+  "summary": "Filters and converts JSON from an input DAT using JSONPath-style expressions, outputting either JSON text or table-form results.",
+  "key_params": [
+    {
+      "name": "filter",
+      "type": "String",
+      "note": "JSONPath-style filter expression"
+    },
+    {
+      "name": "output",
+      "type": "Menu",
+      "note": "Output filtered result or expression result"
+    },
+    {
+      "name": "expression",
+      "type": "Expr",
+      "note": "Python expression using JSON DAT helper members"
+    },
+    {
+      "name": "outputformat",
+      "type": "Menu",
+      "note": "JSON or table output format"
+    },
+    {
+      "name": "holdlast",
+      "type": "Toggle",
+      "note": "Hold last valid result on parse or filter errors"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Input must be valid JSON before filtering; validate or guard upstream text sources.",
+    "Table output changes nested JSON into rows and columns, which may need normalization before DAT to CHOP.",
+    "Expression mode can use DAT.source, DAT.results, DAT.result, and DAT.expr, so generated expressions should stay explicit."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Converts DAT input to JSON text or extracts filtered JSON data into DAT output.",
+    "Filter and Expression parameters choose which JSON values are evaluated or emitted.",
+    "Output and Output Format control whether results are text/table shaped and how values are formatted.",
+    "Hold Last keeps the previous output when new input cannot produce a valid result."
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "card_type": "operator",
+  "op_type": "touchinDAT",
+  "family": "DAT",
+  "display_name": "Touch In DAT",
+  "docs_url": "https://docs.derivative.ca/Touch_In_DAT",
+  "summary": "Receives full DAT tables over the network from a Touch Out DAT, making it useful for synchronizing tabular state between TouchDesigner processes rather than processing individual messages.",
+  "key_params": [
+    {
+      "name": "protocol",
+      "type": "Menu",
+      "note": "Streaming TCP/IP, UDP messaging, or multicast UDP transport"
+    },
+    {
+      "name": "address",
+      "type": "String",
+      "note": "Multicast listen address or UDT server address depending on protocol"
+    },
+    {
+      "name": "port",
+      "type": "Integer",
+      "note": "Network port that receives Touch Out packets"
+    },
+    {
+      "name": "shared",
+      "type": "Toggle",
+      "note": "Share a connection with other networking DATs using the same protocol"
+    },
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable receiving; when off, incoming data is not retained"
+    },
+    {
+      "name": "messages_pending",
+      "type": "Info CHOP",
+      "note": "Pending network message count for diagnostics"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language handling mode"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor file extension mode"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when extension mode uses a custom extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Node viewer word-wrap behavior"
+    }
+  ],
+  "common_gotchas": [
+    "Touch In DAT expects a Touch Out DAT peer and receives whole table states, not arbitrary message rows.",
+    "Port, protocol, address, and multicast settings must match the sender before any table updates appear.",
+    "Turning Active off drops network data received during that period.",
+    "Large or frequently changing tables can be more expensive than message-based UDP/TCP DAT workflows.",
+    "Use UDP In DAT or TCP/IP DAT when the design needs packet/message callbacks instead of table synchronization."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2021.10000+ full-table DAT network synchronization",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Touch In DAT receives whole DAT tables from Touch Out DAT instead of packet-style message rows.",
+    "Protocol, address, port, and shared connection settings must match the sender for table synchronization.",
+    "The Active parameter controls whether incoming table updates are accepted or dropped.",
+    "It is a higher-level table sync tool; UDP/TCP DATs are better for arbitrary messages and callbacks."
+  ]
+}

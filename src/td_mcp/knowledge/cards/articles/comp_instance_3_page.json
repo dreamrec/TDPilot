@@ -1,0 +1,51 @@
+{
+  "card_type": "article",
+  "article_id": "comp_instance_3_page",
+  "title": "COMP Instance 3 Page",
+  "family": "PARAMETER",
+  "families": [
+    "COMP",
+    "PARAMETER",
+    "GLSL",
+    "RENDERING"
+  ],
+  "summary": "Official Derivative common Instance 3 page reference for assigning arbitrary custom attributes to instances for GLSL MAT access through TDInstanceCustomAttrib functions.",
+  "source_url": "https://docs.derivative.ca/COMP_Instance_3_Page",
+  "docsbrain_page_id": "comp_instance_3_page",
+  "covered_operators": [
+    "geometryCOMP",
+    "glslMAT",
+    "pbrMAT",
+    "constantCHOP",
+    "tableDAT"
+  ],
+  "key_concepts": [
+    "COMP Instance 3 Page",
+    "Parameters - Instance 3 Page",
+    "Custom attributes",
+    "arbitrary attributes",
+    "GLSL MAT",
+    "TDInstanceCustomAttrib0()",
+    "TDInstanceCustomAttrib1()",
+    "Write a GLSL Material",
+    "PBR MAT",
+    "ignored in other materials",
+    "GPU maximum",
+    "instance",
+    "instance0customop",
+    "instance0customx",
+    "instance0customy",
+    "instance0customz",
+    "instance0customw"
+  ],
+  "guidance": [
+    "Use this article when a Geometry COMP instancing plan needs custom per-instance attributes consumed by a GLSL MAT.",
+    "Access the custom attributes in GLSL with TDInstanceCustomAttrib0(), TDInstanceCustomAttrib1(), and related generated functions.",
+    "These custom attributes are ignored in other materials such as PBR MAT, so use GLSL MAT when custom instance attributes must drive shading.",
+    "Different GPUs support different maximum numbers of custom instance attributes, so avoid assuming an unlimited number of custom slots."
+  ],
+  "related_snippets": [
+    "GLSL_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

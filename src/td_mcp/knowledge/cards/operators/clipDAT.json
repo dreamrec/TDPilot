@@ -1,0 +1,100 @@
+{
+  "card_type": "operator",
+  "op_type": "clipDAT",
+  "family": "DAT",
+  "display_name": "Clip DAT",
+  "docs_url": "https://docs.derivative.ca/Clip_DAT",
+  "summary": "Stores script or command text that can be triggered by motion clips played through Clip CHOP and Clip Blender CHOP workflows.",
+  "key_params": [
+    {
+      "name": "edit",
+      "type": "Pulse",
+      "note": "Open editor to add, edit, or delete DAT text"
+    },
+    {
+      "name": "file",
+      "type": "File",
+      "note": "Text file path to load from disk or web"
+    },
+    {
+      "name": "reload",
+      "type": "Pulse",
+      "note": "Reload the configured text file into the DAT"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose where the Clip DAT script executes from"
+    },
+    {
+      "name": "component",
+      "type": "COMP path",
+      "note": "Component context used when Execute From is set to Specified Component"
+    },
+    {
+      "name": "clip",
+      "type": "OP Path",
+      "note": "Clip CHOP that triggers the script when played in Clip Blender CHOP"
+    },
+    {
+      "name": "framefirst",
+      "type": "Toggle",
+      "note": "Execute once the first time the specified clip frame is played"
+    },
+    {
+      "name": "frameloop",
+      "type": "Toggle",
+      "note": "Execute each time the specified clip frame is played during looping playback"
+    },
+    {
+      "name": "exit",
+      "type": "Toggle",
+      "note": "Execute when Clip Blender exits the specified clip"
+    },
+    {
+      "name": "printstate",
+      "type": "Toggle",
+      "note": "Print debug state information to the textport"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language setting"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor extension exposed by the DAT"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Clip DAT is Pro-only; generated networks need a license guard or fallback path.",
+    "Scripts trigger through Clip Blender CHOP playback, not merely by editing text in the DAT.",
+    "Execute-on-loop can run repeatedly for looping clips, so callbacks should avoid one-shot side effects unless guarded.",
+    "Clip DAT differs from Text DAT because it has Execute behavior tied to clip playback."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "pro-license-motion-clip-callbacks",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Stores script or command text used by motion clips and Clip CHOP/Clip Blender CHOP workflows.",
+    "Adds Execute-page callbacks for first frame, loop frame, and exit events.",
+    "Can bind the clip script to a specific clip and component context.",
+    "Clip DAT is Pro-only according to the official operator page."
+  ],
+  "platform_notes": [
+    "Official operator page marks Clip DAT as available only in TouchDesigner Pro."
+  ]
+}

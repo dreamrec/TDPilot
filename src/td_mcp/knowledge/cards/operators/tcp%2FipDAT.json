@@ -1,0 +1,113 @@
+{
+  "card_type": "operator",
+  "op_type": "tcp/ipDAT",
+  "family": "DAT",
+  "display_name": "TCP/IP DAT",
+  "docs_url": "https://docs.derivative.ca/TCP/IP_DAT",
+  "summary": "Sends and receives raw data over TCP/IP as either a client or server, logging received bytes, lines, or read chunks and sending through Python or Tscript methods.",
+  "key_params": [
+    {
+      "name": "mode",
+      "type": "Menu",
+      "note": "Communicate as TCP client or TCP server"
+    },
+    {
+      "name": "address",
+      "type": "String",
+      "note": "Server IP or host when this operator is a client"
+    },
+    {
+      "name": "port",
+      "type": "Integer",
+      "note": "Network port to listen on or connect to"
+    },
+    {
+      "name": "shared",
+      "type": "Toggle",
+      "note": "Share a connection with other networking DATs using the same protocol"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Append one row per byte, per line, or per last socket read"
+    },
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable the TCP/IP connection"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT Path",
+      "note": "Callback DAT executed once for each received message"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose the execution context for received-data callback scripts"
+    },
+    {
+      "name": "fromop",
+      "type": "OP Path",
+      "note": "Operator path used when Execute from is set to Specified Operator"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Limit output message history"
+    },
+    {
+      "name": "maxlines",
+      "type": "Integer",
+      "note": "Maximum number of received message rows to retain"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear accumulated output rows"
+    },
+    {
+      "name": "bytes",
+      "type": "Toggle",
+      "note": "Output raw bytes in a separate column"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language handling mode"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor file extension mode"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when extension mode uses a custom extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Node viewer word-wrap behavior"
+    }
+  ],
+  "common_gotchas": [
+    "TCP/IP is stream-based; in One For All Received Data mode, message boundaries are arbitrary socket read chunks.",
+    "Per Line mode does not log until newline, carriage return, or null termination arrives.",
+    "This DAT captures messages without queuing or buffering beyond its output table, so Python callbacks may need to assemble protocol frames.",
+    "Client mode requires the remote server address; server mode listens on the configured port.",
+    "Windows firewall can block connections even when port and address parameters are correct."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "tcpip-raw-dat-network-io",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "TCP/IP DAT sends and receives data over a TCP connection as either client or server.",
+    "Received data can be appended by byte, line, or socket read chunk, which affects row boundaries.",
+    "Callbacks are the official path for handling incoming messages while class methods send data.",
+    "Firewall, port, address, and client/server mode must align before a connection can exchange data."
+  ]
+}

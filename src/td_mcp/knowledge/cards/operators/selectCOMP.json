@@ -1,0 +1,43 @@
+{
+  "card_type": "operator",
+  "op_type": "selectCOMP",
+  "family": "COMP",
+  "display_name": "Select COMP",
+  "docs_url": "https://docs.derivative.ca/Select_COMP",
+  "summary": "Displays a referenced Panel Component from another location, optionally matching or overriding the referenced panel's size.",
+  "key_params": [
+    {"name": "selectpanel", "type": "COMP", "note": "Panel Component being selected"},
+    {"name": "matchsize", "type": "Toggle", "note": "Match this COMP width/height to referenced panel"},
+    {"name": "followselection", "type": "Toggle", "note": "Resolve dimensions through nested Select COMPs"},
+    {"name": "x", "type": "Integer", "note": "Panel X position"},
+    {"name": "y", "type": "Integer", "note": "Panel Y position"},
+    {"name": "w", "type": "Integer", "note": "Panel width"},
+    {"name": "h", "type": "Integer", "note": "Panel height"},
+    {"name": "fixedaspect", "type": "Menu", "note": "Choose off, use horizontal, or use vertical fixed-aspect sizing"},
+    {"name": "hmode", "type": "Menu", "note": "Horizontal layout/sizing mode"},
+    {"name": "vmode", "type": "Menu", "note": "Vertical layout/sizing mode"},
+    {"name": "drag", "type": "Menu", "note": "Panel drag behavior"},
+    {"name": "drop", "type": "Menu", "note": "Panel drop behavior"},
+    {"name": "reinitextensions", "type": "Pulse", "note": "Reinitialize extensions"},
+    {"name": "initextonstart", "type": "Toggle", "note": "Initialize extensions on start"}
+  ],
+  "key_concepts": [
+    "Panel Component reuse",
+    "remote panel reference",
+    "recursive Select COMP resolution",
+    "Match Size and Follow Selection",
+    "Layout Page panel sizing",
+    "Panel Page interaction controls"
+  ],
+  "common_gotchas": [
+    "Select COMP selects Panel Components for display; it is not a generic object/reference component.",
+    "It does not support child panels through its output connector or embedded panels.",
+    "Recursive selection is allowed: selecting a Select COMP displays what that Select COMP points to.",
+    "Match Size copies referenced dimensions; otherwise Width and Height can resize the selected panel.",
+    "Follow Selection resolves dimensions from the upper-most non-Select COMP in nested selection chains.",
+    "Use Container COMP or Base COMP when the goal is to own child networks rather than display a remote panel."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ panel reuse/recursive panel selection",
+  "last_verified": "2026-06-17"
+}

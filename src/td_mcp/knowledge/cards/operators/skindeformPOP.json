@@ -1,0 +1,39 @@
+{
+  "card_type": "operator",
+  "op_type": "skindeformPOP",
+  "family": "POP",
+  "display_name": "Skin Deform POP",
+  "docs_url": "https://docs.derivative.ca/Skin_Deform_POP",
+  "summary": "Applies skeleton or transform-based skin deformation using capture attributes such as bone paths, bind poses, and per-point or per-vertex capture weights. It can deform P and other attributes from capture data or a separate geometry source.",
+  "key_params": [
+    {"name": "mode", "type": "Menu", "note": "Skin deformation mode"},
+    {"name": "attrclass", "type": "Menu", "note": "Attribute class to deform"},
+    {"name": "inputattrscope", "type": "Str", "note": "Input attribute or attribute scope for attribute deformation modes"},
+    {"name": "bonepaths", "type": "Str", "note": "Capture bone paths attribute"},
+    {"name": "bonebindposes", "type": "Str", "note": "Bone bind pose attribute"},
+    {"name": "delcaptattrs", "type": "Toggle", "note": "Delete capture attributes after deform"},
+    {"name": "skelrootpath", "type": "COMP", "note": "Skeleton root path"},
+    {"name": "vlength", "type": "Toggle", "note": "Maintain vector lengths for vector attributes"},
+    {"name": "outputattrscope", "type": "Str", "note": "Output attribute scope"},
+    {"name": "overrideautoattr", "type": "Toggle", "note": "Override automatic output attribute metadata"},
+    {"name": "attrtype", "type": "Menu", "note": "Output attribute data type"},
+    {"name": "attrnumcomps", "type": "Menu", "note": "Output attribute component count"},
+    {"name": "attrdefaultval", "type": "Float4", "note": "Default output attribute value"}
+  ],
+  "key_concepts": [
+    "Skin Deform POP applies transform or skeleton skinning using capture attributes such as pCaptPath, pCaptData, and pCapt.",
+    "Mode selects whether the operator deforms geometry directly, deforms an attribute, or treats an attribute scope as positions or vectors.",
+    "pCaptPath maps capture indices to bone COMP paths, pCaptData stores bind/rest pose matrices, and pCapt stores index/weight pairs for each point or vertex.",
+    "Capture weights should sum to 1 for each point or vertex, and -1 indicates no transform for a capture entry.",
+    "Skeleton Root Path resolves the bone hierarchy for imported or captured rigs, while Bone Paths and Bone Bind Poses name the detail attributes used for deformation.",
+    "Vectors Maintain Length matters when deforming vector attributes such as normals, and output metadata controls the destination attribute type/components."
+  ],
+  "common_gotchas": [
+    "Capture weights should sum to 1 per point/vertex; bad capture data produces distorted deformation.",
+    "GPU skinning can be constrained by bone count per pass, so complex rigs may need splitting or preprocessing.",
+    "Do not delete capture attributes until no later stage needs to inspect or re-deform the geometry."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

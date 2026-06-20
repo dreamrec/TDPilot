@@ -1,0 +1,88 @@
+{
+  "card_type": "operator",
+  "op_type": "touchoutDAT",
+  "family": "DAT",
+  "display_name": "Touch Out DAT",
+  "docs_url": "https://docs.derivative.ca/Touch_Out_DAT",
+  "summary": "Sends full DAT tables across the network to a Touch In DAT in another TouchDesigner process, providing a high-level table synchronization mechanism.",
+  "key_params": [
+    {
+      "name": "protocol",
+      "type": "Menu",
+      "note": "Streaming TCP/IP, UDP messaging, or multicast UDP transport"
+    },
+    {
+      "name": "address",
+      "type": "String",
+      "note": "Destination or multicast address used by the selected protocol"
+    },
+    {
+      "name": "port",
+      "type": "Integer",
+      "note": "Network port used for outgoing packets"
+    },
+    {
+      "name": "shared",
+      "type": "Toggle",
+      "note": "Share a connection with other networking DATs using the same protocol"
+    },
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable sending"
+    },
+    {
+      "name": "redendantsends",
+      "type": "Integer",
+      "note": "Maximum consecutive redundant sends of the same data"
+    },
+    {
+      "name": "resend",
+      "type": "Pulse",
+      "note": "Send current data immediately regardless of prior sends"
+    },
+    {
+      "name": "messages_pending",
+      "type": "Info CHOP",
+      "note": "Pending network message count for diagnostics"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language handling mode"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor file extension mode"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when extension mode uses a custom extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Node viewer word-wrap behavior"
+    }
+  ],
+  "common_gotchas": [
+    "Touch Out DAT sends full table contents to Touch In DAT, not individual event messages.",
+    "Use Redundant Sends and Resend deliberately; they can help late or lossy receivers but increase traffic.",
+    "The output network target must match the receiving Touch In DAT protocol, address, and port.",
+    "Active off stops sending; it does not queue table changes for later delivery.",
+    "For ad hoc text or binary messages, UDP Out DAT or TCP/IP DAT is usually the more direct tool."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2021.10000+ full-table DAT network synchronization",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Touch Out DAT sends whole DAT tables to a Touch In DAT peer in another TouchDesigner process.",
+    "Redundant Sends and Resend Data control repeated table transmission for receiver reliability.",
+    "Protocol, address, port, and shared connection settings define the receiving endpoint.",
+    "It is intended for table synchronization, not general packet/message transport."
+  ]
+}

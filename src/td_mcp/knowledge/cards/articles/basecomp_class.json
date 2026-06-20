@@ -1,0 +1,53 @@
+{
+  "card_type": "article",
+  "article_id": "basecomp_class",
+  "title": "baseCOMP Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "COMP",
+    "NETWORK"
+  ],
+  "summary": "Official Derivative Python API reference for Base COMP instances, documenting that the class has no operator-specific Python members or methods and relies on inherited COMP behavior for component contents, creation, search, layout, storage, privacy, and custom parameters.",
+  "source_url": "https://docs.derivative.ca/BaseCOMP_Class",
+  "docsbrain_page_id": "basecomp_class",
+  "covered_operators": [
+    "baseCOMP"
+  ],
+  "key_concepts": [
+    "baseCOMP Class",
+    "Base COMP",
+    "COMP class",
+    "No operator specific members",
+    "No operator specific methods",
+    "inherited COMP",
+    "extensions",
+    "children",
+    "selectedChildren",
+    "create()",
+    "copy()",
+    "copyOPs()",
+    "layout()",
+    "findChildren()",
+    "progressiveUnload()",
+    "loadTox()",
+    "loadByteArray()",
+    "reload()",
+    "save()",
+    "saveByteArray()",
+    "saveExternalTox()",
+    "appendCustomPage()",
+    "destroyCustomPars()",
+    "sortCustomPages()"
+  ],
+  "guidance": [
+    "Use this article to avoid inventing Base COMP Python members or methods when the official class page does not document operator-specific API.",
+    "For Base COMP creation, copying, layout, recursive search, progressive unload, tox load/save, and custom parameter workflows, use inherited COMP methods such as create(), copy(), copyOPs(), layout(), findChildren(), progressiveUnload(), loadTox(), save(), and appendCustomPage().",
+    "Do not treat inherited COMP members such as extensions, selectedChildren, or internalOPs as baseCOMP-specific members.",
+    "Use baseCOMP as a general component container; reach for the generic COMP Class article when the workflow is about children, extensions, storage, privacy, or custom parameters."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

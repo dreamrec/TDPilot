@@ -1,0 +1,74 @@
+{
+  "card_type": "operator",
+  "op_type": "directxoutTOP",
+  "family": "TOP",
+  "display_name": "DirectX Out TOP",
+  "docs_url": "https://docs.derivative.ca/DirectX_Out_TOP",
+  "summary": "Publishes an input TOP as one or more DirectX shared textures for Windows DirectX interop.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable DirectX shared texture output"
+    },
+    {
+      "name": "queuesize",
+      "type": "Int",
+      "note": "Number of queued shared textures"
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution policy"
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Common TOP output aspect policy"
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Common TOP input smoothing mode"
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Common TOP viewer smoothing mode"
+    },
+    {
+      "name": "npasses",
+      "type": "Int",
+      "note": "Common TOP pass repeat count"
+    },
+    {
+      "name": "chanmask",
+      "type": "String",
+      "note": "Common TOP channel mask"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Queue size changes interop latency and stability; larger queues may hide consumer stalls.",
+    "Use Info DAT for handles instead of guessing them.",
+    "This exports to DirectX interop, not normal in-network TOP wiring.",
+    "This operator is Windows/license gated and should not be planned for macOS projects."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "interop_windows",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "DirectX Out TOP exposes TOP images as DirectX shared textures.",
+    "DirectX applications or DirectX In TOP can consume the shared texture handles.",
+    "It uses DirectX Sharing Resources and supports DirectX 9.0 or later interop.",
+    "Queue Size creates multiple textures updated cyclically to help consumers keep up.",
+    "Info DAT is the normal place to inspect the exported texture handles.",
+    "The operator is Windows-only and available for Educational, Commercial, and Pro licenses."
+  ]
+}

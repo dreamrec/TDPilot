@@ -1,0 +1,62 @@
+{
+  "card_type": "article",
+  "article_id": "comp_children_page",
+  "title": "COMP Children Page",
+  "family": "PARAMETER",
+  "families": [
+    "COMP",
+    "PANEL",
+    "PARAMETER"
+  ],
+  "summary": "Official Derivative common Children page for Panel COMP child alignment, spacing, margins, justification, fitting, scale, offset, crop, and scrollbar behavior.",
+  "source_url": "https://docs.derivative.ca/COMP_Children_Page",
+  "docsbrain_page_id": "comp_children_page",
+  "covered_operators": [
+    "containerCOMP",
+    "widgetCOMP",
+    "textCOMP",
+    "sliderCOMP",
+    "buttonCOMP",
+    "listCOMP",
+    "tableCOMP"
+  ],
+  "key_concepts": [
+    "COMP Children Page",
+    "Children parameter page",
+    "Panel children alignment",
+    "align",
+    "None",
+    "Left to Right",
+    "Right to Left",
+    "Top to Bottom",
+    "Bottom to Top",
+    "Grid Rows",
+    "Grid Columns",
+    "Match Network Nodes",
+    "spacing",
+    "alignmax",
+    "margin",
+    "absolute pixels",
+    "justifymethod",
+    "individual",
+    "group",
+    "justifyh",
+    "justifyv",
+    "fit",
+    "scale",
+    "offset",
+    "crop",
+    "phscrollbar",
+    "pvscrollbar",
+    "scrollbarthickness"
+  ],
+  "guidance": [
+    "Use Align and Align Order together; Grid Rows, Grid Columns, and Match Network Nodes scale children to fit the Panel Component and use child Align Order for sequencing.",
+    "Margins are absolute pixels and do not stretch with the window; they are reflected when the parent draws in a floating window rather than in the node panel viewer.",
+    "Fit overrides Justify Horizontal and Justify Vertical, so avoid planning both as independent controls.",
+    "Offset can be overwritten by Align and Justify settings above it.",
+    "Automatic horizontal and vertical scrollbars appear only when child width or height exceeds the panel dimensions."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

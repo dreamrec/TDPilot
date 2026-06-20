@@ -1,0 +1,30 @@
+{
+  "card_type": "operator",
+  "op_type": "outSOP",
+  "family": "SOP",
+  "display_name": "Out SOP",
+  "docs_url": "https://docs.derivative.ca/Out_SOP",
+  "summary": "Publishes the incoming SOP geometry as a component output connector with an optional hover label.",
+  "key_params": [
+    {
+      "name": "label",
+      "type": "String",
+      "note": "Text shown when hovering over the component output connector"
+    }
+  ],
+  "common_gotchas": [
+    "Out SOP is a boundary publishing operator, so it should usually sit at a stable final geometry point in a component.",
+    "Output ordering follows alphanumeric operator names, which matters when exposing multiple SOP outputs.",
+    "The label only changes the connector hover text; it does not rename the operator or generate geometry."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "component-sop-output",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Creates a SOP output on the containing component so geometry can leave the component boundary.",
+    "The connected input geometry is the published output; Out SOP does not generate geometry by itself.",
+    "Multiple outputs on a component are ordered alphanumerically by operator name."
+  ]
+}

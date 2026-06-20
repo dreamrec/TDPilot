@@ -1,0 +1,101 @@
+{
+  "card_type": "operator",
+  "op_type": "jointSOP",
+  "family": "SOP",
+  "display_name": "Joint SOP",
+  "docs_url": "https://docs.derivative.ca/Joint_SOP",
+  "summary": "Creates intermediate circles between pairs of input circles to help build circle-based skeleton and tube-joint geometry.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Circle group to process."
+    },
+    {
+      "name": "divs",
+      "type": "Int",
+      "note": "Number of intermediate divisions."
+    },
+    {
+      "name": "preserve1",
+      "type": "Toggle",
+      "note": "Preserve first input circle."
+    },
+    {
+      "name": "preserve2",
+      "type": "Toggle",
+      "note": "Preserve second input circle."
+    },
+    {
+      "name": "orient",
+      "type": "Toggle",
+      "note": "Orient generated circles."
+    },
+    {
+      "name": "smoothpath",
+      "type": "Toggle",
+      "note": "Smooth the path between circles."
+    },
+    {
+      "name": "smoothtwist",
+      "type": "Toggle",
+      "note": "Smooth twist across the joint."
+    },
+    {
+      "name": "majoraxes",
+      "type": "Toggle",
+      "note": "Use major axes during orientation."
+    },
+    {
+      "name": "mintwist",
+      "type": "Toggle",
+      "note": "Minimize twist."
+    },
+    {
+      "name": "lrscale",
+      "type": "Float Pair",
+      "note": "Left/right tangent scale."
+    },
+    {
+      "name": "lrscale1",
+      "type": "Float",
+      "note": "Left scale."
+    },
+    {
+      "name": "lrscale2",
+      "type": "Float",
+      "note": "Right scale."
+    },
+    {
+      "name": "lroffset",
+      "type": "Float Pair",
+      "note": "Left/right offset."
+    },
+    {
+      "name": "lroffset1",
+      "type": "Float",
+      "note": "Left offset."
+    },
+    {
+      "name": "lroffset2",
+      "type": "Float",
+      "note": "Right offset."
+    }
+  ],
+  "common_gotchas": [
+    "Joint SOP is not a general object joint or constraint; it expects circle primitives.",
+    "Twist/orientation settings matter when the result feeds tube or skinning workflows.",
+    "`mintwist` can look smoother but may hurt later skin alignment."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "legacy-character-rig",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Joint SOP is a circle-based helper that creates intermediate circles between each pair of input circles.",
+    "It requires at least two circles to produce meaningful output.",
+    "Orientation can flip normals to choose the shorter connection between circle pairs.",
+    "`mintwist` can create visually continuous twist but may cause problems if the output is later skinned."
+  ]
+}

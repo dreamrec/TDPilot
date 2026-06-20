@@ -1,0 +1,92 @@
+{
+  "card_type": "operator",
+  "op_type": "dmxmapDAT",
+  "family": "DAT",
+  "display_name": "DMX Map DAT",
+  "docs_url": "https://docs.derivative.ca/DMX_Map_DAT",
+  "summary": "Reads DMX universe data from a DMX Out POP or DMX Fixture POP and outputs a table for visualizing layouts and debugging channel conflicts.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Continuously grab current DMX universe data when enabled"
+    },
+    {
+      "name": "updateval",
+      "type": "Toggle",
+      "note": "Update the value column with the latest channel values while enabled"
+    },
+    {
+      "name": "updatevalpulse",
+      "type": "Pulse",
+      "note": "Grab the latest value update on demand"
+    },
+    {
+      "name": "dmxpop",
+      "type": "OP Path",
+      "note": "DMX Fixture POP or DMX Out POP to inspect"
+    },
+    {
+      "name": "netfilter",
+      "type": "String",
+      "note": "Pattern filter for DMX net values"
+    },
+    {
+      "name": "subnetfilter",
+      "type": "String",
+      "note": "Pattern filter for DMX subnet values"
+    },
+    {
+      "name": "universefilter",
+      "type": "String",
+      "note": "Pattern filter for DMX universe values"
+    },
+    {
+      "name": "netaddressfilter",
+      "type": "String",
+      "note": "Pattern filter for combined network address values"
+    },
+    {
+      "name": "excludeunused",
+      "type": "Toggle",
+      "note": "Hide unused channels instead of listing all 512 channels per universe"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "DMX Map DAT depends on POP-based DMX operators and is not a standalone DMX input/output node.",
+    "Leaving Exclude Unused Channels off can create large tables because every universe contains 512 channels.",
+    "When Update Value is off, values can be stale until a universe rearrangement or manual pulse occurs.",
+    "Use filters before driving UI tables from large rigs, otherwise the DAT can become noisy and expensive to scan."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "pop-dmx-universe-debugging",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Reads a DMX Out POP or DMX Fixture POP and outputs a table of mapped DMX channels.",
+    "Network, subnet, universe, and net-address filters constrain which DMX rows appear.",
+    "Update parameters control when the table refreshes from the source DMX POP arrangement.",
+    "Exclude Unused hides unmapped fixture channels when a compact map is desired."
+  ]
+}

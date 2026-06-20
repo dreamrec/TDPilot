@@ -1,0 +1,134 @@
+{
+  "card_type": "operator",
+  "op_type": "datexecuteDAT",
+  "family": "DAT",
+  "display_name": "DAT Execute DAT",
+  "docs_url": "https://docs.derivative.ca/DAT_Execute_DAT",
+  "summary": "Monitors another DAT, usually a table, and runs Python callbacks when its contents change, with 2025.30000+ onTableChange support for row, column, cell, and size diffs.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable or disable monitoring and callback execution"
+    },
+    {
+      "name": "dat",
+      "type": "DAT path",
+      "note": "The DAT whose contents are monitored for changes"
+    },
+    {
+      "name": "tablechange",
+      "type": "Toggle",
+      "note": "Calls onTableChange when any table content or size change is detected"
+    },
+    {
+      "name": "rowchange",
+      "type": "Toggle",
+      "note": "Legacy row-change callback toggle; deprecated in favor of onTableChange"
+    },
+    {
+      "name": "colchange",
+      "type": "Toggle",
+      "note": "Legacy column-change callback toggle; deprecated in favor of onTableChange"
+    },
+    {
+      "name": "cellchange",
+      "type": "Toggle",
+      "note": "Legacy cell-change callback toggle; deprecated in favor of onTableChange"
+    },
+    {
+      "name": "sizechange",
+      "type": "Toggle",
+      "note": "Legacy size-change callback toggle; deprecated in favor of onTableChange"
+    },
+    {
+      "name": "execute",
+      "type": "Menu",
+      "note": "Run callbacks at the start of frame or coalesce them to the end of frame"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose the operator context used when executing callback code"
+    },
+    {
+      "name": "fromop",
+      "type": "OP path",
+      "note": "Operator context used when Execute From is set to Specified Operator"
+    },
+    {
+      "name": "edit",
+      "type": "Pulse",
+      "note": "Open the callback DAT text in an external editor"
+    },
+    {
+      "name": "file",
+      "type": "File",
+      "note": "Filesystem path for loading callback script text"
+    },
+    {
+      "name": "syncfile",
+      "type": "Toggle",
+      "note": "Synchronize the DAT text with the file on disk"
+    },
+    {
+      "name": "loadonstart",
+      "type": "Toggle",
+      "note": "Reload the file from disk when the project starts"
+    },
+    {
+      "name": "loadonstartpulse",
+      "type": "Pulse",
+      "note": "Instantly reload the file from disk"
+    },
+    {
+      "name": "write",
+      "type": "Toggle",
+      "note": "Write DAT contents to disk when the project is saved"
+    },
+    {
+      "name": "writepulse",
+      "type": "Pulse",
+      "note": "Instantly write DAT contents to disk"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language setting"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor extension exposed by the DAT"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "DAT Execute DAT is an active operator; DocsBrain can misclassify it as deprecated because the legacy row/column/cell/size callbacks are deprecated.",
+    "For 2025.30000 and later builds, prefer onTableChange(dat, prevDAT, info) and inspect the info lists for rows, columns, cells, and size changes.",
+    "DAT Execute DATs loaded from older builds may keep old callback comments, so create a fresh DAT Execute DAT or update comments before relying on generated templates.",
+    "Start-of-frame execution can run multiple times if a watched DAT changes repeatedly in one frame; end-of-frame execution coalesces repeated changes.",
+    "Sync to File can create or overwrite script files, so automation should avoid enabling it unless explicitly requested.",
+    "Use OP Execute DAT for operator state changes and Execute DAT for project/timeline events; DAT Execute DAT is specifically for DAT content changes."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2025.30000+ DAT table-change callbacks and legacy callback deprecation",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Monitors another DAT and runs callbacks when table contents or size change.",
+    "The current onTableChange callback reports row, column, cell, and size information through the info argument.",
+    "Legacy row, column, cell, and size callbacks remain represented as toggles for older callback templates.",
+    "Execute timing controls whether callbacks happen at the start or end of the frame."
+  ]
+}

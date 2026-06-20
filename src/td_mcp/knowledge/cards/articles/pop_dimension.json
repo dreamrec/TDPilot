@@ -1,0 +1,59 @@
+{
+  "card_type": "article",
+  "article_id": "pop_dimension",
+  "title": "POP Dimension",
+  "family": "POP",
+  "families": [
+    "POP",
+    "TOP",
+    "PYTHON",
+    "GLSL"
+  ],
+  "summary": "Official Derivative page for POP dimension metadata, covering rows/columns/slices, TOP and POP conversion shape preservation, built-in dimension attributes, and Python access through OP.dimension.",
+  "source_url": "https://docs.derivative.ca/POP_Dimension",
+  "docsbrain_page_id": "pop_dimension",
+  "covered_operators": [
+    "dimensionPOP",
+    "gridPOP",
+    "torusPOP",
+    "tubePOP",
+    "copyPOP",
+    "trailPOP",
+    "deletePOP",
+    "mathmixPOP",
+    "lookupchannelPOP",
+    "poptoTOP",
+    "toptoPOP"
+  ],
+  "key_concepts": [
+    "Dimension",
+    "metadata",
+    "cols/rows/slices",
+    "N-dimensions",
+    "replaces meshes in SOPs",
+    "POP to TOP",
+    "TOP to POP",
+    "dimension 20 40 12",
+    "_NumDim",
+    "_DimSize[0]",
+    "_DimI[1]",
+    "_DimU[0]",
+    "_DimCy[0]",
+    "OP.dimension",
+    "numPoints"
+  ],
+  "guidance": [
+    "Use this article when a POP plan depends on preserving or interpreting point-list structure across generators, TOP conversions, lookups, or GLSL indexing.",
+    "Dimension is metadata passed from POP to POP and describes point organization such as columns, rows, slices, or more general N-dimensional layouts.",
+    "When converting POP to TOP or TOP to POP, preserve dimension so the output width, height, and point arrangement match the source structure.",
+    "All POPs have at least one dimension; the product of all dimension sizes should equal the POP point count.",
+    "Use built-in dimension attributes such as _NumDim, _DimSize, _DimI, _DimU, and _DimCy when lookup or shader logic needs structured coordinates.",
+    "In Python, OP.dimension is the list of dimension sizes and len(OP.dimension) is the number of dimensions."
+  ],
+  "related_snippets": [
+    "POP_snippets",
+    "POP_attribute_ontology",
+    "GLSL_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

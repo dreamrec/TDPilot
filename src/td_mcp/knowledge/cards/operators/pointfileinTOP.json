@@ -1,0 +1,108 @@
+{
+  "card_type": "operator",
+  "op_type": "pointfileinTOP",
+  "family": "TOP",
+  "display_name": "Point File In TOP",
+  "docs_url": "https://docs.derivative.ca/Point_File_In_TOP",
+  "summary": "Loads point-cloud or point-field data from mesh, image, floating-point, ASCII, URL, or file-sequence sources into TOP channels.",
+  "key_params": [
+    {
+      "name": "file",
+      "type": "File",
+      "note": "Point file, folder sequence, or URL to load."
+    },
+    {
+      "name": "reload",
+      "type": "Pulse",
+      "note": "Reload the point data source."
+    },
+    {
+      "name": "reloadpulse",
+      "type": "Pulse",
+      "note": "Reload pulse used by current card/test surfaces."
+    },
+    {
+      "name": "red",
+      "type": "Menu",
+      "note": "Point field mapped into output red."
+    },
+    {
+      "name": "green",
+      "type": "Menu",
+      "note": "Point field mapped into output green."
+    },
+    {
+      "name": "blue",
+      "type": "Menu",
+      "note": "Point field mapped into output blue."
+    },
+    {
+      "name": "alpha",
+      "type": "Menu",
+      "note": "Point field mapped into output alpha."
+    },
+    {
+      "name": "playmode",
+      "type": "Menu",
+      "note": "Timeline-locked, specified index, or sequential playback for file sequences."
+    },
+    {
+      "name": "speed",
+      "type": "Float",
+      "note": "Sequential playback speed multiplier."
+    },
+    {
+      "name": "index",
+      "type": "Float",
+      "note": "File-sequence position in Specify Index mode."
+    },
+    {
+      "name": "prereadframes",
+      "type": "Integer",
+      "note": "Frames read ahead for smoother sequence playback."
+    },
+    {
+      "name": "frametimeout",
+      "type": "Float",
+      "note": "Frame read timeout before skipping or substituting frames."
+    },
+    {
+      "name": "frametimeoutstrat",
+      "type": "Menu",
+      "note": "Strategy used when frame reads time out."
+    },
+    {
+      "name": "opentimeout",
+      "type": "Float",
+      "note": "Timeout for opening the point source."
+    },
+    {
+      "name": "alwaysloadinitial",
+      "type": "Toggle",
+      "note": "Load an initial frame even when sequence playback is not advancing."
+    },
+    {
+      "name": "asyncupload",
+      "type": "Toggle",
+      "note": "Upload loaded frames asynchronously when supported."
+    }
+  ],
+  "common_gotchas": [
+    "Only four point fields can be placed into a single TOP output; use Point File Select TOP for additional field outputs.",
+    "ASCII point files can infer headers or counts from early rows, so malformed first lines change channel detection.",
+    "Folder sequences are ordered alphanumerically unless filename-based indexing is selected.",
+    "Large EXR or point sequences need enough CPU, disk, timeout, pre-read, and upload budget to avoid playback stalls."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "POP_snippets"
+  ],
+  "build_relevance": "point_cloud_file_input",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Loads point-cloud and point-field data from mesh, image, floating-point, ASCII, URL, and sequence sources.",
+    "All point fields can be loaded, but a single TOP output can expose only four channels at a time.",
+    "Point File Select TOP exposes additional field outputs from the same loaded source.",
+    "Playback, pre-read, timeout, and async upload controls are important for large point or EXR sequences."
+  ]
+}

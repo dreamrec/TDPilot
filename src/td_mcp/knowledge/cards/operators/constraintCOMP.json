@@ -1,0 +1,40 @@
+{
+  "card_type": "operator",
+  "op_type": "constraintCOMP",
+  "family": "COMP",
+  "display_name": "Constraint COMP",
+  "docs_url": "https://docs.derivative.ca/Constraint_COMP",
+  "summary": "Restricts Bullet Actor COMP body motion with point-to-point, hinge, or slider constraints, either on individual bodies or between matching bodies from two actor sets.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enables or disables this constraint in the simulation"},
+    {"name": "type", "type": "Menu", "note": "Point To Point, Hinge, or Slider constraint mode"},
+    {"name": "bodytobody", "type": "Toggle", "note": "Creates constraints between Actor 1 and Actor 2 body lists"},
+    {"name": "collisions", "type": "Toggle", "note": "Allows or suppresses collisions between constrained bodies"},
+    {"name": "dispcom", "type": "Toggle", "note": "Displays the constraint guide in the viewer"},
+    {"name": "actor1", "type": "Actor COMP", "note": "First actor whose bodies are constrained"},
+    {"name": "bodies1", "type": "Pattern", "note": "Body IDs from Actor 1 to constrain"},
+    {"name": "pivot1", "type": "XYZ", "note": "Constraint pivot point for Actor 1 bodies"},
+    {"name": "axis1", "type": "XYZ", "note": "Hinge axis for Actor 1 bodies"},
+    {"name": "sliderrot1", "type": "XYZ", "note": "Slider constraint axis rotation for Actor 1 bodies"},
+    {"name": "actor2", "type": "Actor COMP", "note": "Second actor for body-to-body constraints"},
+    {"name": "bodies2", "type": "Pattern", "note": "Body IDs from Actor 2 paired with Actor 1 bodies"}
+  ],
+  "key_concepts": [
+    "Constraint COMP restricts Bullet Actor COMP bodies with point-to-point, hinge, or slider constraints.",
+    "Body-to-body mode creates one-to-one constraints between Actor 1 and Actor 2 body lists, with unmatched bodies handled explicitly.",
+    "Actor body IDs are zero-based and can be inspected with Bullet Solver CHOP.",
+    "Point-to-point constraints pin translation around a pivot while still allowing rotation; hinge constraints restrict rotation to a defined axis.",
+    "Slider constraints restrict movement or rotation along a configured axis, and collision behavior between constrained bodies is controlled separately."
+  ],
+  "common_gotchas": [
+    "Constraint COMP is for Bullet dynamics; it needs Actor COMPs in a Bullet Solver COMP context.",
+    "Actor body IDs are zero-based and can be inspected with Bullet Solver CHOP.",
+    "Body-to-body mode pairs body lists one-to-one; unmatched Actor 1 bodies become individual constraints and unmatched Actor 2 bodies are ignored.",
+    "A point-to-point constraint on a single body removes translational degrees of freedom but still allows rotation.",
+    "Hinge constraints require a meaningful hinge axis; slider constraints require careful axis rotation setup.",
+    "Collision behavior between constrained bodies is explicit and may need to be disabled for joints that should not fight themselves."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2020.20000+ Bullet physics joint constraints",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,45 @@
+{
+  "card_type": "operator",
+  "op_type": "timelineCHOP",
+  "family": "CHOP",
+  "display_name": "Timeline CHOP",
+  "docs_url": "https://docs.derivative.ca/Timeline_CHOP",
+  "summary": "Outputs frame, rate, range, BPM, signature, and play-state channels from a component's Time COMP or a referenced timecode source.",
+  "key_concepts": [
+    "Timeline CHOP outputs time-based CHOP channels for a specific component timeline.",
+    "When Reference Operator is blank, it uses the time at the Timeline CHOP's own location, equivalent to `me.time`.",
+    "When Reference Operator is set, the referenced node's Time COMP supplies the timeline values.",
+    "Use Timecode switches the time source to a Timecode object, CHOP, or DAT while the reference operator still supplies BPM, signature, start, and end values.",
+    "The operator can output frame, rate, start/end, range start/end, time signature, BPM, and play-state channels.",
+    "Component-local time can differ from root/project time, so explicit references are safer for reusable components."
+  ],
+  "key_params": [
+    {"name": "op", "type": "OP", "note": "Reference operator whose Time COMP is used"},
+    {"name": "usetimecode", "type": "Toggle", "note": "Use a timecode reference for time values"},
+    {"name": "timecodeop", "type": "String", "note": "Timecode CHOP/DAT/object reference"},
+    {"name": "frame", "type": "Toggle", "note": "Output current frame channel"},
+    {"name": "rate", "type": "Toggle", "note": "Output frame-rate channel"},
+    {"name": "start", "type": "Toggle", "note": "Output start frame channel"},
+    {"name": "end", "type": "Toggle", "note": "Output end frame channel"},
+    {"name": "rangestart", "type": "Toggle", "note": "Output range-start channel"},
+    {"name": "rangeend", "type": "Toggle", "note": "Output range-end channel"},
+    {"name": "signature1", "type": "Toggle", "note": "Output beats-per-measure signature channel"},
+    {"name": "signature2", "type": "Toggle", "note": "Output beat-unit signature channel"},
+    {"name": "bpm", "type": "Toggle", "note": "Output BPM channel"},
+    {"name": "play", "type": "Toggle", "note": "Output play-state channel"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP channel scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Common CHOP sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"}
+  ],
+  "common_gotchas": [
+    "When no Reference Operator is set, Timeline CHOP uses the time at its own location, equivalent to me.time.",
+    "When Use Timecode is enabled, the timecode reference supplies time while the reference operator still supplies BPM, signature, start, and end values.",
+    "The Timecode reference can be a CHOP, DAT first-cell string, or Timecode object.",
+    "Use this for timeline metadata; use Timecode CHOP for conversion/generation workflows.",
+    "Component-local time can differ from root/project time, so explicit references are safer in reusable components."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2025.30000+ component timeline introspection",
+  "last_verified": "2026-06-18"
+}

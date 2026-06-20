@@ -118,20 +118,24 @@ def build_default_templates() -> dict[str, MacroTemplate]:
 
     templates["particle_gpu"] = MacroTemplate(
         name="particle_gpu",
-        description="Minimal POP chain: particle -> noise -> render.",
+        description="Minimal POP preview chain: point source -> noise -> null POP -> Render Simple TOP -> out.",
         nodes=[
-            NodeSpec("particlePOP", "particles", dx=0, dy=0),
+            NodeSpec("circlePOP", "source", dx=0, dy=0),
             NodeSpec("noisePOP", "noise", dx=220, dy=0),
-            NodeSpec("renderPOP", "render", dx=440, dy=0),
-            NodeSpec("nullTOP", "out", dx=660, dy=0),
+            NodeSpec("nullPOP", "out_pop", dx=440, dy=0),
+            NodeSpec("rendersimpleTOP", "render", dx=660, dy=0, params={"normalizegeo": True}),
+            NodeSpec("nullTOP", "out", dx=880, dy=0),
         ],
         connections=[
-            ConnectionSpec("particles", "noise"),
-            ConnectionSpec("noise", "render"),
+            ConnectionSpec("source", "noise"),
+            ConnectionSpec("noise", "out_pop"),
             ConnectionSpec("render", "out"),
         ],
+        node_references=[
+            NodeRefParam(node="render", param="pop", target_node="out_pop"),
+        ],
         param_schema={},
-        entry_node="particles",
+        entry_node="source",
         exit_node="out",
     )
 

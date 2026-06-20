@@ -1,0 +1,27 @@
+{
+  "card_type": "operator",
+  "op_type": "outPOP",
+  "family": "POP",
+  "display_name": "Out POP",
+  "docs_url": "https://docs.derivative.ca/Out_POP",
+  "summary": "Publishes POP data from inside a component to an output connector on the parent component. It can output its wired input or reference another POP through Select POP.",
+  "key_params": [
+    {"name": "selectpop", "type": "POP", "note": "POP reference to output when no input is connected"},
+    {"name": "label", "type": "Str", "note": "Hover label shown on the parent component output connector"},
+    {"name": "connectorder", "type": "Int", "note": "Sort key for ordering parent component output connectors"}
+  ],
+  "key_concepts": [
+    "Parent component output connector export",
+    "One Out POP creates one parent output connector",
+    "Wired input takes precedence over Select POP reference output",
+    "Label text appears on the parent component output hover"
+  ],
+  "common_gotchas": [
+    "Each Out POP creates one parent output connector, so generated reusable components need deliberate output naming and ordering.",
+    "A wired input takes precedence over Select POP; use Select POP for reference-style output only when the input is intentionally empty.",
+    "Changing connectorder can break user expectations in component interfaces even if the internal network still cooks."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

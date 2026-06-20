@@ -1,6 +1,6 @@
 schema_version: 1
 topic: pop
-op_types: [particlePOP, noisePOP, renderPOP, geometryCOMP]
+op_types: [circlePOP, pointgeneratorPOP, noisePOP, mathmixPOP, nullPOP, rendersimpleTOP, geometryCOMP]
 hints:
   - id: pop_use_pop_inspect
     priority: critical
@@ -35,10 +35,12 @@ hints:
   - id: pop_minimal_chain_pattern
     priority: useful
     rule: |
-      Minimal POP chain (from the `particle_gpu` macro template):
-        particlePOP "particles" → noisePOP "noise" → renderPOP "render" → nullTOP "out"
-      The `renderPOP` is what emits a TOP — without it, no visual output.
-      Wire the `nullTOP` after `renderPOP` for a stable downstream tap.
+      Minimal POP preview chain (from the `particle_gpu` macro template):
+        circlePOP "source" → noisePOP "noise" → nullPOP "out_pop"
+        rendersimpleTOP "render" → nullTOP "out"
+      Set the Render Simple TOP's `pop` parameter to the `nullPOP` output.
+      There is no official `renderPOP`; for quick POP visuals use
+      `rendersimpleTOP`, and for full scenes use Geometry COMP + Render TOP.
       For ready-to-instantiate scaffolding use
       `td_create_macro({ macro_type: "particle_gpu" })`.
     source: macros/templates.py particle_gpu

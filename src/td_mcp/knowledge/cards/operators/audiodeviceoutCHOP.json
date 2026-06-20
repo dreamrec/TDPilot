@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "audiodeviceoutCHOP",
+  "family": "CHOP",
+  "display_name": "Audio Device Out CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_Device_Out_CHOP",
+  "summary": "Sends CHOP audio channels to an output device with driver, output layout, volume, pan, clamp, and buffer controls.",
+  "key_concepts": [
+    "Audio Device Out CHOP sends CHOP audio channels to a selected playback device.",
+    "Driver and Device choose the output backend and playback device, including system audio or ASIO where supported.",
+    "Buffer Length adds output delay but helps keep the audio queue full and reduce crackling or popping.",
+    "Multiple input channels are routed to enabled speaker outputs in input-channel order.",
+    "Reliable audio output depends on frame time staying below the audio buffer and CHOP maximum time-slice limits."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable audio output"},
+    {"name": "driver", "type": "Menu", "note": "Output audio driver/backend"},
+    {"name": "device", "type": "Menu", "note": "Output audio device"},
+    {"name": "errormissing", "type": "Toggle", "note": "Raise an error if the selected output device is missing"},
+    {"name": "outputs", "type": "Menu", "note": "Output channel layout"},
+    {"name": "bufferlength", "type": "Float", "note": "Output buffer length"},
+    {"name": "adjustspeed", "type": "Toggle", "note": "Adjust playback speed to maintain output sync"},
+    {"name": "volume", "type": "Float", "note": "Output gain"},
+    {"name": "clampoutput", "type": "Toggle", "note": "Clamp output samples to valid range"},
+    {"name": "cookalways", "type": "Toggle", "note": "Cook every frame even if not otherwise requested"}
+  ],
+  "common_gotchas": [
+    "Audio output is device-specific and can fail silently if the selected device disappears unless errormissing is enabled.",
+    "Low buffer lengths reduce latency but increase dropout risk.",
+    "Clamp Output can hide upstream clipping problems; use meters or Audio Dynamics when level matters.",
+    "Channel routing must match the device speaker/output layout, especially for surround or multichannel systems."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

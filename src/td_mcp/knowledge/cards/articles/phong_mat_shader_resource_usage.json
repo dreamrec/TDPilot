@@ -1,0 +1,56 @@
+{
+  "card_type": "article",
+  "article_id": "phong_mat_shader_resource_usage",
+  "title": "Phong MAT Shader Resource Usage",
+  "family": "GLSL",
+  "families": [
+    "GLSL",
+    "MAT",
+    "GPU",
+    "RENDER"
+  ],
+  "summary": "Official Derivative article on GPU shader resource limits for MAT rendering, especially per-object light, bone, varying, and uniform pressure in Phong/GLSL-style material workflows.",
+  "source_url": "https://docs.derivative.ca/Phong_MAT_Shader_Resource_Usage",
+  "docsbrain_page_id": "phong_mat_shader_resource_usage",
+  "covered_operators": [
+    "phongMAT",
+    "glslMAT",
+    "renderpassTOP",
+    "addTOP",
+    "lightCOMP",
+    "geometryCOMP"
+  ],
+  "key_concepts": [
+    "Phong MAT Shader Resource Usage",
+    "per-object resource limits",
+    "Light Mask",
+    "$SYS_GFX_GLSL_MAX_VARYINGS",
+    "varyings",
+    "vertex shader",
+    "pixel shader",
+    "normal mapping",
+    "shadow mapped",
+    "projection mapped",
+    "attenuated light",
+    "rim lights",
+    "environment mapping",
+    "texture coordinate set",
+    "Render Pass TOP",
+    "Add TOP",
+    "uniforms",
+    "bone matrices",
+    "light information"
+  ],
+  "guidance": [
+    "Use this article when a material-rendering plan needs to reason about why many lights, shadows, projections, bones, or texture coordinate sets can exceed GPU shader resource limits.",
+    "Resource limits are per object: a scene can contain many lights, but each individual object should be constrained with Light Mask when only a subset should affect it.",
+    "Use $SYS_GFX_GLSL_MAX_VARYINGS to estimate varying pressure before planning heavy Phong/GLSL MAT lighting or texture-coordinate combinations.",
+    "Normal mapping changes how light vectors, spotlight directions, normals, and texture coordinates consume varyings, so treat normal-mapped and non-normal-mapped material plans differently.",
+    "When one object needs more lights than a single pass can handle, render the same geometry and camera with different light sets through Render Pass TOP and combine the results with Add TOP.",
+    "Uniform pressure includes values constant across the shader execution such as diffuse, specular, emission colors, bone matrices, and light color information."
+  ],
+  "related_snippets": [
+    "GLSL_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

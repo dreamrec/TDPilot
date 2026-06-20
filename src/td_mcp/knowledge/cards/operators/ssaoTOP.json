@@ -1,0 +1,88 @@
+{
+  "card_type": "operator",
+  "op_type": "ssaoTOP",
+  "family": "TOP",
+  "display_name": "SSAO TOP",
+  "docs_url": "https://docs.derivative.ca/SSAO_TOP",
+  "summary": "Applies screen-space ambient occlusion to a Render TOP or Render Pass TOP result using the source depth buffer.",
+  "key_params": [
+    {
+      "name": "quality",
+      "type": "Menu",
+      "note": "Low or Medium occlusion quality."
+    },
+    {
+      "name": "sampledirs",
+      "type": "Integer",
+      "note": "Number of sample directions."
+    },
+    {
+      "name": "samplesteps",
+      "type": "Integer",
+      "note": "Number of sample steps per direction."
+    },
+    {
+      "name": "surfaceavoid",
+      "type": "Float",
+      "note": "Surface avoid angle."
+    },
+    {
+      "name": "ssaopassres",
+      "type": "Menu",
+      "note": "Full, half, or quarter SSAO pass resolution."
+    },
+    {
+      "name": "ssaoradius",
+      "type": "Float",
+      "note": "Occlusion radius."
+    },
+    {
+      "name": "contrast",
+      "type": "Float",
+      "note": "Occlusion contrast."
+    },
+    {
+      "name": "attenuation",
+      "type": "Float",
+      "note": "Distance attenuation."
+    },
+    {
+      "name": "edgethresh",
+      "type": "Float",
+      "note": "Depth-edge threshold."
+    },
+    {
+      "name": "blurradius",
+      "type": "Float",
+      "note": "Blur radius."
+    },
+    {
+      "name": "blursharpness",
+      "type": "Float",
+      "note": "Blur sharpness."
+    },
+    {
+      "name": "combinewithcolor",
+      "type": "Toggle",
+      "note": "Composite AO with the source color output."
+    }
+  ],
+  "common_gotchas": [
+    "Do not insert another TOP between Render/Render Pass and SSAO or depth data will be unavailable.",
+    "Turn Combine With Color off when you need standalone ambient occlusion output.",
+    "Edge Threshold helps prevent depth-edge bleeding.",
+    "Blur controls are part of the intended denoising workflow."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Render_snippets"
+  ],
+  "build_relevance": "render_post_processing",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "SSAO is a screen-space ambient-occlusion post-process driven by render output depth information.",
+    "The input must be directly from a Render TOP or Render Pass TOP so the depth buffer is available.",
+    "Performance is driven by screen resolution and sample settings rather than scene object count.",
+    "The SSAO pass is expected to be noisy before the built-in blur/sharpness stage."
+  ]
+}

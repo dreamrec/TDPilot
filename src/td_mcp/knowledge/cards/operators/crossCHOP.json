@@ -1,0 +1,30 @@
+{
+  "card_type": "operator",
+  "op_type": "crossCHOP",
+  "family": "CHOP",
+  "display_name": "Cross CHOP",
+  "docs_url": "https://docs.derivative.ca/Cross_CHOP",
+  "summary": "Interpolates between multiple CHOP inputs, blending between the two nearest inputs according to a numeric cross index.",
+  "key_concepts": [
+    "Blends between two inputs at a time across a multi-input CHOP surface.",
+    "Similar to Switch CHOP for choosing among inputs, but Cross CHOP interpolates instead of switching discretely.",
+    "Whole-number Cross values select inputs directly: 0 selects the first input, 1 selects the second, 2 selects the third, and so on.",
+    "Fractional Cross values blend the two nearest inputs proportionally, such as 1.5 blending half of input 2 and half of input 3.",
+    "Common CHOP Time Slice, Scope, and Sample Rate Match controls still shape how channels and sample rates are handled."
+  ],
+  "key_params": [
+    {"name": "cross", "type": "Float", "note": "Input index blend position; whole numbers select inputs and fractional values blend neighbors"},
+    {"name": "timeslice", "type": "Toggle", "note": "Force time-sliced CHOP output"},
+    {"name": "srselect", "type": "Menu", "note": "How mismatched sample rates are handled"},
+    {"name": "scope", "type": "Pattern", "note": "Channel pattern to affect"}
+  ],
+  "common_gotchas": [
+    "Cross is an input index, so 0 selects input 1, 1 selects input 2, and fractional values blend neighboring inputs.",
+    "It only blends the two closest inputs at a time; use Blend CHOP for arbitrary weighted multi-source blending.",
+    "Use Switch CHOP when interpolation is not desired.",
+    "Mismatched channel names, lengths, or sample rates can produce surprising interpolation unless resampling and matching are deliberate."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

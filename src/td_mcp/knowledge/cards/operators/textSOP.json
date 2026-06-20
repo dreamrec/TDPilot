@@ -1,0 +1,222 @@
+{
+  "card_type": "operator",
+  "op_type": "textSOP",
+  "family": "SOP",
+  "display_name": "Text SOP",
+  "docs_url": "https://docs.derivative.ca/Text_SOP",
+  "summary": "Creates 3D text geometry from installed fonts or TrueType/OpenType files with triangulated, closed-outline, or open-outline output modes.",
+  "key_params": [
+    {
+      "name": "font",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "fontfile",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "bold",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "italic",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "fontsizex",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "fontsizey",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "keepfontratio",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "scalefontobboxheight",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "output",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "levelofdetail",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "language",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "readingdirection",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "kerning",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "kerning1",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "kerning2",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "linespacing",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "alignx",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "wordwrapsize",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "text",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "legacyparsing",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "xord",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "rord",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "t",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "tx",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "ty",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "tz",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "r",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "rx",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "ry",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "rz",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "s",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "sx",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "sy",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "sz",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "p",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "px",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "py",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    },
+    {
+      "name": "pz",
+      "type": "Parameter",
+      "note": "Text SOP official parameter"
+    }
+  ],
+  "common_gotchas": [
+    "Installed font selection is machine-dependent; fontfile paths are more portable.",
+    "fontfile disables the font menu.",
+    "Open polygon output is wireframe-style outline geometry, not filled text.",
+    "Use Python expression mode for complex escaped strings instead of relying on legacy parsing."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "font-to-sop-text-geometry",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Text SOP creates geometry from installed system fonts or explicit font files.",
+    "It supports Unicode text and can output triangulated faces, closed outlines, or open outlines.",
+    "Closed polygon output separates outlines, so Hole SOP is needed when glyph holes must be preserved.",
+    "Python expression mode is preferred for newline and tab escapes instead of legacy parsing."
+  ]
+}

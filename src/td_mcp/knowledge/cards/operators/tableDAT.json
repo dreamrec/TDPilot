@@ -1,0 +1,123 @@
+{
+  "card_type": "operator",
+  "op_type": "tableDAT",
+  "family": "DAT",
+  "display_name": "Table DAT",
+  "docs_url": "https://docs.derivative.ca/Table_DAT",
+  "summary": "Creates, edits, loads, syncs, and procedurally fills DAT tables made of rows and columns of text cells.",
+  "key_params": [
+    {
+      "name": "edit",
+      "type": "Pulse",
+      "note": "Open a text editor to edit table text"
+    },
+    {
+      "name": "file",
+      "type": "File/URL",
+      "note": "Load .csv, .tsv, .dat, or tab-treated text from disk or http"
+    },
+    {
+      "name": "syncfile",
+      "type": "Toggle",
+      "note": "Live sync DAT contents to and from a disk file"
+    },
+    {
+      "name": "defaultreadencoding",
+      "type": "Menu",
+      "note": "Auto-detect or choose UTF8, UTF16-LE, UTF16-BE, or CP1252"
+    },
+    {
+      "name": "loadonstart",
+      "type": "Toggle",
+      "note": "Reload the table from the configured file when the project starts"
+    },
+    {
+      "name": "write",
+      "type": "Toggle",
+      "note": "Write table contents to disk when the project is saved"
+    },
+    {
+      "name": "removeblank",
+      "type": "Toggle",
+      "note": "Skip blank file rows when loading table files"
+    },
+    {
+      "name": "fill",
+      "type": "Menu",
+      "note": "Manual, set size, set size and contents, fill by column, or fill by row"
+    },
+    {
+      "name": "rows",
+      "type": "Integer",
+      "note": "Generated table row count for fill modes"
+    },
+    {
+      "name": "cols",
+      "type": "Integer",
+      "note": "Generated table column count for fill modes"
+    },
+    {
+      "name": "cellexpr",
+      "type": "Expr",
+      "note": "Expression used to fill generated cells using me.subRow and me.subCol"
+    },
+    {
+      "name": "includenames",
+      "type": "Toggle",
+      "note": "Create an extra heading row or column for generated fill names"
+    },
+    {
+      "name": "fills",
+      "type": "Sequence",
+      "note": "Repeated fill blocks for Fill by Column and Fill by Row modes"
+    },
+    {
+      "name": "fills0names",
+      "type": "String",
+      "note": "Space-separated or expression-driven names for generated rows or columns"
+    },
+    {
+      "name": "fills0expr",
+      "type": "Expr",
+      "note": "Expression used to fill each generated row or column cell"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language handling mode"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor file extension mode"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when extension mode uses a custom extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Node viewer word-wrap behavior"
+    }
+  ],
+  "common_gotchas": [
+    "Table DAT is table-form DAT data; use Text DAT for free-form multiline text.",
+    "Viewer Active allows manual cell editing, but generated tools should prefer explicit table values or fill parameters.",
+    "Other text files such as .py or .glsl are treated as tab-separated table files when loaded through Table DAT.",
+    "Sync to File immediately mirrors changes both ways and can create a missing file on first update.",
+    "Fill expressions using me.subRow and me.subCol are evaluated per generated subsection cell."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "editable-and-generated-table-data",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Table DAT stores rows and columns of text cells, distinct from free-form Text DAT content.",
+    "Viewer Active supports manual table editing, while Fill parameters procedurally create rows, columns, headings, and cell contents.",
+    "File and sync controls let a table load from disk or mirror edits to an external file.",
+    "Fill expressions can use row and column context such as me.subRow and me.subCol for generated values."
+  ]
+}

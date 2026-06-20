@@ -1,0 +1,80 @@
+{
+  "card_type": "operator",
+  "op_type": "mpcdiTOP",
+  "family": "TOP",
+  "display_name": "MPCDI TOP",
+  "docs_url": "https://docs.derivative.ca/MPCDI_TOP",
+  "summary": "Loads MPCDI calibration files and outputs region/grid calibration textures while exposing projection and cameraTransform members for Camera COMP integration.",
+  "key_params": [
+    {
+      "name": "file",
+      "type": "File",
+      "note": "Path to the .mpcdi configuration file"
+    },
+    {
+      "name": "reloadpulse",
+      "type": "Pulse",
+      "note": "Reload the configuration file"
+    },
+    {
+      "name": "outputformat",
+      "type": "Menu",
+      "note": "single, gridrows, or gridcols"
+    },
+    {
+      "name": "bufferid",
+      "type": "String",
+      "note": "MPCDI buffer ID to output"
+    },
+    {
+      "name": "regionid",
+      "type": "String",
+      "note": "MPCDI region ID to output"
+    },
+    {
+      "name": "layoutmax",
+      "type": "Int2",
+      "note": "Grid layout size components layoutmaxw and layoutmaxh"
+    },
+    {
+      "name": "near",
+      "type": "Float",
+      "note": "Near plane value"
+    },
+    {
+      "name": "far",
+      "type": "Float",
+      "note": "Far plane value"
+    },
+    {
+      "name": "alphabeta",
+      "type": "Toggle",
+      "note": "Apply alpha-beta blending"
+    },
+    {
+      "name": "gamma",
+      "type": "Toggle",
+      "note": "Apply gamma encoding"
+    }
+  ],
+  "common_gotchas": [
+    "Invalid bufferid or regionid values can produce an empty or wrong calibration output.",
+    "Grid output depends on layoutmaxw and layoutmaxh, not only the outputformat menu.",
+    "Camera COMP integration requires the projection and cameraTransform Python members, not just the texture output.",
+    "Alpha-beta and gamma toggles must match how the MPCDI calibration file was authored."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Projection_snippets",
+    "Camera_snippets"
+  ],
+  "build_relevance": "projection_calibration",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Loads projection calibration data from .mpcdi files.",
+    "Can output a single region or lay regions out in grid rows or grid columns.",
+    "Buffer ID and Region ID select which calibration region is emitted.",
+    "projection and cameraTransform Python members feed Camera COMP setup for MPCDI calibration.",
+    "Alpha-beta blending and gamma encoding apply MPCDI calibration corrections."
+  ]
+}

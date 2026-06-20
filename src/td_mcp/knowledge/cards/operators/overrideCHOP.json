@@ -1,0 +1,43 @@
+{
+  "card_type": "operator",
+  "op_type": "overrideCHOP",
+  "family": "CHOP",
+  "display_name": "Override CHOP",
+  "docs_url": "https://docs.derivative.ca/Override_CHOP",
+  "summary": "Selects the most recently changed matching channels from multiple CHOP inputs, using the first input as the default output channel set.",
+  "key_concepts": [
+    "Override CHOP outputs the most recently changed matching values from several inputs.",
+    "The first input defines the output channel names and length, and later inputs only override matching channels.",
+    "Match can compare channels by index or by name; name matching is safer when channel order may change.",
+    "If multiple inputs change the same matched channel at the same time, later input order determines which value wins.",
+    "Changing the number of inputs or the match mode resets output to the first input's default values.",
+    "Make Index adds a channel showing which input most recently supplied each overridden value."
+  ],
+  "key_params": [
+    {"name": "match", "type": "Menu", "note": "Match monitored channels by channel number or channel name"},
+    {"name": "index", "type": "MenuItem", "note": "Match channels by index"},
+    {"name": "name", "type": "MenuItem", "note": "Match channels by name"},
+    {"name": "makeindex", "type": "Toggle", "note": "Create an output index channel identifying which input last changed"},
+    {"name": "indexname", "type": "String", "note": "Name of the generated input-index channel when makeindex is enabled"},
+    {"name": "cookmonitor", "type": "Toggle", "note": "Deprecated Monitor on Input Cooks option"},
+    {"name": "timeslice", "type": "Toggle", "note": "Force the CHOP output to be time sliced"},
+    {"name": "scope", "type": "Pattern", "note": "Restrict channels affected by the Common-page operations"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate match policy for inputs with different rates"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export behavior when using the output to drive parameters"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"},
+    {"name": "commonrenamefrom", "type": "String", "note": "Common CHOP rename-from pattern"},
+    {"name": "commonrenameto", "type": "String", "note": "Common CHOP rename-to pattern"}
+  ],
+  "common_gotchas": [
+    "Override CHOP is active; DocsBrain can misclassify it as deprecated because only the Monitor on Input Cooks parameter is deprecated.",
+    "The output channels and length are based on the first input; extra or missing channels on later inputs are ignored.",
+    "Changing the input count or match mode resets the output to the first input's default values.",
+    "When two inputs change the same matched channel at the same time, input order decides precedence.",
+    "Matching by number is brittle when input channel order changes; matching by name is safer for device/preset handoff rigs.",
+    "Use the optional index channel when downstream logic needs to know which source last won control."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ multi-source CHOP override and last-change control routing",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,47 @@
+{
+  "card_type": "operator",
+  "op_type": "boxPOP",
+  "family": "POP",
+  "display_name": "Box POP",
+  "docs_url": "https://docs.derivative.ca/Box_POP",
+  "summary": "Creates six-sided box geometry as POP data. It can share the 8 corner points across faces or create 24 unique face points, supports quads, triangles, point primitives, rounded corners, normals, texture coordinates, colors, anchors, and post transforms.",
+  "key_params": [
+    {"name": "surftype", "type": "Menu", "note": "Connectivity primitive type: none, points, triangles, or quads"},
+    {"name": "uniquepoints", "type": "Toggle", "note": "Creates separate points per face instead of shared corner points"},
+    {"name": "modifybounds", "type": "Toggle", "note": "Use connected input POP bounds as the starting box bounds"},
+    {"name": "size", "type": "Float3", "note": "Box dimensions in XYZ"},
+    {"name": "roundcorners", "type": "Toggle", "note": "Enables rounded-corner box generation"},
+    {"name": "cornerradius", "type": "Float", "note": "Radius used when rounded corners are enabled"},
+    {"name": "depth", "type": "Int", "note": "Subdivision depth for rounded corners"},
+    {"name": "anchoru", "type": "Menu", "note": "Anchor the left, middle, or right side at X=0"},
+    {"name": "anchorv", "type": "Menu", "note": "Anchor the bottom, middle, or top side at Y=0"},
+    {"name": "anchorw", "type": "Menu", "note": "Anchor the back, middle, or front side at Z=0"},
+    {"name": "t", "type": "Float3", "note": "Post-translate generated points"},
+    {"name": "r", "type": "Float3", "note": "Post-rotate generated points in degrees"},
+    {"name": "scale", "type": "Float", "note": "Uniform post-scale for generated points"},
+    {"name": "normal", "type": "Menu", "note": "Creates no normals, point normals, vertex normals, or primitive normals"},
+    {"name": "texture", "type": "Menu", "note": "Creates texture coordinate attributes on points or vertices"},
+    {"name": "texmethod", "type": "Menu", "note": "Controls face, box, and cube-map style texture coordinate placement"},
+    {"name": "color", "type": "Menu", "note": "Create test color attributes on points, vertices, or primitives"}
+  ],
+  "key_concepts": [
+    "six-sided box",
+    "shared corner points",
+    "Unique Points",
+    "faceted normals",
+    "rounded corners",
+    "Modify Bounds",
+    "Anchor U/V/W",
+    "post transform",
+    "cube-map texture coordinates",
+    "point, vertex, or primitive color"
+  ],
+  "common_gotchas": [
+    "Shared 8-point boxes need vertex or primitive normals for a faceted cube look; point normals smooth the corners.",
+    "Unique Points helps per-face attributes but changes topology and point counts, so downstream index assumptions must be updated.",
+    "Rounded corners increase subdivision density; budget GPU memory before feeding the result into line, proximity, or ray stages."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

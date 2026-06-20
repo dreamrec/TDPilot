@@ -1,0 +1,29 @@
+{
+  "card_type": "article",
+  "article_id": "comp",
+  "title": "COMP",
+  "family": "COMP",
+  "families": [
+    "COMP",
+    "PYTHON"
+  ],
+  "summary": "Official Derivative COMP summary page. This page is intentionally sparse and primarily links to the COMP Class and COMPs category.",
+  "source_url": "https://docs.derivative.ca/COMP",
+  "docsbrain_page_id": "comp",
+  "covered_operators": [
+    "baseCOMP"
+  ],
+  "key_concepts": [
+    "COMP",
+    "COMP Class",
+    "COMPs",
+    "summary/link-out",
+    "Operator Family"
+  ],
+  "guidance": [
+    "Treat this official page as a summary/link-out, not as a full Component behavior reference.",
+    "Use Component, Object Component, Panel Component, COMP Class, and specific COMP common-page articles for concrete planning facts."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

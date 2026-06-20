@@ -1,0 +1,109 @@
+{
+  "card_type": "operator",
+  "op_type": "addTOP",
+  "family": "TOP",
+  "display_name": "Add TOP",
+  "docs_url": "https://docs.derivative.ca/Add_TOP",
+  "summary": "Composites input images by adding pixel values, clamping color channels above 1, with transform controls for the overlay layer.",
+  "key_params": [
+    {
+      "name": "size",
+      "type": "Menu",
+      "note": "Fixed layer, input1 or input2, whose resolution/aspect drive output"
+    },
+    {
+      "name": "prefit",
+      "type": "Menu",
+      "note": "Overlay fit mode such as fill, fithorz, fitvert, fitbest, fitoutside, or nativeres"
+    },
+    {
+      "name": "justifyh",
+      "type": "Menu",
+      "note": "Horizontal overlay alignment"
+    },
+    {
+      "name": "justifyv",
+      "type": "Menu",
+      "note": "Vertical overlay alignment"
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Overlay extend behavior: hold, zero, repeat, or mirror"
+    },
+    {
+      "name": "r",
+      "type": "Float",
+      "note": "Overlay rotation"
+    },
+    {
+      "name": "t",
+      "type": "XY",
+      "note": "Overlay translation"
+    },
+    {
+      "name": "tunit",
+      "type": "Menu",
+      "note": "Units for overlay translation"
+    },
+    {
+      "name": "s",
+      "type": "XY",
+      "note": "Overlay scale"
+    },
+    {
+      "name": "p",
+      "type": "XY",
+      "note": "Overlay pivot"
+    },
+    {
+      "name": "punit",
+      "type": "Menu",
+      "note": "Units for overlay pivot"
+    },
+    {
+      "name": "legacyxform",
+      "type": "Toggle",
+      "note": "Use legacy transform matrix behavior"
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution policy"
+    },
+    {
+      "name": "npasses",
+      "type": "Int",
+      "note": "Common TOP pass repeat count"
+    },
+    {
+      "name": "chanmask",
+      "type": "String",
+      "note": "Common TOP channel mask"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Additive compositing clamps color channels over 1 unless the surrounding pipeline preserves extended range intentionally.",
+    "Transform-page parameters affect only the overlay layer; they do not transform the fixed layer or the formula.",
+    "Fixed Layer choice affects output size and aspect, which can surprise downstream composites.",
+    "Use Native Resolution when the overlay must remain pixel-accurate."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Add TOP performs additive compositing: output pixels are Input1 plus Input2.",
+    "Color channels clamp when the added value exceeds 1, so float/HDR workflows need downstream range planning.",
+    "The Fixed Layer selects which input drives default output resolution and aspect without changing the additive formula.",
+    "Transform parameters affect only the overlay input, not both inputs.",
+    "Native Resolution prefit is the pixel-accurate overlay mode for preserving source resolution.",
+    "The official TOP supports 3D textures and 2D texture arrays."
+  ]
+}

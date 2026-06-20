@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "ltcinCHOP",
+  "family": "CHOP",
+  "display_name": "LTC In CHOP",
+  "docs_url": "https://docs.derivative.ca/LTC_In_CHOP",
+  "summary": "Decodes SMPTE linear timecode from an audio CHOP signal into timecode-related channels.",
+  "key_concepts": [
+    "Reads SMPTE linear timecode encoded into an audio signal, usually after the signal has been brought into CHOPs through Audio Device In CHOP.",
+    "Input Frame Rate is the number of complete LTC frame messages per second and is usually between 24 and 30.",
+    "Discrete Channels, Total LTC Frames, Total Seconds, and User Fields opt into frame/time/user-bit output channels.",
+    "Up-sample to Timeline FPS resamples decoded timecode to project FPS and changes the meaning of total elapsed LTC frames.",
+    "Debug Channels expose quantized signal, decoded bits, consecutive one-bit count, and successful decode count for troubleshooting."
+  ],
+  "key_params": [
+    {"name": "inputrate", "type": "Float", "note": "Encoded LTC frame rate, usually 24 to 30"},
+    {"name": "discrete", "type": "Toggle", "note": "Output frame/second/minute/hour channels"},
+    {"name": "totalframes", "type": "Toggle", "note": "Output total elapsed LTC frames"},
+    {"name": "totalsec", "type": "Toggle", "note": "Output total elapsed seconds"},
+    {"name": "upsample", "type": "Toggle", "note": "Resample decoded timecode to project FPS"},
+    {"name": "userfields", "type": "Toggle", "note": "Output custom user-field channels"},
+    {"name": "debugchans", "type": "Toggle", "note": "Output quantized/bits/decode debug channels"},
+    {"name": "timeslice", "type": "Toggle", "note": "Time-sliced decoding"}
+  ],
+  "common_gotchas": [
+    "LTC In CHOP expects an audio signal already brought into CHOPs, typically through Audio Device In CHOP.",
+    "Input Frame Rate must match the encoded LTC frame message rate, usually 24 to 30 fps.",
+    "Total LTC Frames changes when up-sampling to the timeline FPS, so do not treat it as raw decoded frame count in that mode.",
+    "Debug bits are decoded from specific edge sequences, not raw on/off levels.",
+    "Use the broader Timecode tools/workflow when synchronizing a full project rather than only reading channels."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ timecode/audio",
+  "last_verified": "2026-06-18"
+}

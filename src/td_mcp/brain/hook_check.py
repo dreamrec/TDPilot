@@ -150,7 +150,9 @@ def _transaction_context(response: dict[str, Any], result: dict[str, Any], issue
     parts = [
         "TDPilot brain hook:",
         f"status={result.get('status', 'unknown')}",
-        "validation ok" if validation.get("ok") is True and not result.get("validation_failed") else "validation needs review",
+        "validation ok"
+        if validation.get("ok") is True and not result.get("validation_failed")
+        else "validation needs review",
     ]
     if result.get("before_snapshot_id"):
         parts.append(f"snapshot={result['before_snapshot_id']}")

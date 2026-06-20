@@ -37,7 +37,7 @@ _INTENT_MACRO_KEYWORDS: tuple[tuple[tuple[str, ...], str, str], ...] = (
     (
         ("particle", "gpu particle", "pop simulation", "particles"),
         "particle_gpu",
-        "Minimal POP chain: particle → noise → render.",
+        "Minimal POP preview chain: POP source -> noise -> null POP -> Render Simple TOP.",
     ),
 )
 

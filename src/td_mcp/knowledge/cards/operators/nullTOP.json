@@ -4,15 +4,97 @@
   "family": "TOP",
   "display_name": "Null TOP",
   "docs_url": "https://docs.derivative.ca/Null_TOP",
-  "summary": "A pass-through that marks a clean output point in a texture chain. Best practice is to end every TOP chain with a Null for stable referencing.",
+  "summary": "Pass-through TOP that has no effect on the image and acts as an instance of the input TOP. Use it as a stable texture reference endpoint while adding or changing upstream TOPs.",
   "key_params": [
-    {"name": "cook", "type": "Menu", "note": "Cook behavior: Always, Off, or dependent on viewers/exports"}
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP control for using input resolution, scaling it, fitting/limiting it, or choosing a custom resolution."
+    },
+    {
+      "name": "resolution",
+      "type": "Int2",
+      "note": "Custom output width and height when Output Resolution is set to Custom Resolution."
+    },
+    {
+      "name": "resmenu",
+      "type": "Menu",
+      "note": "Common resolution presets."
+    },
+    {
+      "name": "resmult",
+      "type": "Toggle",
+      "note": "Applies the global TOP resolution multiplier from preferences."
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Chooses input, resolution-derived, or custom output aspect ratio."
+    },
+    {
+      "name": "aspect",
+      "type": "Float2",
+      "note": "Custom aspect ratio pair used when Output Aspect is Custom Aspect."
+    },
+    {
+      "name": "armenu",
+      "type": "Menu",
+      "note": "Common aspect-ratio presets."
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Input image filtering: nearest, linear, or mipmap."
+    },
+    {
+      "name": "fillmode",
+      "type": "Menu",
+      "note": "Controls how the TOP image fills the node viewer."
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Viewer filtering: nearest, linear, or mipmap."
+    },
+    {
+      "name": "npasses",
+      "type": "Integer",
+      "note": "Repeats the TOP operation multiple times by feeding each pass back into the first input."
+    },
+    {
+      "name": "chanmask",
+      "type": "Mask",
+      "note": "Chooses which RGBA channels the TOP operates on."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Pixel format used to store image channel data."
+    }
+  ],
+  "key_concepts": [
+    "no effect on image",
+    "instance of input TOP",
+    "stable TOP reference endpoint",
+    "No Null-page parameters",
+    "Output Resolution",
+    "Input Smoothness",
+    "Pixel Format",
+    "Info CHOP",
+    "resx",
+    "resy",
+    "aspectx",
+    "aspecty",
+    "depth",
+    "gpu_memory_used"
   ],
   "common_gotchas": [
-    "A Null TOP with no input will not error but will output black — ensure it is actually wired.",
-    "Use Nulls as stable reference points so downstream references do not break when you restructure."
+    "No Null-page parameters are documented; tune Common page resolution, aspect, filtering, channel mask, and pixel format only when you intentionally want the endpoint to normalize texture metadata.",
+    "Use Input for resolution and aspect when the Null TOP should preserve upstream texture dimensions exactly.",
+    "Use an Info CHOP to confirm resx, resy, depth, and gpu_memory_used when a stable TOP endpoint feeds rendering, instancing, or external output.",
+    "Keep downstream TOP references pointed at a named Null TOP so upstream network edits do not require reference updates."
   ],
   "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
 }

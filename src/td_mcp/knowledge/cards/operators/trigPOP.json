@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "trigPOP",
+  "family": "POP",
+  "display_name": "Trig POP",
+  "docs_url": "https://docs.derivative.ca/Trig_POP",
+  "summary": "Applies trigonometric and inverse trigonometric functions to POP attributes, with angle units in degrees, radians, or cycles. It can compute sin, cos, tan, inverse functions, atan2, and hyperbolic variants into selected output attributes.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Attribute class to operate on"},
+    {"name": "group", "type": "Str", "note": "Optional group scope"},
+    {"name": "inputattrscopea", "type": "Str", "note": "Input attribute A"},
+    {"name": "inputattrscopeb", "type": "Str", "note": "Input attribute B for atan2"},
+    {"name": "operation", "type": "Menu", "note": "Trig operation"},
+    {"name": "fromunit", "type": "Menu", "note": "Input angle units"},
+    {"name": "tounit", "type": "Menu", "note": "Output angle units for inverse functions"},
+    {"name": "outputattrscope", "type": "Str", "note": "Output attribute scope"},
+    {"name": "overrideautoattr", "type": "Toggle", "note": "Manual output attribute typing"},
+    {"name": "attrtype", "type": "Menu", "note": "Output data type when overriding automatic typing"},
+    {"name": "attrnumcomps", "type": "Menu", "note": "Output component count"},
+    {"name": "attrdefaultval", "type": "Float4", "note": "Default output value if the trigonometric operation cannot be computed"}
+  ],
+  "key_concepts": [
+    "Trig POP applies trigonometric, inverse trigonometric, atan2, and hyperbolic functions to selected POP attributes.",
+    "From-unit and to-unit controls handle degrees, radians, or cycles for operations that consume or produce angles.",
+    "Input B is only meaningful for atan2, while output attribute and override controls determine where the computed values are stored."
+  ],
+  "common_gotchas": [
+    "atan2 requires both input A and input B attributes; single-input setup gives the wrong operation shape.",
+    "Cycles use 1 as a full rotation, which is convenient for animation but differs from radians and degrees.",
+    "Inverse trig values may have multiple mathematical solutions; this operator returns the conventional function branch."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

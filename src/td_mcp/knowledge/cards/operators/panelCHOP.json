@@ -4,17 +4,40 @@
   "family": "CHOP",
   "display_name": "Panel CHOP",
   "docs_url": "https://docs.derivative.ca/Panel_CHOP",
-  "summary": "Reads values and interaction state from Panel COMPs into CHOP channels. Common bridge from UI widgets to control signals.",
+  "summary": "Reads Panel Values from Panel Components into CHOP channels. Common bridge from UI widgets to control signals; panel values can also be accessed through the panel member of the PanelCOMP Class.",
   "key_params": [
-    {"name": "panel", "type": "OP", "note": "Panel COMP or panel path to read"},
-    {"name": "select", "type": "String", "note": "Selects which panel values/channels to output"},
-    {"name": "recursive", "type": "Toggle", "note": "Include child panel components when needed"}
+    {"name": "component", "type": "OP", "note": "Path of the Panel Component being referenced."},
+    {"name": "select", "type": "String", "note": "Panel values to create channels for; use * for all values or select individual values from the menu."},
+    {"name": "rename", "type": "String", "note": "Optional replacement channel names for selected panel values."},
+    {"name": "queue", "type": "Toggle", "note": "Queue overlapping events that occur in one time slice so instant values like wheel or key are not collapsed to only the last value."},
+    {"name": "queuesize", "type": "Integer", "note": "Maximum event queue size; earlier events are discarded when more events arrive than the queue can hold."},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP option to force channels to be time sliced."},
+    {"name": "scope", "type": "String", "note": "Common CHOP scope string restricting affected channels."}
+  ],
+  "key_concepts": [
+    "Panel CHOP",
+    "Panel Values",
+    "Panel Components",
+    "CHOP channels",
+    "PanelCOMP Class",
+    "panel member",
+    "time slice",
+    "instantaneous",
+    "wheel",
+    "key",
+    "Queue Overlapping Events",
+    "Queue Size",
+    "Panel Page",
+    "Info CHOP"
   ],
   "common_gotchas": [
-    "Panel CHOP references panel components; it does not wire to them like ordinary data-flow nodes.",
+    "Panel CHOP references panel components through the Component parameter; it does not wire to them like ordinary data-flow nodes.",
+    "Some panel values such as wheel and key are instantaneous, switching between a value and 0 in the same time slice.",
+    "When Queue Overlapping Events is off, only the last value in the time slice is used, so fast instantaneous changes can be missed.",
+    "Queue Size limits how many queued events are retained; if more events arrive than the Queue Size, earlier events are discarded.",
     "Make sure UI widgets are in a visible/active panel if user interaction is expected."
   ],
   "related_snippets": ["panel_ui"],
   "build_relevance": "2020.20000+",
-  "last_verified": "2026-06-16"
+  "last_verified": "2026-06-18"
 }

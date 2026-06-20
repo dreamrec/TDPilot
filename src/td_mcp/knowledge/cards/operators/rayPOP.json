@@ -1,0 +1,46 @@
+{
+  "card_type": "operator",
+  "op_type": "rayPOP",
+  "family": "POP",
+  "display_name": "Ray POP",
+  "docs_url": "https://docs.derivative.ca/Ray_POP",
+  "summary": "Casts a ray from each input point along a direction attribute against triangle or quad collision geometry in the second input. It can output hit distances, normals, reflected rays, far hits, hit counts, inside/outside state, primitive indices, barycentric coordinates, sampled attributes, projected points, or ray line strips.",
+  "key_params": [
+    {"name": "rayattrib", "type": "Str", "note": "Direction attribute used for ray casting"},
+    {"name": "negateray", "type": "Toggle", "note": "Negates the ray direction"},
+    {"name": "numbounces", "type": "Int", "note": "Number of ray bounces"},
+    {"name": "connectpoints", "type": "Toggle", "note": "Connects bounced intersections as line strips"},
+    {"name": "limitraylength", "type": "Toggle", "note": "Limits ray distance"},
+    {"name": "raydistancemaxattr", "type": "Str", "note": "Attribute providing max ray distance"},
+    {"name": "trimray", "type": "Toggle", "note": "Trim generated ray line strips"},
+    {"name": "hwraytracing", "type": "Menu", "note": "Hardware ray tracing mode when supported"},
+    {"name": "opaque", "type": "Toggle", "note": "Treat collision geometry as opaque for hardware tracing"},
+    {"name": "anyhit", "type": "Toggle", "note": "Allow any-hit tests for hardware tracing workflows"},
+    {"name": "hitnormal", "type": "Toggle", "note": "Output hit normal attribute"},
+    {"name": "doreflectedray", "type": "Toggle", "note": "Output reflected ray direction"},
+    {"name": "dist", "type": "Toggle", "note": "Output point intersection distance"},
+    {"name": "farhit", "type": "Toggle", "note": "Output whether the ray reached the maximum distance without a close hit"},
+    {"name": "numhits", "type": "Toggle", "note": "Output number of hits through the collision geometry"},
+    {"name": "inside", "type": "Toggle", "note": "Output whether the point is inside the collision geometry"},
+    {"name": "hitprimindex", "type": "Toggle", "note": "Output the hit primitive index"},
+    {"name": "barycoords", "type": "Toggle", "note": "Output barycentric coordinates on the hit primitive"},
+    {"name": "scale", "type": "Float", "note": "Blend from original point to projected hit position"},
+    {"name": "lift", "type": "Float", "note": "Move hit point along the ray in absolute units"},
+    {"name": "hitpointattrscope", "type": "Str", "note": "Point attributes to sample from hit geometry"},
+    {"name": "hitprimattrscope", "type": "Str", "note": "Primitive attributes to sample from hit geometry"},
+    {"name": "hitvertattrscope", "type": "Str", "note": "Vertex attributes to sample from hit geometry"}
+  ],
+  "key_concepts": [
+    "Ray POP casts rays from input points along a named direction attribute against triangle or quad geometry in the second input.",
+    "Bounce, connect-points, trim, and length-limit controls can turn ray tests into projected points or explicit ray line strips.",
+    "Hit normals, reflection vectors, distances, far-hit state, hit counts, inside state, primitive indices, barycentric coordinates, and sampled hit attributes expose collision context for downstream POP logic."
+  ],
+  "common_gotchas": [
+    "The second input must contain triangles or quads for collision testing.",
+    "Hardware ray tracing modes depend on GPU and geometry conditions; keep a non-hardware fallback path for portability.",
+    "Ray POP can project P by default; set scale and lift intentionally if you only want diagnostic attributes rather than moved points."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

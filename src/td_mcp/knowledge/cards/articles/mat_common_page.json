@@ -1,0 +1,69 @@
+{
+  "card_type": "article",
+  "article_id": "mat_common_page",
+  "title": "MAT Common Page",
+  "family": "PARAMETER",
+  "families": [
+    "MAT",
+    "PARAMETER",
+    "TOP",
+    "RENDERING"
+  ],
+  "summary": "Official Derivative MAT Common page reference for shader-independent rendering controls: blending, depth test/write, alpha test, wire frame, cull face, and polygon depth offset.",
+  "source_url": "https://docs.derivative.ca/MAT_Common_Page",
+  "docsbrain_page_id": "mat_common_page",
+  "covered_operators": [
+    "phongMAT",
+    "pbrMAT",
+    "constantMAT",
+    "depthMAT",
+    "glslMAT",
+    "lineMAT",
+    "pointspriteMAT"
+  ],
+  "key_concepts": [
+    "MAT Common Page",
+    "shader-independent rendering settings",
+    "Blending",
+    "Transparency",
+    "Final Pixel Value",
+    "blending",
+    "srcblend",
+    "destblend",
+    "separatealphafunc",
+    "srcblenda",
+    "destblenda",
+    "Depth Test",
+    "Frame-Buffer",
+    "Depth Buffer",
+    "depthtest",
+    "depthfunc",
+    "depthwriting",
+    "Alpha Test",
+    "alphatest",
+    "alphafunc",
+    "alphathreshold",
+    "Wire Frame",
+    "wireframe",
+    "wirewidth",
+    "Cull Face",
+    "cullface",
+    "Polygon Depth Offset",
+    "polygonoffset",
+    "polygonoffsetfactor",
+    "polygonoffsetunits",
+    "Z-Fighting",
+    "shadows"
+  ],
+  "guidance": [
+    "Use this article when a material needs render-state tuning independent of the shader code itself.",
+    "Blending combines source and destination color and is the core render-state control for many transparency workflows.",
+    "Depth test controls whether a pixel is accepted relative to the depth buffer; depthwriting controls whether accepted pixels update that depth buffer.",
+    "Alpha test discards pixels by alpha threshold before they are drawn.",
+    "Use polygon depth offset for overlapping-polygon z-fighting and shadow workflows where biasing depth is required."
+  ],
+  "related_snippets": [
+    "GLSL_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

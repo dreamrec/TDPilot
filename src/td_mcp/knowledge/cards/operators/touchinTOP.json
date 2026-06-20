@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "touchinTOP",
+  "family": "TOP",
+  "display_name": "Touch In TOP",
+  "docs_url": "https://docs.derivative.ca/Touch_In_TOP",
+  "summary": "Receives image streams over TCP/IP from a Touch Out TOP in the same or another TouchDesigner process.",
+  "key_params": [
+    {"name": "address", "type": "String", "note": "Computer name or IP address of the Touch Out sender"},
+    {"name": "port", "type": "Integer", "note": "Network port used by the sender"},
+    {"name": "active", "type": "Toggle", "note": "Receive while enabled"},
+    {"name": "mintarget", "type": "Float", "note": "Minimum queue target in seconds"},
+    {"name": "maxtarget", "type": "Float", "note": "Maximum queue target in seconds"},
+    {"name": "maxqueue", "type": "Float", "note": "Maximum queue size in seconds"},
+    {"name": "targetdelay", "type": "Float", "note": "Time before queue speed correction"}
+  ],
+  "common_gotchas": [
+    "Windows Firewall can block TouchDesigner TCP/IP streams.",
+    "Use matching port/address settings with the Touch Out TOP.",
+    "The address can be localhost for same-machine streams.",
+    "Queue targets trade latency against smooth playback; too small can stutter, too large adds delay.",
+    "When maxqueue overflows, older queued data is removed.",
+    "Supports Hap Q, Hap Q Alpha, and uncompressed streams from Touch Out TOP."
+  ],
+  "related_snippets": ["TOP_snippets"],
+  "build_relevance": "touchdesigner_network_input",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Touch In TOP receives image data over TCP/IP from a Touch Out TOP.",
+    "Sender and receiver may be in the same TouchDesigner process, on localhost, or on different networked machines.",
+    "Queue parameters tune latency and smoothness by controlling target delay and maximum queued stream data.",
+    "Touch In TOP supports Uncompressed, Hap Q, and Hap Q Alpha streams produced by Touch Out TOP."
+  ]
+}

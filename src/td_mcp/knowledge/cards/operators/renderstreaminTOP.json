@@ -1,0 +1,54 @@
+{
+  "card_type": "operator",
+  "op_type": "renderstreaminTOP",
+  "family": "TOP",
+  "display_name": "RenderStream In TOP",
+  "docs_url": "https://docs.derivative.ca/RenderStream_In_TOP",
+  "summary": "Receives image data sent over RenderStream from Disguise. Connection setup and frame sync are controlled by RenderStream In CHOP.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable image input from RenderStream."
+    },
+    {
+      "name": "name",
+      "type": "String",
+      "note": "Name of the image to pull from RenderStream."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP Generator output resolution behavior."
+    },
+    {
+      "name": "resolution",
+      "type": "XY",
+      "note": "Common TOP custom output resolution."
+    },
+    {
+      "name": "resmult",
+      "type": "Toggle",
+      "note": "Apply global TOP resolution multiplier."
+    }
+  ],
+  "common_gotchas": [
+    "Only available in TouchDesigner Pro.",
+    "Only supported on Microsoft Windows.",
+    "Requires RenderStream In CHOP for connection setup, frame advancement, and synchronization.",
+    "The TOP name must match the image being sent by the RenderStream session.",
+    "Docs recommend Real-Time off when RenderStream In CHOP drives frame advancement."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "CHOP_snippets"
+  ],
+  "build_relevance": "2022.28040+ RenderStream r22+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Receives image data sent from Disguise RenderStream.",
+    "RenderStream In CHOP controls connection setup, frame advancement, and synchronization.",
+    "The TOP pulls a named image stream from the RenderStream session.",
+    "RenderStream TOP support is Pro-only and Windows-only."
+  ]
+}

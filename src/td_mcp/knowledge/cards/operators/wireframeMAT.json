@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "wireframeMAT",
+  "family": "MAT",
+  "display_name": "Wireframe MAT",
+  "docs_url": "https://docs.derivative.ca/Wireframe_MAT",
+  "summary": "Renders polygon and curve edges as wireframe lines with configurable color, wireframe mode, line width, and common MAT render-state controls.",
+  "key_params": [
+    {"name": "color", "type": "RGBA", "note": "Wireframe color"},
+    {"name": "wireframemode", "type": "Menu", "note": "Wireframe rendering mode"},
+    {"name": "topologywireframe", "type": "Toggle", "note": "Use topology wireframe mode when available"},
+    {"name": "linewidth", "type": "Float", "note": "Wire line width"},
+    {"name": "dodeform", "type": "Toggle", "note": "Enable common MAT deform handling"},
+    {"name": "blending", "type": "Toggle", "note": "Common MAT transparency blending state"},
+    {"name": "depthtest", "type": "Toggle", "note": "Common MAT depth-test state"},
+    {"name": "polygonoffset", "type": "Toggle", "note": "Offset depth to reduce Z-fighting with filled geometry"}
+  ],
+  "key_concepts": [
+    "Wireframe MAT renders polygon and curve edges as lines, making it a material for edge visualization rather than filled surface shading.",
+    "OpenGL Tessellated Wire Frame follows the GPU-rendered tessellation, while Topology Wire Frame follows the source SOP primitive topology.",
+    "Wire color, alpha, and line width define the visible wire result, while the input geometry determines which edges can be drawn.",
+    "Depth test, depth writing, cull face, and polygon offset control whether wires appear over, behind, or fighting with coplanar filled geometry.",
+    "Deform and common MAT render states still apply, so skinned or transparent wireframe materials need the same render-state review as shaded materials."
+  ],
+  "common_gotchas": [
+    "Wireframe renders edges, not filled surfaces; pair with another material or pass when filled shading is also needed.",
+    "Depth test and polygon offset determine whether wires fight with coplanar shaded geometry.",
+    "Topology wireframe and OpenGL-tessellated wireframe modes can show different edge sets.",
+    "Line width is in pixels and may not scale like world-space geometry."
+  ],
+  "related_snippets": ["MAT_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

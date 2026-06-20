@@ -1,0 +1,45 @@
+{
+  "card_type": "operator",
+  "op_type": "actorCOMP",
+  "family": "COMP",
+  "display_name": "Actor COMP",
+  "docs_url": "https://docs.derivative.ca/Actor_COMP",
+  "summary": "Represents one or more physics bodies for Bullet or Nvidia Flex simulations, with SOP-defined collision shapes, static or dynamic kinematic state, forces, gravity, and solver feedback controls.",
+  "key_params": [
+    {"name": "initialize", "type": "Pulse", "note": "Recreate collision shapes, reset velocities, and reset position"},
+    {"name": "updatecs", "type": "Toggle", "note": "Automatically update collision shapes when source SOPs or shape settings change"},
+    {"name": "active", "type": "Toggle", "note": "Include or remove the actor from the simulation"},
+    {"name": "kinstate", "type": "Menu", "note": "Static infinite-mass or dynamic finite-mass body state"},
+    {"name": "sops", "type": "SOP/COMP path", "note": "Collision SOPs or COMP containing SOPs; blank uses displayed/rendered internal SOPs"},
+    {"name": "shape", "type": "Menu", "note": "Concave, convex hull, bounding box, ellipsoid, sphere, or compound collision shape"},
+    {"name": "mass", "type": "Float", "note": "Actor mass in kilograms"},
+    {"name": "forces", "type": "COMP list", "note": "Local Force COMPs applied only to this actor"},
+    {"name": "globalgrav", "type": "Toggle", "note": "Use Bullet Solver COMP global gravity instead of local gravity"},
+    {"name": "gravity", "type": "XYZ", "note": "Local gravitational acceleration when not using global gravity"},
+    {"name": "friction", "type": "Float", "note": "Kinetic friction; effective friction is product of touching bodies"},
+    {"name": "rollfric", "type": "Float", "note": "Rolling friction or drag"},
+    {"name": "rest", "type": "Float", "note": "Restitution or bounce energy retention"},
+    {"name": "ccd", "type": "Toggle", "note": "Continuous collision detection for fast-moving bodies"},
+    {"name": "dispguide", "type": "Toggle", "note": "Display collision shape guide"},
+    {"name": "com", "type": "XYZ", "note": "Center of mass offset"},
+    {"name": "bulletfb", "type": "CHOP", "note": "Feedback CHOP that can override transform and velocity at the next frame"}
+  ],
+  "key_concepts": [
+    "Actor COMP represents one or more physics bodies that must be simulated by a Bullet Solver COMP or NVIDIA Flex Solver COMP.",
+    "Static actors have infinite mass, while dynamic actors move under forces and collide with other bodies in the simulation.",
+    "Collision bodies are built from Collision SOPs or internal display/render SOPs, and the visible geometry can differ from the collision shape.",
+    "Dynamic Bullet actors require convex or compound collision shapes; concave dynamic behavior must be built from multiple convex SOP pieces.",
+    "Initialize Actor is required after SOP, instancing, scale, or collision-shape changes so the solver sees the updated body definition."
+  ],
+  "common_gotchas": [
+    "Actor COMP requires a physics solver such as Bullet Solver COMP or Nvidia Flex Solver COMP to simulate.",
+    "Dynamic Bullet bodies must use convex or compound collision shapes; concave dynamic shapes need decomposition into convex SOP parts.",
+    "The rendered geometry and collision shape can differ, so enable Display Guide when debugging collisions.",
+    "Pulse Initialize Actor after changing SOPs, instancing, or scale-dependent collision settings.",
+    "Actor COMPs cannot be nested inside Actor COMPs, and Geometry COMP scale around nested Actor COMPs requires careful reinitialization.",
+    "Continuous collision detection helps fast linear motion but has performance cost and does not solve every high angular velocity case."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2020.20000+ Bullet/Flex physics actors and collision setup",
+  "last_verified": "2026-06-18"
+}

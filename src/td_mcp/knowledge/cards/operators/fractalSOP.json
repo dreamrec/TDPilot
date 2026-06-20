@@ -1,0 +1,81 @@
+{
+  "card_type": "operator",
+  "op_type": "fractalSOP",
+  "family": "SOP",
+  "display_name": "Fractal SOP",
+  "docs_url": "https://docs.derivative.ca/Fractal_SOP",
+  "summary": "Adds randomized jagged subdivisions and displacements along vertex normals or a specified direction, commonly for terrain-like SOP geometry.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Geometry group to fractalize."
+    },
+    {
+      "name": "divs",
+      "type": "Int",
+      "note": "Subdivision depth."
+    },
+    {
+      "name": "smooth",
+      "type": "Float",
+      "note": "Smoothness of fractal displacement."
+    },
+    {
+      "name": "scale",
+      "type": "Float",
+      "note": "Fractal displacement scale."
+    },
+    {
+      "name": "seed",
+      "type": "Int",
+      "note": "Random seed."
+    },
+    {
+      "name": "fixed",
+      "type": "Toggle",
+      "note": "Use fixed bounds/behavior for the generated displacement."
+    },
+    {
+      "name": "vtxnms",
+      "type": "Toggle",
+      "note": "Use vertex normals for displacement direction."
+    },
+    {
+      "name": "dir",
+      "type": "XYZ",
+      "note": "Explicit displacement direction."
+    },
+    {
+      "name": "dirx",
+      "type": "Float",
+      "note": "Direction X component."
+    },
+    {
+      "name": "diry",
+      "type": "Float",
+      "note": "Direction Y component."
+    },
+    {
+      "name": "dirz",
+      "type": "Float",
+      "note": "Direction Z component."
+    }
+  ],
+  "common_gotchas": [
+    "The official docs caution that `divs` values around 1-3 are reasonable; higher values can create excessive geometry.",
+    "`vtxnms` overrides the explicit direction vector when enabled.",
+    "Seed controls reproducibility, so changing it intentionally changes the generated surface."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Fractal SOP subdivides and displaces geometry to create jagged, terrain-like variation.",
+    "Displacement can use an explicit direction vector or vertex normals through `vtxnms`.",
+    "`divs` controls subdivision depth and quickly increases geometry size.",
+    "`smooth`, `scale`, `seed`, and `fixed` control deviation shape, amplitude, reproducibility, and fixed-bound behavior."
+  ]
+}

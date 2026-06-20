@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "mouseoutCHOP",
+  "family": "CHOP",
+  "display_name": "Mouse Out CHOP",
+  "docs_url": "https://docs.derivative.ca/Mouse_Out_CHOP",
+  "summary": "Drives the operating-system mouse position and button state from incoming CHOP channels.",
+  "key_params": [
+    {"name": "posu", "type": "String", "note": "Input channel name for mouse U position"},
+    {"name": "posv", "type": "String", "note": "Input channel name for mouse V position"},
+    {"name": "lbuttonname", "type": "String", "note": "Input channel name for left button state"},
+    {"name": "rbuttonname", "type": "String", "note": "Input channel name for right button state"},
+    {"name": "mbuttonname", "type": "String", "note": "Input channel name for middle button state"},
+    {"name": "cookalways", "type": "Toggle", "note": "Force the CHOP to cook every frame"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"},
+    {"name": "commonrenamefrom", "type": "String", "note": "Common rename pattern applied to exported channels"},
+    {"name": "commonrenameto", "type": "String", "note": "Common rename replacement pattern"}
+  ],
+  "key_concepts": [
+    "Mouse Out CHOP forces mouse position and button status from incoming CHOP channels.",
+    "Position channels use normalized desktop coordinates.",
+    "The default tx and ty style coordinates range from 0 to 1 across the full desktop.",
+    "Left, right, and middle mouse buttons can be driven from named channels.",
+    "Cook Every Frame can force continuous cooking even when input changes are not otherwise driving cooks.",
+    "On multi-monitor desktops, the normalized range spans the full desktop across monitors."
+  ],
+  "common_gotchas": [
+    "Changing incoming channels every frame can make the mouse difficult to regain without keyboard control or killing the process.",
+    "The operator does not control the mouse while incoming channels are constant.",
+    "Coordinates are 0-1 across the full desktop, not Mouse In CHOP's -1 to 1 normalized primary-monitor range.",
+    "On a two-monitor desktop, tx equal to 1 is the right edge of the second monitor.",
+    "Generated plans should include an obvious disable path before using Mouse Out in an interactive system."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ mouse output control",
+  "last_verified": "2026-06-18"
+}

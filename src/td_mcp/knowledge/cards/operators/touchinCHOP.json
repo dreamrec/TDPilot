@@ -1,0 +1,43 @@
+{
+  "card_type": "operator",
+  "op_type": "touchinCHOP",
+  "family": "CHOP",
+  "display_name": "Touch In CHOP",
+  "docs_url": "https://docs.derivative.ca/Touch_In_CHOP",
+  "summary": "Receives high-speed CHOP data from Touch Out CHOP in another TouchDesigner process over TouchDesigner-optimized TCP/IP or UDP protocols.",
+  "key_concepts": [
+    "Touch In CHOP is the client-side receiver for high-speed TouchDesigner-to-TouchDesigner CHOP data from Touch Out CHOP.",
+    "A Touch In connection must exist before useful data is sent from the Touch Out server.",
+    "The operator usually receives time-sliced data to reduce frame drops when sender or receiver misses realtime frame rate.",
+    "It can also receive non-time-sliced full channel data when full samples are required.",
+    "Info CHOP queue channels such as queue length, advanced total, and retarded total diagnose timing and buffering problems.",
+    "Protocol, address, port, queue target, maximum queue, adjust time, recover, and synced-port settings shape network timing and recovery."
+  ],
+  "key_params": [
+    {"name": "protocol", "type": "Menu", "note": "Streaming TCP/IP, messaging UDP, multicast UDP, or other network mode"},
+    {"name": "address", "type": "String", "note": "Server address to connect to"},
+    {"name": "port", "type": "Integer", "note": "Network port"},
+    {"name": "active", "type": "Toggle", "note": "Enable receiving"},
+    {"name": "queuetarget", "type": "Float", "note": "Target queue length"},
+    {"name": "queuetargetunit", "type": "Menu", "note": "Queue target units"},
+    {"name": "queuevariance", "type": "Float", "note": "Allowed queue variance"},
+    {"name": "queuevarianceunit", "type": "Menu", "note": "Allowed queue variance units"},
+    {"name": "maxqueue", "type": "Float", "note": "Maximum queue size"},
+    {"name": "maxqueueunit", "type": "Menu", "note": "Maximum queue units"},
+    {"name": "adjusttime", "type": "Float", "note": "Timing adjustment window"},
+    {"name": "adjusttimeunit", "type": "Menu", "note": "Timing adjustment units"},
+    {"name": "recover", "type": "Toggle", "note": "Recover from queue timing problems"},
+    {"name": "syncports", "type": "Toggle", "note": "Synchronize port behavior with paired Touch Out"}
+  ],
+  "common_gotchas": [
+    "Touch In is optimized for TouchDesigner-to-TouchDesigner CHOP communication; use Pipe In CHOP or TCP/IP DAT for other software/devices.",
+    "A connection must be established before data is sent from Touch Out.",
+    "Data is usually received as time slices to reduce frame dropping when sender or receiver misses target frame rate.",
+    "Attach Info CHOP and monitor queue_length, queue_advanced_total, and queue_retarded_total for timing issues.",
+    "Windows firewall can block connections.",
+    "Use non-time-sliced mode only when full channel data is required."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ high-speed TD-to-TD CHOP input",
+  "last_verified": "2026-06-18"
+}

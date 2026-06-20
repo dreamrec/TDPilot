@@ -1,0 +1,29 @@
+{
+  "card_type": "operator",
+  "op_type": "oakselectPOP",
+  "family": "POP",
+  "display_name": "OAK Select POP",
+  "docs_url": "https://docs.derivative.ca/OAK_Select_POP",
+  "summary": "Receives point-cloud data from an OAK Device CHOP stream. It references the OAK Device CHOP, selects a stream, and manages a small cache for asynchronous buffer updates.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Retrieve data from the OAK Device CHOP when enabled"},
+    {"name": "chop", "type": "CHOP", "note": "OAK Device CHOP running the depthai pipeline"},
+    {"name": "stream", "type": "Str", "note": "Point-cloud stream name to receive"},
+    {"name": "cachesize", "type": "Int", "note": "Buffer count for asynchronous updates"}
+  ],
+  "key_concepts": [
+    "OAK Select POP receives point-cloud data from an OAK Device CHOP stream.",
+    "The operator is a selector/receiver, not a source by itself: it needs an OAK Device CHOP running a depthai pipeline and a valid stream name.",
+    "Active controls whether data is retrieved from the referenced OAK Device CHOP.",
+    "Cache Size behaves like the OAK Select CHOP queue-size control; the official docs call out 2 as a useful default for displaying one buffer while writing another.",
+    "Because the output depends on hardware and device-pipeline streams, planner-generated networks should guard availability before assuming it can cook."
+  ],
+  "common_gotchas": [
+    "Requires a configured OAK Device CHOP and valid stream; it is not a standalone point generator.",
+    "Cache Size 2 is the documented practical default for display plus asynchronous writing.",
+    "Device-dependent operators need availability checks before generated networks assume they can cook."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

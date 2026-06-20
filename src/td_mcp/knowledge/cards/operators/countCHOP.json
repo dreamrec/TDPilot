@@ -1,0 +1,45 @@
+{
+  "card_type": "operator",
+  "op_type": "countCHOP",
+  "family": "CHOP",
+  "display_name": "Count CHOP",
+  "docs_url": "https://docs.derivative.ca/Count_CHOP",
+  "summary": "Counts threshold crossing events in CHOP channels, with trigger/release thresholds, reset behavior, limit modes, and optional increment-value input.",
+  "key_concepts": [
+    "Counts how many times a channel crosses trigger or release thresholds in either static or Cook to Current Frame mode.",
+    "The default trigger is an upward crossing from less-than-or-equal-to zero to greater than zero.",
+    "Separate trigger and release thresholds allow hysteresis, while Trigger On chooses increasing or decreasing crossings.",
+    "Off to On, While On, On to Off, and While Off menus choose whether events increment, decrement, count by time, or reset.",
+    "The optional second input is reset pulses, and the third input supplies custom increment values instead of the default plus or minus one.",
+    "Limit modes can leave counts unlimited, loop, clamp, mixed loop/clamp, or zigzag between minimum and maximum values."
+  ],
+  "key_params": [
+    {"name": "threshold", "type": "Toggle", "note": "Use trigger threshold as release threshold"},
+    {"name": "threshup", "type": "Float", "note": "Trigger threshold"},
+    {"name": "threshdown", "type": "Float", "note": "Release threshold"},
+    {"name": "retrigger", "type": "Float", "note": "Delay before another trigger can occur"},
+    {"name": "retriggerunit", "type": "Menu", "note": "Unit for re-trigger delay"},
+    {"name": "triggeron", "type": "Menu", "note": "Trigger on increasing or decreasing values"},
+    {"name": "output", "type": "Menu", "note": "Limit behavior: off, loop, clamp, mixed, or zigzag"},
+    {"name": "limitmin", "type": "Float", "note": "Minimum count value"},
+    {"name": "limitmax", "type": "Float", "note": "Maximum count value"},
+    {"name": "offtoon", "type": "Menu", "note": "Operation when trigger goes off to on"},
+    {"name": "on", "type": "Menu", "note": "Operation while trigger remains on"},
+    {"name": "ontooff", "type": "Menu", "note": "Operation when trigger goes on to off"},
+    {"name": "off", "type": "Menu", "note": "Operation while trigger remains off"},
+    {"name": "resetcondition", "type": "Menu", "note": "How the reset input resets counts"},
+    {"name": "resetvalue", "type": "Float", "note": "Value applied on reset"},
+    {"name": "reset", "type": "Toggle", "note": "Hold reset active"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Instantly reset counts"}
+  ],
+  "common_gotchas": [
+    "Default triggering is an upward crossing past 0, but trigger and release thresholds can be separated for hysteresis.",
+    "The second input is interpreted as reset pulses and resets all channels when nonzero.",
+    "The third input supplies custom increment values; without it, Count uses plus or minus one or time-based increments.",
+    "Time-based counts depend on CHOP sample rate, not only timeline frame rate.",
+    "Reset While On holds channels at the reset value until the reset input turns off."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

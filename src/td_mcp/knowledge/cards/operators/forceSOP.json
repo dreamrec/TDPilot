@@ -1,0 +1,76 @@
+{
+  "card_type": "operator",
+  "op_type": "forceSOP",
+  "family": "SOP",
+  "display_name": "Force SOP",
+  "docs_url": "https://docs.derivative.ca/Force_SOP",
+  "summary": "Adds force attributes to metaball fields for Particle SOP or Spring SOP attraction, repulsion, axial, vortex, and spiral force behavior.",
+  "key_params": [
+    {
+      "name": "doradial",
+      "type": "Toggle",
+      "note": "Enable radial force."
+    },
+    {
+      "name": "radial",
+      "type": "Float",
+      "note": "Radial attraction/repulsion force."
+    },
+    {
+      "name": "doaxis",
+      "type": "Toggle",
+      "note": "Enable directional force."
+    },
+    {
+      "name": "dir",
+      "type": "XYZ",
+      "note": "Directional force vector."
+    },
+    {
+      "name": "dirx",
+      "type": "Float",
+      "note": "Directional force X component."
+    },
+    {
+      "name": "diry",
+      "type": "Float",
+      "note": "Directional force Y component."
+    },
+    {
+      "name": "dirz",
+      "type": "Float",
+      "note": "Directional force Z component."
+    },
+    {
+      "name": "axial",
+      "type": "Float",
+      "note": "Axial force amount."
+    },
+    {
+      "name": "vortex",
+      "type": "Float",
+      "note": "Vortex force amount."
+    },
+    {
+      "name": "spiral",
+      "type": "Float",
+      "note": "Spiral force amount."
+    }
+  ],
+  "common_gotchas": [
+    "Force SOP is not a general geometry transform; it writes force attributes for particle/spring workflows.",
+    "Use metaball hull display to inspect the affected force field.",
+    "Keep force values modest because large scales can make Particle/Spring SOP motion unstable."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "legacy-particle-spring",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Force SOP adds force attributes to metaball fields for Particle SOP and Spring SOP dynamics.",
+    "Radial force generally attracts with positive values and repels with negative values.",
+    "Directional force enables axial, vortex, and spiral components along the specified direction vector.",
+    "Metaball weights affect the resulting force field strength and falloff."
+  ]
+}

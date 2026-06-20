@@ -1,0 +1,85 @@
+{
+  "card_type": "operator",
+  "op_type": "moviefileoutTOP",
+  "family": "TOP",
+  "display_name": "Movie File Out TOP",
+  "docs_url": "https://docs.derivative.ca/Movie_File_Out_TOP",
+  "summary": "Records TOP images to movies, still images, image sequences, or stop-frame movies with codec, audio, EXR, and file-output controls.",
+  "key_params": [
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "movie, image, imagesequence, or stopframemovie"
+    },
+    {
+      "name": "videocodec",
+      "type": "Menu",
+      "note": "rle, mjpa, mpeg4, h264nvgpu, cineform, hap, h265nvgpu, gif, notchlc, vp8, vp9, prores, vvc, or av1"
+    },
+    {
+      "name": "imagefiletype",
+      "type": "Menu",
+      "note": "tiff, jpeg, bmp, exr, png, or dds for image outputs"
+    },
+    {
+      "name": "file",
+      "type": "File",
+      "note": "Output path and filename including extension"
+    },
+    {
+      "name": "moviepixelformat",
+      "type": "Menu",
+      "note": "Codec-dependent movie pixel format"
+    },
+    {
+      "name": "moviecontainer",
+      "type": "Menu",
+      "note": "automatic, mov, mp4, mkv, or webm"
+    },
+    {
+      "name": "audiochop",
+      "type": "CHOP",
+      "note": "Audio CHOP source to write to the output stream"
+    },
+    {
+      "name": "record",
+      "type": "Toggle",
+      "note": "Enable recording"
+    },
+    {
+      "name": "pause",
+      "type": "Toggle",
+      "note": "Pause recording; required for Add Frame stop-frame use"
+    },
+    {
+      "name": "addframe",
+      "type": "Pulse",
+      "note": "Add a single frame while paused"
+    },
+    {
+      "name": "maxthread",
+      "type": "Int",
+      "note": "Maximum encoding threads"
+    }
+  ],
+  "common_gotchas": [
+    "H.264, H.265, and AV1 encoding require Commercial or Pro licensing; NVIDIA hardware is required on Windows.",
+    "The official audio source parameter is audiochop, not audiodevice.",
+    "Alpha output requires a codec and pixel format that support alpha.",
+    "Some codec and container combinations are invalid or unsupported.",
+    "Add Frame is for paused stop-frame workflows, not normal realtime recording."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Records TOP streams to movie files, single images, image sequences, or stop-frame movies.",
+    "Video codec, pixel format, and container compatibility determine what can be written.",
+    "Audio is recorded from an audiochop source and must match recording expectations.",
+    "Add Frame supports manual stop-frame and still-image workflows.",
+    "EXR output can include additional image channels and point-cloud metadata.",
+    "Non-realtime recording modes help avoid dropped frames in heavy scenes."
+  ]
+}

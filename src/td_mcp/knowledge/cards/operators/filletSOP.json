@@ -1,0 +1,101 @@
+{
+  "card_type": "operator",
+  "op_type": "filletSOP",
+  "family": "SOP",
+  "display_name": "Fillet SOP",
+  "docs_url": "https://docs.derivative.ca/Fillet_SOP",
+  "summary": "Creates smooth bridging geometry between curve, polygon, surface, or mesh pairs without altering the original input shapes.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Primitive group to fillet."
+    },
+    {
+      "name": "fillet",
+      "type": "Menu",
+      "note": "Fillet operation mode."
+    },
+    {
+      "name": "inc",
+      "type": "Int",
+      "note": "Increment for selecting primitive pairs."
+    },
+    {
+      "name": "loop",
+      "type": "Toggle",
+      "note": "Loop primitive pair selection."
+    },
+    {
+      "name": "dir",
+      "type": "Menu",
+      "note": "U/V direction selection."
+    },
+    {
+      "name": "fillettype",
+      "type": "Menu",
+      "note": "Fillet shape type."
+    },
+    {
+      "name": "primtype",
+      "type": "Menu",
+      "note": "Generated primitive type."
+    },
+    {
+      "name": "order",
+      "type": "Int",
+      "note": "Generated spline order."
+    },
+    {
+      "name": "leftuv1",
+      "type": "Float",
+      "note": "Left primitive first parameter."
+    },
+    {
+      "name": "rightuv1",
+      "type": "Float",
+      "note": "Right primitive first parameter."
+    },
+    {
+      "name": "lrwidth1",
+      "type": "Float",
+      "note": "Left/right width control."
+    },
+    {
+      "name": "lrscale1",
+      "type": "Float",
+      "note": "Left/right tangent scale."
+    },
+    {
+      "name": "lroffset1",
+      "type": "Float",
+      "note": "Left/right offset."
+    },
+    {
+      "name": "seamless",
+      "type": "Toggle",
+      "note": "Create seamless output where supported."
+    },
+    {
+      "name": "cut",
+      "type": "Toggle",
+      "note": "Cut source primitives at the fillet."
+    }
+  ],
+  "common_gotchas": [
+    "Fillet SOP does not consider trim curves; use Join SOP when trim-curve handling is required.",
+    "Circular fillets ignore tangent scale magnitude except for sign.",
+    "`cut` and `seamless` can change how source primitives appear in the output, so do not assume originals are always untouched."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Fillet SOP creates smooth bridging primitives between pairs of curves, polygons, surfaces, or meshes.",
+    "Left and right primitive semantics follow Align SOP style group/increment selection.",
+    "`fillettype`, `primtype`, and `order` define the shape and primitive family of the generated bridge.",
+    "`seamless` and `cut` control how the original primitives appear together with the new fillet output."
+  ]
+}

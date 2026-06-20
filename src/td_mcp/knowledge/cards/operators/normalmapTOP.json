@@ -1,0 +1,55 @@
+{
+  "card_type": "operator",
+  "op_type": "normalmapTOP",
+  "family": "TOP",
+  "display_name": "Normal Map TOP",
+  "docs_url": "https://docs.derivative.ca/Normal_Map_TOP",
+  "summary": "Creates a normal map from image edges for bump/normal mapping workflows with Phong MAT, PBR MAT, and related material pipelines.",
+  "key_params": [
+    {
+      "name": "source",
+      "type": "Menu",
+      "note": "luminance, rgba channels, rgbaverage, or average edge source"
+    },
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "prevcur, curnext, or prevnext slope calculation"
+    },
+    {
+      "name": "offset",
+      "type": "Float2",
+      "note": "Sample step components offset1 and offset2"
+    },
+    {
+      "name": "offsetunit",
+      "type": "Menu",
+      "note": "Sample-step unit"
+    },
+    {
+      "name": "heightmap",
+      "type": "Toggle",
+      "note": "Store height map information in alpha"
+    }
+  ],
+  "common_gotchas": [
+    "Input contrast and noise strongly affect generated normals.",
+    "Sample step must match feature scale; too small or too large a step gives weak or chunky normals.",
+    "Enabling heightmap changes alpha output expectations downstream.",
+    "Downstream materials may require a specific normal-map Y orientation.",
+    "The label Sample Step maps to official parameter id offset."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "MAT_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Creates normal maps from image edge slopes.",
+    "Intended for bump or normal mapping workflows with Phong MAT or PBR MAT.",
+    "The source menu selects which input channel or average drives edge extraction.",
+    "The method menu chooses previous/current, current/next, or previous/next slope sampling.",
+    "Optional height map output stores height data in alpha."
+  ]
+}

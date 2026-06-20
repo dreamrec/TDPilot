@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "impulseforceCOMP",
+  "family": "COMP",
+  "display_name": "Impulse Force COMP",
+  "docs_url": "https://docs.derivative.ca/Impulse_Force_COMP",
+  "summary": "Applies a one-frame Bullet force pulse that instantly changes affected body velocities, useful for kicks, impacts, launches, or other short-duration physics events.",
+  "key_params": [
+    {"name": "pulse", "type": "Pulse", "note": "Applies the impulse force on the next simulation frame"},
+    {"name": "force", "type": "XYZ", "note": "Linear force in Newtons applied by the pulse"},
+    {"name": "relpos", "type": "XYZ", "note": "Force application point relative to the physical center of the body"},
+    {"name": "torque", "type": "XYZ", "note": "Rotational force applied by the pulse"},
+    {"name": "parentshortcut", "type": "String", "note": "Common COMP shortcut for accessing the component from children"},
+    {"name": "opshortcut", "type": "String", "note": "Global OP shortcut for accessing the component anywhere"}
+  ],
+  "key_concepts": [
+    "Impulse Force COMP applies a Bullet force pulse for one simulation frame when Pulse Force is triggered.",
+    "The pulse instantly changes affected body velocities and then stops affecting the simulation unless pulsed again.",
+    "An impulse with a given Newton value produces the same velocity change as an active Force COMP with the same value applied for exactly one second.",
+    "Force defines the linear impulse, Torque defines rotational impulse, and Relative Position can add rotation by applying force away from the physical center.",
+    "Impulse Force COMP is intended for discrete events such as kicks, launches, impacts, or cannon-like shots rather than continuous acceleration."
+  ],
+  "common_gotchas": [
+    "Impulse Force COMP has no effect until its Pulse Force parameter is pulsed.",
+    "The force is applied for one frame and then stops; pulse again for repeated hits.",
+    "Resulting velocity is equivalent to applying the same active force for one second, but the change happens instantly.",
+    "A non-zero Relative Position can add rotation because the impulse is not applied at the physical center.",
+    "The impulse must be referenced by the relevant Bullet simulation setup to affect actors.",
+    "For continuous acceleration, use Force COMP rather than repeatedly pulsing Impulse Force COMP unless a discrete event is intended."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2020.20000+ Bullet one-frame impulse forces",
+  "last_verified": "2026-06-18"
+}

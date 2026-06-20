@@ -198,6 +198,31 @@ class TestDocsBrainGetRelease:
     def test_get_release_missing(self, brain: DocsBrain):
         assert brain.get_release("9999.99999") is None
 
+    def test_get_release_falls_back_to_structured_card(self, tmp_path: Path):
+        chunks_path = tmp_path / "chunks.jsonl"
+        chunks_path.write_text("", encoding="utf-8")
+        db_path = tmp_path / "docsbrain.db"
+        build_index(chunks_path, db_path)
+        cards_dir = tmp_path / "cards"
+        release_dir = cards_dir / "release"
+        release_dir.mkdir(parents=True)
+        (release_dir / "2025.32820.json").write_text(
+            json.dumps(
+                {
+                    "card_type": "release",
+                    "build": "2025.32820",
+                    "highlights": ["Math Mix POP", "GLSL MAT projection helpers"],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        brain_with_fallback = DocsBrain(db_path=db_path, fallback_cards_dir=cards_dir)
+
+        result = brain_with_fallback.get_release("2025.32820")
+        assert result is not None
+        assert result["build"] == "2025.32820"
+
 
 class TestDocsBrainGetPalette:
     def test_get_palette_found(self, brain: DocsBrain):

@@ -1,0 +1,136 @@
+{
+  "card_type": "operator",
+  "op_type": "copySOP",
+  "family": "SOP",
+  "display_name": "Copy SOP",
+  "docs_url": "https://docs.derivative.ca/Copy_SOP",
+  "summary": "Creates transformed copies of source SOP geometry, optionally copying to template points and transferring or modifying attributes per copy.",
+  "key_params": [
+    {
+      "name": "sourcegrp",
+      "type": "String",
+      "note": "Source primitive group to copy."
+    },
+    {
+      "name": "templategrp",
+      "type": "String",
+      "note": "Template point group for copy placement."
+    },
+    {
+      "name": "ncy",
+      "type": "Int",
+      "note": "Number of copies."
+    },
+    {
+      "name": "nprims",
+      "type": "Int",
+      "note": "Number of primitives per copy."
+    },
+    {
+      "name": "nml",
+      "type": "Toggle",
+      "note": "Transform copies according to template normals."
+    },
+    {
+      "name": "cum",
+      "type": "Toggle",
+      "note": "Accumulate transforms over copy number."
+    },
+    {
+      "name": "xord",
+      "type": "Menu",
+      "note": "Transform order."
+    },
+    {
+      "name": "rord",
+      "type": "Menu",
+      "note": "Rotate order."
+    },
+    {
+      "name": "t",
+      "type": "XYZ",
+      "note": "Per-copy translate."
+    },
+    {
+      "name": "r",
+      "type": "XYZ",
+      "note": "Per-copy rotate."
+    },
+    {
+      "name": "s",
+      "type": "XYZ",
+      "note": "Per-copy scale."
+    },
+    {
+      "name": "p",
+      "type": "XYZ",
+      "note": "Per-copy pivot."
+    },
+    {
+      "name": "scale",
+      "type": "Float",
+      "note": "Uniform scale factor."
+    },
+    {
+      "name": "vlength",
+      "type": "Toggle",
+      "note": "Maintain vector length when using normals."
+    },
+    {
+      "name": "newg",
+      "type": "Toggle",
+      "note": "Create output groups for copies."
+    },
+    {
+      "name": "copyg",
+      "type": "String",
+      "note": "Copy group name pattern."
+    },
+    {
+      "name": "lookat",
+      "type": "String",
+      "note": "Object/path to orient copies toward."
+    },
+    {
+      "name": "stamp",
+      "type": "Toggle",
+      "note": "Enable stamping to vary upstream parameters."
+    },
+    {
+      "name": "copy",
+      "type": "Int",
+      "note": "Current copy number local variable context."
+    },
+    {
+      "name": "copy0param",
+      "type": "String",
+      "note": "First stamped parameter name."
+    },
+    {
+      "name": "copy0value",
+      "type": "Float",
+      "note": "First stamped value."
+    },
+    {
+      "name": "doattr",
+      "type": "Toggle",
+      "note": "Enable attribute operations from template points."
+    }
+  ],
+  "common_gotchas": [
+    "Stamping cooks upstream geometry separately per copy and can become expensive quickly.",
+    "Input order matters: source geometry is copied to template points from the second input when present.",
+    "Use a template `up` attribute when normal-driven orientation twists unpredictably."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Copy SOP creates repeated transformed copies of source geometry, either by count or onto template points from the second input.",
+    "Template point normals and `up` attributes can drive per-copy orientation and stabilize normal-based alignment.",
+    "Stamping evaluates upstream parameters separately per copy, enabling variation at a potentially high cook cost.",
+    "Template point attributes can set, multiply, add, or subtract point, primitive, and vertex attributes on copied geometry."
+  ]
+}

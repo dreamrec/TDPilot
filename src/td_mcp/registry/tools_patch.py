@@ -179,9 +179,17 @@ async def td_patch_apply(
             _tr._audit_log(
                 ctx,
                 "td_patch_apply",
-                {"plan_id": parsed.id, "status": result.status, "ops": len(parsed.operations), "transaction": True},
+                {
+                    "plan_id": parsed.id,
+                    "status": result.status,
+                    "ops": len(parsed.operations),
+                    "transaction": True,
+                },
             )
-            return {"success": result.status in {"clean", "warnings", "dry_run"}, "result": result.model_dump(mode="json")}
+            return {
+                "success": result.status in {"clean", "warnings", "dry_run"},
+                "result": result.model_dump(mode="json"),
+            }
         try:
             result = await patch.apply_plan(
                 client,
@@ -206,7 +214,9 @@ async def td_patch_apply(
         finish()
 
 
-async def _apply_patch_transaction(ctx: Context, plan: PatchPlan, options: TransactionOptions, *, macro_engine=None):
+async def _apply_patch_transaction(
+    ctx: Context, plan: PatchPlan, options: TransactionOptions, *, macro_engine=None
+):
     client = _tr._get_client(ctx)
 
     async def create_snapshot(path: str) -> str | None:

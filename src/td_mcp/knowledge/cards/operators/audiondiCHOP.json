@@ -1,0 +1,30 @@
+{
+  "card_type": "operator",
+  "op_type": "audiondiCHOP",
+  "family": "CHOP",
+  "display_name": "Audio NDI CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_NDI_CHOP",
+  "summary": "Receives and plays audio associated with an NDI In TOP stream, making network video audio available as CHOP channels.",
+  "key_concepts": [
+    "Audio NDI CHOP retrieves audio from an NDI In TOP stream.",
+    "The NDI In TOP parameter selects the source TOP whose network stream supplies audio.",
+    "Play controls whether the audio stream outputs signal or no audio.",
+    "The output can be modified with downstream CHOPs or routed to audio output/recording operators.",
+    "Time Slice and sample-rate matching follow common CHOP behavior for stream-oriented downstream networks."
+  ],
+  "key_params": [
+    {"name": "play", "type": "Toggle", "note": "Enable playback/output from the NDI audio stream"},
+    {"name": "ndiintop", "type": "TOP", "note": "NDI In TOP source whose audio should be output"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice behavior"},
+    {"name": "srselect", "type": "Menu", "note": "Common CHOP sample-rate matching behavior"}
+  ],
+  "common_gotchas": [
+    "Audio NDI depends on a working NDI In TOP stream; network discovery, firewall, and sender state affect availability.",
+    "NDI audio timing follows the network stream and may require buffering/sync management with video.",
+    "Choose a stable NDI In TOP reference rather than a temporary discovery node.",
+    "Use Audio Device Out or Audio File Out downstream depending on whether monitoring or recording is intended."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

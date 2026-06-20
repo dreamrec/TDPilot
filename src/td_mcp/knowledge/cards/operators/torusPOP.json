@@ -1,0 +1,49 @@
+{
+  "card_type": "operator",
+  "op_type": "torusPOP",
+  "family": "POP",
+  "display_name": "Torus POP",
+  "docs_url": "https://docs.derivative.ca/Torus_POP",
+  "summary": "Creates a torus as rows and columns of points around a ring and cross-section, with optional triangles, quads, line strips, lines, point primitives, normals, texture coordinates, partial arcs, and end caps.",
+  "key_params": [
+    {"name": "surftype", "type": "Menu", "note": "Connectivity primitive type"},
+    {"name": "linetype", "type": "Menu", "note": "Line strip or lines output for line modes"},
+    {"name": "orient", "type": "Menu", "note": "Axis around which the torus is oriented"},
+    {"name": "modifybounds", "type": "Toggle", "note": "Use input bounds as initial shape bounds"},
+    {"name": "rad", "type": "Float2", "note": "Ring and cross-section radii"},
+    {"name": "cols", "type": "Int", "note": "Divisions around the ring"},
+    {"name": "rows", "type": "Int", "note": "Divisions around the cross-section"},
+    {"name": "anchoru", "type": "Menu", "note": "Anchor left, middle, or right side at X=0"},
+    {"name": "anchorv", "type": "Menu", "note": "Anchor bottom, middle, or top side at Y=0"},
+    {"name": "anchorw", "type": "Menu", "note": "Anchor back, middle, or front side at Z=0"},
+    {"name": "t", "type": "Float3", "note": "Post-translate generated points"},
+    {"name": "r", "type": "Float3", "note": "Post-rotate generated points in degrees"},
+    {"name": "scale", "type": "Float", "note": "Uniform post-scale for generated points"},
+    {"name": "normal", "type": "Menu", "note": "Create normals"},
+    {"name": "texture", "type": "Menu", "note": "Create texture coordinates"},
+    {"name": "closedu", "type": "Toggle", "note": "Close torus geometry in U"},
+    {"name": "closedv", "type": "Toggle", "note": "Close torus geometry in V"},
+    {"name": "angleu", "type": "Float2", "note": "Begin and end angle for the U/ring arc"},
+    {"name": "anglev", "type": "Float2", "note": "Begin and end angle for the V/cross-section arc"}
+  ],
+  "key_concepts": [
+    "closed tube shape",
+    "ring radius",
+    "cross-section radius",
+    "Rows and Columns connectivity",
+    "dimension metadata",
+    "axis orientation",
+    "partial torus arc",
+    "U/V closed geometry",
+    "Anchor U/V/W",
+    "End Caps documented without table parameter"
+  ],
+  "common_gotchas": [
+    "Torus POP emits dimension metadata numCols by numRows; preserve it for _Dim-aware GLSL or Connectivity POP stages.",
+    "Partial torus arcs plus end caps preserve point dimensions but add primitives, so topology expectations change.",
+    "Rows/columns line output is a construction/debug topology, while quads/triangles are renderable surfaces."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

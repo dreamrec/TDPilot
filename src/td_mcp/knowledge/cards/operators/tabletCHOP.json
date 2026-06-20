@@ -1,0 +1,47 @@
+{
+  "card_type": "operator",
+  "op_type": "tabletCHOP",
+  "family": "CHOP",
+  "display_name": "Tablet CHOP",
+  "docs_url": "https://docs.derivative.ca/Tablet_CHOP",
+  "summary": "Reads Wacom tablet pen position, pressure, tilt, rotation, wheels, and button channels, supporting two devices on one tablet.",
+  "key_concepts": [
+    "Tablet CHOP reads Wacom tablet X/Y position, pen pressure, X/Y tilt, pen buttons, wheels, and rotation channels.",
+    "The operator initializes or installs tablet support when the CHOP is created.",
+    "Two devices can be used simultaneously on the same tablet, with separate 1st Pen and 2nd Pen parameter pages.",
+    "Putting a channel name in a parameter creates that output channel; leaving the field empty suppresses the channel.",
+    "Axis channel ranges are -1.0 to 1.0, while button channels output 0 for up and 1 for down.",
+    "The Channel page controls whether values cook while off, on, or only while the timeline is playing, and sets the output sample rate."
+  ],
+  "key_params": [
+    {"name": "xcoord", "type": "String", "note": "Channel name for pen X coordinate"},
+    {"name": "ycoord", "type": "String", "note": "Channel name for pen Y coordinate"},
+    {"name": "pressure", "type": "String", "note": "Channel name for pen pressure"},
+    {"name": "xtilt", "type": "String", "note": "Channel name for X tilt"},
+    {"name": "ytilt", "type": "String", "note": "Channel name for Y tilt"},
+    {"name": "tanpressure", "type": "String", "note": "Channel name for finger wheel if available"},
+    {"name": "zcoord", "type": "String", "note": "Channel name for thumb wheel if available"},
+    {"name": "rotation", "type": "String", "note": "Channel name for pen rotation"},
+    {"name": "button1", "type": "String", "note": "Channel name for button 1"},
+    {"name": "button2", "type": "String", "note": "Channel name for button 2"},
+    {"name": "button3", "type": "String", "note": "Channel name for button 3"},
+    {"name": "button4", "type": "String", "note": "Channel name for button 4"},
+    {"name": "button5", "type": "String", "note": "Channel name for button 5"},
+    {"name": "active", "type": "Menu", "note": "Off, on, or while-playing tablet capture state"},
+    {"name": "off", "type": "MenuItem", "note": "Do not cook or update tablet values"},
+    {"name": "on", "type": "MenuItem", "note": "Cook every frame and output pen movement"},
+    {"name": "play", "type": "MenuItem", "note": "Capture pen events only while the timeline is playing forward"},
+    {"name": "rate", "type": "Float", "note": "Output sample rate"}
+  ],
+  "common_gotchas": [
+    "Tablet CHOP initializes/installs when created and depends on Wacom tablet support.",
+    "Putting a channel name in a parameter creates that output channel; leaving it blank suppresses that channel.",
+    "Axis values are in the -1 to 1 range; button values are 0 or 1.",
+    "Supports two simultaneous devices on the same tablet, with 1st Pen and 2nd Pen pages controlling channel names.",
+    "Use channel filters or Null CHOPs downstream to stabilize names before recording or exporting.",
+    "Refer users to Wacom setup/tuning docs when sensitivity or driver setup is the real issue."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ Wacom tablet input",
+  "last_verified": "2026-06-18"
+}

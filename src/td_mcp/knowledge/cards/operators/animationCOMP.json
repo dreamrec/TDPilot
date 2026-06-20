@@ -1,0 +1,40 @@
+{
+  "card_type": "operator",
+  "op_type": "animationCOMP",
+  "family": "COMP",
+  "display_name": "Animation COMP",
+  "docs_url": "https://docs.derivative.ca/Animation_COMP",
+  "summary": "Special component for keyframe animation channels, built around a Keyframe CHOP and Table DATs, with CHOP input for index control and CHOP output for animated channel values.",
+  "key_params": [
+    {"name": "timeref", "type": "COMP", "note": "Time source used for timeline-based range and rate defaults"},
+    {"name": "playmode", "type": "Menu", "note": "Locked to Timeline, Use Input Index, Sequential, or Output Full Range"},
+    {"name": "play", "type": "Toggle", "note": "Sequential playback enable"},
+    {"name": "speed", "type": "Float", "note": "Sequential playback speed multiplier"},
+    {"name": "cue", "type": "Toggle", "note": "Jump to cue point while sequential playback is active"},
+    {"name": "cuepulse", "type": "Pulse", "note": "Instantly jump to cue point"},
+    {"name": "cuepoint", "type": "Float", "note": "Index to jump to"},
+    {"name": "inputindexunit", "type": "Menu", "note": "Samples, frames, seconds, fraction, or key table units for input index"},
+    {"name": "cyclic", "type": "Menu", "note": "Automatic, yes, or no cyclic range behavior"},
+    {"name": "editanimation", "type": "Pulse", "note": "Open this Animation COMP in the Animation Editor"},
+    {"name": "rangetype", "type": "Menu", "note": "Timeline or custom working range"},
+    {"name": "start", "type": "Float", "note": "Custom range start"},
+    {"name": "end", "type": "Float", "note": "Custom range end"}
+  ],
+  "key_concepts": [
+    "Animation COMP is the component wrapper for authoring and playing keyframe animation channels.",
+    "Its predefined network uses a Keyframe CHOP and Table DATs to store and evaluate animated CHOP channels.",
+    "The Animation Editor is the main UI for creating and editing Animation COMP keyframes.",
+    "Without an input, the index loops over the channel range; with CHOP input, Use Input Index mode supports direct random access.",
+    "The output CHOP exposes current channel values for downstream CHOP processing or parameter export."
+  ],
+  "common_gotchas": [
+    "With no CHOP input, the component's index loops over the channel time range.",
+    "Use Input Index play mode for random access playback driven by an input CHOP.",
+    "Output Full Range emits the whole animation curve and is useful for lookup curves, not current-time playback.",
+    "The CHOP output provides current values for export; append a Null CHOP for stable parameter exports.",
+    "Changing editor origin/rate affects graph display and playback interpretation, not the stored key DAT values."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ keyframe animation channel authoring and playback",
+  "last_verified": "2026-06-18"
+}

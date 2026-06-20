@@ -1,0 +1,40 @@
+{
+  "card_type": "operator",
+  "op_type": "sharedmeminCHOP",
+  "family": "CHOP",
+  "display_name": "Shared Mem In CHOP",
+  "docs_url": "https://docs.derivative.ca/Shared_Mem_In_CHOP",
+  "summary": "Receives CHOP data from a local or global shared-memory segment written by Shared Mem Out CHOP in the same or another process.",
+  "key_concepts": [
+    "Shared Mem In CHOP receives CHOP data from a shared-memory segment written by Shared Mem Out CHOP.",
+    "The operator is available only in TouchDesigner Educational, Commercial, and Pro licenses.",
+    "Active controls whether the CHOP cooks and reads from the memory block.",
+    "Shared Mem Name identifies the memory block to read.",
+    "Shared Mem Type selects Local mode for a segment unique to the given name or Global mode for the combined shared-memory segment.",
+    "Use Pipe In CHOP when pipe-style channel transfer is a better fit than local shared-memory IPC."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Cook and read from the memory block"},
+    {"name": "name", "type": "String", "note": "Shared-memory segment name"},
+    {"name": "memtype", "type": "Menu", "note": "Local or Global shared-memory mode"},
+    {"name": "local", "type": "MenuItem", "note": "Use a shared-memory segment unique for the given name"},
+    {"name": "global", "type": "MenuItem", "note": "Use the combined global shared-memory segment"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common-page time-slice behavior"},
+    {"name": "scope", "type": "String", "note": "Common CHOP channel scope pattern"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"},
+    {"name": "srselect", "type": "Menu", "note": "Common-page sample-rate matching behavior"}
+  ],
+  "common_gotchas": [
+    "Official docs list this as available only in Educational, Commercial, and Pro licenses.",
+    "Local mode creates a unique segment for the given name and is required for sharing with applications other than TouchDesigner.",
+    "Global mode uses a combined segment that all nodes read from; coordinate naming and ownership carefully.",
+    "The writer side must use a matching Shared Mem Out CHOP name and compatible memory type.",
+    "For lower-bandwidth command-style data, Pipe In CHOP or DAT protocols may be a simpler fit.",
+    "Shared-memory workflows are local/process IPC, not a network transport."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ shared-memory CHOP input",
+  "last_verified": "2026-06-18"
+}

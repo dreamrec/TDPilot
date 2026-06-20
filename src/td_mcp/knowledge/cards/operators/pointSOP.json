@@ -1,0 +1,321 @@
+{
+  "card_type": "operator",
+  "op_type": "pointSOP",
+  "family": "SOP",
+  "display_name": "Point SOP",
+  "docs_url": "https://docs.derivative.ca/Point_SOP",
+  "summary": "Edits point-level position, color, texture, normal, custom attributes, and particle-related point attributes.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Point group to modify"
+    },
+    {
+      "name": "t",
+      "type": "XYZ",
+      "note": "Point translate vector"
+    },
+    {
+      "name": "tx",
+      "type": "Float",
+      "note": "Point translate X"
+    },
+    {
+      "name": "ty",
+      "type": "Float",
+      "note": "Point translate Y"
+    },
+    {
+      "name": "tz",
+      "type": "Float",
+      "note": "Point translate Z"
+    },
+    {
+      "name": "doweight",
+      "type": "Toggle",
+      "note": "Enable weight editing"
+    },
+    {
+      "name": "weight",
+      "type": "Float",
+      "note": "Point weight"
+    },
+    {
+      "name": "doclr",
+      "type": "Menu",
+      "note": "Color attribute action"
+    },
+    {
+      "name": "diff",
+      "type": "RGB",
+      "note": "Diffuse color"
+    },
+    {
+      "name": "diffr",
+      "type": "Float",
+      "note": "Diffuse red"
+    },
+    {
+      "name": "diffg",
+      "type": "Float",
+      "note": "Diffuse green"
+    },
+    {
+      "name": "diffb",
+      "type": "Float",
+      "note": "Diffuse blue"
+    },
+    {
+      "name": "alpha",
+      "type": "Float",
+      "note": "Alpha value"
+    },
+    {
+      "name": "donml",
+      "type": "Menu",
+      "note": "Normal attribute action"
+    },
+    {
+      "name": "n",
+      "type": "XYZ",
+      "note": "Normal vector"
+    },
+    {
+      "name": "nx",
+      "type": "Float",
+      "note": "Normal X"
+    },
+    {
+      "name": "ny",
+      "type": "Float",
+      "note": "Normal Y"
+    },
+    {
+      "name": "nz",
+      "type": "Float",
+      "note": "Normal Z"
+    },
+    {
+      "name": "douvw",
+      "type": "Menu",
+      "note": "Texture coordinate action"
+    },
+    {
+      "name": "map",
+      "type": "UVW",
+      "note": "Texture coordinates"
+    },
+    {
+      "name": "mapu",
+      "type": "Float",
+      "note": "Texture U"
+    },
+    {
+      "name": "mapv",
+      "type": "Float",
+      "note": "Texture V"
+    },
+    {
+      "name": "mapw",
+      "type": "Float",
+      "note": "Texture W"
+    },
+    {
+      "name": "dowidth",
+      "type": "Toggle",
+      "note": "Enable width attribute"
+    },
+    {
+      "name": "width",
+      "type": "Float",
+      "note": "Point width attribute"
+    },
+    {
+      "name": "dopscale",
+      "type": "Toggle",
+      "note": "Enable pscale attribute"
+    },
+    {
+      "name": "pscale",
+      "type": "Float",
+      "note": "Point scale attribute"
+    },
+    {
+      "name": "attr",
+      "type": "Sequence",
+      "note": "Custom point attributes"
+    },
+    {
+      "name": "attr0name",
+      "type": "String",
+      "note": "First custom attribute name"
+    },
+    {
+      "name": "attr0type",
+      "type": "Menu",
+      "note": "First custom attribute type"
+    },
+    {
+      "name": "domass",
+      "type": "Toggle",
+      "note": "Enable particle mass"
+    },
+    {
+      "name": "mass",
+      "type": "Float",
+      "note": "Particle mass"
+    },
+    {
+      "name": "drag",
+      "type": "Float",
+      "note": "Particle drag"
+    },
+    {
+      "name": "dotension",
+      "type": "Toggle",
+      "note": "Enable spring tension"
+    },
+    {
+      "name": "tension",
+      "type": "Float",
+      "note": "Spring tension"
+    },
+    {
+      "name": "dospringk",
+      "type": "Toggle",
+      "note": "Enable spring constant"
+    },
+    {
+      "name": "springk",
+      "type": "Float",
+      "note": "Spring constant"
+    },
+    {
+      "name": "dovel",
+      "type": "Toggle",
+      "note": "Enable velocity"
+    },
+    {
+      "name": "v",
+      "type": "XYZ",
+      "note": "Velocity vector"
+    },
+    {
+      "name": "vx",
+      "type": "Float",
+      "note": "Velocity X"
+    },
+    {
+      "name": "vy",
+      "type": "Float",
+      "note": "Velocity Y"
+    },
+    {
+      "name": "vz",
+      "type": "Float",
+      "note": "Velocity Z"
+    },
+    {
+      "name": "doup",
+      "type": "Toggle",
+      "note": "Enable up vector"
+    },
+    {
+      "name": "up",
+      "type": "XYZ",
+      "note": "Up vector"
+    },
+    {
+      "name": "upx",
+      "type": "Float",
+      "note": "Up X"
+    },
+    {
+      "name": "upy",
+      "type": "Float",
+      "note": "Up Y"
+    },
+    {
+      "name": "upz",
+      "type": "Float",
+      "note": "Up Z"
+    },
+    {
+      "name": "doradius",
+      "type": "Toggle",
+      "note": "Enable radius force"
+    },
+    {
+      "name": "radiusf",
+      "type": "Float",
+      "note": "Radius force"
+    },
+    {
+      "name": "doscale",
+      "type": "Toggle",
+      "note": "Enable scale force"
+    },
+    {
+      "name": "scalef",
+      "type": "Float",
+      "note": "Scale force"
+    },
+    {
+      "name": "doradialf",
+      "type": "Toggle",
+      "note": "Enable radial force"
+    },
+    {
+      "name": "radialf",
+      "type": "Float",
+      "note": "Radial force"
+    },
+    {
+      "name": "donormalf",
+      "type": "Toggle",
+      "note": "Enable normal force"
+    },
+    {
+      "name": "normalf",
+      "type": "Float",
+      "note": "Normal force"
+    },
+    {
+      "name": "doedgef",
+      "type": "Toggle",
+      "note": "Enable edge force"
+    },
+    {
+      "name": "edgef",
+      "type": "Float",
+      "note": "Edge force"
+    },
+    {
+      "name": "dodirf",
+      "type": "Toggle",
+      "note": "Enable directional force"
+    },
+    {
+      "name": "dirf",
+      "type": "Float",
+      "note": "Directional force"
+    }
+  ],
+  "common_gotchas": [
+    "Point SOP changes point-level data; use Primitive SOP when the intended edit is primitive-level.",
+    "Edge force only works on primitive face types and its directions are computed in Point SOP, so later transforms do not transform those directions.",
+    "Template or second-input values can cycle when point counts differ, which can be useful but can also hide mismatches."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "point-attribute-editing",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Point SOP operates on point attributes and complements Primitive SOP, which operates at primitive level.",
+    "A second input can provide template values, cycling when it has fewer points than the first input.",
+    "Point width and pscale attributes drive later Line MAT, point display, or particle-style sizing workflows.",
+    "When attribute logic becomes too conditional, Script SOP is the flexible official escape hatch."
+  ]
+}

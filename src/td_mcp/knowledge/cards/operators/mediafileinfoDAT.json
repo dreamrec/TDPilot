@@ -1,0 +1,72 @@
+{
+  "card_type": "operator",
+  "op_type": "mediafileinfoDAT",
+  "family": "DAT",
+  "display_name": "Media File Info DAT",
+  "docs_url": "https://docs.derivative.ca/Media_File_Info_DAT",
+  "summary": "Reads metadata from media files or linked Movie File In TOP and Audio File In CHOP operators, returning details such as codec, frame rate, sample rate, and resolution.",
+  "key_params": [
+    {
+      "name": "file",
+      "type": "File/URL",
+      "note": "Media file path or URL to inspect"
+    },
+    {
+      "name": "topchop",
+      "type": "OP Path",
+      "note": "Optional Movie File In TOP or Audio File In CHOP source to inspect"
+    },
+    {
+      "name": "reloadpulse",
+      "type": "Pulse",
+      "note": "Re-read the media metadata"
+    },
+    {
+      "name": "opentimeout",
+      "type": "Float",
+      "note": "Seconds to wait for media metadata to open"
+    },
+    {
+      "name": "transpose",
+      "type": "Toggle",
+      "note": "Transpose metadata table orientation"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "The source can be a file path or a linked TOP/CHOP, so avoid setting both ambiguously in generated patches.",
+    "Open timeout can produce no metadata until the file is reachable and parsed.",
+    "Transpose changes row and column orientation, which affects downstream table lookups.",
+    "Use this DAT for metadata only; it does not decode frames or samples for playback."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "media-metadata-inspection",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Reads metadata about a media file or media-producing TOP/CHOP.",
+    "The File parameter can inspect media paths directly while TOP/CHOP selects an operator source.",
+    "Reload Pulse forces metadata refresh and Open Timeout bounds file-open waits.",
+    "Transpose changes whether metadata fields are emitted by row or column."
+  ]
+}

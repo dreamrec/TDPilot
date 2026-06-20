@@ -1,0 +1,68 @@
+{
+  "card_type": "operator",
+  "op_type": "convertDAT",
+  "family": "DAT",
+  "display_name": "Convert DAT",
+  "docs_url": "https://docs.derivative.ca/Convert_DAT",
+  "summary": "Converts DAT content between plain text and table form, with delimiter and blank-line controls.",
+  "key_params": [
+    {
+      "name": "how",
+      "type": "Menu",
+      "note": "Convert to text or to table"
+    },
+    {
+      "name": "removeblank",
+      "type": "Toggle",
+      "note": "Skip blank lines when converting to table"
+    },
+    {
+      "name": "delimiters",
+      "type": "String",
+      "note": "Characters used independently to split text into table cells"
+    },
+    {
+      "name": "spacers",
+      "type": "String",
+      "note": "String inserted between cells when converting table to text"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT language behavior"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor/viewer extension"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Delimiters are independent characters; `$%` splits at `$` or `%`, not at the two-character string `$%`.",
+    "Use Substitute DAT upstream to collapse complex delimiters into a single separator before Convert DAT.",
+    "Remove Blank Lines prevents empty rows when table output should be compact.",
+    "Converting table to text uses Concatenate With between cells, so whitespace choices matter.",
+    "Use DAT to CHOP or JSON DAT after conversion only when the resulting table is structurally stable."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2021.10000+ DAT text/table normalization",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Converts text DAT content to table form or table DAT content to text form.",
+    "Text-to-table conversion can remove blank lines before splitting rows.",
+    "Delimiter characters split text into table cells; spacer characters join table cells into text.",
+    "The How menu selects whether conversion is text-to-table or table-to-text."
+  ]
+}

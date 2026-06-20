@@ -4,17 +4,163 @@
   "family": "COMP",
   "display_name": "Base COMP",
   "docs_url": "https://docs.derivative.ca/Base_COMP",
-  "summary": "A generic container component that can hold any operators inside it. The foundation for building reusable modules, custom components, and organizational hierarchy.",
+  "summary": "Generic non-panel, non-3D component for packaging internal operator networks, custom parameters, extensions, clone relationships, and external .tox modules without adding a control panel or object transform surface.",
   "key_params": [
-    {"name": "externaltox", "type": "String", "note": "Path to an external .tox file to load/save this component"},
-    {"name": "enablecloning", "type": "Toggle", "note": "Enable cloning from a master component"},
-    {"name": "extension1", "type": "String", "note": "Python extension class to attach to this component"}
+    {
+      "name": "reinitextensions",
+      "type": "Pulse",
+      "note": "Recompile extension objects attached to this component."
+    },
+    {
+      "name": "initextonstart",
+      "type": "Toggle",
+      "note": "Automatically re-initialize extensions when TouchDesigner starts."
+    },
+    {
+      "name": "ext",
+      "type": "Sequence",
+      "note": "Sequence of extension definitions for the component."
+    },
+    {
+      "name": "ext0object",
+      "type": "Python Object",
+      "note": "Class instance attached as an extension object."
+    },
+    {
+      "name": "ext0name",
+      "type": "String",
+      "note": "Optional extension lookup name instead of the class name."
+    },
+    {
+      "name": "ext0promote",
+      "type": "Toggle",
+      "note": "Expose extension members directly on the component instead of only through .ext."
+    },
+    {
+      "name": "parentshortcut",
+      "type": "String",
+      "note": "Name usable from inside the component as parent.Name."
+    },
+    {
+      "name": "opshortcut",
+      "type": "String",
+      "note": "Global OP shortcut name usable from anywhere in the project."
+    },
+    {
+      "name": "iop",
+      "type": "Sequence",
+      "note": "Sequence header for declaring Internal OP shortcuts."
+    },
+    {
+      "name": "iop0shortcut",
+      "type": "String",
+      "note": "Shortcut name for an internal operator path."
+    },
+    {
+      "name": "iop0op",
+      "type": "OP Path",
+      "note": "Path to the internal operator exposed by the shortcut."
+    },
+    {
+      "name": "opviewer",
+      "type": "OP Path",
+      "note": "Operator whose viewer should be used when the node viewer is set to Operator Viewer."
+    },
+    {
+      "name": "enablecloning",
+      "type": "Toggle",
+      "note": "Enables active cloning from the Clone Master."
+    },
+    {
+      "name": "enablecloningpulse",
+      "type": "Pulse",
+      "note": "Immediately clone contents from the Clone Master."
+    },
+    {
+      "name": "clone",
+      "type": "COMP Path",
+      "note": "Path to the master component used for cloning."
+    },
+    {
+      "name": "loadondemand",
+      "type": "Toggle",
+      "note": "Load the component into memory only when required."
+    },
+    {
+      "name": "enableexternaltox",
+      "type": "Toggle",
+      "note": "Load contents from the referenced external .tox when the .toe starts."
+    },
+    {
+      "name": "enableexternaltoxpulse",
+      "type": "Pulse",
+      "note": "Reload the component contents from the external .tox path."
+    },
+    {
+      "name": "externaltox",
+      "type": "File",
+      "note": "Path to the .tox file that sources this component's contents."
+    },
+    {
+      "name": "reloadcustom",
+      "type": "Toggle",
+      "note": "Reload top-level custom parameter values when the external .tox reloads."
+    },
+    {
+      "name": "reloadbuiltin",
+      "type": "Toggle",
+      "note": "Reload top-level built-in parameter values when the external .tox reloads."
+    },
+    {
+      "name": "savebackup",
+      "type": "Toggle",
+      "note": "Save a backup copy of the external component inside the .toe."
+    },
+    {
+      "name": "subcompname",
+      "type": "String",
+      "note": "Optional sub-component inside the .tox to load as the top-level component."
+    },
+    {
+      "name": "relpath",
+      "type": "Menu",
+      "note": "Controls whether child file paths are relative to the .toe, the external .tox, or parent behavior."
+    }
+  ],
+  "key_concepts": [
+    "no panel parameters",
+    "no 3D object parameters",
+    "component with no panel associated",
+    "no 3D",
+    "Extensions page",
+    "Re-Init Extensions",
+    "Init Extensions On Start",
+    ".ext member",
+    "Parent Shortcut",
+    "Global OP Shortcut",
+    "Internal OP",
+    "Operator Viewer",
+    "cloning",
+    "Clone Master",
+    "Load on Demand",
+    "external .tox",
+    "External .tox Path",
+    "Reload Custom Parameters",
+    "Reload Built-In Parameters",
+    "Save Backup of External",
+    "Sub-Component to Load",
+    "Relative File Path Behavior",
+    "Info CHOP",
+    "num_children"
   ],
   "common_gotchas": [
-    "External .tox references are not auto-saved — you must explicitly save or enable auto-export.",
-    "Extensions are initialized on component creation; changing the extension class requires reinitializing."
+    "Base COMP intentionally has no panel parameters and no 3D object parameters; choose Container/List/Table/Text/Widget COMPs for panel behavior and Object COMPs for renderable 3D transforms.",
+    "Promote controls whether extension members are reached directly on the component or through the .ext member, so scripts should use the access path that matches the component's extension policy.",
+    "External .tox loading falls back to what the .toe was saved with if the .tox cannot be found; Save Backup of External makes that fallback explicit for moved or missing component files.",
+    "Load on Demand saves memory for components that are not always used, but delayed loading can surprise startup scripts that assume children are already resident.",
+    "Reload Custom Parameters and Reload Built-In Parameters affect only top-level component parameters; nodes inside the component are always reloaded with the external .tox contents."
   ],
   "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
 }

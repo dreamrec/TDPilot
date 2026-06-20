@@ -1,0 +1,118 @@
+{
+  "card_type": "operator",
+  "op_type": "opviewerTOP",
+  "family": "TOP",
+  "display_name": "OP Viewer TOP",
+  "docs_url": "https://docs.derivative.ca/OP_Viewer_TOP",
+  "summary": "Renders another operator's node viewer as a TOP image, with optional alpha preservation and output-resolution control for lightweight visual inspection.",
+  "key_params": [
+    {
+      "name": "opviewer",
+      "type": "OP path",
+      "note": "Operator whose node viewer is rendered into the TOP."
+    },
+    {
+      "name": "allowpanel",
+      "type": "Toggle",
+      "note": "Deprecated panel-interaction path; OP Viewer COMP is the replacement."
+    },
+    {
+      "name": "preservealpha",
+      "type": "Toggle",
+      "note": "Use viewer alpha to preserve transparency."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Choose how output resolution is derived or scaled."
+    },
+    {
+      "name": "resolutionw",
+      "type": "Pixels",
+      "note": "Explicit output width when using custom resolution."
+    },
+    {
+      "name": "resolutionh",
+      "type": "Pixels",
+      "note": "Explicit output height when using custom resolution."
+    },
+    {
+      "name": "resmenu",
+      "type": "Menu",
+      "note": "Preset resolution menu."
+    },
+    {
+      "name": "resmult",
+      "type": "Toggle",
+      "note": "Apply the global TOP resolution multiplier."
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Choose how the TOP output aspect ratio is derived."
+    },
+    {
+      "name": "aspect1",
+      "type": "Float",
+      "note": "Custom aspect ratio numerator."
+    },
+    {
+      "name": "aspect2",
+      "type": "Float",
+      "note": "Custom aspect ratio denominator."
+    },
+    {
+      "name": "armenu",
+      "type": "Menu",
+      "note": "Preset aspect ratio menu."
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Input image smoothness/filtering mode."
+    },
+    {
+      "name": "fillmode",
+      "type": "Menu",
+      "note": "Viewer fill behavior for displaying the TOP image."
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Viewer smoothness/filtering mode."
+    },
+    {
+      "name": "npasses",
+      "type": "Integer",
+      "note": "Duplicate the TOP operation for multiple passes."
+    },
+    {
+      "name": "chanmask",
+      "type": "Menu",
+      "note": "Choose which RGBA channels the TOP operates on."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Pixel format used for TOP image storage."
+    }
+  ],
+  "common_gotchas": [
+    "OP Viewer TOP captures the target operator node viewer, not necessarily raw operator data.",
+    "Allow Panel Interaction is being deprecated; use OP Viewer COMP for interactive panel behavior.",
+    "Viewer overlays and display flags can affect the captured image.",
+    "Set Fill Viewer to Native Resolution when debugging pixel-accurate output or text readability.",
+    "Preserve Alpha only helps when the source viewer actually provides meaningful alpha."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2021.10000+ operator viewer capture; panel interaction replacement is OP Viewer COMP",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Displays another operator node viewer as a TOP image.",
+    "The source can be any operator path supplied to the Operator Viewer parameter.",
+    "Panel interaction through the TOP path is being deprecated in favor of OP Viewer COMP.",
+    "Preserve Alpha and Common TOP output controls affect viewer capture transparency and sizing."
+  ]
+}

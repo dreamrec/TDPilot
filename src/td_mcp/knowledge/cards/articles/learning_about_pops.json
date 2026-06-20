@@ -1,0 +1,48 @@
+{
+  "card_type": "article",
+  "article_id": "learning_about_pops",
+  "title": "Learning About POPs",
+  "family": "POP",
+  "families": [
+    "POP",
+    "TOP",
+    "GLSL"
+  ],
+  "summary": "Official Derivative overview for Point Operators, covering POP concepts, point/primitive/vertex lists, attributes, rendering POPs, POP examples, and the OP Snippets POP Concepts path.",
+  "source_url": "https://docs.derivative.ca/Learning_About_POPs",
+  "docsbrain_page_id": "learning_about_pops",
+  "covered_operators": [
+    "renderTOP",
+    "rendersimpleTOP",
+    "groupPOP",
+    "attributePOP",
+    "particlePOP",
+    "glslPOP"
+  ],
+  "key_concepts": [
+    "POP Concepts",
+    "Overview.toe",
+    "POPs Examples Package",
+    "points",
+    "point attributes",
+    "P",
+    "Color",
+    "N",
+    "primitive list",
+    "vertex list",
+    "Render TOP",
+    "OP Snippets"
+  ],
+  "guidance": [
+    "Use this article when a plan needs conceptual grounding for POP data shape, attribute classes, POP rendering, or official POP examples.",
+    "POPs start as points with attributes and can represent particles, point clouds, polygons, lines, spline curves, geometry, and data points.",
+    "A POP has point, primitive, and vertex lists; the common point position attribute is P.",
+    "POPs can be rendered by Render TOP or sent to external systems such as DMX, LED arrays, lasers, and related workflows.",
+    "For live examples, use the POPs Examples Package Overview.toe and Help > Operator Snippets > POP Concepts."
+  ],
+  "related_snippets": [
+    "POP_snippets",
+    "POP_attribute_ontology"
+  ],
+  "last_verified": "2026-06-17"
+}

@@ -1,0 +1,37 @@
+{
+  "card_type": "operator",
+  "op_type": "sharedmemoutCOMP",
+  "family": "COMP",
+  "display_name": "Shared Mem Out COMP",
+  "docs_url": "https://docs.derivative.ca/Shared_Mem_Out_COMP",
+  "summary": "Writes transform data to a named shared memory block that another TouchDesigner process can read with Shared Mem In COMP, allowing object transforms to be exchanged between processes.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Controls whether the node cooks every frame and writes data"},
+    {"name": "name", "type": "String", "note": "Shared memory block name to write"},
+    {"name": "parentshortcut", "type": "String", "note": "Common COMP parent shortcut"},
+    {"name": "opshortcut", "type": "String", "note": "Common COMP global operator shortcut"},
+    {"name": "iop", "type": "Sequence", "note": "Internal OP shortcut table"},
+    {"name": "opviewer", "type": "OP path", "note": "Operator viewer used for node viewer when configured"},
+    {"name": "enablecloning", "type": "Toggle", "note": "Enable active cloning from a clone master"},
+    {"name": "externaltox", "type": "File", "note": "External .tox source path for the component"},
+    {"name": "relpath", "type": "Menu", "note": "Relative file path behavior for child file paths"}
+  ],
+  "key_concepts": [
+    "Shared Mem Out COMP writes transform data to a named shared memory block for another TouchDesigner process to read.",
+    "Active controls whether the node cooks every frame and keeps publishing transform data.",
+    "The Shared Mem Name parameter defines the writer block name that Shared Mem In COMP readers must match.",
+    "The operator exchanges transform data only; other shared-memory data types use the corresponding TOP or CHOP operators.",
+    "Current docs note license availability for Educational, Commercial, and Pro, while the page text also states Commercial/Pro availability."
+  ],
+  "common_gotchas": [
+    "Shared Mem Out COMP requires TouchDesigner Educational, Commercial, or Pro according to current docs, and the page text also notes Commercial/Pro availability.",
+    "It writes transform data only; use the Shared Mem TOP/CHOP family for other data types.",
+    "Active must be on for frame-by-frame writing.",
+    "Readers must use the exact same Shared Mem Name.",
+    "Multiple writers with the same name can create ambiguous or overwritten transform data.",
+    "Because this is cross-process state, validate lifecycle order so the reader is not waiting on a block that has not been created yet."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ cross-process transform shared memory output",
+  "last_verified": "2026-06-18"
+}

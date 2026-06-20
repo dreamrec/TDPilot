@@ -1,0 +1,67 @@
+{
+  "card_type": "operator",
+  "op_type": "kinectSOP",
+  "family": "SOP",
+  "display_name": "Kinect SOP",
+  "docs_url": "https://docs.derivative.ca/Kinect_SOP",
+  "summary": "Uses a Kinect v1 sensor to create SOP geometry from depth/skeleton data for legacy Kinect-based installations.",
+  "key_params": [
+    {
+      "name": "hwversion",
+      "type": "Menu",
+      "note": "Hardware version; official SOP page supports Kinect v1."
+    },
+    {
+      "name": "version1",
+      "type": "Menu Value",
+      "note": "Kinect v1 menu value."
+    },
+    {
+      "name": "sensor",
+      "type": "Int",
+      "note": "Sensor index."
+    },
+    {
+      "name": "skeleton",
+      "type": "Menu",
+      "note": "Skeleton output mode."
+    },
+    {
+      "name": "full",
+      "type": "Menu Value",
+      "note": "Full skeleton mode."
+    },
+    {
+      "name": "seated",
+      "type": "Menu Value",
+      "note": "Seated skeleton mode."
+    },
+    {
+      "name": "neardepthmode",
+      "type": "Toggle",
+      "note": "Use Kinect near depth mode."
+    },
+    {
+      "name": "normals",
+      "type": "Toggle",
+      "note": "Compute normals."
+    }
+  ],
+  "common_gotchas": [
+    "This SOP page is for Kinect v1; do not assume Kinect Azure behavior.",
+    "`full` and `seated` are skeleton menu values, not standalone toggle parameters.",
+    "Near depth mode changes minimum depth and can affect depth-derived geometry assumptions."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "legacy-kinect-v1-hardware",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Kinect SOP creates geometry from Kinect v1 sensor data.",
+    "`hwversion` on the SOP page only supports Kinect v1.",
+    "`sensor` chooses the Kinect sensor index and `skeleton` chooses skeleton output mode.",
+    "`neardepthmode` changes minimum depth behavior from standard range to near mode.",
+    "`normals` computes normals for the generated geometry."
+  ]
+}

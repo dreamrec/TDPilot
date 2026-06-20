@@ -1,0 +1,76 @@
+{
+  "card_type": "operator",
+  "op_type": "curvesectSOP",
+  "family": "SOP",
+  "display_name": "Curvesect SOP",
+  "docs_url": "https://docs.derivative.ca/Curvesect_SOP",
+  "summary": "Finds intersections or nearest points between faces, curves, and surfaces, then cuts, extracts, or keeps selected pieces from the left and right inputs.",
+  "key_params": [
+    {
+      "name": "leftgroup",
+      "type": "String",
+      "note": "Group from the left input."
+    },
+    {
+      "name": "rightgroup",
+      "type": "String",
+      "note": "Group from the right input."
+    },
+    {
+      "name": "xsect",
+      "type": "Toggle",
+      "note": "Find intersections instead of closest points."
+    },
+    {
+      "name": "tolerance",
+      "type": "Float",
+      "note": "Intersection/closest-point tolerance."
+    },
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "Cut or extract operation."
+    },
+    {
+      "name": "left",
+      "type": "Menu",
+      "note": "Keep mode for left input geometry."
+    },
+    {
+      "name": "right",
+      "type": "Menu",
+      "note": "Keep mode for right input geometry."
+    },
+    {
+      "name": "affect",
+      "type": "Menu",
+      "note": "Which input side extraction affects."
+    },
+    {
+      "name": "extractpt",
+      "type": "Toggle",
+      "note": "Extract points at the intersection/closest location."
+    },
+    {
+      "name": "keeporiginal",
+      "type": "Toggle",
+      "note": "Keep original primitives in addition to generated results."
+    }
+  ],
+  "common_gotchas": [
+    "Minimum-distance mode has documented limitations for face/surface combinations when `xsect` is off.",
+    "Small tolerance changes can flip between no result, intersection, or closest-point extraction.",
+    "The left and right keep menus are separate, so asymmetric results are often intentional."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Curvesect SOP finds intersections or closest points between faces, curves, and surfaces.",
+    "`method` chooses whether to cut geometry or extract pieces around intersection results.",
+    "Left and right inputs have independent keep controls, and `affect` scopes extraction to left, right, or both sides.",
+    "`tolerance` materially changes whether near misses count as intersections or closest points."
+  ]
+}

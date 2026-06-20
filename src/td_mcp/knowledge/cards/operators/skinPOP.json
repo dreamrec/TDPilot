@@ -1,0 +1,29 @@
+{
+  "card_type": "operator",
+  "op_type": "skinPOP",
+  "family": "POP",
+  "display_name": "Skin POP",
+  "docs_url": "https://docs.derivative.ca/Skin_POP",
+  "summary": "Connects two-dimensional or higher-dimensional arrangements of primitives or points into triangle or quad meshes. It can skin all primitives, groups of N primitives, or skip every Nth primitive, and can close the resulting mesh.",
+  "key_params": [
+    {"name": "skinops", "type": "Menu", "note": "All primitives, groups of N primitives, or skip every Nth primitive"},
+    {"name": "inc", "type": "Int", "note": "N value for grouped or skipped skinning"},
+    {"name": "closed", "type": "Toggle", "note": "Connect the last vertex back to the first"},
+    {"name": "outputquads", "type": "Toggle", "note": "Output quads instead of triangles"}
+  ],
+  "key_concepts": [
+    "Skin POP connects a two-dimensional or higher-dimensional POP point arrangement into a mesh of triangles or quads.",
+    "POP Dimension metadata is central: rows and columns define how points are connected, independent of how the input primitives were originally wired.",
+    "For three or more dimensions, skinning applies to the first two dimensions and repeats across the higher dimensions.",
+    "Skin mode can use all primitives, groups of N primitives, or skip every Nth primitive when dimensions alone are not the desired grouping.",
+    "Closed connects the last vertex back to the first, and Output Quads preserves quad mesh structure instead of triangulating."
+  ],
+  "common_gotchas": [
+    "Skin POP uses POP dimensions heavily; inspect or set dimensions before skinning ambiguous inputs.",
+    "For inputs with three or more dimensions, skinning applies over the first two dimensions and repeats across higher dimensions.",
+    "Output quads preserve grid structure better; triangles may be preferable for render compatibility."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

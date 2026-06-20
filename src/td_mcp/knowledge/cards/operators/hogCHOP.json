@@ -1,0 +1,31 @@
+{
+  "card_type": "operator",
+  "op_type": "hogCHOP",
+  "family": "CHOP",
+  "display_name": "Hog CHOP",
+  "docs_url": "https://docs.derivative.ca/Hog_CHOP",
+  "summary": "Intentionally consumes CPU time to simulate slower machines or stress-test frame-rate and cooking behavior.",
+  "key_concepts": [
+    "Intentionally consumes CPU cycles to simulate slower machines or reduce a network's effective frame rate.",
+    "Active toggles whether the CPU delay is applied.",
+    "Cook Every Frame forces the operator to cook every frame, making the delay visible even without downstream demand.",
+    "Delay and Delay Unit define the minimum amount of time the CHOP wastes.",
+    "Use Info CHOP or operator info to monitor cook time, warnings, and errors when stress testing with Hog CHOP."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable CPU delay"},
+    {"name": "cookalways", "type": "Toggle", "note": "Force cooking every frame"},
+    {"name": "delay", "type": "Float", "note": "Minimum time to waste"},
+    {"name": "delayunit", "type": "Menu", "note": "Delay unit"}
+  ],
+  "common_gotchas": [
+    "Hog CHOP is deliberately expensive and should not be placed in generated production networks unless the task is performance simulation.",
+    "Cook Every Frame can degrade the entire project frame rate.",
+    "Delay settings should be kept small and explicit during tests.",
+    "This operator is useful for stress testing, not for real signal processing.",
+    "Generated plans should warn users before enabling it in live show files."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ performance testing",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "compositeCHOP",
+  "family": "CHOP",
+  "display_name": "Composite CHOP",
+  "docs_url": "https://docs.derivative.ca/Composite_CHOP",
+  "summary": "Layers one CHOP's channels over another over a defined interval, with base hold, channel matching, easing, and rotation-aware blending options.",
+  "key_concepts": [
+    "Layers the second input over the first input, with the first input as the base and the second input as the layer.",
+    "Designed for static multi-frame motion channels; the official docs direct time-sliced or single-frame blending to Blend CHOP instead.",
+    "Layer contribution is eased in and out across Start, Peak, Release, and End, and the base is unaffected outside the layer interval.",
+    "Base Hold 0 replaces the base when Effect is 1, while Base Hold 1 adds the layer to the base.",
+    "A connected third input overrides the Effect page using its first channel over the layer range.",
+    "Quaternion Blend and Shortest Path Rotation Blending handle rotation channels specially when quaternion attributes or rotation scopes are configured."
+  ],
+  "key_params": [
+    {"name": "base", "type": "Float", "note": "How much base input remains when the layer is fully active"},
+    {"name": "match", "type": "Menu", "note": "Match channels by index, name, or channel union"},
+    {"name": "quatrot", "type": "Toggle", "note": "Use quaternion rotation blending when channels have quaternion attributes"},
+    {"name": "shortrot", "type": "Toggle", "note": "Use shortest-path angle blending"},
+    {"name": "rotscope", "type": "Pattern", "note": "Rotation channels affected by special rotation blending"},
+    {"name": "cyclelen", "type": "Float", "note": "Cycle length for wraparound rotation blending"},
+    {"name": "effect", "type": "Float", "note": "Blend contribution when no third input overrides it"},
+    {"name": "relative", "type": "Menu", "note": "Absolute, relative-to-interval, or current-frame timing"},
+    {"name": "start", "type": "Float", "note": "Start of contribution interval"},
+    {"name": "peak", "type": "Float", "note": "Point where maximum contribution begins"},
+    {"name": "release", "type": "Float", "note": "Point where contribution begins falling"},
+    {"name": "end", "type": "Float", "note": "End of contribution interval"},
+    {"name": "risefunc", "type": "Menu", "note": "Rise interpolation shape"},
+    {"name": "fallfunc", "type": "Menu", "note": "Fall interpolation shape"}
+  ],
+  "common_gotchas": [
+    "Composite CHOP is intended for static multi-frame motion channels; use Blend CHOP for time-sliced or single-frame blends.",
+    "If a third input is connected, its first channel overrides the Effect page.",
+    "Base Hold 0 replaces the base when effect is 1; Base Hold 1 adds the layer to the base.",
+    "Channel matching by index is fragile when source channel order changes; prefer name matching when possible.",
+    "Quaternion blending expects quaternion attributes from Attribute CHOP."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

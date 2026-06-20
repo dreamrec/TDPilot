@@ -1,0 +1,40 @@
+{
+  "card_type": "article",
+  "article_id": "inputpoint_class",
+  "title": "InputPoint Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "SOP",
+    "GEOMETRY"
+  ],
+  "summary": "Official Derivative Python API reference for InputPoint, a special Point object available in Point SOP parameters with color, normal, and optimized SOP-center access.",
+  "source_url": "https://docs.derivative.ca/InputPoint_Class",
+  "docsbrain_page_id": "inputpoint_class",
+  "covered_operators": [
+    "pointSOP"
+  ],
+  "key_concepts": [
+    "InputPoint Class",
+    "Point SOP",
+    "Point Class",
+    "color",
+    "normal",
+    "sopCenter",
+    "Cd",
+    "N",
+    "TDU.Color",
+    "TDU.Vector",
+    "TDU.Position",
+    "No operator specific methods"
+  ],
+  "guidance": [
+    "Use this article when generated Python is running in Point SOP parameter contexts and receives InputPoint objects rather than ordinary Point objects.",
+    "Use color and normal for Point SOP input-point convenience values; they may come from vertex data or the destination point when the input point itself lacks Cd or N.",
+    "Use sopCenter for the optimized barycentric coordinate of the SOP geometry center.",
+    "Do not use InputPoint Class as a general POP or SOP point API; it is specific to Point SOP parameter contexts.",
+    "Do not add InputPoint-only methods; the official page lists no operator specific methods and points back to Point Class for inherited point behavior."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

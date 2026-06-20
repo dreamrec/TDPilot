@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "mathcombinePOP",
+  "family": "POP",
+  "display_name": "Math Combine POP",
+  "docs_url": "https://docs.derivative.ca/Math_Combine_POP",
+  "summary": "Expanded POP math operator for selecting, combining, creating, pre-processing, post-processing, and optionally deleting point, vertex, or primitive attributes with sequential math blocks.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Point, vertex, or primitive attribute class"},
+    {"name": "lengthmismatchnotif", "type": "Menu", "note": "Notification behavior for input length mismatch"},
+    {"name": "lengthmismatchaction", "type": "Menu", "note": "How shorter inputs are sampled when lengths differ"},
+    {"name": "input0attrs", "type": "String", "note": "Selected attributes for an input block"},
+    {"name": "input0renameto", "type": "String", "note": "Optional renamed input attribute"},
+    {"name": "comb", "type": "Sequential", "note": "Combine operation blocks"},
+    {"name": "comb0oper", "type": "Menu", "note": "Math operation for a combine block"},
+    {"name": "comb0scopea", "type": "String", "note": "First attribute, component scope, or constant"},
+    {"name": "comb0scopeb", "type": "String", "note": "Second attribute, component scope, or constant"},
+    {"name": "comb0scopec", "type": "String", "note": "Third attribute, component scope, or constant"},
+    {"name": "comb0result", "type": "String", "note": "Attribute or components to write"},
+    {"name": "deleteattrs", "type": "String", "note": "Output attributes to delete after operations"}
+  ],
+  "key_concepts": [
+    "Runs many sequential combine operations where Scope A, Scope B, and Scope C feed an operation and Result Scope receives the output.",
+    "Explicitly selects attributes across multiple POP inputs, unlike Math Mix POP's automatic input naming behavior.",
+    "Supports constants, vector components, swizzled scopes, and built-in underscore attributes in math scopes.",
+    "Uniforms, New, Pre, Post, and Output pages separate temporary values, generated arrays, unary preprocessing, reranging, and cleanup."
+  ],
+  "common_gotchas": [
+    "Use Math Combine rather than Math Mix when you need explicit multi-input attribute selection or renaming.",
+    "Single-point POP inputs are treated as constants, which is useful but easy to miss when input sizes differ.",
+    "Keep/delete decisions on temporary attributes affect downstream POP memory and attribute availability."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.32820+",
+  "last_verified": "2026-06-17"
+}

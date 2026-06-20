@@ -1,0 +1,45 @@
+{
+  "card_type": "article",
+  "article_id": "attributedata_class",
+  "title": "AttributeData Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "SOP",
+    "GEOMETRY"
+  ],
+  "summary": "Official Derivative Python API reference for AttributeData values, covering the object that stores a specific attribute value for a primitive, point, or vertex.",
+  "source_url": "https://docs.derivative.ca/AttributeData_Class",
+  "docsbrain_page_id": "attributedata_class",
+  "covered_operators": [
+    "attributeSOP",
+    "attributecreateSOP",
+    "pointSOP",
+    "scriptSOP"
+  ],
+  "key_concepts": [
+    "AttributeData Class",
+    "owner",
+    "val",
+    "float",
+    "int",
+    "str",
+    "tuple",
+    "TDU.Position",
+    "TDU.Vector",
+    "Prim Class",
+    "Point Class",
+    "Vertex Class",
+    "No operator specific methods"
+  ],
+  "guidance": [
+    "Use this article when generated Python needs a specific geometric attribute value rather than the Attribute metadata object.",
+    "Read val for the stored attribute value; the returned type depends on the attribute and may be a float, int, string, tuple, Position, or Vector.",
+    "Normal attribute data is represented as a Vector, while position attribute data is represented as a Position.",
+    "Do not invent class-specific methods for AttributeData; the official page lists no operator specific methods."
+  ],
+  "related_snippets": [
+    "POP_attribute_ontology"
+  ],
+  "last_verified": "2026-06-18"
+}

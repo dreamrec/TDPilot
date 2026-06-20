@@ -1,0 +1,57 @@
+{
+  "card_type": "operator",
+  "op_type": "spectrumTOP",
+  "family": "TOP",
+  "display_name": "Spectrum TOP",
+  "docs_url": "https://docs.derivative.ca/Spectrum_TOP",
+  "summary": "Uses VkFFT to run DFT or inverse DFT operations on TOP image data, with polar or cartesian RG interpretations.",
+  "key_params": [
+    {
+      "name": "mode",
+      "type": "Menu",
+      "note": "Transform direction: DFT or IDFT."
+    },
+    {
+      "name": "coord",
+      "type": "Menu",
+      "note": "Polar or cartesian coordinate interpretation."
+    },
+    {
+      "name": "chan",
+      "type": "Menu",
+      "note": "Input channel used for forward DFT."
+    },
+    {
+      "name": "transrows",
+      "type": "Toggle",
+      "note": "Transform each row independently."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    }
+  ],
+  "common_gotchas": [
+    "Keep coordinate mode consistent between DFT output and IDFT input.",
+    "DFT output RG meaning changes between polar and cartesian modes.",
+    "Transform Rows changes the operation from whole-image to row-wise transforms.",
+    "IDFT expects a 32-bit RG input; ordinary color images need DFT preparation first."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "frequency_domain_image_processing",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Spectrum TOP uses the VkFFT library to perform discrete Fourier transforms or inverse transforms.",
+    "DFT mode reads one selected input channel and outputs a 32-bit RG texture.",
+    "IDFT mode expects a 32-bit RG texture and outputs a 32-bit mono result.",
+    "Coordinate mode decides whether RG means magnitude/phase or real/imaginary."
+  ]
+}

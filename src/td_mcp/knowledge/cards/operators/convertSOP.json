@@ -1,0 +1,101 @@
+{
+  "card_type": "operator",
+  "op_type": "convertSOP",
+  "family": "SOP",
+  "display_name": "Convert SOP",
+  "docs_url": "https://docs.derivative.ca/Convert_SOP",
+  "summary": "Converts SOP geometry between primitive types such as polygons, meshes, Bezier/NURBS curves and surfaces, particles, circles, and spheres.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Optional group to convert."
+    },
+    {
+      "name": "fromtype",
+      "type": "Menu",
+      "note": "Source primitive type filter."
+    },
+    {
+      "name": "totype",
+      "type": "Menu",
+      "note": "Target primitive type."
+    },
+    {
+      "name": "surftype",
+      "type": "Menu",
+      "note": "Connectivity for generated surfaces."
+    },
+    {
+      "name": "lodu",
+      "type": "Float",
+      "note": "U level of detail."
+    },
+    {
+      "name": "lodv",
+      "type": "Float",
+      "note": "V level of detail."
+    },
+    {
+      "name": "lodtrim",
+      "type": "Float",
+      "note": "Trim curve level of detail."
+    },
+    {
+      "name": "divu",
+      "type": "Int",
+      "note": "U divisions per span."
+    },
+    {
+      "name": "divv",
+      "type": "Int",
+      "note": "V divisions per span."
+    },
+    {
+      "name": "divtrim",
+      "type": "Int",
+      "note": "Trim curve divisions per span."
+    },
+    {
+      "name": "orderu",
+      "type": "Int",
+      "note": "U order for generated spline primitives."
+    },
+    {
+      "name": "orderv",
+      "type": "Int",
+      "note": "V order for generated spline primitives."
+    },
+    {
+      "name": "new",
+      "type": "Toggle",
+      "note": "Create a new primitive where applicable."
+    },
+    {
+      "name": "interphull",
+      "type": "Toggle",
+      "note": "Interpolate the hull for applicable conversions."
+    },
+    {
+      "name": "prtype",
+      "type": "Menu",
+      "note": "Particle render type for particle output."
+    }
+  ],
+  "common_gotchas": [
+    "A triangulated polygon surface cannot always become one clean NURBS surface.",
+    "Flat NURBS/Bezier curves converted to trimmed surfaces can produce clean concave surfaces; non-flat curves become non-trimmed surfaces.",
+    "Particle render-type ids in the official page include legacy spellings; avoid inventing corrected ids without live verification."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Convert SOP changes SOP primitive families such as polygons, meshes, spline curves/surfaces, particles, circles, and spheres.",
+    "Not every source/target conversion is meaningful or supported; some preserve shape while others cannot represent the input as requested.",
+    "Level-of-detail controls and divisions-per-span controls both affect generated spline/polygon density but use different semantics.",
+    "Connectivity controls how generated surface points are wired, including rows, columns, row/column grids, triangles, quadrilaterals, and alternating triangles."
+  ]
+}

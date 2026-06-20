@@ -1,0 +1,41 @@
+{
+  "card_type": "operator",
+  "op_type": "inversecurveCHOP",
+  "family": "CHOP",
+  "display_name": "Inverse Curve CHOP",
+  "docs_url": "https://docs.derivative.ca/Inverse_Curve_CHOP",
+  "summary": "Solves a bone chain along a guide curve and outputs rotate, bone-length, and first-bone translate channels for export-driven curve IK workflows.",
+  "key_concepts": [
+    "Calculates inverse kinematics for Bone objects using a curve defined by ordered guide components.",
+    "Stretches and positions the bone chain between Bone Start and Bone End to follow the guide curve.",
+    "Outputs rotate and bone-length channels for each bone plus translate channels for the first bone in the chain.",
+    "Guide object order, pattern expansion, and orientation define the guide curve and bone X-axis alignment.",
+    "Span Start and Span End trim the fraction of the guide curve used for the solve.",
+    "Map Exports can create export links, but generated plans still need export enablement to drive the bones."
+  ],
+  "key_params": [
+    {"name": "guide", "type": "COMPSet", "note": "Guide components that define the curve"},
+    {"name": "bonestart", "type": "COMP", "note": "First bone in the chain"},
+    {"name": "boneend", "type": "COMP", "note": "Last bone in the chain"},
+    {"name": "span", "type": "Float2", "note": "Start/end fraction of the guide curve"},
+    {"name": "span1", "type": "Float", "note": "Start fraction of the guide curve"},
+    {"name": "span2", "type": "Float", "note": "End fraction of the guide curve"},
+    {"name": "interpolation", "type": "Menu", "note": "Polygon, Bezier, or NURBS guide curve"},
+    {"name": "order", "type": "Integer", "note": "Curve order for applicable interpolation modes"},
+    {"name": "upvector", "type": "XYZ", "note": "Up-vector orientation controls"},
+    {"name": "upvectorx", "type": "Float", "note": "Up-vector X component"},
+    {"name": "upvectory", "type": "Float", "note": "Up-vector Y component"},
+    {"name": "upvectorz", "type": "Float", "note": "Up-vector Z component"},
+    {"name": "mapexports", "type": "Toggle", "note": "Map calculated values to bone-chain parameters"}
+  ],
+  "common_gotchas": [
+    "The operator needs guide objects plus a valid bone start/end chain.",
+    "It can automatically set up export links, but exports still need to be enabled deliberately.",
+    "The guide curve orientation affects how bones line up their X axes.",
+    "Use Inverse Curve SOP to inspect the generated guide/debug curves.",
+    "Span values are fractions of the guide curve, not frame or sample ranges."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ legacy IK",
+  "last_verified": "2026-06-18"
+}

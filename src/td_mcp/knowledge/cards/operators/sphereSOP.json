@@ -4,17 +4,182 @@
   "family": "SOP",
   "display_name": "Sphere SOP",
   "docs_url": "https://docs.derivative.ca/Sphere_SOP",
-  "summary": "Creates a sphere mesh with configurable type (primitive, polygon, mesh), radius, and tessellation. A fundamental 3D primitive.",
+  "summary": "Creates primitive, polygon, mesh, NURBS, or Bezier sphere geometry with bounds, orientation, radius, rows/columns, texture-coordinate, and normal controls.",
   "key_params": [
-    {"name": "type", "type": "Menu", "note": "Geometry type: Primitive (NURBS), Polygon, Mesh"},
-    {"name": "rad", "type": "Float", "note": "Radius of the sphere (XYZ can be set independently for ellipsoids)"},
-    {"name": "rows", "type": "Int", "note": "Latitudinal subdivisions"},
-    {"name": "cols", "type": "Int", "note": "Longitudinal subdivisions"}
+    {
+      "name": "type",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "surftype",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "orientbounds",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "modifybounds",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "rord",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "rad",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "radx",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "rady",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "radz",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "t",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "tx",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "ty",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "tz",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "r",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "rx",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "ry",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "rz",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "reverseanchors",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "anchoru",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "anchorv",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "anchorw",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "orient",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "freq",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "rows",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "cols",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "orderu",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "orderv",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "imperfect",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "upole",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "accurate",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "texture",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    },
+    {
+      "name": "normals",
+      "type": "Parameter",
+      "note": "Sphere SOP official parameter"
+    }
   ],
   "common_gotchas": [
-    "Primitive type is not renderable with Phong/PBR materials — switch to Polygon or Mesh for standard rendering."
+    "Primitive type is officially not recommended for instancing workflows.",
+    "Several options only apply to specific primitive types, especially mesh and imperfect spline sphere modes.",
+    "Accurate only matters when deriving a bounding sphere from input geometry.",
+    "Rows and columns affect mesh and imperfect spline sphere resolution/topology."
   ],
   "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "build_relevance": "sphere-primitive-geometry",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Sphere SOP supports Primitive, Polygon, Mesh, NURBS, and Bezier sphere types.",
+    "Input geometry can drive a bounding sphere, with Modify Bounds and Accurate controls adjusting the result.",
+    "The rad tuple supports ellipsoid-style XYZ radii, not only uniform spheres.",
+    "Texture coordinates and normals are explicit output options."
+  ]
 }

@@ -1,0 +1,80 @@
+{
+  "card_type": "operator",
+  "op_type": "ndiinTOP",
+  "family": "TOP",
+  "display_name": "NDI In TOP",
+  "docs_url": "https://docs.derivative.ca/NDI_In_TOP",
+  "summary": "Receives image data from NDI-enabled applications over IP, with support for source selection, extra search IPs, bandwidth selection, hardware decode for NDI HX where available, and color-space handling.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Receive image data while enabled"
+    },
+    {
+      "name": "name",
+      "type": "String/Menu",
+      "note": "NDI source stream name"
+    },
+    {
+      "name": "extraips",
+      "type": "String",
+      "note": "Space-separated IPs for sources not reachable by mDNS"
+    },
+    {
+      "name": "bandwidth",
+      "type": "Menu",
+      "note": "high or low bandwidth receive mode"
+    },
+    {
+      "name": "hwdecode",
+      "type": "Toggle",
+      "note": "Hardware decode for supported NDI|HX streams"
+    },
+    {
+      "name": "inputpixelformat",
+      "type": "Menu",
+      "note": "native or fixed8"
+    },
+    {
+      "name": "inputcolorspace",
+      "type": "Menu",
+      "note": "automatic, srgb, rec709, rec2020, aces, passthrough, and related spaces"
+    },
+    {
+      "name": "inputreferencewhite",
+      "type": "Menu",
+      "note": "default, sdr, or hdr reference-white handling"
+    },
+    {
+      "name": "grouptable",
+      "type": "DAT",
+      "note": "NDI group table filter"
+    },
+    {
+      "name": "audiobuflen",
+      "type": "Float",
+      "note": "Audio buffer length for paired NDI audio workflows"
+    }
+  ],
+  "common_gotchas": [
+    "Windows firewall settings can block NDI discovery or connection.",
+    "hwdecode only applies to NDI|HX/H264 streams, not native NDI streams sent by TouchDesigner NDI Out TOP.",
+    "Sources outside the local mDNS reach need extraips entries.",
+    "NDI is low latency but high bandwidth, so network capacity matters.",
+    "The official docs mention NDI In DAT in metadata prose, but the operator here is NDI In TOP."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "NDI_snippets"
+  ],
+  "build_relevance": "network_video_io",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Receives NDI video streams over IP into TOP images.",
+    "Discovery uses mDNS by default and can be expanded with Extra Search IPs for remote networks.",
+    "Bandwidth and hardware decode settings trade quality, CPU/GPU use, and stream compatibility.",
+    "Metadata can be received through Info DAT/XML DAT workflows, and audio is handled by Audio NDI CHOP.",
+    "Input color-space and reference-white controls convert received data into the working color space."
+  ]
+}

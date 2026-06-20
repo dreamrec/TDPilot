@@ -1,0 +1,46 @@
+{
+  "card_type": "operator",
+  "op_type": "keyboardinCHOP",
+  "family": "CHOP",
+  "display_name": "Keyboard In CHOP",
+  "docs_url": "https://docs.derivative.ca/Keyboard_In_CHOP",
+  "summary": "Monitors selected keyboard keys and outputs single-frame channels representing current key state, with modifier and panel-focus filtering.",
+  "key_concepts": [
+    "Receives ASCII keyboard input and outputs a single-frame channel for each monitored key.",
+    "The Keys list controls which key channels are created; it does not output every key automatically.",
+    "Modifier Keys can ignore modifiers or require exact Ctrl, Alt, Shift, and combined modifier states.",
+    "Channel Names can be generated from key names or from channel order numbers.",
+    "Panels restrict capture to keyboard events that occur while specific Panel COMPs have focus.",
+    "For every keystroke callback behavior, the official docs recommend a Panel Execute DAT watching the panel key value."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Menu", "note": "Off, on, or while-playing capture mode"},
+    {"name": "keys", "type": "String", "note": "Keys to monitor"},
+    {"name": "modifiers", "type": "Menu", "note": "Required modifier key combination"},
+    {"name": "ignore", "type": "MenuItem", "note": "Ignore modifier keys"},
+    {"name": "none", "type": "MenuItem", "note": "Require no modifier keys"},
+    {"name": "ctrl", "type": "MenuItem", "note": "Require Control"},
+    {"name": "alt", "type": "MenuItem", "note": "Require Alt"},
+    {"name": "ctrlalt", "type": "MenuItem", "note": "Require Control+Alt"},
+    {"name": "shift", "type": "MenuItem", "note": "Require Shift"},
+    {"name": "shiftalt", "type": "MenuItem", "note": "Require Shift+Alt"},
+    {"name": "shiftctrl", "type": "MenuItem", "note": "Require Shift+Control"},
+    {"name": "shiftctrlalt", "type": "MenuItem", "note": "Require Shift+Control+Alt"},
+    {"name": "channelnames", "type": "Menu", "note": "Name output channels by key name or channel number"},
+    {"name": "panels", "type": "String", "note": "Panel COMP paths that restrict focus capture"},
+    {"name": "rate", "type": "Float", "note": "Sample rate"},
+    {"name": "left", "type": "Menu", "note": "Extend-left condition"},
+    {"name": "right", "type": "Menu", "note": "Extend-right condition"},
+    {"name": "defval", "type": "Float", "note": "Default extend value"}
+  ],
+  "common_gotchas": [
+    "Keyboard In CHOP outputs current key state, not rapid repeated keypress events.",
+    "It does not output all keys automatically; keys must be selected.",
+    "For every keystroke event, official docs recommend Panel Execute DAT watching the panel key value.",
+    "Panel focus filtering is important in multi-panel UIs so global keyboard state does not leak into controls.",
+    "While Playing captures events only when the timeline is playing forward."
+  ],
+  "related_snippets": ["CHOP_snippets", "DAT_snippets"],
+  "build_relevance": "2021.10000+ panel/input control",
+  "last_verified": "2026-06-18"
+}

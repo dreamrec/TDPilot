@@ -1,0 +1,69 @@
+{
+  "card_type": "operator",
+  "op_type": "oakselectTOP",
+  "family": "TOP",
+  "display_name": "OAK Select TOP",
+  "docs_url": "https://docs.derivative.ca/OAK_Select_TOP",
+  "summary": "Receives RGB, mono, depth, or XYZ point-cloud image streams from an OAK Device CHOP and outputs the selected buffer as a TOP.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Receive the selected OAK stream."
+    },
+    {
+      "name": "chop",
+      "type": "CHOP",
+      "note": "OAK Device CHOP running the pipeline."
+    },
+    {
+      "name": "stream",
+      "type": "String",
+      "note": "Stream name to receive."
+    },
+    {
+      "name": "cachesize",
+      "type": "Int",
+      "note": "Buffer count for asynchronous updates."
+    },
+    {
+      "name": "outputindex",
+      "type": "Float",
+      "note": "Output frame or buffer index; negative values can align latency."
+    },
+    {
+      "name": "outputindexunit",
+      "type": "Menu",
+      "note": "Units for output index: indices, frames, or seconds."
+    },
+    {
+      "name": "limitmax",
+      "type": "Toggle",
+      "note": "Limit maximum output dimensions."
+    },
+    {
+      "name": "outputformat",
+      "type": "Menu",
+      "note": "Output pixel format, including pointcloud when supported."
+    }
+  ],
+  "common_gotchas": [
+    "Requires a configured OAK Device CHOP and matching stream name.",
+    "Cache size of 2 is documented as a good async default.",
+    "Negative output indexes can delay images to align them with higher-latency tracking data.",
+    "Point-cloud output depends on depth stream names containing depth.",
+    "Output formats differ by stream type, so downstream TOPs should not assume RGBA8 data."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "CHOP_snippets"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Receives selected OAK camera streams from an OAK Device CHOP.",
+    "Can output RGB, mono, depth, or XYZ point-cloud buffers depending on stream availability.",
+    "Cache Size and Output Index support asynchronous device-frame alignment.",
+    "Point-cloud conversion depends on depth stream naming and output-format choices."
+  ]
+}

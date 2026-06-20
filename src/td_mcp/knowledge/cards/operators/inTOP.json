@@ -1,0 +1,79 @@
+{
+  "card_type": "operator",
+  "op_type": "inTOP",
+  "family": "TOP",
+  "display_name": "In TOP",
+  "docs_url": "https://docs.derivative.ca/In_TOP",
+  "summary": "Defines a TOP input connector inside a Component, with optional label text and Common TOP output controls.",
+  "key_params": [
+    {
+      "name": "label",
+      "type": "String",
+      "note": "Hover/help label for the component input"
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution policy"
+    },
+    {
+      "name": "resolution",
+      "type": "WH",
+      "note": "Common TOP custom resolution"
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Common TOP output aspect policy"
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Common TOP input smoothing mode"
+    },
+    {
+      "name": "fillmode",
+      "type": "Menu",
+      "note": "Common TOP viewer fill mode"
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Common TOP viewer smoothing mode"
+    },
+    {
+      "name": "npasses",
+      "type": "Int",
+      "note": "Common TOP pass repeat count"
+    },
+    {
+      "name": "chanmask",
+      "type": "String",
+      "note": "Common TOP channel mask"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Operator name and order matter more than Label for connector ordering.",
+    "Label is UI help text, not a stable binding identifier.",
+    "Use In TOP for component boundaries, not as a generic TOP reference mechanism.",
+    "Common output settings can silently resize or reformat input data."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "COMP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "In TOP creates a TOP input connector inside a Component.",
+    "Component inputs appear on the left side of the component.",
+    "Input ordering is based on operator names in alphanumeric order.",
+    "Label provides hover/help text for the connector, not a stable connector id.",
+    "Common TOP settings can still resize, filter, or reformat data passing through the input."
+  ]
+}

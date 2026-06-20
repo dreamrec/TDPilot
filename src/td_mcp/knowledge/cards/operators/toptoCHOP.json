@@ -1,0 +1,50 @@
+{
+  "card_type": "operator",
+  "op_type": "toptoCHOP",
+  "family": "CHOP",
+  "display_name": "TOP to CHOP",
+  "docs_url": "https://docs.derivative.ca/TOP_to_CHOP",
+  "summary": "Samples TOP pixels into CHOP channels, supporting direct image conversion, UV-driven sampling, regions, rows, columns, channel selection, and GPU download options.",
+  "key_concepts": [
+    "TOP to CHOP converts TOP image pixels into CHOP channels, placing RGBA color elements into separate channel streams.",
+    "It can extract a single pixel, rows, columns, rectangular regions, or a single set of channels for a whole image depending on parameters.",
+    "An optional CHOP input supplies U/V coordinates for sampling; the first channel is treated as U and the second as V.",
+    "Exclude NaN and Active Mask controls can skip pixels so they are not included in the CHOP output.",
+    "Depth TOP sources output only the depth value in the red channel.",
+    "Download Type can use a delayed GPU readback to avoid stalling rendering, but large image-to-CHOP conversions are still expensive."
+  ],
+  "key_params": [
+    {"name": "top", "type": "TOP", "note": "TOP source to sample"},
+    {"name": "downloadtype", "type": "Menu", "note": "Immediate slow or next-frame fast GPU download mode"},
+    {"name": "immediate", "type": "MenuItem", "note": "Download immediately, stalling render"},
+    {"name": "nextframe", "type": "MenuItem", "note": "Download next frame with less render stall"},
+    {"name": "r", "type": "String", "note": "Red channel prefix"},
+    {"name": "g", "type": "String", "note": "Green channel prefix"},
+    {"name": "b", "type": "String", "note": "Blue channel prefix"},
+    {"name": "a", "type": "String", "note": "Alpha channel prefix"},
+    {"name": "outputcolorspace", "type": "Menu", "note": "Color space for output values"},
+    {"name": "singleset", "type": "Toggle", "note": "Output one set of channels"},
+    {"name": "excludenans", "type": "Toggle", "note": "Skip NaN samples"},
+    {"name": "activechannel", "type": "Menu", "note": "Optional active-mask channel"},
+    {"name": "rgbaunit", "type": "Menu", "note": "RGBA output unit scaling"},
+    {"name": "crop", "type": "Menu", "note": "Pixel, row, column, block, or full image extraction"},
+    {"name": "uvunits", "type": "Menu", "note": "Normalized or pixel UV coordinate units"},
+    {"name": "ustart", "type": "Float", "note": "Starting U or pixel coordinate"},
+    {"name": "uend", "type": "Float", "note": "Ending U or pixel coordinate"},
+    {"name": "vstart", "type": "Float", "note": "Starting V or pixel coordinate"},
+    {"name": "vend", "type": "Float", "note": "Ending V or pixel coordinate"},
+    {"name": "interp", "type": "Menu", "note": "Nearest or linear sampling interpolation"},
+    {"name": "start", "type": "Float", "note": "Output CHOP start"},
+    {"name": "startunit", "type": "Menu", "note": "Output start units"},
+    {"name": "rate", "type": "Float", "note": "Output sample rate"},
+    {"name": "defval", "type": "Float", "note": "Default extend value"}
+  ],
+  "common_gotchas": [
+    "This is a GPU readback into CHOP data; full-frame conversion can be costly.",
+    "Depth TOPs output only red-channel depth data.",
+    "UV sampling requires exactly two input channels; the first is always treated as U and the second as V."
+  ],
+  "related_snippets": ["TOP_snippets", "CHOP_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18"
+}

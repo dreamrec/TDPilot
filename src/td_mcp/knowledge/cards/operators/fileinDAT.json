@@ -1,0 +1,67 @@
+{
+  "card_type": "operator",
+  "op_type": "fileinDAT",
+  "family": "DAT",
+  "display_name": "File In DAT",
+  "docs_url": "https://docs.derivative.ca/File_In_DAT",
+  "summary": "Reads text or table data from disk or a web URL into a DAT, with optional conversion from tab-delimited text to table cells.",
+  "key_params": [
+    {
+      "name": "file",
+      "type": "File/URL",
+      "note": "Path or http URL to load into the DAT"
+    },
+    {
+      "name": "converttable",
+      "type": "Toggle",
+      "note": "Convert tab-delimited text into table rows and columns"
+    },
+    {
+      "name": "refresh",
+      "type": "Toggle",
+      "note": "Reload when the source file changes"
+    },
+    {
+      "name": "refreshpulse",
+      "type": "Pulse",
+      "note": "Force a manual reload"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    ".dat files load as table data while other files are treated as raw text unless Convert to Table is enabled.",
+    "Remote http sources can cook asynchronously or fail, so generated networks should include missing-data handling.",
+    "Refresh behavior is explicit; file edits are not always reflected until refresh or recook depending on settings.",
+    "Use File In DAT for text and tables, not for binary media metadata or image/video pixels."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "text-table-file-ingest",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Reads text or DAT table files from disk into a DAT operator.",
+    "Can load from an http URL as documented by the File parameter.",
+    "Convert Table turns tab-delimited text into table rows and columns.",
+    "Refresh controls whether file contents are reloaded automatically or by pulse."
+  ]
+}

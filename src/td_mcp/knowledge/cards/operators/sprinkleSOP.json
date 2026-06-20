@@ -1,0 +1,52 @@
+{
+  "card_type": "operator",
+  "op_type": "sprinkleSOP",
+  "family": "SOP",
+  "display_name": "Sprinkle SOP",
+  "docs_url": "https://docs.derivative.ca/Sprinkle_SOP",
+  "summary": "Adds scattered points on surfaces, per primitive, inside bounding boxes, approximate volumes, or closed volumes, with rest/deformed input support.",
+  "key_params": [
+    {
+      "name": "seed",
+      "type": "Float",
+      "note": "Random seed"
+    },
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "Scatter method"
+    },
+    {
+      "name": "numpoints",
+      "type": "Int",
+      "note": "Total point count"
+    },
+    {
+      "name": "consolidate",
+      "type": "Toggle",
+      "note": "Remove too-close points"
+    },
+    {
+      "name": "neardist",
+      "type": "Float",
+      "note": "Minimum distance for consolidation"
+    }
+  ],
+  "common_gotchas": [
+    "Volume modes are intended for closed-volume use cases.",
+    "Bounding Box mode is faster but less spatially faithful than volume methods.",
+    "For deforming geometry, input 0 should be rest geometry and input 1 the deformed surface.",
+    "Consolidation can reduce the final output below Number of Points."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "surface-and-volume-point-scatter",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Sprinkle SOP creates points on a surface or inside a volume based on the Method menu.",
+    "Surface mode distributes by area, while Per Primitive gives each primitive the same point count.",
+    "A second input stabilizes scattering on deforming geometry by pairing undeformed input 0 with deformed input 1.",
+    "Consolidate removes points until the remaining points meet a minimum distance."
+  ]
+}

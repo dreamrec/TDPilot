@@ -1,0 +1,48 @@
+{
+  "card_type": "operator",
+  "op_type": "shiftCHOP",
+  "family": "CHOP",
+  "display_name": "Shift CHOP",
+  "docs_url": "https://docs.derivative.ca/Shift_CHOP",
+  "summary": "Time-shifts a CHOP by changing the start and end interval while preserving the channel contents.",
+  "key_concepts": [
+    "Shift CHOP changes the start and end interval of a CHOP while keeping the channel contents the same.",
+    "Reference selects whether start or end position is used as the alignment reference.",
+    "Unit Values decides whether Start and End are absolute, relative to the input start/end, or relative to the current frame.",
+    "Scroll Offset moves samples within the unchanged interval length.",
+    "The $C variable can shift each channel differently through Scroll or Start/End parameters.",
+    "The optional second input supplies a Start/End Reference for aligning the first CHOP to another CHOP interval; output channels still come from the first input."
+  ],
+  "key_params": [
+    {"name": "reference", "type": "Menu", "note": "Use start or end position as the alignment reference"},
+    {"name": "refstart", "type": "MenuItem", "note": "Use the CHOP start as the reference"},
+    {"name": "refend", "type": "MenuItem", "note": "Use the CHOP end as the reference"},
+    {"name": "relative", "type": "Menu", "note": "Absolute, relative to start/end, or relative to current frame"},
+    {"name": "abs", "type": "MenuItem", "note": "Interpret Start/End as absolute positions"},
+    {"name": "rel", "type": "MenuItem", "note": "Interpret Start/End relative to input start/end"},
+    {"name": "cur", "type": "MenuItem", "note": "Use the current frame as the new start position"},
+    {"name": "start", "type": "Float", "note": "Start interval position"},
+    {"name": "startunit", "type": "Menu", "note": "Start units"},
+    {"name": "end", "type": "Float", "note": "End interval position"},
+    {"name": "endunit", "type": "Menu", "note": "End units"},
+    {"name": "scroll", "type": "Float", "note": "Scroll samples within the unchanged interval length"},
+    {"name": "scrollunit", "type": "Menu", "note": "Scroll offset units"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP channel scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Common CHOP sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "commonrenamefrom", "type": "String", "note": "Common CHOP rename-from pattern"},
+    {"name": "commonrenameto", "type": "String", "note": "Common CHOP rename-to pattern"}
+  ],
+  "common_gotchas": [
+    "Channel contents remain the same; the CHOP interval is shifted.",
+    "Scroll changes sample placement within the range without changing the CHOP length.",
+    "Use the $C variable in Scroll or Start/End to shift each channel differently by index.",
+    "Optional second Start/End Reference input aligns the first input relative to another CHOP interval.",
+    "The second input only supplies interval/reference information; output channels come from the first input.",
+    "Relative-to-current-frame ignores Start/End values and uses the current frame as the new start."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ time alignment and offsets",
+  "last_verified": "2026-06-18"
+}

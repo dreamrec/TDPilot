@@ -1,0 +1,77 @@
+{
+  "card_type": "operator",
+  "op_type": "trailSOP",
+  "family": "SOP",
+  "display_name": "Trail SOP",
+  "docs_url": "https://docs.derivative.ca/Trail_SOP",
+  "summary": "Caches an input SOP over previous frames to preserve history, connect temporal meshes/polygons, or compute point velocity attributes.",
+  "key_params": [
+    {
+      "name": "result",
+      "type": "Parameter",
+      "note": "Trail SOP official parameter"
+    },
+    {
+      "name": "length",
+      "type": "Parameter",
+      "note": "Trail SOP official parameter"
+    },
+    {
+      "name": "inc",
+      "type": "Parameter",
+      "note": "Trail SOP official parameter"
+    },
+    {
+      "name": "cache",
+      "type": "Parameter",
+      "note": "Trail SOP official parameter"
+    },
+    {
+      "name": "evalframe",
+      "type": "Parameter",
+      "note": "Trail SOP official parameter"
+    },
+    {
+      "name": "surftype",
+      "type": "Parameter",
+      "note": "Trail SOP official parameter"
+    },
+    {
+      "name": "close",
+      "type": "Parameter",
+      "note": "Trail SOP official parameter"
+    },
+    {
+      "name": "velscale",
+      "type": "Parameter",
+      "note": "Trail SOP official parameter"
+    },
+    {
+      "name": "reset",
+      "type": "Parameter",
+      "note": "Trail SOP official parameter"
+    },
+    {
+      "name": "resetpulse",
+      "type": "Parameter",
+      "note": "Trail SOP official parameter"
+    }
+  ],
+  "common_gotchas": [
+    "Non-integer increments are risky with Particle SOP or Spring SOP sources.",
+    "Cache size must cover the requested length and increment.",
+    "Timeline jumps and reset pulses are visible because Trail SOP is stateful.",
+    "Mesh and polygon connection modes assume stable point counts across cached frames."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "temporal-sop-history-and-velocity",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Trail SOP caches input SOP geometry over previous frames.",
+    "It can preserve trails, connect history as mesh, connect as polygons, or compute velocity.",
+    "Particle SOP and Spring SOP inputs need integer increments for reliable trails.",
+    "cache controls how many frames of history are retained, and reset clears cached geometry."
+  ]
+}

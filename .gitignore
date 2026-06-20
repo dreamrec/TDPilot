@@ -99,6 +99,13 @@ tdpilot.mcpb
 data/brains/active.json
 data/normalized/
 
+# Generated atlas/docsbrain build artifacts (SQLite DBs, jsonl chunks,
+# inventory + draft manifests). Rebuilt by scripts/draft_brain_atlas_cards.py
+# and the docsbrain refresh scripts from committed sources. The derived
+# operator cards under src/td_mcp/knowledge/cards/ ARE tracked; this scratch
+# tree is not — and must never be swept into a commit by `git add -A`.
+data/generated/
+
 # Archived docs — plans, version-specific implementation notes, runtime
 # strategy/roadmap drafts, retired session reports. Kept locally but not
 # published. The public docs/ tree contains only current-state user-facing

@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "interpolateCHOP",
+  "family": "CHOP",
+  "display_name": "Interpolate CHOP",
+  "docs_url": "https://docs.derivative.ca/Interpolate_CHOP",
+  "summary": "Treats multiple input CHOPs as keyframes, sorts them in time, and interpolates between them to fill gaps.",
+  "key_concepts": [
+    "Treats multiple input CHOPs as keyframes and interpolates between them to fill gaps.",
+    "Inputs are sorted in time without shifting them, so source timing remains planner-critical.",
+    "The output channel count follows the first input.",
+    "When Match is Channel Name, missing channels in an input are treated as no keyframe for that channel.",
+    "Shape chooses the interpolation curve and Overlap Priority resolves overlapping multi-frame inputs."
+  ],
+  "key_params": [
+    {"name": "blendfunc", "type": "Menu", "note": "Interpolation shape such as linear, ease, cubic, add, or hold previous"},
+    {"name": "overlap", "type": "Menu", "note": "How overlapping multi-frame inputs are resolved"},
+    {"name": "avg", "type": "MenuItem", "note": "Average overlapping segments"},
+    {"name": "first", "type": "MenuItem", "note": "Use earliest segment in overlaps"},
+    {"name": "last", "type": "MenuItem", "note": "Use latest segment in overlaps"},
+    {"name": "match", "type": "Menu", "note": "Match channels by index or name"},
+    {"name": "scope", "type": "Pattern", "note": "Channel pattern to affect"}
+  ],
+  "common_gotchas": [
+    "Inputs are sorted in time without shifting them.",
+    "The output channel count follows the first input.",
+    "When matching by name, a missing channel in an input is treated as no keyframe for that channel.",
+    "Single-frame inputs such as Constant CHOPs are the common keyframe source.",
+    "Overlap handling only matters when inputs have multi-frame intervals that overlap."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

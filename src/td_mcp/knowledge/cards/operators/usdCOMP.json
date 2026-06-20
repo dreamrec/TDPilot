@@ -1,0 +1,49 @@
+{
+  "card_type": "operator",
+  "op_type": "usdCOMP",
+  "family": "COMP",
+  "display_name": "USD COMP",
+  "docs_url": "https://docs.derivative.ca/USD_COMP",
+  "summary": "Loads USD, USDA, USDC, and USDZ scenes into a generated TouchDesigner network with cached .tdc assets, Import Select operators, material/camera/actor options, merge controls, GPU-direct paths, and animation playback controls.",
+  "key_params": [
+    {"name": "file", "type": "File", "note": "USD, USDA, USDC, or USDZ file path"},
+    {"name": "importmethod", "type": "Menu", "note": "Full Replacement, Merge with Existing, or Reload Assets"},
+    {"name": "imp", "type": "Pulse", "note": "Import according to the selected method"},
+    {"name": "usematerial", "type": "Toggle", "note": "Generate material and texture-related nodes for material bindings"},
+    {"name": "cameras", "type": "Toggle", "note": "Import camera nodes defined by the USD scene"},
+    {"name": "genactors", "type": "Toggle", "note": "Generate Actor COMPs instead of Geometry COMPs for imported SOP parents"},
+    {"name": "mergegeo", "type": "Toggle", "note": "Merge compatible geometry to improve generated network performance"},
+    {"name": "mergelevel", "type": "Integer", "note": "Tree depth used for geometry merging"},
+    {"name": "maxwiredchildren", "type": "Integer", "note": "Relocate excess wired children inside parent nodes to reduce network clutter"},
+    {"name": "computenormals", "type": "Toggle", "note": "Compute subdivision normals with OpenSubdiv for CPU mode"},
+    {"name": "pops", "type": "Toggle", "note": "Use POPs instead of SOPs for geometry import when enabled"},
+    {"name": "gpudirect", "type": "Toggle", "note": "Load supported mesh and point primitives directly to GPU in SOP mode"},
+    {"name": "keepparams", "type": "Toggle", "note": "Keep existing parameter values when updating an imported network"},
+    {"name": "keepconnections", "type": "Toggle", "note": "Keep existing network connections when updating an imported network"},
+    {"name": "callbacks", "type": "DAT", "note": "Callbacks that run during import or update for generated-network customization"},
+    {"name": "buildnetwork", "type": "Pulse", "note": "Build or rebuild generated network after USD page changes"},
+    {"name": "update", "type": "Pulse", "note": "Merge USD file changes into the existing generated network"},
+    {"name": "sampleratemode", "type": "Menu", "note": "Use file FPS or a custom sample rate for USD animation"},
+    {"name": "playmode", "type": "Menu", "note": "Locked to timeline, specify index, sequential, or output full range"},
+    {"name": "index", "type": "Float", "note": "Random-access animation position in Specify Index mode"}
+  ],
+  "key_concepts": [
+    "USD COMP imports USD, USDA, USDC, and USDZ scene assets into a generated TouchDesigner network.",
+    "Imported assets are cached as .tdc files in TDImportCache and read through Import Select TOP/SOP/CHOP operators.",
+    "Build Network is required after choosing a file or changing USD-page import options; Reload File refreshes assets without reshaping the network.",
+    "Update merges changes from an edited USD file into the existing generated network, with Keep Parameters and Keep Connections preserving manual edits.",
+    "Merge Geometry, Import POPs, Direct to GPU, material/camera generation, and actor generation choose the generated network shape and runtime performance path."
+  ],
+  "common_gotchas": [
+    "USD page parameter changes require Build Network before the generated network reflects them.",
+    "Assets are cached to a .tdc file in TDImportCache next to the .toe; moving machines without that cache forces reimport.",
+    "Reload File refreshes assets without network changes, while Update merges changed USD content into the existing network.",
+    "Merge Geometry can significantly improve medium or large scene performance, but changes network shape.",
+    "Direct to GPU currently supports mesh and point primitives; unsupported prim types generate errors in Import Select SOPs.",
+    "Keep Parameter Values and Keep Connections matter when updating a generated network that has manual adjustments.",
+    "Play mode controls determine whether animation follows the timeline, a specified index, or sequential playback."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2025.30000+ USD 25.05.01 import, cache, and playback workflow",
+  "last_verified": "2026-06-18"
+}

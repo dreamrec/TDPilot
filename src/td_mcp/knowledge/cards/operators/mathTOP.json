@@ -1,0 +1,90 @@
+{
+  "card_type": "operator",
+  "op_type": "mathTOP",
+  "family": "TOP",
+  "display_name": "Math TOP",
+  "docs_url": "https://docs.derivative.ca/Math_TOP",
+  "summary": "Performs mathematical operations on image pixels, including per-channel unary operations, channel combining, multiply/add, range mapping, integer conversion, and invalid-value handling in newer builds.",
+  "key_params": [
+    {
+      "name": "preop",
+      "type": "Menu",
+      "note": "off, negate, pos, root, square, or inverse before channel combine"
+    },
+    {
+      "name": "chanop",
+      "type": "Menu",
+      "note": "off, add, sub, mul, div, avg, min, max, or len"
+    },
+    {
+      "name": "postop",
+      "type": "Menu",
+      "note": "Unary operation after channel combine"
+    },
+    {
+      "name": "integer",
+      "type": "Menu",
+      "note": "off, ceiling, floor, or round integer handling"
+    },
+    {
+      "name": "inputmask",
+      "type": "String",
+      "note": "Input channel mask used by channel-combine operation"
+    },
+    {
+      "name": "outputchannels",
+      "type": "String",
+      "note": "Output channel mask for channel-combine operation"
+    },
+    {
+      "name": "preoff",
+      "type": "Float",
+      "note": "Pre-add offset in Multi-Add page"
+    },
+    {
+      "name": "gain",
+      "type": "Float",
+      "note": "Multiply value in Multi-Add page"
+    },
+    {
+      "name": "postoff",
+      "type": "Float",
+      "note": "Post-add offset in Multi-Add page"
+    },
+    {
+      "name": "op",
+      "type": "Menu",
+      "note": "no_op, rgbmultalpha, rgbdivalpha, or rgbdivalphafill"
+    },
+    {
+      "name": "fromrange",
+      "type": "Float2",
+      "note": "All-channel source range fromrange1/fromrange2"
+    },
+    {
+      "name": "torange",
+      "type": "Float2",
+      "note": "All-channel destination range torange1/torange2"
+    }
+  ],
+  "common_gotchas": [
+    "Channel combine operates across selected channels for each pixel, not across neighboring pixels.",
+    "inputmask and outputchannels can silently exclude channels from the operation.",
+    "RGB divide-by-alpha modes have special fill behavior where alpha is zero.",
+    "Pixel format can clamp or quantize math results if left at an integer format.",
+    "Range mapping happens after the other math pages, so it can hide upstream values."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Performs math operations on image pixels and channels on the GPU.",
+    "Channel Pre OP and Post OP apply unary math before and after channel combination.",
+    "Combine Channels uses input and output masks to combine selected channels of each pixel.",
+    "Multi-Add applies pre-add, gain, and post-add in order.",
+    "Range mapping is the final conversion step before output.",
+    "The operator supports 3D Textures and 2D Texture Arrays."
+  ]
+}

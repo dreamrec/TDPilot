@@ -1,0 +1,49 @@
+{
+  "card_type": "operator",
+  "op_type": "mouseinCHOP",
+  "family": "CHOP",
+  "display_name": "Mouse In CHOP",
+  "docs_url": "https://docs.derivative.ca/Mouse_In_CHOP",
+  "summary": "Outputs mouse X/Y screen channels, button states, optional wheel/monitor channels, and panel-filtered mouse input.",
+  "key_params": [
+    {"name": "active", "type": "Menu", "note": "Off, On, or While Playing mouse capture"},
+    {"name": "output", "type": "Menu", "note": "Normalized, normalized aspect, or absolute pixel coordinates"},
+    {"name": "posxname", "type": "String", "note": "Output channel name for mouse X"},
+    {"name": "posyname", "type": "String", "note": "Output channel name for mouse Y"},
+    {"name": "lbuttonname", "type": "String", "note": "Output channel name for left button"},
+    {"name": "rbuttonname", "type": "String", "note": "Output channel name for right button"},
+    {"name": "mbuttonname", "type": "String", "note": "Output channel name for middle button"},
+    {"name": "wheel", "type": "Toggle", "note": "Output mouse wheel channel"},
+    {"name": "wheelinc", "type": "Float", "note": "Amount added or subtracted per wheel movement"},
+    {"name": "monitor", "type": "Toggle", "note": "Output current monitor channel"},
+    {"name": "panels", "type": "COMP", "note": "Only trigger events when the specified panel has focus"},
+    {"name": "rate", "type": "Float", "note": "Output sample rate"},
+    {"name": "left", "type": "Menu", "note": "Left extend condition"},
+    {"name": "right", "type": "Menu", "note": "Right extend condition"},
+    {"name": "defval", "type": "Float", "note": "Default extend value"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"}
+  ],
+  "key_concepts": [
+    "Mouse In CHOP outputs mouse X and Y screen values.",
+    "It outputs left, right, and middle button states as 0 for up and 1 for down.",
+    "Active controls whether mouse movement is captured and whether the CHOP cooks every frame.",
+    "Output Coordinates can be normalized, aspect-adjusted normalized, or absolute pixels.",
+    "Wheel and current monitor can be output as additional channels.",
+    "Panels limits events to a specified focused panel."
+  ],
+  "common_gotchas": [
+    "When Active is Off, the operator does not cook and current mouse X/Y values are not output.",
+    "While Playing captures mouse events only while the timeline is playing forward.",
+    "Normalized coordinates are centered on the primary monitor; absolute coordinates are pixels with 0,0 at the primary monitor bottom-left.",
+    "Do not hardcode channel names because position and button channel names are parameter-defined.",
+    "Panels restricts events to the focused specified panel, which is important in multi-panel UIs."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2020.20000+ mouse input channels",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,47 @@
+{
+  "card_type": "article",
+  "article_id": "textcomp_class",
+  "title": "textCOMP Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "COMP",
+    "PANEL",
+    "UI"
+  ],
+  "summary": "Official Derivative Python API reference for Text COMP instances, covering edited text, selection, text measurements, text formatting, cursor placement, keyboard focus, and inherited COMP behavior.",
+  "source_url": "https://docs.derivative.ca/TextCOMP_Class",
+  "docsbrain_page_id": "textcomp_class",
+  "covered_operators": [
+    "textCOMP"
+  ],
+  "key_concepts": [
+    "textCOMP Class",
+    "Text COMP",
+    "COMP class",
+    "editText",
+    "selectedText",
+    "textHeight",
+    "textWidth",
+    "evalTextSize()",
+    "formatText()",
+    "setCursorPosUV()",
+    "setKeyboardFocus()",
+    "editing",
+    "selectAll",
+    "current text",
+    "font settings",
+    "UV coordinates"
+  ],
+  "guidance": [
+    "Use this article when a script needs to inspect the text currently being edited, read selected text, or place the cursor by UV coordinates.",
+    "Use textHeight and textWidth for the current measured panel text size after updates; use evalTextSize() when the code needs an immediate measurement from the current font settings.",
+    "Use formatText(text, editing=True) when the returned string must match the Text COMP formatting used while editing.",
+    "Use setCursorPosUV(u, v) to position the cursor from normalized text-panel coordinates.",
+    "Use setKeyboardFocus(selectAll=True) when giving the Text COMP keyboard focus should also select all editable text."
+  ],
+  "related_snippets": [
+    "panel_ui"
+  ],
+  "last_verified": "2026-06-18"
+}

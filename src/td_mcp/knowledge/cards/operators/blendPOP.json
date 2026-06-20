@@ -1,0 +1,38 @@
+{
+  "card_type": "operator",
+  "op_type": "blendPOP",
+  "family": "POP",
+  "display_name": "Blend POP",
+  "docs_url": "https://docs.derivative.ca/Blend_POP",
+  "summary": "Blends matching attributes across multiple input POPs using simple reductions such as average, add, multiply, min, max, or weighted proportional blending. Point, vertex, and primitive attributes can be blended in one operator.",
+  "key_params": [
+    {"name": "blendtype", "type": "Menu", "note": "Blend operation such as average, add, min, max, or proportional"},
+    {"name": "lengthmismatchnotif", "type": "Menu", "note": "Notification/action when input lengths do not match"},
+    {"name": "lengthmismatchaction", "type": "Menu", "note": "Attribute-value behavior when sampling outside an input range"},
+    {"name": "weightchop", "type": "CHOP", "note": "Optional CHOP source for blend weights"},
+    {"name": "pointattrscope", "type": "Str", "note": "Point attributes to blend"},
+    {"name": "primattrscope", "type": "Str", "note": "Primitive attributes to blend"},
+    {"name": "vertattrscope", "type": "Str", "note": "Vertex attributes to blend"},
+    {"name": "input", "type": "Sequential", "note": "Input POP sequence blocks"},
+    {"name": "input0pop", "type": "POP", "note": "POP source for the first input sequence block"},
+    {"name": "input0weight", "type": "Float", "note": "Weight for the first input block"},
+    {"name": "map", "type": "Sequential", "note": "Map attributes to blend parameters"},
+    {"name": "map0op", "type": "Menu", "note": "Source operator for the first mapping block"},
+    {"name": "map0element", "type": "Str", "note": "Source element for the first mapping block"},
+    {"name": "map0parm", "type": "Menu", "note": "Target parameter for the first mapping block"},
+    {"name": "map0combineop", "type": "Menu", "note": "Combine operation for mapped values"}
+  ],
+  "key_concepts": [
+    "Blend POP combines matching point, primitive, and vertex attributes across multiple POP inputs by element index.",
+    "Blend Type chooses simple reduction or weighted proportional behavior, while input blocks and CHOP weights provide per-input influence.",
+    "Length-mismatch controls and the Map page are important when inputs differ in size or when point attributes should drive blend weights."
+  ],
+  "common_gotchas": [
+    "Inputs should have matching point/vertex/primitive counts unless the length mismatch behavior is intentionally configured.",
+    "Weighted modes can pull weights from attributes or CHOPs, so inspect both parameter and mapped weight sources.",
+    "Blend only affects attributes that exist in the selected scopes across inputs; missing attributes do not magically appear."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

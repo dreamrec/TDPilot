@@ -1,0 +1,87 @@
+{
+  "card_type": "operator",
+  "op_type": "slopeTOP",
+  "family": "TOP",
+  "display_name": "Slope TOP",
+  "docs_url": "https://docs.derivative.ca/Slope_TOP",
+  "summary": "Calculates per-pixel neighbor differences across horizontal, vertical, or depth/array directions to create slope data.",
+  "key_params": [
+    {
+      "name": "red",
+      "type": "Menu",
+      "note": "Slope source routed to red."
+    },
+    {
+      "name": "green",
+      "type": "Menu",
+      "note": "Slope source routed to green."
+    },
+    {
+      "name": "blue",
+      "type": "Menu",
+      "note": "Slope source routed to blue."
+    },
+    {
+      "name": "alpha",
+      "type": "Menu",
+      "note": "Slope source routed to alpha."
+    },
+    {
+      "name": "method",
+      "type": "Menu",
+      "note": "Neighbor comparison method."
+    },
+    {
+      "name": "zeropoint",
+      "type": "Float",
+      "note": "Neutral zero-slope value."
+    },
+    {
+      "name": "strength",
+      "type": "Float",
+      "note": "Multiplier for slope intensity."
+    },
+    {
+      "name": "offset",
+      "type": "XYZ",
+      "note": "Pixel offset for sampling."
+    },
+    {
+      "name": "offsetunit",
+      "type": "Menu",
+      "note": "Units for offset."
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Edge extend behavior."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    }
+  ],
+  "common_gotchas": [
+    "Default normalized output can hide signed negative slopes unless you use float output and zeropoint 0.",
+    "Z slope sources only make sense for 3D textures or 2D texture arrays.",
+    "Neutral output means zeropoint, not always a hardcoded 0.5.",
+    "Edge results depend on the Extend menu."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "image_gradient_analysis",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Slope TOP computes differences between neighboring pixels and writes selected horizontal, vertical, or Z slope data into output channels.",
+    "A neutral value is based on zeropoint, with 0.5 as the default display-friendly midpoint.",
+    "32-bit float output plus zeropoint 0 is better for signed slope data.",
+    "The operator supports 3D textures and 2D texture arrays, where Z options sample depth/slice direction."
+  ]
+}

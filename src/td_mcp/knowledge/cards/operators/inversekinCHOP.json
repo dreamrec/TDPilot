@@ -1,0 +1,41 @@
+{
+  "card_type": "operator",
+  "op_type": "inversekinCHOP",
+  "family": "CHOP",
+  "display_name": "Inverse Kin CHOP",
+  "docs_url": "https://docs.derivative.ca/Inverse_Kin_CHOP",
+  "summary": "Calculates inverse-kinematics solutions for Bone objects and outputs rotations that can be exported back to a bone chain.",
+  "key_concepts": [
+    "Calculates inverse kinematics simulations for Bone objects and legacy object-level bone chains.",
+    "Solver Type switches between no solve, rest display, capture display, inverse kinematics, constraints, and curve-following modes.",
+    "Inverse Kinematics mode positions the end of the chain at the origin of the End Affector object.",
+    "Rest angles shape the IK solution, and continuity is only guaranteed for a fixed set of rest angles.",
+    "Twist Affector and IK Twist control chain twist around the root-to-end-affector axis.",
+    "Solved rotation channels are intended to be exported back to the bone chain rather than mixed with manual bone rotations."
+  ],
+  "key_params": [
+    {"name": "solvertype", "type": "Menu", "note": "None, rest position, capture position, inverse kinematics, constraint, or curve mode"},
+    {"name": "none", "type": "MenuItem", "note": "No motion solution"},
+    {"name": "boneroot", "type": "COMP", "note": "Root bone in the chain"},
+    {"name": "boneend", "type": "COMP", "note": "End bone in the chain"},
+    {"name": "endaffector", "type": "COMP", "note": "Target object for the end of the chain"},
+    {"name": "twistaffector", "type": "COMP", "note": "Optional target for twist orientation"},
+    {"name": "iktwist", "type": "Float", "note": "Twist control"},
+    {"name": "ikdampen", "type": "Float", "note": "IK damping"},
+    {"name": "rest", "type": "MenuItem", "note": "Show rest position"},
+    {"name": "capture", "type": "MenuItem", "note": "Show capture position"},
+    {"name": "inverse", "type": "MenuItem", "note": "Use inverse kinematics solver"},
+    {"name": "constraint", "type": "MenuItem", "note": "Use constraint solver"},
+    {"name": "curve", "type": "MenuItem", "note": "Use curve solver or curve object control"}
+  ],
+  "common_gotchas": [
+    "Inverse Kin CHOP works with Bone objects and legacy object-level rigging.",
+    "Do not animate rest angles casually because IK continuity is only guaranteed for a fixed rest-angle set.",
+    "Enable the export flag to drive the bones with the solved rotation channels.",
+    "Inverse Kinematics mode requires an End Affector object.",
+    "Follow Curve mode requires a curve object and should not be planned like end-affector IK."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ legacy IK",
+  "last_verified": "2026-06-18"
+}

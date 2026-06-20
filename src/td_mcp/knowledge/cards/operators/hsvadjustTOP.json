@@ -1,0 +1,94 @@
+{
+  "card_type": "operator",
+  "op_type": "hsvadjustTOP",
+  "family": "TOP",
+  "display_name": "HSV Adjust TOP",
+  "docs_url": "https://docs.derivative.ca/HSV_Adjust_TOP",
+  "summary": "Adjusts hue, saturation, and value globally or within ranges centered around a start color.",
+  "key_params": [
+    {
+      "name": "startcolor",
+      "type": "RGB",
+      "note": "Color around which HSV selection is centered"
+    },
+    {
+      "name": "huerange",
+      "type": "Float",
+      "note": "Hue selection range in degrees"
+    },
+    {
+      "name": "huefalloff",
+      "type": "Float",
+      "note": "Soft falloff outside hue range"
+    },
+    {
+      "name": "saturationrange",
+      "type": "Float",
+      "note": "Saturation selection range"
+    },
+    {
+      "name": "saturationfalloff",
+      "type": "Float",
+      "note": "Soft falloff outside saturation range"
+    },
+    {
+      "name": "valuerange",
+      "type": "Float",
+      "note": "Value selection range"
+    },
+    {
+      "name": "valuefalloff",
+      "type": "Float",
+      "note": "Soft falloff outside value range"
+    },
+    {
+      "name": "hueoffset",
+      "type": "Float",
+      "note": "Hue offset applied to selected pixels"
+    },
+    {
+      "name": "saturationmult",
+      "type": "Float",
+      "note": "Saturation multiplier for selected pixels"
+    },
+    {
+      "name": "valuemult",
+      "type": "Float",
+      "note": "Value multiplier for selected pixels"
+    },
+    {
+      "name": "parmcolorspace",
+      "type": "Menu",
+      "note": "Parameter color-space selector when working color space is active"
+    },
+    {
+      "name": "parmreferencewhite",
+      "type": "Menu",
+      "note": "Parameter reference white when working color space is active"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Leaving ranges broad means the offset and multipliers affect the whole image.",
+    "Selection is centered on Start Color, so changing Start Color changes which pixels are adjusted.",
+    "Falloff expands and softens the selected range rather than changing the target color directly.",
+    "Multipliers can clip depending on output format and downstream color handling."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "HSV Adjust TOP changes image colors in hue, saturation, and value space.",
+    "Hue Offset, Saturation Multiplier, and Value Multiplier affect all pixels when ranges remain broad.",
+    "Start Color centers range-limited edits around a chosen hue/saturation/value target.",
+    "Hue Range is in degrees, and a range of 360 affects all hues.",
+    "Saturation Range and Value Range are normalized from 0 to 1.",
+    "Falloff controls soften the selected hue, saturation, and value ranges."
+  ]
+}

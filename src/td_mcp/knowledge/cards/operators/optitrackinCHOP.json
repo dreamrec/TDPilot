@@ -1,0 +1,44 @@
+{
+  "card_type": "operator",
+  "op_type": "optitrackinCHOP",
+  "family": "CHOP",
+  "display_name": "OptiTrack In CHOP",
+  "docs_url": "https://docs.derivative.ca/OptiTrack_In_CHOP",
+  "summary": "Receives OptiTrack/NatNet rigid-body tracking data over the network and outputs tracking channels.",
+  "key_concepts": [
+    "OptiTrack In CHOP is a Windows-only receiver for OptiTrack/NatNet tracking data.",
+    "The docs state it currently receives Rigid Body data, so generated plans should not assume marker or skeleton streams.",
+    "Connection Type selects multicast or unicast, with Network Address still pointing at the OptiTrack server in multicast mode.",
+    "Local Address selects the local NIC on multi-adapter systems, while command and data ports must match NatNet/server settings.",
+    "This operator was previously called NatNet In CHOP, so old projects may use that legacy name."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Receive tracking data"},
+    {"name": "connectiontype", "type": "Menu", "note": "Multicast or unicast connection mode"},
+    {"name": "mutlicast", "type": "MenuItem", "note": "Multicast connection mode"},
+    {"name": "unicast", "type": "MenuItem", "note": "Unicast connection mode"},
+    {"name": "netaddress", "type": "String", "note": "OptiTrack server computer name or IP address"},
+    {"name": "localaddress", "type": "String", "note": "Local NIC/IP wildcard or address to bind on multi-NIC systems"},
+    {"name": "commandport", "type": "Integer", "note": "NatNet command port"},
+    {"name": "dataport", "type": "Integer", "note": "NatNet data port"},
+    {"name": "rate", "type": "Float", "note": "Output sample rate"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Reset received channels/state"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"}
+  ],
+  "common_gotchas": [
+    "Official docs list this operator as Windows-only.",
+    "Only rigid-body data is currently received; do not plan for skeleton/marker streams unless verified elsewhere.",
+    "This operator was previously called NatNet In CHOP, so old projects/docs may use the legacy name.",
+    "In multicast mode, Network Address should still be the server address; the server negotiates multicast addressing.",
+    "Use Local Address when the machine has multiple network adapters and tracking should bind to a specific NIC.",
+    "Firewall and server NatNet settings must match connection type and ports before live data appears."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ Windows motion tracking",
+  "last_verified": "2026-06-18"
+}

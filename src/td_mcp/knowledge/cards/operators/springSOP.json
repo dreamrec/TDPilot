@@ -1,0 +1,233 @@
+{
+  "card_type": "operator",
+  "op_type": "springSOP",
+  "family": "SOP",
+  "display_name": "Spring SOP",
+  "docs_url": "https://docs.derivative.ca/Spring_SOP",
+  "summary": "Simulates spring dynamics on point masses and polygon edges with stateful time stepping, fixed points, attributes, forces, turbulence, limits, and collision behavior.",
+  "key_params": [
+    {
+      "name": "timepreroll",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "timeinc",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "accurate",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "attractmode",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "reset",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "resetpulse",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "external",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "externalx",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "externaly",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "externalz",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "wind",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "windx",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "windy",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "windz",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "turb",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "turbx",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "turby",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "turbz",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "period",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "seed",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "fixed",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "revertfixed",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "copygroups",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "domass",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "mass",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "dodrag",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "drag",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "springbehavior",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "springk",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "tension",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "limitpos",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "limitposx",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "limitposy",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "limitposz",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "limitneg",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "limitnegx",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "limitnegy",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "limitnegz",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "hit",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "gaintan",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    },
+    {
+      "name": "gainnorm",
+      "type": "Parameter",
+      "note": "Spring SOP official parameter"
+    }
+  ],
+  "common_gotchas": [
+    "High springk values can oscillate out of control; reduce timeinc for stability.",
+    "timepreroll still computes skipped simulation time.",
+    "fixed is a point group field, not a boolean toggle.",
+    "bounce and stick are hit menu values, not parameters."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "legacy-sop-spring-simulation",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Spring SOP is a stateful simulation over point masses and polygon edge springs.",
+    "timeinc controls simulation step size and should not exceed one frame of project time.",
+    "Fixed point groups can be copied from the source each frame to anchor parts of the simulation.",
+    "Hooke's Law spring behavior is generally more stable than normalized displacement.",
+    "Limit planes and collision inputs use hit behavior plus tangent/normal gain controls."
+  ]
+}

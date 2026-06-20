@@ -1,0 +1,133 @@
+{
+  "card_type": "operator",
+  "op_type": "executeDAT",
+  "family": "DAT",
+  "display_name": "Execute DAT",
+  "docs_url": "https://docs.derivative.ca/Execute_DAT",
+  "summary": "Runs Python callbacks on project and runtime events such as process start, frame start/end, play state changes, device changes, and node creation.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable or disable all Execute DAT callbacks"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose the operator context scripts execute from"
+    },
+    {
+      "name": "fromop",
+      "type": "OP path",
+      "note": "Operator context used when Execute From is set to Specified Operator"
+    },
+    {
+      "name": "start",
+      "type": "Toggle",
+      "note": "Run onStart when TouchDesigner starts"
+    },
+    {
+      "name": "create",
+      "type": "Toggle",
+      "note": "Run create when the node is created"
+    },
+    {
+      "name": "exit",
+      "type": "Toggle",
+      "note": "Run onExit when the TouchDesigner process quits"
+    },
+    {
+      "name": "framestart",
+      "type": "Toggle",
+      "note": "Run onFrameStart at the start of every frame"
+    },
+    {
+      "name": "frameend",
+      "type": "Toggle",
+      "note": "Run onFrameEnd at the end of every frame"
+    },
+    {
+      "name": "playstatechange",
+      "type": "Toggle",
+      "note": "Run when timeline play state changes"
+    },
+    {
+      "name": "devicechange",
+      "type": "Toggle",
+      "note": "Run when devices are connected or disconnected"
+    },
+    {
+      "name": "edit",
+      "type": "Pulse",
+      "note": "Open an editor to edit the Execute DAT text"
+    },
+    {
+      "name": "file",
+      "type": "File",
+      "note": "Filesystem path for loading callback script text"
+    },
+    {
+      "name": "syncfile",
+      "type": "Toggle",
+      "note": "Synchronize the DAT text with the file on disk"
+    },
+    {
+      "name": "loadonstart",
+      "type": "Toggle",
+      "note": "Reload the file from disk when the project starts"
+    },
+    {
+      "name": "loadonstartpulse",
+      "type": "Pulse",
+      "note": "Instantly reload the file from disk"
+    },
+    {
+      "name": "write",
+      "type": "Toggle",
+      "note": "Write DAT contents to disk when the project is saved"
+    },
+    {
+      "name": "writepulse",
+      "type": "Pulse",
+      "note": "Instantly write DAT contents to disk"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language setting"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor extension exposed by the DAT"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "Frame callbacks can run every frame, so generated scripts need cheap guards and no unbounded side effects.",
+    "Start and Create callbacks trigger in numbered-alphanumeric Execute DAT name order when multiple Execute DATs exist.",
+    "Start callbacks are not called in TouchEngine, so tool plans need alternate initialization when targeting TouchEngine.",
+    "The input text is not editable; edit the Execute DAT text body or synced file instead.",
+    "Sync File can overwrite or write to disk, so automated edits should avoid enabling it accidentally."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "project-event-callbacks",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Runs project and timeline callbacks such as start, create, exit, frame start, and frame end.",
+    "Can also react to play-state and device-change events when the corresponding toggles are enabled.",
+    "Execute-location parameters choose the operator context used for callback execution.",
+    "The File page can load, sync, and write callback script text on disk."
+  ]
+}

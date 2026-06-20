@@ -1,0 +1,38 @@
+{
+  "card_type": "operator",
+  "op_type": "linebreakPOP",
+  "family": "POP",
+  "display_name": "Line Break POP",
+  "docs_url": "https://docs.derivative.ca/Line_Break_POP",
+  "summary": "Builds new line strips from points or existing line strips. It can split lines by a LineBreak attribute, a LineStripIndex attribute, distance thresholds, every N points, input line breaks, or simple point order.",
+  "key_params": [
+    {"name": "connecmode", "type": "Menu", "note": "Use no connectivity, one line strip from point order, or input line strips"},
+    {"name": "uselinebreak", "type": "Toggle", "note": "Enable using a LineBreak-style attribute"},
+    {"name": "linebreakname", "type": "Str", "note": "Attribute name used to trigger line breaks"},
+    {"name": "uselinestripindex", "type": "Toggle", "note": "Enable line-strip-index attribute grouping"},
+    {"name": "linestripindexname", "type": "Str", "note": "Attribute name used to assign points to line strips"},
+    {"name": "useinputlinebreaks", "type": "Toggle", "note": "Respect line breaks already present on input line strips"},
+    {"name": "everyn", "type": "Toggle", "note": "Enable line breaks every N points"},
+    {"name": "n", "type": "Int", "note": "Point interval for Every N Points"},
+    {"name": "bydistancethreshold", "type": "Toggle", "note": "Split when point-to-point distance exceeds a threshold"},
+    {"name": "distancethreshold", "type": "Float", "note": "Distance threshold for splitting line strips"},
+    {"name": "distancethresholdattr", "type": "Str", "note": "Per-point or per-edge attribute that supplies distance thresholds"},
+    {"name": "outputlinebreakattr", "type": "Toggle", "note": "Output a line-break attribute describing the generated splits"},
+    {"name": "outputlines", "type": "Toggle", "note": "Create output line geometry after computing break data"},
+    {"name": "linetype", "type": "Menu", "note": "Output line strips or separate line primitives"},
+    {"name": "cpureadback", "type": "Toggle", "note": "Enable CPU readback for diagnostics or downstream CPU consumers"}
+  ],
+  "key_concepts": [
+    "Connection Mode selects whether loose points, one point-order strip, or existing input line strips provide the starting topology.",
+    "Break rules can come from LineBreak attributes, LineStripIndex attributes, input break data, every-N cadence, or distance thresholds.",
+    "Output options separate computing break metadata from emitting line geometry, and can choose line strips or independent line primitives."
+  ],
+  "common_gotchas": [
+    "LineBreak uses 1 to start a new line and 0 to continue; inverted logic creates fragmented output.",
+    "Use LineStripIndex from Line Metrics when preserving existing strip identity matters.",
+    "Distance splitting is sensitive to scale, so normalize or limit P before using threshold-based breaks."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

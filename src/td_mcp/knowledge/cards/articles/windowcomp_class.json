@@ -1,0 +1,49 @@
+{
+  "card_type": "article",
+  "article_id": "windowcomp_class",
+  "title": "windowCOMP Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "COMP",
+    "WINDOW",
+    "UI"
+  ],
+  "summary": "Official Derivative Python API reference for Window COMP instances, covering window state, DPI-scaled geometry, content bounds, foreground activation, and inherited COMP behavior.",
+  "source_url": "https://docs.derivative.ca/WindowCOMP_Class",
+  "docsbrain_page_id": "windowcomp_class",
+  "covered_operators": [
+    "windowCOMP"
+  ],
+  "key_concepts": [
+    "windowCOMP Class",
+    "Window COMP",
+    "COMP class",
+    "scalingMonitorIndex",
+    "isBorders",
+    "isFill",
+    "isOpen",
+    "width",
+    "height",
+    "x",
+    "y",
+    "contentX",
+    "contentY",
+    "contentWidth",
+    "contentHeight",
+    "DPI Scaling",
+    "borders",
+    "setForeground()",
+    "foreground process",
+    "process priority"
+  ],
+  "guidance": [
+    "Use this article when a script needs to inspect Window COMP open state, border/fill state, monitor scaling, or on-screen bounds.",
+    "Interpret width, height, x, y, and content bounds using the Window COMP DPI Scaling parameter because the official docs say they are expressed in points or pixels depending on that setting.",
+    "Use contentX, contentY, contentWidth, and contentHeight when the workflow needs the drawable content area and should ignore window borders.",
+    "Use setForeground() only when foreground activation is appropriate; the official docs note it can only be called by a foreground process or child of one and returns True when successful.",
+    "Window COMP inherits general COMP behavior, but PanelCOMP-specific panel value methods are not part of this class page."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

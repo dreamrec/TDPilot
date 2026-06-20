@@ -4,19 +4,41 @@
   "family": "CHOP",
   "display_name": "LFO CHOP",
   "docs_url": "https://docs.derivative.ca/LFO_CHOP",
-  "summary": "Generates low-frequency oscillator waveforms (sine, square, triangle, ramp, pulse) as CHOP channels. Commonly used for cyclic animation and parameter modulation.",
+  "summary": "Generates low-frequency oscillator waveforms in real time for non-audio motion and control signals, or repeats a prepared incoming source wave.",
+  "key_concepts": [
+    "Generates low-frequency oscillator waves in real time for motion, control, and time-warping workflows.",
+    "Type selects a synthesized waveform unless the Source Wave input is connected, in which case the input curve replaces the waveform type.",
+    "Frequency is cycles per second, and the Octave Control input scales it exponentially by powers of two.",
+    "Reset input behavior depends on Reset Condition and can restart or hold the waveform at its beginning.",
+    "LFO CHOP is time-sliced and changes stepping speed as Frequency changes while it cooks.",
+    "Channel Name supports pattern expansion, and $C can vary per-channel parameters."
+  ],
   "key_params": [
-    {"name": "type", "type": "Menu", "note": "Waveform shape: Sin, Gaussian, Triangle, Ramp, Square, Pulse"},
+    {"name": "wavetype", "type": "Menu", "note": "Waveform shape: sine, Gaussian, triangle, ramp, square, or pulse"},
+    {"name": "play", "type": "Toggle", "note": "Play or pause the oscillator"},
     {"name": "frequency", "type": "Float", "note": "Oscillation frequency in Hz"},
-    {"name": "amplitude", "type": "Float", "note": "Peak amplitude of the waveform"},
     {"name": "offset", "type": "Float", "note": "Vertical offset added to the waveform"},
-    {"name": "phase", "type": "Float", "note": "Phase offset in cycles (0-1)"}
+    {"name": "amp", "type": "Float", "note": "Scale applied to output values"},
+    {"name": "bias", "type": "Float", "note": "Shape control for triangle, Gaussian, and square waves"},
+    {"name": "phase", "type": "Float", "note": "Phase offset in cycles"},
+    {"name": "resetcondition", "type": "Menu", "note": "How the Reset input restarts the oscillator"},
+    {"name": "reset", "type": "Toggle", "note": "Reset channel output to the beginning while on"},
+    {"name": "resetpulse", "type": "Pulse", "note": "Instantly reset channel output to the beginning"},
+    {"name": "channelname", "type": "String", "note": "Output channel names or expansion pattern"},
+    {"name": "rate", "type": "Float", "note": "Output sample rate"},
+    {"name": "timeslice", "type": "Toggle", "note": "Output a time slice"},
+    {"name": "scope", "type": "Pattern", "note": "Channel pattern to affect"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate matching behavior"}
   ],
   "common_gotchas": [
-    "Default output range is -1 to 1 for sine; use a Math CHOP to remap to 0-1 if needed for parameters.",
-    "LFO is time-dependent — if the timeline is paused, the LFO will also pause unless set to independent time."
+    "Source Wave input disables the waveform Type choice and repeats the incoming multi-sample curve.",
+    "Octave Control is exponential: +1 doubles frequency, +2 quadruples it, and -1 halves it.",
+    "Reset input is interpreted as off/on using <=0 and >0 and depends on Reset Condition.",
+    "Bias only shapes triangle, Gaussian, and square waves.",
+    "LFO CHOP is designed for non-audio frequencies; use Audio Oscillator CHOP for audio-rate oscillation.",
+    "Sine and triangle outputs are -1 to 1 by default, while Gaussian and ramp outputs are 0 to 1."
   ],
   "related_snippets": [],
   "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "last_verified": "2026-06-18"
 }

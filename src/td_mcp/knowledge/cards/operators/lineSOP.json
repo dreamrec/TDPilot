@@ -4,17 +4,71 @@
   "family": "SOP",
   "display_name": "Line SOP",
   "docs_url": "https://docs.derivative.ca/Line_SOP",
-  "summary": "Creates a line between two points with configurable number of divisions. Useful as a curve primitive for sweeps, instancing paths, and wire-frame effects.",
+  "summary": "Creates a straight line between explicit Point A and Point B endpoints, with configurable point count and optional texture coordinates.",
   "key_params": [
-    {"name": "dist", "type": "Float", "note": "Length of the line"},
-    {"name": "points", "type": "Int", "note": "Number of points along the line (more points = smoother curves when deformed)"},
-    {"name": "direction", "type": "Menu", "note": "Direction axis for the line: X, Y, or Z"}
+    {
+      "name": "pa",
+      "type": "XYZ",
+      "note": "Point A endpoint."
+    },
+    {
+      "name": "pax",
+      "type": "Float",
+      "note": "Point A X."
+    },
+    {
+      "name": "pay",
+      "type": "Float",
+      "note": "Point A Y."
+    },
+    {
+      "name": "paz",
+      "type": "Float",
+      "note": "Point A Z."
+    },
+    {
+      "name": "pb",
+      "type": "XYZ",
+      "note": "Point B endpoint."
+    },
+    {
+      "name": "pbx",
+      "type": "Float",
+      "note": "Point B X."
+    },
+    {
+      "name": "pby",
+      "type": "Float",
+      "note": "Point B Y."
+    },
+    {
+      "name": "pbz",
+      "type": "Float",
+      "note": "Point B Z."
+    },
+    {
+      "name": "points",
+      "type": "Int",
+      "note": "Number of points along the line."
+    },
+    {
+      "name": "texture",
+      "type": "Toggle",
+      "note": "Apply unit texture coordinates."
+    }
   ],
   "common_gotchas": [
-    "A line with only 2 points cannot be smoothly deformed — increase points for curve-like operations.",
-    "Lines are not renderable by default in most materials; use a Wire MAT or convert to tubes."
+    "The official Line SOP page does not define `dist` or `direction`; use `pa` and `pb` endpoints.",
+    "A two-point line has no interior samples for smooth curve-like deformation.",
+    "Line geometry often needs a render path such as Wire MAT, Line MAT, or conversion/thickening for visible surfaces."
   ],
   "related_snippets": [],
   "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Line SOP creates straight lines between Point A and Point B.",
+    "Endpoint vectors `pa` and `pb` define the line in 3D space.",
+    "`points` controls the number of points along the line and must be at least two for an actual segment.",
+    "`texture` applies unit texture coordinates along the generated line."
+  ]
 }

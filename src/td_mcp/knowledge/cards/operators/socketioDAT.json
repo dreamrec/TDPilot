@@ -1,0 +1,108 @@
+{
+  "card_type": "operator",
+  "op_type": "socketioDAT",
+  "family": "DAT",
+  "display_name": "SocketIO DAT",
+  "docs_url": "https://docs.derivative.ca/SocketIO_DAT",
+  "summary": "Connects to a Socket.IO v3/v4 server, listens for configured server events, and emits events to the server from Python.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable listening and event emission"
+    },
+    {
+      "name": "reset",
+      "type": "Pulse",
+      "note": "Disconnect and reconnect the Socket.IO connection"
+    },
+    {
+      "name": "url",
+      "type": "String",
+      "note": "Socket.IO server URL"
+    },
+    {
+      "name": "verifycert",
+      "type": "Toggle",
+      "note": "Verify TLS certificates"
+    },
+    {
+      "name": "delay",
+      "type": "Milliseconds",
+      "note": "Reconnect delay between attempts"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT Path",
+      "note": "Callback DAT executed once for each incoming message or listened event"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose the execution context for received-message callback scripts"
+    },
+    {
+      "name": "fromop",
+      "type": "OP Path",
+      "note": "Operator path used when Execute from is set to Specified Operator"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Limit output message history"
+    },
+    {
+      "name": "maxlines",
+      "type": "Integer",
+      "note": "Maximum number of received message rows to retain"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear accumulated output rows"
+    },
+    {
+      "name": "bytes",
+      "type": "Toggle",
+      "note": "Output raw bytes in a separate column"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "The four optional inputs have fixed meanings: headers, event names, query parameters, and auth parameters.",
+    "Events are emitted with the SocketIO DAT Python emit method; acknowledgement callbacks are not supported.",
+    "The DAT uses socket.io C++ Client API v3.1.0 and is intended for socket.io v3 or v4 servers.",
+    "TLS verification can fail with self-signed or local certificates unless intentionally configured.",
+    "Socket.IO status messages print to the TouchDesigner text console, which may require TOUCH_TEXT_CONSOLE=1 before launch."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "socketio-event-client",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Connects to a Socket.IO server and logs messages/events in a DAT.",
+    "URL, certificate verification, delay, active, and reset parameters control the connection lifecycle.",
+    "Callbacks handle incoming Socket.IO events and messages.",
+    "FIFO retention and bytes controls manage event table size and byte display."
+  ]
+}

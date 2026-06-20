@@ -4,19 +4,343 @@
   "family": "COMP",
   "display_name": "Camera COMP",
   "docs_url": "https://docs.derivative.ca/Camera_COMP",
-  "summary": "Defines a virtual camera for 3D rendering. Controls position, rotation, field of view, near/far clipping, and projection type (perspective or orthographic).",
+  "summary": "3D Object COMP that behaves like a real-world camera. A Render TOP renders the scene from this component's point of view, using its transform, projection, clipping, background, fog, light-mask, and render/pick priority settings.",
   "key_params": [
-    {"name": "tx", "type": "Float", "note": "Camera position X"},
-    {"name": "ty", "type": "Float", "note": "Camera position Y"},
-    {"name": "tz", "type": "Float", "note": "Camera position Z"},
-    {"name": "fov", "type": "Float", "note": "Field of view in degrees (perspective mode)"},
-    {"name": "near", "type": "Float", "note": "Near clipping plane distance"}
+    {
+      "name": "xord",
+      "type": "Menu",
+      "note": "Transform order for applying scale, rotate, and translate."
+    },
+    {
+      "name": "rord",
+      "type": "Menu",
+      "note": "Rotate order for composing X/Y/Z rotations."
+    },
+    {
+      "name": "t",
+      "type": "Float3",
+      "note": "Translate group for X/Y/Z camera position."
+    },
+    {
+      "name": "r",
+      "type": "Float3",
+      "note": "Rotate group for camera orientation."
+    },
+    {
+      "name": "s",
+      "type": "Float3",
+      "note": "Non-uniform scale group."
+    },
+    {
+      "name": "p",
+      "type": "Float3",
+      "note": "Pivot point used for scale and rotation."
+    },
+    {
+      "name": "scale",
+      "type": "Float",
+      "note": "Uniform scale applied to the camera object."
+    },
+    {
+      "name": "parentxformsrc",
+      "type": "Menu",
+      "note": "Parent transform source: hierarchy, specified object, or world origin."
+    },
+    {
+      "name": "parentobject",
+      "type": "COMP Path",
+      "note": "Object used as the parent transform when parent source is specified."
+    },
+    {
+      "name": "lookat",
+      "type": "COMP Path",
+      "note": "3D component whose origin the camera should face."
+    },
+    {
+      "name": "forwarddir",
+      "type": "Menu",
+      "note": "Axis and direction considered forward for Look At and path orientation."
+    },
+    {
+      "name": "lookup",
+      "type": "Float3",
+      "note": "Up-vector used by Look At orientation."
+    },
+    {
+      "name": "pathsop",
+      "type": "SOP Path",
+      "note": "Path SOP used to animate or orient the camera along a curve."
+    },
+    {
+      "name": "roll",
+      "type": "Float",
+      "note": "Roll angle around the forward axis."
+    },
+    {
+      "name": "pos",
+      "type": "Float",
+      "note": "Position along the Path SOP."
+    },
+    {
+      "name": "pathorient",
+      "type": "Toggle",
+      "note": "Orient the camera along the path direction."
+    },
+    {
+      "name": "up",
+      "type": "Float3",
+      "note": "Up vector used when orienting along a path."
+    },
+    {
+      "name": "bank",
+      "type": "Float",
+      "note": "Auto-bank amount based on path curvature."
+    },
+    {
+      "name": "projection",
+      "type": "Menu",
+      "note": "Perspective, Orthographic, perspective-to-ortho blend, or custom projection matrix."
+    },
+    {
+      "name": "projectionblend",
+      "type": "Float",
+      "note": "Blend amount for Perspective to Ortho Blend projection mode."
+    },
+    {
+      "name": "orthowidth",
+      "type": "Float",
+      "note": "Orthographic projection width."
+    },
+    {
+      "name": "viewanglemethod",
+      "type": "Menu",
+      "note": "Horizontal FOV, vertical FOV, or focal length/aperture view-angle definition."
+    },
+    {
+      "name": "fov",
+      "type": "Float",
+      "note": "Field of view angle."
+    },
+    {
+      "name": "focal",
+      "type": "Float",
+      "note": "Focal length for lens zoom and FOV calculations."
+    },
+    {
+      "name": "aperture",
+      "type": "Float",
+      "note": "Lens aperture used with focal length to determine angle of view."
+    },
+    {
+      "name": "near",
+      "type": "Float",
+      "note": "Near clipping plane."
+    },
+    {
+      "name": "far",
+      "type": "Float",
+      "note": "Far clipping plane."
+    },
+    {
+      "name": "winrollpivot",
+      "type": "Menu",
+      "note": "Pivot for window roll."
+    },
+    {
+      "name": "win",
+      "type": "Float2",
+      "note": "Normalized window pan without moving the camera."
+    },
+    {
+      "name": "winsize",
+      "type": "Float",
+      "note": "Window scaling/zoom factor."
+    },
+    {
+      "name": "winroll",
+      "type": "Float",
+      "note": "Roll of the camera window area."
+    },
+    {
+      "name": "ipdshift",
+      "type": "Float",
+      "note": "Interpupillary-distance X shift used for stereo and cube-map workflows."
+    },
+    {
+      "name": "projmatrixop",
+      "type": "CHOP/DAT",
+      "note": "Custom 4x4 projection matrix source for Custom Projection Matrix mode."
+    },
+    {
+      "name": "customproj",
+      "type": "DAT",
+      "note": "Custom Projection GLSL DAT for advanced projection behavior."
+    },
+    {
+      "name": "quadreprojsop",
+      "type": "SOP Path",
+      "note": "Quad Reproject SOP for matching projection to a quadrilateral."
+    },
+    {
+      "name": "quadreprojpts",
+      "type": "Menu",
+      "note": "Point selection mode for quad reprojection."
+    },
+    {
+      "name": "bgcolor",
+      "type": "RGBA",
+      "note": "Camera background color and alpha."
+    },
+    {
+      "name": "premultrgbbyalpha",
+      "type": "Toggle",
+      "note": "Pre-multiply camera background RGB by alpha."
+    },
+    {
+      "name": "fog",
+      "type": "Menu",
+      "note": "Fog mode: off, linear, exponential, or squared exponential."
+    },
+    {
+      "name": "fogdensity",
+      "type": "Float",
+      "note": "Fog density for exponential fog modes."
+    },
+    {
+      "name": "fognear",
+      "type": "Float",
+      "note": "Linear fog start distance."
+    },
+    {
+      "name": "fogfar",
+      "type": "Float",
+      "note": "Linear fog end distance."
+    },
+    {
+      "name": "fogcolor",
+      "type": "RGB",
+      "note": "Fog color."
+    },
+    {
+      "name": "fogalpha",
+      "type": "Float",
+      "note": "Fog/background opacity control."
+    },
+    {
+      "name": "fogmap",
+      "type": "TOP Path",
+      "note": "Texture map used for fog color."
+    },
+    {
+      "name": "camlightmask",
+      "type": "Pattern",
+      "note": "Camera-side light mask used during rendering."
+    },
+    {
+      "name": "material",
+      "type": "MAT Path",
+      "note": "Material assigned to geometry inside the component if any."
+    },
+    {
+      "name": "render",
+      "type": "Toggle",
+      "note": "Whether this component is visible to Render TOPs, combined with the Render Flag."
+    },
+    {
+      "name": "drawpriority",
+      "type": "Integer",
+      "note": "Draw ordering priority; smaller values draw after larger values."
+    },
+    {
+      "name": "pickpriority",
+      "type": "Integer",
+      "note": "Priority used by Render Pick CHOP/DAT search-area picks."
+    },
+    {
+      "name": "wcolor",
+      "type": "RGB",
+      "note": "Wireframe viewer color."
+    },
+    {
+      "name": "lightmask",
+      "type": "Pattern",
+      "note": "Object render light mask."
+    },
+    {
+      "name": "reinitextensions",
+      "type": "Pulse",
+      "note": "Recompile extension objects attached to this component."
+    },
+    {
+      "name": "initextonstart",
+      "type": "Toggle",
+      "note": "Automatically re-initialize extensions when TouchDesigner starts."
+    },
+    {
+      "name": "ext",
+      "type": "Sequence",
+      "note": "Sequence of extension definitions for this component."
+    },
+    {
+      "name": "ext0object",
+      "type": "Python Object",
+      "note": "Class instance attached as an extension object."
+    },
+    {
+      "name": "ext0name",
+      "type": "String",
+      "note": "Optional extension lookup name."
+    },
+    {
+      "name": "ext0promote",
+      "type": "Toggle",
+      "note": "Expose extension members directly on the component instead of only through .ext."
+    }
+  ],
+  "key_concepts": [
+    "3D object",
+    "real-world camera",
+    "Render TOP",
+    "Geometry Viewer",
+    "cameraViewport",
+    "3D hierarchy",
+    "Transform Order",
+    "Rotate Order",
+    "Parent Transform Source",
+    "Look At",
+    "Null Component center of interest",
+    "Path SOP",
+    "Perspective",
+    "Orthographic",
+    "Custom Projection Matrix",
+    "FOV Angle",
+    "Focal Length",
+    "Aperture",
+    "Near/Far clipping planes",
+    "z-depth artifacts",
+    "IPD Shift",
+    "Vulkan depth clip range [0,1]",
+    "Background Color",
+    "Fog",
+    "Camera Light Mask",
+    "Render flag logical AND",
+    "Draw Priority",
+    "Pick Priority",
+    "Render Pick CHOP",
+    "Render Pick DAT",
+    "Light Mask",
+    "Info CHOP",
+    "num_children"
   ],
   "common_gotchas": [
-    "Default position is at the origin looking down -Z; move it back (positive Z) to see geometry at the origin.",
-    "Near plane too close to 0 causes Z-fighting artifacts — keep it as large as your scene allows."
+    "Scaling a camera's channels is not generally recommended; if scale is used, TouchDesigner tries to match the rendered output to the viewport as closely as possible.",
+    "Near and Far clipping planes control z-depth precision as well as visibility; reduce the near/far distance range, starting with the near plane, when z-depth artifacts appear.",
+    "For stable Look At rigs, use a Null Component as a center of interest, parent the camera as needed, and animate the Null instead of fighting camera rotations directly.",
+    "Camera Light Mask participates in Render TOP lighting decisions; multi-camera rendering can only share a pass when the cameras resolve to the same lights.",
+    "Custom Projection Matrix sources should produce Vulkan depth clip values in the [0,1] range, not OpenGL-style [-1,1] clip depth.",
+    "Render visibility is the logical AND of this component's Render parameter and its Render Flag, so both must allow rendering."
   ],
   "related_snippets": [],
-  "build_relevance": "2020.20000+",
-  "last_verified": "2026-03-14"
+  "build_relevance": "2022.24140+",
+  "last_verified": "2026-06-18"
 }

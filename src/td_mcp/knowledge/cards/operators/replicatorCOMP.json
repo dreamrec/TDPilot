@@ -1,0 +1,41 @@
+{
+  "card_type": "operator",
+  "op_type": "replicatorCOMP",
+  "family": "COMP",
+  "display_name": "Replicator COMP",
+  "docs_url": "https://docs.derivative.ca/Replicator_COMP",
+  "summary": "Creates and deletes replicated operator copies from a master operator, driven either by a table row set or a numeric count, with naming, destination, maximum-count, layout, and callback scripting controls.",
+  "key_params": [
+    {"name": "method", "type": "Menu", "note": "Replicate By Number or By Table"},
+    {"name": "numreplicants", "type": "Integer", "note": "Number of copies when using By Number"},
+    {"name": "template", "type": "DAT", "note": "Template table whose rows drive copies when using By Table"},
+    {"name": "namefromtable", "type": "Menu", "note": "Generate names from row index, column index, or column name"},
+    {"name": "ignorefirstrow", "type": "Toggle", "note": "Skip the first table row, often used as a header"},
+    {"name": "colname", "type": "String", "note": "Column name used for table-driven naming"},
+    {"name": "colindex", "type": "Integer", "note": "Column index used for table-driven naming"},
+    {"name": "opprefix", "type": "String", "note": "Prefix for generated operator names"},
+    {"name": "master", "type": "OP path", "note": "Operator or component to copy"},
+    {"name": "destination", "type": "COMP path", "note": "Network where replicated operators are placed"},
+    {"name": "domaxops", "type": "Toggle", "note": "Enable maximum replicated operator count"},
+    {"name": "maxops", "type": "Integer", "note": "Maximum allowed replicated operators"},
+    {"name": "tscript", "type": "DAT", "note": "Callback script DAT for per-replicant behavior"}
+  ],
+  "key_concepts": [
+    "Replicator COMP creates and deletes operator copies from a master by table rows or by a numeric count.",
+    "Table-driven replication can name copies by row index, column index, or a column name, with optional header-row skipping.",
+    "Master, destination, and maximum-operator parameters define the replication scope and safety boundary.",
+    "The master and replicants do not need to be components or clones, though a self-cloned master can create cloned replicants.",
+    "Callback/script customization can modify each replicant, and unchanged table rows are not recreated when only one row changes."
+  ],
+  "common_gotchas": [
+    "Destination cannot be blank; use . for inside the Replicator COMP or .. for alongside it in the parent.",
+    "The master can be a full component or a single operator and does not have to be a clone master.",
+    "Replicator COMP creates and deletes nodes as the table or count changes; do not manually edit generated nodes unless callbacks preserve those edits.",
+    "If only one table line changes, unchanged replicants are not recreated, which is useful but can surprise callbacks that assume full rebuilds.",
+    "Removing onRemoveReplicant() can keep removed replicants around for reuse, so stale state must be cleared explicitly.",
+    "Name-from-table values must be valid and unique operator names after prefixing or replication can collide."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ table-driven operator replication",
+  "last_verified": "2026-06-18"
+}

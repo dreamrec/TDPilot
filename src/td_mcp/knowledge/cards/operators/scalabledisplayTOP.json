@@ -1,0 +1,72 @@
+{
+  "card_type": "operator",
+  "op_type": "scalabledisplayTOP",
+  "family": "TOP",
+  "display_name": "Scalable Display TOP",
+  "docs_url": "https://docs.derivative.ca/Scalable_Display_TOP",
+  "summary": "Loads Scalable Display calibration data and exposes projection/camera transform data for projector calibration workflows.",
+  "key_params": [
+    {
+      "name": "configfile",
+      "type": "File",
+      "note": "Scalable Displays calibration data file."
+    },
+    {
+      "name": "near",
+      "type": "Float",
+      "note": "Near plane value for calibration camera data."
+    },
+    {
+      "name": "far",
+      "type": "Float",
+      "note": "Far plane value for calibration camera data."
+    },
+    {
+      "name": "eyepoint",
+      "type": "XYZ",
+      "note": "Eye point for dynamic calibration files."
+    },
+    {
+      "name": "eyepoint1",
+      "type": "Float",
+      "note": "Eye point X component."
+    },
+    {
+      "name": "eyepoint2",
+      "type": "Float",
+      "note": "Eye point Y component."
+    },
+    {
+      "name": "eyepoint3",
+      "type": "Float",
+      "note": "Eye point Z component."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution behavior."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "Available only in TouchDesigner Pro.",
+    "Supported only on Microsoft Windows.",
+    "Use the operator projection and cameraTransform Python members in a Camera COMP to apply the calibration.",
+    "A missing or incompatible calibration file means this TOP cannot produce useful projector data."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "projector_calibration",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Loads Scalable Display calibration data for projector calibration workflows.",
+    "Exposes projection and cameraTransform Python members for use by a Camera COMP.",
+    "Near, Far, and Eye Point parameters shape the camera data exported from dynamic/POL calibration files.",
+    "Official docs mark this TOP as TouchDesigner Pro-only and Microsoft Windows-only."
+  ]
+}

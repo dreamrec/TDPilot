@@ -1,0 +1,28 @@
+{
+  "card_type": "operator",
+  "op_type": "cplusplusPOP",
+  "family": "POP",
+  "display_name": "CPlusPlus POP",
+  "docs_url": "https://docs.derivative.ca/CPlusPlus_POP",
+  "summary": "Loads a custom POP operator implemented as a C++ plugin. It is the native-extension path for custom POP behavior and plugin-side access to POP data.",
+  "key_params": [
+    {"name": "plugin", "type": "File", "note": "Path to the C++ plugin"},
+    {"name": "reinit", "type": "Toggle", "note": "Recreate the plugin class instance"},
+    {"name": "reinitpulse", "type": "Pulse", "note": "Reinitialize immediately"},
+    {"name": "unloadplugin", "type": "Pulse/Float", "note": "Unload the plugin when safe"}
+  ],
+  "key_concepts": [
+    "Custom POP operator implemented as a C++ plugin",
+    "Plugin Path resolves the native extension to load",
+    "Re-Init recreates the plugin class instance",
+    "Unload Plugin releases shared plugin instances only after all users unload"
+  ],
+  "common_gotchas": [
+    "Plugin lifecycle matters; multiple operators using the same plugin may all need to unload before the file is released.",
+    "Use CPlusPlus POP only when built-in POPs or GLSL POPs are not sufficient.",
+    "Recent builds added cross-family CUDA buffer access, so confirm build compatibility for GPU interop work."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

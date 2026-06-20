@@ -1,0 +1,41 @@
+{
+  "card_type": "operator",
+  "op_type": "logicCHOP",
+  "family": "CHOP",
+  "display_name": "Logic CHOP",
+  "docs_url": "https://docs.derivative.ca/Logic_CHOP",
+  "summary": "Converts CHOP samples to binary states and combines channels/inputs with logical operations such as invert, toggle, radio, and/or/xor.",
+  "key_concepts": [
+    "Converts input CHOP samples to binary off/on states before applying later logic stages.",
+    "Convert Input chooses how continuous values become 0 or 1, including nonzero, positive, bounds, value-change, and name-change modes.",
+    "Channel Pre OP applies unary operations such as invert, toggle, radio button, rising edge, and falling edge.",
+    "Combine Channels can reduce many channels within each input to one logical result.",
+    "Combine CHOPs can combine corresponding channels across multiple input CHOPs by number or name.",
+    "Match and Align control multi-input channel pairing and interval alignment."
+  ],
+  "key_params": [
+    {"name": "convert", "type": "Menu", "note": "Convert samples to binary by nonzero, positive, bounds, value change, or name change"},
+    {"name": "preop", "type": "Menu", "note": "Unary operation before channel/input combination"},
+    {"name": "chanop", "type": "Menu", "note": "Operation to combine channels within an input"},
+    {"name": "chopop", "type": "Menu", "note": "Operation to combine multiple input CHOPs"},
+    {"name": "match", "type": "Menu", "note": "Match channels between inputs by number or name"},
+    {"name": "align", "type": "Menu", "note": "Align input intervals before combining"},
+    {"name": "bound", "type": "Float2", "note": "Bounds used by Off When Outside Bounds"},
+    {"name": "boundmin", "type": "Float", "note": "Lower binary-conversion bound"},
+    {"name": "boundmax", "type": "Float", "note": "Upper binary-conversion bound"},
+    {"name": "timeslice", "type": "Toggle", "note": "Operate on time-sliced samples"},
+    {"name": "scope", "type": "Pattern", "note": "Restrict affected channels"}
+  ],
+  "common_gotchas": [
+    "Official docs note Logic CHOP is superseded for many event-style uses by CHOP Execute DAT or Text DAT scripts.",
+    "Convert Input changes continuous values into 0/1 before later operations; threshold choices matter more than downstream logic.",
+    "Value-change and name-change conversions are stateful and depend on previous samples/cooks.",
+    "One-input mode can reduce many channels to one; multi-input mode can reduce many CHOPs to one.",
+    "Use Math CHOP for arithmetic combinations instead of logical operations.",
+    "Lowest and Highest Index On return channel indices or -1, not simple boolean values.",
+    "Set Match and Align intentionally for multi-input plans so channel names and intervals are paired as intended."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ legacy/control logic",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,31 @@
+{
+  "card_type": "operator",
+  "op_type": "thresholdTOP",
+  "family": "TOP",
+  "display_name": "Threshold TOP",
+  "docs_url": "https://docs.derivative.ca/Threshold_TOP",
+  "summary": "Creates a binary matte by comparing selected image channel data against a threshold.",
+  "key_params": [
+    {"name": "comparator", "type": "Menu", "note": "Comparison operation against the threshold; matching pixels are set to 0"},
+    {"name": "rgb", "type": "Menu", "note": "Channel or aggregate used for RGB thresholding"},
+    {"name": "threshold", "type": "Float", "note": "Threshold value used by the comparator"},
+    {"name": "alpha", "type": "Menu", "note": "Alpha output source, either following RGB or forcing alpha to one"},
+    {"name": "soften", "type": "Float", "note": "Falloff around the threshold for smoother mattes"},
+    {"name": "format", "type": "Menu", "note": "Common TOP output pixel format"}
+  ],
+  "common_gotchas": [
+    "Official comparator semantics set pixels satisfying the comparison against Threshold to 0, which is easy to invert mentally.",
+    "Alpha can follow the threshold result or be forced to one, so RGB and transparency may not carry the same matte.",
+    "Hard thresholding creates aliased/noisy mattes; use soften or prefiltering for smoother masks.",
+    "Supports 3D textures and 2D texture arrays."
+  ],
+  "related_snippets": ["TOP_snippets", "Compositing_snippets"],
+  "build_relevance": "mask_generation",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Threshold TOP compares a selected image channel or aggregate against a threshold to generate binary image regions.",
+    "The comparator defines which pixels are forced to 0, while the remaining pixels form the nonzero side of the matte.",
+    "RGB thresholding and alpha output are controlled separately, allowing opaque RGB masks or alpha-following masks.",
+    "The soften control creates a transition band around the threshold for smoother keyed edges."
+  ]
+}

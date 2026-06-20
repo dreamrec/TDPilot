@@ -1,0 +1,43 @@
+{
+  "card_type": "operator",
+  "op_type": "blobtrackCHOP",
+  "family": "CHOP",
+  "display_name": "Blob Track CHOP",
+  "docs_url": "https://docs.derivative.ca/Blob_Track_CHOP",
+  "summary": "Tracks 2D blobs from point data, usually tx/ty Cartesian scan channels, and can output blob centroids, velocity, and persistent tracking information.",
+  "key_concepts": [
+    "Consumes 2D Cartesian point data, normally tx and ty channels, and groups nearby points into persistent blobs.",
+    "Hokuyo and Leuze radial scanner data should be supplied in Cartesian coordinate mode before Blob Track can analyze it correctly.",
+    "All-points search is more robust for unordered point clouds, while Consecutive Points is faster when neighboring spatial points are adjacent in samples.",
+    "Area of Interest can restrict tracking to off/rectangle/circle regions, with center, size, rotation, and outside-movement behavior controlling persistence.",
+    "Output Centroid, Output Velocity, initialization time, lost timeout, and prediction mode govern whether blobs become stable tracked targets."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable blob tracking without clearing existing blobs when off"},
+    {"name": "searchmode", "type": "Menu", "note": "All-points or consecutive-point search strategy"},
+    {"name": "maxblobs", "type": "Integer", "note": "Maximum number of blobs to track"},
+    {"name": "maxpointdistance", "type": "Float", "note": "Maximum distance for points to belong to the same blob"},
+    {"name": "maxblobmovement", "type": "Float", "note": "Maximum frame-to-frame movement for preserving blob identity"},
+    {"name": "areaofinterest", "type": "Menu", "note": "Optional rectangular or circular tracking region"},
+    {"name": "center", "type": "Float2", "note": "Center of the area of interest"},
+    {"name": "size", "type": "Float2", "note": "Size of the area of interest"},
+    {"name": "rotate", "type": "Float", "note": "Rotation of the area of interest"},
+    {"name": "allowmovementoutside", "type": "Toggle", "note": "Keep blobs tracked after they leave the area of interest"},
+    {"name": "outputcentroid", "type": "Toggle", "note": "Include blob centroid channels"},
+    {"name": "outputvelocity", "type": "Toggle", "note": "Include blob velocity channels"},
+    {"name": "minblobpoints", "type": "Integer", "note": "Minimum points required to accept a blob"},
+    {"name": "blobinittime", "type": "Float", "note": "Time before a new blob is considered trustworthy"},
+    {"name": "lostblobtimeout", "type": "Float", "note": "Time before an occluded or lost blob is removed"},
+    {"name": "predicttype", "type": "Menu", "note": "Off, simple forward prediction, or Kalman prediction"}
+  ],
+  "common_gotchas": [
+    "Input channels should be named tx and ty and represent 2D Cartesian positions.",
+    "Consecutive Points mode is faster, but only works when nearby spatial points are adjacent in CHOP samples.",
+    "All mode is more robust for unordered points but can be slower on large scans.",
+    "Area of interest and movement limits can silently drop fast-moving blobs if they are too tight.",
+    "Hokuyo and Leuze-style radial scans should be converted to Cartesian coordinates before tracking."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "lineMAT",
+  "family": "MAT",
+  "display_name": "Line MAT",
+  "docs_url": "https://docs.derivative.ca/Line_MAT",
+  "summary": "Renders SOP line segments, edges, points, dots, and vectors with flat shading, distance-based width/color controls, and configurable caps and joints.",
+  "key_params": [
+    {"name": "linetype", "type": "Menu", "note": "Line, point, vector, or related drawing mode"},
+    {"name": "color", "type": "RGBA", "note": "Base line color"},
+    {"name": "linewidth", "type": "Float", "note": "Base line width"},
+    {"name": "nearwidth", "type": "Float", "note": "Width at near distance for rolloff models"},
+    {"name": "farwidth", "type": "Float", "note": "Width at far distance for rolloff models"},
+    {"name": "roundwidth", "type": "Float", "note": "Round cap width"},
+    {"name": "arrowwidth", "type": "Float", "note": "Arrow cap width"},
+    {"name": "startcappullback", "type": "Float", "note": "Pull back the start cap along the line"},
+    {"name": "dodeform", "type": "Toggle", "note": "Enable common MAT deform handling"}
+  ],
+  "key_concepts": [
+    "Line MAT renders 3D line segments, polygon edges, dots, points, and per-point vectors rather than filled shaded surfaces.",
+    "The shader is flat shaded, so line color and width are controlled by MAT parameters and attributes instead of scene lighting.",
+    "Line width is resolution-independent by default and can also be driven by SOP point attributes such as width or pscale.",
+    "Depth interpolation, near/far rolloff, and FOV/Ortho Width behavior determine whether line width and color remain visually stable through camera changes.",
+    "Caps, hinges, arrows, points, and vector controls are part of the material shape, so they affect actual rendered extents and joins."
+  ],
+  "common_gotchas": [
+    "Line MAT is flat shaded and is not affected by scene lights like Phong or PBR materials.",
+    "Width and color can vary with distance to camera; check rolloff settings before assuming constant screen-space width.",
+    "Caps and hinges affect visual length and joins, so they matter for arrows, vectors, and dense line fields.",
+    "The input geometry must contain suitable lines, edges, points, or vectors for the selected rendering mode."
+  ],
+  "related_snippets": ["MAT_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

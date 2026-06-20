@@ -12,6 +12,7 @@ _KEY_FIELDS = {
     "palette": "component_name",
     "release": "build",
     "snippets": "snippet_id",
+    "articles": "article_id",
 }
 
 
@@ -25,6 +26,7 @@ class CardIndex:
             palette/     *.json  keyed by component_name
             release/     *.json  keyed by build
             snippets/    *.json  keyed by snippet_id
+            articles/    *.json  keyed by article_id
     """
 
     def __init__(self, cards_dir: str | Path) -> None:
@@ -35,6 +37,7 @@ class CardIndex:
             "palette": {},
             "release": {},
             "snippets": {},
+            "articles": {},
         }
         self._load()
 
@@ -91,8 +94,10 @@ class CardIndex:
         for bucket_name, bucket in buckets_to_search.items():
             key_field = _KEY_FIELDS.get(bucket_name, "")
             for card in bucket.values():
-                # Optional family filter
-                if family and card.get("family", "").upper() != family.upper():
+                # Optional family filter. Snippet cards can be cross-family
+                # guides (for example GLSL snippets that cover GLSL POP), so
+                # allow reviewed nested metadata to opt into related families.
+                if family and not self._matches_family(card, family):
                     continue
 
                 score = self._score_card(card, query_lower, key_field)
@@ -105,22 +110,100 @@ class CardIndex:
     @staticmethod
     def _score_card(card: dict, query_lower: str, key_field: str) -> float:
         score = 0.0
+        query_tokens = [token for token in query_lower.replace("_", " ").split() if token]
         # Primary key field (highest boost)
         key_val = str(card.get(key_field, "")).lower()
         if query_lower in key_val:
             score += 10.0
+        elif query_tokens and all(token in key_val for token in query_tokens):
+            score += 8.0
 
         # display_name (medium boost)
         display = str(card.get("display_name", "")).lower()
         if query_lower in display:
             score += 5.0
+        elif query_tokens and all(token in display for token in query_tokens):
+            score += 4.0
 
         # summary (low boost)
         summary = str(card.get("summary", "")).lower()
         if query_lower in summary:
             score += 1.0
+        elif query_tokens and all(token in summary for token in query_tokens):
+            score += 0.75
+
+        nested_text = CardIndex._nested_search_text(card)
+        if query_lower in nested_text:
+            score += 0.75
+        elif query_tokens:
+            matched_tokens = sum(1 for token in query_tokens if token in nested_text)
+            if matched_tokens == len(query_tokens):
+                score += 0.5 + (0.05 * matched_tokens)
+            elif matched_tokens:
+                score += 0.03 * matched_tokens
 
         return score
+
+    @staticmethod
+    def _nested_search_text(value: Any) -> str:
+        strings: list[str] = []
+
+        def visit(item: Any) -> None:
+            if isinstance(item, str):
+                strings.append(item.lower())
+            elif isinstance(item, dict):
+                for nested in item.values():
+                    visit(nested)
+            elif isinstance(item, list):
+                for nested in item:
+                    visit(nested)
+
+        visit(value)
+        return " ".join(strings)
+
+    @staticmethod
+    def _matches_family(card: dict, family: str) -> bool:
+        target = family.upper()
+        families: set[str] = set()
+
+        def add(value: Any) -> None:
+            if isinstance(value, str) and value.strip():
+                families.add(value.strip().upper())
+            elif isinstance(value, list):
+                for item in value:
+                    add(item)
+
+        add(card.get("family"))
+        add(card.get("families"))
+        add(card.get("related_families"))
+        for collection_key in ("official_examples", "templates"):
+            collection = card.get(collection_key, [])
+            if not isinstance(collection, list):
+                continue
+            for item in collection:
+                if not isinstance(item, dict):
+                    continue
+                add(item.get("family"))
+                add(item.get("families"))
+                for op_type in item.get("operators", []):
+                    family_suffix = CardIndex._family_from_op_type(op_type)
+                    if family_suffix:
+                        families.add(family_suffix)
+                op_type = item.get("op_type")
+                family_suffix = CardIndex._family_from_op_type(op_type)
+                if family_suffix:
+                    families.add(family_suffix)
+
+        return target in families
+
+    @staticmethod
+    def _family_from_op_type(op_type: Any) -> str | None:
+        if not isinstance(op_type, str):
+            return None
+        for suffix in ("COMP", "CHOP", "SOP", "TOP", "DAT", "MAT", "POP"):
+            if op_type.upper().endswith(suffix):
+                return suffix
+        return None
 
     # ------------------------------------------------------------------
     # Exact lookups
@@ -137,6 +220,10 @@ class CardIndex:
     def get_release(self, build: str) -> dict | None:
         """Exact lookup by build string. Returns None if not found."""
         return self._buckets["release"].get(build)
+
+    def get_article(self, article_id: str) -> dict | None:
+        """Exact lookup by article_id. Returns None if not found."""
+        return self._buckets["articles"].get(article_id)
 
     # ------------------------------------------------------------------
     # Compatibility check

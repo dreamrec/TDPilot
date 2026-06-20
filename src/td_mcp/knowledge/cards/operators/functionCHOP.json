@@ -1,0 +1,38 @@
+{
+  "card_type": "operator",
+  "op_type": "functionCHOP",
+  "family": "CHOP",
+  "display_name": "Function CHOP",
+  "docs_url": "https://docs.derivative.ca/Function_CHOP",
+  "summary": "Applies unary or binary math functions to CHOP channels, including trigonometric, logarithmic, exponential, power, and dB/power/amplitude conversions.",
+  "key_concepts": [
+    "Applies selected math functions to CHOP channel samples, with most functions using only the first input.",
+    "Binary functions such as atan2 and Input1 to the power of Input2 use the second input and the Match parameter to pair channels.",
+    "Base Value and Exponent Value feed the log and power modes that need constants instead of a second input.",
+    "Error Handling can abort cooking, replace bad samples with specified values, or reuse the previous good value.",
+    "Angle Units controls trigonometric interpretation as degrees, radians, or cycles."
+  ],
+  "key_params": [
+    {"name": "func", "type": "Menu", "note": "Math function to apply"},
+    {"name": "angunit", "type": "Menu", "note": "Angle units for trigonometric functions"},
+    {"name": "match", "type": "Menu", "note": "Pair binary-function channels by index or name"},
+    {"name": "error", "type": "Menu", "note": "Abort, replace with specified values, or use previous value on math errors"},
+    {"name": "pinfval", "type": "Float", "note": "Replacement for positive infinity"},
+    {"name": "ninfval", "type": "Float", "note": "Replacement for negative infinity"},
+    {"name": "domval", "type": "Float", "note": "Replacement for domain errors"},
+    {"name": "divval", "type": "Float", "note": "Replacement for divide errors"},
+    {"name": "baseval", "type": "Float", "note": "Base value for log/power functions"},
+    {"name": "expval", "type": "Float", "note": "Exponent value for power functions"},
+    {"name": "scope", "type": "Pattern", "note": "Channel pattern to affect"}
+  ],
+  "common_gotchas": [
+    "Most functions use only input 1, but atan2 and input1^input2 style functions use a second input.",
+    "Input channels from two inputs are paired by name or index depending on common CHOP matching behavior.",
+    "Trigonometric, log, sqrt, and power functions can produce domain, infinity, or divide errors.",
+    "Abort mode is useful for debugging; replace or previous-value modes are safer for live systems.",
+    "dB/power/amplitude conversions are not interchangeable; choose based on whether values represent signal power or amplitude."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

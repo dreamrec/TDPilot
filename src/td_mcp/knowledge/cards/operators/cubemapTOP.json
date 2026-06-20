@@ -1,0 +1,46 @@
+{
+  "card_type": "operator",
+  "op_type": "cubemapTOP",
+  "family": "TOP",
+  "display_name": "Cube Map TOP",
+  "docs_url": "https://docs.derivative.ca/Cube_Map_TOP",
+  "summary": "Creates or converts cube-map textures from per-face inputs, vertical crosses, or horizontal crosses for reflection and GLSL workflows.",
+  "key_params": [
+    {
+      "name": "mode",
+      "type": "Menu",
+      "note": "Conversion mode: onepersidetocubemap, verticalcrosstocubemap, cubemaptoverticalcross, horizontalcrosstocubemap, or cubemaptohorizontalcross"
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution policy"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Six separate inputs must be connected in +X, -X, +Y, -Y, +Z, -Z order.",
+    "Input layout must match Mode or faces will be scrambled.",
+    "GLSL cube maps use samplerCube rather than sampler2D.",
+    "Mismatched face resolution or orientation appears as seams or broken reflections."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "GLSL_snippets",
+    "MAT_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Cube Map TOP builds TouchDesigner cube-map texture format from face images or cross layouts.",
+    "Six-input mode expects face order +X, -X, +Y, -Y, +Z, -Z.",
+    "Mode can convert vertical or horizontal crosses to cube maps and cube maps back to cross layouts.",
+    "Phong MAT can use cube maps for reflection workflows.",
+    "Render TOP can produce cube-map inputs, and GLSL samples them with samplerCube.",
+    "Face ordering and orientation are critical for seamless reflections."
+  ]
+}

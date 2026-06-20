@@ -1,0 +1,149 @@
+{
+  "card_type": "operator",
+  "op_type": "rectangleTOP",
+  "family": "TOP",
+  "display_name": "Rectangle TOP",
+  "docs_url": "https://docs.derivative.ca/Rectangle_TOP",
+  "summary": "Generates positioned, rotated rectangles with rounded corners, optional borders, independent fill/background colors, and antialiasing.",
+  "key_params": [
+    {
+      "name": "size",
+      "type": "XY",
+      "note": "Rectangle width and height."
+    },
+    {
+      "name": "sizeunit",
+      "type": "Menu",
+      "note": "Pixels or normalized fraction units for size."
+    },
+    {
+      "name": "rotate",
+      "type": "Float",
+      "note": "Rectangle rotation in degrees."
+    },
+    {
+      "name": "center",
+      "type": "XY",
+      "note": "Shape center position."
+    },
+    {
+      "name": "centerunit",
+      "type": "Menu",
+      "note": "Pixels or normalized fraction units for center."
+    },
+    {
+      "name": "justifyh",
+      "type": "Menu",
+      "note": "Horizontal alignment."
+    },
+    {
+      "name": "justifyv",
+      "type": "Menu",
+      "note": "Vertical alignment."
+    },
+    {
+      "name": "fillcolor",
+      "type": "RGB",
+      "note": "Rectangle fill color."
+    },
+    {
+      "name": "fillalpha",
+      "type": "Float",
+      "note": "Rectangle fill alpha."
+    },
+    {
+      "name": "border",
+      "type": "RGB",
+      "note": "Border color."
+    },
+    {
+      "name": "borderalpha",
+      "type": "Float",
+      "note": "Border alpha."
+    },
+    {
+      "name": "bgcolor",
+      "type": "RGB",
+      "note": "Background color."
+    },
+    {
+      "name": "bgalpha",
+      "type": "Float",
+      "note": "Background alpha."
+    },
+    {
+      "name": "borderwidth",
+      "type": "Float",
+      "note": "Border thickness."
+    },
+    {
+      "name": "borderwidthunit",
+      "type": "Menu",
+      "note": "Border width units."
+    },
+    {
+      "name": "borderoffset",
+      "type": "Float",
+      "note": "Border offset applied to the effective corner radius."
+    },
+    {
+      "name": "cornerradius",
+      "type": "Float",
+      "note": "Corner rounding radius."
+    },
+    {
+      "name": "cornerradiusunit",
+      "type": "Menu",
+      "note": "Corner radius units."
+    },
+    {
+      "name": "antialias",
+      "type": "Toggle",
+      "note": "Enable antialiasing."
+    },
+    {
+      "name": "softness",
+      "type": "Float",
+      "note": "Blend amount from background into shape."
+    },
+    {
+      "name": "softnessunit",
+      "type": "Menu",
+      "note": "Softness units."
+    },
+    {
+      "name": "compoverinput",
+      "type": "Toggle",
+      "note": "Composite rectangle output over input."
+    },
+    {
+      "name": "operand",
+      "type": "Menu",
+      "note": "Blend operation when compositing."
+    },
+    {
+      "name": "swaporder",
+      "type": "Toggle",
+      "note": "Swap input and rectangle order when compositing."
+    }
+  ],
+  "common_gotchas": [
+    "Center value 0,0 means perfectly centered, not lower-left.",
+    "Unit menus strongly change interpretation of size, center, border width, corner radius, and softness.",
+    "Border Offset changes the effective radius using the documented radius plus offset times border width relationship.",
+    "Background, border, and fill colors have independent alpha controls.",
+    "Use antialiasing for clean UI and mask shapes, but account for softened edge pixels."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Compositing_snippets"
+  ],
+  "build_relevance": "procedural_shape_generator",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Generates positioned and rotated procedural rectangles with optional rounded corners.",
+    "Fill, border, and background colors have independent alpha controls.",
+    "Size, center, border, corner radius, and softness can use different unit modes.",
+    "Output-page controls can composite the rectangle over an input TOP."
+  ]
+}

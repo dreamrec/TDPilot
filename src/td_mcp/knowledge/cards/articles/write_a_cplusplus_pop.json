@@ -1,0 +1,51 @@
+{
+  "card_type": "article",
+  "article_id": "write_a_cplusplus_pop",
+  "title": "Write a CPlusPlus POP",
+  "family": "POP",
+  "families": [
+    "CPLUSPLUS",
+    "POP",
+    "TOP",
+    "GPU"
+  ],
+  "summary": "Official Derivative guide for CPlusPlus POP authoring, covering CPU/CUDA POP geometry creation, point/vertex/primitive attribute buffers, index buffers, topology metadata, line-strip restart rules, input-buffer reads, and CUDA synchronization.",
+  "source_url": "https://docs.derivative.ca/Write_a_CPlusPlus_POP",
+  "docsbrain_page_id": "write_a_cplusplus_pop",
+  "covered_operators": [
+    "cplusplusPOP",
+    "renderTOP"
+  ],
+  "key_concepts": [
+    "POP_Context::createBuffer()",
+    "POP_Output::setAttribute()",
+    "POP_AttributeInfo",
+    "index buffer",
+    "uint32_t indices",
+    "POP_TopologyInfo",
+    "POP_PointInfo",
+    "POP_InfoBuffers",
+    "Max Info",
+    "line strips",
+    "primitive restart index",
+    "0xFFFFFFFF",
+    "POP_GridInfo::getRequiredSize()",
+    "OP_Context::beginCUDAOperations()",
+    "OP_Context::endCUDAOperations()",
+    "cudaStream_t"
+  ],
+  "guidance": [
+    "Use this article when a plan needs native POP generation, POP topology authoring, or plugin-side POP buffer access beyond GLSL POP templates.",
+    "CPlusPlus POP can mix CPU memory and CUDA workflows, unlike CPlusPlus TOP's explicit execute-mode choice, but CUDA availability is platform and GPU dependent.",
+    "Do not reuse buffers after handing them back to TouchDesigner through setIndexBuffer() or setAttribute().",
+    "Attribute buffers are assigned by class using POP_AttributeInfo; downstream point/vertex/primitive counts are inferred from the smallest buffer in the class.",
+    "A POP has one index buffer; triangle, quad, line-strip, line, and point primitive groups must be ordered as expected by POP_TopologyInfo for efficient rendering.",
+    "Line strips require primitive restart index entries such as 0xFFFFFFFF and additional line-strip info buffers, so generated plans should not treat them like fixed-size triangles.",
+    "CUDA buffers must be created or acquired before beginCUDAOperations(), and GPU reads/writes known to TouchDesigner should occur between beginCUDAOperations() and endCUDAOperations() with a cudaStream_t."
+  ],
+  "related_snippets": [
+    "POP_snippets",
+    "POP_attribute_ontology"
+  ],
+  "last_verified": "2026-06-17"
+}

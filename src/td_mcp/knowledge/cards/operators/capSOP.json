@@ -1,0 +1,103 @@
+{
+  "card_type": "operator",
+  "op_type": "capSOP",
+  "family": "SOP",
+  "display_name": "Cap SOP",
+  "docs_url": "https://docs.derivative.ca/Cap_SOP",
+  "summary": "Closes open primitive regions with flat, shared, faceted, rounded, or tangential caps in the U and V directions.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Primitive group to cap"
+    },
+    {
+      "name": "pshapeu",
+      "type": "Toggle",
+      "note": "Preserve NURBS shape while capping in U"
+    },
+    {
+      "name": "firstu",
+      "type": "Menu",
+      "note": "Cap mode for the first U side"
+    },
+    {
+      "name": "lastu",
+      "type": "Menu",
+      "note": "Cap mode for the last U side"
+    },
+    {
+      "name": "divsu1",
+      "type": "Int",
+      "note": "Rounded cap cross sections for first U side"
+    },
+    {
+      "name": "scaleu1",
+      "type": "Float",
+      "note": "Scale first U rounded or tangent cap height"
+    },
+    {
+      "name": "divsu2",
+      "type": "Int",
+      "note": "Rounded cap cross sections for last U side"
+    },
+    {
+      "name": "scaleu2",
+      "type": "Float",
+      "note": "Scale last U rounded or tangent cap height"
+    },
+    {
+      "name": "pshapev",
+      "type": "Toggle",
+      "note": "Preserve NURBS shape while capping in V"
+    },
+    {
+      "name": "firstv",
+      "type": "Menu",
+      "note": "Cap mode for the first V side"
+    },
+    {
+      "name": "lastv",
+      "type": "Menu",
+      "note": "Cap mode for the last V side"
+    },
+    {
+      "name": "divsv1",
+      "type": "Int",
+      "note": "Rounded cap cross sections for first V side"
+    },
+    {
+      "name": "scalev1",
+      "type": "Float",
+      "note": "Scale first V rounded or tangent cap height"
+    },
+    {
+      "name": "divsv2",
+      "type": "Int",
+      "note": "Rounded cap cross sections for last V side"
+    },
+    {
+      "name": "scalev2",
+      "type": "Float",
+      "note": "Scale last V rounded or tangent cap height"
+    }
+  ],
+  "common_gotchas": [
+    "Faceted caps use unique points, while shared caps share points with the original primitive.",
+    "Rounded caps add concentric regions and can increase geometry density.",
+    "Preserve NURB Shape clamps the surface at the cap point; decide this before expecting the original surface profile to remain unchanged.",
+    "Positive and negative scale values change rounded/tangent cap height and direction.",
+    "Cap behavior differs between meshes and faces, so verify the primitive type before planning closure."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Cap SOP closes open primitive regions on U and/or V ends.",
+    "Cap modes include no cap, faceted, shared, rounded, and tangent-style caps.",
+    "Faceted caps create unique points, while shared caps reuse the original primitive points.",
+    "Rounded and tangential caps can add cross sections and scaled cap height in the selected direction."
+  ]
+}

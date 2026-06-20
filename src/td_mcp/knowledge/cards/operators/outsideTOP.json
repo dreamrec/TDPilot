@@ -1,0 +1,89 @@
+{
+  "card_type": "operator",
+  "op_type": "outsideTOP",
+  "family": "TOP",
+  "display_name": "Outside TOP",
+  "docs_url": "https://docs.derivative.ca/Outside_TOP",
+  "summary": "Composites Input 1 only where Input 2 is not fully opaque, effectively the opposite alpha-mask relationship of Inside TOP.",
+  "key_params": [
+    {
+      "name": "size",
+      "type": "Menu",
+      "note": "Fixed layer that defines final resolution/aspect: input1 or input2."
+    },
+    {
+      "name": "prefit",
+      "type": "Menu",
+      "note": "Fit behavior for the overlay before compositing."
+    },
+    {
+      "name": "justifyh",
+      "type": "Menu",
+      "note": "Horizontal placement of the overlay layer."
+    },
+    {
+      "name": "justifyv",
+      "type": "Menu",
+      "note": "Vertical placement of the overlay layer."
+    },
+    {
+      "name": "extend",
+      "type": "Menu",
+      "note": "Overlay sampling beyond image edges."
+    },
+    {
+      "name": "r",
+      "type": "Float",
+      "note": "Overlay rotation."
+    },
+    {
+      "name": "t",
+      "type": "XY",
+      "note": "Overlay translation."
+    },
+    {
+      "name": "tunit",
+      "type": "Menu",
+      "note": "Translation units."
+    },
+    {
+      "name": "s",
+      "type": "XY",
+      "note": "Overlay scale."
+    },
+    {
+      "name": "p",
+      "type": "XY",
+      "note": "Overlay pivot."
+    },
+    {
+      "name": "punit",
+      "type": "Menu",
+      "note": "Pivot units."
+    },
+    {
+      "name": "legacyxform",
+      "type": "Toggle",
+      "note": "Use legacy transform behavior."
+    }
+  ],
+  "common_gotchas": [
+    "Requires meaningful alpha in Input 2; opaque masks hide Input 1 entirely.",
+    "Fixed Layer chooses final dimensions but does not change the Input 1/Input 2 compositing relationship.",
+    "Pre-fit and transform controls operate on the non-fixed overlay input.",
+    "Use Native Resolution prefit when pixel-accurate overlay alignment matters.",
+    "3D textures and 2D texture arrays should keep depth and array size consistent downstream."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Compositing_snippets"
+  ],
+  "build_relevance": "alpha_composite",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Composites Input 1 only where Input 2 alpha is less than fully opaque.",
+    "Acts as the opposite alpha-mask relationship of Inside TOP.",
+    "Supports 3D textures and 2D texture arrays in addition to 2D textures.",
+    "Fixed Layer controls the final resolution/aspect while transform parameters affect the overlay layer."
+  ]
+}

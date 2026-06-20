@@ -1,0 +1,95 @@
+{
+  "card_type": "operator",
+  "op_type": "functionTOP",
+  "family": "TOP",
+  "display_name": "Function TOP",
+  "docs_url": "https://docs.derivative.ca/Function_TOP",
+  "summary": "Applies mathematical functions to TOP color channels, with per-channel function selection and invalid-value replacement.",
+  "key_params": [
+    {
+      "name": "rerange",
+      "type": "XY",
+      "note": "Integer-format input rerange before functions"
+    },
+    {
+      "name": "funcrgba",
+      "type": "Menu",
+      "note": "Function applied to all RGBA channels"
+    },
+    {
+      "name": "funcrgb",
+      "type": "Menu",
+      "note": "Function applied to RGB channels"
+    },
+    {
+      "name": "funcr",
+      "type": "Menu",
+      "note": "Function applied to red"
+    },
+    {
+      "name": "funcg",
+      "type": "Menu",
+      "note": "Function applied to green"
+    },
+    {
+      "name": "funcb",
+      "type": "Menu",
+      "note": "Function applied to blue"
+    },
+    {
+      "name": "funca",
+      "type": "Menu",
+      "note": "Function applied to alpha"
+    },
+    {
+      "name": "baseval",
+      "type": "Float",
+      "note": "Base value for base-related functions"
+    },
+    {
+      "name": "expval",
+      "type": "Float",
+      "note": "Exponent value for exponent-related functions"
+    },
+    {
+      "name": "constval",
+      "type": "Float",
+      "note": "Constant value for constant function"
+    },
+    {
+      "name": "angunit",
+      "type": "Menu",
+      "note": "Angle units: deg, rad, or cycle"
+    },
+    {
+      "name": "replace",
+      "type": "Toggle",
+      "note": "Replace invalid math results"
+    },
+    {
+      "name": "errval",
+      "type": "Float",
+      "note": "Replacement value for invalid math results"
+    }
+  ],
+  "common_gotchas": [
+    "Rerange affects integer texture formats, not float formats.",
+    "Trig functions depend on Angle Unit, so degrees/radians/cycles must match the source data.",
+    "Logs and dB conversions error on non-positive values unless replacement is handled.",
+    "Second-input functions such as atan2 and powxy require valid paired input data."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "GLSL_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Function TOP applies math functions to TOP color values.",
+    "Functions can be applied to RGBA together, RGB together, or individual channels.",
+    "Some functions use Base Value, Exponent Value, or Constant Value parameters.",
+    "Some functions use a second input as an operand, such as atan2 or powxy workflows.",
+    "Angle Unit controls trig input interpretation for degree, radian, or cycle units.",
+    "Replace and Error Value handle invalid math cases such as logs and powers outside valid domains."
+  ]
+}

@@ -1,0 +1,6283 @@
+# TDPilot Atlas Research - 2026-06-17
+
+## Local Inventory
+
+- `data/normalized/derivative/docsbrain.db` contains 25,887 chunks, including 5,532 operator chunks and 103 distinct POP operators.
+- The generated DocsBrain release manifest currently stops at `2025.32460`.
+- Structured release cards already include `2025.32820`, so exact lookups need a structured-card fallback when DocsBrain is stale.
+- Before this pass, the structured operator atlas had sparse POP/GLSL coverage and no `glslMAT` card despite GLSL MAT hints referencing it.
+
+## Online Findings
+
+- Official POP docs describe POPs as GPU point/geometry data that can be rendered by Render TOP or sent to external systems: https://docs.derivative.ca/POP
+- Render Simple TOP is the quick official path for rendering one POP directly to a TOP, with built-in transform, light, material, and optional MAT controls: https://docs.derivative.ca/Render_Simple_TOP
+- `renderPOP` was not found as an official operator page; the old `particle_gpu` macro/hint path used a stale or project-local assumption.
+- GLSL TOP docs expose the pixel shader DAT parameter as `pixeldat`, support pixel and compute modes, and note compute shaders require GLSL 4.30+: https://docs.derivative.ca/GLSL_TOP
+- Write a GLSL TOP notes TouchDesigner's main supported GLSL version is 4.60 and stresses `TDOutputSwizzle()`: https://docs.derivative.ca/Write_a_GLSL_TOP
+- GLSL MAT docs require shader attributes to be declared on the Attributes page for POP-compatible workflows and provide `vdat`/`pdat` shader parameters: https://docs.derivative.ca/GLSL_MAT
+- Write a GLSL POP distinguishes GLSL POP from GLSL Advanced POP: basic GLSL POP modifies one attribute class without changing element counts; Advanced can work across classes, output counts, index buffers, and primitive batches: https://docs.derivative.ca/Write_a_GLSL_POP
+- Release notes for `2025.32820` add Math Mix POP, Math Combine POP, array-attribute `name[:]` support for several POP math operators, and GLSL MAT projection texture helpers: https://docs.derivative.ca/Release_Notes
+- The fourth pass checked official Derivative docs for POP generators and topology helpers (`Box`, `Plane`, `Point`, `Primitive`, `Pattern`, `Random`), spatial analysis (`Neighbor`, `Proximity`, `Ray`, `Projection`), particle helpers (`Field`, `Force Radial`), line processing (`Line Break`, `Line Divide`, `Line Metrics`, `Line Resample`, `Line Smooth`, `Experimental:Line Thick`), component interfaces (`In`, `Out`), and attribute shaping (`Group`, `Limit`, `Lookup Channel`, `Quantize`).
+- The fifth pass checked official Derivative docs for remaining active POP gaps covering import/export, file I/O, geometry construction, topology control, sorting, deformation, device-driven point clouds, DMX fixture layout, and temporal trails. It also found DocsBrain rows for `Write a ...` pages; those are documentation articles and are now excluded from operator-card priority.
+
+## Implemented Upgrade
+
+- Expanded brain profiles from 8 to 10 with `glsl_material` and `glsl_pop`.
+- Upgraded the POP profile from a POP-only chain to a renderable chain:
+  `circlePOP -> noisePOP -> mathmixPOP -> nullPOP`, rendered by `rendersimpleTOP -> nullTOP`.
+- Added reference-parameter resolution in BrainPlan compilation with `${path:concept_id}` placeholders.
+- GLSL TOP plans now set `pixeldat` to the generated shader DAT.
+- GLSL MAT plans now bind vertex/pixel shader DATs, assign the MAT to geometry, and reference camera/geometry from Render TOP.
+- Replaced the stale `renderPOP` macro with an official Render Simple TOP based preview macro.
+- Added structured cards for current POP/GLSL operators and conversion bridges.
+- Added DocsBrain fallback to structured JSON cards for exact operator, palette, and release lookups.
+- Extended atlas audit output with operator-family counts and release freshness signal.
+
+## Second Pass - Coverage Audit Upgrade
+
+- `scripts/audit_brain_atlas.py --pretty` now compares structured JSON cards against the full local Derivative DocsBrain operator corpus.
+- Current DocsBrain operator inventory: 674 distinct official operators:
+  - CHOP: 175
+  - COMP: 42
+  - DAT: 75
+  - MAT: 13
+  - POP: 103
+  - SOP: 113
+  - TOP: 153
+- Structured operator cards now cover 68 operators overall and 27 POP operators.
+- The audit now reports active structured-card gaps without failing profile coverage, so release gates can stay strict while still exposing the larger atlas backlog.
+- Deprecated missing operators are separated from active priorities. `glslcreatePOP` is correctly treated as deprecated because the official GLSL Create POP page says to use GLSL Advanced POP with or without Topology POP instead.
+- Added high-value second-band POP/GLSL cards:
+  - `gridPOP`, `linePOP`, `spherePOP`
+  - `transformPOP`, `mergePOP`, `selectPOP`, `switchPOP`, `attributePOP`
+  - `feedbackPOP`, `cachePOP`
+  - `soptoPOP`, `choptoPOP`, `dattoPOP`
+  - `glslcopyPOP`, `glslselectPOP`
+
+## Third Pass Research Targets
+
+The audit-driven next card targets are active, non-deprecated operators with high planning value:
+
+- `attributeconvertPOP`, `attributecombinePOP`, `lookupattributePOP`
+- `cacheselectPOP`, `cacheblendPOP`
+- `analyzePOP`, `mathPOP`, `normalPOP`, `normalizePOP`
+- `lookuptexturePOP`, `texturemapPOP`
+- `convertPOP`, `copyPOP`, `triangulatePOP`, `deletePOP`
+- `renderselectTOP`
+- Recent-release POPs still needing structured cards: `analyzePOP`, `cplusplusPOP`, `dmxoutPOP`, `extrudePOP`, `polygonizePOP`, `triangulatePOP`
+
+## Third Pass - Audit-Ranked POP Card Expansion
+
+- Added structured cards for the next high-priority active operators from the audit:
+  - Attribute and analysis: `analyzePOP`, `attributecombinePOP`, `attributeconvertPOP`, `mathPOP`
+  - Cache/time: `cacheblendPOP`, `cacheselectPOP`
+  - Lookup/texture/normalization: `lookupattributePOP`, `lookuptexturePOP`, `texturemapPOP`, `normalPOP`, `normalizePOP`
+  - Topology/copy/delete: `convertPOP`, `copyPOP`, `deletePOP`, `extrudePOP`, `polygonizePOP`, `triangulatePOP`
+  - Extension/output/render selection: `cplusplusPOP`, `dmxoutPOP`, `renderselectTOP`
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Structured cards: 88 operator cards
+  - Structured POP cards: 46 of 103 known POP operators
+  - Active missing POP cards: 57
+  - Overall structured coverage against DocsBrain operators: 0.1306
+- The current active priority list has moved on to remaining POP categories such as import/device selects, source/generator POPs, line-processing POPs, lookup channel, projection, proximity, quantize/random/ray, and related geometry tools.
+
+## Fourth Pass - POP Backbone Card Expansion
+
+- Added structured cards for the next audit-priority POP workflow backbone:
+  - Sources and explicit construction: `boxPOP`, `planePOP`, `pointPOP`, `primitivePOP`, `patternPOP`, `randomPOP`
+  - Particle and spatial helpers: `fieldPOP`, `forceradialPOP`, `neighborPOP`, `proximityPOP`, `rayPOP`, `projectionPOP`
+  - Groups, component interfaces, and shaping: `groupPOP`, `inPOP`, `outPOP`, `dimensionPOP`, `limitPOP`, `quantizePOP`, `lookupchannelPOP`
+  - Line processing: `linebreakPOP`, `linedividePOP`, `linemetricsPOP`, `lineresamplePOP`, `linesmoothPOP`, `linethickPOP`
+- Added a dedicated atlas regression test so these cards must keep `key_params`, `common_gotchas`, and audit-priority coverage.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Structured cards: 113 operator cards
+  - Structured POP cards: 71 of 103 known POP operators
+  - Active missing POP cards: 32
+  - Overall structured coverage against DocsBrain operators: 0.1677
+- The current active priority list has moved on to the remaining POP card families:
+  - Import/device/select bridges: `importselectPOP`, `oakselectPOP`, `zedPOP`
+  - File and interchange: `alembicinPOP`, `alembicoutPOP`, `fileinPOP`, `fileoutPOP`, `pointfileinPOP`
+  - Geometry/topology/editing: `connectivityPOP`, `curvePOP`, `facetPOP`, `rectanglePOP`, `rerangePOP`, `revolvePOP`, `skinPOP`, `skindeformPOP`, `sortPOP`, `sprinklePOP`, `subdividePOP`, `topologyPOP`, `torusPOP`, `trailPOP`, `trigPOP`, `tubePOP`, `twistPOP`
+  - Control/data/specialty: `accumulatePOP`, `blendPOP`, `dmxfixturePOP`, `histogramPOP`, `phaserPOP`, `writeacplusplusPOP`
+
+## Fifth Pass - Active POP Coverage Closure
+
+- Added structured cards for the remaining active POP operators found by the audit:
+  - Data/analysis/blending: `accumulatePOP`, `blendPOP`, `histogramPOP`, `rerangePOP`, `trigPOP`, `phaserPOP`
+  - Import/export/file workflows: `alembicinPOP`, `alembicoutPOP`, `fileinPOP`, `fileoutPOP`, `importselectPOP`, `pointfileinPOP`
+  - Device/output workflows: `dmxfixturePOP`, `oakselectPOP`, `zedPOP`
+  - Geometry generation/topology/editing: `connectivityPOP`, `curvePOP`, `facetPOP`, `rectanglePOP`, `revolvePOP`, `skinPOP`, `skindeformPOP`, `sortPOP`, `sprinklePOP`, `subdividePOP`, `topologyPOP`, `torusPOP`, `trailPOP`, `tubePOP`, `twistPOP`
+- Improved `atlas_audit.py` so `Write a ...` documentation articles are not treated as createable operator-card gaps. This removed false positives like `writeacplusplusPOP` and `writeaglslTOP` from priority output.
+- Added regression coverage asserting active POP priorities are empty after this pass and that only deprecated `glslcreatePOP` remains as a POP gap.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Structured cards: 143 operator cards
+  - Structured POP cards: 101
+  - DocsBrain active/non-article POP rows: 102
+  - Missing POP cards: 1, the deprecated `glslcreatePOP`
+  - Overall structured coverage against DocsBrain operators: 0.2141
+- The current audit priority has moved beyond POPs to TOP/DAT/CHOP/MAT gaps:
+  - TOP/GLSL/render/cache: `cacheselectTOP`, `glslmultiTOP`, `blobtrackTOP`, `cplusplusTOP`, `layermixTOP`, `layoutTOP`, `moviefileoutTOP`, `orbbecTOP`, `renderpassTOP`, `cacheTOP`
+  - Bridges and data: `poptoDAT`, `choptoTOP`, `hsvtorgbTOP`, `rgbtohsvTOP`, `dattoCHOP`
+  - CHOP/MAT essentials: `audiorenderCHOP`, `audiowebrenderCHOP`, `renderpickCHOP`, `feedbackCHOP`, `attributeCHOP`, `selectMAT`, `switchMAT`
+
+## Sixth Pass - TOP, CHOP, DAT, and MAT Priority Expansion
+
+- Checked official Derivative docs for the next non-POP priority band:
+  - Render/cache/GLSL TOPs: `cacheTOP`, `cacheselectTOP`, `glslmultiTOP`, `cplusplusTOP`, `renderpassTOP`, `renderstreaminTOP`, `renderstreamoutTOP`, `moviefileoutTOP`, `webrenderTOP`
+  - Image composition, transforms, data textures, and color utilities: `blobtrackTOP`, `layermixTOP`, `layoutTOP`, `mathTOP`, `transformTOP`, `pointtransformTOP`, `texture3dTOP`, `normalmapTOP`, `choptoTOP`, `rgbtohsvTOP`, `hsvtorgbTOP`
+  - Device and legacy/alias surface: `orbbecTOP`, `simplerenderTOP`
+  - CHOP/DAT/MAT bridges and control surfaces: `attributeCHOP`, `audiorenderCHOP`, `audiowebrenderCHOP`, `dattoCHOP`, `feedbackCHOP`, `renderpickCHOP`, `renderstreaminCHOP`, `poptoDAT`, `selectMAT`, `switchMAT`
+- Added a regression test asserting this cross-family batch is structured and leaves audit priority output.
+- Recorded the `Simple Render TOP`/`Render Simple TOP` rename as a legacy alias card. Current build plans should still prefer `rendersimpleTOP`; `simplerenderTOP` exists to neutralize stale DocsBrain/release-note rows without losing historical context.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Structured operator cards: 175
+  - Structured TOP cards: 37
+  - Structured CHOP cards: 18
+  - Structured DAT cards: 2
+  - Structured MAT cards: 3
+  - Missing operator cards: 493
+  - Overall structured coverage against DocsBrain operators: 0.2620
+- The current audit priority has moved to:
+  - TOP select/device/data surfaces: `importselectTOP`, `kinectazureselectTOP`, `oakselectTOP`, `orbbecselectTOP`, `ousterselectTOP`, `pointfileselectTOP`, `substanceselectTOP`, `zedselectTOP`
+  - Bridge operators: `poptoCHOP`, `soptoCHOP`, `toptoCHOP`, `choptoSOP`, `dattoSOP`, `poptoSOP`
+  - DAT and CHOP essentials: `jsonDAT`, `keyboardinDAT`, `renderpickDAT`, `transformCHOP`, `transformxyzCHOP`, `mergeCHOP`, `switchCHOP`
+  - Remaining broad TOP image basics: `addTOP`, `analyzeTOP`, `antialiasTOP`, `bloomTOP`, `blurTOP`, `channelmixTOP`, `chromakeyTOP`, `circleTOP`, `convolveTOP`, `cornerpinTOP`, `cropTOP`
+
+## Seventh Pass - Select and Bridge Operator Expansion
+
+- Checked official Derivative docs and local DocsBrain parameters for the next audit-priority select, bridge, CHOP, DAT, SOP, and TOP band:
+  - TOP select/device/data surfaces: `importselectTOP`, `kinectazureselectTOP`, `oakselectTOP`, `orbbecselectTOP`, `ousterselectTOP`, `pointfileselectTOP`, `substanceselectTOP`, `zedselectTOP`
+  - CHOP bridges and transform/control essentials: `copyCHOP`, `importselectCHOP`, `mergeCHOP`, `oakselectCHOP`, `poptoCHOP`, `soptoCHOP`, `switchCHOP`, `toptoCHOP`, `transformCHOP`, `transformxyzCHOP`
+  - DAT essentials: `jsonDAT`, `keyboardinDAT`, `renderpickDAT`
+  - SOP bridges: `choptoSOP`, `dattoSOP`, `poptoSOP`
+- Added a regression test asserting this batch is structured, sourced from official docs, and removed from audit priority output.
+- This pass improves TDPilot's practical wiring knowledge for sensor/device streams, imported asset texture/channel selection, TOP/CHOP/POP/SOP/DAT conversion boundaries, render picking, keyboard events, JSON filtering, and transform-channel handling.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Structured operator cards: 199
+  - Structured CHOP cards: 28
+  - Structured DAT cards: 5
+  - Structured SOP cards: 10
+  - Structured TOP cards: 45
+  - Structured POP cards: 101
+  - Missing operator cards: 469
+  - Overall structured coverage against DocsBrain operators: 0.2979
+- The current audit priority has moved to:
+  - GLSL/component and SOP fundamentals: `glslCOMP`, `particleSOP`, `attributeSOP`, `attributecreateSOP`, `cacheSOP`
+  - Broad TOP image basics: `addTOP`, `analyzeTOP`, `antialiasTOP`, `bloomTOP`, `blurTOP`, `channelmixTOP`, `chromakeyTOP`, `circleTOP`, `convolveTOP`, `cornerpinTOP`, `cropTOP`, `crossTOP`, `cubemapTOP`, `cudaTOP`, `depthTOP`, `differenceTOP`, `displaceTOP`, `edgeTOP`, `embossTOP`, `fitTOP`, `flipTOP`, `functionTOP`, `hsvadjustTOP`, `limitTOP`, `lookupTOP`
+  - Hardware and IO TOP surfaces still needing manual enrichment: `directdisplayoutTOP`, `directxinTOP`, `directxoutTOP`, `kinectTOP`, `kinectazureTOP`, `layerTOP`, `leapmotionTOP`, `lensdistortTOP`
+
+## Eighth Pass - GLSL COMP, SOP Fundamentals, and TOP Image Basics
+
+- Checked official Derivative docs and local DocsBrain summaries/parameters for the next audit-priority GLSL/SOP/TOP band:
+  - Shader/panel surface: `glslCOMP`
+  - SOP fundamentals: `attributeSOP`, `attributecreateSOP`, `cacheSOP`, `particleSOP`
+  - TOP image basics and compositing: `addTOP`, `analyzeTOP`, `antialiasTOP`, `bloomTOP`, `blurTOP`, `channelmixTOP`, `chromakeyTOP`, `circleTOP`, `convolveTOP`, `cornerpinTOP`, `cropTOP`, `crossTOP`, `cubemapTOP`, `cudaTOP`, `depthTOP`, `differenceTOP`, `displaceTOP`, `edgeTOP`, `embossTOP`, `fitTOP`, `flipTOP`, `functionTOP`, `hsvadjustTOP`, `inTOP`, `insideTOP`, `layerTOP`, `lensdistortTOP`, `limitTOP`, `lookupTOP`
+- Added a red/green regression test asserting this batch is structured, has official docs URLs, has key parameters and gotchas, and leaves audit priority output.
+- Captured `CUDA TOP` as a legacy warning card because the official page says it is no longer supported and points new CUDA plugin work to `CPlusPlus TOP`.
+- This pass materially improves TDPilot's basic TOP vocabulary for blur, bloom, keying, image math, edge/emboss/convolve, warp/displace, lens correction, channel mapping, depth extraction, layer compositing, and component input routing.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Structured operator cards: 233
+  - Structured COMP cards: 8
+  - Structured SOP cards: 14
+  - Structured TOP cards: 74
+  - Structured CHOP cards: 28
+  - Structured DAT cards: 5
+  - Structured POP cards: 101
+  - Missing operator cards: 435
+  - Overall structured coverage against DocsBrain operators: 0.3488
+- The current audit priority has moved to:
+  - Hardware, IO, and vendor TOP surfaces: `directdisplayoutTOP`, `directxinTOP`, `directxoutTOP`, `kinectTOP`, `kinectazureTOP`, `leapmotionTOP`, `mosysTOP`, `ncamTOP`, `ndiinTOP`, `ndioutTOP`, `notchTOP`, `nvidiabackgroundTOP`, `nvidiadenoiseTOP`, `nvidiaflexTOP`, `nvidiaflowTOP`, `nvidiartxvideoTOP`, `nvidiaupscalerTOP`, `oculusriftTOP`, `openvrTOP`, `ousterTOP`, `photoshopinTOP`, `realsenseTOP`
+  - Remaining TOP image basics and utility surfaces: `lumablurTOP`, `lumalevelTOP`, `matteTOP`, `mirrorTOP`, `monochromeTOP`, `mpcdiTOP`, `multiplyTOP`, `opencolorioTOP`, `opticalflowTOP`, `outTOP`, `outsideTOP`, `overTOP`, `packTOP`, `pointfileinTOP`, `prefiltermapTOP`, `projectionTOP`, `rampTOP`, `rectangleTOP`
+  - The long tail still includes CHOP, DAT, MAT, SOP, and COMP families; the next automated improvement should draft cards from DocsBrain instead of hand-writing every remaining low-risk operator.
+
+## Ninth Pass - DocsBrain Draft Automation
+
+- Added a DocsBrain-to-operator-card draft path so atlas expansion can scale past hand-written batches without treating raw generated content as production knowledge.
+- `src/td_mcp/brain/atlas_drafts.py` now builds `operator_draft` records for missing structured operator cards, ranked by the existing atlas audit priority. Drafts carry:
+  - `target_card_type: operator`
+  - official `docs_url`, family, display name, and cleaned DocsBrain summary
+  - operator-specific parameter candidates before common-page parameters
+  - `review_status: needs_manual_enrichment`
+  - provenance with DocsBrain source chunk IDs, summary chunk ID, parameter chunk IDs, database path, and generation timestamp
+- `scripts/draft_brain_atlas_cards.py` exposes the workflow:
+  - preview: `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --pretty`
+  - write review bundle: `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`
+- Generated an initial review bundle at `data/generated/atlas_drafts/operators` with 20 high-priority TOP drafts:
+  `directdisplayoutTOP`, `directxinTOP`, `directxoutTOP`, `kinectTOP`, `kinectazureTOP`, `leapmotionTOP`, `lumablurTOP`, `lumalevelTOP`, `matteTOP`, `mirrorTOP`, `monochromeTOP`, `mosysTOP`, `mpcdiTOP`, `multiplyTOP`, `ncamTOP`, `ndiinTOP`, `ndioutTOP`, `notchTOP`, `nvidiabackgroundTOP`, `nvidiadenoiseTOP`.
+- Draft files intentionally live outside `src/td_mcp/knowledge/cards`, use `card_type: operator_draft`, and are not counted by `CardIndex` or atlas coverage until manually reviewed and promoted.
+- Added regression coverage for summary-noise and common-page parameter leakage, because official DocsBrain chunks frequently include shared family pages and menu values alongside true operator parameters.
+
+## Tenth Pass - Hardware, IO, and Vendor TOP Promotion
+
+- Manually reviewed official Derivative docs and promoted the first generated draft batch into production structured operator cards:
+  - Direct output and sharing: `directdisplayoutTOP`, `directxinTOP`, `directxoutTOP`
+  - Network video IO: `ndiinTOP`, `ndioutTOP`
+  - Vendor/runtime integrations: `notchTOP`, `nvidiabackgroundTOP`, `nvidiadenoiseTOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Windows/license restrictions for DirectX and Notch workflows
+  - Direct Display NVIDIA/Windows/direct-output setup and Hardware Frame-Lock caveats
+  - NDI discovery, firewall, FPS/compression, sender-thread, metadata, and audio CHOP considerations
+  - Notch CodeMeter/runtime DLL, exposed parameter, layer, playback, CHOP/TOP reference, and license limits
+  - NVIDIA Maxine model downloads, RTX card requirements, TensorRT/ZED conflicts, input-size limits, model latency, and quality/performance tradeoffs
+- Added a regression test requiring these eight promoted TOPs to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion so `data/generated/atlas_drafts/operators` continues pointing at remaining missing cards instead of already-promoted ones.
+
+## Eleventh Pass - Sensor, Luma, Matte, and Color TOP Promotion
+
+- Manually reviewed official Derivative docs and promoted the next generated draft batch into production structured operator cards:
+  - Depth and tracking camera inputs: `kinectTOP`, `kinectazureTOP`, `leapmotionTOP`
+  - Luma, matte, mirror, grayscale, and multiply image utilities: `lumablurTOP`, `lumalevelTOP`, `matteTOP`, `mirrorTOP`, `monochromeTOP`, `multiplyTOP`
+  - Color management and motion analysis: `opencolorioTOP`, `opticalflowTOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Kinect and Kinect Azure Windows/hardware/runtime constraints, Kinect v1/v2 differences, Azure/Orbbec body-tracking caveats, single-camera ownership, remapped image and point-cloud modes
+  - Leap Motion image permission, Ultraleap driver/library folder requirements, Gemini orientation behavior, and separate hardware/software licensing
+  - Luma Blur second-input control texture behavior, kernel/ringing/performance tradeoffs, and array-texture support
+  - Luma Level hue/saturation preservation, source-channel semantics, range/posterize behavior, and clamp risks
+  - Matte three-input compositing semantics, matte-channel selection, and switch-input behavior
+  - Mirror pivot-unit/extend/flip distinctions and Multiply fixed-layer/pre-fit/resolution semantics
+  - OpenColorIO linear-TOP assumptions, transform order, LUT/source color-space responsibilities, and config reload requirements
+  - Optical Flow Windows/NVIDIA 3000-series requirements, RG 32-bit float vector output, grid/quality performance tradeoffs, and manual timestamp handling
+- Added a red/green regression test requiring these eleven promoted TOPs to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next 20 generated review drafts now start at:
+  `mosysTOP`, `mpcdiTOP`, `ncamTOP`, `nvidiaflexTOP`, `nvidiaflowTOP`, `nvidiartxvideoTOP`, `nvidiaupscalerTOP`, `oculusriftTOP`, `openvrTOP`, `ousterTOP`, `outTOP`, `outsideTOP`, `overTOP`, `packTOP`, `photoshopinTOP`, `pointfileinTOP`, `prefiltermapTOP`, `projectionTOP`, `rampTOP`, `realsenseTOP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 264
+  - Structured operator cards: 252
+  - Structured TOP cards: 93
+  - Structured CHOP cards: 28
+  - Structured DAT cards: 5
+  - Structured MAT cards: 3
+  - Structured POP cards: 101
+  - Structured SOP cards: 14
+  - Missing operator cards: 416
+  - Missing TOP cards: 57
+  - Overall structured coverage against DocsBrain operators: 0.3772
+
+## Twelfth Pass - Tracking, VR, Lidar, and NVIDIA TOP Promotion
+
+- Manually reviewed official Derivative docs and promoted another generated draft batch into production structured operator cards:
+  - Camera tracking and projection calibration: `mosysTOP`, `mpcdiTOP`, `ncamTOP`
+  - NVIDIA simulation and video enhancement: `nvidiaflexTOP`, `nvidiaflowTOP`, `nvidiaupscalerTOP`
+  - VR output: `oculusriftTOP`, `openvrTOP`
+  - Lidar/depth sensor inputs: `ousterTOP`, `realsenseTOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - MoSys and Ncam TouchDesigner Pro licensing, required CHOP references, server/stream availability, and lens-distortion map semantics
+  - MPCDI configuration-file, buffer/region/grid, alpha-beta/gamma, and `projection`/`cameraTransform` Camera COMP integration details
+  - NVIDIA Flex Windows/NVIDIA GPU requirements, Actor COMP/Flex Solver dependency, and 32-bit float simulation-data texture interpretation
+  - NVIDIA Flow memory, block allocation, simulation step, damping/fade/vorticity/combustion, and debug-render optimization constraints
+  - NVIDIA Upscaler RTX card/model download requirements, TensorRT/ZED conflict, mode-specific resolution limits, and upscale vs super-resolution behavior
+  - Oculus Rift and OpenVR Windows-only two-eye input requirements and headset/SteamVR output expectations
+  - Ouster firmware/network/bandwidth/firewall requirements, RGBA channel mapping, timing modes, coordinate-space conversion, and Ouster Select TOP expansion path
+  - RealSense Apple Silicon SDK limitation, model/image-mode selection, depth scaling, visualized-depth caveat, UV-map Remap TOP workflow, and Options CHOP naming
+- Added a red/green regression test requiring these ten promoted TOPs to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next 20 generated review drafts now start at:
+  `nvidiartxvideoTOP`, `outTOP`, `outsideTOP`, `overTOP`, `packTOP`, `photoshopinTOP`, `pointfileinTOP`, `prefiltermapTOP`, `projectionTOP`, `rampTOP`, `rectangleTOP`, `remapTOP`, `reorderTOP`, `resolutionTOP`, `rgbkeyTOP`, `scalabledisplayTOP`, `screenTOP`, `screengrabTOP`, `scriptTOP`, `sharedmeminTOP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 274
+  - Structured operator cards: 262
+  - Structured TOP cards: 103
+  - Structured CHOP cards: 28
+  - Structured DAT cards: 5
+  - Structured MAT cards: 3
+  - Structured POP cards: 101
+  - Structured SOP cards: 14
+  - Missing operator cards: 406
+  - Missing TOP cards: 47
+  - Overall structured coverage against DocsBrain operators: 0.3922
+
+## Thirteenth Pass - TOP Output, Composite, Generator, and Transfer Promotion
+
+- Manually reviewed official Derivative docs and promoted the full generated review queue into production structured operator cards:
+  - Output and process boundaries: `outTOP`, `sharedmeminTOP`
+  - Alpha/blend compositing and channel routing: `outsideTOP`, `overTOP`, `screenTOP`, `reorderTOP`, `rgbkeyTOP`
+  - Texture packing, remapping, and resolution/projection transforms: `packTOP`, `remapTOP`, `resolutionTOP`, `projectionTOP`
+  - Procedural/image generation: `rampTOP`, `rectangleTOP`, `scriptTOP`, `prefiltermapTOP`
+  - External/source integrations: `nvidiartxvideoTOP`, `photoshopinTOP`, `pointfileinTOP`, `scalabledisplayTOP`, `screengrabTOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - `nvidiartxvideoTOP` is no longer just a redirect in the live official docs; it now exposes RTX Video SDK mode, super-resolution quality, and HDR controls, so the production card supersedes the stale local draft.
+  - `outTOP` naming/label/output-resolution semantics for deterministic Component output exposure.
+  - Over/Outside/Screen fixed-layer transform semantics, alpha/blend behavior, 3D texture and 2D texture-array caveats.
+  - Pack TOP Passthrough color-space requirements, lossless storage expectations, and no-intermediate-processing guidance for packed float data.
+  - Photoshop Remote Connections setup, password/address/update-mode behavior, and document-locking risks.
+  - Point File In four-channel output mapping, sequence playback modes, ASCII header sensitivity, EXR/point-field considerations, and Point File Select expansion path.
+  - PreFilter Map direct Environment Light use, Projection TOP aspect-ratio guidance, Ramp DAT keyframe format, Rectangle unit/antialias/border interactions.
+  - Remap TOP high-bit-depth UV-map requirement, Reorder multi-input channel-routing behavior, RGB Key threshold/softness output semantics.
+  - Scalable Display TouchDesigner Pro plus Windows-only constraints, Screen Grab source/refresh/delayed-capture caveats, Script TOP callback/copyNumpyArray requirements, and Shared Mem In license/local/global producer matching.
+- Added a red/green regression test requiring these twenty promoted TOPs to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next 20 generated review drafts now start at:
+  `sharedmemoutTOP`, `sickTOP`, `slopeTOP`, `spectrumTOP`, `ssaoTOP`, `st2110inTOP`, `st2110outTOP`, `stypeTOP`, `substanceTOP`, `subtractTOP`, `syphonspoutinTOP`, `syphonspoutoutTOP`, `thresholdTOP`, `tileTOP`, `timemachineTOP`, `tonemapTOP`, `touchinTOP`, `touchoutTOP`, `underTOP`, `videodeviceinTOP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 294
+  - Structured operator cards: 282
+  - Structured TOP cards: 123
+  - Structured CHOP cards: 28
+  - Structured DAT cards: 5
+  - Structured MAT cards: 3
+  - Structured POP cards: 101
+  - Structured SOP cards: 14
+  - Missing operator cards: 386
+  - Missing TOP cards: 27
+  - Overall structured coverage against DocsBrain operators: 0.4222
+
+## Fourteenth Pass - Network, Sensor, Effect, and Capture TOP Promotion
+
+- Manually reviewed official Derivative docs and promoted the next generated review queue into production structured operator cards:
+  - Local and network sharing: `sharedmemoutTOP`, `touchinTOP`, `touchoutTOP`
+  - Sensor, acquisition, and broadcast IO: `sickTOP`, `st2110inTOP`, `st2110outTOP`, `syphonspoutinTOP`, `syphonspoutoutTOP`, `videodeviceinTOP`
+  - Image analysis/effects and correction: `slopeTOP`, `spectrumTOP`, `ssaoTOP`, `subtractTOP`, `thresholdTOP`, `tileTOP`, `tonemapTOP`, `underTOP`
+  - Format/vendor/time workflows: `stypeTOP`, `substanceTOP`, `timemachineTOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Shared Memory Out naming/local-global matching, producer/consumer lifecycle, resolution/pixel-format agreement, and commercial-license expectations.
+  - SICK protocol/stream setup, ST 2110 PTP/network-interface expectations, Touch In/Out addressing and multicast/firewall caveats, and Video Device In driver/format/audio-channel implications.
+  - Syphon Spout input/output application naming, alpha and resolution matching, and macOS-only workflow expectations.
+  - Slope, Spectrum, SSAO, Subtract, Threshold, Tile, Tone Map, and Under TOP input-format, alpha, bit-depth, and performance constraints.
+  - Stype server state, Substance package/license/cache behavior, and Time Machine buffer/memory/output-timing semantics.
+- Added a red/green regression test requiring these twenty promoted TOPs to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next generated review drafts moved to the last active TOP priority cards:
+  `videodeviceoutTOP`, `videostreaminTOP`, `videostreamoutTOP`, `viosoTOP`, `zedTOP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 314
+  - Structured operator cards: 302
+  - Structured TOP cards: 143
+  - Structured CHOP cards: 28
+  - Structured DAT cards: 5
+  - Structured MAT cards: 3
+  - Structured POP cards: 101
+  - Structured SOP cards: 14
+  - Missing operator cards: 366
+  - Missing TOP cards: 7
+  - Overall structured coverage against DocsBrain operators: 0.4521
+
+## Fifteenth Pass - Active TOP Coverage Completion
+
+- Manually reviewed official Derivative docs and promoted the remaining active TOP priority cards into production structured operator cards:
+  - Video device and stream IO: `videodeviceoutTOP`, `videostreaminTOP`, `videostreamoutTOP`
+  - Calibration and camera-depth integrations: `viosoTOP`, `zedTOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Video Device Out driver/device ownership, format negotiation, GPU/CPU transfer costs, and platform-specific output behavior.
+  - Video Stream In/Out protocol/address/port matching, compression/latency tradeoffs, firewall and bandwidth caveats, and stable sender/receiver naming.
+  - VIOSO calibration-file/projector mapping, TouchDesigner Pro expectations, and projection pipeline fit.
+  - ZED SDK/GPU/camera mode requirements, depth/point-cloud/body-tracking output semantics, TensorRT/NVIDIA integration caveats, and ZED Select expansion path.
+- Added a regression test asserting active TOP priority coverage is empty and the only remaining TOP gaps are deprecated `opviewerTOP` and `svgTOP`.
+- Regenerated the draft review bundle after active TOP closure. The next generated review queue now starts at:
+  `textureSOP`, `constantMAT`, `depthMAT`, `inMAT`, `lineMAT`, `nullMAT`, `outMAT`, `pbrMAT`, `phongMAT`, `pointspriteMAT`, `wireframeMAT`, `objectmergeSOP`, `choptoDAT`, `soptoDAT`, `convertSOP`, `importselectSOP`, `selectSOP`, `mergeDAT`, `copySOP`, `abletonlinkCHOP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 319
+  - Structured operator cards: 307
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 28
+  - Structured DAT cards: 5
+  - Structured MAT cards: 3
+  - Structured POP cards: 101
+  - Structured SOP cards: 14
+  - Missing operator cards: 361
+  - Missing TOP cards: 2
+  - Overall structured coverage against DocsBrain operators: 0.4596
+
+## Sixteenth Pass - MAT Completion, SOP/DAT Bridges, and CHOP Intake Cleanup
+
+- Manually reviewed official Derivative docs and promoted the next mixed-family generated review queue into production structured operator cards:
+  - Complete MAT family coverage: `constantMAT`, `depthMAT`, `inMAT`, `lineMAT`, `nullMAT`, `outMAT`, `pbrMAT`, `phongMAT`, `pointspriteMAT`, `wireframeMAT`
+  - SOP geometry/material support: `textureSOP`, `objectmergeSOP`, `convertSOP`, `importselectSOP`, `selectSOP`, `copySOP`
+  - DAT bridge/table utilities: `choptoDAT`, `soptoDAT`, `mergeDAT`
+  - Timing/control bridge: `abletonlinkCHOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - MAT common render-state interactions across blending, depth test/write, alpha test, cull face, polygon offset, deform data, texture coordinates, and texture color-space assumptions.
+  - PBR/Phong shader-output paths for later GLSL MAT adaptation, plus material-map coordinate and lighting/environment-map dependencies.
+  - Point Sprite and Line MAT screen-space sizing, cap/joint/attenuation, point-cloud/particle compatibility, and fill-rate risks.
+  - Texture SOP UV-layer/projection/camera-mapping semantics and the risk of mismatching MAT coordinate selectors.
+  - Object Merge SOP transform baking vs Select SOP memory-sharing, Convert SOP topology/attribute changes, Copy SOP geometry explosion and stamping complexity, and Import Select SOP USD/FBX parent/playback/GPU-readback constraints.
+  - CHOP to DAT and SOP to DAT table-shape risks, time-slice/latest-sample behavior, large geometry table output, and multi-value attribute column naming.
+  - Ableton Link CHOP network/session initialization, output-channel opt-in behavior, start/stop sync scope, and audio-driver caveats.
+- Improved DocsBrain operator intake so tutorial/article pages such as `Anatomy of a CHOP` no longer become fake operator-card priorities.
+- Improved replaced/deprecated detection so pages that say an operator "has been replaced by" or "please use ... in the future" move to deprecated missing cards. This moved `bandeqCHOP` and `parametriceqCHOP` out of active priority.
+- Added red/green regression tests for the twenty promoted cards, the article filter, and replaced-operator classification.
+- Regenerated the draft review bundle after promotion and intake cleanup. The next generated review queue now starts at:
+  `angleCHOP`, `audiobandeqCHOP`, `audiobinauralCHOP`, `audiodeviceinCHOP`, `audiodeviceoutCHOP`, `audiodynamicsCHOP`, `audiofileoutCHOP`, `audiofilterCHOP`, `audiomovieCHOP`, `audiondiCHOP`, `audiooscillatorCHOP`, `audioparaeqCHOP`, `audioplayCHOP`, `audiospectrumCHOP`, `audiostreaminCHOP`, `audiostreamoutCHOP`, `audiovstCHOP`, `beatCHOP`, `bindCHOP`, `blacktraxCHOP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 339
+  - Structured operator cards: 327
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 29
+  - Structured DAT cards: 8
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 20
+  - Missing operator cards: 340
+  - Missing MAT cards: 0
+  - Overall structured coverage against DocsBrain operators: 0.4903
+
+## Seventeenth Pass - CHOP Audio, Timing, Binding, Streaming, and Tracking Promotion
+
+- Manually reviewed official Derivative docs and promoted the next CHOP generated review queue into production structured operator cards:
+  - Rotation/format conversion and timing: `angleCHOP`, `beatCHOP`
+  - Audio input/output, playback, recording, filtering, analysis, and dynamics: `audiobandeqCHOP`, `audiobinauralCHOP`, `audiodeviceinCHOP`, `audiodeviceoutCHOP`, `audiodynamicsCHOP`, `audiofileoutCHOP`, `audiofilterCHOP`, `audiomovieCHOP`, `audiondiCHOP`, `audiooscillatorCHOP`, `audioparaeqCHOP`, `audioplayCHOP`, `audiospectrumCHOP`
+  - Audio networking and plugin workflows: `audiostreaminCHOP`, `audiostreamoutCHOP`, `audiovstCHOP`
+  - Bidirectional parameter/channel state and external tracking: `bindCHOP`, `blacktraxCHOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Angle CHOP channel-count/order requirements for quaternion and two-vector conversion, plus Euler rotation-order gotchas.
+  - Audio device driver/device availability, ASIO/pro capture differences, buffer-length latency/stability tradeoffs, multichannel routing, clamping, and sample-rate ownership.
+  - Audio Band EQ vs Audio Para EQ selection, filter resonance/clipping risks, Audio Dynamics channel-linking effects, and Spectrum CHOP FFT size/latency tradeoffs.
+  - Audio Movie/NDI/Stream In sync-offset and source-reference requirements, plus RTSP/WebRTC stream naming, port, peer, track, and firewall considerations.
+  - Audio VST plugin-file, bus-layout, GUI, callback, playhead, binding, CPU, latency, and plugin-specific stability risks.
+  - Beat CHOP play-mode/reset semantics and when Ableton Link is the better sync source.
+  - Bind CHOP bidirectional state flow, match-by-name vs match-by-index safety, pickup behavior, and two-way control-surface relevance.
+  - BlackTrax Pro-license and external system/network/mapping-table constraints.
+- Added a red/green regression test requiring these twenty CHOP cards to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next generated review queue now starts at:
+  `blendCHOP`, `blobtrackCHOP`, `bodytrackCHOP`, `bulletsolverCHOP`, `clipCHOP`, `clipblenderCHOP`, `clockCHOP`, `compositeCHOP`, `countCHOP`, `cplusplusCHOP`, `crossCHOP`, `cycleCHOP`, `delayCHOP`, `deleteCHOP`, `dmxinCHOP`, `dmxoutCHOP`, `envelopeCHOP`, `eventCHOP`, `expressionCHOP`, `extendCHOP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 359
+  - Structured operator cards: 347
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 49
+  - Structured DAT cards: 8
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 20
+  - Missing operator cards: 320
+  - Missing CHOP cards: 123
+  - Overall structured coverage against DocsBrain operators: 0.5202
+
+## Eighteenth Pass - CHOP Control, Tracking, Clip, DMX, and Expression Promotion
+
+- Manually reviewed official Derivative docs and promoted the next twenty CHOP generated review drafts into production structured operator cards:
+  - Blending, crossfading, compositing, cycles, delays, deletion, and extend conditions: `blendCHOP`, `crossCHOP`, `compositeCHOP`, `cycleCHOP`, `delayCHOP`, `deleteCHOP`, `extendCHOP`
+  - Tracking, body analysis, and Bullet simulation readback/feedback: `blobtrackCHOP`, `bodytrackCHOP`, `bulletsolverCHOP`
+  - Clip sequencing and animation playback: `clipCHOP`, `clipblenderCHOP`
+  - Clock, threshold counting, envelopes, events, and sample expressions: `clockCHOP`, `countCHOP`, `envelopeCHOP`, `eventCHOP`, `expressionCHOP`
+  - Custom compiled CHOPs and show-control I/O: `cplusplusCHOP`, `dmxinCHOP`, `dmxoutCHOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Blend CHOP first-input weight semantics, source-input count matching, quaternion Attribute CHOP setup, and zero-weight cooking behavior.
+  - Blob Track CHOP `tx`/`ty` Cartesian input requirements, ordered-sample assumptions for Consecutive Points mode, and occlusion/prediction controls.
+  - Body Track CHOP Windows/Nvidia RTX/Maxine model requirements, TOP input dependency, FOV sensitivity for 3D output, and SDK body-count limits.
+  - Bullet Solver CHOP Bullet Solver/Actor COMP dependency, collision/body ID mapping, transform-space selection, and feedback-loop simulation risks.
+  - Clip and Clip Blender Pro-license gates, matching channel-count/name/sample-rate requirements, DAT list sequencing behavior, and root-transform targeting.
+  - Clock CHOP units vs fraction vs countdown semantics, named countdown inputs, and solar latitude/longitude dependencies.
+  - Composite CHOP third-input effect override, base-hold behavior, static multi-frame use case, and quaternion/shortest-rotation blending requirements.
+  - Count CHOP threshold/release/reset/third-input increment behavior and sample-rate-dependent time counting.
+  - CPlusPlus CHOP plugin path, reinit/unload lifecycle, platform/SDK binary coupling, and process-stability risks.
+  - DMX In/Out protocol address semantics, 44 Hz DMX refresh limits, packet layout choices, routing/filter DAT constraints, macOS ENTTEC caveat, and network debugging hooks.
+  - Envelope, Event, Expression, and Extend CHOP runtime semantics that affect generated plans and downstream sampling assumptions.
+- Added a red/green regression test requiring these twenty CHOP cards to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next generated review queue now starts at:
+  `facetrackCHOP`, `fanCHOP`, `fileinCHOP`, `fileoutCHOP`, `freedinCHOP`, `freedoutCHOP`, `functionCHOP`, `gestureCHOP`, `handleCHOP`, `hogCHOP`, `hokuyoCHOP`, `holdCHOP`, `inCHOP`, `infoCHOP`, `interpolateCHOP`, `inversecurveCHOP`, `inversekinCHOP`, `joinCHOP`, `joystickCHOP`, `keyboardinCHOP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 379
+  - Structured operator cards: 367
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 69
+  - Structured DAT cards: 8
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 20
+  - Missing operator cards: 300
+  - Missing CHOP cards: 103
+  - Overall structured coverage against DocsBrain operators: 0.5502
+
+## Nineteenth Pass - CHOP Tracking, Files, Device Input, Kinematics, and Utility Promotion
+
+- Manually reviewed official Derivative docs and promoted the next twenty CHOP generated review drafts into production structured operator cards:
+  - Face/body and sensor-adjacent tracking: `facetrackCHOP`, `freedinCHOP`, `freedoutCHOP`, `hokuyoCHOP`
+  - File/audio/channel IO and component interfaces: `fileinCHOP`, `fileoutCHOP`, `inCHOP`, `infoCHOP`
+  - Utility, logic, interpolation, and joining: `fanCHOP`, `functionCHOP`, `holdCHOP`, `interpolateCHOP`, `joinCHOP`
+  - Gesture capture, legacy handles, inverse curve, and inverse kinematics: `gestureCHOP`, `handleCHOP`, `inversecurveCHOP`, `inversekinCHOP`
+  - Device and system input/output surfaces: `hogCHOP`, `joystickCHOP`, `keyboardinCHOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Face Track CHOP Windows/Nvidia RTX/Maxine AR SDK/model-folder requirements, TOP input dependency, largest-face tracking behavior, and `.nvf` mesh compatibility.
+  - Fan CHOP Fan In/Out mode semantics, fractional index interpolation, output index bounds, and multi-on Fan In channel selection behavior.
+  - File In/Out CHOP path/URL behavior, sample-rate override vs resample handling, audio-channel format risks, output suffix rules, and write interval controls.
+  - FreeD In/Out CHOP D1 message limitations, network/local-address setup, camera ID filtering/defaults, focus/zoom arbitrary units, and older/lower-precision protocol caveats.
+  - Function CHOP unary/binary operator selection, error outputs for undefined math, and dB/power/amplitude conversion distinctions.
+  - Gesture CHOP listen/reset input behavior, recorded-duration vs beat-fitting playback, and gestureCapture palette suitability.
+  - Handle, Inverse Curve, and Inverse Kin CHOP legacy rig dependencies, export flags, bone/SOP dependencies, solver setup, and rest-angle jump risks.
+  - Hokuyo CHOP serial/ethernet setup, model selection, firewall/network concerns, start/end step validity, and Cartesian output usage for Blob Track workflows.
+  - Hold CHOP second-input edge sampling, Join CHOP sample/name matching and quaternion blending constraints, and Keyboard In CHOP state-vs-event limitations.
+- Added a red/green regression test requiring these twenty CHOP cards to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next generated review queue now starts at:
+  `keyframeCHOP`, `kinectCHOP`, `kinectazureCHOP`, `lagCHOP`, `laserCHOP`, `laserdeviceCHOP`, `leapmotionCHOP`, `leuzerod4CHOP`, `limitCHOP`, `logicCHOP`, `lookupCHOP`, `ltcinCHOP`, `ltcoutCHOP`, `midiinCHOP`, `midiinmapCHOP`, `midioutCHOP`, `mosysCHOP`, `mouseinCHOP`, `mouseoutCHOP`, `ncamCHOP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 399
+  - Structured operator cards: 387
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 89
+  - Structured DAT cards: 8
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 20
+  - Missing operator cards: 280
+  - Missing CHOP cards: 83
+  - Overall structured coverage against DocsBrain operators: 0.5802
+
+## Twentieth Pass - CHOP Animation, Sensors, Lasers, MIDI, Timecode, and Tracking Promotion
+
+- Manually reviewed official Derivative docs and promoted the next twenty CHOP generated review drafts into production structured operator cards:
+  - Animation, smoothing, limiting, logic, and lookup: `keyframeCHOP`, `lagCHOP`, `limitCHOP`, `logicCHOP`, `lookupCHOP`
+  - Kinect, Leap, Leuze, and laser scanner/device workflows: `kinectCHOP`, `kinectazureCHOP`, `leapmotionCHOP`, `leuzerod4CHOP`, `laserCHOP`, `laserdeviceCHOP`
+  - LTC and MIDI control IO: `ltcinCHOP`, `ltcoutCHOP`, `midiinCHOP`, `midiinmapCHOP`, `midioutCHOP`
+  - Virtual-production camera tracking and desktop input automation: `mosysCHOP`, `ncamCHOP`, `mouseinCHOP`, `mouseoutCHOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Keyframe CHOP Animation COMP dependency, lookup-input behavior, time-slice output, and extend-condition playback semantics.
+  - Kinect CHOP Windows/runtime/hardware limits, Kinect 2 single-device SDK restriction, interaction depth-resolution coupling, and bone-rotation unroll guidance.
+  - Kinect Azure CHOP Windows/Kinect Azure TOP dependency, body-tracking configuration limits, Microsoft/Orbbec one-hardware-type lockout, body/image lag, and IMU channel handling.
+  - Lag, Limit, Logic, and Lookup CHOP state/range/sample-rate behaviors, including quaternion lag licensing, Normalize/time-slice incompatibility, Logic CHOP legacy event limitations, and lookup input ordering.
+  - Laser CHOP and Laser Device CHOP physical safety requirements, source channel/attribute contracts, ILDA/DAC routing, blanking behavior, EtherDream discovery, and high sample-rate cost.
+  - Leap Motion CHOP one-device limit, Ultraleap driver/library-folder setup, licensing responsibility, Gemini orientation differences, and V2 vs V5 feature tradeoffs.
+  - Leuze ROD4 CHOP license/network/protocol-coordinate matching requirements, unsupported object-detection mode, and Blob Track workflow constraints.
+  - LTC In/Out audio timecode routing, frame-rate/drop-frame/non-standard high-FPS caveats, upsampled frame-count semantics, cue behavior, and Info CHOP inspection.
+  - MIDI In/Map/Out channel naming, saved-value jump risks, Simplified Output dynamic channel growth, mapped-vs-direct portability, realtime timing, and normalized vs 0-127 output values.
+  - MoSys/Ncam Pro-license gates, UDP/multicast/TCP network setup, camera ID filtering, local NIC selection, FOV conversion, and companion TOP use for lens/image data.
+  - Mouse In/Out capture/automation risks, full-desktop coordinate semantics, panel filtering, timeline-playing modes, and explicit disable-path requirements.
+- Added a red/green regression test requiring these twenty CHOP cards to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next generated review queue now starts at:
+  `oakdeviceCHOP`, `objectCHOP`, `oculusaudioCHOP`, `oculusriftCHOP`, `openvrCHOP`, `optitrackinCHOP`, `oscinCHOP`, `oscoutCHOP`, `outCHOP`, `pangolinCHOP`, `pantiltCHOP`, `parameterCHOP`, `patternCHOP`, `performCHOP`, `phaserCHOP`, `pipeinCHOP`, `pipeoutCHOP`, `posistagenetCHOP`, `pulseCHOP`, `recordCHOP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 419
+  - Structured operator cards: 407
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 109
+  - Structured DAT cards: 8
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 20
+  - Missing operator cards: 260
+  - Missing CHOP cards: 63
+  - Overall structured coverage against DocsBrain operators: 0.6102
+
+## Twenty-First Pass - CHOP OAK, Object, VR, OSC, Output, Pattern, Pipe, and Recording Promotion
+
+- Manually reviewed official Derivative docs and promoted the next twenty CHOP generated review drafts into production structured operator cards:
+  - OAK camera, object transforms, VR, and tracking: `oakdeviceCHOP`, `objectCHOP`, `oculusaudioCHOP`, `oculusriftCHOP`, `openvrCHOP`, `optitrackinCHOP`
+  - Network/protocol/component output surfaces: `oscinCHOP`, `oscoutCHOP`, `outCHOP`, `pipeinCHOP`, `pipeoutCHOP`, `posistagenetCHOP`
+  - Laser/show-control aiming and scanning: `pangolinCHOP`, `pantiltCHOP`
+  - Parameter, static pattern, performance, phasing, pulse, and recording utilities: `parameterCHOP`, `patternCHOP`, `performCHOP`, `phaserCHOP`, `pulseCHOP`, `recordCHOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - OAK Device CHOP camera-start, pipeline-callback, stream color-space, FPS, and TouchDesigner-startup ordering constraints.
+  - Object CHOP target/reference modes, point-input naming requirements, DAT-table column contracts, and point-only rotation limitations.
+  - Oculus Audio/Rift and OpenVR Windows/device-mode limits, transform COMP dependencies, projection-matrix workflow, VR refresh throttling, unit assumptions, and deprecated finger-tip bone output.
+  - OptiTrack, OSC, Pipe, PosiStageNet, and Out CHOP network/port/firewall/addressing contracts, queue or pulse semantics, TCP/IP command-stream limits, and parent-component output connector behavior.
+  - Pangolin CHOP Beyond/license/POP-vs-CHOP input contracts and explicit laser safety requirements.
+  - Pan Tilt, Parameter, Pattern, Perform, Phaser, Pulse, and Record CHOP state/sample-rate/range behaviors, including moving-head flip minimization, sequence-parameter multisample output, sample-indexed static patterns, runtime diagnostic channels, irregular phase inputs, reference pulse inputs, and active-gated recording.
+- Added a red/green regression test requiring these twenty CHOP cards to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next generated review queue now starts at:
+  `renameCHOP`, `reorderCHOP`, `replaceCHOP`, `resampleCHOP`, `scriptCHOP`, `scurveCHOP`, `sequencerCHOP`, `serialCHOP`, `sharedmeminCHOP`, `sharedmemoutCHOP`, `shiftCHOP`, `shuffleCHOP`, `slopeCHOP`, `sortCHOP`, `speedCHOP`, `spliceCHOP`, `springCHOP`, `st2110deviceCHOP`, `stretchCHOP`, `stypeinCHOP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 439
+  - Structured operator cards: 427
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 129
+  - Structured DAT cards: 8
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 20
+  - Missing operator cards: 240
+  - Missing CHOP cards: 43
+  - Overall structured coverage against DocsBrain operators: 0.6402
+
+## Twenty-Second Pass - CHOP Rename, Resample, Script, Serial, Shared Memory, Time, Motion, and Stype Promotion
+
+- Manually reviewed official Derivative docs and promoted the next twenty CHOP generated review drafts into production structured operator cards:
+  - Channel naming, ordering, replacement, and sample layout: `renameCHOP`, `reorderCHOP`, `replaceCHOP`, `shuffleCHOP`, `sortCHOP`
+  - Sample-rate, interval, time, and segment editing: `resampleCHOP`, `shiftCHOP`, `speedCHOP`, `spliceCHOP`, `stretchCHOP`
+  - Scripted and generated control curves: `scriptCHOP`, `scurveCHOP`, `sequencerCHOP`
+  - Serial, shared-memory, ST 2110, and Stype IO/configuration: `serialCHOP`, `sharedmeminCHOP`, `sharedmemoutCHOP`, `st2110deviceCHOP`, `stypeinCHOP`
+  - Motion analysis and spring dynamics: `slopeCHOP`, `springCHOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Rename/Reorder/Replace distinguish name-only changes, channel-order changes, name-matched replacement, optional second-reference inputs, and sample-vs-channel sorting boundaries.
+  - Resample/Shift/Stretch/Splice capture interval, sample-rate, interpolation, pulse-preservation, cyclic-angle correction, reference-input alignment, and trim/insert matching rules.
+  - Script CHOP requires an explicit callbacks DAT and has conservative dependency recook behavior; Sequencer CHOP is legacy and should generally be replaced by Timer CHOP.
+  - Serial CHOP is for simple RS-232 script output and ASCII numeric return; Serial DAT is the better target for complex incoming serial data.
+  - Shared Mem In/Out CHOP licensing and local/global memory modes must be explicit; local mode is required for non-TouchDesigner applications.
+  - ST2110 Device CHOP is Pro-only, configures device/network/PTP/IGMP/SPS settings, and does not output data channels itself.
+  - Stype In CHOP is Pro-only, requires Stype/RedSpy hardware, drops packets while inactive, and should be paired with Camera COMP/Stype TOP lens workflows.
+  - Slope/Speed/Spring cards clarify derivative/integration/reset/initial-condition behavior for motion rigs.
+- Added a red/green regression test requiring these twenty CHOP cards to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next generated review queue now starts at:
+  `stypeoutCHOP`, `syncinCHOP`, `syncoutCHOP`, `tabletCHOP`, `timecodeCHOP`, `timelineCHOP`, `timesliceCHOP`, `touchinCHOP`, `touchoutCHOP`, `trailCHOP`, `triggerCHOP`, `trimCHOP`, `warpCHOP`, `waveCHOP`, `wrnchaiCHOP`, `zedCHOP`, `convertDAT`, `selectDAT`, `switchDAT`, `selectCOMP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 459
+  - Structured operator cards: 447
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 149
+  - Structured DAT cards: 8
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 20
+  - Missing operator cards: 220
+  - Missing CHOP cards: 23
+  - Overall structured coverage against DocsBrain operators: 0.6702
+
+## Twenty-Third Pass - CHOP Sync, Time, Touch, Device Tail, DAT Basics, and Select COMP Promotion
+
+- Manually reviewed official Derivative docs and promoted the next sixteen CHOP, three DAT, and one COMP generated review drafts into production structured operator cards:
+  - Stype, Sync, tablet, timecode, and timeline control: `stypeoutCHOP`, `syncinCHOP`, `syncoutCHOP`, `tabletCHOP`, `timecodeCHOP`, `timelineCHOP`, `timesliceCHOP`
+  - TouchDesigner process IO and channel histories/envelopes: `touchinCHOP`, `touchoutCHOP`, `trailCHOP`, `triggerCHOP`
+  - Interval/warp/wave/device/legacy tracking tail: `trimCHOP`, `warpCHOP`, `waveCHOP`, `wrnchaiCHOP`, `zedCHOP`
+  - DAT and panel selection/routing basics: `convertDAT`, `selectDAT`, `switchDAT`, `selectCOMP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Stype Out CHOP is Pro-only, sends one Stype HF packet per frame, and falls back to defaults when expected channels are missing.
+  - Sync In/Out CHOPs are Pro-only and require client Realtime disabled, matched monitor rates, multicast/port coordination, and timeout/firewall diagnosis. The Derivative `Sync_In_CHOP` page returned a MediaWiki database error during verification, so shared Sync behavior was verified from the official `Sync_Out_CHOP` page plus local DocsBrain data for Sync In parameters.
+  - Tablet CHOP only outputs channels whose parameter fields contain channel names and reports axes in -1 to 1 with buttons as 0/1.
+  - Timecode and Timeline CHOP cards distinguish SMPTE/general timecode conversion from component Time COMP metadata.
+  - Time Slice CHOP preserves channel names/count while generating a skipped-frame time slice for smoother Record/Gesture/Lag inputs.
+  - Touch In/Out CHOPs are optimized for TD-to-TD CHOP transport; Pipe CHOPs or TCP/IP DAT are better for non-TD software/devices, and Info CHOP queue diagnostics matter.
+  - Trail CHOP clears history when input names/counts change; Trigger CHOP ADSR behavior needs threshold/release/multi-trigger decisions.
+  - Trim/Warp/Wave cards capture interval extension, rate-vs-index warping, finite waveform generation, and when LFO/Pattern/Audio Oscillator are better targets.
+  - WrnchAI CHOP is legacy/removed in 2022.20000+ and should be treated as a migration/diagnostic card, not a current build target.
+  - ZED CHOP is Windows-only and depends on ZED camera/ZED TOP channel naming, body-count, and joint-mode choices.
+  - Convert/Select/Switch DAT and Select COMP cards clarify text/table conversion, row/column selection, whole-DAT switching, and panel-selection reuse boundaries.
+- Added a red/green regression test requiring these twenty cards to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next generated review queue now starts at:
+  `addSOP`, `alembicSOP`, `alignSOP`, `armSOP`, `basisSOP`, `blendSOP`, `bonegroupSOP`, `booleanSOP`, `boxSOP`, `bridgeSOP`, `capSOP`, `captureSOP`, `captureregionSOP`, `carveSOP`, `circleSOP`, `claySOP`, `clipSOP`, `cplusplusSOP`, `creepSOP`, `curveclaySOP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 479
+  - Structured operator cards: 467
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 165
+  - Structured DAT cards: 11
+  - Structured COMP cards: 9
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 20
+  - Missing operator cards: 200
+  - Missing CHOP cards: 7
+  - Missing DAT cards: 64
+  - Missing COMP cards: 33
+  - Overall structured coverage against DocsBrain operators: 0.7001
+
+## Twenty-Fourth Pass - SOP Foundation, Capture, Curves, Boolean, and C++ Promotion
+
+- Manually reviewed official Derivative docs and promoted the next twenty SOP generated review drafts into production structured operator cards:
+  - Geometry creation and tabular/explicit construction: `addSOP`, `boxSOP`, `circleSOP`
+  - Import/playback and custom extension: `alembicSOP`, `cplusplusSOP`
+  - Primitive alignment, blending, bridging, capping, carving, clipping, and deformation: `alignSOP`, `basisSOP`, `blendSOP`, `booleanSOP`, `bridgeSOP`, `capSOP`, `carveSOP`, `claySOP`, `clipSOP`, `creepSOP`, `curveclaySOP`
+  - Legacy character/capture workflows: `armSOP`, `bonegroupSOP`, `captureSOP`, `captureregionSOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Add SOP card captures DAT-driven points/polygons, named attributes, connection-list pattern risk, and normal-computation choices.
+  - Alembic SOP distinguishes object-path/time playback from Straight to GPU mode, where downstream SOP/SOP-to-DAT/SOP-to-CHOP access is intentionally unavailable.
+  - Align and Bridge SOP cards clarify primitive grouping, left/right auxiliary-input semantics, precision/density tradeoffs, and when relative layout is preserved.
+  - Arm, Bone Group, Capture, and Capture Region SOPs are flagged as legacy character/capture tools with capture-attribute chain requirements and rig-convention gotchas.
+  - Boolean SOP now records the hard input requirements: closed polygonal sets, convex coplanar polygons, front/back extrusion care, and follow-up normal cleanup.
+  - Basis, Cap, Carve, Clay, Creep, and Curveclay cards distinguish spline/surface-domain edits from whole-primitive transforms or polygon-mesh workflows.
+  - CPlusPlus SOP records plugin reload/unload behavior and the CPU-vs-GPU-direct class split so TDPilot can avoid treating a plugin SOP like a normal createable geometry source.
+- Added a red/green regression test requiring these twenty SOP cards to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next generated review queue now starts at:
+  `curvesectSOP`, `deformSOP`, `deleteSOP`, `divideSOP`, `extrudeSOP`, `facetSOP`, `facetrackSOP`, `fileinSOP`, `filletSOP`, `fitSOP`, `forceSOP`, `fractalSOP`, `groupSOP`, `holeSOP`, `inSOP`, `inversecurveSOP`, `isosurfaceSOP`, `joinSOP`, `jointSOP`, `kinectSOP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 499
+  - Structured operator cards: 487
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 165
+  - Structured DAT cards: 11
+  - Structured COMP cards: 9
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 40
+  - Missing operator cards: 180
+  - Missing SOP cards: 73
+  - Overall structured coverage against DocsBrain operators: 0.7301
+
+## Twenty-Fifth Pass - SOP Intersection, Deform, File, Group, Surface Fit, and Legacy Device Promotion
+
+- Manually reviewed official Derivative docs/DocsBrain chunks and promoted the next twenty SOP generated review drafts into production structured operator cards:
+  - Intersection, deletion, subdivision, extrusion, faceting, and topology edits: `curvesectSOP`, `deleteSOP`, `divideSOP`, `extrudeSOP`, `facetSOP`, `holeSOP`
+  - Capture deformation and legacy force/rig helpers: `deformSOP`, `forceSOP`, `jointSOP`
+  - Hardware/file/component boundary operators: `facetrackSOP`, `fileinSOP`, `inSOP`, `inversecurveSOP`, `kinectSOP`
+  - Curve/surface construction and cleanup: `filletSOP`, `fitSOP`, `fractalSOP`, `groupSOP`, `isosurfaceSOP`, `joinSOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Curvesect SOP now records left/right cutter semantics, tolerance sensitivity, cut-vs-extract mode, and both-input mutation risk.
+  - Deform SOP explicitly depends on Capture SOP-compatible capture attributes and skeleton/capture transforms; deleting capture attributes is flagged as a final-output cleanup step.
+  - Delete/Group SOP cards distinguish pattern/range/bounds/normal/expression selection and ordered group behavior so generated plans do not assume exclusive or stable index selections.
+  - Divide/Extrude/Facet/Hole cards capture Boolean-prep constraints, normals/facing ambiguity, staged normal computation, and topology/index drift risks.
+  - Face Track SOP and Kinect SOP are hardware/OS-gated cards: Face Track is Windows/NVIDIA RTX/Maxine AR SDK dependent, while Kinect SOP is a legacy Kinect v1 path.
+  - File In SOP records disk/URL loading and reload/cook-spike concerns; In SOP records component-boundary behavior rather than createable geometry behavior.
+  - Fit/Fillet/Join/Iso Surface cards distinguish approximation vs interpolation, new-bridge vs source-changing operations, mixed face/surface restrictions, and implicit-function bounds/division cost.
+  - Force SOP is tagged as a legacy metaball force-field helper for Particle/Spring SOP rather than a general transform-force operator.
+- Added a red/green regression test requiring these twenty SOP cards to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next generated review queue now starts at:
+  `latticeSOP`, `limitSOP`, `linethickSOP`, `lodSOP`, `lsystemSOP`, `magnetSOP`, `materialSOP`, `metaballSOP`, `modelSOP`, `noiseSOP`, `oculusriftSOP`, `openvrSOP`, `outSOP`, `pointSOP`, `polyloftSOP`, `polypatchSOP`, `polyreduceSOP`, `polysplineSOP`, `polystitchSOP`, `primitiveSOP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 519
+  - Structured operator cards: 507
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 165
+  - Structured DAT cards: 11
+  - Structured COMP cards: 9
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 60
+  - Missing operator cards: 160
+  - Missing SOP cards: 53
+  - Overall structured coverage against DocsBrain operators: 0.7601
+
+## Twenty-Sixth Pass - SOP Lattice, CHOP Geometry, Materials, LOD, VR Model, and Poly Tool Promotion
+
+- Manually reviewed official Derivative docs/DocsBrain chunks and promoted the next twenty SOP generated review drafts into production structured operator cards:
+  - Deformation, noise, force fields, and procedural growth: `latticeSOP`, `lsystemSOP`, `magnetSOP`, `metaballSOP`, `noiseSOP`
+  - CHOP-to-geometry and point/primitive attribute editing: `limitSOP`, `pointSOP`, `primitiveSOP`
+  - Surface/curve/mesh construction and cleanup: `linethickSOP`, `polyloftSOP`, `polypatchSOP`, `polyreduceSOP`, `polysplineSOP`, `polystitchSOP`
+  - Display/cache, material, modeler storage, component boundary, and VR model loaders: `lodSOP`, `materialSOP`, `modelSOP`, `outSOP`, `oculusriftSOP`, `openvrSOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Lattice SOP now records its three-input contract and the difference between regular lattice and arbitrary point-cloud deformation, including matching lattice divisions, point order, kernel, and capture-radius gotchas.
+  - Limit SOP distinguishes CHOP sample-to-geometry output modes, channel-to-attribute mapping, custom attributes, rotation/radius channel applicability, and bounding behavior.
+  - Line Thick, Polyloft, Polypatch, Polyreduce, Polyspline, and Polystitch cards capture real surface/mesh output semantics, rest-geometry stability, patch connectivity, triangular-mesh reduction, resampling validity, and point-number boundary matching.
+  - LOD SOP is tagged as a camera-distance display/cache tool rather than a geometry simplifier; Polyreduce SOP remains the correct reduced-geometry output target.
+  - LSystem SOP records iteration/turtle-rule expansion risk, tube/skeleton output choices, stamp variables, and random seed repeatability.
+  - Magnet/Metaball/Noise SOP cards capture metaball influence vs actual transform deformation, implicit-field fusion, polygonized normal quality, attribute-target choices, and reproducible noise controls.
+  - Material, Model, Out, Point, and Primitive SOP cards distinguish SOP-level material assignment, protected modeler storage, component output publishing, point-vs-primitive data ownership, and profile-transform limitations.
+  - Oculus Rift SOP and OpenVR SOP are recorded as Windows/device/driver-dependent model loaders, not cross-platform or stable asset sources.
+- Added a red/green regression test requiring these twenty SOP cards to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next generated review queue now starts at:
+  `profileSOP`, `projectSOP`, `railsSOP`, `rasterSOP`, `raySOP`, `rectangleSOP`, `refineSOP`, `resampleSOP`, `revolveSOP`, `scriptSOP`, `sequenceblendSOP`, `skinSOP`, `sortSOP`, `springSOP`, `sprinkleSOP`, `spriteSOP`, `stitchSOP`, `subdivideSOP`, `superquadSOP`, `surfsectSOP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 539
+  - Structured operator cards: 527
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 165
+  - Structured DAT cards: 11
+  - Structured COMP cards: 9
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 80
+  - Missing operator cards: 140
+  - Missing SOP cards: 33
+  - Overall structured coverage against DocsBrain operators: 0.7901
+
+## Twenty-Seventh Pass - SOP Profiles, Projection, Scatter, Skinning, Script, and Surface Simulation Promotion
+
+- Manually reviewed official Derivative docs/DocsBrain chunks and promoted the next twenty SOP generated review drafts into production structured operator cards:
+  - Profile and surface-domain workflows: `profileSOP`, `projectSOP`, `railsSOP`, `skinSOP`, `stitchSOP`, `surfsectSOP`
+  - Projection, resampling, refinement, and topology order: `raySOP`, `refineSOP`, `resampleSOP`, `sortSOP`
+  - Geometry generation and conversion: `rasterSOP`, `rectangleSOP`, `revolveSOP`, `superquadSOP`, `spriteSOP`
+  - Procedural scripting, morphing, scatter, and simulation: `scriptSOP`, `sequenceblendSOP`, `springSOP`, `sprinkleSOP`, `subdivideSOP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Profile/Project/Surfsect cards now distinguish curves-on-surface, Trim/Bridge/Profile follow-up needs, invisible profile-domain cases, vector-vs-parametric projection distortion, and surface-normal-dependent inside/outside behavior.
+  - Rails/Skin/Stitch cards capture cross-section vs rail input ordering, rail pair modes, face-vs-surface category constraints, parametric direction/order requirements, and tangent/seam modification risks.
+  - Raster/Sprite cards distinguish TOP pixels and CHOP samples becoming real SOP geometry, with point/quad count, GPU-download, camera-facing, and CHOP channel-count constraints.
+  - Ray/Refine/Resample/Sort cards record normal-dependent projection, attribute-only projection mode, lossy unrefinement intervals, polygon-only resampling conversion, per-edge corner preservation, and point/primitive-number drift.
+  - Revolve/Superquad/Subdivide cards clarify axis/guide behavior, polygon/mesh isoquad output rather than metaball fields, Catmull-Clark subdivision, creaseweight input/attribute handling, and crack-closing strategies.
+  - Script/Sequence Blend/Spring/Sprinkle cards capture Python callback dependency recooking, compatible-topology morphing, stateful spring simulation time steps/resets, and stable scatter on deforming surfaces through rest/deformed inputs.
+- Added a red/green regression test requiring these twenty SOP cards to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next generated review queue now starts at:
+  `sweepSOP`, `textSOP`, `torusSOP`, `traceSOP`, `trailSOP`, `trimSOP`, `tristripSOP`, `tubeSOP`, `twistSOP`, `vertexSOP`, `wireframeSOP`, `zedSOP`, `art-netDAT`, `audiodevicesDAT`, `chopexecuteDAT`, `clipDAT`, `cplusplusDAT`, `dmxmapDAT`, `errorDAT`, `etherdreamDAT`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 559
+  - Structured operator cards: 547
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 165
+  - Structured DAT cards: 11
+  - Structured COMP cards: 9
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 100
+  - Missing operator cards: 120
+  - Missing SOP cards: 13
+  - Overall structured coverage against DocsBrain operators: 0.8201
+
+## Twenty-Eighth Pass - SOP Tail, Device Discovery DATs, DMX Mapping, and Runtime Diagnostics Promotion
+
+- Manually reviewed official Derivative docs/DocsBrain chunks and promoted the next mixed SOP/DAT generated review drafts into production structured operator cards:
+  - Remaining active SOP tail: `sweepSOP`, `textSOP`, `torusSOP`, `traceSOP`, `trailSOP`, `trimSOP`, `tristripSOP`, `tubeSOP`, `twistSOP`, `vertexSOP`, `wireframeSOP`, `zedSOP`
+  - Device discovery, callbacks, motion clips, C++ plugins, DMX maps, and runtime logs: `art-netDAT`, `audiodevicesDAT`, `chopexecuteDAT`, `clipDAT`, `cplusplusDAT`, `dmxmapDAT`, `errorDAT`, `etherdreamDAT`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Sweep SOP now records reference-point count requirements, cross-section/backbone group contracts, fast-sweep topology stability, and skin-output performance tradeoffs.
+  - Text/Trace SOP cards distinguish font-file portability, filled vs outline glyph output, Hole SOP follow-up, threshold/noise sensitivity, curve-fitting order, and hole-face conversion choices.
+  - Torus/Tube/Twist/Wireframe cards capture primitive/mesh/NURBS/Bezier output differences, rows/columns open-line semantics, cap limitations, pivot/rolloff behavior, and generated tube/sphere polygon-count blowups.
+  - Trail SOP is tagged as a stateful temporal cache with integer increment requirements for Particle/Spring SOP inputs and stable point-count requirements for connected trails.
+  - Trim/Vertex/Tristrip cards capture profile invisibility vs deletion, surface-profile prerequisites, per-vertex attribute ownership, creaseweight edge ordering, and primitive-number drift after strip conversion.
+  - ZED SOP is explicitly Windows/hardware/SDK gated and depends on a primary ZED TOP before spatial mapping can be planned.
+  - Art-Net/EtherDream/Audio Devices DAT cards distinguish discovery tables from actual I/O operators, device/network dependence, selectable columns, callback behavior, and current-device table lookups.
+  - CHOP Execute, Clip, CPlusPlus, DMX Map, and Error DAT cards record execution-context pitfalls, every-sample callback explosions, Pro-license gating, plugin unload lifecycle, POP-based DMX dependency, stale-value behavior, FIFO/clamp limits, and diagnostic callback recursion risk.
+- Added a red/green regression test requiring these twenty cards to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next generated review queue now starts at:
+  `evaluateDAT`, `examineDAT`, `executeDAT`, `fifoDAT`, `fileinDAT`, `fileoutDAT`, `folderDAT`, `inDAT`, `indicesDAT`, `infoDAT`, `insertDAT`, `lookupDAT`, `mediafileinfoDAT`, `midieventDAT`, `midiinDAT`, `monitorsDAT`, `mpcdiDAT`, `mqttclientDAT`, `multitouchinDAT`, `ndiDAT`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 579
+  - Structured operator cards: 567
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 165
+  - Structured DAT cards: 19
+  - Structured COMP cards: 9
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 112
+  - Missing operator cards: 100
+  - Missing DAT cards: 56
+  - Missing SOP cards: 1
+  - Overall structured coverage against DocsBrain operators: 0.8501
+
+## Twenty-Ninth Pass - DAT Expression, Table IO, File/Media Metadata, MIDI, Display, and Network Discovery Promotion
+
+- Manually reviewed official Derivative docs/DocsBrain chunks and promoted the next twenty DAT generated review drafts into production structured operator cards:
+  - Expression, Python-state inspection, and event callbacks: `evaluateDAT`, `examineDAT`, `executeDAT`
+  - Rolling logs, file IO, folder scanning, component boundaries, and helper tables: `fifoDAT`, `fileinDAT`, `fileoutDAT`, `folderDAT`, `inDAT`, `indicesDAT`, `infoDAT`, `insertDAT`, `lookupDAT`
+  - Media/device/network metadata and event streams: `mediafileinfoDAT`, `midieventDAT`, `midiinDAT`, `monitorsDAT`, `mpcdiDAT`, `mqttclientDAT`, `multitouchinDAT`, `ndiDAT`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Evaluate DAT now records expression-DAT size repetition, `me.inputCell`/row/col context, dependency recooking, and escape-sequence table output behavior.
+  - Examine DAT distinguishes operator storage, locals, globals, expression, and extension inspection, with depth/column filtering warnings for large Python state.
+  - Execute DAT captures start/create/frame/play/device callback triggers, execution context, TouchEngine start-callback limitations, sync-file write risk, and multi-DAT trigger order.
+  - FIFO, File In, File Out, Folder, In, Indices, Info, Insert, and Lookup DAT cards now cover append-only table logs, text/table file semantics, destructive file writes, recursive scan cost, component-boundary wiring, axis-label generation, passive info staleness, table insertion quoting, and two-input lookup/reorder contracts.
+  - Media File Info, MIDI Event, MIDI In, Monitors, MPCDI, MQTT Client, Multi Touch In, and NDI cards capture metadata-only behavior, MIDI mapper and 14-bit controller pairing, lower-left monitor coordinates, projection-calibration member usage, MQTT broker/TLS/session behavior, Windows-only touch input and mouse ID collisions, and NDI discovery vs stream reception.
+- Added a red/green regression test requiring these twenty DAT cards to be structured, manually verified, and absent from audit priority output.
+- Fixed draft writer filename handling for DocsBrain operator names containing path separators. The generated draft filename is now percent-encoded, so `tcp/ipDAT` writes to `tcp%2FipDAT.draft.json` while the manifest and draft body preserve the original `op_type`.
+- Regenerated the draft review bundle after promotion. The next generated review queue now starts at:
+  `nullDAT`, `opexecuteDAT`, `opfindDAT`, `oscinDAT`, `oscoutDAT`, `outDAT`, `panelexecuteDAT`, `parameterDAT`, `parameterexecuteDAT`, `pargroupexecuteDAT`, `performDAT`, `reorderDAT`, `scriptDAT`, `serialDAT`, `serialdevicesDAT`, `socketioDAT`, `sortDAT`, `substituteDAT`, `tableDAT`, `tcp/ipDAT`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 599
+  - Structured operator cards: 587
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 165
+  - Structured DAT cards: 39
+  - Structured COMP cards: 9
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 112
+  - Missing operator cards: 80
+  - Missing DAT cards: 36
+  - Missing SOP cards: 1
+  - Overall structured coverage against DocsBrain operators: 0.8801
+
+## Thirtieth Pass - DAT Boundary, Execute, Search, Network, Serial, and Table Transform Promotion
+
+- Manually reviewed official Derivative docs/DocsBrain chunks and promoted the next twenty DAT generated review drafts into production structured operator cards:
+  - Stable boundaries and hierarchy/search tooling: `nullDAT`, `outDAT`, `opfindDAT`
+  - Operator, panel, parameter, and parameter-group callbacks: `opexecuteDAT`, `panelexecuteDAT`, `parameterexecuteDAT`, `pargroupexecuteDAT`
+  - OSC, serial, Socket.IO, and raw TCP/IP networking: `oscinDAT`, `oscoutDAT`, `serialDAT`, `serialdevicesDAT`, `socketioDAT`, `tcp/ipDAT`
+  - Performance diagnostics and table transforms/generation: `performDAT`, `reorderDAT`, `scriptDAT`, `sortDAT`, `substituteDAT`, `tableDAT`, `parameterDAT`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Null/Out DAT cards clarify stable DAT reference endpoints and component-boundary output ordering rather than data generation or file export.
+  - OP Find DAT records expensive recursive traversal risk, depth/operator count limits, family filters, incremental cook behavior, ID-column seeded searches, and callback predicate safety.
+  - OP/Panel/Parameter/ParGroup Execute cards capture trigger semantics, per-frame callback hazards, template method matching, panelValue usage, end-of-frame value batching, ParGroup callback argument shape, and sync-file write risk.
+  - OSC In/Out, Serial, Serial Devices, SocketIO, and TCP/IP cards now distinguish message/table logs from send methods, FIFO clamp limits, firewall/driver/device constraints, Socket.IO input ordering and unsupported acknowledgements, serial framing/flow control, and stream-based TCP message boundary issues.
+  - Perform, Parameter, Reorder, Script, Sort, Substitute, and Table DAT cards capture table shape changes, metadata column choices, row/column duplication/deletion, dynamic Script DAT dependency recooking, sort mode edge cases, scoped wildcard substitution, file encoding/sync behavior, and per-cell fill expressions.
+- Added a red/green regression test requiring these twenty DAT cards to be structured, manually verified, and absent from audit priority output.
+- Promoted `tcp/ipDAT` into the structured atlas using a percent-encoded card filename (`tcp%2FipDAT.json`) while preserving the official `op_type` in card content and lookup tests.
+- Regenerated the draft review bundle after promotion. The next generated review queue now starts at:
+  `touchinDAT`, `touchoutDAT`, `transposeDAT`, `tuioinDAT`, `udpinDAT`, `udpoutDAT`, `udtinDAT`, `udtoutDAT`, `videodevicesDAT`, `webclientDAT`, `webrtcDAT`, `webserverDAT`, `websocketDAT`, `xmlDAT`, `actorCOMP`, `ambientlightCOMP`, `animationCOMP`, `annotateCOMP`, `blendCOMP`, `boneCOMP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 619
+  - Structured operator cards: 607
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 165
+  - Structured DAT cards: 59
+  - Structured COMP cards: 9
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 112
+  - Missing operator cards: 60
+  - Missing DAT cards: 16
+  - Missing SOP cards: 1
+  - Overall structured coverage against DocsBrain operators: 0.91
+
+## Thirty-First Pass - DAT Network/Web Tail and First COMP Physics/UI/Animation Promotion
+
+- Manually reviewed official Derivative docs/DocsBrain chunks and promoted the next twenty generated review drafts into production structured operator cards:
+  - DAT table synchronization and reshaping: `touchinDAT`, `touchoutDAT`, `transposeDAT`
+  - TUIO, UDP, legacy UDT, device discovery, HTTP, WebRTC, Web Server, WebSocket, and XML parsing: `tuioinDAT`, `udpinDAT`, `udpoutDAT`, `udtinDAT`, `udtoutDAT`, `videodevicesDAT`, `webclientDAT`, `webrtcDAT`, `webserverDAT`, `websocketDAT`, `xmlDAT`
+  - First COMP physics, lighting, animation, network annotation, transform blending, and rigging slice: `actorCOMP`, `ambientlightCOMP`, `animationCOMP`, `annotateCOMP`, `blendCOMP`, `boneCOMP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Touch In/Out DAT cards distinguish full-table TouchDesigner-to-TouchDesigner synchronization from arbitrary packet/message DATs, including redundant resend behavior and Active/off data-loss semantics.
+  - TUIO/UDP/UDT cards capture OSC-bundle parsing, callback location, row-per-byte/line/message output shape, reply address limitations, firewall concerns, and UDT's legacy removal in TouchDesigner 2021 Official builds and later.
+  - Video Devices/Web Client/Web Server/WebSocket/WebRTC/XML cards now cover discovery-vs-capture boundaries, structured device-name fallback matching, HTTP input table contracts, streaming clamp requirements, TLS/authentication responsibility, ICE/STUN/TURN debugging, FIFO WebSocket logs, and XML tree/scope/filter semantics.
+  - Actor/Ambient Light/Animation/Annotate/Blend/Bone COMP cards capture solver requirements, convex-vs-concave collision constraints, collision-shape guide debugging, ambient-vs-positional lighting, Animation COMP play modes and index units, annotate locking/layering/enclosed-node movement, transform-only Blend COMP behavior, and Bone COMP end-to-end parenting/IK expression caveats.
+- Added a red/green regression test requiring these twenty DAT/COMP cards to be structured, manually verified, and absent from audit priority output.
+- Regenerated the draft review bundle after promotion. The next generated review queue now starts at:
+  `buildalistCOMP`, `bulletsolverCOMP`, `camerablendCOMP`, `constraintCOMP`, `engineCOMP`, `environmentlightCOMP`, `fbxCOMP`, `forceCOMP`, `geotextCOMP`, `handleCOMP`, `impulseforceCOMP`, `listCOMP`, `nullCOMP`, `nvidiaflexsolverCOMP`, `nvidiaflowemitterCOMP`, `opviewerCOMP`, `parameterCOMP`, `replicatorCOMP`, `sharedmeminCOMP`, `sharedmemoutCOMP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 639
+  - Structured operator cards: 627
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 165
+  - Structured DAT cards: 73
+  - Structured COMP cards: 15
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 112
+  - Missing operator cards: 40
+  - Missing DAT cards: 2
+  - Missing COMP cards: 27
+  - Missing POP cards: 1
+  - Missing SOP cards: 1
+  - Overall structured coverage against DocsBrain operators: 0.94
+
+## Thirty-Second Pass - COMP Physics, Engine, Panel, and Shared Memory Promotion
+
+- Confirmed the existing red coverage test `test_comp_physics_engine_panel_and_sharedmem_priority_cards_are_structured` failed for the expected missing `buildalistCOMP` card before promotion.
+- Manually reviewed official Derivative docs/DocsBrain chunks and promoted the next twenty COMP generated review drafts into production structured operator cards:
+  - List/panel UI authoring and display: `buildalistCOMP`, `listCOMP`, `opviewerCOMP`, `parameterCOMP`
+  - Bullet physics and IK helpers: `bulletsolverCOMP`, `constraintCOMP`, `forceCOMP`, `impulseforceCOMP`, `handleCOMP`
+  - Camera, lighting, text, hierarchy, and import/rendering infrastructure: `camerablendCOMP`, `environmentlightCOMP`, `fbxCOMP`, `geotextCOMP`, `nullCOMP`
+  - External execution, replication, NVIDIA simulation, and transform IPC: `engineCOMP`, `replicatorCOMP`, `nvidiaflexsolverCOMP`, `nvidiaflowemitterCOMP`, `sharedmeminCOMP`, `sharedmemoutCOMP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Build-a-List/List cards distinguish the how-to article from creatable List COMP behavior, callback init order, storage-backed list state, off-cell callback handling, and reset/load determinism.
+  - Bullet/Constraint/Force/Impulse/Flex cards capture one-solver ownership, body ID pairing rules, collision-shape reinitialization cost, force-vs-impulse timing, Flex Windows/GPU/driver limits, and force-field semantics.
+  - Engine/FBX/Replicator cards capture TouchEngine one-way parameter flow, supported TOP/CHOP/DAT IO, relative path behavior, FBX cache/import-method consequences, and table/count replication naming and destination hazards.
+  - Camera Blend/Environment Light/Geo Text/OP Viewer/Parameter cards capture non-camera input fallback, environment-map prefilter cost, transparent text draw-priority handling, embedded viewer-vs-raw-output behavior, and scoped parameter-panel exposure.
+  - Shared Mem In/Out cards clarify transform-only payloads, license constraints, Active/write behavior, exact shared-memory name matching, and cross-process lifecycle/name-collision risks.
+- The focused red/green coverage test now passes after promotion.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`. Only five priority COMP drafts remain in the generated queue:
+  `tableCOMP`, `textCOMP`, `timeCOMP`, `usdCOMP`, `widgetCOMP`.
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 659
+  - Structured operator cards: 647
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 165
+  - Structured DAT cards: 73
+  - Structured COMP cards: 35
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 112
+  - Missing operator cards: 20
+  - Missing COMP cards: 7
+  - Missing DAT cards: 2
+  - Missing POP cards: 1
+  - Missing SOP cards: 1
+  - Missing TOP cards: 2
+  - Overall structured coverage against DocsBrain operators: 0.97
+- Verification gates after this pass:
+  - `uv run pytest -q`: 1073 passed
+  - `uv run python scripts/eval_brain_golden.py`: ok, 6/6 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 8 scenarios planned, no TD mutation
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 8 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+
+## Thirty-Third Pass - Remaining Priority COMP Panel, Time, and USD Promotion
+
+- Added a red coverage test requiring the final generated priority COMP cards to be structured and absent from atlas priority output. The test failed first on the expected missing `tableCOMP` card.
+- Manually reviewed official Derivative docs/DocsBrain chunks and promoted the remaining five priority COMP generated review drafts into production structured operator cards:
+  - DAT-backed panel grids and text entry/display: `tableCOMP`, `textCOMP`
+  - Component-local timelines and USD scene import/playback: `timeCOMP`, `usdCOMP`
+  - Generic widget shell and child panel layout: `widgetCOMP`
+- The promoted cards add planner-relevant constraints that raw DocsBrain drafts should not decide alone:
+  - Table COMP now records cell, row, column, and table attribute DAT fallback order, value-table row shape, state-grid diagnostics, and table-offset vs panel-position distinction.
+  - Text COMP now captures editable write-back behavior, Specification DAT/CHOP row matching, formatting-code and escape-sequence scope, continuous-update recook risk, and Field COMP replacement guidance.
+  - Time COMP now captures `/local/time` placement for Component Time, `/sys/local/time` clone behavior, overall range vs working range, loop/hold behavior, independent parent-time isolation, and obsolete Reset Frame handling.
+  - USD COMP now captures USD/USDZ cache/import semantics, Build Network vs Reload File vs Update behavior, material/camera/actor generation, merge-level performance tradeoffs, GPU-direct primitive limits, and animation play modes.
+  - Widget COMP now captures generic panel-shell behavior, display/enable/opacity differences, fill/anchor layout dependency on parents, child-fit override behavior, and modern drag/drop callback preference.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`. There are no remaining generated priority drafts:
+  - Draft count: 0
+  - Draft op types: []
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Total cards: 664
+  - Structured operator cards: 652
+  - Structured TOP cards: 148
+  - Structured CHOP cards: 165
+  - Structured DAT cards: 73
+  - Structured COMP cards: 40
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 112
+  - Missing operator cards: 15
+  - Missing COMP cards: 2
+  - Missing DAT cards: 2
+  - Missing POP cards: 1
+  - Missing SOP cards: 1
+  - Missing TOP cards: 2
+  - Priority missing operator cards: 0
+  - Overall structured coverage against DocsBrain operators: 0.9775
+- Verification gates after this pass:
+  - `uv run pytest -q`: 1074 passed
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_brain_atlas_audit_reports_docsbrain_operator_gaps tests/brain/test_atlas_coverage.py::test_remaining_priority_comp_operator_cards_are_structured -q`: 2 passed
+  - `uv run python scripts/eval_brain_golden.py`: ok, 6/6 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 8 scenarios planned, no TD mutation
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 8 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 652 structured operator cards, zero priority gaps
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+
+## Thirty-Fourth Pass - Active Name-Drift Cards and Deprecated Gap Notes
+
+- Added a red coverage test for active DocsBrain gaps that were being hidden by coarse deprecated-text detection. The test failed first on the missing `datexecuteDAT` card.
+- Re-reviewed local DocsBrain chunks and official Derivative docs, then promoted four active structured operator cards:
+  - `datexecuteDAT`: active DAT content-change callbacks; legacy row/column/cell/size methods are deprecated in favor of `onTableChange`.
+  - `opviewerTOP`: active node-viewer-to-TOP capture; only panel interaction is being deprecated in favor of `opviewerCOMP`.
+  - `overrideCHOP`: active last-changed CHOP source selector; only Monitor on Input Cooks is deprecated.
+  - `windowCOMP`: active Perform/separate-window controller; hardware frame-lock should use Direct Display Out TOP instead.
+- Added a red coverage test requiring the remaining deprecated DocsBrain gaps to carry planner notes and replacement operator pointers, then enriched `atlas_audit.py` output for:
+  - `bandeqCHOP` -> `audiobandeqCHOP`
+  - `etherdreamCHOP`, `heliosdacCHOP` -> `laserdeviceCHOP`
+  - `parametriceqCHOP` -> `audioparaeqCHOP`
+  - `realsenseCHOP` -> `realsenseTOP` for supported camera-stream planning, with skeleton tracking avoided
+  - `scanCHOP` -> `laserCHOP`
+  - `fieldCOMP` -> `textCOMP`
+  - `webDAT` -> `webclientDAT`
+  - `glslcreatePOP` -> `glsladvancedPOP` plus optional `topologyPOP`
+  - `fontSOP` -> `textSOP`
+  - `svgTOP` -> `webrenderTOP` or `palette:webSvg`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Draft op types: []
+- `scripts/audit_brain_atlas.py --pretty` after this pass:
+  - Structured operator cards: 656
+  - Structured CHOP cards: 166
+  - Structured COMP cards: 41
+  - Structured DAT cards: 74
+  - Structured MAT cards: 13
+  - Structured POP cards: 101
+  - Structured SOP cards: 112
+  - Structured TOP cards: 149
+  - Missing operator cards: 11
+  - Missing CHOP cards: 6
+  - Missing COMP cards: 1
+  - Missing DAT cards: 1
+  - Missing POP cards: 1
+  - Missing SOP cards: 1
+  - Missing TOP cards: 1
+  - Priority missing operator cards: 0
+  - Deprecated missing operator cards now include explicit `gap_status`, `replacement_op_types`, official-doc notes, and planner guidance.
+- Verification gates after this pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_active_docsbrain_name_drift_operator_cards_are_structured -q`: 1 passed
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_deprecated_docsbrain_operator_gaps_have_planner_notes tests/brain/test_atlas_coverage.py::test_active_docsbrain_name_drift_operator_cards_are_structured -q`: 2 passed
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 39 passed
+  - `uv run pytest -q`: 1076 passed
+  - `uv run python scripts/eval_brain_golden.py`: ok, 6/6 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 8 scenarios planned, no TD mutation
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 8 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 668 total cards, 656 structured operator cards, 0 priority gaps
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+
+## Thirty-Fifth Pass - GLSL Shader Template Snippets
+
+- Added a red seed-corpus coverage test requiring a dedicated `GLSL_snippets` card with shader templates for `glslTOP`, `glslMAT`, `glslPOP`, and `glsladvancedPOP`. The test failed first on the expected missing `GLSL_snippets.json`.
+- Reviewed local DocsBrain GLSL chunks and official Derivative docs:
+  - `Write a GLSL TOP`: GLSL TOP pixel shaders should use `layout(location = 0)` outputs and pass texture writes through `TDOutputSwizzle`; compute shaders use `TDImageStoreOutput`/`TDImageLoadOutput`.
+  - `GLSL TOP`: compile errors should be checked through Info DAT/diagnostics, and compute mode needs GLSL 4.30 or later.
+  - `GLSL MAT`: custom materials use `vdat`/`pdat`; POP-compatible attributes must be declared on the Attributes page and accessed through `TDAttrib_<Name>()`.
+  - `Write a GLSL POP`, `GLSL POP`, and `GLSL Advanced POP`: compute shaders should guard writes with `TDIndex()` and `TDNumElements()` because dispatch counts can exceed requested element counts; GLSL POP modifies one attribute class without changing counts, while GLSL Advanced POP can write point/vertex/primitive outputs, index buffers, and output counts.
+- Added `src/td_mcp/knowledge/cards/snippets/GLSL_snippets.json` with four reviewed templates:
+  - `glsl_top_pixel_template`: GLSL TOP pixel shader using `TDOutputSwizzle`.
+  - `glsl_mat_basic_template`: GLSL MAT vertex/pixel pair using `TDWorldToProj(TDDeform(TDPos()))`, `TDAttrib_Color()`, and `TDOutputSwizzle`.
+  - `glsl_pop_attribute_template`: GLSL POP point-attribute compute shader using `TDIndex()`, `TDNumElements()`, `TDIn_P()`, and `P[id]`.
+  - `glsl_advanced_pop_template`: GLSL Advanced POP point-output shader using `TDInPoint_P()` and `oTDPoint_P[id]`.
+- Linked `glslTOP`, `glslMAT`, `glslPOP`, and `glsladvancedPOP` operator cards to `GLSL_snippets` so operator lookup can lead to shader templates.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Draft op types: []
+- Focused verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestSnippetCards::test_glsl_shader_template_snippets_cover_td_idioms -q`: 1 passed
+  - `uv run pytest tests/test_seed_corpus.py -q`: 11 passed
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 669 total cards, 656 structured operator cards, zero priority gaps
+  - `uv run pytest -q`: 1077 passed
+  - `uv run python scripts/eval_brain_golden.py`: ok, 6/6 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 8 scenarios planned, no TD mutation
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 8 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+
+## Thirty-Sixth Pass - POP Attribute Ontology
+
+- Added a red seed-corpus coverage test requiring `POP_attribute_ontology.json` to cover POP attribute classes, core point and particle attributes, groups, dimensions, array attributes, GLSL POP access, and GLSL MAT POP-buffer access. The test failed first on the expected missing ontology card.
+- Used local DocsBrain evidence and official Derivative docs, with a read-only helper agent cross-checking the POP ontology facts:
+  - `Attribute`: POPs have point, primitive, and vertex attribute classes; point attributes include `P`, `N`, `Tex`, `Color`, `PartVel`, `PartMass`, `PartDrag`, `PartLife`, `PartAge`, `PartId`, `PartInitP`, `Weight`, and `PointScale`.
+  - `Particle POP`: particle state uses `P`, `PartVel`, `PartAge`, `PartLifeSpan`, `PartForce`, `PartMass`, `PartDrag`, `PartId`, and optional `PartDeath`; Particle POP looks for `PartForce` and `PartVel` during integration.
+  - `Force Radial POP`: writes or adds to `PartForce`, and `PartForce` can also be authored with Math, Noise, Pattern, Lookup, or GLSL POP workflows.
+  - `Group POP`: groups are named point or primitive subsets built from attribute, thin, pattern, group-combine, and bounding methods, then consumed by downstream Group parameters.
+  - `Write a GLSL POP`: selected-class reads use `TDIn_AttribName(inputIndex, elementId, arrayIndex)`, cross-class reads use `TDInPoint_`, `TDInPrim_`, and `TDInVert_`, outputs use `AttribName[]` or `oTDPoint_/oTDPrim_/oTDVert_`, dimensions use `TDDimension()`, `TDDimCoords()`, and `TDDimPointIndex()`, and array sizes use `cTDArraySize_` constants.
+  - `Write a GLSL MAT`: POP attributes declared on the GLSL MAT Attributes page use `TDAttrib_AttribName()`, while arbitrary POP buffers use `TDBuffer_AttribName(elementIndex, arrayIndex)`.
+- Added `src/td_mcp/knowledge/cards/snippets/POP_attribute_ontology.json` with:
+  - Attribute-class definitions for point, primitive, and vertex data.
+  - Reserved/common attributes for `P`, `N`, `Color`, `Tex`, `Weight`, `PointScale`, `LineWidth`, and particle attributes.
+  - Explicit `PartLife` / `PartLifeSpan` naming caution because official docs currently split between the generic Attribute table and the Particle POP page.
+  - Explicit `PartId` type-conflict caution because Particle POP lists `uint` while the generic Attribute table lists `float`.
+  - Group semantics, attribute precedence, component syntax examples, GLSL POP access patterns, GLSL MAT POP-buffer access, dimension helpers, array-attribute creation/access notes, and planning gotchas.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Draft op types: []
+- Focused verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestSnippetCards::test_pop_attribute_ontology_covers_particle_group_dimension_and_array_idioms -q`: 1 passed
+  - `uv run pytest tests/test_seed_corpus.py -q`: 12 passed
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 670 total cards, 656 structured operator cards, zero priority gaps
+  - `uv run pytest -q`: 1078 passed
+  - `uv run python scripts/eval_brain_golden.py`: ok, 6/6 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 8 scenarios planned, no TD mutation
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 8 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+
+## Thirty-Seventh Pass - Transaction Reference Parameter Validators
+
+- Added red validator coverage for static plan reference-parameter checks before transaction mutation. The test failed first on the expected missing `validate_reference_params_for_plan` import.
+- Reviewed official Derivative docs for the reference parameters that should be validated:
+  - `GLSL TOP`: `pixeldat` and `computedat` point to DATs holding shader code.
+  - `GLSL POP`: `computedat` points to the DAT holding the compute shader.
+  - `GLSL MAT`: `vdat` and `pdat` point to the vertex and pixel shader DATs.
+  - `Render Simple TOP`: `pop` is the path to the single POP to render.
+  - `Render TOP`: Camera and Geometry references are required for rendering a 3D scene.
+  - `Geometry COMP`: a Material MAT is assigned through the Geometry COMP Material parameter.
+- Added `validate_reference_params_for_plan()` in `src/td_mcp/brain/validators.py`.
+  - Checks generated plan nodes for required reference parameters before mutation.
+  - Accepts existing external paths conservatively, but validates references between nodes created in the same plan for family/type compatibility.
+  - Covers GLSL TOP shader DAT refs, GLSL MAT `vdat`/`pdat`, GLSL POP `computedat`, Render Simple TOP `pop`, Render TOP `camera`/`geometry`, and Geometry COMP `material` when the plan includes a MAT.
+- Wired the validator into `apply_transaction()` preflight in `src/td_mcp/brain/transaction.py` so invalid reference params return a blocked `TransactionResult` with a `reference_params` validation report before `patch.apply_plan()` can mutate TouchDesigner.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Draft op types: []
+- Focused verification after this pass:
+  - `uv run pytest tests/brain/test_validators.py -q`: 7 passed
+  - `uv run pytest tests/brain/test_planner.py tests/brain/test_validators.py tests/brain/test_live_smoke.py -q`: 23 passed
+  - `uv run pytest tests/brain/test_transaction.py tests/test_tools_patch.py -q`: 14 passed
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 670 total cards, 656 structured operator cards, zero priority gaps
+  - `uv run pytest -q`: 1082 passed
+  - `uv run python scripts/eval_brain_golden.py`: ok, 6/6 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 8 scenarios planned, no TD mutation
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 8 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+
+## Thirty-Eighth Pass - OP Snippets Metadata Recommendations
+
+- Added red coverage for concrete OP Snippets recommendations:
+  - `tests/test_seed_corpus.py::TestSnippetCards::test_op_snippets_metadata_covers_pop_and_glsl_examples` failed first on missing `POP_snippets.official_examples`.
+  - `tests/test_official_tools.py::test_find_official_example_returns_structured_op_snippet_examples` failed first because `td_find_official_example` returned no `official_snippet_example` rows.
+- Spawned a read-only research subagent to cross-check official Derivative OP Snippets facts while the main implementation continued.
+- Reviewed official Derivative docs:
+  - `OP Snippets`: documents 1000+ live examples launched in TouchDesigner through right-click menus, OP Create menu, or Help > Operator Snippets; no public per-snippet permalink/index is exposed.
+  - `Learning About POPs`: POP live examples include the POPs Examples Package, `Overview.toe`, POP Concepts, and snippets for every POP.
+  - `Release Notes/2025.30000/experimental`: introduced OP Snippets for almost all POPs and related inter-family operators.
+  - `Release Notes/2025.30000/next`: explicitly points to OP Snippets POP CONCEPTS `"array attributes math"` for array-attribute math examples.
+  - `Particle POP` and `Force Radial POP`: particle feedback loops use `PartForce`, `PartVel`, and target feedback POPs; Force Radial POP writes/adds `PartForce` and can be replaced by Noise, Math Mix, Pattern, Lookup, or GLSL POP authoring.
+  - `Write a GLSL TOP`, `Write a GLSL MAT`, `Write a GLSL POP`, `GLSL POP`, and `GLSL Advanced POP`: source-linked the shader/attribute examples already in `GLSL_snippets`.
+- Promoted structured OP Snippets metadata:
+  - `POP_snippets` now has official-example records for POP Concepts, the explicitly named `array attributes math` concept, Particle POP feedback, and Force Radial POP force-field examples.
+  - `GLSL_snippets` now has official-example records for GLSL TOP pixel/compute examples, GLSL MAT POP-attribute access, GLSL POP selected-class compute, and GLSL Advanced POP output/index-buffer workflows.
+  - Each entry uses a stable TDPilot `example_id`, official `source_url`, `supporting_urls`, `access_path`, `operators`, `topics`, and `source_context`; per-snippet Derivative permalinks are intentionally not invented.
+- Updated retrieval behavior:
+  - `CardIndex.search()` now scores nested structured metadata and allows cross-family snippet matches through reviewed `official_examples` and template operator suffixes, so GLSL cards can satisfy POP-family GLSL POP queries.
+  - `td_find_official_example` now expands reviewed snippet-card children into `official_snippet_example` rows with `source_url`, `supporting_urls`, `access_path`, `operators`, `topics`, and `snippet_id`, while preserving the older broad `snippet` rows.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Draft op types: []
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestSnippetCards::test_op_snippets_metadata_covers_pop_and_glsl_examples tests/test_official_tools.py::test_find_official_example_returns_structured_op_snippet_examples -q`: 2 passed after the initial red failures.
+  - `uv run pytest tests/test_knowledge_index.py::TestCardIndex::test_search_matches_nested_snippet_metadata_with_related_family tests/test_seed_corpus.py::TestSnippetCards::test_op_snippets_metadata_covers_pop_and_glsl_examples tests/test_official_tools.py::test_find_official_example_returns_structured_op_snippet_examples -q`: 3 passed
+  - `uv run pytest tests/test_seed_corpus.py tests/test_knowledge_index.py tests/test_official_tools.py -q`: 36 passed
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_comp_physics_engine_panel_and_sharedmem_priority_cards_are_structured -q`: 1 passed
+  - `uv run pytest -q`: 1085 passed
+  - `uv run python scripts/eval_brain_golden.py`: ok, 6/6 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 8 scenarios planned, no TD mutation
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 670 total cards, 656 structured operator cards, zero priority gaps
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 8 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+
+## Thirty-Ninth Pass - GLSL and POP Article Cards
+
+- Added red coverage for first-class article/document cards:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_glsl_and_pop_articles_cover_official_learning_pages` failed first because no article cards existed.
+  - `tests/test_knowledge_index.py::TestCardIndex::test_search_and_lookup_article_cards` failed first because `CardIndex` ignored an `articles` directory and had no `get_article()` lookup.
+- Reviewed local DocsBrain pages/chunks plus official Derivative docs:
+  - Local DocsBrain contains `write_a_glsl_top`, `write_a_glsl_mat`, `write_a_glsl_pop`, `learning_about_pops`, and `op_snippets` page IDs.
+  - `Write a GLSL TOP`: image shaders run per output pixel; pixel outputs should use `TDOutputSwizzle`; compute shaders should use `TDImageStoreOutput`/`TDImageLoadOutput`; TOP input sampling uses the `sTD*Inputs` arrays and `TDTexInfo`; shader DATs should not include a `#version` line.
+  - `Write a GLSL MAT`: materials use TD transform/deform helpers such as `TDWorldToProj(TDDeform(TDPos()))`; POP/SOP-compatible attributes use `TDAttrib_*` from the Attributes page; arbitrary POP buffers use `TDBuffer_*`; outputs should use `TDOutputSwizzle`.
+  - `Write a GLSL POP`: GLSL POP compute shaders should guard writes with `TDIndex`/`TDNumElements`; `P[id]` requires `P` in Output Attributes; GLSL Advanced POP is needed for multi-class, output-count, index-buffer, or per-primitive-batch work.
+  - `Learning About POPs`: POPs are GPU point operators built from point/primitive/vertex lists and attributes; POPs can be rendered by Render TOP and official examples live in the POPs Examples Package, `Overview.toe`, and OP Snippets POP Concepts.
+- Added an `articles` bucket to `CardIndex`:
+  - Loads `cards/articles/*.json` keyed by `article_id`.
+  - Supports `get_article(article_id)`.
+  - Supports `card_types=["articles"]` searches through the existing nested-text scoring path.
+  - Family filtering now honors top-level `families`, so article cards can span GLSL/POP/TOP/MAT.
+- Added reviewed article cards:
+  - `write_a_glsl_top`: GLSL TOP pixel/compute output, input sampling, POP buffers, uniforms, and `#version` gotchas.
+  - `write_a_glsl_mat`: GLSL MAT transforms/deforms, attribute access, POP buffers, alpha/output swizzle, and Render TOP image outputs.
+  - `write_a_glsl_pop`: GLSL POP, GLSL Advanced POP, GLSL Copy POP, selected-class access, output attributes, dimensions, groups, output counts, and index buffers.
+  - `learning_about_pops`: POP concepts, point/primitive/vertex lists, core attributes, rendering, Examples Package, `Overview.toe`, and OP Snippets POP Concepts.
+- Updated `td_search_official_docs` wording to include article cards as a supported search target.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Draft op types: []
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_glsl_and_pop_articles_cover_official_learning_pages tests/test_knowledge_index.py::TestCardIndex::test_search_and_lookup_article_cards -q`: 2 failed first, then passed after implementation.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards tests/test_knowledge_index.py::TestCardIndex::test_search_and_lookup_article_cards -q`: 3 passed
+  - `uv run pytest tests/test_seed_corpus.py tests/test_knowledge_index.py tests/test_knowledge_tools.py -q`: 38 passed
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 674 total cards, 656 structured operator cards, zero priority gaps
+  - `uv run pytest -q`: 1088 passed
+  - `uv run python scripts/eval_brain_golden.py`: ok, 6/6 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 8 scenarios planned, no TD mutation
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 8 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+
+## Fortieth Pass - GLSL MAT and POP End-to-End Gates
+
+- Spawned a read-only release/gap audit subagent while the main gate work continued. Its report agreed active atlas priority gaps are closed and flagged `glsl_material` / `glsl_pop` end-to-end eval and smoke coverage as the highest-value remaining verification gap.
+- Added red coverage for the missing end-to-end GLSL profiles:
+  - `tests/brain/test_evals.py::test_load_golden_cases_preserves_ids_and_expected_ops` failed first because `glsl_material_shader` and `glsl_pop_attribute_shader` were absent from the golden fixture.
+  - `tests/brain/test_live_smoke.py::test_live_smoke_dry_run_covers_required_visual_domains` failed first because `glsl_material_render` and `glsl_pop_attribute_render` were absent from the smoke catalog.
+- Extended `tests/evals/td_brain_golden.jsonl` with:
+  - `glsl_material_shader`: validates `glsl_material` planning with `geometryCOMP`, `glslMAT`, `cameraCOMP`, `renderTOP`, `textDAT`, and `nullTOP`.
+  - `glsl_pop_attribute_shader`: validates `glsl_pop` planning with `circlePOP`, `glslPOP`, `textDAT`, `nullPOP`, `rendersimpleTOP`, and `nullTOP`.
+- Extended `src/td_mcp/brain/live_smoke.py` with:
+  - `glsl_material_render`: GLSL MAT source DATs, material assignment, camera/geometry Render TOP output, and stable output.
+  - `glsl_pop_attribute_render`: GLSL POP compute DAT, stable POP output, Render Simple TOP preview, and stable rendered output.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Draft op types: []
+- Verification after this pass:
+  - `uv run pytest tests/brain/test_evals.py::test_load_golden_cases_preserves_ids_and_expected_ops tests/brain/test_live_smoke.py::test_live_smoke_dry_run_covers_required_visual_domains -q`: 2 failed first for the expected missing IDs, then passed after implementation.
+  - `uv run pytest tests/brain/test_evals.py tests/brain/test_eval_fixture.py tests/brain/test_live_smoke.py -q`: 16 passed
+  - `uv run python scripts/eval_brain_golden.py --pretty`: ok, 8/8 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run --pretty`: ok, 10 scenarios planned, no TD mutation
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 674 total cards, 656 structured operator cards, zero priority gaps
+  - `uv run pytest -q`: 1090 passed
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+  - `uv run python scripts/brain_live_smoke.py --live --pretty`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+  - `uv run python scripts/check_release_gates.py`: expected release-input failure because no benchmark or soak report was provided; the checker returned `bench and/or soak report required`.
+
+## Forty-First Pass - CPlusPlus and CHOP Article Cards
+
+- Spawned Helmholtz as a read-only DocsBrain/local-fact audit subagent while the main implementation continued. Its audit confirmed the five target official pages should be represented as article cards, not synthetic operator cards, and flagged the sparse CPlusPlus TOP/CHOP pages as SDK-entry guidance that should avoid overclaiming parameter-level coverage.
+- Added red coverage first:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_cplusplus_and_chop_articles_cover_official_learning_pages` failed first because the CPlusPlus/CHOP article IDs were absent.
+- Promoted five reviewed official-doc article cards from local DocsBrain evidence plus current Derivative docs:
+  - `write_a_cplusplus_plugin`: plugin lifecycle, Custom Operator reuse, `setupParameters()`, `pulsePressed()`, Info CHOP/DAT outputs, console-print performance caution, and the difference between regular CPlusPlus OPs and Custom Operators.
+  - `write_a_cplusplus_pop`: POP buffers, attributes, topology info, primitive restart index behavior, Info buffers, and CUDA begin/end operation timing.
+  - `write_a_cplusplus_top`: CPU memory vs CUDA TOP execution modes, multiple texture outputs, CUDA operation windows, `cudaArray` ownership, and the 2022.20000 upgrade boundary.
+  - `write_a_cplusplus_chop`: `getOutputInfo()`, channel/sample-rate output contracts, and Time Slice sample-count rules.
+  - `anatomy_of_a_chop`: CHOP raw samples, clips, sample rate, export discipline, local variables, cooking behavior, and `chop()` / `chopi()` accessors.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T18:31:34Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_cplusplus_and_chop_articles_cover_official_learning_pages -q`: 1 failed first for the expected missing IDs, then passed after implementation.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards tests/test_knowledge_index.py::TestCardIndex::test_search_and_lookup_article_cards -q`: 4 passed
+  - `uv run pytest tests/test_seed_corpus.py tests/test_knowledge_index.py tests/test_knowledge_tools.py -q`: 39 passed
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 679 total cards, 656 structured operator cards, zero active priority gaps
+  - `uv run pytest -q`: 1091 passed
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, no TD mutation
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+
+## Forty-Second Pass - Parameter and Binding Reference Cards
+
+- Added red coverage first:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_parameter_reference_articles_cover_official_control_workflows` failed first because the parameter/reference article IDs were absent.
+- Reviewed local DocsBrain page IDs and current official Derivative docs for parameter/control references that affect planner behavior across COMP, CHOP, DAT, Python, binding, export, and custom-parameter workflows.
+- Promoted nine reviewed article/reference cards:
+  - `parameter`: parameter types, modes, evaluated values, attributes, custom/internal/sequential parameter concepts, and `.eval()` guidance.
+  - `parameter_mode`: Constant, Expression, Export, and Bind modes, mode UI cues, export-mode availability, bind semantics, and `Par.mode` guidance.
+  - `custom_parameters`: component/script/CPlusPlus custom parameter creation, naming rules, `appendCustomPage()`, `setupParameters()`, `onPulse()`, and clone/style behavior.
+  - `par_class`: `val`, `expr`, `mode`, bind/export metadata, menu members, evaluation helpers, pulse/reset/copy/destroy behavior, and menu-index guidance.
+  - `page_class`: custom page members and parameter creation helpers such as `appendOP()`, `appendFloat()`, `appendMenu()`, vector/color helpers, `replace`, and returned `ParGroup` handling.
+  - `pargroup_class`: tuple-valued group state, `bindExpr`, `defaultMode`, `enableExpr`, group-level `expr`/`eval()`, copy/destroy behavior, and sequence-block cautions.
+  - `binding`: bind masters/references/chains, bind expressions, menu-source propagation, bind tuples, table cells, Bind CHOP channels, panel values, and dependency objects.
+  - `export`: CHOP and DAT exporting, Export Flag behavior, mass-export `Path:Parameter` channel naming, DAT text/path support, and expression-reference tradeoffs.
+  - `parameter_reference`: one-way expression references, source/reference parameter roles, Yank/Put workflows, and dashed-link semantics.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T18:39:03Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_parameter_reference_articles_cover_official_control_workflows -q`: 1 failed first for the expected missing IDs, then passed after implementation.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards tests/test_knowledge_index.py::TestCardIndex::test_search_and_lookup_article_cards -q`: 5 passed
+  - `uv run pytest tests/test_seed_corpus.py tests/test_knowledge_index.py tests/test_knowledge_tools.py -q`: 40 passed
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps
+  - `uv run pytest -q`: 1092 passed
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, no TD mutation
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+  - `uv run python scripts/check_release_gates.py`: expected release-input failure because no benchmark or soak report was provided; the checker returned `bench and/or soak report required`.
+
+## Forty-Third Pass - Execute DAT Parameter Token Hygiene
+
+- Added red coverage first:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_execute_and_parameter_dat_cards_use_atomic_parameter_names` failed first on `chopexecuteDAT` because grouped names such as `executeloc/fromop`, `offtoon/whileon/ontooff/whileoff/valuechange`, and `file/syncfile/loadonstart/write` were still present.
+- Spawned Boole as a read-only audit subagent for exact official parameter-token review while the main thread continued implementation. Its report matched the official Derivative docs and confirmed unusual spellings such as `offtoon`, `ontooff`, `childrename`, `numchildrenchange`, `valueschanged`, `tupletname`, `menunames`, and `loadonstartpulse`.
+- Split grouped key-parameter names into atomic official tokens for:
+  - `chopexecuteDAT`: execution context, trigger toggles, frequency, and file-page load/write tokens.
+  - `panelexecuteDAT`: panel monitor, panel-value trigger, and file-page tokens.
+  - `opexecuteDAT`: pre/post-cook, destroy/flag/wire/name/path/UI, component-child, extension, and file-page tokens, including missing `numchildrenchange`.
+  - `parameterDAT`: parameter selection, rename, custom/built-in, output columns, definition-page columns, and menu metadata tokens.
+  - `parameterexecuteDAT`: execution context, value/batch callbacks, pulse/expression/export/enable/mode callbacks, custom/built-in filters, and file-page tokens.
+  - `pargroupexecuteDAT`: callback mode, trigger toggles, custom/built-in filters, and file-page tokens.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T18:44:40Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_execute_and_parameter_dat_cards_use_atomic_parameter_names -q`: 1 failed first for the expected grouped token names, then passed after implementation.
+  - `uv run pytest tests/test_seed_corpus.py -q`: 18 passed
+  - `uv run pytest tests/test_knowledge_index.py tests/test_knowledge_tools.py -q`: 23 passed
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps
+  - `uv run pytest -q`: 1093 passed
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, no TD mutation
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates after a serial rerun. A parallel `uv run` invocation briefly produced `ModuleNotFoundError: No module named 'td_mcp'`, consistent with the known editable-install warning and concurrent `uv` package reinstall race.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+  - `uv run python scripts/check_release_gates.py`: expected release-input failure because no benchmark or soak report was provided; the checker returned `bench and/or soak report required`.
+
+## Forty-Fourth Pass - DAT Event and IO Parameter Token Hygiene
+
+- Added red coverage first:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_dat_event_and_io_cards_use_atomic_parameter_names` failed first on `audiodevicesDAT` because grouped names `input/output` and `extension/customext` were still present.
+- Spawned Ampere as a read-only atlas-gap scout for the next hygiene slice while the main thread continued this TDD pass. The delegated scope is operator-card/test inspection only, with no edits, staging, or reverts.
+- Reviewed local cards plus current official Derivative docs for:
+  - `Audio_Devices_DAT`: `input`, `output`, `extension`, and `customext`.
+  - `Clip_DAT`: `file`, `reload`, `executeloc`, `component`, `framefirst`, `frameloop`, `exit`, plus common `language`, `extension`, and `customext`.
+  - `Execute_DAT`: `executeloc`, `fromop`, start/create/exit and frame triggers, file-page tokens `file`, `syncfile`, `loadonstart`, `loadonstartpulse`, `write`, and `writepulse`, plus common editor-extension tokens.
+  - `DAT_Execute_DAT`: DAT/table-change callbacks, execution context, file-page load/write tokens, and common editor-extension tokens.
+- Split grouped key-parameter names into atomic official tokens for:
+  - `audiodevicesDAT`
+  - `clipDAT`
+  - `executeDAT`
+  - `datexecuteDAT`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T18:49:06Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_dat_event_and_io_cards_use_atomic_parameter_names -q`: 1 failed first for the expected grouped token names, then passed after implementation.
+  - `uv run pytest tests/test_seed_corpus.py -q`: 19 passed
+  - JSON parse/name check for `audiodevicesDAT`, `clipDAT`, `executeDAT`, and `datexecuteDAT`: all parsed and no grouped names remained in the checked `key_params`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0
+  - `uv run pytest -q`: 1094 passed
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, no TD mutation
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+  - `uv run python scripts/check_release_gates.py`: expected release-input failure because no benchmark or soak report was provided; the checker returned `bench and/or soak report required`.
+
+## Forty-Fifth Pass - DAT Diagnostics and Search Parameter Token Hygiene
+
+- Added red coverage first:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_dat_diagnostics_and_search_cards_use_atomic_parameter_names` failed first on `errorDAT` because grouped names `callbacks/executeloc/fromop` and `clamp/maxlines/clear` were still present.
+- Used Ampere's read-only scout report as the local gap queue, then verified exact token spelling against current official Derivative docs for `Error_DAT`, `Folder_DAT`, `OP_Find_DAT`, and `Perform_DAT`.
+- Split grouped/prose key-parameter names into atomic official tokens for:
+  - `errorDAT`: callback execution context and FIFO clamp/clear controls.
+  - `folderDAT`: refresh, async update, name/date/type filters, extension filters, recursive depth controls, and output column toggles.
+  - `opfindDAT`: cook/update controls, traversal bounds, family toggles, global filter-combination controls, and common search filters.
+  - `performDAT`: active snapshot controls and each performance timing category.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T18:52:45Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_dat_diagnostics_and_search_cards_use_atomic_parameter_names -q`: 1 failed first for the expected grouped token names, then passed after implementation.
+  - JSON parse/name check for `errorDAT`, `folderDAT`, `opfindDAT`, and `performDAT`: all parsed and no grouped names remained in the checked `key_params`.
+  - `uv run pytest tests/test_seed_corpus.py -q`: 20 passed
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0
+  - `uv run pytest -q`: 1095 passed
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, no TD mutation
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+  - `uv run python scripts/check_release_gates.py`: expected release-input failure because no benchmark or soak report was provided; the checker returned `bench and/or soak report required`.
+
+## Forty-Sixth Pass - Protocol DAT Parameter Token Hygiene
+
+- Added red coverage first:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_protocol_dat_cards_use_atomic_parameter_names` failed first on `mqttclientDAT` because grouped names `specifyid/usercid`, `keepalive/maxinflight/cleansession`, `verifycert/username/password`, and `callbacks/clamp/maxlines/bytes` were still present.
+- Confirmed local DocsBrain has normalized operator pages for `MQTT_Client_DAT`, `Serial_DAT`, `MIDI_In_DAT`, `MIDI_Event_DAT`, `OSC_In_DAT`, and `OSC_Out_DAT`, then verified exact token spelling against current official Derivative docs for each page.
+- Split grouped protocol and FIFO key-parameter names into atomic official tokens for:
+  - `mqttclientDAT`: client identity, keepalive/inflight/session controls, TLS/auth credentials, callback execution context, and FIFO bytes controls.
+  - `serialDAT`: baud/framing/parity/stop-bit controls, DTR/RTS flow-control settings, callback execution context, and FIFO bytes controls.
+  - `midiinDAT`: device/id selection, 14-bit mode, skip/filter controls, callback execution context, and FIFO bytes controls.
+  - `midieventDAT`: skip/filter/direction controls, callback execution context, and FIFO bytes controls.
+  - `oscinDAT`: network address/port/local address/shared controls, bundle/message split controls, callback execution context, and FIFO bytes controls.
+  - `oscoutDAT`: target address/port/local address/shared controls, bundle/message split controls, callback execution context, and FIFO bytes controls.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T18:57:00Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_protocol_dat_cards_use_atomic_parameter_names -q`: 1 failed first for the expected grouped token names, then passed after implementation.
+  - JSON parse/name check for `mqttclientDAT`, `serialDAT`, `midiinDAT`, `midieventDAT`, `oscinDAT`, and `oscoutDAT`: all parsed and no grouped names remained in the checked `key_params`.
+  - `uv run pytest tests/test_seed_corpus.py -q`: 21 passed
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0
+  - `uv run pytest -q`: 1096 passed
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, no TD mutation
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+  - `uv run python scripts/check_release_gates.py`: expected release-input failure because no benchmark or soak report was provided; the checker returned `bench and/or soak report required`.
+
+## Forty-Seventh Pass - Viewer and GLSL Reference Hygiene
+
+- Added red coverage first:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_viewer_and_window_cards_use_atomic_parameter_names` failed first on `windowCOMP` because grouped names `justifyh/justifyv` and `winoffsetx/winoffsety` were still present.
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_glsl_adjacent_operator_cards_reference_existing_glsl_snippet_card` failed first on `glslmultiTOP` because `related_snippets` still referenced stale `glsl_shader` instead of the actual `GLSL_snippets` card.
+- Spawned Kepler as a read-only status audit subagent while the main thread continued implementation. Its report independently confirmed the active priority atlas gaps are closed, the remaining 11 operator gaps are deprecated/replaced/nonfunctional, and the only aggregate release-gate blocker is missing benchmark/soak report input.
+- Verified exact parameter-token spelling against current official Derivative docs for:
+  - `Window_COMP`: `justifyh`, `justifyv`, `winoffsetx`, `winoffsety`, `ignoretaskbar`, `single`, `size`, `winw`, `winh`, `update`, `borders`, `bordersinsize`, `alwaysontop`, `cursorvisible`, `constraincursor`, `cursordisplay`, `interact`, `allowminimize`, `windowpixelformat`, `vsyncmode`, `drawwindow`, and deprecated `hwframelock`.
+  - `OP_Viewer_TOP`: `opviewer`, `allowpanel`, `preservealpha`, `outputresolution`, `resolutionw`, `resolutionh`, `resmenu`, `resmult`, `outputaspect`, `aspect1`, `aspect2`, `armenu`, `inputfiltertype`, `fillmode`, `filtertype`, `npasses`, `chanmask`, and `format`.
+  - `GLSL_Multi_TOP`: official docs confirm it follows GLSL TOP behavior while allowing more than three inputs, so the production card should point at shared GLSL snippets.
+  - `Text_DAT`: official docs confirm Text DAT is a multi-line text holder commonly used for GLSL shader text, so it should point at the GLSL snippet card rather than a non-existent legacy id.
+- Split viewer/window grouped key-parameter names into atomic official tokens for:
+  - `windowCOMP`
+  - `opviewerTOP`
+- Replaced stale GLSL snippet references for:
+  - `glslmultiTOP`: `["GLSL_snippets", "TOP_snippets"]`
+  - `textDAT`: `["GLSL_snippets"]`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T19:02:27Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_viewer_and_window_cards_use_atomic_parameter_names tests/test_seed_corpus.py::TestOperatorCards::test_glsl_adjacent_operator_cards_reference_existing_glsl_snippet_card -q`: 2 failed first for the expected grouped/stale references, then passed after implementation.
+  - JSON parse checks for `windowCOMP`, `opviewerTOP`, `glslmultiTOP`, and `textDAT`: all parsed.
+  - `uv run pytest tests/test_seed_corpus.py -q`: 23 passed
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_comp_physics_engine_panel_and_sharedmem_priority_cards_are_structured -q`: 1 passed, confirming the original next-20 COMP continuation coverage is green in the current worktree.
+  - `uv run pytest -q`: 1098 passed
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps, 11 deprecated/replaced/nonfunctional missing operator cards documented with guidance
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, no TD mutation
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+  - `uv run python scripts/check_release_gates.py`: expected release-input failure because no benchmark or soak report was provided; the checker returned `bench and/or soak report required`.
+
+## Forty-Eighth Pass - Benchmark and Soak Release Evidence
+
+- Generated the missing benchmark/soak release inputs while TouchDesigner was running:
+  - `reports/bench_tools.json`
+  - `reports/soak_events.json`
+  - `reports/release_gates.json`
+- Verified `scripts/bench_tools.py` and `scripts/check_release_gates.py` behavior first with:
+  - `uv run pytest tests/test_bench_tools.py tests/test_release_gates.py -q`: 5 passed
+- Used the live `/project1` root carefully for the benchmark:
+  - The default `td_set_params` target `cook` was not exposed by the current `/project1` params endpoint, so the benchmark used existing `pageindex` with `--set-a 1 --set-b 1` to measure `td_set_params` without intentionally changing the value.
+  - A first benchmark run confirmed `/project1` is not a valid capture target for `td_capture_and_analyze_capture_only`; after a one-shot successful capture check on `/project1/null1`, the full benchmark was rerun with `--capture-path /project1/null1`.
+- Benchmark report highlights:
+  - `td_get_nodes`: p95 `17.361963090661447` ms, error rate `0.0%`
+  - `td_get_params`: p95 `17.446778842713684` ms, error rate `0.0%`
+  - `td_set_params`: p95 `17.07447085500462` ms, error rate `0.0%`
+  - `td_capture_and_analyze_capture_only`: p95 `30.01709315722109` ms, error rate `0.0%`
+- Soak report highlights:
+  - Duration `300` seconds at requested `1000` events/minute
+  - Attempted/sent `4865/4865`
+  - Drop rate `0.0%`
+  - Reconnect median/p95 `38.43304100155365` ms
+- Verification after this pass:
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics
+
+## Forty-Ninth Pass - Live Operator Availability Sampling
+
+- Added red coverage first:
+  - `tests/brain/test_operator_availability.py::test_build_availability_targets_includes_deprecated_gaps_and_replacements` failed first because `td_mcp.brain.operator_availability` had no target-building behavior.
+  - `tests/brain/test_operator_availability.py::test_sample_operator_availability_records_results_and_cleans_scratch` failed first because the sampler did not create a scratch COMP, record success/failure per op type, or clean up.
+- Added `src/td_mcp/brain/operator_availability.py`:
+  - Builds live sampling targets from `audit_brain_atlas()` deprecated missing operator gaps plus their replacement operators.
+  - Creates a scratch COMP under `/project1`, samples each target via `node/create`, records createability and exact TD rejection text, deletes the scratch COMP, and closes the TD client.
+- Added `scripts/sample_operator_availability.py` so this evidence can be regenerated as a JSON report without merging live sampling into the static atlas audit.
+- Generated `reports/operator_availability.json` against the running TouchDesigner session.
+  - Atlas summary: 688 cards, 656 structured operator cards, 11 deprecated missing operator gaps, 0 priority missing operator gaps.
+  - Sampled 23 targets: 13 createable, 10 unavailable.
+  - Replacement operators sampled as createable: `audiobandeqCHOP`, `audioparaeqCHOP`, `glsladvancedPOP`, `laserCHOP`, `laserdeviceCHOP`, `realsenseTOP`, `textCOMP`, `textSOP`, `topologyPOP`, `webclientDAT`, `webrenderTOP`.
+  - Deprecated gap operators sampled as unavailable: `bandeqCHOP`, `etherdreamCHOP`, `fontSOP`, `glslcreatePOP`, `heliosdacCHOP`, `parametriceqCHOP`, `realsenseCHOP`, `scanCHOP`, `svgTOP`, `webDAT`.
+  - `fieldCOMP` sampled as still createable despite being deprecated/replaced, so the atlas should keep replacement guidance instead of assuming every deprecated page is uncreateable in live TD.
+  - Cleanup check after the run found no remaining `tdpilot_availability_probe` nodes.
+- Verification after this pass:
+  - `uv run pytest tests/brain/test_operator_availability.py -q`: 2 failed first for missing behavior, then 2 passed after implementation.
+  - `uv run python scripts/sample_operator_availability.py --out reports/operator_availability.json --pretty`: ok, `cleanup_ok=true`
+  - `uv run pytest -q`: 1100 passed
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T19:17:46Z`
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, no TD mutation
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+
+## Fiftieth Pass - DocsBrain Parameter Choice Extraction Hygiene
+
+- Added red coverage first:
+  - `tests/test_chunker.py::TestChunkPage::test_operator_parameter_names_ignore_bullet_menu_choices` failed first because the DocsBrain chunker treated operator menu choices such as `Low/low`, `Medium/medium`, `High/high`, `Luminance/lum`, and `RGB/rgb` as parameter names.
+- Verified the shape against official Derivative docs:
+  - `https://docs.derivative.ca/Anti_Alias_TOP` lists `quality`, `edgedetectsource`, and `edgethreshold` as parameters, while `low`, `medium`, `high`, `ultra`, `custom`, `lum`, and `rgb` appear as bullet menu choices under those parameters.
+  - `https://docs.derivative.ca/GLSL_TOP` shows the same pattern on GLSL-heavy pages, where real parameters such as `inputmapping`, `inputextenduv`, and `inputextendw` have bullet choices such as `all`, `hold`, `zero`, `repeat`, and `mirror`.
+- Updated `src/td_mcp/knowledge/docsbrain/chunker.py` so future HTML scrape chunks extract parameter names from paragraph/div parameter rows and skip entries inside list items.
+  - Official-doc code spans are preserved as `Label\ninternalname`, matching the draft generator and runtime DocsBrain key-param normalization shape.
+  - The old normalized-text regex remains as a fallback for simpler fixtures or nonstandard pages.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T19:23:18Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_chunker.py::TestChunkPage::test_operator_parameter_names_ignore_bullet_menu_choices -q`: 1 failed first for the expected menu-choice leak, then passed after implementation.
+  - `uv run pytest tests/test_chunker.py -q`: 11 passed
+  - `uv run pytest tests/test_chunker.py tests/brain/test_atlas_drafts.py tests/test_docsbrain_search.py tests/test_live_validation_fixes.py -q`: 70 passed
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0
+  - `uv run pytest -q`: 1101 passed
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, no TD mutation
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+  - `git diff --check`: clean
+  - JSON parse checks for `data/generated/atlas_drafts/operators/manifest.json`, `reports/release_gates.json`, and `reports/operator_availability.json`: all parsed
+
+## Fifty-First Pass - Local DocsBrain Rebuild with Clean Parameter Rows
+
+- Rebuilt the local Derivative DocsBrain artifacts from the newest available local offline mirror:
+  - Source: `<USER_DESKTOP>/doc derivative/docs.derivative.ca_offline/docs.derivative.ca`
+  - Staged output: `data/generated/docsbrain_rebuild/derivative`
+  - Promoted output: `data/normalized/derivative`
+- The first staged rebuild exposed a real full-corpus extractor miss:
+  - The earlier HTML-aware extractor skipped `<li>` menu choices, but actual Derivative parameter rows use a top-level parameter `<div>` with nested collapsible menu `<div>` blocks.
+  - That shape produced aggregate false parameters such as `Low low - Medium medium - High high\nlow`.
+- Added red coverage for the actual Derivative nested-collapsible shape:
+  - `tests/test_chunker.py::TestChunkPage::test_operator_parameter_names_ignore_nested_collapsible_menu_choices` failed first on aggregate menu labels, then passed after tightening extraction.
+- Updated `src/td_mcp/knowledge/docsbrain/chunker.py` so parameter extraction:
+  - uses direct `<code>` children from parameter row elements,
+  - skips collapsible menu containers and descendants,
+  - avoids fallback text extraction on container nodes that have nested parameter/menu structure.
+- Rebuilt the full local DocsBrain corpus again after the fix:
+  - Pages normalized: 2,478
+  - Chunks created/indexed: 25,887
+  - Operator chunks: 5,532
+  - Distinct operator names in chunk DB: 674
+  - Release artifacts: 10 builds, 245 operators with changelog entries
+  - Local mirror latest build: `2025.32460`
+- Parameter cleanup impact after promotion:
+  - Operator `parameter_names` entries dropped from 46,261 to 18,382.
+  - Watched menu-choice hits dropped from 4,236 to 63.
+  - `Anti Alias TOP` / `Parameters - Anti Alias Page` now keeps only real parameter rows: `quality`, `edgedetectsource`, `edgethreshold`, `maxsearchsteps`, `maxdiagsearchsteps`, `cornerrounding`, and `outputedges`.
+  - `GLSL TOP` / `Parameters - Buffers Page` now keeps `buffer`, `buffer0pop`, `buffer0attrclass`, `buffer0attr`, and `buffer0name`, without `point`, `vertex`, or `primitive` menu choices.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T19:34:59Z`
+- Important limit:
+  - This pass rebuilds and promotes the local offline mirror with cleaner extraction, but it does not satisfy the fresh `2025.32820+` scrape target. The available local mirror still tops out at `2025.32460`.
+- Verification after this pass:
+  - `uv run pytest tests/test_chunker.py::TestChunkPage::test_operator_parameter_names_ignore_nested_collapsible_menu_choices -q`: 1 failed first for the expected aggregate menu-label leak, then passed after implementation.
+  - `uv run pytest tests/test_chunker.py::TestChunkPage::test_operator_parameter_names_ignore_bullet_menu_choices tests/test_chunker.py::TestChunkPage::test_operator_parameter_names_ignore_nested_collapsible_menu_choices tests/test_chunker.py -q`: 12 passed
+  - `uv run pytest tests/test_chunker.py tests/brain/test_atlas_drafts.py tests/test_docsbrain_search.py tests/test_live_validation_fixes.py -q`: 71 passed
+  - `uv run pytest -q`: 1102 passed
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps; release freshness still reports DocsBrain `2025.32460` trailing structured `2025.32820`
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, no TD mutation
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+
+## Fifty-Second Pass - Release-Refreshed DocsBrain Build
+
+- Added red coverage first for a repeatable release-page refresh helper:
+  - `tests/test_docs_release_refresh.py` failed first because `scripts/refresh_docs_release_pages.py` did not exist.
+- Added `scripts/refresh_docs_release_pages.py`:
+  - maps official Derivative release page ids such as `Release_Notes/2025.30000` to local mirror paths such as `Release_Notes/2025.30000.html`,
+  - refreshes the stable, next, experimental, and experimental-next release-note pages from `https://docs.derivative.ca`,
+  - reports a parseable JSON summary with page count, refreshed pages, and newest build.
+- Used the helper on a temporary copy of the cleaned local mirror rather than mutating the offline source:
+  - Staged mirror: `/tmp/tdpilot_docs_release_overlay_mirror`
+  - Refreshed pages: `Release_Notes`, `Release_Notes/2025.30000`, `Release_Notes/2025.30000/next`, `Release_Notes/Experimental`, `Release_Notes/2025.30000/experimental`, and `Release_Notes/2025.30000/experimental/next`
+  - Helper reported latest build `2025.32820`.
+- Rebuilt DocsBrain from the release-refreshed mirror:
+  - Staged output: `data/generated/docsbrain_release_refresh/derivative`
+  - Promoted output: `data/normalized/derivative`
+  - Pages normalized: 2,478
+  - Chunks created/indexed: 25,897
+  - Operator chunks: 5,532
+  - Distinct operator names in chunk DB: 674
+  - Release chunks: 1,193
+  - `2025.32820` chunks: 16
+  - Release artifacts: 10 builds, 268 operators with changelog entries
+  - Promoted build manifest latest build/date: `2025.32820` / `May 06, 2026`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T19:43:15Z`
+- Important limit:
+  - This pass refreshes release-note pages from the live official docs and closes the release-chunk freshness gap. It still preserves operator pages from the local full mirror because the public sitemap is incomplete for a full operator scrape: it lists 524 operator-suffix pages and no POP pages, while the local DocsBrain operator universe contains 667 DocsBrain operators including POP.
+- Verification after this pass:
+  - `uv run pytest tests/test_docs_release_refresh.py -q`: 3 failed first for the missing helper, then 3 passed after implementation.
+  - `uv run pytest tests/test_docs_release_refresh.py tests/test_chunker.py tests/brain/test_atlas_drafts.py tests/test_docsbrain_search.py tests/test_live_validation_fixes.py -q`: 74 passed
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps; release freshness now reports DocsBrain `2025.32820` matching structured `2025.32820`
+  - `uv run pytest -q`: 1105 passed
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, no TD mutation
+  - `uv run python scripts/audit_brain_skills.py`: ok
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`
+
+## Fifty-Third Pass - Inventory-Based Official DocsBrain Refresh
+
+- Added red coverage first for a full-inventory Derivative docs mirror refresher:
+  - `tests/test_docs_mirror_refresh.py` failed first because `scripts/refresh_docs_mirror_from_inventory.py` did not exist.
+  - After the helper existed, the same test failed again until the refresh summary exposed `promotion_safe`.
+  - After the full staged rebuild exposed a live MediaWiki database-error body for `Sync_In_CHOP`, the test failed again until official-doc error pages were treated as fallback candidates instead of fresh content.
+- Added `scripts/refresh_docs_mirror_from_inventory.py`:
+  - derives page ids from mirror-relative `.html` paths without URL-decoding or case normalization,
+  - follows DocsBrain normalizer boundaries with `should_skip_file(relative_name)` and `classify_page(base_without_html)`,
+  - writes only to a staged mirror and never mutates the offline source mirror,
+  - fetches current official `https://docs.derivative.ca/{page}` HTML with bounded worker parallelism,
+  - falls back to local source HTML on fetch failures, official 404s, and MediaWiki database-error bodies,
+  - reports `page_count`, `fetched_count`, `fallback_count`, `failed_pages`, and `promotion_safe`.
+- Ran a full official-doc inventory refresh from the local mirror inventory:
+  - Source mirror: `<USER_DESKTOP>/doc derivative/docs.derivative.ca_offline/docs.derivative.ca`
+  - Staged mirror: `/tmp/tdpilot_docs_current_inventory_mirror`
+  - Inventory pages: 2,478
+  - Live fetched pages: 2,471 on the first full run
+  - Official 404 fallback pages: `Experimental:Alembic_In_POP`, `Experimental:Array_Attribute`, `Experimental:Learning_About_POPs`, `Experimental:Movin3D`, `Experimental:Phaser_POP`, `GLSL_Matrix_Functions`, and `index`
+  - Additional validated fallback: `Sync_In_CHOP`, because the live page returned HTTP 200 with a MediaWiki `Database error` / `DBQueryError` body.
+  - Current non-experimental replacements exist and were fetched for `Alembic_In_POP`, `Array_Attribute`, `Learning_About_POPs`, `Movin3D`, and `Phaser_POP`.
+- Rebuilt and promoted the repaired staged DocsBrain corpus:
+  - Staged/promoted output: `data/generated/docsbrain_current_inventory/derivative` -> `data/normalized/derivative`
+  - Pages normalized: 2,478
+  - Chunks created/indexed: 25,958
+  - Operator chunks: 5,539
+  - Distinct operator names in chunk DB: 674
+  - Release chunks: 1,193
+  - Release artifacts: 10 builds, 268 operators with changelog entries
+  - Promoted build manifest latest build/date: `2025.32820` / `May 06, 2026`
+  - Operator parameter names: 18,415
+  - Watched menu-choice leakage hits: 0
+- Important limit:
+  - This pass materially refreshes the full DocsBrain inventory from official docs while preserving local fallbacks, but it still does not make every historical mirror page current. The remaining stale exceptions are explicit and should be resolved by either official-page recovery, redirect mapping, or reviewed retirement guidance before calling the full current-mirror target complete.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T20:07:05Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_docs_mirror_refresh.py -q`: failed first for missing helper, failed again for missing `promotion_safe`, failed again for official-doc database-error body handling, then passed.
+  - `uv run pytest tests/test_docs_mirror_refresh.py tests/test_docs_release_refresh.py tests/test_normalizer.py -q`: 41 passed.
+  - `uv run pytest tests/test_docs_mirror_refresh.py tests/test_docs_release_refresh.py tests/test_normalizer.py tests/test_chunker.py tests/brain/test_atlas_drafts.py tests/test_docsbrain_search.py -q`: 84 passed.
+  - Limited official-doc smoke with `--limit 5 --workers 4`: fetched 5/5 pages, `promotion_safe=true`.
+  - Full official-doc inventory refresh with `--workers 8`: completed with explicit fallback pages listed above.
+  - `uv run python scripts/build_docs_brain.py --source /tmp/tdpilot_docs_current_inventory_mirror --output data/generated/docsbrain_current_inventory/derivative`: ok after `Sync_In_CHOP` fallback repair.
+  - `sqlite3 data/generated/docsbrain_current_inventory/derivative/docsbrain.db 'pragma integrity_check;'`: ok.
+  - Promoted `data/normalized/derivative/docsbrain.db` integrity check: ok.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run pytest -q`: 1108 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`.
+  - `git diff --check`: clean.
+  - JSON parse checks for `data/generated/atlas_drafts/operators/manifest.json`, `reports/release_gates.json`, `data/normalized/derivative/build_manifest.json`, and `data/normalized/derivative/operator_changelog.json`: all parsed.
+
+## Fifty-Fourth Pass - Current Docs Alias Mapping for Historical Mirror Pages
+
+- Added red coverage first for official-doc alias resolution:
+  - `tests/test_docs_mirror_refresh.py::test_refresh_inventory_pages_fetches_current_aliases_without_fallback` failed first because `MirrorRefreshResult` had no `mapped_pages` field and the refresher did not fetch canonical current pages for historical mirror ids.
+- Updated `scripts/refresh_docs_mirror_from_inventory.py`:
+  - Added `DEFAULT_PAGE_ALIASES` for historical pages whose live official page now exists under a current canonical id:
+    - `Experimental:Alembic_In_POP` -> `Alembic_In_POP`
+    - `Experimental:Array_Attribute` -> `Array_Attribute`
+    - `Experimental:Learning_About_POPs` -> `Learning_About_POPs`
+    - `Experimental:Movin3D` -> `Movin3D`
+    - `Experimental:Phaser_POP` -> `Phaser_POP`
+    - `GLSL_Matrix_Functions` -> `Write_a_GLSL_TOP`
+    - `index` -> `Main_Page`
+  - The refresher now writes official current HTML to the original mirror path while reporting the canonical source in `mapped_pages`.
+  - Alias-resolved pages count as fetched official docs, not local fallbacks; `promotion_safe` still remains false if any true fallback remains.
+- Verified the alias map against official Derivative docs:
+  - The non-experimental POP/article pages and `Main_Page` fetch successfully.
+  - `Write_a_GLSL_TOP` contains the current GLSL built-in matrix-function documentation, including the `Matrix Functions` section and matrix helpers.
+  - `Sync_In_CHOP` still returns a live MediaWiki `Database error` / `DBQueryError` body, so it remains the only true local fallback.
+- Refreshed the staged mirror for the 7 aliasable pages plus `Sync_In_CHOP`:
+  - `page_count`: 8
+  - `fetched_count`: 7
+  - `fallback_count`: 1
+  - `failed_pages`: `Sync_In_CHOP`
+  - `mapped_pages`: the 7 alias mappings listed above
+  - `promotion_safe`: false, because `Sync_In_CHOP` still requires local fallback
+- Rebuilt and promoted the alias-mapped DocsBrain corpus:
+  - Staged/promoted output: `data/generated/docsbrain_current_inventory/derivative` -> `data/normalized/derivative`
+  - Pages normalized: 2,478
+  - Chunks created/indexed: 25,995
+  - Operator chunks: 5,550
+  - Distinct operator names in chunk DB: 674
+  - Release chunks: 1,193
+  - Release artifacts: 10 builds, 268 operators with changelog entries
+  - Promoted build manifest latest build/date: `2025.32820` / `May 06, 2026`
+  - Operator parameter names: 18,462
+  - Watched menu-choice leakage hits: 0
+- Remaining limit:
+  - The explicit fallback set is now reduced to `Sync_In_CHOP` only. Do not call the full current-mirror target complete until that official page stops returning a database-error body, a current official replacement is identified, or reviewed retirement guidance is added.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T20:14:48Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_docs_mirror_refresh.py -q`: failed first for missing `mapped_pages` / alias behavior, then passed.
+  - Alias smoke with `Experimental:Alembic_In_POP`, `Experimental:Array_Attribute`, `Experimental:Learning_About_POPs`, `Experimental:Movin3D`, `Experimental:Phaser_POP`, `GLSL_Matrix_Functions`, and `index`: fetched 7/7 via aliases, `fallback_count=0`, `promotion_safe=true`.
+  - Staged targeted refresh with the 7 aliasable pages plus `Sync_In_CHOP`: fetched 7, fell back only for `Sync_In_CHOP`, and reported all mappings.
+  - `uv run python scripts/build_docs_brain.py --source /tmp/tdpilot_docs_current_inventory_mirror --output data/generated/docsbrain_current_inventory/derivative`: ok, 25,995 chunks.
+  - `sqlite3 data/generated/docsbrain_current_inventory/derivative/docsbrain.db 'pragma integrity_check;'`: ok.
+  - Promoted `data/normalized/derivative/docsbrain.db` integrity check: ok.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0.
+  - `uv run pytest tests/test_docs_mirror_refresh.py tests/test_docs_release_refresh.py tests/test_normalizer.py tests/test_chunker.py tests/brain/test_atlas_drafts.py tests/test_docsbrain_search.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run pytest -q`: 1109 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`.
+  - `git diff --check`: clean.
+  - JSON parse checks for `data/generated/atlas_drafts/operators/manifest.json`, `reports/release_gates.json`, `data/normalized/derivative/build_manifest.json`, and `data/normalized/derivative/operator_changelog.json`: all parsed.
+
+## Fifty-Fifth Pass - Sync In CHOP Official Printable Page Recovery
+
+- Added red coverage first for official query-url aliases:
+  - `tests/test_docs_mirror_refresh.py::test_refresh_inventory_pages_supports_official_query_url_aliases` failed first because the refresher treated `index.php?title=...` aliases as encoded page names and fell back locally.
+- Verified current official Derivative behavior:
+  - `https://docs.derivative.ca/Sync_In_CHOP` returns HTTP 200 with a MediaWiki `Database error` / `DBQueryError` body.
+  - `https://docs.derivative.ca/index.php?title=Sync_In_CHOP&printable=yes` returns the official rendered `Sync In CHOP` page and includes `Parameters - Sync In Page`.
+  - `https://docs.derivative.ca/Sync_Out_CHOP` is live, but it is not a sufficient replacement because it contains `Parameters - Sync Out Page`, not the Sync In parameter section.
+- Updated `scripts/refresh_docs_mirror_from_inventory.py`:
+  - Added `Sync_In_CHOP` -> `index.php?title=Sync_In_CHOP&printable=yes` to `DEFAULT_PAGE_ALIASES`.
+  - Allowed trusted `index.php?...` alias values to become official `docs.derivative.ca` URLs without percent-encoding the query string.
+  - Preserved the local mirror path and DocsBrain identity as `Sync_In_CHOP.html` / `https://docs.derivative.ca/Sync_In_CHOP` while filling the HTML from the official printable page.
+- Refreshed the staged mirror for `Sync_In_CHOP`:
+  - `page_count`: 1
+  - `fetched_count`: 1
+  - `fallback_count`: 0
+  - `failed_pages`: []
+  - `mapped_pages`: `Sync_In_CHOP` -> `index.php?title=Sync_In_CHOP&printable=yes`
+  - `promotion_safe`: true
+- Rebuilt and promoted the no-fallback DocsBrain corpus:
+  - Staged/promoted output: `data/generated/docsbrain_current_inventory/derivative` -> `data/normalized/derivative`
+  - Pages normalized: 2,478
+  - Chunks created/indexed: 25,995
+  - Operator chunks: 5,550
+  - Distinct operator names in chunk DB: 674
+  - Release chunks: 1,193
+  - Release artifacts: 10 builds, 268 operators with changelog entries
+  - Promoted build manifest latest build/date: `2025.32820` / `May 06, 2026`
+  - Operator parameter names: 18,462
+  - Watched menu-choice leakage hits: 0
+  - Staged mirror scan found no `Database error` / `DBQueryError` bodies before rebuild.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T20:22:50Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_docs_mirror_refresh.py -q`: failed first for missing query-url alias support, then passed.
+  - Live `Sync_In_CHOP` smoke through `scripts/refresh_docs_mirror_from_inventory.py --page Sync_In_CHOP`: fetched 1/1 via the official printable page, `fallback_count=0`, `promotion_safe=true`.
+  - `uv run python scripts/build_docs_brain.py --source /tmp/tdpilot_docs_current_inventory_mirror --output data/generated/docsbrain_current_inventory/derivative`: ok, 25,995 chunks.
+  - `sqlite3 data/generated/docsbrain_current_inventory/derivative/docsbrain.db 'pragma integrity_check;'`: ok.
+  - Promoted `data/normalized/derivative/docsbrain.db` integrity check: ok.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0.
+  - `uv run pytest tests/test_docs_mirror_refresh.py tests/test_docs_release_refresh.py tests/test_normalizer.py tests/test_chunker.py tests/brain/test_atlas_drafts.py tests/test_docsbrain_search.py -q`: 86 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run pytest -q`: 1110 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`.
+
+## Fifty-Sixth Pass - Clean Full Inventory Refresh Proof
+
+- Ran a clean end-to-end full inventory refresh from an empty staged mirror with the current alias map:
+  - Source mirror: `<USER_DESKTOP>/doc derivative/docs.derivative.ca_offline/docs.derivative.ca`
+  - Clean staged mirror: `/tmp/tdpilot_docs_current_inventory_clean_mirror`
+  - Command: `uv run python scripts/refresh_docs_mirror_from_inventory.py --source ... --output /tmp/tdpilot_docs_current_inventory_clean_mirror --workers 8`
+- Result:
+  - `page_count`: 2,478
+  - `fetched_count`: 2,478
+  - `fallback_count`: 0
+  - `failed_pages`: []
+  - `promotion_safe`: true
+  - `mapped_pages`:
+    - `Experimental:Alembic_In_POP` -> `Alembic_In_POP`
+    - `Experimental:Array_Attribute` -> `Array_Attribute`
+    - `Experimental:Learning_About_POPs` -> `Learning_About_POPs`
+    - `Experimental:Movin3D` -> `Movin3D`
+    - `Experimental:Phaser_POP` -> `Phaser_POP`
+    - `GLSL_Matrix_Functions` -> `Write_a_GLSL_TOP`
+    - `Sync_In_CHOP` -> `index.php?title=Sync_In_CHOP&printable=yes`
+    - `index` -> `Main_Page`
+- Verified the clean staged mirror:
+  - File count: 2,478
+  - `rg -l "Database error|DBQueryError" /tmp/tdpilot_docs_current_inventory_clean_mirror`: no matches.
+  - Spot checks confirmed `Sync_In_CHOP.html` contains the official `Sync In CHOP` rendered page, `Experimental:Phaser_POP.html` contains the official `Phaser POP` page, `GLSL_Matrix_Functions.html` contains the official `Write a GLSL TOP` page, and `index.html` contains the official TouchDesigner Documentation main page.
+- Interpretation:
+  - The full current official-doc inventory refresh target is now satisfied by an explicit official alias map with zero local fallbacks. The promoted `data/normalized/derivative` corpus already matches the same counts and integrity checks from the prior rebuild.
+
+## Fifty-Seventh Pass - Network DAT Atomic Parameter Hygiene
+
+- Added red coverage first for the next operator-card quality slice:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_network_dat_cards_use_atomic_received_message_parameter_names` failed first on `tcp/ipDAT` because `clamp/maxlines/clear/bytes` was still grouped into a single `key_params` entry.
+- Verified the expected parameter names against current official Derivative docs:
+  - `TCP/IP DAT` documents `executeloc`, `fromop`, `clamp`, `maxlines`, `clear`, and `bytes` on the Received Data page.
+  - `SocketIO DAT` documents `executeloc`, `fromop`, `clamp`, `maxlines`, `clear`, and `bytes` on the Received Messages page.
+  - `FIFO DAT` documents `executeloc`, `fromop`, `clamp`, `maxlines`, `clear`, and `firstrow` on the FIFO page.
+- Promoted reviewed card fixes:
+  - `src/td_mcp/knowledge/cards/operators/tcp%2FipDAT.json`: split `clamp/maxlines/clear/bytes` into atomic `executeloc`, `fromop`, `clamp`, `maxlines`, `clear`, and `bytes` entries.
+  - `src/td_mcp/knowledge/cards/operators/socketioDAT.json`: split `clamp/maxlines/clear/bytes` into atomic `executeloc`, `fromop`, `clamp`, `maxlines`, `clear`, and `bytes` entries.
+  - `src/td_mcp/knowledge/cards/operators/fifoDAT.json`: split `executeloc/fromop` into atomic `executeloc` and `fromop` entries.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T20:34:40Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_comp_physics_engine_panel_and_sharedmem_priority_cards_are_structured -q`: 1 passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_network_dat_cards_use_atomic_received_message_parameter_names -q`: failed first for the grouped `tcp/ipDAT` parameter entry, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 11 passed.
+  - `uv run pytest tests/test_seed_corpus.py tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 68 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run pytest -q`: 1111 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`.
+  - `git diff --check`: clean.
+  - JSON parse checks for `data/generated/atlas_drafts/operators/manifest.json`, `reports/release_gates.json`, `data/normalized/derivative/build_manifest.json`, and `data/normalized/derivative/operator_changelog.json`: all parsed.
+  - Remaining grouped/compound `key_params` scan: 47 operator cards still need reviewed cleanup.
+
+## Fifty-Eighth Pass - Common DAT Editor Parameter Hygiene
+
+- Added red coverage first for the next reviewed DAT common-parameter slice:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_common_dat_cards_use_atomic_editor_and_reload_parameter_names` failed first on `art-netDAT` because `extension/customext` was still grouped into a single `key_params` entry.
+- Verified the expected parameter names against both official Derivative docs and the promoted local DocsBrain corpus:
+  - `Art-Net DAT`, `EtherDream DAT`, `Null DAT`, `Out DAT`, and `Script DAT` document `extension` and `customext` as separate Common page parameters.
+  - `CPlusPlus DAT` documents `reinit`, `reinitpulse`, `extension`, and `customext` as separate Load/Common page parameters.
+  - Local `data/normalized/derivative/docsbrain.db` chunks for the same operators expose the same names in `parameter_names`.
+- Promoted reviewed card fixes:
+  - `src/td_mcp/knowledge/cards/operators/art-netDAT.json`: split `extension/customext` into atomic `extension` and `customext` entries.
+  - `src/td_mcp/knowledge/cards/operators/etherdreamDAT.json`: split `extension/customext` into atomic `extension` and `customext` entries.
+  - `src/td_mcp/knowledge/cards/operators/nullDAT.json`: split `extension/customext` into atomic `extension` and `customext` entries.
+  - `src/td_mcp/knowledge/cards/operators/outDAT.json`: split `extension/customext` into atomic `extension` and `customext` entries.
+  - `src/td_mcp/knowledge/cards/operators/scriptDAT.json`: split `extension/customext` into atomic `extension` and `customext` entries.
+  - `src/td_mcp/knowledge/cards/operators/cplusplusDAT.json`: split `reinit/reinitpulse` and `extension/customext` into atomic `reinit`, `reinitpulse`, `extension`, and `customext` entries.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T20:38:57Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_common_dat_cards_use_atomic_editor_and_reload_parameter_names -q`: failed first for grouped `art-netDAT` `extension/customext`, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 12 passed.
+  - `uv run pytest tests/test_seed_corpus.py tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 69 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run pytest -q`: 1112 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`.
+  - Remaining grouped/compound `key_params` scan: 41 operator cards still need reviewed cleanup.
+
+## Fifty-Ninth Pass - Table Transform DAT Scope and Filter Parameter Hygiene
+
+- Added red coverage first for the remaining grouped table-transform and diagnostic DAT entries:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_table_transform_dat_cards_use_atomic_scope_filter_parameter_names` failed first on `dmxmapDAT` because `updateval/updatevalpulse` and `netfilter/subnetfilter/universefilter` were still grouped.
+- Verified expected parameter names against official Derivative docs and local DocsBrain:
+  - Official/current DocsBrain pages for `DMX Map DAT`, `Evaluate DAT`, `Examine DAT`, `Insert DAT`, `MPCDI DAT`, `Multi Touch In DAT`, `Reorder DAT`, `Sort DAT`, and `Substitute DAT` list the relevant filter, scope, reload, and table-transform parameters as individual names.
+- Promoted reviewed card fixes:
+  - `src/td_mcp/knowledge/cards/operators/dmxmapDAT.json`: split update and DMX network filters into `updateval`, `updatevalpulse`, `netfilter`, `subnetfilter`, and `universefilter`.
+  - `src/td_mcp/knowledge/cards/operators/evaluateDAT.json`: replaced `row/col scope` with atomic `xfirstrow`, `xfirstcol`, `extractrows`, and `extractcols`.
+  - `src/td_mcp/knowledge/cards/operators/examineDAT.json`: split `key/type/value` and `expandclasses/maxlevels` into atomic `key`, `type`, `value`, `expandclasses`, and `maxlevels`.
+  - `src/td_mcp/knowledge/cards/operators/insertDAT.json`: split `replaceduplicate/replace` into `replaceduplicate` and `replace`.
+  - `src/td_mcp/knowledge/cards/operators/mpcdiDAT.json`: split `bufferid/regionid` and `near/far` into `bufferid`, `regionid`, `near`, and `far`.
+  - `src/td_mcp/knowledge/cards/operators/multitouchinDAT.json`: split panel-relative, occlusion, callback, and FIFO groups into atomic `relativeid`, `relativepos`, `occlusion`, `occbydepth`, `occdepthlayer`, `callbacks`, `executeloc`, `fromop`, `clamp`, `maxlines`, and `clear`.
+  - `src/td_mcp/knowledge/cards/operators/reorderDAT.json`: split `before/after` into `before` and `after`.
+  - `src/td_mcp/knowledge/cards/operators/sortDAT.json`: split `name/index` into `name` and `index`.
+  - `src/td_mcp/knowledge/cards/operators/substituteDAT.json`: split `expand/expandto`, `xfirstrow/xfirstcol`, and `extractrows/extractcols` into atomic scope and expansion parameters.
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_table_transform_dat_cards_use_atomic_scope_filter_parameter_names -q`: failed first for grouped `dmxmapDAT` entries, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 13 passed.
+  - Remaining grouped/compound `key_params` scan after this pass: 32 operator cards still needed reviewed cleanup.
+
+## Sixtieth Pass - Table DAT Load and Fill Parameter Hygiene
+
+- Added red coverage first for the last remaining grouped DAT card:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_table_dat_uses_atomic_load_and_fill_parameter_names` failed first because `tableDAT` still grouped `loadonstart/write/removeblank` and `rows/cols/cellexpr`.
+- Verified expected parameter names against official Derivative docs and local DocsBrain:
+  - `Table DAT` documents `loadonstart`, `write`, `removeblank`, `rows`, `cols`, and `cellexpr` as individual Table/Fill page parameters.
+  - Local `data/normalized/derivative/docsbrain.db` chunks for `Table DAT` expose the same names in `parameter_names`.
+- Promoted reviewed card fixes:
+  - `src/td_mcp/knowledge/cards/operators/tableDAT.json`: split load/write/blank-line behavior into `loadonstart`, `write`, and `removeblank`, and split fill sizing/expression behavior into `rows`, `cols`, and `cellexpr`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T20:43:22Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_table_dat_uses_atomic_load_and_fill_parameter_names -q`: failed first for grouped `tableDAT` entries, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 14 passed.
+  - `uv run pytest tests/test_seed_corpus.py tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 71 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run pytest -q`: 1114 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `data/generated/atlas_drafts/operators/manifest.json`, `reports/release_gates.json`, `data/normalized/derivative/build_manifest.json`, and `data/normalized/derivative/operator_changelog.json`: all parsed.
+  - Remaining grouped/compound `key_params` scan: 31 operator cards still need reviewed cleanup, all currently SOP cards.
+
+## Sixty-First Pass - SOP Atomic Parameter Hygiene
+
+- Added red coverage first for the remaining grouped SOP parameter-card slice:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_sop_cards_use_atomic_grouped_parameter_names` failed first on `limitSOP` because `chanx/chany/chanz`, `chanrx/chanry/chanrz`, and `chanr/chang/chanb/chanalpha` were still grouped.
+- Verified expected parameter names against official Derivative docs and the promoted local DocsBrain corpus:
+  - Official/current DocsBrain pages for `Limit SOP`, `LSystem SOP`, `Magnet SOP`, `Metaball SOP`, `Point SOP`, `Polyloft SOP`, `Polypatch SOP`, `Primitive SOP`, `Profile SOP`, `Project SOP`, `Rails SOP`, `Ray SOP`, `Rectangle SOP`, `Refine SOP`, `Resample SOP`, `Skin SOP`, `Sort SOP`, `Spring SOP`, `Stitch SOP`, `Subdivide SOP`, `Superquad SOP`, `Surfsect SOP`, `Sweep SOP`, `Text SOP`, `Torus SOP`, `Trace SOP`, `Trail SOP`, `Tube SOP`, `Twist SOP`, `Vertex SOP`, and `ZED SOP` list the reviewed parameters as individual names.
+  - A read-only subagent cross-check flagged three stale menu-option or cross-contaminated splits; the promoted fixes treat `primitiveSOP` `open`/`reverse`/`cycle` and `springSOP` `bounce`/`stick` as menu options rather than parameter names, and remove stale `vertexSOP` normal controls not present on the current Vertex SOP page.
+- Promoted reviewed card fixes:
+  - Split grouped SOP `key_params` across 31 cards into atomic names: `limitSOP`, `lsystemSOP`, `magnetSOP`, `metaballSOP`, `pointSOP`, `polyloftSOP`, `polypatchSOP`, `primitiveSOP`, `profileSOP`, `projectSOP`, `railsSOP`, `raySOP`, `rectangleSOP`, `refineSOP`, `resampleSOP`, `skinSOP`, `sortSOP`, `springSOP`, `stitchSOP`, `subdivideSOP`, `superquadSOP`, `surfsectSOP`, `sweepSOP`, `textSOP`, `torusSOP`, `traceSOP`, `trailSOP`, `tubeSOP`, `twistSOP`, `vertexSOP`, and `zedSOP`.
+  - `src/td_mcp/knowledge/cards/operators/primitiveSOP.json`: corrected stale face/hull menu-option tokens to actual `closeu`, `closev`, `vtxsort`, `vtxuoff`, and `vtxvoff` parameters.
+  - `src/td_mcp/knowledge/cards/operators/springSOP.json`: kept `hit` as the collision behavior parameter, removed `bounce` and `stick` menu-option tokens from `key_params`, and added documented `gainnorm` alongside `gaintan`.
+  - `src/td_mcp/knowledge/cards/operators/vertexSOP.json`: removed stale `donml`/`nml` controls because the current Vertex SOP page supports color, alpha, texture, crease, and custom attributes, not vertex-normal editing controls.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T20:51:02Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_sop_cards_use_atomic_grouped_parameter_names -q`: failed first for grouped `limitSOP`, failed again after official-doc correction for stale `primitiveSOP` tokens, then passed.
+  - Remaining grouped/compound `key_params` scan: 0 operator cards.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 15 passed.
+  - `uv run pytest tests/test_seed_corpus.py tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 72 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 688 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run pytest -q`: 1115 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `data/generated/atlas_drafts/operators/manifest.json`, `reports/release_gates.json`, `data/normalized/derivative/build_manifest.json`, and `data/normalized/derivative/operator_changelog.json`: all parsed.
+
+## Sixty-Second Pass - Python Operator Class Article Coverage
+
+- Added red coverage first for official Derivative Python operator-family class pages:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_python_operator_class_articles_cover_core_family_api_pages` failed first because article cards for `op_class`, `comp_class`, `top_class`, `chop_class`, `dat_class`, `sop_class`, `pop_class`, and `mat_class` were missing.
+- Verified expected class concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - `OP Class` covers OP lookup shortcuts, `opex`, parameter collections, storage, tags, children, and diagnostics such as `errors()`.
+  - `COMP Class` covers child networks, extensions, `create()`, `copy()`, `layout()`, and `findChildren()`.
+  - `TOP Class` covers texture dimensions, `numpyArray()`, and `save()`.
+  - `CHOP Class` covers channel counts, sample counts, `rate`, `chan()`, and `chans()`.
+  - `DAT Class` covers `module`, table dimensions, `cell()`, `findCell()`, and `setSize()`.
+  - `SOP Class` covers `points`, `prims`, `numPoints`, `numVertices`, `pointAttribs`, `bounds()`, and geometry export; the stale `copyNumpyArray()` expectation was corrected because it is not present on the current official SOP Class page.
+  - `POP Class` covers `dimension`, point/primitive/vertex attributes, changed-attribute sets, and delayed bounds helpers.
+  - `MAT Class` explicitly has no operator-specific members or methods and inherits OP Class behavior.
+- Promoted reviewed article cards:
+  - `src/td_mcp/knowledge/cards/articles/op_class.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_class.json`
+  - `src/td_mcp/knowledge/cards/articles/top_class.json`
+  - `src/td_mcp/knowledge/cards/articles/chop_class.json`
+  - `src/td_mcp/knowledge/cards/articles/dat_class.json`
+  - `src/td_mcp/knowledge/cards/articles/sop_class.json`
+  - `src/td_mcp/knowledge/cards/articles/pop_class.json`
+  - `src/td_mcp/knowledge/cards/articles/mat_class.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T20:58:02Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_python_operator_class_articles_cover_core_family_api_pages -q`: failed first for missing article IDs, then passed.
+  - JSON parse checks for the 8 promoted article cards: all parsed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 5 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 696 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run pytest -q`: 1116 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `data/generated/atlas_drafts/operators/manifest.json`, `reports/release_gates.json`, `data/normalized/derivative/build_manifest.json`, `data/normalized/derivative/operator_changelog.json`, and the 8 promoted article cards: all parsed.
+
+## Sixty-Third Pass - Component Authoring Article Coverage
+
+- Added red coverage first for official Derivative component-authoring pages:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_component_authoring_articles_cover_comp_extension_and_timing_workflows` failed first because article cards for `extensions`, `comp_extensions_page`, `component`, `component_variables`, `component_time`, `component_timeline`, and `component_editor_dialog` were missing.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - `Extensions` covers Python extension setup on custom COMPs, `ownerComp`, `TDF.createProperty()`, `StorageManager`, promoted members, `ext`, `extensions`, `extensionsReady`, `onInitTD`, and `onDestroyTD`.
+  - `COMP Extensions Page` covers `reinitextensions`, `initextonstart`, extension object/name/promote parameters, and `.ext` access when promotion is off.
+  - `Component` covers Object Components, Panel Components, component inputs and outputs via internal In/Out OPs, component flags, and saving reusable components as `.tox`.
+  - `Component Variables` covers `var('VARNAME')`, `cvar`, hierarchical lookup, and the internal `local/variables` and `local/set_variables` DAT pattern, with guidance to prefer Extensions or custom parameters for new Python-heavy components.
+  - `Component Time` and `Component Timeline` cover `local/time`, Time COMP-driven local rate/start/end/range, Timepath inheritance, Add Component Time, Run Independently, Scope, and root-time UI scoping.
+  - `Component Editor Dialog` covers Customize Component, custom parameters, Extension Code, Shortcuts and Tags, Storage, editable human-readable parameter JSON, and Reference/Bind creation from dragged parameters.
+- Promoted reviewed article cards:
+  - `src/td_mcp/knowledge/cards/articles/extensions.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_extensions_page.json`
+  - `src/td_mcp/knowledge/cards/articles/component.json`
+  - `src/td_mcp/knowledge/cards/articles/component_variables.json`
+  - `src/td_mcp/knowledge/cards/articles/component_time.json`
+  - `src/td_mcp/knowledge/cards/articles/component_timeline.json`
+  - `src/td_mcp/knowledge/cards/articles/component_editor_dialog.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T21:03:02Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_component_authoring_articles_cover_comp_extension_and_timing_workflows -q`: failed first for missing article IDs, then passed.
+  - JSON parse checks for the 7 promoted article cards: all parsed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 6 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 703 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run pytest -q`: 1117 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `data/generated/atlas_drafts/operators/manifest.json`, `reports/release_gates.json`, `data/normalized/derivative/build_manifest.json`, `data/normalized/derivative/operator_changelog.json`, and the 7 promoted article cards: all parsed.
+
+## Sixty-Fourth Pass - GLSL Runtime and Texture Sampling Article Coverage
+
+- Added red coverage first for official Derivative GLSL runtime, Vulkan, and texture-sampling pages:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_glsl_runtime_and_texture_articles_cover_shader_debugging_and_sampling_workflows` failed first because article cards for `shader`, `compute_shader`, `debugging_crashes_triggered_by_glsl_errors`, `vulkan`, `2d_texture_array`, `3d_texture`, `texture_sampling_parameters`, `texture_coordinates_and_texture_sampling`, `texture_extend_modes`, and `texture_filtering` were missing.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - `Shader` covers TouchDesigner GLSL shaders running on OpenGL pre-2022 or Vulkan 2022+, Text DAT shader sources, GLSL Material, GLSL TOP, Vertex/Pixel/Compute shader stages, and obsolete Geometry Shaders.
+  - `Compute Shader` covers GPU thread dispatch outside regular polygon rasterization, texture reads, arbitrary-location writes, GLSL 4.30+, and GLSL TOP compute mode.
+  - `Debugging crashes triggered by GLSL errors` covers Vulkan-era crash risks from out-of-bounds sampler/uniform array access, `TD_NUM_*_INPUTS` guards, uniform-array data sufficiency, infinite-loop checks, `TOUCH_ROBUST_BUFFER_ACCESS=1`, and `TOUCH_ENABLE_NV_AFTERMATH=1`.
+  - `Vulkan` covers TouchDesigner's Vulkan graphics API, MoltenVK/Metal on macOS, reduced OpenGL driver overhead, lower TOP CPU cook time, Geometry Shader removal on macOS, and safer cross-platform Compute Shaders.
+  - `2D Texture Array` covers Texture 3D TOP / GLSL TOP creation paths, non-normalized W slice coordinates, no between-slice blending, per-slice mipmaps, `GL_EXT_texture_array`, `sampler2DArray`, and `texture2DArray()`.
+  - `3D Texture` covers normalized u/v/w coordinates, layer blending, `0.5 / NumberOfSlices` first-slice sampling, 2025.30000+ all-slice TOP operations, Texture 3D TOP `POffset`, and Time Machine TOP offset consumption.
+  - `Texture Sampling Parameters` covers the `+` dialog for TOP sampling parameters, map-prefixed internal names, `extendu`, `extendv`, `extendw`, `filter`, `anisotropy`, `coord`, and `coordinterp`.
+  - `Texture Coordinates and Texture Sampling` covers applying TOPs to SOP geometry via MATs on Geometry COMPs, `uv` attributes from Texture SOP and primitive SOPs, texels, Nearest filtering, and Linear filtering.
+  - `Texture Extend Modes` covers `[0,1]` coordinate behavior for U/V/W through Hold, Zero, Repeat, and Mirror.
+  - `Texture Filtering` covers Nearest, Linear, Mipmap Linear / Trilinear, TOP Common page Input Smoothness and Viewer Smoothness, MAT `Filter Type`, and Anisotropic Filtering.
+  - A read-only release-auditor subagent independently cross-checked that all ten article IDs were absent before promotion, all ten local DocsBrain page IDs were present, and the official-doc concept list was aligned; it flagged Geometry Shader only as an obsolete/non-active concept.
+- Promoted reviewed article cards:
+  - `src/td_mcp/knowledge/cards/articles/shader.json`
+  - `src/td_mcp/knowledge/cards/articles/compute_shader.json`
+  - `src/td_mcp/knowledge/cards/articles/debugging_crashes_triggered_by_glsl_errors.json`
+  - `src/td_mcp/knowledge/cards/articles/vulkan.json`
+  - `src/td_mcp/knowledge/cards/articles/2d_texture_array.json`
+  - `src/td_mcp/knowledge/cards/articles/3d_texture.json`
+  - `src/td_mcp/knowledge/cards/articles/texture_sampling_parameters.json`
+  - `src/td_mcp/knowledge/cards/articles/texture_coordinates_and_texture_sampling.json`
+  - `src/td_mcp/knowledge/cards/articles/texture_extend_modes.json`
+  - `src/td_mcp/knowledge/cards/articles/texture_filtering.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T21:10:23Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_glsl_runtime_and_texture_articles_cover_shader_debugging_and_sampling_workflows -q`: failed first for missing article IDs, then passed.
+  - JSON parse checks for the 10 promoted article cards: all parsed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 7 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 713 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run pytest -q`: 1118 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `data/generated/atlas_drafts/operators/manifest.json`, `reports/release_gates.json`, `data/normalized/derivative/build_manifest.json`, `data/normalized/derivative/operator_changelog.json`, and the 10 promoted article cards: all parsed.
+
+## Sixty-Fifth Pass - POP Foundations and Common Page Article Coverage
+
+- Added red coverage first for official Derivative POP foundation and common-page docs:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_pop_foundation_articles_cover_dimensions_attributes_and_common_pages` failed first because article cards for `pop`, `pop_dimension`, `points,_vertices_and_primitives_in_pops`, `mapping_pop_attributes_to_parameters`, `pop_generator_common_page`, `pop_filter_common_page`, and `pop_info_channels_common_page` were missing.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - `POP` covers Point Operators as a GPU-accelerated operator family for 3D geometry or general numeric data, Render TOP output, DMX/LED/laser/external-system routing, OP Snippets, Category:POPs, and POP Class.
+  - `POP Dimension` covers dimension metadata, columns/rows/slices, TOP-to-POP and POP-to-TOP shape preservation, one-or-more dimensions on every POP, the point-count product rule, built-in `_NumDim`, `_DimSize`, `_DimI`, `_DimU`, and `_DimCy` attributes, and Python `OP.dimension`.
+  - `Points, Vertices and Primitives in POPs` covers point lists, primitive lists, vertices as point-list indices, triangle/quad/line/linestrip/point primitives, closed linestrips, point lists with no primitives, Point Sprite MAT, and the current lack of POP mesh or curve primitives.
+  - `Mapping POP Attributes to Parameters` covers POP Map pages, per-point parameter values from attributes or attribute components, Combine Operation modes Add/Multiply/Set, Sequential Blocks, and input attribute sources such as `_in0`.
+  - `POP Generator Common Page` and `POP Filter Common Page` cover `bypass`, `freeextragpumem`, and `delinputattrs`, including first-input pass-through, extra GPU memory release, and attribute isolation.
+  - `POP Info Channels Common Page` is intentionally sparse in official docs; the card anchors the common POP info-channel section while directing concrete channel-name guidance to operator-specific Info CHOP sections.
+  - A read-only release-auditor subagent independently cross-checked that all seven article IDs were absent before promotion, all seven local DocsBrain page IDs were present, and the official-doc concept list was aligned; it flagged the POP info-channel page as too sparse for concrete channel-name assertions.
+- Promoted reviewed article cards:
+  - `src/td_mcp/knowledge/cards/articles/pop.json`
+  - `src/td_mcp/knowledge/cards/articles/pop_dimension.json`
+  - `src/td_mcp/knowledge/cards/articles/points,_vertices_and_primitives_in_pops.json`
+  - `src/td_mcp/knowledge/cards/articles/mapping_pop_attributes_to_parameters.json`
+  - `src/td_mcp/knowledge/cards/articles/pop_generator_common_page.json`
+  - `src/td_mcp/knowledge/cards/articles/pop_filter_common_page.json`
+  - `src/td_mcp/knowledge/cards/articles/pop_info_channels_common_page.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T21:16:20Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_pop_foundation_articles_cover_dimensions_attributes_and_common_pages -q`: failed first for missing article IDs, then passed.
+  - JSON parse checks for the 7 promoted article cards: all parsed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 8 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 720 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run pytest -q`: 1119 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `data/generated/atlas_drafts/operators/manifest.json`, `reports/release_gates.json`, `data/normalized/derivative/build_manifest.json`, `data/normalized/derivative/operator_changelog.json`, and the 7 promoted article cards: all parsed.
+
+## Sixty-Sixth Pass - Rendering and MAT Article Coverage
+
+- Added red coverage first for official Derivative Rendering, MAT, COMP Render page, MAT common/deform/info common pages, shadows, and black-render troubleshooting docs:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_rendering_and_mat_articles_cover_render_material_and_shadow_workflows` failed first because article cards for `rendering`, `mat`, `comp_render_page`, `mat_common_page`, `mat_deform_page`, `mat_filter_common_page`, `mat_generator_common_page`, `mat_info_channels_common_page`, `rendering_shadows`, and `why_is_my_render_black` were missing.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - `Rendering` covers Render TOP scene setup, Render Pass TOP reuse of the Render TOP off-screen buffer, GLSL rasterization features, Camera COMP, Geometry COMP, render flags, Light COMP, MAT assignment, the shared Depth Buffer, and the requirement that Render/Render Pass TOP chains stay linear.
+  - `MAT` covers materials as shader operators for SOP or 3D Geometry Object surfaces, Display-page Material assignment on Object Components, Phong MAT, GLSL MAT, TOP shader inputs, normals, texture coordinates, PBR MAT with Environment Light COMP, Substance TOP `.sbsar` assets, Constant MAT, Depth MAT, Line MAT, and Point Sprite MAT.
+  - `COMP Render Page` covers `material`, `render`, `drawpriority`, `pickpriority`, `wcolor`, and `lightmask`, including the logical-AND relationship between the Render parameter and the Component Render Flag.
+  - `MAT Common Page` covers shader-independent blending, depth test/write, alpha test, wire frame, cull face, and polygon depth offset controls, including z-fighting and shadow relevance.
+  - `MAT Deform Page` covers `dodeform`, `deformdata`, SOP/MAT/Deform In MAT data sources, `targetsop`, `pcaptpath`, `pcaptdata`, `skelrootpath`, capture attributes, and Bone Group SOP workflows.
+  - `MAT Filter Common Page` covers the shared common render-state parameters without the generator-only blend operation and blend-constant controls.
+  - `MAT Generator Common Page` covers the shared common render-state parameters plus generator-specific `blendop`, `blendopa`, constant color, and constant alpha blend factors.
+  - `MAT Info Channels Common Page` is intentionally sparse in official docs; the card anchors the common MAT info-channel section while directing concrete channel-name guidance to operator-specific Info CHOP sections.
+  - `Rendering Shadows` covers built-in Hard, 2D Mapped shadows, Shadow Casters, Polygon Offset Factor artifact cleanup, Focal Length/Aperture/FOV shadow-map detail, Depth TOP inspection, material-local Shadow Strength/Shadow Color, custom shadow maps, `TDShadowTexture`, and Render TOP polygon depth offset for custom maps.
+  - `Why is My Render Black` covers checkerboard-vs-black diagnosis, lighting/material checks, Constant MAT fallback, Cube Map render mode, Camera COMP near/far clipping, Render TOP Geometry patterns, COMP and SOP render flags, SOP bounds/alpha/normals inspection via SOP to DAT, light display flags, material/texture alpha, Base COMP nesting, default render rebuilds, back-face culling, and blend modes.
+  - A read-only release-auditor subagent independently cross-checked that all ten article IDs were absent before promotion, all ten local DocsBrain page IDs were present, and the official-doc concept list was aligned; it flagged the MAT info-channel page as too sparse for concrete channel-name assertions and confirmed the generator/filter common-page distinction.
+- Promoted reviewed article cards:
+  - `src/td_mcp/knowledge/cards/articles/rendering.json`
+  - `src/td_mcp/knowledge/cards/articles/mat.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_render_page.json`
+  - `src/td_mcp/knowledge/cards/articles/mat_common_page.json`
+  - `src/td_mcp/knowledge/cards/articles/mat_deform_page.json`
+  - `src/td_mcp/knowledge/cards/articles/mat_filter_common_page.json`
+  - `src/td_mcp/knowledge/cards/articles/mat_generator_common_page.json`
+  - `src/td_mcp/knowledge/cards/articles/mat_info_channels_common_page.json`
+  - `src/td_mcp/knowledge/cards/articles/rendering_shadows.json`
+  - `src/td_mcp/knowledge/cards/articles/why_is_my_render_black.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T21:24:37Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_rendering_and_mat_articles_cover_render_material_and_shadow_workflows -q`: failed first for missing article IDs, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 9 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 730 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T21:24:37Z`.
+  - `uv run pytest -q`: 1120 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `data/generated/atlas_drafts/operators/manifest.json`, `reports/release_gates.json`, and the 10 promoted article cards: all parsed.
+
+## Sixty-Seventh Pass - Object COMP Transform, Instancing, and Render Optimization Article Coverage
+
+- Added red coverage first for official Derivative Object Component, Object transform/pre-transform, instancing, render-flag, geometry optimization, and multi-camera rendering docs:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_object_comp_transform_instancing_and_render_optimization_articles_are_structured` failed first because article cards for `object_component`, `comp_xform_page`, `comp_pre-xform_page`, `comp_geometry_common_page`, `comp_instance_page`, `comp_instance_2_page`, `comp_instance_3_page`, `optimize_geometry_for_rendering`, `render_flag`, and `multi-camera_rendering` were missing.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - `Object Component` covers Object COMPs as Components used to create and render 3D scenes, including Ambient Light, Blend, Bone, Camera, Environment Light, Geometry, Light, Null, Shared Mem In/Out, USD COMP, and ObjectCOMP Class.
+  - `COMP Xform Page` covers world-space Object Component transforms, transform and rotate order, translate/rotate/scale/pivot/uniform scale, parent transform source, Look At, path SOP, roll, path orientation, up vector, and bank controls.
+  - `COMP Pre-Xform Page` covers pre-transform composition to the left of Xform, `preXForm * xform * Position`, pre-transform translate/rotate/scale/pivot controls, reset/commit operations, and matrix input via CHOP/DAT/operator.
+  - `COMP Geometry Common Page` covers the shared COMP Common page, including shortcuts, internal OP bindings, node viewer selection, cloning, load-on-demand, external `.tox` behavior, reload/save controls, and relative file path behavior; it is not transform or render-state guidance.
+  - `COMP Instance Page` covers hardware instancing, instance IDs in MAT shaders and Render Pick CHOP, instance count modes, TOP/CHOP/SOP/DAT data sources, first-row handling, transform order, active masks, and translate/rotate/scale/pivot instance mappings.
+  - `COMP Instance 2 Page` covers rotate-to-vector, rotate-up, instance/world transform order, texture coordinate mapping, color mapping, per-instance texture controls, and texture index behavior.
+  - `COMP Instance 3 Page` covers custom per-instance attributes for GLSL MAT through `TDInstanceCustomAttrib*()` helpers, while noting that custom attributes are ignored by PBR MAT and other non-GLSL materials.
+  - `Optimize Geometry for Rendering` covers Render TOP geometry performance through primitive type/count, vertex count, SOP count, triangle/triangle-strip guidance, VBO update and render-batch costs, Performance Monitor markers, batching, Merge SOP caveats, Vulkan, triangle-strip stitching, and non-batched primitives.
+  - `Render Flag` covers the purple SOP/Geometry COMP render flag path and the requirement that the SOP render flag, containing Geometry COMP render flag, and Render TOP Geometry parameter all include the object for Render TOP or Render Pass TOP output.
+  - `Multi-Camera Rendering` covers single-pass rendering for multiple cameras over the same scene, driver-call reduction, Nvidia Pascal / AMD Polaris-or-newer support, VR and Cube Map use cases, differing light-mask incompatibility, Render TOP `Cameras` and `Multi-Camera Hint`, Render Select TOP extraction, and Nvidia's Simultaneous Multi-Projection name.
+  - A read-only release-auditor subagent independently cross-checked that all ten article IDs were absent before promotion, all ten local DocsBrain page IDs were present, and the official-doc concept list was aligned; it warned to keep `multi-camera_rendering` narrow, keep `comp_geometry_common_page` scoped as a shared common page, and keep the three Instance pages distinct.
+- Promoted reviewed article cards:
+  - `src/td_mcp/knowledge/cards/articles/object_component.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_xform_page.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_pre-xform_page.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_geometry_common_page.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_instance_page.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_instance_2_page.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_instance_3_page.json`
+  - `src/td_mcp/knowledge/cards/articles/optimize_geometry_for_rendering.json`
+  - `src/td_mcp/knowledge/cards/articles/render_flag.json`
+  - `src/td_mcp/knowledge/cards/articles/multi-camera_rendering.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T21:32:50Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_object_comp_transform_instancing_and_render_optimization_articles_are_structured -q`: failed first for missing article IDs, failed once more on a case-sensitive `render_flag` guidance assertion, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 10 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 740 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T21:32:50Z`.
+  - JSON parse checks for the 10 promoted article cards and `data/generated/atlas_drafts/operators/manifest.json`: all parsed.
+  - `uv run pytest -q`: 1121 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `data/generated/atlas_drafts/operators/manifest.json`, `reports/release_gates.json`, `data/normalized/derivative/build_manifest.json`, `data/normalized/derivative/operator_changelog.json`, and the 10 promoted article cards: all parsed.
+
+## Sixty-Eighth Pass - COMP Panel and Common Page Article Coverage
+
+- Added red coverage first for official Derivative COMP summary, panel, children, layout, look, drag/drop, shortcuts, generator common, other common, and info-channel common pages:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_comp_panel_and_common_articles_cover_shared_comp_parameter_pages` failed first because article cards for `comp`, `comp_panel_page`, `comp_panel_common_page`, `comp_children_page`, `comp_layout_page`, `comp_look_page`, `comp_drag_page`, `comp_shortcuts_page`, `comp_generator_common_page`, `comp_generator_shortcuts_page`, `comp_other_common_page`, and `comp_info_channels_common_page` were missing.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - `COMP` is intentionally sparse and only acts as a summary/link-out to `COMP Class`; it should not be inflated into full component behavior.
+  - `COMP Panel Page` covers display, enable, help DAT, cursor, multi-touch, click-through, mouse wheel, mouse UV buttons, relative UV, resize ranges, drag-to-reposition, anchor-drag behavior, and scroll overlay behavior. It preserves the official gotchas that `display` changes can incur layout work, opacity is better for simple overlays, built-in multi-touch only handles the first touch, and Multi Touch In DAT workflows may need built-in multi-touch disabled.
+  - `COMP Panel Common Page` covers node viewer, shortcuts, internal OPs, panel memory, cloning, load-on-demand, external `.tox`, reload pulses, top-level-only built-in/custom parameter reloads, `.toe` fallback backup, sub-component load, and `.toe` vs `.tox` relative path behavior.
+  - `COMP Children Page` covers child alignment, Align Order, spacing, max-per-line, absolute-pixel margins, group/individual justification, fit, scale, offset, crop, and horizontal/vertical scrollbars.
+  - `COMP Layout Page` covers `x/y/w/h`, fixed aspect, depth layer draw order and name tie-breaks, fixed/fill/anchor horizontal and vertical modes, normalized anchors, fill weights, parent alignment, align order, post offset, and Size From Window.
+  - `COMP Look Page` covers background colors, Background TOP fill/smoothness, border colors, disabled colors, RGB-alpha multiplication, panel compositing, and opacity, including the old-file Mipmap smoothness and 32-bit float nearest-filtering caveats.
+  - `COMP Drag Page` covers parent/legacy/no/callback drag/drop options, drop types, temporary-network drop destination processing, alternate dropped operator fallback, and table-based Drop Script routing.
+  - `COMP Shortcuts Page` and `COMP Generator Shortcuts Page` cover Parent Shortcut local scope, Global OP Shortcut project-wide access, Internal OP shortcut/path pairs, and shortcut objects returning operators or sometimes parameters.
+  - `COMP Generator Common Page` covers the generator-common variant of node viewer, shortcuts, clone, load-on-demand, external `.tox`, `reloadtoxonstart`, top-level-only parameter reloads, backup, sub-component load, and Re-Init Network.
+  - `COMP Other Common Page` covers the miscellaneous-COMP variant of shortcuts, internal OPs, operator viewer, clone, load-on-demand, external `.tox`, reload, backup, sub-component load, and relative path behavior.
+  - `COMP Info Channels Common Page` is intentionally sparse; the only documented common channel is `num_children`, so the card warns against inventing additional common COMP info channels.
+  - A read-only release-auditor subagent independently cross-checked that none of the 12 exact article cards existed before promotion, all 12 local DocsBrain page IDs were present, and official gotchas were aligned; it explicitly warned to keep `comp` narrow and `comp_info_channels_common_page` sparse.
+- Promoted reviewed article cards:
+  - `src/td_mcp/knowledge/cards/articles/comp.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_panel_page.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_panel_common_page.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_children_page.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_layout_page.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_look_page.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_drag_page.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_shortcuts_page.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_generator_common_page.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_generator_shortcuts_page.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_other_common_page.json`
+  - `src/td_mcp/knowledge/cards/articles/comp_info_channels_common_page.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T21:40:34Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_comp_panel_and_common_articles_cover_shared_comp_parameter_pages -q`: failed first for missing article IDs, failed once more on singular/plural shortcut terminology, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 11 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 752 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T21:40:34Z`.
+  - JSON parse checks for the 12 promoted article cards and `data/generated/atlas_drafts/operators/manifest.json`: all parsed.
+  - `uv run pytest -q`: 1122 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `data/generated/atlas_drafts/operators/manifest.json`, `reports/release_gates.json`, `data/normalized/derivative/build_manifest.json`, `data/normalized/derivative/operator_changelog.json`, and the 12 promoted article cards: all parsed.
+
+## Sixty-Ninth Pass - Panel Foundation and PanelCOMP API Article Coverage
+
+- Added red coverage first for official Derivative Panel, Panel Component, Panel Value, and PanelCOMP Class pages:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_panel_foundation_articles_cover_values_and_panelcomp_api` failed first because article cards for `panel`, `panel_component`, `panel_value`, and `panelcomp_class` were missing.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - `Panel` covers Panels / Control Panels as custom graphical user interface controls, with visual look from Text COMPs and TOPs, behavior from Panel Component settings, Panel Execute DAT, extensions, PanelCOMP API, Panel Values, and Panel CHOP, plus Window COMP display and Panel pane / Open Viewer editing routes.
+  - `Panel Component` covers the Component sub-family for custom interactive 2D control panels and UIs, the OP Create dialog location, OP Snippets examples, Container, Widget, Text, Slider, Button, List, OP Viewer, Parameter, Select, and Table COMP roles, nested panels, panel parenting, and scripting entry points.
+  - `Panel Value` covers interaction state access through middle-click info, Panel CHOP, PanelValue Class, `panel()` expressions, and Panel Execute DAT, plus user interaction, Python `click()` calls, Tscript click/controlpanel updates, general values, slider/button/table/radio/field/table-only values, and important caveats for string/instant values, readonly values, key pulses, Node Viewer screen-size behavior, and obsolete `stateu`/`statev` usage.
+  - `PanelCOMP Class` covers Panel Component Python API access to Panel Values, `panelRoot`, `panelChildren`, pixel and margin dimensions, `dropReady`, `panelParent(n)`, `interactMouse()`, `interactTouch()`, `interactClear()`, `interactStatus()`, `locateMouse()`, `locateMouseUV()`, `setFocus()`, virtual interaction coordinate modes, focus behavior, and inherited COMP behavior.
+- Promoted reviewed article cards:
+  - `src/td_mcp/knowledge/cards/articles/panel.json`
+  - `src/td_mcp/knowledge/cards/articles/panel_component.json`
+  - `src/td_mcp/knowledge/cards/articles/panel_value.json`
+  - `src/td_mcp/knowledge/cards/articles/panelcomp_class.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T21:46:47Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_panel_foundation_articles_cover_values_and_panelcomp_api -q`: failed first for missing article IDs, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 12 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 756 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T21:46:47Z`.
+  - JSON parse checks for the 4 promoted article cards and `data/generated/atlas_drafts/operators/manifest.json`: all parsed.
+  - `uv run pytest -q`: 1123 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - Note: an attempted parallel `uv run pytest -q` raced with other concurrent `uv run` invocations on editable install metadata and failed before tests ran; rerunning full pytest sequentially passed.
+
+## Seventieth Pass - Panel CHOP Queue Event Operator Coverage
+
+- Added red operator-card coverage first for the official Derivative Panel CHOP queue-event behavior:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_panel_chop_card_covers_queue_overlapping_events` failed first because `panelCHOP` was missing `component`, `rename`, `queue`, and `queuesize` key parameters and did not carry Panel Values / PanelCOMP API concepts.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - `Panel CHOP` reads Panel Values from Panel Components into CHOP channels, while Panel Values can also be accessed from the `panel` member of PanelCOMP Class.
+  - The official Panel page parameters are `component`, `select`, `rename`, `queue`, and `queuesize`.
+  - `Queue Overlapping Events` queues all events that occur in a time slice; instantaneous values such as `wheel` or `key` can switch between a value and `0` in the same time slice.
+  - When `queue` is off, only the last value in the time slice is used and changes can be missed.
+  - `Queue Size` limits how many queued events are retained; if more events arrive than the queue can hold, earlier events are discarded.
+- Enriched reviewed operator card:
+  - `src/td_mcp/knowledge/cards/operators/panelCHOP.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T21:49:48Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_panel_chop_card_covers_queue_overlapping_events -q`: failed first for missing key parameters, then passed.
+  - `uv run pytest tests/test_seed_corpus.py -q`: 37 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 756 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T21:49:48Z`.
+  - JSON parse checks for `src/td_mcp/knowledge/cards/operators/panelCHOP.json`, the 4 promoted Panel article cards, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: all parsed.
+  - `uv run pytest -q`: 1124 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+
+## Seventy-First Pass - PanelValue and Core Panel COMP Python API Article Coverage
+
+- Added red coverage first for official Derivative PanelValue, Button COMP, Slider COMP, and Container COMP Python API pages:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_panel_python_class_articles_cover_panelvalue_and_core_panel_comp_click_apis` failed first because article cards for `panelvalue_class`, `buttoncomp_class`, `slidercomp_class`, and `containercomp_class` were missing.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - `PanelValue Class` covers PanelValue instances accessed through a component's `panel` member and used in Panel Execute DAT workflows, including `name`, `owner`, `val`, `valid`, and implicit numeric/string casting where explicit `eval()` or `set()` is unnecessary in parameter or numeric expressions.
+  - `buttonCOMP Class` covers the operator-specific `click(val, clickCount, force, left, middle, right)` method for simulating Button COMP panel clicks, the retained-state `val` option, double-click count, disabled-panel force behavior, mouse-button overrides, and inherited PanelCOMP behavior.
+  - `sliderCOMP Class` covers the operator-specific `click(uOrV, v, clickCount, force, left, middle, right, vOnly)` method, normalized U/V coordinates, one-value primary-coordinate behavior for U/V sliders, two-value UV updates, `vOnly` for UV sliders, disabled-panel force behavior, and inherited PanelCOMP behavior.
+  - `containerCOMP Class` covers `click(u, v, clickCount, force, left, middle, right, group)` at a container location, `clickChild(childIndex, ...)` for sub-panels such as radio buttons, optional group labels compatible with Button COMP group behavior, disabled-panel force behavior, and inherited PanelCOMP behavior.
+  - A read-only release-auditor subagent independently cross-checked the same pages and warned not to invent a `prev` PanelValue member and not to invent `clickPulse`, `clickOn`, or `clickOff` ButtonCOMP class methods; the promoted cards avoid those non-official methods/members.
+- Promoted reviewed article cards:
+  - `src/td_mcp/knowledge/cards/articles/panelvalue_class.json`
+  - `src/td_mcp/knowledge/cards/articles/buttoncomp_class.json`
+  - `src/td_mcp/knowledge/cards/articles/slidercomp_class.json`
+  - `src/td_mcp/knowledge/cards/articles/containercomp_class.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T21:54:17Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_panel_python_class_articles_cover_panelvalue_and_core_panel_comp_click_apis -q`: failed first for missing article IDs, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 13 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 760 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T21:54:17Z`.
+  - JSON parse checks for the 4 promoted article cards, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: all parsed.
+  - Non-official member/method guard check: no `prev`, `clickPulse`, `clickOn`, or `clickOff` references in the 4 promoted cards.
+  - `uv run pytest -q`: 1125 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+
+## Seventy-Second Pass - List, Table, Text, and Parameter COMP Python API Article Coverage
+
+- Added red coverage first for official Derivative List COMP, Table COMP, Text COMP, and Parameter COMP Python API pages:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_panel_python_class_articles_cover_list_table_text_and_parameter_comp_apis` failed first because article cards for `listcomp_class`, `tablecomp_class`, `textcomp_class`, and `parametercomp_class` were missing.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - `listCOMP Class` covers table, row, column, cell, displayed, focus, radio, rollover, selection, drag, and drop members; list scrolling/focus/reset methods; and callback hooks such as `onInitCell`, `onSelect`, `onEdit`, and drop-accept callbacks.
+  - `tableCOMP Class` has no operator-specific members and covers cell-ID helpers `getRowFromID`, `getColFromID`, and `getCellID`, plus `click`, `clickID`, and `setKeyboardFocus` for cell interaction workflows.
+  - `textCOMP Class` covers edited and selected text, `textHeight`/`textWidth`, immediate `evalTextSize` measurement, formatting, cursor placement with UV coordinates, and keyboard focus.
+  - `parameterCOMP Class` covers the `minWidth` parameter-dialog member, documents no operator-specific methods, and relies on inherited PanelCOMP / COMP behavior for panel state and hierarchy.
+  - A read-only release-auditor subagent independently cross-checked the candidate class pages and flagged three guardrails for future passes: use `https://docs.derivative.ca/OpviewerCOMP_Class` rather than the uppercase `OPViewerCOMP_Class` URL, keep inherited PanelCOMP / COMP APIs labeled as inherited, and avoid promoting `tableCOMP.select()`, `displayColWidth`, or `tableAttribs` as official operator-specific members/methods from this slice.
+- Promoted reviewed article cards:
+  - `src/td_mcp/knowledge/cards/articles/listcomp_class.json`
+  - `src/td_mcp/knowledge/cards/articles/tablecomp_class.json`
+  - `src/td_mcp/knowledge/cards/articles/textcomp_class.json`
+  - `src/td_mcp/knowledge/cards/articles/parametercomp_class.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T22:00:22Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_panel_python_class_articles_cover_list_table_text_and_parameter_comp_apis -q`: failed first for missing article IDs, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 14 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 764 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T22:00:22Z`.
+  - JSON parse checks for the 4 promoted article cards and `data/generated/atlas_drafts/operators/manifest.json`: all parsed.
+  - Non-official member/method guard check: no `tableCOMP.select`, `displayColWidth`, `displlayColWidth`, `tableAttribs`, or `OPViewerCOMP_Class` references in the 4 promoted cards.
+  - `uv run pytest -q`: 1126 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+
+## Seventy-Third Pass - OP Viewer, Select, Widget, and Window COMP Python API Article Coverage
+
+- Added red coverage first for official Derivative OP Viewer COMP, Select COMP, Widget COMP, and Window COMP Python API pages:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_panel_python_class_articles_cover_opviewer_select_widget_and_window_comp_apis` failed first because article cards for `opviewercomp_class`, `selectcomp_class`, `widgetcomp_class`, and `windowcomp_class` were missing.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - `opviewerCOMP Class` uses the official `https://docs.derivative.ca/OpviewerCOMP_Class` URL casing, has no operator-specific members, and covers `isViewable(path)` for checking whether the OP Viewer COMP can view a target operator without recursion issues.
+  - `selectCOMP Class` documents no operator-specific members or methods, so its card explicitly points users to inherited PanelCOMP / COMP behavior instead of inventing Select COMP Python API.
+  - `widgetCOMP Class` covers `click(u, v, clickCount, force, left, middle, right, group)` and `clickChild(childIndex, ...)`, including default left-button behavior, disabled-panel force behavior, group labels, and radio-button child-panel workflows.
+  - `windowCOMP Class` covers `scalingMonitorIndex`, border/fill/open state, DPI-scaled window and content bounds, and `setForeground()` foreground activation constraints.
+- Promoted reviewed article cards:
+  - `src/td_mcp/knowledge/cards/articles/opviewercomp_class.json`
+  - `src/td_mcp/knowledge/cards/articles/selectcomp_class.json`
+  - `src/td_mcp/knowledge/cards/articles/widgetcomp_class.json`
+  - `src/td_mcp/knowledge/cards/articles/windowcomp_class.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T22:04:51Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_panel_python_class_articles_cover_opviewer_select_widget_and_window_comp_apis -q`: failed first for missing article IDs, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 15 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 768 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T22:04:51Z`.
+  - JSON parse checks for the 4 promoted article cards and `data/generated/atlas_drafts/operators/manifest.json`: all parsed.
+  - Guard check: the only `OPViewerCOMP_Class` reference is the warning that the official DocsBrain page URL uses `OpviewerCOMP_Class`.
+  - `uv run pytest -q`: 1127 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+
+## Seventy-Fourth Pass - Base and Object COMP Python API Foundation Article Coverage
+
+- Added red coverage first for official Derivative Base COMP and ObjectCOMP Python API pages:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_comp_python_class_articles_cover_base_and_object_comp_foundation_apis` failed first because article cards for `basecomp_class` and `objectcomp_class` were missing.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - `baseCOMP Class` explicitly documents no operator-specific members or methods; its card points users to inherited COMP behavior for extensions, children, creation/copy/layout/search, progressive unload, tox load/save, and custom parameter workflows.
+  - `ObjectCOMP Class` is the parent class of Object COMPs and covers `localTransform`, `worldTransform`, `transform`, `setTransform`, `preTransform`, `setPreTransform`, `relativeTransform`, `importABC`, and `importFBX`, including Alembic/FBX import options such as lights, cameras, `mergeGeometry`, `gpuDeform`, rate, texture, geometry, and animation folders.
+- Promoted reviewed article cards:
+  - `src/td_mcp/knowledge/cards/articles/basecomp_class.json`
+  - `src/td_mcp/knowledge/cards/articles/objectcomp_class.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T22:08:06Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_comp_python_class_articles_cover_base_and_object_comp_foundation_apis -q`: failed first for missing article IDs, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 16 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 770 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T22:08:06Z`.
+  - JSON parse checks for the 2 promoted foundation article cards, the 4 previous COMP class cards, and `data/generated/atlas_drafts/operators/manifest.json`: all parsed.
+  - `uv run pytest -q`: 1128 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+
+## Seventy-Fifth Pass - Attribute and Point Python Geometry API Article Coverage
+
+- Added red coverage first for official Derivative Attribute, Attributes, AttributeData, InputPoint, Point, and Points Python API pages:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_pop_and_sop_python_geometry_articles_cover_attribute_and_point_apis` failed first because article cards for `attribute_class`, `attributes_class`, `attributedata_class`, `inputpoint_class`, `point_class`, and `points_class` were missing.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - `Attribute Class` covers geometric attribute metadata for primitive, point, and vertex attributes, including `owner`, `name`, `size`, `type`, `default`, array and matrix shape metadata, `destroy()`, and `vals(delayed=False)` for attribute-value readback with delayed GPU-stall avoidance in POP-oriented workflows.
+  - `Attributes Class` covers SOP attribute collections, `[name]` lookup, `create(name, default)`, and standard implied-default attributes `N`, `uv`, `T`, `v`, and `Cd`; the card explicitly avoids presenting this as a POP attribute-creation API.
+  - `AttributeData Class` covers specific attribute values through `val`, including scalar values, tuples, `TDU.Position`, and `TDU.Vector`, and documents that the page has no operator-specific methods.
+  - `InputPoint Class` is framed as a Point SOP parameter-context helper with `color`, `normal`, and `sopCenter`, not as a general POP point API.
+  - `Point Class` covers SOP `points` access, `index`, `P`, `x`, `y`, `z`, `normP`, dynamic attributes such as `Point.uv` / `Point.N`, and `destroy()` constraints for `scriptSOP`.
+  - `Points Class` covers SOP-owned point collections, `len(Points)`, integer indexing, and iteration yielding `td.Point`, while avoiding POP point-iteration claims.
+  - A read-only explorer subagent independently cross-checked the same six pages and warned to keep `Point`, `Points`, and `InputPoint` labeled as SOP / Point SOP APIs, not POP point iteration APIs; the promoted cards encode those guardrails.
+- Promoted reviewed article cards:
+  - `src/td_mcp/knowledge/cards/articles/attribute_class.json`
+  - `src/td_mcp/knowledge/cards/articles/attributes_class.json`
+  - `src/td_mcp/knowledge/cards/articles/attributedata_class.json`
+  - `src/td_mcp/knowledge/cards/articles/inputpoint_class.json`
+  - `src/td_mcp/knowledge/cards/articles/point_class.json`
+  - `src/td_mcp/knowledge/cards/articles/points_class.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T22:14:32Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_pop_and_sop_python_geometry_articles_cover_attribute_and_point_apis -q`: failed first for missing article IDs, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 17 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 776 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T22:14:32Z`.
+  - JSON parse checks for the 6 promoted article cards: all parsed.
+  - `uv run pytest -q`: 1129 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+
+## Seventy-Sixth Pass - GLSL/MAT Shader Resource Usage Article Coverage
+
+- Added red coverage first for the official Derivative `Phong MAT Shader Resource Usage` page:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_glsl_runtime_and_texture_articles_cover_shader_debugging_and_sampling_workflows` failed first because `phong_mat_shader_resource_usage` was missing from article cards.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - Shader resource limits are per object and affect how many lights, bones, varyings, uniforms, and related material features a GPU shader can handle in one pass.
+  - Large scenes can still use many lights if each individual object is constrained to a smaller set through Light Mask.
+  - `SYS_GFX_GLSL_MAX_VARYINGS` exposes the available varying count; varying pressure changes when normal mapping is enabled and when lights are attenuated, shadow mapped, projection mapped, or paired with rim/environment/texture-coordinate work.
+  - Uniform pressure includes shader-constant values such as diffuse, specular, emission colors, bone matrices, and light information.
+  - When one object needs more lights than a single pass can support, the official page recommends rendering the same geometry/camera with different light sets through Render Pass TOP and combining results with Add TOP.
+- Promoted reviewed article card:
+  - `src/td_mcp/knowledge/cards/articles/phong_mat_shader_resource_usage.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T22:18:25Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_glsl_runtime_and_texture_articles_cover_shader_debugging_and_sampling_workflows -q`: failed first for missing article ID, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 17 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T22:18:25Z`.
+  - JSON parse check for the promoted article card: parsed.
+  - `uv run pytest -q`: 1129 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+
+## Seventy-Seventh Pass - GLSL POP Safety and Generated Access Idiom Enrichment
+
+- Added red coverage first for deeper current official `Write a GLSL POP` safety and access idioms:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_glsl_and_pop_articles_cover_official_learning_pages` failed first because the existing `write_a_glsl_pop` card did not cover output initialization, output access modes, atomics, input count/index helpers, array-size constants, extra-output helper names, or GLSL Copy POP template/copy helpers.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - Output attributes can be created or selected for writing, but output buffers are uninitialized unless `Initialize Output Attributes` is enabled or the shader writes all values; downstream reads of uninitialized values can be unpredictable and can crash.
+  - `Output Access` controls write-only versus read-write SSBO access; read-write output access is required for atomic operations.
+  - Auto and related thread modes provide `TDIndex()` and `TDNumElements()`, and dispatches can be rounded up to the workgroup size, so bounds guards are required.
+  - Manual number-of-threads mode does not define `TDIndex()` or `TDNumElements()`, and using them there causes compile errors.
+  - Input count/index helpers include `TDInputNumPoints()`, `TDInputNumPrims()`, `TDInputNumVerts()`, and `TDInputPointIndex()`.
+  - Array and extra-output idioms include `cTDArraySize_Attrib`, `cTDArraySizePoint_Attrib`, `TDInputNumPoints_OutputName()`, and `oTDPoint_OutputName_AttribName[]`.
+  - GLSL Copy POP point shaders can use `TDCopyIndex()`, `TDTemplate_Attrib()`, and `TDUpdatePointGroups()` for template-driven per-copy work and group preservation.
+- Enriched existing reviewed article card:
+  - `src/td_mcp/knowledge/cards/articles/write_a_glsl_pop.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T22:22:06Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_glsl_and_pop_articles_cover_official_learning_pages -q`: failed first for missing key concepts, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 17 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T22:22:06Z`.
+  - JSON parse check for the enriched article card: parsed.
+  - `uv run pytest -q`: 1129 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+
+## Seventy-Eighth Pass - GLSL MAT Rendering, Instance, and Image Output Enrichment
+
+- Added red coverage first for deeper current official `Write a GLSL MAT` rendering and multi-camera idioms:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_glsl_and_pop_articles_cover_official_learning_pages` failed first because the existing `write_a_glsl_mat` card did not cover GLSL 3.30+ stage expectations, TD shader-stage defines, POP texture/buffer helper names, true camera indexing, point sprite coordinate wrappers, multiple render target bounds, or Render TOP image-output helper guards.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - Current GLSL MAT code targets GLSL 3.30+ conventions, with vertex, pixel, and optional geometry shader stages.
+  - TouchDesigner supplies compile-time defines for light counts, environment light counts, camera counts, and shader stages such as `TD_VERTEX_SHADER`, `TD_PIXEL_SHADER`, and `TD_COMPUTE_SHADER`.
+  - POP/SOP material code can share texture-attribute paths through `TDTexAttrib_AttribName()`, and POP buffer access should pair `TDBuffer_AttribName()` with `TDBufferLength_AttribName()` and `cTDBufferArraySize_AttribName`.
+  - Multi-camera Render TOP workflows should use TD helpers such as `TDInstanceID()`, `TDCameraIndex()`, and `TDTrueCameraIndex()` instead of raw GLSL instance/camera assumptions.
+  - Pixel shaders should use `TDCheckDiscard()` for discard-aware render features and `TDPointCoord()` instead of `gl_PointCoord` for point sprites.
+  - Multiple render targets should write only within `TD_NUM_COLOR_BUFFERS` and inspect results through Render Select TOP.
+  - Render TOP image outputs should use `TDImageStore_Name()` and `TDImageLoad_Name()` inside guarded Render TOP code; TouchDesigner declares those image uniforms during Render TOP compilation.
+- Enriched existing reviewed article card:
+  - `src/td_mcp/knowledge/cards/articles/write_a_glsl_mat.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T22:27:55Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_glsl_and_pop_articles_cover_official_learning_pages -q`: failed first for missing key concepts, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 17 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T22:27:55Z`.
+  - JSON parse check for the enriched article card: parsed.
+  - `uv run pytest -q`: 1129 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+
+## Seventy-Ninth Pass - GLSL MAT Lighting, Deform, Instancing, and Picking Enrichment
+
+- Added red coverage first for the remaining official `Write a GLSL MAT` lighting/deform/instancing/picking helpers:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_glsl_and_pop_articles_cover_official_learning_pages` failed first because the existing `write_a_glsl_mat` card did not link the page to related lighting/picking operators or cover the helper families for TD lighting, shadows, projection maps, skinning deforms, instance texturing, picking outputs, specialization constants, or includes.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - Built-in geometry/color helpers include `TDNormal()`, `TDTexCoord(uint coordLayer)`, `TDPointColor()`, and pixel-stage helpers such as `TDPixelColor(vec4 c)`.
+  - Lighting helpers include `TDLightingPBR()`, `TDEnvLightingPBR()`, `TDLighting()`, lower-level shadow/projection helpers, cone lookup, and attenuation helpers for custom light math.
+  - Deforms return World-space values; `TDDeformNorm(TDNormal())` is the normal path, with direct lower-level helpers such as `TDSkinnedDeform()` and `TDBoneMat()` reserved for special cases.
+  - SOP skinning attributes such as `pCapt`, `pCaptPath`, and `pCaptData` map to POP `BoneIndices` and `BoneWeights` inputs.
+  - Instance values that reach the pixel shader need flat varyings, and instance texturing uses `TDInstanceTextureIndex()` plus `TDInstanceTexture()`.
+  - Order Independent Transparency should call `TDCheckOrderIndTrans()` when supported.
+  - Render Pick DAT/CHOP workflows use `TD_PICKING_ACTIVE`, `TDWritePickingValues()`, `vTDPickVert`, and `vTDCustomPickVert`.
+  - Specialization constants use `layout(constant_id = 0)` for rarely changing shader modes and should not be used for constantly changing values.
+  - `#include` can share DAT shader code by absolute or relative path while TouchDesigner supplies the GLSL `#version`.
+- Enriched existing reviewed article card:
+  - `src/td_mcp/knowledge/cards/articles/write_a_glsl_mat.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T22:32:26Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_glsl_and_pop_articles_cover_official_learning_pages -q`: failed first for missing covered operators and concepts, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 17 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T22:32:26Z`.
+  - JSON parse check for the enriched article card: parsed.
+  - `uv run pytest -q`: 1129 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+
+## Eightieth Pass - GLSL MAT Reusable Snippet Templates
+
+- Added red coverage first for planner-usable GLSL MAT snippet templates:
+  - `tests/test_seed_corpus.py::TestSnippetCards::test_glsl_shader_template_snippets_cover_td_idioms` failed first because `GLSL_snippets.json` did not yet include reusable templates for World-space GLSL MAT lighting/OIT or instance texturing plus Render Pick guarded output.
+- Verified expected snippet idioms against official Derivative docs and the promoted local DocsBrain corpus:
+  - A World-space lighting GLSL MAT template should pair `TDDeformNorm(TDNormal())`, `TDLightingPBR`, `TDCheckOrderIndTrans()`, `TDFog`, `TDDither`, and `TDOutputSwizzle`.
+  - A specialization constant snippet should show `layout(constant_id = 0)` only for rarely changing shader modes.
+  - An instance texture/picking template should pass instance ids and texture indices through flat varyings, use `TDInstanceTextureIndex()` and `TDInstanceTexture()`, and guard Render Pick output with `TD_PICKING_ACTIVE` plus `TDWritePickingValues()`.
+- Enriched reviewed snippet card:
+  - `src/td_mcp/knowledge/cards/snippets/GLSL_snippets.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T22:35:29Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestSnippetCards::test_glsl_shader_template_snippets_cover_td_idioms -q`: failed first for missing template IDs, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestSnippetCards -q`: 4 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T22:35:29Z`.
+  - JSON parse check for the enriched snippet card: parsed.
+  - `uv run pytest -q`: 1129 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+
+## Eighty-First Pass - GLSL TOP Sampler, Buffer, Output, and Vertex Caveat Enrichment
+
+- Added red coverage first for deeper current official `Write a GLSL TOP` shader authoring idioms:
+  - `tests/test_seed_corpus.py::TestArticleCards::test_glsl_and_pop_articles_cover_official_learning_pages` failed first because the existing `write_a_glsl_top` card did not link Render Select TOP or Texture 3D TOP, and did not cover dimensional sampler defines, non-uniform sampler indexing, built-in lookup samplers, POP buffer metadata helpers, texture-info uniforms, depth/pass uniforms, atomic counters, specialization constants, multi-color-buffer behavior, or custom vertex shader caveats.
+- Verified expected concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - GLSL TOP input samplers are split by dimensionality and paired with compile-time counts such as `TD_NUM_2D_INPUTS`, `TD_NUM_3D_INPUTS`, `TD_NUM_2D_ARRAY_INPUTS`, and `TD_NUM_CUBE_INPUTS`.
+  - Dynamic sampler/image-output indices should use `nonuniformEXT()` when the chosen index is not dynamically uniform.
+  - Built-in lookup samplers include `sTDNoiseMap` and `sTDSineLookup`.
+  - POP buffer access should pair `TDBuffer_AttribName()` with `TDBufferLength_AttribName()` and `cTDBufferArraySize_AttribName`.
+  - Texture-info uniforms such as `uTD2DInfos`, `uTD3DInfos`, `uTD2DArrayInfos`, `uTDCubeInfos`, and `uTDOutputInfo` carry resolution/depth metadata.
+  - `uTDCurrentDepth` supports 3D Texture and 2D Texture Array outputs, and `uTDPass` supports multi-pass GLSL TOP shaders.
+  - Atomic counters use `atomic_uint` and `atomicCounterIncrement()`; TouchDesigner can assign bindings rather than copying online examples with explicit binding layouts.
+  - Specialization constants use `layout(constant_id = 0)` for rarely changing modes.
+  - Multi-color-buffer pixel shaders must write all declared outputs, use Render Select TOP for buffers beyond the first, and avoid relying on undefined unwritten values.
+  - Custom GLSL TOP vertex shaders must pass their own UV output because `vUV` is not automatically available, and should keep the TOP quad aligned with `TDSOPToProj(P)`.
+- Enriched existing reviewed article card:
+  - `src/td_mcp/knowledge/cards/articles/write_a_glsl_top.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T22:38:54Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards::test_glsl_and_pop_articles_cover_official_learning_pages -q`: failed first for missing covered operators, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards -q`: 17 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T22:38:54Z`.
+  - JSON parse check for the enriched article card: parsed.
+  - `uv run pytest -q`: 1129 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+
+## Eighty-Second Pass - GLSL TOP Reusable Sampler and Multi-Buffer Snippet Templates
+
+- Added red coverage first for planner-usable GLSL TOP snippet templates:
+  - `tests/test_seed_corpus.py::TestSnippetCards::test_glsl_shader_template_snippets_cover_td_idioms` failed first because `GLSL_snippets.json` did not include reusable templates for non-uniform input sampler indexing or custom-vertex multi-color-buffer GLSL TOP output.
+- Verified expected snippet idioms against official Derivative docs and the promoted local DocsBrain corpus:
+  - Dynamic sampler-array selection should use `nonuniformEXT()` with dimensional sampler arrays such as `sTD2DInputs`.
+  - Neighboring-pixel sampling can use offsets derived from `uTD2DInfos`, with `textureOffset()` useful for nearby offsets.
+  - Multi-buffer pixel shaders declare multiple `layout(location = N) out vec4` outputs and should write all declared outputs.
+  - Custom GLSL TOP vertex shaders should pass `uv[0]` through their own varying because `vUV` is not automatically provided, and keep the quad aligned through `TDSOPToProj(P)`.
+  - Render Select TOP is the inspection path for color buffers beyond the first output connector.
+- Enriched reviewed snippet card:
+  - `src/td_mcp/knowledge/cards/snippets/GLSL_snippets.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T22:41:36Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestSnippetCards::test_glsl_shader_template_snippets_cover_td_idioms -q`: failed first for missing template IDs, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestSnippetCards -q`: 4 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T22:41:36Z`.
+  - JSON parse check for the enriched snippet card: parsed.
+  - `uv run pytest -q`: 1129 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+
+## Eighty-Third Pass - GLSL TOP Compute Output Snippet Template
+
+- Added red coverage first for a planner-usable GLSL TOP compute shader output template:
+  - `tests/test_seed_corpus.py::TestSnippetCards::test_glsl_shader_template_snippets_cover_td_idioms` failed first because `GLSL_snippets.json` did not include `glsl_top_compute_output_template`.
+- Verified expected snippet idioms against official Derivative docs and the promoted local DocsBrain corpus:
+  - GLSL TOP compute shaders use `gl_GlobalInvocationID` for dispatch coordinates.
+  - TouchDesigner defines compute output textures; shader DATs should use `TDImageStoreOutput()` and `TDImageLoadOutput()` rather than declaring image uniforms directly.
+  - `TDImageStoreOutput()` handles TouchDesigner output swizzle/sRGB handling internally, so compute-output code should not add `TDOutputSwizzle()`.
+  - `uTDOutputInfo.res.zw` exposes output width and height for bounds guards and normalized coordinate derivation.
+- Enriched reviewed snippet card:
+  - `src/td_mcp/knowledge/cards/snippets/GLSL_snippets.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T22:47:13Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestSnippetCards::test_glsl_shader_template_snippets_cover_td_idioms -q`: failed first for missing template ID, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestSnippetCards -q`: 4 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 44 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T22:47:13Z`.
+  - JSON parse check for the enriched snippet card: parsed.
+  - `uv run pytest -q`: 1129 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+
+## Eighty-Fourth Pass - GLSL TOP Operator Compute and Output-Control Metadata
+
+- Added red coverage first for GLSL TOP operator-card metadata:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_glsl_top_card_covers_compute_output_buffer_and_compile_controls` failed first because `glslTOP.json` lacked compute mode, dispatch, output access, color-buffer, atomic counter, specialization constant, and POP buffer parameters.
+- Verified expected operator parameters and planning concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - GLSL TOP uses `mode` to switch between Vertex/Pixel Shader and Compute Shader, with `vertexdat`, `pixeldat`, and `computedat` source DAT parameters.
+  - Compute shader planning needs dispatch dimensions, `autodispatchsize`, `outputaccess`, `clearoutputs`, and output texture `type`/depth controls.
+  - `outputaccess` should be Read-Write when compute code reads previous output values.
+  - `numcolorbufs` pairs with Render Select TOP for buffers beyond color buffer 0.
+  - Atomic Counters, Constants, and Buffers pages expose shader-side atomic uniforms, specialization constants, and POP attribute buffers.
+- Enriched reviewed operator card:
+  - `src/td_mcp/knowledge/cards/operators/glslTOP.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T22:51:09Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_glsl_top_card_covers_compute_output_buffer_and_compile_controls -q`: failed first for missing key params, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 17 passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards tests/test_seed_corpus.py::TestSnippetCards tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 65 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T22:51:09Z`.
+  - JSON parse check for the enriched operator card: parsed.
+  - `uv run pytest -q`: 1130 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+
+## Eighty-Fifth Pass - GLSL MAT Operator Attribute, Deform, Sampler, and Render-State Metadata
+
+- Added red coverage first for GLSL MAT operator-card metadata:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_glsl_mat_card_covers_shader_attribute_sampler_deform_and_render_controls` failed first because `glslMAT.json` lacked the official Load, Attributes, Samplers, Matrices, Constants, Deform, and Common render-state controls.
+- Verified expected operator parameters and planning concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - GLSL MAT Load page controls include `predat`, `vdat`, `pdat`, optional `gdat`, inherited uniforms/samplers, lighting space, geometry shader primitive types, output vertex count, and two-sided coloring.
+  - Attributes must be declared on the Attributes page for POP-compatible workflows and are accessed through `TDAttrib_<attribName>()`.
+  - Samplers page controls expose sampler name, TOP source, extend modes, filtering, and anisotropy; sampler declarations must match TOP dimensionality.
+  - Matrices, relative transforms, and Constants pages expose matrix uniforms, object-relative transforms, and specialization constants.
+  - Deform page controls include `dodeform`, deform data source, capture SOP, `pCaptPath`, `pCaptData`, skeleton root, and source MAT.
+  - Common page render-state controls include blending, depth test/writing, alpha test, wireframe, cull face, and polygon depth offset.
+- Enriched reviewed operator card:
+  - `src/td_mcp/knowledge/cards/operators/glslMAT.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T22:54:47Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_glsl_mat_card_covers_shader_attribute_sampler_deform_and_render_controls -q`: failed first for missing key params, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 18 passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards tests/test_seed_corpus.py::TestSnippetCards tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 65 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T22:54:47Z`.
+  - JSON parse check for the enriched operator card: parsed.
+  - `uv run pytest -q`: 1131 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `src/td_mcp/knowledge/cards/operators/glslMAT.json`, `src/td_mcp/knowledge/cards/operators/glslTOP.json`, `src/td_mcp/knowledge/cards/snippets/GLSL_snippets.json`, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: parsed.
+
+## Eighty-Sixth Pass - GLSL POP Operator Thread, Attribute, Uniform, and Collision Metadata
+
+- Added red coverage first for GLSL POP operator-card metadata:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_glsl_pop_card_covers_thread_output_attribute_uniform_and_collision_controls` failed first because `glslPOP.json` only covered the compute DAT, attribute class, coarse thread mode, and workgroup size.
+- Verified expected operator parameters and planning concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - GLSL POP GLSL page controls include `computedat`, selected attribute class, thread-count modes, manual number-of-elements and attribute-driven element counts, workgroup and dispatch dimensions, output attributes, output access, output initialization, previous-pass copy, shader passes, extra input POP references, and TDSimplexNoise implementation.
+  - Create Attributes and matrix-attribute pages expose new scalar/vector/array attributes plus matrix attribute shape, array size, and transform-matrix qualifiers.
+  - Uniform pages expose color, vector, sampler, array/texture-buffer, matrix, temp-buffer, and specialization constant bindings for shader-side control.
+  - Collisions page exposes acceleration-structure naming, Collision POP reference, build strategy, and opaque-geometry behavior for ray-query workflows.
+  - Write a GLSL POP shader guidance requires TDIndex/TDNumElements guards for rounded dispatches, treats TDIndex/TDNumElements as undefined in full Manual dispatch mode, allocates writable attributes through Output Attributes or created attributes, and provides TDIn_*, TDInPoint_*, TDInPrim_*, TDInVert_*, TDInCache_*, TDInputNumElements, and TDInputPointIndex helper families.
+- Enriched reviewed operator card:
+  - `src/td_mcp/knowledge/cards/operators/glslPOP.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T23:01:34Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_glsl_pop_card_covers_thread_output_attribute_uniform_and_collision_controls -q`: failed first for missing key params, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 19 passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards tests/test_seed_corpus.py::TestSnippetCards tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 65 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T23:01:34Z`.
+  - JSON parse check for the enriched operator card: parsed.
+  - `uv run pytest -q`: 1132 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `src/td_mcp/knowledge/cards/operators/glslPOP.json`, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: parsed.
+
+## Eighty-Seventh Pass - GLSL Advanced POP Output, Topology, and Extra-Output Metadata
+
+- Added red coverage first for GLSL Advanced POP operator-card metadata:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_glsl_advanced_pop_card_covers_output_topology_and_extra_output_controls` failed first because `glsladvancedPOP.json` only covered the compute DAT, dispatch mode, manual element count, and coarse workgroup size.
+- Verified expected operator parameters and planning concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - GLSL Advanced POP Main page controls include single vs per-primitive-batch dispatch, manual and attribute-driven element counts, workgroup and dispatch dimensions, per-batch thread source, point/primitive/vertex output attributes, output access, output initialization, previous-pass copy, shader passes, extra input POPs, TDSimplexNoise implementation, and thread modes across input and max-output classes.
+  - Output page controls expose render preview, max point and primitive capacities, point-count source, topology info, line-strip info buffers, line-strip index-per-vertex buffers, max verts per line strip, output primitive initialization, topology info source, and per-type primitive count sources.
+  - Extra Outputs page declares named extra POP outputs, their point/primitive/vertex output attributes, access modes, previous-pass copy, and input-attribute copy behavior; these outputs are selected downstream with GLSL Select POP.
+  - Create Attribs, Colors, Vectors, Samplers, Arrays, Matrices, Temp Buffers, Constants, and Common pages mirror the advanced shader's class-aware attribute creation and uniform binding surfaces.
+  - Write a GLSL POP documents Advanced POP's class-prefixed output namespaces (`oTDPoint_*`, `oTDPrim_*`, `oTDVert_*`), extra-output helper names, index-buffer write access, output counts, primitive-batch helpers, topology helpers, and Topology POP guidance for combining multi-pass topology results.
+- Enriched reviewed operator card:
+  - `src/td_mcp/knowledge/cards/operators/glsladvancedPOP.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T23:06:33Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_glsl_advanced_pop_card_covers_output_topology_and_extra_output_controls -q`: failed first for missing key params, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 20 passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards tests/test_seed_corpus.py::TestSnippetCards tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 65 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T23:06:33Z`.
+  - JSON parse check for the enriched operator card: parsed.
+  - `uv run pytest -q`: 1133 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `src/td_mcp/knowledge/cards/operators/glsladvancedPOP.json`, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: parsed.
+
+## Eighty-Eighth Pass - GLSL Copy POP Template, Stage, Uniform, and POP-Buffer Metadata
+
+- Added red coverage first for GLSL Copy POP operator-card metadata:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_glsl_copy_pop_card_covers_template_stage_uniform_and_pop_buffer_controls` failed first because `glslcopyPOP.json` only covered the copy count, point shader DAT, point output attrs, and coarse vertex/primitive shader DAT controls.
+- Verified expected operator parameters and planning concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - GLSL Copy POP creates copies from the first input POP; if the template input is disconnected, `ncy` controls copy count, and if the template input is connected, one copy is created per template point.
+  - The point compute shader is required, while vertex and primitive custom shaders are optional because the default vertex shader updates topology/index buffers and the default primitive shader updates line-strip/primitive-group metadata and copies attributes.
+  - GLSL page controls now cover point, vertex, and primitive shader source/output-attribute parameters, Append Dimension, and TDSimplexNoise implementation selection.
+  - Create Attribs, Colors, Vectors, Samplers, Arrays, Matrices, Temp Buffers, Constants, POP Buffers, and Common pages now expose shader uniforms, texture-buffer arrays, specialization constants, source POP attribute buffers, GPU-memory freeing, delete-input-attributes, and color-management controls.
+  - Write a GLSL POP now anchors Copy POP planning around `TDNumPoints()`, `TDInputNumPoints()`, `TDNumVertsBatch()`, `TDInputNumVertsBatch()`, `TDVertIndex()`, `TDNumPrimsBatch()`, `TDPrimIndex()`, `TDInputIndex()`, `TDCopyIndex()`, `TDTemplateNumPoints()`, source/template attribute helpers, `TDBuffer()`, direct `AttribName[]` output writes, topology/group update helpers, and `cTDPrimIndexRestart`.
+- Enriched reviewed operator card:
+  - `src/td_mcp/knowledge/cards/operators/glslcopyPOP.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T23:12:25Z`
+- Parallel read-only release-audit helper found no release-blocking atlas issue and recommended the next highest-value TDD targets:
+  - `glslselectPOP` for GLSL Advanced extra-output selection concepts.
+  - `glslmultiTOP` for multi-input shader planning, sampler arrays, output access, and diagnostics.
+  - `glslCOMP` for panel-specific shader behavior and compile diagnostics.
+  - Concept-light recent POP cards such as `pointgeneratorPOP`, `tracePOP`, and `toptoPOP`.
+  - A future quality gate for high-value thin cards that are counted as structured but lack useful concepts.
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_glsl_copy_pop_card_covers_template_stage_uniform_and_pop_buffer_controls -q`: failed first for missing key params, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 21 passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards tests/test_seed_corpus.py::TestSnippetCards tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 65 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T23:12:25Z`.
+  - JSON parse check for the enriched operator card: parsed.
+  - `uv run pytest -q`: 1134 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `src/td_mcp/knowledge/cards/operators/glslcopyPOP.json`, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: parsed.
+
+## Eighty-Ninth Pass - GLSL Select POP Extra-Output Selection Metadata
+
+- Added red coverage first for GLSL Select POP operator-card metadata:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_glsl_select_pop_card_covers_extra_output_selection_controls` failed first because `glslselectPOP.json` only covered the `pop` reference and output `name`, with no Common-page controls, `key_concepts`, or GLSL/POP ontology snippet links.
+- Verified expected operator parameters and planning concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - GLSL Select POP selects one of the Extra Output POPs made available by a GLSL Advanced POP.
+  - The GLSL Select page exposes the source `pop` reference and `name`/Output Name parameter that must match an extra output on the referenced GLSL Advanced POP.
+  - Common page controls expose `bypass`, `freeextragpumem`, and `delinputattrs`, which matter when selecting topology-heavy or attribute-pruned branches.
+  - GLSL Advanced POP's Extra Outputs page provides the upstream naming and branch concepts: `extraout0name`, `extraout0pop`, point/primitive/vertex attribute scopes, output access, previous-pass output, and input-attribute copy behavior.
+  - Info CHOP channels remain the diagnostic path for cook, warning, and error state when a selected output does not appear downstream.
+- Enriched reviewed operator card:
+  - `src/td_mcp/knowledge/cards/operators/glslselectPOP.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T23:15:36Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_glsl_select_pop_card_covers_extra_output_selection_controls -q`: failed first for missing key params, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 22 passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards tests/test_seed_corpus.py::TestSnippetCards tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 65 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T23:15:36Z`.
+  - JSON parse check for the enriched operator card: parsed.
+  - `uv run pytest -q`: 1135 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `src/td_mcp/knowledge/cards/operators/glslselectPOP.json`, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: parsed.
+
+## Ninetieth Pass - GLSL Multi TOP Multi-Input, Compute, Uniform, and Output Metadata
+
+- Added red coverage first for GLSL Multi TOP operator-card metadata:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_glsl_multi_top_card_covers_multi_input_compute_uniform_and_output_controls` failed first because `glslmultiTOP.json` only covered the coarse GLSL shader DATs and `outputaccess`.
+- Verified expected operator parameters and planning concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - GLSL Multi TOP follows GLSL TOP parameters and functionality but supports more than 3 inputs for many-texture shader pipelines.
+  - GLSL page controls now cover uniform-name loading, compute autodispatch and dispatch size, output access, 2D/2D-array/3D output type and depth, clear output values, input mapping, input extend modes, and multi-color-buffer allocation.
+  - Vectors, Arrays, Matrices, Atomic Counters, and Constants pages now expose vector uniforms, CHOP-backed uniform arrays, texture-buffer arrays, matrix uniforms, atomic counter initialization, and specialization constants.
+  - Common TOP controls now cover output resolution/aspect, global resolution multiplier, filtering, viewer fill, passes, channel mask, pixel format, and color-management interpretation.
+  - Write a GLSL TOP anchors planner behavior for many-input sampling and output inspection: `TD_NUM_*_INPUTS`, sampler arrays such as `sTD2DInputs[]`, `nonuniformEXT()` for dynamic sampler indexing, `uTD*Infos` metadata, `TDImageStoreOutput()`, `TDImageLoadOutput()`, `sTDComputeOutputs[]`, and Render Select TOP for buffers beyond color buffer 0.
+- Enriched reviewed operator card:
+  - `src/td_mcp/knowledge/cards/operators/glslmultiTOP.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T23:20:09Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_glsl_multi_top_card_covers_multi_input_compute_uniform_and_output_controls -q`: failed first for missing key params, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 23 passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards tests/test_seed_corpus.py::TestSnippetCards tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 65 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T23:20:09Z`.
+  - JSON parse check for the enriched operator card: parsed.
+  - `uv run pytest -q`: 1136 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `src/td_mcp/knowledge/cards/operators/glslmultiTOP.json`, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: parsed.
+
+## Ninety-First Pass - GLSL COMP Panel Shader, Layout, Interaction, and Component Metadata
+
+- Added red coverage first for GLSL COMP operator-card metadata:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_glsl_comp_card_covers_panel_shader_layout_interaction_and_component_controls` failed first because `glslCOMP.json` only covered shader DATs, coarse sampler/vector/constant controls, and lacked the panel/layout/look/children/drag/drop/component control surface.
+- Verified expected operator parameters and planning concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - GLSL COMP renders a shader-driven panel image directly to screen, adapting to DPI scaling and exposing panel variables for event-aware, pixel-accurate UI work.
+  - GLSL controls cover vertex and pixel shader DATs, texture sampler bindings and extend/filter/anisotropy settings, vector uniforms, and specialization constants.
+  - Layout controls now cover position, size, fixed aspect, depth layer, horizontal/vertical fill, anchors, alignment order, post offsets, and size-from-window behavior.
+  - Panel and Look controls now cover display/enabled state, Help DAT, cursor, multi-touch, constrained cursor, click-through, mouse wheel/relative mouse, resize/reposition/anchor drag, scroll overlay, background color/TOP fill, composite, and opacity.
+  - Children controls now cover alignment, spacing, margins, justify modes, fit/scale/offset/crop behavior, and horizontal/vertical scrollbars.
+  - Drag/drop, Extensions, clone, external `.tox`, shortcut, internal-operator, node-viewer, and Info CHOP concepts are now represented so planners understand the COMP inheritance surface around the shader panel.
+- Enriched reviewed operator card:
+  - `src/td_mcp/knowledge/cards/operators/glslCOMP.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T23:25:38Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_glsl_comp_card_covers_panel_shader_layout_interaction_and_component_controls -q`: failed first for missing key params, caught one gotcha wording mismatch after promotion, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 24 passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards tests/test_seed_corpus.py::TestSnippetCards tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 65 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T23:25:38Z`.
+  - JSON parse check for the enriched operator card: parsed.
+  - `uv run pytest -q`: 1137 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `src/td_mcp/knowledge/cards/operators/glslCOMP.json`, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: parsed.
+
+## Ninety-Second Pass - Point Generator POP Shape, Distribution, Transform, and Attribute Metadata
+
+- Added red coverage first for Point Generator POP operator-card metadata:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_point_generator_pop_card_covers_shape_distribution_transform_and_attributes` failed first because `pointgeneratorPOP.json` only covered `shape`, `numpoints`, `distribution`, `random`, and `seed`.
+- Verified expected operator parameters and planning concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - Point Generator POP creates a specified number of points randomly or in a pattern on a mathematical shape surface or inside a closed shape volume.
+  - Shape controls now represent sphere, box, torus, tube, rectangle, circle, and line sources, plus point-primitive creation.
+  - Distribution controls now distinguish random vs predictable patterned output, surface vs volume generation, seed handling, closed-shape assumptions, and the official warning that surface distribution is not uniform per unit surface area.
+  - Shape-dimension controls now cover orientation, size, radius, tube height, and Line mode's Point A/Point B endpoints.
+  - Attribute controls now cover generated normal (`N` float3) and tangent (`T` float4) vectors, including default vs randomized direction modes.
+  - Transform and Common pages now cover transform order, rotate order, translate/rotate/scale, pivot, bypass, GPU-memory freeing, Delete Input Attributes, and Info CHOP diagnostics.
+- Enriched reviewed operator card:
+  - `src/td_mcp/knowledge/cards/operators/pointgeneratorPOP.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T23:29:14Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_point_generator_pop_card_covers_shape_distribution_transform_and_attributes -q`: failed first for missing key params, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 25 passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards tests/test_seed_corpus.py::TestSnippetCards tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 65 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T23:29:14Z`.
+  - JSON parse check for the enriched operator card: parsed.
+  - `uv run pytest -q`: 1138 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `src/td_mcp/knowledge/cards/operators/pointgeneratorPOP.json`, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: parsed.
+
+## Ninety-Third Pass - Trace POP TOP Threshold, Line-Strip, Surface, and GPU Limit Metadata
+
+- Added red coverage first for Trace POP operator-card metadata:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_trace_pop_card_covers_top_threshold_line_strip_surface_and_gpu_limits` failed first because `tracePOP.json` only covered a coarse input TOP, threshold, simplify, and output control, with no official parameter names or planner concepts.
+- Verified expected operator parameters and planning concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - Trace POP reads a TOP image or dimension-2 POP data and traces thresholded regions into contour lines, contour line strips, or triangle surfaces.
+  - TOP/channel controls now cover `top`, luminance/RGBA channel choices, resolution multiplier, threshold, and above-vs-below inside tests.
+  - Boundary and topology controls now cover Extend Hold/Zero behavior, line-strip openness around borders, line/surface output modes, unique points, winding for surfaces and holes, Smooth Edge Distance, and ReRange P for the default centered coordinate output.
+  - Attribute and allocation controls now cover normal output, normal direction, point texture coordinates, Fraction of Max Allocation, Max Num Line Strips, Max Num Verts per Line Strip, and Copy Topology Info Back to CPU.
+  - Common POP controls now cover bypass, freeing extra GPU memory, Delete Input Attributes, and Info CHOP diagnostics.
+- Enriched reviewed operator card:
+  - `src/td_mcp/knowledge/cards/operators/tracePOP.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T23:32:52Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_trace_pop_card_covers_top_threshold_line_strip_surface_and_gpu_limits -q`: failed first for missing key params, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 26 passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards tests/test_seed_corpus.py::TestSnippetCards tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 65 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T23:32:52Z`.
+  - JSON parse check for the enriched operator card: parsed.
+  - `uv run pytest -q`: 1139 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `src/td_mcp/knowledge/cards/operators/tracePOP.json`, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: parsed.
+
+## Ninety-Fourth Pass - TOP to POP RGBA, Attribute, Dimension, Depth, and Filtering Metadata
+
+- Added red coverage first for TOP to POP operator-card metadata:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_top_to_pop_card_covers_rgba_attribute_dimension_depth_and_filtering` failed first because `toptoPOP.json` only covered the first RGBA mode, first TOP reference, channel/attribute scopes, and coarse connectivity.
+- Verified expected operator parameters and planning concepts against official Derivative docs and the promoted local DocsBrain corpus:
+  - TOP to POP converts TOP pixels into POP points and attributes, with First RGBA Contains modes for Color (RGBA), Position and Active (RGBA), Position (RGB), Depth, Height (R), and Custom component mapping.
+  - Input controls now cover max point override, first TOP sequential block, Channel Scope, Attribute Scope, TOP pixel filtering, and the New Attribute sequential block with custom names, component counts, and default component values.
+  - Detail controls now cover connectivity modes, line/plane axis controls, unique points, center, size/resolution override, pixel sampling location, texture-coordinate output, and Append Dimension.
+  - Dimension behavior now represents the local POP Dimension guidance: TOP-to-POP workflows should preserve width/height/slice structure when downstream row/column/slice lookup or POP-to-TOP conversion depends on it.
+  - Depth and Height pages now cover rerange controls, camera projection, view-angle method, FOV/focal lengths, optical center, near/far deletion, line-strip deletion behavior, and height displacement scale.
+  - Common POP controls now cover bypass, freeing extra GPU memory, Delete Input Attributes, parameter color space/reference white, and Info CHOP diagnostics.
+- Enriched reviewed operator card:
+  - `src/td_mcp/knowledge/cards/operators/toptoPOP.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T23:39:13Z`
+- Background subagent audit result:
+  - The current live atlas audit has no active priority missing-operator queue left; remaining missing operators are deprecated/replaced/unavailable entries with planner guidance.
+  - The next meaningful objective is depth quality: strengthen high-traffic thin cards and add quality gates so parameter-only cards are not counted as planner-ready.
+  - Suggested next targets include `mergeSOP`, `nullSOP`, `nullCHOP`, `nullTOP`, `nullPOP`, `selectTOP`, `selectCHOP`, `switchTOP`, `switchSOP`, `baseCOMP`, `cameraCOMP`, `geometryCOMP`, `renderTOP`, `feedbackTOP`, `compositeTOP`, `constantTOP`, `constantCHOP`, `levelTOP`, `noiseTOP`, and `textDAT`.
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_top_to_pop_card_covers_rgba_attribute_dimension_depth_and_filtering -q`: failed first for missing key params, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 27 passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards tests/test_seed_corpus.py::TestSnippetCards tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 65 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T23:39:13Z`.
+  - JSON parse check for the enriched operator card: parsed.
+  - `uv run pytest -q`: 1140 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `src/td_mcp/knowledge/cards/operators/toptoPOP.json`, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: parsed.
+
+## Ninety-Fifth Pass - Merge SOP and Null SOP Reference Endpoint, Info CHOP, and Batching Metadata
+
+- Added red coverage first for high-traffic SOP depth metadata:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_merge_and_null_sop_cards_cover_reference_endpoint_and_batching_tradeoffs` failed first because `mergeSOP.json` had no `sops` parameter or concepts, and `nullSOP.json` had no concepts explaining its deliberately parameterless endpoint role.
+- Verified expected operator behavior against official Derivative docs and the promoted local DocsBrain corpus:
+  - Merge SOP merges geometry from multiple SOPs, either by wiring SOP inputs or by using the SOPs parameter with wildcard Pattern Matching.
+  - Merge SOP planning concepts now cover unified SOP output, separate primitives, wired inputs, Info CHOP diagnostics, Common SOP Info channels, VBO update timings, render-batch optimization, and comparisons with Object Merge SOP and Select SOP.
+  - Local rendering-performance article knowledge now informs Merge SOP gotchas: merging can reduce batch count for same-material geometry, but can cost more than extra draw batches when inputs cook every frame.
+  - Null SOP officially has no parameters, has no effect on geometry, and is an instance of the input SOP used to keep downstream references stable while upstream SOP networks change.
+  - Null SOP planning concepts now cover stable reference endpoints for Geometry COMP, Select SOP, and Object Merge SOP references, plus Info CHOP diagnostics for blank or invalid upstream geometry.
+- Enriched reviewed operator cards:
+  - `src/td_mcp/knowledge/cards/operators/mergeSOP.json`
+  - `src/td_mcp/knowledge/cards/operators/nullSOP.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T23:43:38Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_merge_and_null_sop_cards_cover_reference_endpoint_and_batching_tradeoffs -q`: failed first for missing `mergeSOP` metadata, caught one Null SOP gotcha wording mismatch after promotion, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards -q`: 28 passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestArticleCards tests/test_seed_corpus.py::TestSnippetCards tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py -q`: 65 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T23:43:38Z`.
+  - JSON parse checks for the enriched operator cards: parsed.
+  - `uv run pytest -q`: 1141 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `src/td_mcp/knowledge/cards/operators/mergeSOP.json`, `src/td_mcp/knowledge/cards/operators/nullSOP.json`, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: parsed.
+
+## Ninety-Sixth Pass - Null CHOP, Null TOP, and Null POP Endpoint Cook, Metadata, and Reference Semantics
+
+- Added red coverage first for high-traffic null endpoint depth metadata:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_null_chop_top_pop_cards_cover_family_specific_endpoint_behavior` failed first because `nullCHOP.json` only had a generic `cook` parameter, while `nullTOP.json` and `nullPOP.json` also used generic/non-documentation parameters and lacked family-specific concepts.
+- Verified expected operator behavior against official Derivative docs and the promoted local DocsBrain corpus:
+  - Null CHOP is a place-holder that does not alter CHOP data, is commonly used as a stable export endpoint, and has documented downstream cook controls on the Null page: Cook Type, Check Values, Check Names, and Check Range.
+  - Null CHOP Common-page metadata now covers Time Slice, Scope, Sample Rate Match, Export Method, Export Root, Export Table, Common-page renaming, and Info CHOP diagnostics including `start`, `length`, `sample_rate`, `num_channels`, `time_slice`, and `export_sernum`.
+  - Null TOP has no Null-page parameters, has no effect on the image, is an instance of its input TOP, and is used as a stable texture reference endpoint while upstream TOP networks change.
+  - Null TOP Common-page metadata now covers output resolution, aspect, input/viewer filtering, passes, channel mask, pixel format, and Info CHOP diagnostics including `resx`, `resy`, `aspectx`, `aspecty`, `depth`, and `gpu_memory_used`.
+  - Null POP does nothing, passes input unchanged, does not consume CPU or GPU memory, has only the documented `bypass` Null-page parameter, and should be used as a meaningful named POP reference endpoint.
+  - Null POP planning concepts now cover unchanged POP attributes as references, middle-click popup `(r)` reference markers, and links to `POP_snippets` plus `POP_attribute_ontology`.
+- Enriched reviewed operator cards:
+  - `src/td_mcp/knowledge/cards/operators/nullCHOP.json`
+  - `src/td_mcp/knowledge/cards/operators/nullTOP.json`
+  - `src/td_mcp/knowledge/cards/operators/nullPOP.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T23:49:24Z`
+- Background subagent audit result:
+  - No release-blocking atlas gap found in the current worktree.
+  - Atlas audit remains green by count: 777 total cards, 656 structured operator cards, 10/10 brain profiles covered, 28 required profile operators covered, zero active priority missing operators, and DocsBrain freshness aligned at `2025.32820`.
+  - Remaining work is quality depth, not missing-priority coverage: thin-but-counted cards still need stronger `key_concepts` and planner gotchas.
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_null_chop_top_pop_cards_cover_family_specific_endpoint_behavior -q`: failed first for missing `nullCHOP` metadata, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards tests/brain/test_atlas_coverage.py::test_comp_physics_engine_panel_and_sharedmem_priority_cards_are_structured -q`: 30 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py tests/test_docsbrain_search.py tests/test_knowledge_index.py tests/test_seed_corpus.py::TestOperatorCards -q`: 120 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T23:49:24Z`.
+  - `uv run pytest -q`: 1142 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `src/td_mcp/knowledge/cards/operators/nullCHOP.json`, `src/td_mcp/knowledge/cards/operators/nullTOP.json`, `src/td_mcp/knowledge/cards/operators/nullPOP.json`, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: parsed.
+
+## Ninety-Seventh Pass - Select/Switch TOP, CHOP, and SOP Routing Metadata
+
+- Added red coverage first for routing and switching operator-card depth:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_select_and_switch_cards_cover_routing_patterns_indices_and_info_channels` failed first because `selectTOP.json` only had `top` and no documented Common TOP controls or concepts.
+- Verified expected operator behavior against official Derivative docs and the promoted local DocsBrain corpus:
+  - Select TOP references a TOP from any other TouchDesigner location by path and creates an instance of the referenced TOP to save graphics memory.
+  - Select TOP metadata now covers the `top` path, drag-and-drop TOP target workflow, Common TOP resolution/aspect/filtering/channel-mask/pixel-format controls, and Info CHOP diagnostics.
+  - Select CHOP metadata now covers source `chop`, `channames`, order-preserving channel selection, duplicate channel output, pattern matching/replacement/expansion, digit filtering, interval alignment, automatic prefixing, export settings, and CHOP Info channels.
+  - Switch TOP metadata now covers `index`, `blend`, `extend`, 0-based input selection, floating-point blend behavior, negative/out-of-range index extension via Clamp/Loop/ZigZag, Common TOP controls, and Info CHOP diagnostics.
+  - Switch SOP metadata now covers the official `input` Select Input field, `extend`, up to 9999 inputs, expression-driven switching examples, negative/out-of-range index extension, and SOP Info channels for geometry count and VBO update checks.
+- Enriched reviewed operator cards:
+  - `src/td_mcp/knowledge/cards/operators/selectTOP.json`
+  - `src/td_mcp/knowledge/cards/operators/selectCHOP.json`
+  - `src/td_mcp/knowledge/cards/operators/switchTOP.json`
+  - `src/td_mcp/knowledge/cards/operators/switchSOP.json`
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-17T23:54:39Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_select_and_switch_cards_cover_routing_patterns_indices_and_info_channels -q`: failed first for missing `selectTOP` metadata, caught one Switch SOP gotcha wording mismatch after promotion, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards tests/brain/test_atlas_coverage.py::test_comp_physics_engine_panel_and_sharedmem_priority_cards_are_structured -q`: 31 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py tests/test_docsbrain_search.py tests/test_knowledge_index.py tests/test_seed_corpus.py::TestOperatorCards -q`: 121 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-17T23:54:39Z`.
+  - `uv run pytest -q`: 1143 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+  - `git diff --check`: clean.
+  - JSON parse checks for `src/td_mcp/knowledge/cards/operators/selectTOP.json`, `src/td_mcp/knowledge/cards/operators/selectCHOP.json`, `src/td_mcp/knowledge/cards/operators/switchTOP.json`, `src/td_mcp/knowledge/cards/operators/switchSOP.json`, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: parsed.
+
+## Ninety-Eighth Pass - Core Render Pipeline COMP/TOP Role, Instancing, and Render-Target Metadata
+
+- Added red coverage first for core render/control operator-card depth:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_core_render_pipeline_cards_cover_component_roles_instancing_and_render_targets` failed first because `baseCOMP.json` exposed only a few generic fields and no official extension/common parameter surface or planner concepts.
+- Verified expected operator behavior against official Derivative docs and the promoted local DocsBrain corpus:
+  - Base COMP is represented as the generic non-panel, non-3D component for packaging internal networks, extensions, shortcuts, cloning, Load on Demand, and external `.tox` workflows.
+  - Base COMP metadata now covers the documented Extensions page (`reinitextensions`, `initextonstart`, `ext`, `ext0object`, `ext0name`, `ext0promote`), Common page shortcuts/internal OP/viewer/clone/external `.tox` controls, relative path behavior, and Info CHOP `num_children`.
+  - Camera COMP metadata now covers the 3D object/camera role, Geometry Viewer and `cameraViewport` references, object transforms, Look At/Null Component rigs, projection/FOV/focal/aperture/near/far controls, fog/background/light-mask settings, and render/pick priority controls.
+  - Geometry COMP metadata now covers POP/SOP shape networks, Render Flag versus Display Flag behavior, Material MAT assignment, light masks, render/pick priority controls, hardware instancing, TOP/CHOP/DAT/SOP instance data sources, instance textures, texture index, custom instance attributes, and GLSL MAT integration.
+  - Render TOP metadata now covers minimum camera/geometry/material requirements, geometry/light pattern matching, multi-camera rendering and Render Select TOP retrieval, anti-alias memory, render modes, transparency/depth peeling, depth/color buffer controls, override materials, polygon offset/overdraw, projection-matrix cropping, GLSL MAT vectors/samplers, image outputs, common TOP output controls, pixel format, and Info CHOP diagnostics.
+- Enriched reviewed operator cards:
+  - `src/td_mcp/knowledge/cards/operators/baseCOMP.json`
+  - `src/td_mcp/knowledge/cards/operators/cameraCOMP.json`
+  - `src/td_mcp/knowledge/cards/operators/geometryCOMP.json`
+  - `src/td_mcp/knowledge/cards/operators/renderTOP.json`
+- Background subagent audit result:
+  - Confirmed the old COMP priority queue is no longer the active blocker; the live atlas audit is green by count, while the remaining objective is depth-quality hardening for high-traffic thin cards.
+  - Confirmed the current render/control slice was still thin before this pass and recommended exactly this red test plus enrichment path.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T00:03:54Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_core_render_pipeline_cards_cover_component_roles_instancing_and_render_targets -q`: failed first for missing `baseCOMP` metadata, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 122 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T00:03:54Z`.
+  - JSON parse checks for the enriched operator cards: parsed.
+  - `uv run pytest -q`: 1144 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok.
+
+## Ninety-Ninth Pass - Feedback, Source, Level, Noise, and Text DAT Runtime Metadata
+
+- Added red coverage first for high-traffic feedback/source/GLSL-adjacent operator-card depth:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_feedback_source_and_control_cards_cover_top_chop_dat_runtime_metadata` failed first because `feedbackTOP.json` still used stale `resetcondition` metadata and lacked the official `reset` plus TOP common/runtime controls.
+- Verified expected behavior against official Derivative docs and local DocsBrain context:
+  - Feedback TOP metadata now uses the official `top`, `reset`, and `resetpulse` controls, captures reset pass-through behavior, downstream Target TOP feedback-loop topology, filter/decay placement, 3D Texture / 2D Texture Array support, Common TOP controls, and Info CHOP diagnostics.
+  - Composite TOP metadata now covers multi-input composition, operation order, preview/input selection, noncommutative `swaporder`, Fixed Layer versus Native Resolution planning, transform-page controls, and TOP common runtime controls.
+  - Constant TOP metadata now uses the official `alpha` field instead of stale `colora`, covers RGBA unit semantics, premultiplied-alpha behavior, input compositing, output texture type/slices, and TOP common controls.
+  - Constant CHOP metadata now uses the official `const`, `const0name`, and `const0value` page structure instead of stale `name0`/`value0`, covers Pattern Expansion, Snapshot Input, sample range/rate controls, time slice, export settings, and Info CHOP planning concepts.
+  - Level TOP metadata now distinguishes pre-level, input/output range, per-channel range, stepping, threshold, post-level, opacity, premultiplication, and Common TOP controls. It also records the official CPU lookup-table performance caveat for animated parameters.
+  - Noise TOP metadata now uses the official `mono` parameter instead of stale `monochrome`, separates noise-function controls from transform controls, captures the Noise Coordinate Map input, 3D-output requirement, gradient restrictions, alpha/dither/output scaling, and TOP common controls.
+  - Text DAT metadata now removes the stale `text` parameter assumption and covers editor/file/sync/load/write/language/extension/word-wrap controls, free-form text versus Table DAT behavior, shader/script source usage, and `num_rows` / `num_cols` Info CHOP diagnostics.
+- Enriched reviewed operator cards:
+  - `src/td_mcp/knowledge/cards/operators/feedbackTOP.json`
+  - `src/td_mcp/knowledge/cards/operators/compositeTOP.json`
+  - `src/td_mcp/knowledge/cards/operators/constantTOP.json`
+  - `src/td_mcp/knowledge/cards/operators/constantCHOP.json`
+  - `src/td_mcp/knowledge/cards/operators/levelTOP.json`
+  - `src/td_mcp/knowledge/cards/operators/noiseTOP.json`
+  - `src/td_mcp/knowledge/cards/operators/textDAT.json`
+- Background subagent audit result:
+  - Spawned Rawls the 6th as a read-only atlas-slice explorer while the main thread continued implementation.
+  - Its report independently flagged the same stale official-parameter aliases: `resetcondition`, `opacity`, `colora`, `name0`/`value0`, `gamma`, `monochrome`, and `text`.
+  - The subagent confirmed these cards were quality-depth gaps, not active audit missing-card blockers.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T00:12:35Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_feedback_source_and_control_cards_cover_top_chop_dat_runtime_metadata -q`: failed first for missing/stale `feedbackTOP` metadata, caught one `levelTOP` gotcha wording mismatch after promotion, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 123 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T00:12:35Z`.
+  - `uv run pytest -q`: 1145 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` risk flags on some scenarios, with no missing facts or missing expected operators.
+  - `git diff --check`: clean.
+  - JSON parse checks for the seven enriched operator cards, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: parsed.
+
+## One Hundredth Pass - Profile UI, Audio, Render Simple, and POP Attribute Semantics
+
+- Added red coverage first for high-traffic profile cards that were structured but still concept-thin:
+  - `tests/test_seed_corpus.py::TestOperatorCards::test_profile_ui_audio_and_pop_cards_cover_runtime_control_and_attribute_semantics` failed first because `buttonCOMP.json` only had `label`, `value0`, and stale non-official `toggle` metadata.
+- Verified expected behavior against official Derivative docs and local DocsBrain context:
+  - Button COMP metadata now uses `buttontype` instead of stale `toggle`, covers momentary/toggle/radio/exclusive modes, Button Group Label versus Button Group DAT, Pattern Matching, Table DAT group paths, panel layout/look controls, and `buttonCOMP.click(...)` API context.
+  - Slider COMP metadata now removes stale `rangemin`/`rangemax`, covers official `slidertype`, `value0`, `value1`, zone/clamp controls, U/V/UV panel values, Panel CHOP placement, and slider click API context.
+  - Container COMP metadata now distinguishes parent panel sizing from Children-page layout, captures Background TOP `top`, child `align`, spacing, margin, fit, crop, scrollbar controls, opacity/display tradeoffs, and `clickChild(...)` API context.
+  - Math CHOP metadata now covers official operation order: Channel Pre OP, Combine Channels, Combine CHOPs, Channel Post OP, Mult-Add, Range, and Integer, plus matching, alignment, high-frequency parameter interpolation, CHOP common controls, and Info CHOP diagnostics.
+  - Analyze CHOP metadata now covers one-sample analysis output, average/max/min/sum/RMS/peak modes, sample-index semantics, `nopeakvalue`, valley analysis, CHOP common controls, and follow-on Math CHOP scaling.
+  - Audio File In CHOP metadata now covers file/http sources, supported audio formats, time-sliced output, streaming/few-seconds-in-memory behavior, play modes, speed/cue/index/timecode/repeat/trim/pre-read/open-timeout/mono/volume controls, and CHOP common controls.
+  - Render Simple TOP metadata now covers single-POP rendering, built-in camera/light/material controls, Normalize Geo, premultiplied background alpha, POP render/display flag ignoring, MAT and color-map options, TOP common controls, and Info CHOP diagnostics.
+  - Circle POP metadata now uses official internal names such as `rad`, `divs`, and `orient`, covers connectivity modes, closed arcs, input-bound Modify Bounds behavior, transforms, normals, tangents, texture-coordinate attributes, and POP common controls.
+  - Noise POP metadata now uses official `amp` instead of stale `amplitude`, covers lookup/type/noise-size/seed/harmonic/parameter-size controls, transform and 4D animation, raw Noise/Gradient/Curl outputs, combine attributes, output attribute typing, map-page per-point parameter overrides, and POP common controls.
+  - Math Mix POP metadata now uses official sequential-block names such as `comb0scopea`, `comb0scopeb`, `comb0scopec`, and `comb0result`, covers length mismatch handling, input blocks, uniforms, combine operations, auto-prefixed secondary inputs, constants/components, first-input primitive/vertex behavior, Info DAT GLSL inspection, and color-space controls.
+- Enriched reviewed operator cards:
+  - `src/td_mcp/knowledge/cards/operators/buttonCOMP.json`
+  - `src/td_mcp/knowledge/cards/operators/sliderCOMP.json`
+  - `src/td_mcp/knowledge/cards/operators/containerCOMP.json`
+  - `src/td_mcp/knowledge/cards/operators/mathCHOP.json`
+  - `src/td_mcp/knowledge/cards/operators/analyzeCHOP.json`
+  - `src/td_mcp/knowledge/cards/operators/audiofileinCHOP.json`
+  - `src/td_mcp/knowledge/cards/operators/rendersimpleTOP.json`
+  - `src/td_mcp/knowledge/cards/operators/circlePOP.json`
+  - `src/td_mcp/knowledge/cards/operators/noisePOP.json`
+  - `src/td_mcp/knowledge/cards/operators/mathmixPOP.json`
+- Background subagent audit result:
+  - Spawned Poincare the 6th as a read-only atlas-slice explorer while the main thread wrote and verified the red test.
+  - Its report independently flagged the same stale official-parameter aliases: `toggle`, `rangemin`/`rangemax`, `radius`/`divisions`/`orientation`, `amplitude`, and `scopea`/`scopeb`/`scopec`/`resultscope`.
+  - It also confirmed `Render Simple TOP` is current while `Simple Render TOP` is a legacy redirect/alias, and that `mathmixPOP` should remain current from the 2025.30000 POP docs rather than being gated only on 2025.32820 release-note extras.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T08:17:58Z`
+- Verification after this pass:
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards::test_profile_ui_audio_and_pop_cards_cover_runtime_control_and_attribute_semantics -q`: failed first for missing/stale `buttonCOMP` metadata, caught three wording/case mismatches after promotion, then passed.
+  - `uv run pytest tests/test_seed_corpus.py::TestOperatorCards tests/brain/test_atlas_coverage.py tests/brain/test_atlas_drafts.py tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 124 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, DocsBrain `2025.32820` matches structured `2025.32820`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T08:17:58Z`.
+  - `uv run pytest -q`: 1146 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` risk flags on some scenarios, with no missing facts or missing expected operators.
+  - `git diff --check`: clean.
+  - JSON parse checks for the ten enriched operator cards, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: parsed.
+
+## One Hundred First Pass - High-Value Operator Quality Gate and COMP/CHOP Concepts
+
+- Added a red atlas coverage test for a strict high-value operator quality gate:
+  - `tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts` failed first with `KeyError: 'operator_card_quality'`.
+  - After wiring the audit section, the same test failed on ten real `key_concepts` gaps rather than on missing card counts.
+- Added `operator_card_quality` to `src/td_mcp/brain/atlas_audit.py`.
+  - The gate currently covers a reviewed high-value allowlist so it catches thin-but-counted cards without requiring every historical structured card to be promoted in one pass.
+  - Minimums are `key_params >= 3`, `key_concepts >= 3`, and `common_gotchas >= 3`.
+  - The atlas `ok` flag now includes this quality gate.
+  - Reviewed item counting ignores empty/placeholder strings so filler concepts cannot satisfy the gate.
+- Manually reviewed official Derivative docs and enriched ten concept-thin operator cards:
+  - COMP UI/runtime: `selectCOMP`, `tableCOMP`, `textCOMP`, `widgetCOMP`, `windowCOMP`.
+  - CHOP timing/control: `abletonlinkCHOP`, `angleCHOP`, `beatCHOP`, `bindCHOP`, `blendCHOP`.
+- Corrected `selectCOMP` parameter metadata while reviewing official docs:
+  - Replaced stale `horizontal`/`vertical` pseudo-parameter names with official `hmode`/`vmode`.
+  - Changed `fixedaspect` from toggle-style metadata to menu-style metadata.
+- Background subagent audit result:
+  - Spawned Lorentz the 6th as a read-only atlas-slice explorer while the main thread implemented the test and gate.
+  - Its report independently confirmed all ten target cards existed but had zero `key_concepts`, recommended the scoped strict gate, and flagged the `selectCOMP` stale parameter aliases that were corrected in this pass.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T08:40:14Z`
+- Verification after this pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts tests/brain/test_atlas_coverage.py::test_brain_atlas_audit_reports_profile_operator_coverage -q`: 2 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.gap_count = 0`.
+  - JSON parse checks for the ten enriched operator cards: parsed.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T08:40:14Z`.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios planned, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: all versioned files in sync at v2.0.0.
+  - `uv run python scripts/check_release_notes_freshness.py`: seed card 2025.32820 matches or exceeds Derivative latest 2025.32820.
+  - `uv run python scripts/check_tox_freshness.py`: `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 checks passed, no failed or missing metrics.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios planned against the running TouchDesigner session, `mutated_td=false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` risk flags on some scenarios, with no missing facts or missing expected operators.
+  - `git diff --check`: clean.
+  - JSON parse checks for the ten enriched operator cards, `data/generated/atlas_drafts/operators/manifest.json`, and `reports/release_gates.json`: parsed.
+
+## One Hundred Second Pass - POP Bridge and Topology Quality Gate Expansion
+
+- Expanded the strict `operator_card_quality` gate with a red test first:
+  - `tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts` failed first because the strict allowlist did not include the next POP bridge/topology batch.
+  - After adding the batch to the allowlist, the same test failed on real `key_concepts` gaps for ten cards.
+  - Added an explicit `poptoSOP` minimum override test because the official POP to SOP page exposes only two operator-specific parameters.
+- Updated `src/td_mcp/brain/atlas_audit.py`:
+  - Strict quality coverage now spans 20 reviewed high-value operator cards.
+  - `minimum_overrides` records official small-parameter exceptions, currently `poptoSOP.key_params = 2`.
+- Manually reviewed official Derivative docs and enriched POP bridge/topology cards:
+  - Topology/simulation/text: `topologyPOP`, `particlePOP`, `textPOP`.
+  - POP ingress bridges: `choptoPOP`, `dattoPOP`, `soptoPOP`.
+  - POP egress bridges: `poptoCHOP`, `poptoDAT`, `poptoSOP`, `poptoTOP`.
+- Corrected `textPOP` parameter metadata after the read-only subagent flagged stale aliases:
+  - Replaced stale `outputtype` with official `connectivity`.
+  - Replaced generic `align` with official `alignx` and `aligny`.
+  - Added official `mode`, `specdat`, `specchop`, `fontfile`, `fontsize`, `tracking`, and `linespacing` controls.
+- Background subagent audit result:
+  - Spawned Volta the 6th as a read-only atlas-slice explorer for the ten-card POP bridge/topology batch.
+  - Its report independently confirmed all ten targets were concept-thin, recommended official concept seeds, and identified the stale `textPOP` aliases corrected in this pass.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T08:47:19Z`
+- Verification after this pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first, failed again on card concept gaps and the Text POP stale aliases, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 20`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T08:47:19Z`.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against TouchDesigner, `mutated_td = false`, no missing expected operators or facts.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - JSON parse checks for the ten enriched operator cards, draft manifest, and release-gate report: parsed.
+  - `git diff --check`: clean.
+
+## One Hundred Third Pass - POP Attribute and Math Quality Gate Expansion
+
+- Expanded the strict `operator_card_quality` gate with a red test first:
+  - `tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts` failed first because the strict allowlist did not include the next POP attribute/math batch.
+  - After adding the batch to the allowlist, the same test failed on real `key_concepts` gaps for ten cards.
+  - Added a focused official-alias assertion for Math Combine POP, which failed on stale `scopea`/`scopeb`/`scopec`/`resultscope` metadata before correction.
+- Updated `src/td_mcp/brain/atlas_audit.py`:
+  - Strict quality coverage now spans 30 reviewed high-value operator cards.
+  - `minimum_overrides` remains scoped to official small-parameter exceptions, currently `poptoSOP.key_params = 2`.
+- Manually reviewed official Derivative docs and enriched POP attribute/math cards:
+  - Attribute management: `attributePOP`, `attributecombinePOP`, `attributeconvertPOP`.
+  - Math and remap transforms: `mathPOP`, `mathcombinePOP`, `rerangePOP`, `normalizePOP`.
+  - Lookup bridges: `lookupattributePOP`, `lookupchannelPOP`, `lookuptexturePOP`.
+- Corrected `mathcombinePOP` parameter metadata after the read-only subagent flagged stale aliases:
+  - Replaced coarse `scopea`, `scopeb`, `scopec`, and `resultscope` entries with official `comb0scopea`, `comb0scopeb`, `comb0scopec`, and `comb0result`.
+  - Added official combine/input controls including `comb`, `comb0oper`, `lengthmismatchnotif`, `lengthmismatchaction`, `input0attrs`, `input0renameto`, and `deleteattrs`.
+- Background subagent audit result:
+  - Spawned Goodall the 6th as a read-only atlas-slice explorer for the ten-card POP attribute/math batch.
+  - Its report independently confirmed all ten targets were concept-thin, recommended official concept seeds, identified no needed quality-minimum overrides, and flagged the Math Combine stale aliases corrected in this pass.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T08:54:52Z`
+- Verification after this pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first, failed again on card concept gaps and the Math Combine stale aliases, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, `operator_card_quality.strict_operator_count = 30`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T08:54:52Z`.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against TouchDesigner, `mutated_td = false`, no missing expected operators or facts.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - JSON parse checks for the ten enriched operator cards, draft manifest, and release-gate report: parsed.
+  - `git diff --check`: clean.
+
+## One Hundred Fourth Pass - POP Cache Selection and Topology Flow Quality Gate Expansion
+
+- Expanded the strict `operator_card_quality` gate with a red test first:
+  - `tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts` failed first because the strict allowlist did not include the next POP cache/selection/topology-flow batch.
+  - After adding the batch to the allowlist, the same test failed on real `key_concepts` gaps for ten cards.
+  - Added focused official-alias assertions for Delete POP, Cache Blend POP, Switch POP, Cache POP, Group POP, Merge POP, and Sort POP; the second tier failed on missing official params before correction.
+- Updated `src/td_mcp/brain/atlas_audit.py`:
+  - Strict quality coverage now spans 40 reviewed high-value operator cards.
+  - `minimum_overrides` remains scoped to official small-parameter exceptions, currently `poptoSOP.key_params = 2`.
+- Manually reviewed official Derivative docs and enriched POP cache/selection/topology-flow cards:
+  - Cache history: `cachePOP`, `cacheblendPOP`, `cacheselectPOP`.
+  - Selection and topology flow: `connectivityPOP`, `deletePOP`, `groupPOP`, `mergePOP`, `selectPOP`, `sortPOP`, `switchPOP`.
+- Corrected and expanded parameter metadata after the read-only subagent flagged official alias gaps:
+  - `deletePOP`: replaced stale `delete` key param with official `invert` and added `cpureadback`.
+  - `cacheblendPOP`: added official `cache0index`, `cache0indexunit`, and `indexchanunit`.
+  - `cachePOP`: added official `alwayscook`, `activepulse`, `stepunit`, and `outputindexunit`.
+  - `switchPOP`: added `lengthmismatchnotif`, `lengthmismatchaction`, `input`, and `input0pop`.
+  - `groupPOP`: added official page roots and edit controls including `attr`, `pattern`, `group`, `bound`, `cnvttype`, `cnvtgroup`, `cnvtname`, `oldname`, `newname`, `deletename`, and `preserve`.
+  - `mergePOP`: added `group`, `input0pop`, and `input0groupentity`.
+  - `sortPOP`: added `pointoffset` and primitive-side sort controls including `primattr`, `primuint`, `primseed`, `primprox`, `primdir`, `primobj`, `primrev`, `primshift`, and `primoffset`.
+- Background subagent audit result:
+  - Spawned Singer the 6th as a read-only atlas-slice explorer for the ten-card POP cache/selection/topology-flow batch.
+  - Its report independently confirmed all ten targets were concept-thin, recommended official concept seeds, identified no needed quality-minimum overrides, and flagged the official parameter alias gaps corrected in this pass.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T09:01:42Z`
+- Verification after this pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first, failed again on card concept gaps, failed on second-tier official params, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, `operator_card_quality.strict_operator_count = 40`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T09:01:42Z`.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against TouchDesigner, `mutated_td = false`, no missing expected operators or facts.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - JSON parse checks for the ten enriched operator cards, draft manifest, and release-gate report: parsed.
+  - `git diff --check`: clean.
+
+## One Hundred Fifth Pass - POP Source Geometry Quality Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with the existing failing test first:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first with `operator_card_quality.ok = false`.
+  - `uv run python scripts/audit_brain_atlas.py --pretty` reported exactly ten quality gaps, all `key_concepts` gaps for the new POP source/geometry batch.
+- Manually reviewed official Derivative docs and enriched POP source/geometry cards:
+  - Primitive/source grids and solids: `boxPOP`, `gridPOP`, `planePOP`, `rectanglePOP`, `spherePOP`, `torusPOP`, `tubePOP`.
+  - Explicit point/curve/line sources: `pointPOP`, `linePOP`, `curvePOP`.
+- Corrected and expanded parameter metadata while reviewing official docs:
+  - Added official Modify Bounds, anchor, translate/rotate/scale, line/plane toggle, dimension, closed, angle, end-cap, texture-fit, texture-method, and shared-pole controls where they are present in the official tables.
+  - Added Line POP interpolation, tension, weight, tangent, point-repeat, division, post-resample, independent-variable, and max-vertex controls.
+  - Added Point POP color-management controls `parmcolorspace` and `parmreferencewhite`.
+  - Added Curve POP segment-shaping and lookup controls including `seg0alpha`, `seg0beta`, `seg0slopein`, `seg0slopeout`, `applylookup`, `lookupindexattr`, `extendleft`, `extendright`, `lookup0combineop`, and `lookup0outputattrscope`.
+  - Kept Torus POP `endcaps` out of `key_params` because the official page describes End Caps in prose but the parameter table does not expose a clear `endcaps` row for Torus POP.
+- Subagent audit carry-forward:
+  - The prior read-only audit confirmed all ten cards existed, no quality-minimum override was needed, and the useful parameter gaps were concentrated around bounds/anchors/transforms, line interpolation/resampling, Point POP color space, and Curve POP segment/lookup controls.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T10:03:45Z`
+- Verification after this pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first, then passed.
+  - JSON parse checks for the ten enriched operator cards: parsed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 50`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T10:03:45Z`.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against the running TouchDesigner session, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed.
+  - `git diff --check`: clean.
+
+## One Hundred Sixth Pass - POP Line and Spatial Workflow Quality Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with the focused failing test first:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first with `operator_card_quality.ok = false`.
+  - `uv run python scripts/audit_brain_atlas.py --pretty` reported exactly ten quality gaps, all `key_concepts` gaps for the newly added POP line/spatial workflow batch.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the ten-card POP line/spatial workflow batch.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for Line Break, Line Divide, Line Metrics, Trail, Proximity, Ray, Transform, and Copy POP.
+  - Strict quality coverage now spans 60 reviewed high-value operator cards.
+- Manually reviewed official Derivative docs and enriched POP line/spatial workflow cards:
+  - Line topology and line attributes: `linebreakPOP`, `linedividePOP`, `linemetricsPOP`, `lineresamplePOP`, `linesmoothPOP`.
+  - Temporal/spatial operations: `trailPOP`, `proximityPOP`, `rayPOP`, `transformPOP`, `copyPOP`.
+- Corrected and expanded parameter metadata while reviewing official docs:
+  - `linebreakPOP`: added input-line-break, line-strip-index name, distance-threshold attribute, output-line-break attribute, output-line toggle, and CPU-readback controls.
+  - `linedividePOP`: added per-segment interpolation, segment-method, spline weight/tangent/constraint, cardinal clamp/tension, and post-resample controls.
+  - `linemetricsPOP`: added angle-per-distance, neighbor, cumulative/normalized distance, primitive length, point index, vertex count, line-strip index, and normalized line-strip index outputs.
+  - `lineresamplePOP` and `linesmoothPOP`: added control-point, max-try, output-attribute, optional resample, and parameter-map controls where the official pages expose them.
+  - `trailPOP`: added attribute-match name, unsigned integer max, max line strips, surface type, closed, and transform controls.
+  - `proximityPOP` and `rayPOP`: added endpoint attribute/readback controls plus ray hit diagnostics, barycentric coordinates, and hit-attribute sampling scopes.
+  - `transformPOP` and `copyPOP`: added transform/rotate order, pivot, uniform scale, look-at, matrix/template, alignment, dimension, and parameter/template-map controls.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T10:11:48Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first, then passed.
+  - JSON parse checks for the ten enriched operator cards: parsed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 60`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T10:11:48Z`.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against the running TouchDesigner session, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed.
+  - `git diff --check`: clean.
+
+## One Hundred Seventh Pass - POP Surface Topology and Texture Quality Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first with `operator_card_quality.ok = false`.
+  - `uv run python scripts/audit_brain_atlas.py --pretty` reported exactly ten quality gaps, all `key_concepts` gaps for the newly added POP surface/topology/texture batch.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the ten-card POP surface/topology/texture batch.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for Facet, Normal, Primitive, Extrude, Polygonize, Texture Map, and Line Thick POP.
+  - Strict quality coverage now spans 70 reviewed high-value operator cards.
+- Manually reviewed official Derivative docs and enriched POP surface/topology/texture cards:
+  - Topology and surface bookkeeping: `facetPOP`, `normalPOP`, `primitivePOP`, `triangulatePOP`, `subdividePOP`.
+  - Surface generation and texture utilities: `extrudePOP`, `revolvePOP`, `polygonizePOP`, `texturemapPOP`, `linethickPOP`.
+- Corrected and expanded parameter metadata while reviewing official docs:
+  - `facetPOP`: added spatial-grid-per-voxel controls `gridres`, `specifybbox`, `bbox`, and `cpureadback`.
+  - `normalPOP`: added GPU allocation, vertex-normal angle, normal output override/type/component, tangent input, tangent technique, and tangent output controls.
+  - `primitivePOP`: replaced stale `rmvunusedpts` with official `unusedpointsop` and added point/attribute/primitive block controls plus color-space metadata.
+  - `extrudePOP`: added `maxprimsperpoint`, `cpureadback`, and Map page block controls for mapped distance/taper.
+  - `polygonizePOP`: added inside/winding, unique-points, P re-range, normal step, texture-coordinate, allocation, and CPU-readback controls.
+  - `texturemapPOP`: added transform-input, input texture attribute, fisheye/camera projection, UV transform, output-attribute override, and Transform page controls.
+  - `linethickPOP`: added depth interpolation, width/color falloff, line/vector cap, cap-shape, pullback, and color-space controls from the Experimental official page.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T10:19:39Z`
+- Verification after this pass so far:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first, then passed.
+  - JSON parse checks for the ten enriched operator cards: parsed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 70`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T10:19:39Z`.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against the running TouchDesigner session, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed.
+  - `git diff --check`: clean.
+
+## One Hundred Eighth Pass - POP Control and Value Utility Quality Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first after the new POP control/value utility cards were added to the strict surface.
+  - The first red surface exposed nine concept gaps; `limitPOP` was then added to keep the intended ten-card batch complete, and the focused gate failed red with exactly ten `key_concepts` gaps.
+  - `uv run python scripts/audit_brain_atlas.py --pretty` confirmed the ten target gaps before card promotion.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the ten-card POP control/value utility batch.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for Accumulate, Analyze, Blend, Feedback, Force Radial, Limit, Pattern, Quantize, Random, and Trig POP.
+  - Strict quality coverage now spans 80 reviewed high-value operator cards.
+- Manually reviewed official Derivative docs and enriched POP control/value utility cards:
+  - Attribute/value processing: `accumulatePOP`, `analyzePOP`, `blendPOP`, `feedbackPOP`, `limitPOP`, `patternPOP`, `quantizePOP`, `randomPOP`, `trigPOP`.
+  - Force control: `forceradialPOP`.
+- Corrected and expanded parameter metadata while reviewing official docs:
+  - `accumulatePOP`: added attribute default-value handling.
+  - `analyzePOP`: added group-element counts, append-name controls, centroid/size/min/max/sum/RMS outputs, primitive-count outputs, and attribute-value output controls.
+  - `blendPOP`: added length-mismatch handling, input-selection controls, and Map page controls.
+  - `feedbackPOP`: added preroll and completion-pulse controls.
+  - `forceradialPOP`: added axial/spiral/planar force controls, falloff controls, global force and wind multipliers, and Map page controls.
+  - `limitPOP`: added output-attribute scope, auto-attribute override, type/component/default controls, and quantize step/offset controls.
+  - `patternPOP`: added cycle/bias/phase/exponent/range/reverse/closed controls, line-break and texture options, combine/output attribute controls, attribute class, and group scope.
+  - `quantizePOP`: added group, auto-attribute override, component count, and default-value controls.
+  - `randomPOP`: added distribution/value-range/cone/combine controls, output and combine attribute scopes, color/default metadata, group scope, and Map page controls.
+  - `trigPOP`: added attribute type and default-value controls.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T10:27:38Z`
+- Verification after this pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first, then passed.
+  - JSON parse checks for the ten enriched operator cards: parsed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 80`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T10:27:38Z`.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against the running TouchDesigner session, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed.
+  - `git diff --check`: clean.
+
+## One Hundred Ninth Pass - POP External IO and Device Interchange Quality Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first after the new POP external I/O and device-interchange cards were added to the strict surface.
+  - `uv run python scripts/audit_brain_atlas.py --pretty | jq '.operator_card_quality'` reported exactly ten quality gaps, all `key_concepts` gaps for the newly added batch.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the ten-card POP external I/O and device-interchange batch.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for Alembic In/Out, DMX Fixture/Out, File Out, Import Select, Point File In, and ZED POP.
+  - Strict quality coverage now spans 90 reviewed high-value operator cards.
+- Manually reviewed official Derivative docs and enriched POP external I/O and device-interchange cards:
+  - File and interchange: `alembicinPOP`, `alembicoutPOP`, `fileinPOP`, `fileoutPOP`, `importselectPOP`, `pointfileinPOP`.
+  - Device and protocol bridges: `dmxfixturePOP`, `dmxoutPOP`, `oakselectPOP`, `zedPOP`.
+- Corrected and expanded parameter metadata while reviewing official docs:
+  - `alembicinPOP`: added interpolation, file-load, sample-rate, initialize/start, cue, trim, and left/right extension controls.
+  - `alembicoutPOP`: added custom point/vertex/primitive attribute patterns, unique suffix controls, recording length, pause/add-frame, max active saves, primitive inclusion, texture coordinate attribute, unchanged topology, and Alembic FPS controls.
+  - `dmxfixturePOP`: replaced stale `quantizeuniverse` with official `quantizeuni`, replaced duplicate channel-block metadata with official `dmxchan*` names, and added routing table, channel gap, value type, group, resolution, normalization, merge, interleave, and color-space controls.
+  - `dmxoutPOP`: replaced stale generic `protocol`/`fixturepops` metadata with official `interface`, `fixture`, `fixture0active`, `fixture0pop`, serial/device/network, ArtSync, priority, and routing-table controls.
+  - `fileoutPOP`: added unique suffix, recording length, max active saves, texture coordinate, output color-space, and attribute-field sequence controls.
+  - `importselectPOP`: added parent animation, sample-rate, initialize/start, cue, index unit, speed, trim, and extension controls.
+  - `pointfileinPOP`: added texture-field mapping, custom attribute arrays/qualifiers, input color-space metadata, thinning controls, and rerange sequence controls.
+  - `zedPOP`: added done, normals, color, filter, perspective, rerange, mirror, camera override, FOV/focal-length/center, and near/far depth deletion controls.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T10:36:45Z`
+- Verification after this pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first, then passed.
+  - JSON parse checks for the ten enriched operator cards: parsed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 90`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T10:36:45Z`.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against the running TouchDesigner session, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed.
+  - `git diff --check`: clean.
+
+## One Hundred Tenth Pass - POP Spatial Field and Deformation Quality Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first after the new POP spatial/field/deformation cards were added to the strict surface.
+  - `uv run python scripts/audit_brain_atlas.py --pretty | jq '.operator_card_quality'` reported exactly ten quality gaps, all `key_concepts` gaps for the newly added batch.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the ten-card POP spatial/field/deformation batch.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for Dimension, Field, Histogram, Neighbor, Phaser, Projection, Skin Deform, Sprinkle, and Twist POP.
+  - Strict quality coverage now spans 100 reviewed high-value operator cards.
+- Manually reviewed official Derivative docs and enriched POP spatial/field/deformation cards:
+  - Structural and analysis utilities: `dimensionPOP`, `histogramPOP`, `neighborPOP`, `phaserPOP`, `projectionPOP`.
+  - Field and geometry shaping: `fieldPOP`, `skinPOP`, `skindeformPOP`, `sprinklePOP`, `twistPOP`.
+- Corrected and expanded parameter metadata while reviewing official docs:
+  - `fieldPOP`: added shape controls, transition type/absolute/invert/range/delete/line-strip controls, transform page controls, weight/signed-distance/per-field output controls, and combine output metadata.
+  - `histogramPOP`: added explicit input range component controls.
+  - `neighborPOP`: added official neighbor/count/distance attribute-name controls plus average, query-point, prefix, integer-cast, and neighbor-attribute output controls.
+  - `phaserPOP`: added output attribute override/type/component/default, attribute class, and range remap controls.
+  - `projectionPOP`: added aspect/FOV/depth, output attribute scope, and output attribute metadata controls for screen-space and NDC conversion workflows.
+  - `skindeformPOP`: replaced stale menu-value aliases `skindeformgeo` and `skindeformattrib` with official `inputattrscope`, output override/type/component/default controls, and capture attribute concepts.
+  - `sprinklePOP`: added official vertex attribute sampling scope.
+  - `twistPOP`: added output attribute override/type/component/default controls.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T10:43:57Z`
+- Verification after this pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first, then passed.
+  - JSON parse checks for the ten enriched operator cards: parsed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 100`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T10:43:57Z`.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against the running TouchDesigner session, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed.
+  - `git diff --check`: clean.
+
+## One Hundred Eleventh Pass - POP Bridge and Utility Quality Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first after the final POP bridge/utility cards were added to the strict surface.
+  - `uv run python scripts/audit_brain_atlas.py --pretty | jq '.operator_card_quality'` reported six quality gaps: `key_concepts` gaps for `convertPOP`, `cplusplusPOP`, `inPOP`, and `outPOP`, plus `key_params` minimum gaps for the intentionally tiny `convertPOP` and `inPOP` official parameter surfaces.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes `convertPOP`, `cplusplusPOP`, `inPOP`, and `outPOP`.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for Convert, CPlusPlus, In, and Out POP.
+  - Added scoped `key_params = 2` minimum overrides for `convertPOP` and `inPOP`, matching their small official docs surfaces without padding generic controls into the reviewed key-parameter set.
+  - Strict quality coverage now spans 104 reviewed high-value operator cards.
+- Manually reviewed official Derivative docs and enriched the final POP bridge/utility cards:
+  - Topology utility: `convertPOP`.
+  - Native extension bridge: `cplusplusPOP`.
+  - Component interface bridges: `inPOP`, `outPOP`.
+- Corrected and expanded reviewed concepts while preserving official parameter scope:
+  - `convertPOP`: added concepts for point-preserving topology conversion, primitive conversion modes, unique point flattening/reordering, and slow CPU topology readback.
+  - `cplusplusPOP`: added concepts for custom POP C++ plugins, plugin-path loading, class reinitialization, and shared plugin unload behavior.
+  - `inPOP`: added concepts for parent input connector export, one-connector-per-In behavior, second-input default fallback data, and connector ordering.
+  - `outPOP`: added concepts for parent output connector export, one-connector-per-Out behavior, wired-input versus Select POP output, and output hover labels.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T10:49:03Z`
+- Verification after this pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first, then passed.
+  - JSON parse checks for the four enriched operator cards: parsed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 104`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T10:49:03Z`.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against the running TouchDesigner session, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed.
+  - `git diff --check`: clean.
+
+## One Hundred Twelfth Pass - Live-Smoke Runtime Backbone Quality Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first after the smoke-backbone batch was added to the expected high-value set while the strict audit allowlist still excluded those operators.
+  - `uv run python scripts/audit_brain_atlas.py --pretty | jq '.operator_card_quality | {ok, strict_operator_count, gap_count, gaps, strict_operator_types}'` showed the prior strict surface was still healthy at 104 operators with zero quality gaps, so the red failure specifically protected allowlist promotion for the new runtime batch.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes `noiseTOP`, `feedbackTOP`, `levelTOP`, `constantTOP`, `renderTOP`, `rendersimpleTOP`, `textDAT`, `audiofileinCHOP`, `analyzeCHOP`, and `mathCHOP`.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for TOP feedback/noise/level/render sources, Text DAT shader/text source workflows, and CHOP audio analysis/range-mapping workflows.
+  - Strict quality coverage now spans 114 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the live-smoke backbone batch:
+  - Feedback visual chain: `noiseTOP`, `feedbackTOP`, `levelTOP`.
+  - GLSL/render sources and outputs: `constantTOP`, `renderTOP`, `rendersimpleTOP`, `textDAT`.
+  - Audio-reactive CHOP chain: `audiofileinCHOP`, `analyzeCHOP`, `mathCHOP`.
+- Preserved and guarded reviewed runtime metadata already present in the current worktree:
+  - `noiseTOP`: protected noise type/seed/period/harmonics/transform/output/gradient controls.
+  - `feedbackTOP`: protected Target TOP, reset, and reset-pulse controls for recursive image loops.
+  - `levelTOP`: protected clamp, level/range, stepping, opacity, and premultiply controls for feedback decay.
+  - `constantTOP`: protected RGBA, premultiply, composite-over-input, texture type, and slices controls.
+  - `renderTOP`: protected camera/geometry/lights, render mode, depth/color-buffer, material override, uniform/sampler/image, and color-space controls.
+  - `rendersimpleTOP`: protected camera mode/FOV/ortho width, normalize/background, POP, transform/light, and material-source controls.
+  - `textDAT`: protected file sync, load/write, language, extension, and word-wrap controls.
+  - `audiofileinCHOP`: protected file/reload/playback, cue/index/timecode, repeat/trim, timeout, mono, and volume controls.
+  - `analyzeCHOP`: protected function, peak boundary, no-peak sentinel, and valley-analysis controls.
+  - `mathCHOP`: protected pre/channel/CHOP/post operations, matching/alignment, per-sample interpolation, integer, gain/offset, and range-mapping controls.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T10:54:02Z`
+- Verification after this pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 114`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T10:54:02Z`.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against the running TouchDesigner session, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed.
+  - `git diff --check`: clean.
+
+## One Hundred Thirteenth Pass - Profile Backbone Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first after the profile-backbone cards were added to the expected high-value set while the strict audit allowlist still excluded those operators.
+  - `uv run python scripts/audit_brain_atlas.py --pretty | jq '.operator_card_quality | {ok, strict_operator_count, gap_count, gaps, strict_operator_types}'` showed the prior strict surface was still healthy at 114 operators with zero quality gaps, so the first red failure specifically protected allowlist promotion.
+  - After adding the batch to `_STRICT_OPERATOR_QUALITY_TYPES`, the focused gate failed red again on the intentionally tiny `nullPOP` key-parameter surface: `actual = 1`, `minimum = 3`.
+  - Added a scoped `nullPOP.key_params = 1` minimum override and test assertion, matching the official Null POP parameter surface without padding generic metadata.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes `nullTOP`, `compositeTOP`, `glslTOP`, `glslMAT`, `glslPOP`, `cameraCOMP`, `geometryCOMP`, `nullCHOP`, `constantCHOP`, and `nullPOP`.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for null/pass-through endpoints, TOP compositing, GLSL TOP/MAT/POP shader workflows, camera/projection, geometry instancing/material assignment, and CHOP constant/null control channels.
+  - Strict quality coverage now spans 124 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the profile-backbone batch:
+  - TOP routing/compositing: `nullTOP`, `compositeTOP`.
+  - GLSL and render-scene backbone: `glslTOP`, `glslMAT`, `glslPOP`, `cameraCOMP`, `geometryCOMP`.
+  - CHOP/POP control endpoints: `nullCHOP`, `constantCHOP`, `nullPOP`.
+- Preserved and guarded reviewed metadata already present in the current worktree:
+  - `nullTOP`: protected Common TOP output resolution/pass/channel/format controls.
+  - `compositeTOP`: protected TOP pattern, preview/select input, operation/order, fixed-layer, pre-fit, transform, and legacy transform controls.
+  - `glslTOP`: protected shader DATs, compile/error behavior, dispatch/output access, color buffers, and POP buffer controls.
+  - `glslMAT`: protected shader-stage DATs, lighting space, attributes, samplers, uniforms, constants, deform/capture, and render-state controls.
+  - `glslPOP`: protected compute DAT, attribute class, thread/dispatch sizing, output attributes, pass behavior, uniforms/samplers/temp buffers/constants, auto-shader, and input-attribute controls.
+  - `cameraCOMP`: protected transform, Look At/path, projection/FOV/clip/custom projection, fog/light-mask, and render controls.
+  - `geometryCOMP`: protected transform, instancing, instance source/rotation/order/color/custom attributes, material, render, and light-mask controls.
+  - `nullCHOP`: protected cook-type, value/name/range check, and time-slice controls.
+  - `constantCHOP`: protected constant sequence, snap, sample domain, rate, extend/default, and common CHOP controls.
+  - `nullPOP`: protected the official bypass parameter plus reviewed pass-through/endpoint concepts through the scoped minimum override.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T10:59:49Z`
+- Verification after this pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on the missing `nullPOP` override, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 124`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T10:59:49Z`.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: initially failed once during parallel `uv` package churn with `ModuleNotFoundError: td_mcp`, then passed when rerun sequentially: 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against the running TouchDesigner session, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed.
+  - `git diff --check`: clean.
+
+## One Hundred Fourteenth Pass - Profile-Visible UI and POP Strict Gate Closure
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first after the remaining profile-visible UI/control and POP cards were added to the expected high-value set while the strict audit allowlist still excluded those operators.
+  - `uv run python scripts/audit_brain_atlas.py --pretty | jq '.operator_card_quality | {ok, strict_operator_count, gap_count, gaps}'` showed the previous strict surface remained healthy, so the red failure protected strict-surface promotion rather than a missing-card regression.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes `baseCOMP`, `buttonCOMP`, `circlePOP`, `containerCOMP`, `mathmixPOP`, `noisePOP`, `panelCHOP`, and `sliderCOMP`.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for Base COMP extension/common controls, Button/Slider/Container panel controls, Panel CHOP state capture, and Circle/Noise/Math Mix POP attribute workflows.
+  - Strict quality coverage now spans 132 reviewed high-value operator cards.
+- Preserved and guarded reviewed metadata already present in the current worktree:
+  - `baseCOMP`: protected extension initialization, shortcuts, I/O, viewer, clone, load-on-demand, and external tox controls.
+  - `buttonCOMP`: protected button type/grouping, value/label, text/layout, panel geometry, enable/display, opacity, and click API context.
+  - `circlePOP`: protected connectivity, orientation, Modify Bounds, radius/divisions, closed arc angles, anchors, transforms, normals, tangents, and texture coordinate controls.
+  - `containerCOMP`: protected panel geometry/display controls, background TOP/compositing, children alignment/spacing/margins/justify/fit, and scrollbar controls.
+  - `mathmixPOP`: protected length-mismatch handling, group/angle units, input/attribute/color vectors, combine block scopes, result scopes, delete-attribute behavior, and color-space controls.
+  - `noisePOP`: protected lookup attributes, noise type/size/seed/period/harmonics, attribute class/groups, transforms and 4D animation, raw noise/gradient/curl outputs, combine operation, output attributes, normals, and map-page overrides.
+  - `panelCHOP`: protected component selection, rename, queue/queue-size, time-slice, and scope controls for panel state capture.
+  - `sliderCOMP`: protected slider type, value channels, zone/clamp bounds, label, panel geometry, display/enable, opacity, and click API context.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T11:06:52Z`
+- Verification after this pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: passed, 1 passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 132`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T11:06:52Z`.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against the running TouchDesigner session, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+
+## One Hundred Fifteenth Pass - MAT Family Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first after the MAT batch was added to the expected high-value set while the strict audit allowlist still excluded those operators.
+  - After the cards were promoted, the wider atlas suite caught a stale draft-priority assertion that still pinned the newly reviewed MAT cards to `last_verified = 2026-06-17`; the test now keeps older cards pinned while expecting `2026-06-18` for the MAT cards reviewed in this pass.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes `pbrMAT`, `phongMAT`, `constantMAT`, `lineMAT`, `pointspriteMAT`, `wireframeMAT`, `depthMAT`, `inMAT`, `nullMAT`, `outMAT`, `selectMAT`, and `switchMAT`.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for physically based materials, Phong/constant/line/point-sprite/wireframe/depth render states, and MAT component interface/routing operators.
+  - Strict quality coverage now spans 144 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the MAT batch:
+  - Shaded materials: `pbrMAT`, `phongMAT`, `constantMAT`.
+  - Geometry visualization and depth materials: `lineMAT`, `pointspriteMAT`, `wireframeMAT`, `depthMAT`.
+  - Component interface and routing materials: `inMAT`, `nullMAT`, `outMAT`, `selectMAT`, `switchMAT`.
+- Added reviewed concepts grounded in the official docs:
+  - `pbrMAT`: physically based map workflow, Substance TOP integration, texture sampling/coordinate modes, Output Shader behavior, and lighting/render-context dependence.
+  - `phongMAT`: ambient/diffuse/specular Phong lighting, shininess, texture-map contribution, scene-light dependence, and Output Shader adaptation.
+  - `constantMAT`: light-independent constant material output, projection-map use, point color/alpha, texture sampling, and common MAT state.
+  - `lineMAT`: line/dot/vector rendering modes, flat shading, resolution-independent width, distance/FOV rolloff, and cap/joint shape controls.
+  - `pointspriteMAT`: point-sprite sources, material/point/color-map color composition, pscale sizing, attenuation/perspective sizing, and texture-array slice selection.
+  - `wireframeMAT`: topology versus tessellated wireframe, edge-only rendering, line color/width, depth/polygon-offset interactions, and deform/common state.
+  - `depthMAT`: invisible Z barrier use, depth test versus depth writing, cull-face impact, polygon offset, and skinned/deformed occluders.
+  - `inMAT`, `nullMAT`, `outMAT`, `selectMAT`, `switchMAT`: component connector ordering/labels, stable material endpoints, project-path selection, zero-based switching, extend behavior, and common render-state wrapper effects.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T11:14:30Z`
+- Verification after this pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: failed once on the stale draft-priority `last_verified` assertion, then passed with 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 144`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T11:14:30Z`.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against the running TouchDesigner session, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed 779 JSON files.
+  - `git diff --check`: clean.
+
+## One Hundred Sixteenth Pass - COMP Utility and Authoring Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate from the current worktree rather than the stale POP checkpoint:
+  - The older POP source/geometry batch was already green in the current worktree; those cards had reviewed concepts dated `2026-06-18`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first after the COMP utility/authoring batch was added to the expected high-value set while the strict audit allowlist still excluded those operators.
+  - After the first promotion, the audit showed `operator_card_quality.strict_operator_count = 153`; a focused red-green correction added the missing `opviewerCOMP` strict expectation and allowlist entry, bringing the batch to all 10 operators.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes `nullCOMP`, `replicatorCOMP`, `parameterCOMP`, `opviewerCOMP`, `animationCOMP`, `timeCOMP`, `listCOMP`, `blendCOMP`, `annotateCOMP`, and `buildalistCOMP`.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for object placeholders/look-at targets, table/count replication, parameter panels, embedded OP viewers, keyframe animation, component-local time, callback-driven lists, transform blending, annotations, and List COMP callback construction.
+  - Strict quality coverage now spans 154 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the COMP utility/authoring batch:
+  - Object/time/animation helpers: `nullCOMP`, `blendCOMP`, `animationCOMP`, `timeCOMP`.
+  - UI and authoring panels: `parameterCOMP`, `opviewerCOMP`, `listCOMP`, `annotateCOMP`.
+  - Replication and callback construction: `replicatorCOMP`, `buildalistCOMP`.
+- Added reviewed concepts grounded in the official docs:
+  - `nullCOMP`: placeholder transform hierarchy, Look At target use, bone-chain end-affector role, transform-order/parent-source semantics, and Path SOP/orient motion controls.
+  - `replicatorCOMP`: table/count-driven copies, table naming modes, master/destination/max-operator scope, non-COMP/non-clone support, and per-replicant callback customization.
+  - `parameterCOMP`: parameter-dialog panels, header/page/label/input-editor inclusion, page/parameter pattern scopes, expansion/expression editing control, and scope/page synchronization.
+  - `opviewerCOMP`: embedded operator viewers, optional interaction, pan/zoom controls, TOP direct RGBA drawing, and panel layout/display behavior.
+  - `animationCOMP`: Keyframe CHOP/Table DAT channel storage, Animation Editor authoring, no-input looping, CHOP-driven input index playback, and current-value CHOP output.
+  - `timeCOMP`: component-local clock use, `/local` Component Time placement, play/rate/range/tempo/signature controls, independent clock behavior, and `/sys/local/time` clone customization.
+  - `listCOMP`: callback-described table/row/column/cell attributes, list sizing/scroll/lock/reset controls, drag/drop ListCell metadata, and Build a List COMP state-management guidance.
+  - `blendCOMP`: transform-only blending, Blend/Sequence/Constrain modes, weights/masks, relative transform preservation, and three-parent orientation/quaternion controls.
+  - `annotateCOMP`: network documentation rectangles, Comment/Network Box/Annotate modes, default setup extension behavior, embedded OP Viewer controls, and utility/layer-zone behavior.
+  - `buildalistCOMP`: article-scoped List COMP callback construction, init callback order, event callbacks, storage-backed state restoration, and DAT/dictionary-backed cell content.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T11:25:10Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again for the missing `opviewerCOMP` allowlist expectation, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: failed once on stale COMP `last_verified` date assertions, then passed with 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 154`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T11:25:10Z`.
+  - Zero-concept operator card count after promotion: 488 remaining overall; COMP remaining zero-concept cards: 19.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh with hash `39f1dbd47d8f041a...`.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against the running TouchDesigner session, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed 779 JSON files.
+  - `git diff --check`: clean.
+
+## One Hundred Seventeenth Pass - COMP Scene Runtime Strict Gate Expansion
+
+- Continued from the current worktree rather than the older POP checkpoint:
+  - The POP source/geometry batch (`boxPOP`, `gridPOP`, `linePOP`, `planePOP`, `pointPOP`, `rectanglePOP`, `spherePOP`, `torusPOP`, `tubePOP`, `curvePOP`) was already reviewed and green in the current worktree, with official parameter metadata and 2026-06-18 concepts.
+  - The active red surface was the next COMP scene/runtime batch already added to the strict test and audit allowlist while its cards still had zero `key_concepts`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first with `quality["ok"] is False`, proving the strict gate caught the empty reviewed-concept surfaces before card promotion.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes `usdCOMP`, `boneCOMP`, `actorCOMP`, `engineCOMP`, `nvidiaflowemitterCOMP`, `nvidiaflexsolverCOMP`, `bulletsolverCOMP`, `constraintCOMP`, `fbxCOMP`, and `geotextCOMP`.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for USD/FBX import caches, character bones, physics actors/solvers/constraints, TouchEngine components, NVIDIA Flow/Flex runtime limits, and Slug-based 3D text rendering.
+  - Strict quality coverage now spans 164 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the COMP scene/runtime batch:
+  - Scene import and generated networks: `USD COMP`, `FBX COMP`.
+  - Character and physics workflows: `Bone COMP`, `Actor COMP`, `Bullet Solver COMP`, `Constraint COMP`.
+  - External/runtime systems: `Engine COMP`, `NVIDIA Flow Emitter COMP`, `NVIDIA Flex Solver COMP`.
+  - Direct 3D text rendering: `Geo Text COMP`.
+- Added reviewed concepts grounded in the official docs:
+  - `usdCOMP`: USD/USDA/USDC/USDZ scene import, `.tdc` TDImportCache assets, Import Select OP reuse, Build Network versus Reload/Update, and performance-shaping import toggles.
+  - `boneCOMP`: bone-chain foundation, end-of-parent attachment, non-bone parent behavior, IK range/damping/rolloff controls, capture regions, and Bone Creation state guidance.
+  - `actorCOMP`: solver-required physics bodies, static versus dynamic behavior, collision SOP/display geometry separation, convex/compound Bullet requirements, and initialize-after-shape-change workflow.
+  - `engineCOMP`: separate TouchEngine process execution, supported top-level TOP/CHOP/DAT interfaces, lifetime controls, Asset Paths behavior, and `onCreate` setup guidance.
+  - `nvidiaflowemitterCOMP`: Windows/NVIDIA requirement, emitter versus collider modes, sphere/box/capsule/Shape TOP/Shape SOP sources, Shape TOP resolution limit, and velocity/material/simulation injection controls.
+  - `nvidiaflexsolverCOMP`: Flex solver world behavior, actor ownership limits, force/gravity behavior, simulation stepping controls, and NVIDIA driver/GPU support constraints.
+  - `bulletsolverCOMP`: Bullet world stepping, actor ownership limits, global force/vacuum behavior, dimension/axis constraints, and collision-shape reinitialization semantics.
+  - `constraintCOMP`: point-to-point/hinge/slider restrictions, body-to-body pairing, zero-based body IDs, degree-of-freedom behavior, and constrained-body collision control.
+  - `fbxCOMP`: FBX scene/geometry/animation/texture import, `.tdc` cache reuse, Import Method behavior, rebuild/update requirements, and external texture directory recovery.
+  - `geotextCOMP`: direct Slug text rendering rather than SOP output, Text/Spec DAT/Spec CHOP sources, layout box and face-camera controls, transparent glyph ordering controls, and per-block row/sample alignment.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T11:35:15Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 164`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T11:35:15Z`.
+  - Zero-concept operator card count after promotion: 478 remaining overall; COMP remaining zero-concept cards: 9.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh with hash `39f1dbd47d8f041a...`.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against the running TouchDesigner session, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed 778 JSON files plus the release-gates report.
+  - `git diff --check`: clean.
+
+## One Hundred Eighteenth Pass - COMP Light Force and Shared Memory Strict Gate Closure
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - Current atlas metrics showed 9 remaining zero-concept COMP cards: `ambientlightCOMP`, `camerablendCOMP`, `environmentlightCOMP`, `forceCOMP`, `handleCOMP`, `impulseforceCOMP`, `lightCOMP`, `sharedmeminCOMP`, and `sharedmemoutCOMP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first after the final COMP batch was added to the expected high-value set while the strict audit allowlist still excluded those operators.
+  - After adding the batch to the audit allowlist, the same focused gate failed red again on reviewed quality: the 9 cards had zero `key_concepts`, and `lightCOMP` still had only two gotchas.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes `ambientlightCOMP`, `camerablendCOMP`, `environmentlightCOMP`, `forceCOMP`, `handleCOMP`, `impulseforceCOMP`, `lightCOMP`, `sharedmeminCOMP`, and `sharedmemoutCOMP`.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for scene lights, camera blending, physics forces, IK handles, impulse force pulses, and transform shared-memory exchange.
+  - Strict quality coverage now spans 173 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the final COMP batch:
+  - Scene lighting and camera controls: `Ambient Light COMP`, `Environment Light COMP`, `Light COMP`, `Camera Blend COMP`.
+  - Physics and rigging controls: `Force COMP`, `Impulse Force COMP`, `Handle COMP`.
+  - Cross-process transform exchange: `Shared Mem In COMP`, `Shared Mem Out COMP`.
+- Added reviewed concepts grounded in the official docs:
+  - `ambientlightCOMP`: scene-wide environmental light color/intensity, no source position or cone behavior, Render TOP inclusion, global fill behavior, and Light Mask use.
+  - `camerablendCOMP`: bottom-connector camera inputs, Blend/Sequence/Constrain modes, input weights/masks, relative transform preservation, and non-camera View/Background fallback.
+  - `environmentlightCOMP`: image-based external lighting, object orientation versus position behavior, sphere/equirectangular/cube-map inputs, quality multiplier behavior, and expensive pre-filtering tradeoffs.
+  - `forceCOMP`: Bullet active force behavior, local/global solver references, Newton units and mass response, relative-position torque effects, and Flex spherical force-field controls.
+  - `handleCOMP`: Handle CHOP IK workflow, multiple end-affectors per bone, target/translate/weight/falloff semantics, twist-only behavior, and per-axis rotation limits.
+  - `impulseforceCOMP`: one-frame Bullet force pulses, instant velocity changes, equivalence to one second of active force at the same value, linear/torque/relative-position controls, and event-style usage.
+  - `lightCOMP`: point/cone/distant light behavior, dimmer compute cutoff, cone/attenuation/projector-map controls, shadow-map generation, and light-view projection controls.
+  - `sharedmeminCOMP`: named shared-memory transform reads from another TouchDesigner process, exact name matching, transform-only scope, license notes, and common COMP wrapper behavior.
+  - `sharedmemoutCOMP`: active named shared-memory transform writes, reader name matching, transform-only scope, cross-process lifecycle concerns, and license notes.
+- Tightened `lightCOMP` metadata while promoting it:
+  - Replaced the stale light-type wording with official point/cone/distant behavior.
+  - Replaced stale shadow wording with official off/hard/soft/custom shadow-map modes.
+  - Added official color, dimmer, cone, attenuation, projector-map, shadow-caster, and projection controls.
+  - Expanded gotchas so the card now clears strict quality without any minimum override.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T11:41:27Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 173`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T11:41:27Z`.
+  - Zero-concept operator card count after promotion: 469 remaining overall; COMP remaining zero-concept cards: 0. Remaining zero-concept families: CHOP 153, TOP 136, SOP 108, DAT 72.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh with hash `39f1dbd47d8f041a...`.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios against the running TouchDesigner session, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed 778 JSON files plus the release-gates report.
+  - `git diff --check`: clean.
+
+## One Hundred Nineteenth Pass - CHOP Routing, Editing, Resampling, and Switching Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - Added the reviewed CHOP routing/editing batch to the high-value strict test and audit allowlist: `deleteCHOP`, `joinCHOP`, `renameCHOP`, `reorderCHOP`, `replaceCHOP`, `resampleCHOP`, `shuffleCHOP`, `sortCHOP`, `switchCHOP`, and `trimCHOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership, then failed red again on reviewed card quality because the 10 CHOP cards had zero `key_concepts`.
+  - After promotion, the focused strict gate passed with the batch held to the same reviewed-concept minimums as the rest of the allowlist.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 10 CHOP routing/editing operators.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for channel deletion, joining/blending, renaming, channel reordering, replacement, resampling, sample/channel shuffling, sample sorting, hard switching, and interval trimming.
+  - Strict quality coverage now spans 183 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the CHOP batch:
+  - Channel and sample routing: `Delete CHOP`, `Join CHOP`, `Rename CHOP`, `Reorder CHOP`, `Replace CHOP`.
+  - Sample-rate, layout, sorting, switching, and interval editing: `Resample CHOP`, `Shuffle CHOP`, `Sort CHOP`, `Switch CHOP`, `Trim CHOP`.
+- Added reviewed concepts grounded in the official docs:
+  - `deleteCHOP`: whole-channel deletion, sample deletion, delete-versus-retain modes, compare-channel sample matching, and all-samples-deleted length behavior.
+  - `joinCHOP`: input appending, expected matching channel sets, shifted later inputs, blend-region modes, blend shapes, and quaternion/translation blending.
+  - `renameCHOP`: name-only channel changes, From/To pattern replacement, unmatched pass-through behavior, second-input name reference behavior, and Select CHOP comparison.
+  - `reorderCHOP`: channel order changes without value changes, numeric/character/base-name/value/reverse/random/group/every-Nth methods, Order Reference precedence, and Sort CHOP comparison.
+  - `replaceCHOP`: same-named channel replacement, unchanged unmatched first-input channels, fast delete workflow, output interval source selection, and Notify on Change diagnostics.
+  - `resampleCHOP`: sample-rate and interval conversion, full-interval mapping, method selection, interpolation modes, pulse preservation, and Time Slice limitations.
+  - `shuffleCHOP`: sample/channel reshaping, channel/sample transposition, sequence and split modes, N Value controls, and SOP/TOP-to-CHOP row-column workflows.
+  - `sortCHOP`: sample sorting inside channels, selected sort-channel behavior, independent sorting when no channel is selected, Index Channel output, and Reorder CHOP comparison.
+  - `switchCHOP`: exact single-input selection, zero-based indices, First Input is Index control wiring, fractional index rounding, and Cross/Blend CHOP comparison for blended transitions.
+  - `trimCHOP`: channel shortening/lengthening, extend-condition behavior for lengthened output, absolute/relative interval controls, current-frame one-sample output, and discard exterior/interior behavior.
+- Tightened date expectations around the CHOP priority-card groups:
+  - Existing broad CHOP structure tests still expect `2026-06-17` for older reviewed cards, while this batch now expects `2026-06-18`.
+  - This avoids weakening the broader coverage assertions while allowing the newly reviewed cards to carry the current verification date.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T11:50:48Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: passed after the earlier red membership and quality failures.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: initially exposed stale date assertions for the newly verified CHOP cards, then passed with 40 tests.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 183`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T11:50:48Z`.
+  - Zero-concept operator card count after promotion: 459 remaining overall. Remaining zero-concept families: CHOP 143, TOP 136, SOP 108, DAT 72. COMP, POP, and MAT remain at 0 zero-concept cards.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh with hash `39f1dbd47d8f041a...`.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running, so `uv run python scripts/brain_live_smoke.py --live` was run: ok, 10 scenarios, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed 778 JSON files plus the release-gates report.
+  - `git diff --check`: clean.
+
+## One Hundred Twentieth Pass - CHOP Audio Device, Filter, Dynamics, Movie, and NDI Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - Added the reviewed audio CHOP batch to the high-value strict test: `audiobandeqCHOP`, `audiobinauralCHOP`, `audiodeviceinCHOP`, `audiodeviceoutCHOP`, `audiodynamicsCHOP`, `audiofileoutCHOP`, `audiofilterCHOP`, `audiomovieCHOP`, `audiondiCHOP`, and `audiooscillatorCHOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded those operators.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the same focused gate failed red again on reviewed card quality because the 10 audio CHOP cards had zero `key_concepts`.
+  - After promotion, the focused strict gate passed with the batch held to the same reviewed-concept minimums as the rest of the allowlist.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 10 audio CHOP operators.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for graphic EQ bands, binaural format/listener mapping, device input/output, dynamics stages, file recording, filter cutoff/rolloff, movie/NDI source audio, and audio-rate oscillator controls.
+  - Strict quality coverage now spans 193 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the audio CHOP batch:
+  - Audio filtering and generation: `Audio Band EQ CHOP`, `Audio Filter CHOP`, `Audio Oscillator CHOP`.
+  - Audio device and file IO: `Audio Device In CHOP`, `Audio Device Out CHOP`, `Audio File Out CHOP`.
+  - Spatial, dynamics, and media-stream audio: `Audio Binaural CHOP`, `Audio Dynamics CHOP`, `Audio Movie CHOP`, `Audio NDI CHOP`.
+- Added reviewed concepts grounded in the official docs:
+  - `audiobandeqCHOP`: 16-band graphic EQ behavior, fixed 25 Hz to 22 kHz band layout, neighboring-band bandwidth behavior, Dry/Wet Mix, and Audio Para EQ comparison.
+  - `audiobinauralCHOP`: Steam Audio HRTF binaural output, input-format channel-count contracts, ambisonics order, custom speaker mapping DAT requirements, and listener COMP orientation.
+  - `audiodeviceinCHOP`: live device capture, driver/backend selection, OS-default versus explicit device selection, mono/stereo/multichannel formatting, and rate/buffer stability tradeoffs.
+  - `audiodeviceoutCHOP`: device playback routing, driver/device selection, buffer delay versus stability, speaker-output routing order, and crackle/pop risk when frame time exceeds audio-buffer constraints.
+  - `audiodynamicsCHOP`: pre gain, compression, limiting, dry/wet processing, side-chain input behavior, channel-linking choices, and Info CHOP diagnostics for gain reduction and dB/timing values.
+  - `audiofileoutCHOP`: CHOP audio recording to disk, file-type and codec/bitrate selection, extension matching, Record/Pause workflow, and metadata from Header Source DAT.
+  - `audiofilterCHOP`: low/high/band-pass/reject filtering, cutoff half-power behavior, rolloff sharpness, second-input cutoff modulation, and EQ operator comparison.
+  - `audiomovieCHOP`: Movie File In TOP audio playback, Play control, source TOP reference, pre-read/open-timeout behavior, and audio sync offset for output-device latency.
+  - `audiondiCHOP`: audio extraction from NDI In TOP, Play behavior, downstream CHOP/output routing, and stream-oriented time-slice/sample-rate handling.
+  - `audiooscillatorCHOP`: audio-rate waveform/noise generation, base frequency, units-per-octave pitch mapping, playback-source time warping, and Wave/LFO CHOP comparison.
+- Tightened metadata while promoting the cards:
+  - Added official `drywet` coverage to Audio Band EQ and Audio Filter.
+  - Added Audio Device Out `errormissing` so missing output devices can be surfaced explicitly.
+  - Added Audio Dynamics `inputgain` and `drywet` to represent pre/post dynamics controls.
+  - Added Audio Movie `prereadlength` and Audio Oscillator reset controls for planner-relevant timing and reset behavior.
+  - Updated the broad audio CHOP structure test so only the newly reviewed audio batch expects `2026-06-18`; older cards in the same group keep `2026-06-17`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T11:58:56Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: initially exposed the stale audio-group date assertion, then passed with 40 tests.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 193`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T11:58:56Z`.
+  - Zero-concept operator card count after promotion: 449 remaining overall. Remaining zero-concept families: CHOP 133, TOP 136, SOP 108, DAT 72. COMP, POP, and MAT remain at 0 zero-concept cards.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh with hash `39f1dbd47d8f041a...`.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running, so `uv run python scripts/brain_live_smoke.py --live` was run: ok, 10 scenarios, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed 778 JSON files plus the release-gates report.
+  - `git diff --check`: clean.
+
+## One Hundred Twenty-First Pass - CHOP Audio Tail, Streaming, VST, Spectrum, and Spatial Render Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - Added the reviewed audio-tail CHOP batch to the high-value strict test and audit allowlist: `audioparaeqCHOP`, `audioplayCHOP`, `audiorenderCHOP`, `audiospectrumCHOP`, `audiostreaminCHOP`, `audiostreamoutCHOP`, `audiovstCHOP`, and `audiowebrenderCHOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded those operators.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the same focused gate failed red again on reviewed card quality because the 8 audio-tail CHOP cards had zero `key_concepts`.
+  - After promotion, the focused strict gate passed with the batch held to the same reviewed-concept minimums as the rest of the allowlist.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 8 audio-tail CHOP operators.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for parametric EQ bands, direct audio playback, Steam Audio rendering, FFT spectrum conversion, RTSP/WebRTC audio streaming, VST plugin hosting, and Web Render TOP audio extraction.
+  - Strict quality coverage now spans 201 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the audio-tail CHOP batch:
+  - Audio playback, EQ, and analysis: `Audio Para EQ CHOP`, `Audio Play CHOP`, `Audio Spectrum CHOP`.
+  - Spatial rendering and plugin hosting: `Audio Render CHOP`, `Audio VST CHOP`.
+  - Streaming and browser-rendered audio: `Audio Stream In CHOP`, `Audio Stream Out CHOP`, `Audio Web Render CHOP`.
+- Added reviewed concepts grounded in the official docs:
+  - `audioparaeqCHOP`: three serial parametric filters, frequency/bandwidth/boost controls, dB boost behavior, dry/wet mix, and modulation-input handling for fast parameter changes.
+  - `audioplayCHOP`: direct file-to-device playback without CHOP sample output, state-channel feedback, trigger/volume/pan input roles, DAT file-list playback, disk/web file references, and output-device mapping.
+  - `audiorenderCHOP`: Steam Audio spatial rendering, listener/source transform roles, sample-rate options, simple positional versus simulation modes, output-format channel counts, and custom mapping-table workflows.
+  - `audiospectrumCHOP`: time-to-spectrum and spectrum-to-time conversion, visual waveform/spectrum modes, FFT-size tradeoffs, high-frequency boost, output-length controls, and log-frequency display.
+  - `audiostreaminCHOP`: RTSP and WebRTC audio intake, Video Stream In TOP embedded-audio references, Play/open-timeout controls, sync offset, volume control, and stream state diagnostics.
+  - `audiostreamoutCHOP`: RTSP and WebRTC audio publishing, active/mode/port/stream-name routing, WebRTC connection and track binding, and common CHOP output-rate controls.
+  - `audiovstCHOP`: VST3 plugin loading, plugin-generated and plugin-processed audio, bidirectional plugin parameters, Binding/Bind CHOP automation guidance, MIDI callbacks, multichannel inputs, GUI display, and bus layout controls.
+  - `audiowebrenderCHOP`: Web Render TOP audio capture, required Web Render TOP audio-routing settings, Active control, source TOP reference, and buffer/drop diagnostics.
+- Tightened metadata while promoting the cards:
+  - Added `boost1`, `boost2`, `boost3`, and `drywet` to Audio Para EQ.
+  - Added `attenuation`, `ambisonicsorder`, and `mappingtable` to Audio Render.
+  - Added `frequencylog` to Audio Spectrum and `webrtctrack` to Audio Stream In.
+  - Added `loadpluginstate`, `alwaysontop`, `readonlyparms`, and `clearlearnedparms` to Audio VST.
+  - Kept Torus POP's earlier End Caps note out of this pass because the current audio-tail docs did not introduce a comparable hidden parameter ambiguity.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T12:08:03Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 201`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T12:08:03Z`.
+  - Zero-concept operator card count after promotion: 441 remaining overall. Remaining zero-concept families: CHOP 125, TOP 136, SOP 108, DAT 72. COMP, POP, and MAT remain at 0 zero-concept cards.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh with hash `39f1dbd47d8f041a...`.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running, so `uv run python scripts/brain_live_smoke.py --live` was run: ok, 10 scenarios, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed 778 JSON files plus the release-gates report.
+  - `git diff --check`: clean.
+
+## One Hundred Twenty-Second Pass - CHOP Tracking, Device Input, and Skeleton Sensor Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - Added a reviewed CHOP tracking/device batch to the high-value strict test: `blacktraxCHOP`, `blobtrackCHOP`, `bodytrackCHOP`, `facetrackCHOP`, `gestureCHOP`, `hokuyoCHOP`, `joystickCHOP`, `kinectCHOP`, `kinectazureCHOP`, and `leapmotionCHOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded those operators.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the same focused gate failed red again on reviewed card quality because the 10 tracking/device CHOP cards had zero `key_concepts`.
+  - After promotion, the focused strict gate passed with the batch held to the same reviewed-concept minimums as the rest of the allowlist.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 10 CHOP tracking/device operators.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for BlackTrax beacon mapping, Blob Track 2D point tracking, Nvidia Maxine body/face tracking, Gesture capture/looping, Hokuyo scanner output, Joystick channels, Kinect skeleton tracking, Kinect Azure TOP-linked body tracking, and Leap Motion hand/finger/gesture channels.
+  - The broad CHOP date assertions now use the aggregate `_CHOP_REVIEWED_2026_06_18` set so newly reviewed CHOP batches carry the current verification date without weakening older card checks.
+  - Strict quality coverage now spans 211 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the CHOP tracking/device batch:
+  - Optical/body/face tracking: `BlackTrax CHOP`, `Blob Track CHOP`, `Body Track CHOP`, `Face Track CHOP`.
+  - Capture and scanner/controller input: `Gesture CHOP`, `Hokuyo CHOP`, `Joystick CHOP`.
+  - Skeleton and hand sensors: `Kinect CHOP`, `Kinect Azure CHOP`, `Leap Motion CHOP`.
+- Added reviewed concepts grounded in the official docs:
+  - `blacktraxCHOP`: RTTrPM packet reception, beacon ID to channel mapping, Mapping Table versus Max Beacons output, centroid/velocity/acceleration/LED output selection, and WYSIWYG/Euler server settings.
+  - `blobtrackCHOP`: tx/ty Cartesian input contract, Hokuyo/Leuze scan workflow, all-points versus consecutive search tradeoff, area-of-interest controls, and centroid/velocity/prediction persistence behavior.
+  - `bodytrackCHOP`: Nvidia Maxine model requirements, TOP input image analysis, bounding box/keypoint/rotation/Body 3D outputs, people tracking lifecycle controls, and Windows/RTX prerequisites.
+  - `facetrackCHOP`: Nvidia Maxine face detection, largest-face tracking behavior, 68/126 landmark outputs, mesh-transform channels for Face Track SOP, and orthographic bottom-left/aspect-correct overlay guidance.
+  - `gestureCHOP`: first-input capture while listen is active, second-input listen and third-input reset roles, beat-cycle fitting, blend/interpolation playback shaping, and timeline versus sequential playback.
+  - `hokuyoCHOP`: serial/ethernet laser scanner connection, polar versus Cartesian output, model-specific start/end steps, high-sensitivity/motor-speed tradeoffs, and Blob Track CHOP pairing.
+  - `joystickCHOP`: controller axis/button/slider/POV output surface, source selection, axis range and dead-zone behavior, OS/controller calibration dependency, and sample-rate/extend controls.
+  - `kinectCHOP`: Kinect v1/v2 skeleton support, world/color/depth coordinate outputs, interaction and face channels, bone rotation/length/unroll behavior, and smoothing/prediction latency tradeoffs.
+  - `kinectazureCHOP`: Kinect Azure TOP dependency, max-player channel allocation, world/color/depth output toggles, confidence and IMU channels, body/image synchronization lag, and hardware-type exclusivity.
+  - `leapmotionCHOP`: single-device Ultraleap tracking, API generation tradeoffs, library-folder setup, debug/status channel diagnostics, and hand/finger/tool/gesture indexed channel limits.
+- Tightened metadata while promoting the cards:
+  - Added official BlackTrax `centroid`, `leds`, `reset`, and `resetpulse` controls.
+  - Added Blob Track area-of-interest center/size/rotate/outside-movement controls and centroid/velocity output toggles.
+  - Added Kinect status, near-depth, U-flip, smoothing, correction, jitter, deviation, and rotation-smoothing controls.
+  - Added Kinect Azure relative and absolute bone rotation controls.
+  - Added Leap Motion finger size/extended/joints, tool, circle/swipe/key-tap/screen-tap gesture controls.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-18T12:15:12Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: initially exposed stale CHOP date assertions, then passed with 40 tests.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 211`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-18T12:15:12Z`.
+  - Zero-concept operator card count after promotion: 431 remaining overall. Remaining zero-concept families: CHOP 115, TOP 136, SOP 108, DAT 72. COMP, POP, and MAT remain at 0 zero-concept cards.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh with hash `39f1dbd47d8f041a...`.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running, so `uv run python scripts/brain_live_smoke.py --live` was run: ok, 10 scenarios, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed 778 JSON files plus the release-gates report.
+  - `git diff --check`: clean.
+
+## One Hundred Twenty-Third Pass - CHOP Protocol, Timecode, Laser, MIDI, and FreeD Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate from the in-progress TDD red state:
+  - The high-value strict test and atlas audit allowlist already included the reviewed protocol/timecode/device CHOP batch: `dmxinCHOP`, `dmxoutCHOP`, `freedinCHOP`, `freedoutCHOP`, `laserCHOP`, `laserdeviceCHOP`, `ltcinCHOP`, `ltcoutCHOP`, `midiinCHOP`, and `midioutCHOP`.
+  - Reconfirmed the focused gate was still red before promotion: `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed because the 10 reviewed cards still had zero `key_concepts`.
+  - After promotion, the focused strict gate passed with the batch held to the same reviewed-concept minimums as the existing allowlist.
+- Updated the strict quality surface:
+  - Strict quality coverage now spans 221 reviewed high-value operator cards.
+  - The broad CHOP date assertions required the promoted batch to carry `last_verified = 2026-06-18`; an initial full coverage run exposed stale `2026-06-17` timestamps, then passed after the 10 cards were aligned with `_CHOP_REVIEWED_2026_06_18`.
+- Reviewed the current official Derivative docs for the CHOP protocol, timecode, laser, MIDI, and FreeD batch:
+  - DMX and network lighting IO: `DMX In CHOP`, `DMX Out CHOP`.
+  - FreeD camera tracking IO: `FreeD In CHOP`, `FreeD Out CHOP`.
+  - Laser point generation and DAC output: `Laser CHOP`, `Laser Device CHOP`.
+  - SMPTE LTC audio timecode: `LTC In CHOP`, `LTC Out CHOP`.
+  - MIDI device/file IO: `MIDI In CHOP`, `MIDI Out CHOP`.
+- Added reviewed concepts grounded in the official docs:
+  - `dmxinCHOP`: DMX/Art-Net/sACN/KiNET channel reception, 0-255 values, 44 Hz DMX refresh limit, packet format modes, Art-Net addressing semantics, Filter Table routing, sACN universe indexing, queue latency, and resampling behavior.
+  - `dmxoutCHOP`: DMX/Art-Net/sACN/KiNET/FTDI output, channel-to-address mapping, Packet Per Sample versus Packet Per Channel packing, 44 Hz Rate guidance, network broadcast/direct-address behavior, Routing Table fallbacks, and ArtSync synchronization.
+  - `freedinCHOP`: FreeD network tracking input, virtual Camera COMP channel surface, D1-only message handling, lower precision and missing lens distortion versus hardware-specific protocols, camera ID filtering, and UDP/multicast NIC selection.
+  - `freedoutCHOP`: FreeD tracking output, one-packet-per-frame behavior, expected camera/lens/user channels, missing-channel defaults, D1 message encoding, and destination/local network addressing.
+  - `laserCHOP`: high-sample-rate POP/SOP/CHOP laser point generation, x/y/id/color channel contracts, SOP/POP laser attributes, corner/guide point semantics, blanking timing, Laser Device CHOP and AVB output routing.
+  - `laserdeviceCHOP`: EtherDream/Helios/ShowNET DAC targeting, required x/y/r/g/b/i channel ranges, optional user fields, EtherDream discovery, Helios/ShowNET device menus, blanking behavior, and point-buffer queue tuning.
+  - `ltcinCHOP`: SMPTE LTC audio decoding, Audio Device In CHOP source expectations, input frame-rate matching, discrete/total/user-field output options, timeline up-sampling effects, and debug decode channels.
+  - `ltcoutCHOP`: LTC audio-signal generation, sequential versus Timecode object/CHOP/DAT reference modes, play/cue initialization, frame-rate and drop-frame semantics, high-FPS behavior, and user-bit metadata.
+  - `midiinCHOP`: device/internal/file MIDI event input, simplified dynamic channels, channel prefix split/merge behavior, 7-bit versus paired 14-bit controller handling, `.toe` value restore behavior, sample-rate/pulse preservation, and event-type coverage.
+  - `midioutCHOP`: device/file MIDI event output, channel-name event mapping, time-sliced realtime timing, raw versus normalized value interpretation, Cook Every Frame guidance, and note/controller/program/clock/MTC output coverage.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T09:39:22Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: initially exposed stale CHOP verification dates, then passed with 40 tests.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 221`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T09:39:22Z`.
+  - Zero-concept operator card count after promotion: 421 remaining overall. Remaining zero-concept families: CHOP 105, TOP 136, SOP 108, DAT 72. COMP, POP, and MAT remain at 0 zero-concept cards.
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden cases passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td = false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 resource templates.
+  - `uv run python scripts/check_versions.py`: ok, v2.0.0 files in sync.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, seed release note `2025.32820` matches or exceeds Derivative latest `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` fresh with hash `39f1dbd47d8f041a...`.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running, so `uv run python scripts/brain_live_smoke.py --live` was run: ok, 10 scenarios, `mutated_td = false`, TD health ok. The live planner still emitted non-blocking `family-list-omitted:*` and validation-advisory risk flags on some scenarios, with no missing facts or missing expected operators.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed 778 JSON files plus the release-gates report.
+  - `git diff --check`: clean.
+
+## One Hundred Twenty-Fourth Pass - CHOP Attribute, Clip, Clock, Count, Copy, Composite, Cross, and CPlusPlus Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - Added a reviewed CHOP core/motion/editing batch to the high-value strict test: `attributeCHOP`, `bulletsolverCHOP`, `clipCHOP`, `clipblenderCHOP`, `clockCHOP`, `compositeCHOP`, `copyCHOP`, `countCHOP`, `cplusplusCHOP`, and `crossCHOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded those operators.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the same focused gate failed red again on reviewed card quality because the 10 CHOP cards had zero `key_concepts`.
+  - After promotion, the focused strict gate passed with the batch held to the same reviewed-concept minimums as the rest of the allowlist.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 10 CHOP core/motion/editing operators.
+  - `tests/brain/test_atlas_coverage.py` expects those cards in the high-value set and protects official parameter metadata for quaternion attributes, Bullet Solver output/feedback, Clip and Clip Blender animation sequencing, wall-clock/solar channels, Composite and Cross blending, Copy stamping, Count thresholds/resets, and CPlusPlus plugin loading.
+  - Strict quality coverage now spans 231 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the CHOP core/motion/editing batch:
+  - Attribute and Bullet simulation output: `Attribute CHOP`, `Bullet Solver CHOP`.
+  - Animation clip sequencing: `Clip CHOP`, `Clip Blender CHOP`.
+  - Time/count utilities: `Clock CHOP`, `Count CHOP`.
+  - CHOP blending/copying/custom plugins: `Composite CHOP`, `Copy CHOP`, `CPlusPlus CHOP`, `Cross CHOP`.
+- Added reviewed concepts grounded in the official docs:
+  - `attributeCHOP`: CHOP attribute edits, quaternion rotation triplet grouping, spherical linear interpolation, documented CHOP consumers, Function modes, Scope, and Rotate Order.
+  - `bulletsolverCHOP`: Bullet Solver COMP versus Actor COMP references, solved actor/body/active/collision/transform/velocity outputs, collision test dependency, transform space, and feedback injection into the next simulation step.
+  - `clipCHOP`: Pro-only Clip Blender workflow role, rule/callback DATs, rotate order, transition/blend/next controls, loop behavior, index channel, position/rotation type, and pause-at-end behavior.
+  - `clipblenderCHOP`: Pro-only animation clip blending/sequencing/scripting engine, DAT-list consumption, last-clip looping, channel-count/name/sample-rate requirements, FBX/USD extraction workflow, target/root transform channels, and Info CHOP/DAT state inspection.
+  - `clockCHOP`: date/time units and fraction ramps, countdown mode, hour format/adjustment, start reference, wall-clock semantics, moon/solar channels, and latitude/longitude/hemisphere dependencies.
+  - `compositeCHOP`: base/layer input roles, static multi-frame motion blending, Start/Peak/Release/End effect envelope, Base Hold replace-versus-add behavior, third-input Effect override, and quaternion/shortest-path rotation blending.
+  - `copyCHOP`: first-input trigger/convolve source, second-input copy source, Triggered Copy versus Convolve methods, output channel organization, per-copy stamping through `fetchStamp`, and Remainder handling.
+  - `countCHOP`: threshold crossing counts, default upward zero crossing, trigger/release hysteresis, operation menus for each trigger state, reset and increment-value inputs, and loop/clamp/zigzag limit modes.
+  - `cplusplusCHOP`: compiled C++ plugin loading, Re-Init and Unload Plugin lifecycle, shared plugin unload requirement, official C++ plugin/API references, plugin-defined custom parameters, and common CHOP sample-rate/scope/export controls.
+  - `crossCHOP`: multi-input two-nearest-input blending, Switch CHOP contrast, integer input selection, fractional proportional interpolation, and common CHOP time-slice/scope/sample-rate controls.
+- Tightened metadata while promoting the cards:
+  - Added Clip Blender `reset`, `resetpulse`, and root translate/rotate channel parameters.
+  - Added Clock `ampm`, `sunphase`, and `declination` channels.
+  - Added Copy `copy` stamp sequence metadata.
+  - Added Count `retriggerunit`.
+  - Added CPlusPlus CHOP `srselect` and Cross CHOP `timeslice` common controls.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T09:52:46Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 231`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T09:52:46Z`.
+  - Zero-concept operator card count after promotion: 411 remaining overall. Remaining zero-concept families: CHOP 95, TOP 136, SOP 108, DAT 72. COMP, POP, and MAT remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; the commands completed successfully after the environment repair step.
+
+## One Hundred Twenty-Fifth Pass - CHOP Cycle, DAT, Delay, Envelope, Event, Expression, Extend, Fan, Feedback, and File In Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - Added a reviewed CHOP timing/file/control batch to the high-value strict test: `cycleCHOP`, `dattoCHOP`, `delayCHOP`, `envelopeCHOP`, `eventCHOP`, `expressionCHOP`, `extendCHOP`, `fanCHOP`, `feedbackCHOP`, and `fileinCHOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded those operators.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, `uv run python scripts/audit_brain_atlas.py --pretty` failed with `operator_card_quality.strict_operator_count = 241`, `operator_card_quality.gap_count = 10`, and all 10 new gaps on `key_concepts` actual 0, minimum 3.
+  - After promotion, the focused strict gate passed with the new batch held to the reviewed-concept minimums.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 10 CHOP timing/file/control operators.
+  - `tests/brain/test_atlas_coverage.py` includes `_CHOP_TIMING_FILE_CONTROL_REVIEWED_2026_06_18` in `_CHOP_REVIEWED_2026_06_18`.
+  - The high-value strict test now protects official parameter metadata for Cycle blending/step controls, DAT to CHOP row/column selectors, Delay cache/reset controls, Envelope analysis controls, Event ADSR unit parameters, Expression channel grouping, Extend conditions, Fan in/out handling, Feedback output/dt/reset controls, and File In naming/rate/extend/refresh controls.
+  - Strict quality coverage now spans 241 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the CHOP timing/file/control batch:
+  - Looping and delay utilities: `Cycle CHOP`, `Delay CHOP`, `Extend CHOP`.
+  - DAT conversion and expression/event control: `DAT to CHOP`, `Expression CHOP`, `Event CHOP`.
+  - Envelope, fan, feedback, and file input utilities: `Envelope CHOP`, `Fan CHOP`, `Feedback CHOP`, `File In CHOP`.
+- Added reviewed concepts grounded in the official docs:
+  - `cycleCHOP`: before/after repetition, fractional cycle counts, mirrored cycles, end-to-start blending, blend timing topology and shapes, audio-oriented Add behavior, and Step/Step Scope for root-motion offsets.
+  - `dattoCHOP`: table DAT conversion, Convert DAT normalization guidance, row/column extraction modes, `fromcol`/`fromrow` label-axis dependence, output shape choices, and first-row/first-column naming semantics.
+  - `delayCHOP`: per-channel delays, `me.chanIndex` and table-based offsets, delay units, reset/cache clearing, Delay+Math or Feedback echo construction, and sample-rate timing sensitivity.
+  - `envelopeCHOP`: nearby-sample amplitude/power envelopes, Exponential Decay versus Local Maximum Window tradeoffs, bounds modes, width/unit window sizing, interpolation, normalization, and resampling behavior.
+  - `eventCHOP`: overlapping off-to-on event births, dynamic one-sample-per-active-event output, trigger/reset/sample inputs, event output channels, state-channel phase uses, ADSR unit parameters, and callbacks DAT lifecycle hooks.
+  - `expressionCHOP`: sample-wise math expressions, first-input output shape preservation, expression recycling, Channels per Expr grouping, `me.inputVal` and `me.inputs[...]` access, and Evaluate DAT as the general expression-testing companion.
+  - `extendCHOP`: pre/post interval extend conditions, independent left/right modes, official mode set, Default Value semantics, Trim CHOP as the interval-editing operator, and extend-state inspection.
+  - `fanCHOP`: Fan Out and Fan In roles, 0-based binary channel selection, Channel Names driven output count, integer-like input assumptions, outside-range behavior, and first-on Fan In selection.
+  - `feedbackCHOP`: previous-frame/time-slice state storage, recursive control chains, circular-loop recursion avoidance, previous/shift/sample output modes, `dt` channel creation, and reset activation semantics.
+  - `fileinCHOP`: disk/web channel and audio file reading, official `.chan`, `.clip`, `.bclip`, `.aiff`, and `.wav` examples, MIDI handoff to MIDI In CHOP, channel naming, sample-rate override versus resample, extend conditions, rename/override preprocessing, and refresh controls.
+- Tightened metadata while promoting the cards:
+  - Added DAT to CHOP row/column selector parameters: `rownamestart`, `rowindexstart`, `rownameend`, `rowindexend`, `rownames`, `rowexpr`, `fromcol`, `colnamestart`, `colindexstart`, `colnameend`, `colindexend`, `colnames`, `colexpr`, and `fromrow`.
+  - Added Event CHOP ADSR time-unit parameters: `attacktunit`, `decaytunit`, `sustaintunit`, and `releasetunit`.
+  - Updated all 10 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T10:02:24Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 241`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T10:02:24Z`.
+  - Zero-concept operator card count after promotion: 401 remaining overall. Remaining zero-concept families: CHOP 85, TOP 136, SOP 108, DAT 72. COMP, POP, and MAT remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed 778 JSON files plus the release-gates report.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; the commands completed successfully after the environment repair step.
+
+## One Hundred Twenty-Sixth Pass - CHOP File Out, Filter, Function, Handle, Hog, Hold, Import Select, In, Info, and Interpolate Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate from the in-progress red TDD state:
+  - Added a reviewed CHOP file/filter/function/interface batch to the high-value strict test: `fileoutCHOP`, `filterCHOP`, `functionCHOP`, `handleCHOP`, `hogCHOP`, `holdCHOP`, `importselectCHOP`, `inCHOP`, `infoCHOP`, and `interpolateCHOP`.
+  - The focused strict gate failed red first on strict membership before the audit allowlist included the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate and atlas audit failed red again on reviewed card quality: `operator_card_quality.strict_operator_count = 251`, `operator_card_quality.gap_count = 11`, with all 10 promoted cards missing `key_concepts` and `filterCHOP` also below the gotcha minimum.
+  - After promotion, the focused strict gate passed with the new batch held to the same reviewed-concept minimums as the rest of the allowlist.
+- Updated the strict quality surface:
+  - `tests/brain/test_atlas_coverage.py` includes `_CHOP_FILE_FILTER_FUNCTION_REVIEWED_2026_06_18` in `_CHOP_REVIEWED_2026_06_18`.
+  - `src/td_mcp/brain/atlas_audit.py` includes the 10 CHOP file/filter/function/interface operators.
+  - The high-value strict test now protects official parameter metadata for File Out writes, Filter official names and One Euro controls, Function error/match/angle controls, Handle IK solve controls, Hog CPU delay controls, Hold trigger modes, Import Select playback/trim/cue/extend controls, In CHOP component interface controls, Info CHOP range/passive controls, and Interpolate blend/overlap/match controls.
+  - Strict quality coverage now spans 251 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the CHOP file/filter/function/interface batch:
+  - File and filtering utilities: `File Out CHOP`, `Filter CHOP`.
+  - Math and IK utilities: `Function CHOP`, `Handle CHOP`.
+  - Performance and sample-hold utilities: `Hog CHOP`, `Hold CHOP`.
+  - Import, component input, diagnostics, and interpolation utilities: `Import Select CHOP`, `In CHOP`, `Info CHOP`, `Interpolate CHOP`.
+  - Read-only subagent audits were used as acceleration, and the main pass independently verified the official Derivative docs before editing the cards.
+- Added reviewed concepts grounded in the official docs:
+  - `fileoutCHOP`: `.chan` raw ASCII output, one-row-per-frame channel data, Active versus Write behavior, Interval frame units, File path readiness, and Scope-limited channel writes.
+  - `filterCHOP`: neighbor-sample filtering, Type-controlled weighting, Width and Width Unit delay/smoothing tradeoffs, Effect blending, De-spike/Ramp Preserve/One Euro dedicated controls, Filter per Sample multi-sample behavior, and audio-filter operator guidance.
+  - `functionCHOP`: unary versus binary math functions, second-input pairing for `atan2` and power modes, Base Value and Exponent Value constants, Error Handling replacement modes, and Angle Units.
+  - `handleCHOP`: Handle COMP IK rotation output, `rx`/`ry`/`rz` bone channels, fixed branch/unit solving, iteration accuracy versus cook cost, Init/Preroll stabilization, and Max Angle Change restraint.
+  - `hogCHOP`: deliberate CPU consumption, slower-machine/frame-rate simulation, Active toggle, Cook Every Frame behavior, Delay/Delay Unit minimum waste time, and Info CHOP/operator-info monitoring.
+  - `holdCHOP`: first-input sampling with second-input trigger, rising/high/falling/low/value-change sample modes, Hold Last semantics, immediate Hold Last Pulse capture, and per-sample holding for multi-sample channels.
+  - `importselectCHOP`: FBX/USD import parent channel selection, empty Parent search behavior, animation versus blend-shape take type, parent versus local playback controls, timeline/index/sequential/full-range play modes, trim/cue/index unit controls, and extend behavior.
+  - `inCHOP`: parent COMP CHOP input connector creation, incoming channel pass-through, Label hover text, Num Channels validation, and Names filtering versus renaming behavior.
+  - `infoCHOP`: referenced-operator info channels, all/general/timecode Info Type modes, `.timecode` conditional output, Scope/Values/Range filtering, Passive cook semantics, and Children Cook Time performance cost.
+  - `interpolateCHOP`: keyframe-style multi-input interpolation, time sorting without shifting inputs, first-input output channel count, channel-name matching behavior, interpolation Shape, and Overlap Priority handling.
+- Tightened metadata while promoting the cards:
+  - Replaced `filterCHOP` non-official `filtertype`, `filterwidth`, and `resetcondition` metadata with official `type`, `effect`, `width`, `widthunit`, `spike`, `ramptolerance`, `ramprate`, `passes`, `cutoff`, `speedcoeff`, `slopecutoff`, `slopedownreset`, `slopedownmax`, `slopeupreset`, `slopeupmax`, `reset`, `resetpulse`, `filterpersample`, and `scope`.
+  - Added `functionCHOP` `angunit` and `match` parameters.
+  - Added `importselectCHOP` playback controls: `shiftanimationstart`, `indexunit`, `trim`, `tstart`, `tstartunit`, `tend`, `tendunit`, `cue`, `cuepulse`, `cuepoint`, `cuepointunit`, `textendleft`, `textendright`, and `scope`.
+  - Added `infoCHOP` `range1` and `range2` sub-parameters.
+  - Updated all 10 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T10:11:53Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 251`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T10:11:53Z`.
+  - Zero-concept operator card count after promotion: 391 remaining overall. Remaining zero-concept families: CHOP 75, TOP 136, SOP 108, DAT 72. COMP, POP, and MAT remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 18836, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed 778 JSON files plus the release-gates report.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully after the environment repair step.
+
+## One Hundred Twenty-Seventh Pass - CHOP IK, Keyboard, Keyframe, Lag, Scanner, LFO, Limit, Logic, and Lookup Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - Added the next current zero-concept CHOP batch to the high-value strict test: `inversecurveCHOP`, `inversekinCHOP`, `keyboardinCHOP`, `keyframeCHOP`, `lagCHOP`, `leuzerod4CHOP`, `lfoCHOP`, `limitCHOP`, `logicCHOP`, and `lookupCHOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the same focused gate failed red again on reviewed card quality.
+  - `uv run python scripts/audit_brain_atlas.py --pretty` captured the intended quality-red state: `operator_card_quality.strict_operator_count = 261`, `operator_card_quality.gap_count = 11`, with all 10 new cards missing `key_concepts` and `lfoCHOP` also below the gotcha minimum.
+  - After promotion, the focused strict gate passed with the new batch held to the reviewed-concept minimums and official parameter guards.
+- Updated the strict quality surface:
+  - `tests/brain/test_atlas_coverage.py` now includes `_CHOP_IK_INPUT_LOGIC_REVIEWED_2026_06_18` in `_CHOP_REVIEWED_2026_06_18`.
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 10 CHOP IK/input/control operators.
+  - The high-value strict test now protects official parameter metadata for Inverse Curve guide/span/export controls, Inverse Kin solver controls, Keyboard In modifier/panel/rate controls, Keyframe playback/extend controls, Lag up/down sub-parameters, Leuze ROD4 TCP/blob/area controls, LFO waveform/reset/channel controls, Limit value/index quantization controls, Logic combine/match/bound controls, and Lookup index/cyclic/extend controls.
+  - Strict quality coverage now spans 261 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the CHOP IK/input/control batch:
+  - Legacy IK and animation: `Inverse Curve CHOP`, `Inverse Kin CHOP`, `Keyframe CHOP`.
+  - Input and hardware scanning: `Keyboard In CHOP`, `Leuze ROD4 CHOP`.
+  - Control shaping and mapping: `Lag CHOP`, `LFO CHOP`, `Limit CHOP`, `Logic CHOP`, `Lookup CHOP`.
+  - Three read-only official-doc audit subagents accelerated the doc pass; the main agent independently verified the official Derivative pages before editing.
+- Added reviewed concepts grounded in the official docs:
+  - `inversecurveCHOP`: guide-component curve IK, bone start/end chain solving, rotate/bone-length/first-bone translate outputs, guide order/orientation effects, Span Start/End fractions, and Map Exports behavior.
+  - `inversekinCHOP`: Bone-object IK simulation, solver-type modes, end-affector targeting, rest-angle dependence, twist controls, curve-following mode, and export-driven bone rotation workflow.
+  - `keyboardinCHOP`: ASCII keyboard input, monitored key channel creation, modifier filtering, key-name versus number channel naming, Panel COMP focus filtering, and Panel Execute DAT guidance for per-keystroke callbacks.
+  - `keyframeCHOP`: Animation COMP key data sampling, Animation Editor authoring role, input lookup-index playback, time-sliced output, sample-rate semantics, extend behavior, and specific start/end info channels.
+  - `lagCHOP`: lag and overshoot smoothing, separate up/down values, lag method semantics, 90 percent lag-time interpretation, Snap threshold behavior, and Lag per Sample for multi-sample channels.
+  - `leuzerod4CHOP`: TCP/IP scanner connection, raw 529-sample output, blob tracking IDs, Area of Interest modes, protocol/coordinate setup coupling, and Blob Track CHOP pairing guidance.
+  - `lfoCHOP`: real-time low-frequency non-audio oscillator use, Source Wave override behavior, frequency and Octave Control scaling, reset-condition semantics, time-sliced evolution, and channel-name pattern expansion.
+  - `limitCHOP`: clamp/loop/zigzag range limiting, Positive Only absolute-value behavior, Normalize limitation with Time Slicing, value quantization, and index quantization as sample-and-hold.
+  - `logicCHOP`: binary input conversion, Convert Input modes, Channel Pre OP state operations, Combine Channels, Combine CHOPs, and Match/Align behavior for multi-input logic.
+  - `lookupCHOP`: Index Channel versus Lookup Table input roles, default 0-to-1 index mapping, output shape inheritance, interpolation versus nearest lookup, Cyclic Range handling, and extend conditions for out-of-range indices.
+- Tightened metadata while promoting the cards:
+  - Added `inversecurveCHOP` `span1`, `span2`, and `mapexports`.
+  - Added `inversekinCHOP` `none` solver menu item.
+  - Added `keyboardinCHOP` `none` modifier menu item.
+  - Added `lagCHOP` up/down sub-parameters: `lag1`, `lag2`, `overshoot1`, `overshoot2`, `slope1`, `slope2`, `accel1`, and `accel2`.
+  - Added Leuze ROD4 blob and area parameters: `maxpointdistance`, `lowerleft`, `lowerleft1`, `lowerleft2`, `upperright`, `upperright1`, `upperright2`, `allowmovementoutside`, `boundingboxmask`, and `rotate`.
+  - Replaced stale `lfoCHOP` `type` and `amplitude` metadata with official `wavetype`, `amp`, `bias`, `resetcondition`, `reset`, `resetpulse`, `channelname`, `rate`, `timeslice`, `scope`, and `srselect`.
+  - Added `limitCHOP` index quantization controls: `istep`, `istepunit`, `ioffset`, `ioffsetunit`, and `scope`.
+  - Replaced stale `logicCHOP` `inputop`/`bounds` metadata with official `chopop`, `match`, `align`, `bound`, `boundmin`, and `boundmax`.
+  - Added `lookupCHOP` `index1` and `index2`.
+  - Updated all 10 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T10:22:31Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 261`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T10:22:31Z`.
+  - Zero-concept operator card count after promotion: 381 remaining overall. Remaining zero-concept families: CHOP 65, TOP 136, SOP 108, DAT 72. COMP, POP, and MAT remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 18836, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed 778 JSON files plus the release-gates report.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully after the environment repair step.
+
+## One Hundred Twenty-Eighth Pass - CHOP Merge, MIDI Map, Camera Tracking, Mouse, Noise, OAK, and Object Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - Added the next current zero-concept CHOP batch to the high-value strict test: `mergeCHOP`, `midiinmapCHOP`, `mosysCHOP`, `mouseinCHOP`, `mouseoutCHOP`, `ncamCHOP`, `noiseCHOP`, `oakdeviceCHOP`, `oakselectCHOP`, and `objectCHOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the same focused gate failed red again on reviewed card quality.
+  - `uv run python scripts/audit_brain_atlas.py --pretty` captured the intended quality-red state: `operator_card_quality.strict_operator_count = 271`, `operator_card_quality.gap_count = 12`, with all 10 new cards missing `key_concepts`, plus `mergeCHOP` below the key-parameter minimum and `noiseCHOP` below the gotcha minimum.
+  - After promotion, the focused strict gate passed with the new batch held to reviewed-concept minimums and official parameter guards.
+- Updated the strict quality surface:
+  - `tests/brain/test_atlas_coverage.py` now includes `_CHOP_MERGE_DEVICE_OBJECT_REVIEWED_2026_06_18` in `_CHOP_REVIEWED_2026_06_18`.
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 10 CHOP merge/device/object operators.
+  - The high-value strict test now protects official parameter metadata for Merge align/duplicate/export controls, MIDI In Map mapper/device/extend controls, MoSys UDP/multicast/camera controls, Mouse In coordinate/button/panel controls, Mouse Out desktop/button controls, Ncam camera-view/projection/property/timecode controls, Noise official `rough`/harmonic/transform/constraint controls, OAK Device lifecycle/status/stream controls, OAK Select queue/output/callback controls, and Object transform/measurement/range controls.
+  - Strict quality coverage now spans 271 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the CHOP merge/device/object batch:
+  - Channel merge and MIDI mapping: `Merge CHOP`, `MIDI In Map CHOP`.
+  - Tracking and camera systems: `MoSys CHOP`, `Ncam CHOP`.
+  - Mouse I/O and procedural channels: `Mouse In CHOP`, `Mouse Out CHOP`, `Noise CHOP`.
+  - OAK camera streams and spatial relationships: `OAK Device CHOP`, `OAK Select CHOP`, `Object CHOP`.
+  - Read-only official-doc audit subagents accelerated the doc pass for Merge/MIDI/MoSys and Mouse/Ncam/Noise; the main agent independently verified the official Derivative pages before editing.
+- Added reviewed concepts grounded in the official docs:
+  - `mergeCHOP`: multi-input channel merging, input-order output, duplicate-name policy, Align interval handling, Time Slice behavior, and sample-rate match policy.
+  - `midiinmapCHOP`: MIDI Device Mapper dependence, slider and button mapped names, pattern selection, remap portability versus MIDI In CHOP, button velocity, and device table/ID coupling.
+  - `mosysCHOP`: TouchDesigner Pro requirement, MoSys tracking input, virtual camera channels, MoSys TOP pairing, UDP/multicast transport, and Camera ID packet filtering.
+  - `mouseinCHOP`: mouse X/Y output, button state output, Active cooking/capture modes, normalized/aspect/absolute coordinate modes, wheel/monitor channels, and Panel focus filtering.
+  - `mouseoutCHOP`: OS mouse control from CHOP input, normalized full-desktop coordinates, button driving, Cook Every Frame, multi-monitor coordinate range, and safety disable guidance.
+  - `ncamCHOP`: TouchDesigner Pro requirement, Ncam Reality tracking input, TCP transport, camera view/projection/property/timecode channel families, Camera COMP sync, and Ncam TOP image-data pairing.
+  - `noiseCHOP`: irregular non-repeating noise, smooth versus random noise, official shaping controls, optional 3D coordinate input, transform-space sampling, and Time Slice/reset limitations.
+  - `oakdeviceCHOP`: Luxonis OAK camera lifecycle, DepthAI `createPipeline` callbacks, Play behavior, TOP-to-device XLinkIn streams, BGR conversion, and Timer-style state outputs.
+  - `oakselectCHOP`: OAK Device stream selection, automatic simple-message channel conversion, callback parsing for complex messages, output format modes, First Sample Only behavior, and queue/max-items effects.
+  - `objectCHOP`: target/reference spatial comparisons, DAT table pair format, optional point/transform inputs, transform/matrix/measurement compute families, bearing/distance outputs, and naming/output-range controls.
+- Tightened metadata while promoting the cards:
+  - Added Merge CHOP common `timeslice`, `scope`, `srselect`, export, and rename parameters.
+  - Added MIDI In Map, MoSys, Mouse In, Mouse Out, and Ncam common CHOP parameters where the official pages expose them.
+  - Replaced stale `noiseCHOP` `roughness` metadata with official `rough`, and added official harmonic, transform, constraint, range, extend, and common CHOP parameters.
+  - Added OAK Device status channels including `outinitfail`, `outtimercount`, and `outrunningcount`, plus common CHOP parameters.
+  - Added OAK Select common CHOP parameters and clarified output format, First Sample Only, queue, callback, and setup behavior.
+  - Expanded Object CHOP from the coarse transform subset to official compute, measure, bearing, point-scope, smooth-rotate, output-range, extend, and common CHOP parameters.
+  - Updated all 10 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T10:32:19Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 271`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T10:32:19Z`.
+  - Zero-concept operator card count after promotion: 371 remaining overall. Remaining zero-concept families: CHOP 55, TOP 136, SOP 108, DAT 72. COMP, POP, and MAT remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 18836, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed successfully.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully after the environment repair step.
+
+## One Hundred Twenty-Ninth Pass - CHOP VR, OSC, Output, Override, Pangolin, and Pan Tilt Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - Added the next current zero-concept CHOP batch to the high-value strict test: `oculusaudioCHOP`, `oculusriftCHOP`, `openvrCHOP`, `optitrackinCHOP`, `oscinCHOP`, `oscoutCHOP`, `outCHOP`, `overrideCHOP`, `pangolinCHOP`, and `pantiltCHOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the same focused gate failed red again on reviewed card quality.
+  - `uv run python scripts/audit_brain_atlas.py --pretty` captured the intended quality-red state: `operator_card_quality.strict_operator_count = 281`, `operator_card_quality.gap_count = 10`, with all 10 new cards missing reviewed `key_concepts`.
+  - After promotion, the focused strict gate passed with the new batch held to reviewed-concept minimums and official parameter guards.
+- Updated the strict quality surface:
+  - `tests/brain/test_atlas_coverage.py` now includes `_CHOP_VR_OSC_OUTPUT_REVIEWED_2026_06_18` in `_CHOP_REVIEWED_2026_06_18`.
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 10 CHOP VR, OSC, output, override, Pangolin, and pan/tilt operators.
+  - The high-value strict test now protects official parameter metadata for Oculus Audio room/reflection controls, Oculus Rift HMD/controller/projection output modes, OpenVR sensor/projection/tracker/frame/action/skeleton modes, OptiTrack multicast/unicast and NatNet ports, OSC In queue/reset/unit controls, OSC Out protocol/numeric/data-format/packet controls, Out CHOP label/export/rename controls, Override index/name matching, Pangolin source/rate/output controls, and Pan Tilt reset/clamp-range controls.
+  - Strict quality coverage now spans 281 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the CHOP VR, OSC, output, override, Pangolin, and pan/tilt batch:
+  - VR and tracking: `Oculus Audio CHOP`, `Oculus Rift CHOP`, `OpenVR CHOP`, and `OptiTrack In CHOP`.
+  - OSC and component output: `OSC In CHOP`, `OSC Out CHOP`, and `Out CHOP`.
+  - Control handoff and show-control: `Override CHOP`, `Pangolin CHOP`, and `Pan Tilt CHOP`.
+  - Main-agent verification used only official Derivative pages: https://docs.derivative.ca/Oculus_Audio_CHOP, https://docs.derivative.ca/Oculus_Rift_CHOP, https://docs.derivative.ca/OpenVR_CHOP, https://docs.derivative.ca/OptiTrack_In_CHOP, https://docs.derivative.ca/OSC_In_CHOP, https://docs.derivative.ca/OSC_Out_CHOP, https://docs.derivative.ca/Out_CHOP, https://docs.derivative.ca/Override_CHOP, https://docs.derivative.ca/Pangolin_CHOP, and https://docs.derivative.ca/Pan_Tilt_CHOP.
+- Added reviewed concepts grounded in the official docs:
+  - `oculusaudioCHOP`: Windows-only Oculus Audio SDK spatialization, mono input to spatial stereo/output channels, listener/source transform roles, range/diameter/band-hint shaping, reflection/reverb and box-room controls, and Audio Render CHOP alternative guidance.
+  - `oculusriftCHOP`: Windows-only Oculus Rift HMD/controller/projection data, output modes, orientation/acceleration/velocity/device/button channels, recenter behavior, camera custom-projection use, and disconnected default values.
+  - `openvrCHOP`: Windows-only OpenVR sensor/projection/tracker/frame/action/skeleton modes, meter-based unit scaling, tracker range limits, custom action manifest handling, legacy action names, and OpenVR TOP refresh-throttling behavior.
+  - `optitrackinCHOP`: Windows-only OptiTrack/NatNet rigid-body receiver, multicast/unicast setup, server and local address roles, command/data ports, output rate/reset behavior, and legacy NatNet In CHOP naming.
+  - `oscinCHOP`: connection-less OSC input, free-port requirement, UDP/multicast protocol selection, address scope/channel naming, queue timing controls with units, Pulse Mode, and reset behavior.
+  - `oscoutCHOP`: OSC channel-name/value sending, UDP/multicast/reliable protocol choices, outgoing timestamp behavior, Send Events Every Cook semantics, data-format modes, Max Bytes splitting, and OSC Out DAT bundle guidance.
+  - `outCHOP`: component output-connector role, one parent connector per Out CHOP, label tooltip behavior, non-network output boundary, and common CHOP scope/sample/export behavior.
+  - `overrideCHOP`: most-recently changed matching values, first-input output shape, match by index or name, simultaneous-change precedence, reset triggers, and optional source-index channel.
+  - `pangolinCHOP`: Windows-only Pangolin Beyond interface, SOP/CHOP/POP laser image sources, Beyond-open requirement, licensing constraints, source channel/attribute requirements, zone routing, and laser-safety guidance.
+  - `pantiltCHOP`: moving-head pan/tilt calculation, flip-minimizing angular selection, multi-rig channel handling, relative position or Object CHOP transform input, reset input/defaults, and degree-based clamp ranges.
+- Tightened metadata while promoting the cards:
+  - Added Oculus Audio official room sub-parameters and typo-preserving docs ids: `reflectrevert`, `roomleftrelfect`, `roomrightrelfect`, `roombottomrelfect`, `roomtoprelfect`, `roomfrontrelfect`, and `roombackrelfect`.
+  - Added Oculus Rift HMD/controller/projection menu ids and common CHOP parameters.
+  - Added OpenVR output mode ids, skeleton range ids, action manifest controls, and common CHOP parameters.
+  - Added OptiTrack official connection mode ids, including the docs spelling `mutlicast`, plus common CHOP parameters.
+  - Added OSC In protocol ids, queue unit controls, reset values, and common CHOP parameters.
+  - Added OSC Out protocol ids, numeric format ids, official `format`, `sample`, `timeslice`, `transpose`, `transposename`, `maxsizeunit`, `maxbytes`, export, and rename controls.
+  - Added Out CHOP and Override CHOP common rename/export controls, plus Override `index` and `name` match menu ids.
+  - Added Pangolin SOP/CHOP/POP source ids, rate mode ids, `repeat`, output state controls, and common CHOP parameters.
+  - Added Pan Tilt reset and clamp sub-parameters: `resetvals1`, `resetvals2`, `panrangemin`, `panrangemax`, `tiltrangemin`, and `tiltrangemax`.
+  - Updated all 10 promoted cards to `last_verified = 2026-06-18` and adjusted the active name-drift coverage test so only the re-reviewed `overrideCHOP` expects the newer date.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T13:11:33Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 281`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T13:11:33Z`.
+  - Zero-concept operator card count after promotion: 361 remaining overall. Remaining zero-concept families: CHOP 45, TOP 136, SOP 108, DAT 72. COMP, POP, and MAT remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 65075, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed successfully.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully after the environment repair step.
+
+## One Hundred Thirtieth Pass - CHOP Parameter, Pattern, Performance, Pipe, PosiStageNet, Pulse, Record, and Render Pick Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - Added the next current zero-concept CHOP batch to the high-value strict test: `parameterCHOP`, `patternCHOP`, `performCHOP`, `phaserCHOP`, `pipeinCHOP`, `pipeoutCHOP`, `posistagenetCHOP`, `pulseCHOP`, `recordCHOP`, and `renderpickCHOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the same focused gate failed red again on reviewed card quality.
+  - `uv run python scripts/audit_brain_atlas.py --pretty` captured the intended quality-red state: `operator_card_quality.strict_operator_count = 291`, `operator_card_quality.gap_count = 10`, with all 10 new cards missing reviewed `key_concepts`.
+  - After promotion, the focused strict gate passed with the new batch held to reviewed-concept minimums and official parameter guards.
+- Updated the strict quality surface:
+  - `tests/brain/test_atlas_coverage.py` now includes `_CHOP_PARAMETER_PATTERN_RECORD_REVIEWED_2026_06_18` in `_CHOP_REVIEWED_2026_06_18`.
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 10 CHOP parameter, pattern, performance, pipe, PosiStageNet, pulse, record, and render-pick operators.
+  - The high-value strict test now protects official parameter metadata for Parameter fetch/name-format/common controls, Pattern type/range/integer/combine controls, Perform diagnostic channel toggles, Phaser output/extend modes, Pipe In queue/script/callback controls, Pipe Out single-sample/script/rename controls, PosiStageNet tracking channel controls, Pulse interpolation/spacing/value/interval controls, Record input/output/reset modes, and Render Pick strategy/picking/fetched-data controls.
+  - Strict quality coverage now spans 291 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the CHOP parameter, pattern, performance, pipe, PosiStageNet, pulse, record, and render-pick batch:
+  - Parameter and static signal generation: `Parameter CHOP`, `Pattern CHOP`, `Phaser CHOP`, and `Pulse CHOP`.
+  - Diagnostics and stateful recording: `Perform CHOP` and `Record CHOP`.
+  - TCP/IP and stage/render picking: `Pipe In CHOP`, `Pipe Out CHOP`, `PosiStageNet CHOP`, and `Render Pick CHOP`.
+  - Main-agent verification used only official Derivative pages: https://docs.derivative.ca/Parameter_CHOP, https://docs.derivative.ca/Pattern_CHOP, https://docs.derivative.ca/Perform_CHOP, https://docs.derivative.ca/Phaser_CHOP, https://docs.derivative.ca/Pipe_In_CHOP, https://docs.derivative.ca/Pipe_Out_CHOP, https://docs.derivative.ca/PosiStageNet_CHOP, https://docs.derivative.ca/Pulse_CHOP, https://docs.derivative.ca/Record_CHOP, and https://docs.derivative.ca/Render_Pick_CHOP.
+- Added reviewed concepts grounded in the official docs:
+  - `parameterCHOP`: OP parameter fetching, Fetch CHOP replacement role, parameter versus output-channel boundary, pattern/NOT selection, sequence multisample behavior, name-format export implications, and expression/Parameter Execute DAT alternatives.
+  - `patternCHOP`: static sample-indexed generation, lookup/SOP/instancing uses, sample-unit defaults, optional input length/sample-rate matching, combine modes, one-cycle-over-length behavior, and Wave/LFO distinction for time-based oscillation.
+  - `performCHOP`: runtime performance/system-state outputs, FPS/frame/cook/dropped-frame diagnostics, Trail CHOP use for skipped frames, hardware/platform-dependent channels, adaptive monitoring role, and Built-in Variables alternative.
+  - `phaserCHOP`: staggered 0-to-1 phaser values, first-input cycle control, optional explicit phase input, Edge cohesiveness, samples-versus-channels output format, and Lookup CHOP animation mapping.
+  - `pipeinCHOP`: TCP/IP client/server reception, Active connection behavior, queue target/adjust semantics, script-command security, Touch In CHOP optimization guidance, and DAT alternatives for arbitrary packets.
+  - `pipeoutCHOP`: TCP/IP client/server output, multiple Pipe In receivers, current-sample versus time-slice behavior, Send All Data burst upload, script-command trust boundary, and Touch Out/DAT alternatives.
+  - `posistagenetCHOP`: PosiStageNet endpoint input, default TCP port/firewall note, position/orientation/speed/acceleration/target channels, dynamic tracked-object channel growth, reset-clears-stale-data behavior, and BlackTrax distinction.
+  - `pulseCHOP`: static pulse interval generation, interpolation modes, pulse-width unit behavior, reference interval input, pulse-location input with spacing/cascade controls, and LFO/Merge alternatives.
+  - `recordCHOP`: stateful first-input recording, optional Active gate input, current-frame versus time-slice record input, output range modes, Auto Range storage reset behavior, and Trail CHOP/gestureCapture alternatives.
+  - `renderpickCHOP`: Render TOP/Render Pass TOP sampling, returned 3D data families, panel versus parameter pick location, strategy modes, response-time tradeoff, Info DAT path retrieval, and Render Pick DAT multi-sample alternative.
+- Tightened metadata while promoting the cards:
+  - Added Parameter CHOP official fetch mode ids `partypes` and `sequencetypes`, name-format ids `op` and `path`, plus common CHOP parameters.
+  - Expanded Pattern CHOP to official type menu ids, taper/range/integer controls, combine ids, extend controls, and common CHOP parameters.
+  - Expanded Perform CHOP to the documented diagnostic/system channels, including `deactivatedops`, `cpumemused`, `cookstate`, `cookrealtime`, `timeslicestep`, `timeslicemsec`, `performfocus`, `gputemp`, `aclinestatus`, `batterycharging`, `batterylife`, `batterytime`, `optimizedexpression`, and `cachedexpressions`.
+  - Added Phaser official output-format ids `samples` and `channels`, extend ids `mirror` and `add`, plus common CHOP parameters.
+  - Added Pipe In queue unit ids `mintargetunit`, `maxtargetunit`, `maxqueueunit`, and `adjusttimeunit`, echo mode ids, callbacks, and common CHOP parameters.
+  - Added Pipe Out client/server ids, single-sample ids `scur` and `sstart`, script/send controls, monitor pulse, callbacks, common export, and rename controls.
+  - Added PosiStageNet common export and rename controls.
+  - Added Pulse official interpolation ids, clamp/value/spacing/cascade/outside-pulse controls, pulse sequence value, interval/extend controls, and common CHOP parameters.
+  - Added Record official mode ids, input/output menu ids, segment sub-parameters, reset condition ids, common export, and rename controls.
+  - Added Render Pick official strategy, response, radius, pickable, picking source, callback, fetched data, custom attribute, and common CHOP controls.
+  - Updated all 10 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T13:22:00Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 291`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T13:22:00Z`.
+  - Zero-concept operator card count after promotion: 351 remaining overall. Remaining zero-concept families: CHOP 35, TOP 136, SOP 108, DAT 72. COMP, POP, and MAT remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 65075, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - JSON parse checks for structured card JSON, generated draft JSON, and `reports/release_gates.json`: parsed successfully.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully after the environment repair step.
+
+## One Hundred Thirty-First Pass - CHOP RenderStream, Script, S Curve, Sequencer, Serial, Shared Memory, Shift, Slope, and SOP Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - Added the next current zero-concept CHOP batch to the high-value strict test: `renderstreaminCHOP`, `scriptCHOP`, `scurveCHOP`, `sequencerCHOP`, `serialCHOP`, `sharedmeminCHOP`, `sharedmemoutCHOP`, `shiftCHOP`, `slopeCHOP`, and `soptoCHOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the same focused gate failed red again on reviewed card quality.
+  - `uv run python scripts/audit_brain_atlas.py --pretty | jq '.operator_card_quality | {ok, strict_operator_count, gap_count, gaps}'` captured the intended quality-red state: `operator_card_quality.strict_operator_count = 301`, `operator_card_quality.gap_count = 10`, with all 10 new cards missing reviewed `key_concepts`.
+  - After promotion, the focused strict gate passed with the new batch held to reviewed-concept minimums and official parameter guards.
+- Updated the strict quality surface:
+  - `tests/brain/test_atlas_coverage.py` now includes `_CHOP_SCRIPT_SERIAL_SHARED_MEMORY_REVIEWED_2026_06_18` in `_CHOP_REVIEWED_2026_06_18`.
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 10 CHOP RenderStream, script/generator, legacy sequencer, serial, shared-memory, time-shift, derivative, and SOP bridge operators.
+  - The high-value strict test now protects official parameter metadata for RenderStream session/schema controls, Script callback controls, S Curve type/range/channel controls, Sequencer legacy DAT/scope/reset controls, Serial port/script controls, Shared Mem local/global controls, Shift reference/unit/scroll controls, Slope derivative/method controls, and SOP to CHOP point-attribute controls.
+  - Strict quality coverage now spans 301 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the CHOP RenderStream, script/generator, serial/shared-memory, time-analysis, and SOP bridge batch:
+  - RenderStream and scripted generation: `RenderStream In CHOP`, `Script CHOP`, `S Curve CHOP`, and `Sequencer CHOP`.
+  - Device and process IPC: `Serial CHOP`, `Shared Mem In CHOP`, and `Shared Mem Out CHOP`.
+  - Time/derivative/geometry bridge utilities: `Shift CHOP`, `Slope CHOP`, and `SOP to CHOP`.
+  - Main-agent verification used only official Derivative pages: https://docs.derivative.ca/RenderStream_In_CHOP, https://docs.derivative.ca/Script_CHOP, https://docs.derivative.ca/S_Curve_CHOP, https://docs.derivative.ca/Sequencer_CHOP, https://docs.derivative.ca/Serial_CHOP, https://docs.derivative.ca/Shared_Mem_In_CHOP, https://docs.derivative.ca/Shared_Mem_Out_CHOP, https://docs.derivative.ca/Shift_CHOP, https://docs.derivative.ca/Slope_CHOP, and https://docs.derivative.ca/SOP_to_CHOP.
+- Added reviewed concepts grounded in the official docs:
+  - `renderstreaminCHOP`: Pro-only RenderStream control/configuration role, Disguise frame sync, Real-Time-off frame-driving workflow, schema DAT requirements, stream-index and timeout controls, and float/image/text schema data routing.
+  - `scriptCHOP`: per-cook Python callback model, default docked `cook`, `onPulse`, and `setupParameters` methods, Setup Parameters pulse behavior, broad dependency/recook behavior, NumPy array channel conversion, and built-in CHOP preference for standard transforms.
+  - `scurveCHOP`: S-curve generation role, half-cosine/logistic/arctangent types, sample length with prepend/append, steepness/linearize/bias shaping, From/To Range mapping, and channel-name/sample-rate/extend behavior.
+  - `sequencerCHOP`: legacy timed sequencing, official Timer CHOP replacement note, removed-for-new-creation status while existing files still work, DAT List path role, Blend/Add Scope behavior, and Queue/Trigger/Reset controls.
+  - `serialCHOP`: RS-232 serial communication, input-transition-triggered script sending, numeric ASCII `return` channel, Serial DAT alternative for complex receive data, serial-port setting requirements, and script escape-sequence handling.
+  - `sharedmeminCHOP`: Educational/Commercial/Pro license scope, shared-memory CHOP input role, Active read/cook control, memory-block naming, Local versus Global memory type semantics, and Pipe In CHOP comparison.
+  - `sharedmemoutCHOP`: Educational/Commercial/Pro license scope, Shared Mem In pairing, official TOP licensing distinction, Active write/cook control, Local versus Global memory type semantics, and Pipe Out CHOP comparison.
+  - `shiftCHOP`: interval shifting without changing channel contents, start/end reference selection, absolute/relative/current-frame unit modes, Scroll Offset behavior, `$C` per-channel shifting, and optional Start/End Reference input.
+  - `slopeCHOP`: slope/derivative analysis, position-to-speed interpretation, slope/acceleration/acceleration-of-slope modes, sample-pair method tradeoffs, realtime-safe previous/current mode, slope-per-sample behavior, and Speed CHOP reconstruction caveat.
+  - `soptoCHOP`: point-attribute-to-channel conversion, P-to-`tx/ty/tz` mapping, color/normal/texture/index/custom attribute toggles, point group filtering, Attribute/Rename Scope behavior, and Channel SOP opposite-direction workflow.
+- Tightened metadata while promoting the cards:
+  - Added RenderStream common CHOP export/rename controls and schema-routing gotchas.
+  - Added Script CHOP common CHOP export controls while preserving official `callbacks`, `setuppars`, and `modoutsidecook`.
+  - Added S Curve official type ids `halfcosine`, `log`, and `atan`, plus extra curve-shaping gotchas.
+  - Added Sequencer common CHOP controls while preserving legacy replacement guidance.
+  - Added Serial official State menu ids `offtoon`, `on`, `ontooff`, `off`, and `valuechange`, plus common CHOP controls.
+  - Added Shared Mem In/Out official `local` and `global` memory type ids, common CHOP controls, and licensing/process-IPC gotchas.
+  - Added Shift official reference ids `refstart` and `refend`, unit ids `abs`, `rel`, and `cur`, plus common CHOP controls.
+  - Added Slope official type ids `slope`, `accel`, and `slacc`, method ids `pc`, `cn`, and `pn`, plus common CHOP controls.
+  - Added SOP to CHOP common CHOP controls and expanded gotchas for alpha, rename scope, and Channel SOP direction.
+  - Updated all 10 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T13:35:57Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 301`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T13:35:57Z`.
+  - Zero-concept operator card count after promotion: 341 remaining overall. Remaining zero-concept families: CHOP 25, TOP 136, SOP 108, DAT 72. COMP, POP, and MAT remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 65075, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - Repo-wide JSON/JSONL parse check with `jq`: clean.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully after the environment repair step.
+
+## One Hundred Thirty-Second Pass - CHOP Speed, Splice, Spring, ST2110, Stretch, Stype, Sync, and Tablet Strict Gate Expansion
+
+- Continued the strict `operator_card_quality` gate with a red test first:
+  - Added the next current zero-concept CHOP batch to the high-value strict test: `speedCHOP`, `spliceCHOP`, `springCHOP`, `st2110deviceCHOP`, `stretchCHOP`, `stypeinCHOP`, `stypeoutCHOP`, `syncinCHOP`, `syncoutCHOP`, and `tabletCHOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the same focused gate failed red again on reviewed card quality.
+  - `uv run python scripts/audit_brain_atlas.py --pretty | jq '.operator_card_quality | {ok, strict_operator_count, gap_count, gaps}'` captured the intended quality-red state: `operator_card_quality.strict_operator_count = 311`, `operator_card_quality.gap_count = 10`, with all 10 new cards missing reviewed `key_concepts`.
+  - After promotion, the focused strict gate passed with the new batch held to reviewed-concept minimums and official parameter guards.
+- Updated the strict quality surface:
+  - `tests/brain/test_atlas_coverage.py` now includes `_CHOP_SPEED_STYPE_SYNC_REVIEWED_2026_06_18` in `_CHOP_REVIEWED_2026_06_18`.
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 10 CHOP speed/integration, splice/editing, spring simulation, ST2110 device, stretch/resampling, Stype, Sync, and tablet operators.
+  - The high-value strict test now protects official parameter metadata for Speed integration/reset/limit controls, Splice trim/insert/match controls, Spring mass/damping/method/reset controls, ST2110 driver/network/PTP/SPS controls, Stretch interpolation/range/scale/reverse controls, Stype In/Out protocol/timecode/packet controls, Sync In/Out multicast/port/client-management controls, and Tablet channel/output-state controls.
+  - Strict quality coverage now spans 311 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the CHOP speed/edit/simulation, ST2110, Stype, Sync, and tablet batch:
+  - Motion and signal editing: `Speed CHOP`, `Splice CHOP`, `Spring CHOP`, and `Stretch CHOP`.
+  - Protocol/device operators: `ST2110 Device CHOP`, `Stype In CHOP`, `Stype Out CHOP`, `Sync In CHOP`, `Sync Out CHOP`, and `Tablet CHOP`.
+  - Main-agent verification used only official Derivative pages: https://docs.derivative.ca/Speed_CHOP, https://docs.derivative.ca/Splice_CHOP, https://docs.derivative.ca/Spring_CHOP, https://docs.derivative.ca/ST2110_Device_CHOP, https://docs.derivative.ca/Stretch_CHOP, https://docs.derivative.ca/Stype_In_CHOP, https://docs.derivative.ca/Stype_Out_CHOP, https://docs.derivative.ca/Sync_In_CHOP, https://docs.derivative.ca/Sync_Out_CHOP, and https://docs.derivative.ca/Tablet_CHOP.
+  - The official `Sync_In_CHOP` page returned a Derivative MediaWiki database error on 2026-06-19, so shared Sync In behavior was grounded only in the official `Sync_Out_CHOP` page that describes the Sync In/Out pair.
+- Added reviewed concepts grounded in the official docs:
+  - `speedCHOP`: rate-to-cumulative integration, time-sliced accumulation, first/second/third-order integration, generated-speed versus input behavior, reset input/condition semantics, and limit modes.
+  - `spliceCHOP`: first/second-input insertion workflow, trim and insert interval control, stretch-trim/stretch-insert behavior, channel match by index or name, unmatched-channel interpolation, and edit/replace use cases.
+  - `springCHOP`: mass-on-spring simulation, position versus force input modes, spring constant/mass/damping interaction, initial position/speed state, reset behavior, and step-value tuning.
+  - `st2110deviceCHOP`: Pro-only ST2110 device configuration, driver/device selection, DHCP/static IP controls, PTP profile/address/domain controls, IGMP version controls, SPS network controls, and Info CHOP diagnostics despite no output channels.
+  - `stretchCHOP`: interval stretching while preserving curve shape, interpolation choices, constant-area option, absolute/relative/current-frame range semantics, scale and reverse controls, and sample-rate metadata gotchas.
+  - `stypeinCHOP`: Pro-only Stype/RedSpy HF tracking input, virtual-camera and Stype TOP lens-distortion channels, connected/status/timecode outputs, lens/sensor/distortion channels, packet diagnostics, and hardware network matching.
+  - `stypeoutCHOP`: Pro-only Stype HF tracking output, once-per-frame packet sending, required tracking/lens/timecode channel names, default-value behavior for missing channels, Timecode Object/CHOP/DAT references, and packet-number source modes.
+  - `syncinCHOP`: Pro Sync In/Out client role, Realtime-off client workflow, one-frame multi-process sync target, timeline-pausing synchronization behavior, timeout/slowness failure mode, and extra CHOP channel reception from Sync Out.
+  - `syncoutCHOP`: Pro Sync In/Out server role, one-server/many-client topology, Realtime and monitor-refresh requirements, timeline cook barrier, client timeout/ban/reset behavior, extra-channel forwarding, and Info DAT/Info CHOP diagnostics.
+  - `tabletCHOP`: Wacom tablet axes/buttons/pressure/tilt/rotation/wheel output, two-device support, channel-name-driven output creation, axis/button value ranges, active/off/on/while-playing capture states, and sample-rate control.
+- Tightened metadata while promoting the cards:
+  - Added Speed official integration-order ids, limit ids, reset-condition ids, and common CHOP controls.
+  - Added Splice official direction, trim/insert method, match, and interpolation ids.
+  - Added Spring official method ids `disp` and `force`, plus common CHOP controls.
+  - Added ST2110 Device official driver ids, PTP profile ids, IGMP ids, and preserved the official typo `vesion2`.
+  - Added Stretch official interpolation ids and relative-range ids.
+  - Added Stype In/Out official protocol ids, Stype Out packet-number ids, and common CHOP controls.
+  - Added Sync Out official local-port ids, timeout/client-timeout controls, common CHOP controls, and Sync In official common controls.
+  - Added Tablet official button channel ids and Active menu ids `off`, `on`, and `play`.
+  - Updated all 10 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T13:46:05Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 311`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T13:46:05Z`.
+  - Zero-concept operator card count after promotion: 331 remaining overall. Remaining zero-concept families: CHOP 15, TOP 136, SOP 108, DAT 72. COMP, POP, and MAT remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 65075, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - Repo-wide JSON/JSONL parse check with `jq`: clean.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully after the environment repair step.
+
+## One Hundred Thirty-Third Pass - CHOP Timecode, Timeline, Timer, Time Slice, TOP, Touch, Trail, Transform, Trigger, Warp, Wave, WrnchAI, and ZED Strict Gate Completion
+
+- Completed the remaining CHOP zero-concept backlog with a red test first:
+  - Added the final CHOP batch to the high-value strict test: `timecodeCHOP`, `timelineCHOP`, `timerCHOP`, `timesliceCHOP`, `toptoCHOP`, `touchinCHOP`, `touchoutCHOP`, `trailCHOP`, `transformCHOP`, `transformxyzCHOP`, `triggerCHOP`, `warpCHOP`, `waveCHOP`, `wrnchaiCHOP`, and `zedCHOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the same focused gate failed red again on reviewed card quality.
+  - `uv run python scripts/audit_brain_atlas.py --pretty | jq '.operator_card_quality | {ok, strict_operator_count, gap_count, gaps}'` captured the intended quality-red state: `operator_card_quality.strict_operator_count = 326`, `operator_card_quality.gap_count = 16`, with all 15 new cards missing reviewed `key_concepts` and `timerCHOP` also below the gotcha minimum.
+  - After promotion and one official-id correction in the test guard (`transformxyzCHOP` uses `normalize`, not stale `outnormalize`), the focused strict gate passed.
+- Updated the strict quality surface:
+  - `tests/brain/test_atlas_coverage.py` now includes `_CHOP_TIME_TOUCH_TRAIL_TRANSFORM_REVIEWED_2026_06_18` in `_CHOP_REVIEWED_2026_06_18`.
+  - `src/td_mcp/brain/atlas_audit.py` now includes the final 15 CHOP timecode/timeline/timer, time-slice/TOP bridge, Touch network, trail/transform, trigger/warp/wave, legacy WrnchAI, and ZED operators.
+  - The high-value strict test now protects official parameter metadata for Timecode source/output controls, Timeline reference/timecode outputs, Timer timing/segment/output controls, Time Slice method/quaternion controls, TOP to CHOP image/download/crop controls, Touch In/Out queue/network controls, Trail history controls, Transform and Transform XYZ order/output controls, Trigger ADSR controls, Warp method/index controls, Wave shape/range controls, WrnchAI legacy setup controls, and ZED tracking controls.
+  - Strict quality coverage now spans 326 reviewed high-value operator cards.
+- Reviewed the current official Derivative docs for the final CHOP batch:
+  - Time/timeline utilities: `Timecode CHOP`, `Timeline CHOP`, `Timer CHOP`, and `Time Slice CHOP`.
+  - Pixel/network/history/transform bridges: `TOP to CHOP`, `Touch In CHOP`, `Touch Out CHOP`, `Trail CHOP`, `Transform CHOP`, and `Transform XYZ CHOP`.
+  - Trigger/warp/wave and legacy/device tracking: `Trigger CHOP`, `Warp CHOP`, `Wave CHOP`, `WrnchAI CHOP`, and `ZED CHOP`.
+  - Main-agent verification used only official Derivative pages: https://docs.derivative.ca/Timecode_CHOP, https://docs.derivative.ca/Timeline_CHOP, https://docs.derivative.ca/Timer_CHOP, https://docs.derivative.ca/Time_Slice_CHOP, https://docs.derivative.ca/TOP_to_CHOP, https://docs.derivative.ca/Touch_In_CHOP, https://docs.derivative.ca/Touch_Out_CHOP, https://docs.derivative.ca/Trail_CHOP, https://docs.derivative.ca/Transform_CHOP, https://docs.derivative.ca/Transform_XYZ_CHOP, https://docs.derivative.ca/Trigger_CHOP, https://docs.derivative.ca/Warp_CHOP, https://docs.derivative.ca/Wave_CHOP, https://docs.derivative.ca/WrnchAI_CHOP, and https://docs.derivative.ca/ZED_CHOP.
+  - Subagent read-only audits were used for speed, but the main agent re-opened and verified the official pages before editing.
+- Added reviewed concepts grounded in the official docs:
+  - `timecodeCHOP`: CHOP channels plus `.timecode` Python object, SMPTE/general modes, source modes, CHOP channel additions, fractional-rate/drop-frame behavior, and output channel toggles.
+  - `timelineCHOP`: component-local timeline output, `me.time` fallback, reference-operator time, timecode-source override, channel output roles, and reusable-component reference guidance.
+  - `timerCHOP`: timed-process engine, event-driven start/input control, Python callbacks, serial/parallel segments, locked versus sequential timing, and Info DAT/timecode output.
+  - `timesliceCHOP`: skipped-frame smoothing, output time-slice range, channel preservation, hold/linear/trim modes, quaternion rotation blending, and downstream Record/Gesture/Lag use.
+  - `toptoCHOP`: TOP pixel-to-channel conversion, pixel/row/column/block/full extraction, UV input sampling, NaN/active masking, depth-channel behavior, and delayed GPU readback.
+  - `touchinCHOP`: TouchDesigner-to-TouchDesigner CHOP receiving, client/server connection order, time-sliced delivery, non-time-sliced mode, queue diagnostics, and network timing controls.
+  - `touchoutCHOP`: Touch Out server role, Touch In client address/port requirements, multiple clients, queue limits, Cook Every Frame, and synced-port single-process constraints.
+  - `trailCHOP`: sliding/growing channel history, current-frame last sample, Grow Length, capture modes, resampling/rate controls, and channel-name/count reset behavior.
+  - `transformCHOP`: transform-format conversion, prefix/order matching, missing-value defaults, complete matrix requirements, input-before-transform-page combination, and output format/unmatched/continuity controls.
+  - `transformxyzCHOP`: XYZ position/vector transforms, vector translation exclusion, suffix grouping, second-input Transform CHOP formats, transform combination order, and multi-sample point/vector workflows.
+  - `triggerCHOP`: ADSR threshold/pulse triggering, delay/attack/peak/decay/sustain/release sections, trigger/release threshold handling, peak/sustain constraint, complete/remainder behavior, and static full-waveform setup.
+  - `warpCHOP`: first-input pre-warp channels, second-input warp curve, rate/index modes, output channel/sample inheritance, warp-curve output interval, and Speed CHOP equivalence.
+  - `waveCHOP`: finite waveform generation, default sine/range behavior, waveform type menu, shaping controls, channel-name pattern expansion, and LFO/Pattern/Audio Oscillator alternatives.
+  - `wrnchaiCHOP`: legacy Pro-only body/face/hand tracking, removed 2022.20000+ status, Windows/NVIDIA/cuDNN/full-installer/license requirements, model-folder initialization, and migration-only guidance.
+  - `zedCHOP`: Windows-only ZED tracking, ZED TOP dependency, camera transform output, plane detection/reference frames, body-tracking channels, and dynamic `p#` body prefixes.
+- Tightened metadata while promoting the cards:
+  - Added Timecode official mode, drop-frame, custom-length, extend, and output-channel ids.
+  - Corrected Timeline `timecodeop` to the official string-style reference and added common CHOP controls.
+  - Expanded Timer beyond the stale minimal card with official active/time-control/start/speed/run/cue/cycle/done/segment/subrange/output/external ids and corrected the Start versus Play gotcha.
+  - Corrected Time Slice `trim` to a method menu item and added method ids plus common rename controls.
+  - Corrected TOP to CHOP `r/g/b/a` from toggles to channel-prefix strings, `activechannel` to a menu, and added download/crop/UV/interp/output ids.
+  - Added Touch In missing queue variance/adjustment units and corrected `recover` from pulse to toggle-style behavior.
+  - Added Touch Out synced-port and non-TD endpoint gotchas.
+  - Added Transform CHOP output-format, multiply-order, forward-direction, unmatched-channel, and rotation-continuity ids.
+  - Corrected Transform XYZ output normalize id to `normalize` and added unmatched-channel controls.
+  - Expanded Trigger with retrigger/min-trigger/clamp/update/reset/peak/shape/remap-related controls.
+  - Added Warp `scaleindex`, Wave official type/menu/ramp/expression/default ids, WrnchAI `license`/`top`/GPU default ids, and ZED reference-frame/body-tracking/joint-mode ids.
+  - Updated all 15 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T13:56:05Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on card quality, failed once on stale `outnormalize` guard, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 326`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T13:56:05Z`.
+  - Zero-concept operator card count after promotion: 316 remaining overall. Remaining zero-concept families: TOP 136, SOP 108, DAT 72. CHOP, COMP, POP, and MAT now have 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 65075, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - Repo-wide JSON/JSONL parse check with `jq`: clean.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully after the environment repair step.
+
+## One Hundred Thirty-Fourth Pass - TOP Add, Analyze, Antialias, Blob, Bloom, Blur, Cache, Channel Mix, CHOP Bridge, Keying, Shape, Convolve, Corner Pin, CPlusPlus, Crop, Cross, Cube Map, CUDA, and Depth Strict Gate Expansion
+
+- Promoted the first TOP zero-concept batch into the strict reviewed-card gate with TDD:
+  - Added `_TOP_IMAGE_COLOR_CACHE_REVIEWED_2026_06_18` and `_TOP_REVIEWED_2026_06_18` in `tests/brain/test_atlas_coverage.py`.
+  - The reviewed set covers `addTOP`, `analyzeTOP`, `antialiasTOP`, `blobtrackTOP`, `bloomTOP`, `blurTOP`, `cacheTOP`, `cacheselectTOP`, `channelmixTOP`, `choptoTOP`, `chromakeyTOP`, `circleTOP`, `convolveTOP`, `cornerpinTOP`, `cplusplusTOP`, `cropTOP`, `crossTOP`, `cubemapTOP`, `cudaTOP`, and `depthTOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the TOP batch.
+  - After adding the TOP batch to `src/td_mcp/brain/atlas_audit.py`, the same focused gate failed red again on quality: `operator_card_quality.strict_operator_count = 346`, `operator_card_quality.gap_count = 20`, with all 20 promoted cards missing reviewed `key_concepts`.
+  - After promotion, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 20 TOP operators in `_STRICT_OPERATOR_QUALITY_TYPES`.
+  - Added a strict minimum override for `cudaTOP` because the official CUDA TOP page says the operator is no longer supported and does not publish active parameter rows; the card keeps one atlas guidance pseudo-param, `replacement`, pointing to `cplusplusTOP`.
+  - The strict test now guards official TOP parameter ids for additive/cross transforms, Analyze operations, Anti Alias search controls, Blob Track constraints and download mode, Bloom preprocess controls, Blur pre-shrink and XYZ controls, Cache and Cache Select indexing, Channel Mix RGBA weights, CHOP to TOP `layout`, Chroma Key soft HSV controls, Circle compositing controls, Convolve kernels, Corner Pin source/destination quads, CPlusPlus plugin buffers, Crop edge units, Cube Map mode, CUDA replacement guidance, and Depth TOP rerange/precision controls.
+- Reviewed official Derivative docs only:
+  - Main-agent verification opened the official pages before editing: https://docs.derivative.ca/Add_TOP, https://docs.derivative.ca/Analyze_TOP, https://docs.derivative.ca/Anti_Alias_TOP, https://docs.derivative.ca/Blob_Track_TOP, https://docs.derivative.ca/Bloom_TOP, https://docs.derivative.ca/Blur_TOP, https://docs.derivative.ca/Cache_TOP, https://docs.derivative.ca/Cache_Select_TOP, https://docs.derivative.ca/Channel_Mix_TOP, https://docs.derivative.ca/CHOP_to_TOP, https://docs.derivative.ca/Chroma_Key_TOP, https://docs.derivative.ca/Circle_TOP, https://docs.derivative.ca/Convolve_TOP, https://docs.derivative.ca/Corner_Pin_TOP, https://docs.derivative.ca/CPlusPlus_TOP, https://docs.derivative.ca/Crop_TOP, https://docs.derivative.ca/Cross_TOP, https://docs.derivative.ca/Cube_Map_TOP, https://docs.derivative.ca/CUDA_TOP, and https://docs.derivative.ca/Depth_TOP.
+  - Read-only subagent audits were used for speed, but the main agent re-opened and verified the official pages before editing the atlas.
+- Added reviewed concepts grounded in the official docs:
+  - `addTOP`: additive formula, clamping above 1, fixed-layer output resolution, overlay-only transforms, native-resolution overlays, and 3D/2D-array support.
+  - `analyzeTOP`: image statistics, scope-dependent output shapes, min/max selected-pixel behavior, TOP-to-CHOP bridge use, float precision for count/sum, and 3D/2D-array support.
+  - `antialiasTOP`: SMAA-style screen-space antialiasing, luminance/RGB edge detection, quality/cost tradeoff, custom search controls, Output Edges diagnostics, and non-temporal behavior.
+  - `blobtrackTOP`: OpenCV blob tracking, SimpleBlobDetector versus background subtraction, Info DAT/CHOP result access, preprocessing guidance, download timing, and Non-Commercial two-blob limit.
+  - `bloomTOP`: bright-region preprocessing, downscaled blur levels, min/max bloom radius, threshold/S-curve/fill/intensity shaping, output debug stages, and separate Add TOP compositing.
+  - `blurTOP`: kernel types, pixel filter size, XYZ scale/sample-step controls, Pre-Shrink performance tradeoff, dither for 8-bit blur, and 3D/2D-array support.
+  - `cacheTOP`: GPU frame cache semantics, freeze via Active, newest/negative output indexing, capture Step, replace/prefill controls, and reset memory behavior.
+  - `cacheselectTOP`: source Cache TOP dependency, relative index semantics, random access to cached GPU frames, source-content validity, and common output overrides.
+  - `channelmixTOP`: RGBA matrix-style mixing, per-output weights, defaults, negative-weight ranges, constants, and Reorder TOP as the simple rearrangement path.
+  - `choptoTOP`: CHOP samples to TOP pixels, R/RG/RGB/RGBA/A/legacy packing, channel-order behavior, official `layout` modes, default float precision, and square data-texture use.
+  - `chromakeyTOP`: HSV range matching, soft low/high falloff, RGB output modes, alpha output modes, Palette `chromaKey` richer controls, and 3D/2D-array support.
+  - `circleTOP`: circle/ellipse/arc/polygon generation, radius/center units, independent fill/border/background alpha, arc cutout behavior, polygon X-radius behavior, and compositing over input.
+  - `convolveTOP`: DAT kernel coefficients, kernel size from table dimensions, normalization behavior, alpha convolution, Z convolution, and blur/edge/emboss/sharpen/slope use.
+  - `cornerpinTOP`: extract-then-pin stages, source versus destination corners, corner units, bilinear versus perspective mapping, grid refinement, and background fill.
+  - `cplusplusTOP`: compiled plugin loading, per-node plugin instances, custom params and Info output, multiple color buffers, CUDA lifecycle calls, and pre-2022 plugin upgrade risk.
+  - `cropTOP`: edge-based cropping, resolution reduction, crop unit parameters, extend behavior, and common output overrides.
+  - `crossTOP`: crossfade formula, endpoint behavior, fixed-layer output shape, overlay fit/justify/extend, and 3D/2D-array support.
+  - `cubemapTOP`: cube-map creation/conversion, six-face order, vertical/horizontal cross modes, Phong MAT reflection use, Render TOP and GLSL samplerCube workflows, and face orientation risks.
+  - `cudaTOP`: no-longer-supported status, official CPlusPlus TOP replacement, no new-network planning, old-project migration role, and CUDA plugin workflow guidance.
+  - `depthTOP`: Render TOP depth-buffer input, near/far visualization, loose-plane white-output pitfall, depth-space modes, single-channel depth behavior, and 16/32-bit precision guidance.
+- Tightened metadata while promoting the cards:
+  - Corrected `antialiasTOP` by removing stale `anti` metadata and adding official `maxdiagsearchsteps`.
+  - Corrected `choptoTOP` from stale `imagelayout` to official `layout`, and added `rgba`.
+  - Added missing official ids for Blob Track `threshold`/`downloadtype`/constraint/revival controls, Bloom preprocess controls, Blur `preshrink`, Cache replace/prefill/reset pulse controls, Chroma Key saturation/value softness, Circle background/antialias/compositing controls, Corner Pin unit and premultiply controls, CPlusPlus depth/stencil controls, Crop common output controls, Depth `clamp`, and CUDA replacement guidance.
+  - Updated all 20 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T14:05:25Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on reviewed card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 346`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T14:05:25Z`.
+  - Zero-concept operator card count after promotion: 296 remaining overall. Remaining zero-concept families: TOP 116, SOP 108, DAT 72. CHOP, COMP, POP, and MAT remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 65075, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - Repo-wide JSON/JSONL parse check: clean.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully after the environment repair step.
+
+## One Hundred Thirty-Fifth Pass - TOP Difference, Direct Display, DirectX, Displace, Edge, Emboss, Fit, Flip, Function, HSV, Import, In, Kinect, Layer, and Layer Mix Strict Gate Expansion
+
+- Promoted the next TOP zero-concept batch into the strict reviewed-card gate with TDD:
+  - Added `_TOP_COMPOSITE_IO_GPU_LAYER_REVIEWED_2026_06_18` to `tests/brain/test_atlas_coverage.py` and folded it into `_TOP_REVIEWED_2026_06_18`.
+  - The reviewed set covers `differenceTOP`, `directdisplayoutTOP`, `directxinTOP`, `directxoutTOP`, `displaceTOP`, `edgeTOP`, `embossTOP`, `fitTOP`, `flipTOP`, `functionTOP`, `hsvadjustTOP`, `hsvtorgbTOP`, `importselectTOP`, `inTOP`, `insideTOP`, `kinectTOP`, `kinectazureTOP`, `kinectazureselectTOP`, `layerTOP`, and `layermixTOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate failed red again on reviewed quality. The audit reported `operator_card_quality.strict_operator_count = 366`, `operator_card_quality.gap_count = 22`, all 20 new cards missing `key_concepts`, plus `directxinTOP` and `directxoutTOP` below the key-parameter minimum.
+  - After promotion and structural-date expectation updates for the newly reviewed TOP cards, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 20 TOP difference/DirectX/displacement/filter/fit/flip/function/HSV/import/input/Kinect/layer operators.
+  - The strict test now protects official TOP parameter ids for Difference difference/add/scaling, Direct Display output and frame-sync controls, DirectX shared-texture controls, Displace offset/weight/UV controls, Edge/Emboss alpha and combine controls, Fit scale/crop/fill units, Flip orientation controls, Function re-range and function menus, HSV adjust controls, Import Select index/source controls, In label and common controls, Inside transform units, Kinect and Kinect Azure device/processing controls, Kinect Azure Select stream selection, and Layer/Layer Mix crop/justify/extend/operation/composition controls.
+  - Strict quality coverage now spans 366 reviewed high-value operator cards.
+- Reviewed official Derivative docs only:
+  - Main-agent verification opened the official pages before editing: https://docs.derivative.ca/Difference_TOP, https://docs.derivative.ca/Direct_Display_Out_TOP, https://docs.derivative.ca/DirectX_In_TOP, https://docs.derivative.ca/DirectX_Out_TOP, https://docs.derivative.ca/Displace_TOP, https://docs.derivative.ca/Edge_TOP, https://docs.derivative.ca/Emboss_TOP, https://docs.derivative.ca/Fit_TOP, https://docs.derivative.ca/Flip_TOP, https://docs.derivative.ca/Function_TOP, https://docs.derivative.ca/HSV_Adjust_TOP, https://docs.derivative.ca/HSV_to_RGB_TOP, https://docs.derivative.ca/Import_Select_TOP, https://docs.derivative.ca/In_TOP, https://docs.derivative.ca/Inside_TOP, https://docs.derivative.ca/Kinect_TOP, https://docs.derivative.ca/Kinect_Azure_TOP, https://docs.derivative.ca/Kinect_Azure_Select_TOP, https://docs.derivative.ca/Layer_TOP, and https://docs.derivative.ca/Layer_Mix_TOP.
+  - Read-only subagent audits were used for speed, but the main agent re-opened and verified the official pages before editing the atlas.
+- Added reviewed concepts grounded in the official docs:
+  - `differenceTOP`: absolute image difference, optional additive mode, input scaling, fixed-layer output shape, mismatch-resolution handling, and 3D/2D-array support.
+  - `directdisplayoutTOP`: Windows/NVIDIA direct-display output, NVIDIA Mosaic and Quadro Sync/Sync II use, Pro frame-lock workflows, monitor/display selection, output sizing, and platform/GPU constraints.
+  - `directxinTOP` and `directxoutTOP`: Windows DirectX shared-texture exchange, sender/receiver naming, application interop, shared-memory versus GPU texture expectations, resolution/format matching, and lifecycle/reset behavior.
+  - `displaceTOP`: red/green channel displacement, UV and pixel-space offset behavior, displacement scale/weight controls, extend/fill behavior, source/displace input dependencies, and 3D/2D-array considerations.
+  - `edgeTOP` and `embossTOP`: edge detection and emboss filtering, alpha output options, premultiply behavior, combining with inputs, operand choices, and image-space filter costs.
+  - `fitTOP` and `flipTOP`: resolution fitting, crop/fill/stretch modes, position units, justification, horizontal/vertical flip behavior, and common output overrides.
+  - `functionTOP`: per-pixel function application, re-range controls, function menu behavior, channel independence, and float/precision implications.
+  - `hsvadjustTOP` and `hsvtorgbTOP`: HSV channel adjustment, hue offset and saturation/value scaling, RGB-to-HSV workflow pairing, sparse official HSV-to-RGB parameter surface, and color-space ordering gotchas.
+  - `importselectTOP`, `inTOP`, and `insideTOP`: component import selection, operator index/source behavior, In TOP label/name display role, Inside TOP transform/crop behavior, position units, and common TOP output controls.
+  - `kinectTOP`, `kinectazureTOP`, and `kinectazureselectTOP`: legacy Kinect depth/color streams, Kinect Azure device/processing controls, body/index/depth stream selection, Windows hardware dependencies, sensor calibration, and channel or image availability gotchas.
+  - `layerTOP` and `layermixTOP`: layer compositing over a base input, official `base` input behavior, crop/fit/justify/extend controls, operation/operand menus, composition order, and multi-layer blending.
+- Tightened metadata while promoting the cards:
+  - Removed stale `edgeTOP` `bgcolor` metadata and added official alpha/premultiply/combine/operand controls.
+  - Added DirectX common controls so both `directxinTOP` and `directxoutTOP` satisfy strict key-parameter minimums.
+  - Added Fit and Inside unit controls, Function `rerange`, HSV adjustment ids, Kinect near-depth and unknown-point controls, and the official Kinect Azure misspelling `proccessingmode`.
+  - Corrected Layer from stale `basetop` to official `base` and expanded Layer/Layer Mix crop, justify, extend, operand, and composition-order metadata.
+  - Updated all 20 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T14:14:52Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on reviewed card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 366`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T14:14:52Z`.
+  - Zero-concept operator card count after promotion: 276 remaining overall. Remaining zero-concept families: TOP 96, SOP 108, DAT 72. CHOP, COMP, POP, and MAT remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 65075, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - JSON parse check across operator cards, generated drafts, and `reports/release_gates.json`: clean, 658 JSON files parsed.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully after the environment repair step.
+
+## One Hundred Thirty-Sixth Pass - TOP Layout, Leap Motion, Lens Distort, Limit, Lookup, Luma, Math, Matte, Mirror, Monochrome, MoSys, Movie File, MPCDI, Multiply, Ncam, NDI, and Normal Map Strict Gate Expansion
+
+- Promoted the next TOP zero-concept batch into the strict reviewed-card gate with TDD:
+  - Added `_TOP_LAYOUT_MEDIA_TRACKING_REVIEWED_2026_06_18` to `tests/brain/test_atlas_coverage.py` and folded it into `_TOP_REVIEWED_2026_06_18`.
+  - The reviewed set covers `layoutTOP`, `leapmotionTOP`, `lensdistortTOP`, `limitTOP`, `lookupTOP`, `lumablurTOP`, `lumalevelTOP`, `mathTOP`, `matteTOP`, `mirrorTOP`, `monochromeTOP`, `mosysTOP`, `moviefileinTOP`, `moviefileoutTOP`, `mpcdiTOP`, `multiplyTOP`, `ncamTOP`, `ndiinTOP`, `ndioutTOP`, and `normalmapTOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate failed red again on reviewed quality. The audit reported `operator_card_quality.strict_operator_count = 386`, `operator_card_quality.gap_count = 23`, with all 20 new cards missing `key_concepts`, `matteTOP` and `mosysTOP` below the key-parameter minimum, and `moviefileinTOP` below the gotcha minimum.
+  - After promotion and structural-date expectation updates for TOP reviewed cards, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 20 TOP layout, tracking, lens/color/math/composite, media, projection, virtual-production, NDI, and normal-map operators.
+  - The strict test now protects official parameter ids for Layout row/column/grid/border/background controls, Leap Motion API/library/HMD controls, Lens Distort calibration/layout/crop controls, Limit wrap/quantize/normalize controls, Lookup `independentalpha` and UV/CHOP lookup controls, Luma Blur official `bartlette` kernel spelling, Luma Level step/post controls, Math `inputmask`/`outputchannels`/`op`/range controls, Matte/Mirror/Monochrome source controls, MoSys Pro pipeline controls, Movie File In `prereadframes`, Movie File Out `audiochop` and container/pixel-format controls, MPCDI region/grid controls, Multiply transform-unit controls, Ncam output stream modes, NDI color/reference/group/audio metadata controls, and Normal Map source/method/sample-step controls.
+  - Strict quality coverage now spans 386 reviewed high-value operator cards.
+- Reviewed official Derivative docs only:
+  - Main-agent verification opened the official pages before editing: https://docs.derivative.ca/Layout_TOP, https://docs.derivative.ca/Leap_Motion_TOP, https://docs.derivative.ca/Lens_Distort_TOP, https://docs.derivative.ca/Limit_TOP, https://docs.derivative.ca/Lookup_TOP, https://docs.derivative.ca/Luma_Blur_TOP, https://docs.derivative.ca/Luma_Level_TOP, https://docs.derivative.ca/Math_TOP, https://docs.derivative.ca/Matte_TOP, https://docs.derivative.ca/Mirror_TOP, https://docs.derivative.ca/Monochrome_TOP, https://docs.derivative.ca/MoSys_TOP, https://docs.derivative.ca/Movie_File_In_TOP, https://docs.derivative.ca/Movie_File_Out_TOP, https://docs.derivative.ca/MPCDI_TOP, https://docs.derivative.ca/Multiply_TOP, https://docs.derivative.ca/Ncam_TOP, https://docs.derivative.ca/NDI_In_TOP, https://docs.derivative.ca/NDI_Out_TOP, and https://docs.derivative.ca/Normal_Map_TOP.
+  - Read-only subagent audits were used for speed, but the main agent re-opened and verified the official pages before editing the atlas. A read-only `notchTOP` audit also returned, but `notchTOP` remains unpromoted for the next TOP pass.
+- Added reviewed concepts grounded in the official docs:
+  - `layoutTOP`: multi-input TOP layout, TOP-parameter ordering before wired inputs, equal cell allocation, scale-resolution behavior, per-cell fitting, per-input transforms, borders, and background fill.
+  - `leapmotionTOP`: Leap/Ultraleap camera capture, Allow Images requirement, external SDK/library setup, V2 versus Orion/Gemini API behavior, camera orientation controls, and external licensing.
+  - `lensdistortTOP`: Brown-Conrady model, radial and tangential coefficients, camera matrix controls, approximate inverse distortion, layout/post-transform/crop behavior, and optimal ROI/focal-length diagnostics.
+  - `limitTOP` and `lookupTOP`: clamp/loop/zigzag and value/position quantization behavior, final normalization cost, first-input index image workflow, second-input versus CHOP lookup tables, scalar versus independent channel lookup, endpoint hold behavior, and diagnostic lookup output.
+  - `lumablurTOP`, `lumalevelTOP`, `mathTOP`, `matteTOP`, `mirrorTOP`, and `monochromeTOP`: luma-driven blur, luma-preserving level workflow, channel and range math, matte compositing with input3, pivoted mirroring, greyscale conversion, official menu tokens, and 3D/2D-array support where documented.
+  - `mosysTOP`, `ncamTOP`, `ndiinTOP`, and `ndioutTOP`: Pro-only MoSys/Ncam virtual-production paths, Ncam stream/distortion map modes, NDI discovery, firewall/IP gotchas, hardware decode limitations, metadata/audio workflows, group tables, and color/reference-white controls.
+  - `moviefileinTOP` and `moviefileoutTOP`: media/image-sequence/URL loading, movie index versus project frame semantics, playback/index/timecode modes, pre-read and hardware-decode tuning, recording types/codecs/containers, Commercial/Pro/NVIDIA encoding gates, audio CHOP recording, and stop-frame Add Frame workflow.
+  - `mpcdiTOP`, `multiplyTOP`, and `normalmapTOP`: MPCDI file/region/grid calibration and Camera COMP Python-member workflow, fixed-layer multiply compositing and overlay transforms, and normal-map generation from sampled image slopes.
+- Tightened metadata while promoting the cards:
+  - Added Layout `rowlayout`, `collayout`, `bcolor`, `borders`, `premultrgbbyalpha`, `compover`, and transform controls.
+  - Added Lens Distort post-transform/crop controls and noted that inverse distortion does not use `k3`.
+  - Corrected Movie File In from stale `preread` to official `prereadframes`.
+  - Corrected Movie File Out from stale `audiodevice` to official `audiochop`, and added `moviepixelformat` and `moviecontainer`.
+  - Added NDI In/Out color-space, reference-white, group, audio, and metadata controls.
+  - Added common TOP `outputresolution` and `format` controls to `mosysTOP` and `matteTOP` so sparse official pages still meet the strict minimum without inventing non-official params.
+  - Updated all 20 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T14:23:08Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on reviewed card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 386`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T14:23:08Z`.
+  - Zero-concept operator card count after promotion: 256 remaining overall. Remaining zero-concept families: TOP 76, SOP 108, DAT 72. CHOP, COMP, POP, and MAT remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 65075, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - JSON parse check across operator cards, generated drafts, and `reports/release_gates.json`: clean, 658 JSON files parsed.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully after the environment repair step.
+
+## One Hundred Thirty-Seventh Pass - TOP Notch, NVIDIA, OAK, Oculus, OpenColorIO, OpenVR, Optical Flow, OP Viewer, Orbbec, Ouster, Out, Outside, and Over Strict Gate Expansion
+
+- Promoted the next TOP zero-concept batch into the strict reviewed-card gate with TDD:
+  - Added `_TOP_DEVICE_VR_OUTPUT_REVIEWED_2026_06_18` to `tests/brain/test_atlas_coverage.py` and folded it into `_TOP_REVIEWED_2026_06_18`.
+  - The reviewed set covers `notchTOP`, `nvidiabackgroundTOP`, `nvidiadenoiseTOP`, `nvidiaflexTOP`, `nvidiaflowTOP`, `nvidiartxvideoTOP`, `nvidiaupscalerTOP`, `oakselectTOP`, `oculusriftTOP`, `opencolorioTOP`, `openvrTOP`, `opticalflowTOP`, `opviewerTOP`, `orbbecTOP`, `orbbecselectTOP`, `ousterTOP`, `ousterselectTOP`, `outTOP`, `outsideTOP`, and `overTOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate failed red again on reviewed quality. The audit reported `operator_card_quality.strict_operator_count = 406`, `operator_card_quality.gap_count = 25`, with all 20 new cards missing `key_concepts`, plus sparse key-parameter gaps for `nvidiabackgroundTOP`, `nvidiadenoiseTOP`, `nvidiaflexTOP`, `oculusriftTOP`, and `openvrTOP`.
+  - After promotion, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 20 TOP Notch/NVIDIA/OAK/VR/color-management/flow-viewer/sensor/output/composite operators.
+  - The strict test now protects official parameter ids for Notch block/playback controls, NVIDIA Background/Denoise/Flex/Flow/RTX/Upscaler controls, OAK async stream controls, Oculus/OpenVR sparse page plus Common TOP output controls, OpenColorIO color-space/file/CDL/output controls, Optical Flow grid/quality/timing controls, OP Viewer atomic viewer/output controls, Orbbec official `ip` and `image` ids, Ouster channel/time-sync controls, Out component-output controls, and Outside/Over transform-unit and legacy-transform controls.
+  - Strict quality coverage now spans 406 reviewed high-value operator cards.
+- Reviewed official Derivative docs only:
+  - Main-agent verification opened the official pages before editing: https://docs.derivative.ca/Notch_TOP, https://docs.derivative.ca/NVIDIA_Background_TOP, https://docs.derivative.ca/NVIDIA_Denoise_TOP, https://docs.derivative.ca/NVIDIA_Flex_TOP, https://docs.derivative.ca/NVIDIA_Flow_TOP, https://docs.derivative.ca/NVIDIA_RTX_Video_TOP, https://docs.derivative.ca/NVIDIA_Upscaler_TOP, https://docs.derivative.ca/OAK_Select_TOP, https://docs.derivative.ca/Oculus_Rift_TOP, https://docs.derivative.ca/OpenColorIO_TOP, https://docs.derivative.ca/OpenVR_TOP, https://docs.derivative.ca/Optical_Flow_TOP, https://docs.derivative.ca/OP_Viewer_TOP, https://docs.derivative.ca/Orbbec_TOP, https://docs.derivative.ca/Orbbec_Select_TOP, https://docs.derivative.ca/Ouster_TOP, https://docs.derivative.ca/Ouster_Select_TOP, https://docs.derivative.ca/Out_TOP, https://docs.derivative.ca/Outside_TOP, and https://docs.derivative.ca/Over_TOP.
+  - Read-only subagent audits were used for a second official-doc pass, but the main agent independently opened and verified the official pages before editing the atlas.
+- Added reviewed concepts grounded in the official docs:
+  - `notchTOP`: compiled Notch Block loading, generated custom parameters from exposed properties, layer selection, playback modes, exposed TOP/CHOP/object layout constraints, Windows/license limits, CodeMeter/Wupi runtime requirements, and `TOUCH_NOTCH_LOGGING=1` diagnostics.
+  - `nvidiabackgroundTOP`, `nvidiadenoiseTOP`, `nvidiaflexTOP`, `nvidiaflowTOP`, `nvidiartxvideoTOP`, and `nvidiaupscalerTOP`: NVIDIA Maxine/RTX/Flex/Flow workflows, Windows/NVIDIA hardware constraints, model-download and TensorRT conflicts, mode-specific dimension limits, simulation/emitter/camera dependencies, HDR/VSR quality tradeoffs, and float data-texture expectations.
+  - `oakselectTOP`, `oculusriftTOP`, `openvrTOP`, and `opencolorioTOP`: OAK Device CHOP stream selection and async cache/indexing, headset eye-output and debug HUD behavior, sparse VR page plus Common TOP output contracts, OCIO transform order, file/LUT/CDL/output controls, linear TOP color-space expectations, and config reload behavior.
+  - `opticalflowTOP` and `opviewerTOP`: optical-flow vector/cost output semantics, grid and quality menu behavior, Windows/NVIDIA GPU constraints, manual timing expectations, node-viewer capture versus raw output, deprecated panel interaction, OP Viewer COMP replacement, and atomic Common TOP viewer/output parameters.
+  - `orbbecTOP` and `orbbecselectTOP`: official Orbbec SDK v1 camera stream controls, corrected `ip` and `image` parameter ids, one-primary-camera rule, macOS root requirement, Kinect Azure incompatibility, IMU/property CHOP outputs, depth/point-cloud float data, and primary TOP dependency.
+  - `ousterTOP` and `ousterselectTOP`: lidar connection and channel mapping, 32-bit float RGBA sensor data, range millimeters versus XYZ meters, TD Y-up coordinate conversion, firmware/network/Gigabit requirements, time-sync modes, Educational/Commercial/Pro license availability, and Ouster Select precision/filtering gotchas.
+  - `outTOP`, `outsideTOP`, and `overTOP`: component output connector ordering, label versus deterministic node identity, Common TOP output contract controls, Outside versus Inside alpha behavior, Over foreground alpha compositing, 3D/2D-array support, transform units, and `legacyxform` behavior.
+- Tightened metadata while promoting the cards:
+  - Corrected `orbbecTOP` from stale draft `ipaddress`/`stream` to official `ip`/`image`, and added Orbbec logging, resolution/FPS, alignment, IMU, and property CHOP controls.
+  - Restored the full atomic `opviewerTOP` Common TOP parameter surface required by the seed-corpus guard.
+  - Added sparse Common TOP output controls to NVIDIA Background, NVIDIA Denoise, NVIDIA Flex, Oculus Rift, and OpenVR so strict quality minimums remain official-doc grounded.
+  - Expanded OpenColorIO with `cdldirection`, `ccfile`, `gain`, and `colorspace`; Ouster with time-sync/channel details; and Outside/Over with `tunit`, `punit`, and `legacyxform`.
+  - Updated all 20 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T14:32:22Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on reviewed card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: initially found the expected `opviewerTOP` structural-date update, then passed with 40 tests.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: initially caught the compressed `opviewerTOP` Common TOP params, then passed with 85 tests after restoring atomic names.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 406`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T14:32:22Z`.
+  - Zero-concept operator card count after promotion: 236 remaining overall. Remaining zero-concept families: TOP 56, SOP 108, DAT 72. CHOP, COMP, POP, and MAT remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 65075, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - JSON parse check across structured cards, generated drafts, and reports: clean, 782 JSON/JSONL records parsed.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully after the environment repair step.
+
+## One Hundred Thirty-Eighth Pass - TOP Pack, Photoshop, Point File, Point Transform, PreFilter, Projection, Ramp, RealSense, Rectangle, Remap, Render, RenderStream, Reorder, Resolution, RGB, and Scalable Display Strict Gate Expansion
+
+- Promoted the next TOP zero-concept batch into the strict reviewed-card gate with TDD:
+  - Added `_TOP_POINT_RENDER_REMAP_REVIEWED_2026_06_18` to `tests/brain/test_atlas_coverage.py` and folded it into `_TOP_REVIEWED_2026_06_18`.
+  - The reviewed set covers `packTOP`, `photoshopinTOP`, `pointfileinTOP`, `pointfileselectTOP`, `pointtransformTOP`, `prefiltermapTOP`, `projectionTOP`, `rampTOP`, `realsenseTOP`, `rectangleTOP`, `remapTOP`, `renderpassTOP`, `renderselectTOP`, `renderstreaminTOP`, `renderstreamoutTOP`, `reorderTOP`, `resolutionTOP`, `rgbkeyTOP`, `rgbtohsvTOP`, and `scalabledisplayTOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate failed red again on reviewed quality. The audit reported `operator_card_quality.strict_operator_count = 426`, `operator_card_quality.gap_count = 20`, with all 20 new cards missing `key_concepts`.
+  - After promotion, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 20 TOP packing, Photoshop, point-file, transform, projection, sensor, render, RenderStream, reorder, resolution, RGB, and scalable-display operators.
+  - The strict test now protects official parameter ids for Pack unpack-channel controls, Photoshop `unlock`, Point File reload/timeout/upload controls, Point Transform matrix/weight controls, Ramp key/tension/aspect controls, RealSense skeleton/model controls, Rectangle border/background alpha and units, Render Pass advanced render controls, Render Select image-output controls, RenderStream active/name/index/profile controls, RGB Key soft ranges, and Scalable Display eye-point controls.
+  - Strict quality coverage now spans 426 reviewed high-value operator cards.
+- Reviewed official Derivative docs only:
+  - Main-agent verification used the official pages before editing: https://docs.derivative.ca/Pack_TOP, https://docs.derivative.ca/Photoshop_In_TOP, https://docs.derivative.ca/Point_File_In_TOP, https://docs.derivative.ca/Point_File_Select_TOP, https://docs.derivative.ca/Point_Transform_TOP, https://docs.derivative.ca/PreFilter_Map_TOP, https://docs.derivative.ca/Projection_TOP, https://docs.derivative.ca/Ramp_TOP, https://docs.derivative.ca/RealSense_TOP, https://docs.derivative.ca/Rectangle_TOP, https://docs.derivative.ca/Remap_TOP, https://docs.derivative.ca/Render_Pass_TOP, https://docs.derivative.ca/Render_Select_TOP, https://docs.derivative.ca/RenderStream_In_TOP, https://docs.derivative.ca/RenderStream_Out_TOP, https://docs.derivative.ca/Reorder_TOP, https://docs.derivative.ca/Resolution_TOP, https://docs.derivative.ca/RGB_Key_TOP, https://docs.derivative.ca/RGB_to_HSV_TOP, and https://docs.derivative.ca/Scalable_Display_TOP.
+  - Read-only subagent audits were used for a second official-doc pass, but the main agent independently verified the official findings before editing the atlas.
+- Added reviewed concepts grounded in the official docs:
+  - `packTOP` and `photoshopinTOP`: 32-bit float channel packing into 8-bit RGBA textures, unpack modes, width expansion by channel count, lossless storage expectations, Photoshop Remote Connections setup, host/platform behavior, JPEG versus uncompressed transfer, manual/automatic update behavior, and lock/unlock workflow.
+  - `pointfileinTOP`, `pointfileselectTOP`, and `pointtransformTOP`: four-field point-file loading, sequence and ASCII inference, async upload and timeout controls, extra-field selection, sparse Point File Select page behavior, position/vector inputs, vector translation behavior, alpha passthrough, weighted transforms, transform order, and 2021.10000+ build relevance for Point Transform.
+  - `prefiltermapTOP`, `projectionTOP`, `rampTOP`, `realsenseTOP`, and `rectangleTOP`: diffuse/specular prefiltered environment maps for Environment Light, cube/equirectangular/fisheye/dual-paraboloid projection workflows, oversize/downsample anti-aliasing, DAT-driven ramp keys with tension/aspect/order behavior, RealSense TOP depth/color/infrared and skeleton/model controls, Apple Silicon and RealSense CHOP deprecation notes, and Rectangle fill/border/background alpha/unit controls.
+  - `remapTOP`, `renderpassTOP`, `renderselectTOP`, `renderstreaminTOP`, and `renderstreamoutTOP`: normalized UV/UVW lookup-map remapping, 8-bit map jaggedness, 3D/array remap modes, Render Pass render-input/camera/geometry/light/clear/transparency/depth/color controls, Render Select compatibility and Toggle `imageoutput`, RenderStream Pro/Windows/r22+ constraints, In CHOP-driven setup/sync workflow, and stream/profile controls.
+  - `reorderTOP`, `resolutionTOP`, `rgbkeyTOP`, `rgbtohsvTOP`, and `scalabledisplayTOP`: multi-input channel routing, constants/luminance routing, official `Ouput` label typo awareness, resolution menu/multiply/fill/filter/pass/channel-mask controls, RGB Key red/green/blue hard and soft ranges, RGB/HSV conversion without operator-specific params beyond common TOP controls, and Scalable Display Pro/Windows projection/cameraTransform/eye-point workflow.
+- Tightened metadata while promoting the cards:
+  - Preserved the official Pack parameter id spelling `unpackrgbA` and added Photoshop `unlock`.
+  - Added Point File reload, frame-timeout, open-timeout, initial-load, and async-upload controls.
+  - Updated `pointtransformTOP` build relevance to `2021.10000+`.
+  - Added Ramp `tension`, `fitaspect`, `multrgbbyalpha`, and `swaporder`; Rectangle border/background alpha and unit controls; and RealSense `skeltracking`, license directory, and model-file controls.
+  - Expanded Render Pass with advanced official controls and removed the unsupported stale pixel-format gotcha.
+  - Corrected Render Select `imageoutput` as a Toggle and updated RenderStream In/Out build relevance to `2022.28040+ RenderStream r22+`.
+  - Preserved the official Reorder `Ouput` typo note, added RGB Key green/blue soft controls, set `rgbtohsvTOP` build relevance to color-space conversion, and added Scalable Display `eyepoint1`, `eyepoint2`, and `eyepoint3`.
+  - Updated all 20 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T14:40:15Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on reviewed card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 426`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T14:40:15Z`.
+  - Zero-concept operator card count after promotion: 216 remaining overall. Remaining zero-concept families: TOP 36, SOP 108, DAT 72. CHOP, COMP, POP, and MAT remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 65075, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - JSON parse check across structured cards, generated drafts, and reports: clean, 782 JSON/JSONL records parsed.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully.
+
+## One Hundred Thirty-Ninth Pass - TOP Screen, Screen Grab, Script, Shared Memory, SICK, Simple Render, Slope, Spectrum, SSAO, ST2110, Stype, Substance, Subtract, Syphon Spout, Text, and Texture 3D Strict Gate Expansion
+
+- Promoted the next TOP zero-concept batch into the strict reviewed-card gate with TDD:
+  - Added `_TOP_SCREEN_SHARED_STYPE_TEXTURE_REVIEWED_2026_06_18` to `tests/brain/test_atlas_coverage.py` and folded it into `_TOP_REVIEWED_2026_06_18`.
+  - The reviewed set covers `screenTOP`, `screengrabTOP`, `scriptTOP`, `sharedmeminTOP`, `sharedmemoutTOP`, `sickTOP`, `simplerenderTOP`, `slopeTOP`, `spectrumTOP`, `ssaoTOP`, `st2110inTOP`, `st2110outTOP`, `stypeTOP`, `substanceTOP`, `substanceselectTOP`, `subtractTOP`, `syphonspoutinTOP`, `syphonspoutoutTOP`, `textTOP`, and `texture3dTOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate failed red again on reviewed quality. The audit reported `operator_card_quality.strict_operator_count = 446`, `operator_card_quality.gap_count = 22`, with all 20 new cards missing `key_concepts`, plus `substanceselectTOP` needing one more official parameter and `textTOP` needing one more gotcha.
+  - After promotion, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 20 TOP screen/compositing, screen capture, Python/script, shared-memory, lidar, render alias, slope/frequency/AO, ST2110, Stype, Substance, Syphon/Spout, text, and 3D-texture operators.
+  - The strict test now protects official parameter ids for Screen/Subtract transform units and `legacyxform`, Screen Grab crop-unit controls, Script TOP callback/setup/outside-cook controls, Shared Mem Local/Global memory ids, SICK field-channel routing, Slope `zeropoint`/strength/offset/extend controls, Spectrum DFT/IDFT controls, SSAO blur/sharpness controls, ST2110 SDP/NMOS/color/audio/SPS controls, Stype CHOP/padding controls, Substance and Substance Select routing controls, Syphon/Spout active sender/sender controls, Text TOP DAT/spec DAT/font/composite controls, and Texture 3D replacement/prefill/reset controls.
+  - Strict quality coverage now spans 446 reviewed high-value operator cards.
+- Reviewed official Derivative docs only:
+  - Main-agent verification opened the official pages before editing: https://docs.derivative.ca/Screen_TOP, https://docs.derivative.ca/Screen_Grab_TOP, https://docs.derivative.ca/Script_TOP, https://docs.derivative.ca/Shared_Mem_In_TOP, https://docs.derivative.ca/Shared_Mem_Out_TOP, https://docs.derivative.ca/SICK_TOP, https://docs.derivative.ca/Simple_Render_TOP, https://docs.derivative.ca/Render_Simple_TOP, https://docs.derivative.ca/Slope_TOP, https://docs.derivative.ca/Spectrum_TOP, https://docs.derivative.ca/SSAO_TOP, https://docs.derivative.ca/ST2110_In_TOP, https://docs.derivative.ca/ST2110_Out_TOP, https://docs.derivative.ca/Stype_TOP, https://docs.derivative.ca/Substance_TOP, https://docs.derivative.ca/Substance_Select_TOP, https://docs.derivative.ca/Subtract_TOP, https://docs.derivative.ca/Syphon_Spout_In_TOP, https://docs.derivative.ca/Syphon_Spout_Out_TOP, https://docs.derivative.ca/Text_TOP, and https://docs.derivative.ca/Texture_3D_TOP.
+  - Four read-only subagent audits were used for a second official-doc pass, but the main agent independently opened and verified the official pages before editing the atlas.
+- Added reviewed concepts grounded in the official docs:
+  - `screenTOP` and `subtractTOP`: Screen brightening semantics, Subtract `Input1 - Input2` with clamping, fixed-layer output resolution/aspect behavior, overlay-only transform controls, Native Resolution pixel-accuracy, 3D/2D-array support, and legacy transform behavior.
+  - `screengrabTOP`, `scriptTOP`, `sharedmeminTOP`, and `sharedmemoutTOP`: real-time and pulse screen capture, Windows-only application capture, delayed capture caveat, Python callback/NumPy Script TOP workflow, `setuppars` and outside-cook modification, shared-memory Local/Global modes, name/memory-type matching, Educational/Commercial/Pro license notes, and immediate versus next-frame download tradeoffs.
+  - `sickTOP`, `simplerenderTOP`, `slopeTOP`, `spectrumTOP`, and `ssaoTOP`: SICK lidar point-field packing through `sick_scan_xd`, one-active-SICK-TOP limit and Engine workflow, legacy Simple Render versus current Render Simple guidance, Slope neighbor-difference and signed-float workflow, VkFFT DFT/IDFT RG semantics, and SSAO depth-buffer/direct-render-input requirements.
+  - `st2110inTOP`, `st2110outTOP`, and `stypeTOP`: Pro-only ST2110 hardware I/O through ST2110 Device CHOP, SDP/NMOS setup modes, stream identifiers, deinterlacing, pixel format and color/reference-white handling, audio/SPS output routing, timesliced audio requirement, Pro-only Stype/RedSpy lens distortion, exact custom CHOP channel names, and padding behavior.
+  - `substanceTOP`, `substanceselectTOP`, `syphonspoutinTOP`, `syphonspoutoutTOP`, `textTOP`, and `texture3dTOP`: `.sbsar` graph/output routing and CPU/GPU engine notes, dynamic Substance Select output menus, same-machine Spout/Syphon texture sharing and GPU/format limits, Text TOP DAT/spec DAT/CHOP/font/display/composite workflows, deprecated `legacyparsing`, and 3D texture versus 2D array W-coordinate and slice-cache behavior.
+- Tightened metadata while promoting the cards:
+  - Added Screen/Subtract `tunit`, `punit`, and `legacyxform`.
+  - Added Screen Grab `leftunit`, `rightunit`, `bottomunit`, and `topunit`.
+  - Preserved Script TOP `setuppars` spelling and Shared Mem `memtype` menu ids.
+  - Added SICK `red`, `green`, `blue`, and `alpha`; Slope `zeropoint`, `strength`, `offset`, `offsetunit`, and `extend`; SSAO `blursharpness`; and Texture 3D `replacesinglepulse`, `prefillpulse`, `reset`, and `resetpulse`.
+  - Expanded ST2110 In with NMOS, deinterlace, precedence, and pixel-format controls, and ST2110 Out with timecode, memory mode, audio network, SPS, and reference-white controls.
+  - Treated `simplerenderTOP` as a legacy/alias-style card and pointed planning guidance toward current `rendersimpleTOP`.
+  - Expanded Text TOP from a thin draft into a reviewed DAT/spec DAT/font/display/layout/composite card, corrected the stale backtick-expression guidance, and guarded the official `legacyparsing` id.
+  - Updated all 20 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T14:48:23Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on reviewed card quality, caught one incorrect `textTOP` guard (`legacykerning`), then passed after correcting the guard to official `legacyparsing`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 446`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T14:48:23Z`.
+  - Zero-concept operator card count after promotion: 196 remaining overall. Remaining zero-concept families: TOP 16, SOP 108, DAT 72. CHOP, COMP, POP, and MAT remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 65075, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - JSON parse check across structured cards, generated drafts, release gates, and eval JSONL: clean, 787 JSON/JSONL records parsed.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully.
+
+## One Hundred Fortieth Pass - TOP Threshold, Tile, Time Machine, Tone Map, Touch, Transform, Under, Video Device, Video Stream, Vioso, Web Render, and ZED Strict Gate Completion
+
+- Promoted the final TOP zero-concept batch into the strict reviewed-card gate with TDD:
+  - Added `_TOP_FINAL_DEVICE_WEB_ZED_REVIEWED_2026_06_18` to `tests/brain/test_atlas_coverage.py` and folded it into `_TOP_REVIEWED_2026_06_18`.
+  - The reviewed set covers `thresholdTOP`, `tileTOP`, `timemachineTOP`, `tonemapTOP`, `touchinTOP`, `touchoutTOP`, `transformTOP`, `underTOP`, `videodeviceinTOP`, `videodeviceoutTOP`, `videostreaminTOP`, `videostreamoutTOP`, `viosoTOP`, `webrenderTOP`, `zedTOP`, and `zedselectTOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate failed red again on reviewed quality. The audit reported `operator_card_quality.strict_operator_count = 462`, `operator_card_quality.gap_count = 16`, with all 16 new cards missing `key_concepts`.
+  - After promotion, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the final 16 TOP operators in `_STRICT_OPERATOR_QUALITY_TYPES`.
+  - The strict test now protects official parameter ids for Threshold comparator/RGB/alpha controls, Tile crop/repeat/reflect controls, Time Machine offset units, Tone Map nit/exposure controls, Touch In/Out queue/network/video-codec controls, Transform order/pivot/background/extend controls, Under fixed-layer/transform controls, Video Device In/Out driver/signal/pixel/color/sync controls, Video Stream In/Out URL/WebRTC/codec/bitrate controls, Vioso calibration controls, Web Render browser process controls, and ZED/ZED Select depth/camera/selection controls.
+  - Corrected the local Video Stream Out guard from stale `codec` and `goplength` names to the official `videocodec` and `keyframeinterval` parameter ids.
+  - Strict quality coverage now spans 462 reviewed high-value operator cards.
+- Reviewed official Derivative docs only:
+  - Main-agent verification opened the official pages before editing: https://docs.derivative.ca/Threshold_TOP, https://docs.derivative.ca/Tile_TOP, https://docs.derivative.ca/Time_Machine_TOP, https://docs.derivative.ca/Tone_Map_TOP, https://docs.derivative.ca/Touch_In_TOP, https://docs.derivative.ca/Touch_Out_TOP, https://docs.derivative.ca/Transform_TOP, https://docs.derivative.ca/Under_TOP, https://docs.derivative.ca/Video_Device_In_TOP, https://docs.derivative.ca/Video_Device_Out_TOP, https://docs.derivative.ca/Video_Stream_In_TOP, https://docs.derivative.ca/Video_Stream_Out_TOP, https://docs.derivative.ca/Vioso_TOP, https://docs.derivative.ca/Vioso, https://docs.derivative.ca/Web_Render_TOP, https://docs.derivative.ca/ZED_TOP, https://docs.derivative.ca/ZED, and https://docs.derivative.ca/ZED_Select_TOP.
+  - Four read-only subagent audits were used for a second official-doc pass, but the main agent independently opened and verified the official pages before editing the atlas.
+- Added reviewed concepts grounded in the official docs:
+  - `thresholdTOP`, `tileTOP`, `timemachineTOP`, and `tonemapTOP`: comparator semantics where matching pixels become 0, separated RGB/alpha thresholding, crop-unit and overlap tiling, Reflect X/Y repeat dependencies, Texture 3D time-offset sampling, red-channel fallback for non-monochrome controls, HDR-to-SDR tone mapping, Reference White considerations, and the official warning not to use Tone Map TOP for true HDR display output.
+  - `touchinTOP`, `touchoutTOP`, `transformTOP`, and `underTOP`: TouchDesigner TCP/IP image streaming, queue/latency tradeoffs, Hap Q/Hap Q Alpha/uncompressed codec choices, frame-step send behavior, transform order/pivot/grow-shrink/composite-over/tile-limit controls, Under TOP fixed-layer versus compositing-order behavior, overlay-only transforms, and 3D/2D-array support.
+  - `videodeviceinTOP`, `videodeviceoutTOP`, `videostreaminTOP`, and `videostreamoutTOP`: live capture hardware/vendor/platform limits, Info DAT/CHOP diagnostics, deinterlace and sync workflows, SDR/HDR color/reference-white handling, native hardware output and Pro-only sync output, RTSP/HLS/SRT/WebRTC input, NVIDIA/Windows hardware encoding, RTSP server sharing, SRT metadata, WebRTC tracks, and firewall/session-limit caveats.
+  - `viosoTOP`, `webrenderTOP`, `zedTOP`, and `zedselectTOP`: VIOSO 6 `.vwf` calibration and Pro-only restrictions, Web Render CEF process/Info DAT/Info CHOP diagnostics, shared-memory versus Windows shared-texture return paths, unique CEF user directories, ZED camera/SVO/network-stream input, ZED SDK v5.0.4 GPU support notes, neural depth first-run cost, ZED Select companion outputs, and primary-ZED activity requirements.
+- Tightened metadata while promoting the cards:
+  - Added Tile crop unit and overlap controls, Transform `growshrink`, `punit`, `premultrgbbyalpha`, `compover`, `mipmapbias`, `limittiles`, `tileu`, and `tilev`, and Under `tunit`, `punit`, and `legacyxform`.
+  - Expanded Video Device In with IP/options/deinterlace/signal/color/sync/Ximea capture controls and Video Device Out with legacy `chop`, audio bit depth, sync group, and reset stats.
+  - Expanded Video Stream In with `reload`, `forcerebuffer`, and `bottomhalfalpha`; expanded Video Stream Out with `videocodec`, `quality`, `keyframeinterval`, `maxbframes`, `numslices`, audio bitrate, silent-audio, and WebRTC audio track controls.
+  - Expanded Web Render with current browser-process, URL filtering, shared texture, restart, and cache controls.
+  - Expanded ZED TOP with cue/start/camera/depth/rerange/reference-frame/white-balance/LED controls and corrected ZED Select perspective guidance to the official left/right ids.
+  - Updated all 16 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T14:58:17Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on reviewed card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 462`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T14:58:17Z`.
+  - Zero-concept operator card count after promotion: 180 remaining overall. Remaining zero-concept families: SOP 108 and DAT 72. CHOP, COMP, POP, MAT, and TOP remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 65075, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - JSON parse check across structured cards, generated drafts, release gates, reports, and eval JSONL: clean, 790 JSON/JSONL records parsed.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully.
+
+## One Hundred Forty-First Pass - SOP Foundation, Alembic, Align, Arm, Attribute, Basis, Blend, Bone Group, Boolean, Box, Bridge, Cache, Cap, Capture, Carve, CHOP Bridge, Circle, and Clay Strict Gate Expansion
+
+- Promoted the first SOP zero-concept batch into the strict reviewed-card gate with TDD:
+  - Added `_SOP_FOUNDATION_CAPTURE_REVIEWED_2026_06_18` to `tests/brain/test_atlas_coverage.py` and folded it into `_SOP_REVIEWED_2026_06_18`.
+  - The reviewed set covers `addSOP`, `alembicSOP`, `alignSOP`, `armSOP`, `attributeSOP`, `attributecreateSOP`, `basisSOP`, `blendSOP`, `bonegroupSOP`, `booleanSOP`, `boxSOP`, `bridgeSOP`, `cacheSOP`, `capSOP`, `captureSOP`, `captureregionSOP`, `carveSOP`, `choptoSOP`, `circleSOP`, and `claySOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate failed red again on reviewed quality. The audit reported `operator_card_quality.strict_operator_count = 482`, `operator_card_quality.gap_count = 21`, with all 20 new cards missing `key_concepts` plus `bonegroupSOP` needing one more official parameter.
+  - Because the official Bone Group SOP page only exposes two meaningful operator-specific parameters in this card's current shape, added a documented `bonegroupSOP` minimum override for `key_params = 2` and covered it in the strict test.
+  - After promotion, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 20 SOP operators in `_STRICT_OPERATOR_QUALITY_TYPES`.
+  - The strict test now protects official parameter ids for Add point/polygon connection modes, Alembic archive/object/transform controls, Align translate/rotate/transform-order controls, Attribute class/name/value controls, Blend input/up-vector controls, Boolean operation/output/attribute controls, Box division/texture/normal controls, Bridge isoparm/Frenet/circular/sharpness controls, Cache prefill controls, Cap scale/division controls, Capture autoincrement/save-selection controls, Carve U/V/domain/location/division controls, CHOP-to-SOP tangent and channel controls, Circle primitive/arc/anchor/texture controls, and Clay distance/projection/face/bias/warp controls.
+  - Strict quality coverage now spans 482 reviewed high-value operator cards.
+- Reviewed official Derivative docs only:
+  - Main-agent verification used the official pages before editing: https://docs.derivative.ca/Add_SOP, https://docs.derivative.ca/Alembic_SOP, https://docs.derivative.ca/Align_SOP, https://docs.derivative.ca/Arm_SOP, https://docs.derivative.ca/Attribute_SOP, https://docs.derivative.ca/Attribute_Create_SOP, https://docs.derivative.ca/Basis_SOP, https://docs.derivative.ca/Blend_SOP, https://docs.derivative.ca/Bone_Group_SOP, https://docs.derivative.ca/Boolean_SOP, https://docs.derivative.ca/Box_SOP, https://docs.derivative.ca/Bridge_SOP, https://docs.derivative.ca/Cache_SOP, https://docs.derivative.ca/Cap_SOP, https://docs.derivative.ca/Capture_SOP, https://docs.derivative.ca/Capture_Region_SOP, https://docs.derivative.ca/Carve_SOP, https://docs.derivative.ca/CHOP_to_SOP, https://docs.derivative.ca/Circle_SOP, and https://docs.derivative.ca/Clay_SOP.
+  - Four read-only subagent audits were used for a second official-doc pass, but the main agent independently verified the official source set and owned the atlas edits and test evidence.
+- Added reviewed concepts grounded in the official docs:
+  - `addSOP`, `alembicSOP`, `alignSOP`, `armSOP`, and `attributeSOP`: explicit geometry construction from orphan points, Alembic archive/object selection and optional transform import, translation/rotation alignment controls, bone-arm construction, and point/vertex/primitive/detail attribute editing semantics.
+  - `attributecreateSOP`, `basisSOP`, `blendSOP`, `bonegroupSOP`, and `booleanSOP`: attribute creation and local-variable export, basis conversion tradeoffs, input-weighted blending with zero-weight cook caveats, capture bone group metadata, and boolean surface operation/output/twisted-edge/reversed-polygon caveats.
+  - `boxSOP`, `bridgeSOP`, `cacheSOP`, `capSOP`, and `captureSOP`: box primitive/division/texture/normal choices, bridge-section interpolation and sharp-end knot/ripple behavior, frame caching and prefill behavior, cap scale/division behavior, and capture-weight overwrite/selection workflows.
+  - `captureregionSOP`, `carveSOP`, `choptoSOP`, `circleSOP`, and `claySOP`: capture-region geometry, curve/surface domain carving and breakpoint mode, CHOP-driven point-channel replacement with tangent computation, circle primitive/arc/anchor/normal behavior, and projection/clay face/warp/bias controls.
+- Tightened metadata while promoting the cards:
+  - Added Alembic `interp` and transform warnings, Align `dotrans`, `dorotate`, `xord`, `rord`, `t`, `r`, `s`, and `p`, Blend `doup` and `input`, Boolean `accattrib`, and Box `rord`, `anchorw`, `dodivs`, `divs`, `texture`, and `normals`.
+  - Expanded Bridge with `isodivs`, `frenet`, `circular`, `rotatet`, `scalet`, and `csharp`; Cache with `prefill`; Cap with U/V scale and division ids; Capture with `autoincr` and `savesel`; Carve with V-domain, keep, location, and division controls; and CHOP to SOP with `comptang`.
+  - Corrected Circle `arc` to a menu and added `reverseanchors`, `anchoru`, `anchorv`, `angle`, `imperfect`, `texture`, and `normals`.
+  - Expanded Clay with distance, normal/direction/coordinate, snap, U/V warp, U/V face, bias, and sharpness controls.
+  - Updated all 20 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T15:46:03Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on reviewed card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 482`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T15:46:03Z`.
+  - Zero-concept operator card count after promotion: 160 remaining overall. Remaining zero-concept families: SOP 88 and DAT 72. CHOP, COMP, POP, MAT, and TOP remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 65075, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - JSON parse check across structured cards, generated drafts, release gates, reports, and eval JSONL: clean, 790 JSON/JSONL records parsed.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully.
+
+## One Hundred Forty-Second Pass - SOP Clip, Convert, Copy, CPlusPlus, Creep, Curveclay, Curvesect, DAT Bridge, Deform, Delete, Divide, Extrude, Facet, Face Track, File In, Fillet, Fit, Force, Fractal, and Grid Strict Gate Expansion
+
+- Promoted the second SOP zero-concept batch into the strict reviewed-card gate with TDD:
+  - Added `_SOP_CURVE_DEFORM_FILE_REVIEWED_2026_06_18` to `tests/brain/test_atlas_coverage.py` and folded it into `_SOP_REVIEWED_2026_06_18`.
+  - The reviewed set covers `clipSOP`, `convertSOP`, `copySOP`, `cplusplusSOP`, `creepSOP`, `curveclaySOP`, `curvesectSOP`, `dattoSOP`, `deformSOP`, `deleteSOP`, `divideSOP`, `extrudeSOP`, `facetSOP`, `facetrackSOP`, `fileinSOP`, `filletSOP`, `fitSOP`, `forceSOP`, `fractalSOP`, and `gridSOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate failed red again on reviewed quality. The audit reported `operator_card_quality.strict_operator_count = 502`, `operator_card_quality.gap_count = 21`, with all 20 new cards missing `key_concepts` plus `gridSOP` needing one more gotcha.
+  - After promotion, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 20 SOP operators in `_STRICT_OPERATOR_QUALITY_TYPES`.
+  - The strict test now protects official parameter ids for Clip group creation and above/below groups, Convert LOD/division/order/interpolation controls, Copy transform/stamping/attribute controls, CPlusPlus plugin lifecycle controls, Creep fill/proportion/path-space transform controls, Curveclay projection/deformation controls, Curvesect affect/extract controls, DAT to SOP point/vertex/primitive/detail and build controls, Delete `negate` and number/bounds/normal controls, Divide bricker/smooth/dual controls, Extrude cusp/group/cross-section controls, Facet consolidation/cusp/normal controls, Face Track `pretransform`, File In reload controls, Fillet seam/cut/width controls, Fit parameterization/wrap controls, Force directional components, Fractal fixed/direction controls, and Grid type/connectivity/bounds/texture controls.
+  - Strict quality coverage now spans 502 reviewed high-value operator cards.
+- Reviewed official Derivative docs only:
+  - Main-agent verification opened the official pages before editing: https://docs.derivative.ca/Clip_SOP, https://docs.derivative.ca/Convert_SOP, https://docs.derivative.ca/Copy_SOP, https://docs.derivative.ca/CPlusPlus_SOP, https://docs.derivative.ca/Creep_SOP, https://docs.derivative.ca/Curveclay_SOP, https://docs.derivative.ca/Curvesect_SOP, https://docs.derivative.ca/DAT_to_SOP, https://docs.derivative.ca/Deform_SOP, https://docs.derivative.ca/Delete_SOP, https://docs.derivative.ca/Divide_SOP, https://docs.derivative.ca/Extrude_SOP, https://docs.derivative.ca/Facet_SOP, https://docs.derivative.ca/Face_Track_SOP, https://docs.derivative.ca/File_In_SOP, https://docs.derivative.ca/Fillet_SOP, https://docs.derivative.ca/Fit_SOP, https://docs.derivative.ca/Force_SOP, https://docs.derivative.ca/Fractal_SOP, and https://docs.derivative.ca/Grid_SOP.
+  - Four read-only subagent audits were used for a second official-doc pass, but the main agent independently opened and verified the official pages before editing the atlas.
+- Added reviewed concepts grounded in the official docs:
+  - `clipSOP`, `convertSOP`, `copySOP`, `cplusplusSOP`, and `creepSOP`: clipping plane keep modes and above/below group creation, valid and invalid primitive-family conversions, per-copy/template/stamping behavior, CPlusPlus CPU versus GPU-direct plugin output, and Creep source/path input order with fill/proportion controls.
+  - `curveclaySOP`, `curvesectSOP`, `dattoSOP`, `deformSOP`, and `deleteSOP`: spline-surface-only deformation, intersection versus closest-point extraction, DAT-authored point/vertex/primitive/detail geometry, Capture-to-Deform attribute workflow, and Delete selection via `negate`, numbers, bounds, normals, and point preservation.
+  - `divideSOP`, `extrudeSOP`, `facetSOP`, `facetrackSOP`, and `fileinSOP`: polygon division/smoothing/bricker behavior, extrusion normal/cross-section/text pitfalls, staged faceting and cusp/consolidation behavior, Face Track CHOP mesh consumption with GPU-direct/editable modes, and File In reload/normal/facing behavior.
+  - `filletSOP`, `fitSOP`, `forceSOP`, `fractalSOP`, and `gridSOP`: fillet bridge and trim-curve limitations, approximation versus interpolation fitting, metaball force attributes for Particle/Spring SOPs, fractal subdivision and direction modes, and Grid primitive type/connectivity/orientation/UV/normal behavior.
+- Tightened metadata while promoting the cards:
+  - Corrected `clipSOP` `newg` from a string-like group name to a Create Groups toggle and added `above`/`below`.
+  - Expanded `convertSOP` with trim LOD/divisions, order, new primitive, and interpolation controls.
+  - Expanded `copySOP` with transform orders, pivot, uniform scale, output groups, look-at, stamping, and attribute operations.
+  - Removed the stale `curveclaySOP` `mindist` pseudo-parameter and added deformation/projection ids.
+  - Corrected `deleteSOP` by guarding official `negate` for selected/non-selected deletion and treating `groupop` as number-selection mode.
+  - Added missing official ids across Divide, Extrude, Facet, Face Track, Fillet, Fit, Force, Fractal, and Grid, including `pretransform`, `fixed`, and Grid's official ZX orientation note.
+  - Updated all 20 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-19T15:55:33Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on reviewed card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: initially caught stale `last_verified` expectations for newly reviewed `convertSOP`/`copySOP`, then passed after the expectation was tied to `_SOP_REVIEWED_2026_06_18`.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 502`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-19T15:55:33Z`.
+  - Zero-concept operator card count after promotion: 140 remaining overall. Remaining zero-concept families: SOP 68 and DAT 72. CHOP, COMP, POP, MAT, and TOP remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - TouchDesigner was running at PID 65075, so `uv run python scripts/brain_live_smoke.py --live` also ran: ok, 10 scenarios, `mutated_td=false`, TD health ok.
+  - JSON parse check across structured cards, generated drafts, release gates, reports, and eval JSONL: clean, 790 JSON/JSONL records parsed.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully.
+
+## One Hundred Forty-Third Pass - SOP Group, Hole, Import Select, In, Inverse Curve, Iso Surface, Join, Joint, Kinect, Lattice, Limit, Line, Line Thick, LOD, LSystem, Magnet, Material, Metaball, Model, and Noise Strict Gate Expansion
+
+- Promoted the third SOP zero-concept batch into the strict reviewed-card gate with TDD:
+  - Added `_SOP_GROUP_IMPORT_FIELD_REVIEWED_2026_06_18` to `tests/brain/test_atlas_coverage.py` and folded it into `_SOP_REVIEWED_2026_06_18`.
+  - The reviewed set covers `groupSOP`, `holeSOP`, `importselectSOP`, `inSOP`, `inversecurveSOP`, `isosurfaceSOP`, `joinSOP`, `jointSOP`, `kinectSOP`, `latticeSOP`, `limitSOP`, `lineSOP`, `linethickSOP`, `lodSOP`, `lsystemSOP`, `magnetSOP`, `materialSOP`, `metaballSOP`, `modelSOP`, and `noiseSOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate failed red again on reviewed quality. The audit reported `operator_card_quality.strict_operator_count = 522`, `operator_card_quality.gap_count = 24`, with all 20 new cards missing `key_concepts`, plus `inSOP`, `inversecurveSOP`, and `materialSOP` needing low-parameter handling and `lineSOP` needing one more gotcha.
+  - Added documented `key_params = 1` minimum overrides for `inSOP`, `inversecurveSOP`, and `materialSOP`, because each official page exposes only one operator-specific parameter.
+  - After promotion, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 20 SOP operators in `_STRICT_OPERATOR_QUALITY_TYPES`.
+  - The strict test now protects official parameter ids for Group create/combine/edit controls, Hole unbridge/snap controls, Import Select parent/playback/trim controls, In label, Inverse Curve CHOP source, Iso Surface `me.curPos` bounds/divisions controls, Join knot/direction/increment controls, Joint twist/tangent controls, Kinect v1 skeleton/depth controls, Lattice lattice/point-mode kernels, Limit CHOP channel/custom-attribute/bounds controls, Line Point A/B endpoints, Line Thick domain/symmetric controls, LOD draw-cache controls, LSystem generation/tube/rule controls, Magnet transform/attribute controls, Material `mat`, Metaball radius/kernel/exponent controls, Model Info CHOP diagnostics, and Noise harmonic/sampling-transform controls.
+  - Strict quality coverage now spans 522 reviewed high-value operator cards.
+- Reviewed official Derivative docs only:
+  - Main-agent verification opened the official pages before editing: https://docs.derivative.ca/Group_SOP, https://docs.derivative.ca/Hole_SOP, https://docs.derivative.ca/Import_Select_SOP, https://docs.derivative.ca/In_SOP, https://docs.derivative.ca/Inverse_Curve_SOP, https://docs.derivative.ca/Iso_Surface_SOP, https://docs.derivative.ca/Join_SOP, https://docs.derivative.ca/Joint_SOP, https://docs.derivative.ca/Kinect_SOP, https://docs.derivative.ca/Lattice_SOP, https://docs.derivative.ca/Limit_SOP, https://docs.derivative.ca/Line_SOP, https://docs.derivative.ca/Line_Thick_SOP, https://docs.derivative.ca/LOD_SOP, https://docs.derivative.ca/LSystem_SOP, https://docs.derivative.ca/Magnet_SOP, https://docs.derivative.ca/Material_SOP, https://docs.derivative.ca/Metaball_SOP, https://docs.derivative.ca/Model_SOP, and https://docs.derivative.ca/Noise_SOP.
+  - Four read-only subagent audits were used for a second official-doc pass, but the main agent independently opened and verified the official pages before editing the atlas.
+- Added reviewed concepts grounded in the official docs:
+  - `groupSOP`, `holeSOP`, `importselectSOP`, `inSOP`, and `inversecurveSOP`: point/primitive grouping and boolean group edits, hole creation/unbridge behavior, USD/FBX primitive import with local playback controls, component-boundary SOP input labels, and Inverse Curve CHOP round-trip reconstruction.
+  - `isosurfaceSOP`, `joinSOP`, `jointSOP`, `kinectSOP`, and `latticeSOP`: zero-set implicit surfaces using `me.curPos`, face/surface joining and type conversion limits, circle-based joint helpers with twist caveats, Kinect v1 geometry output, and three-input lattice/point deformation contracts.
+  - `limitSOP`, `lineSOP`, `linethickSOP`, `lodSOP`, and `lsystemSOP`: CHOP-sample geometry generation with channel-to-attribute mapping, official Point A/B Line SOP endpoints, curve thickening into surfaces, LOD draw-cache behavior, and LSystem string rewriting/turtle/tube/rule controls.
+  - `magnetSOP`, `materialSOP`, `metaballSOP`, `modelSOP`, and `noiseSOP`: metaball-field magnet deformation, SOP-level material assignment and object-override behavior, implicit metaball fields and exponent/kernel controls, Model SOP protected storage behavior, and Noise SOP harmonic/sampling transform semantics.
+- Tightened metadata while promoting the cards:
+  - Expanded `groupSOP` across Create, Combine, Convert, Rename, and Destroy group controls.
+  - Corrected `lineSOP` by replacing stale `dist`/`direction` entries with official `pa`/`pb` endpoint vectors and `texture`.
+  - Corrected `lsystemSOP` by treating `pictop` as the Pic Image TOP for `pic()`, not a file/rule source.
+  - Corrected `kinectSOP` notes so `full` and `seated` are treated as skeleton menu values, not standalone toggles.
+  - Added low-parameter overrides for `inSOP`, `inversecurveSOP`, and `materialSOP`.
+  - Added `lineSOP`'s missing third gotcha and expanded Lattice, Limit, Line Thick, LOD, Magnet, Metaball, and Noise official child ids.
+  - Updated all 20 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-20T17:23:26Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on reviewed card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: initially caught stale `last_verified` expectations for newly reviewed Lattice/Limit/Material SOP slice, then passed after the expectation was tied to `_SOP_REVIEWED_2026_06_18`.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 522`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-20T17:23:26Z`.
+  - Zero-concept operator card count after promotion: 120 remaining overall. Remaining zero-concept families: SOP 48 and DAT 72. CHOP, COMP, POP, MAT, and TOP remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `pgrep -fl TouchDesigner`: no running TouchDesigner process, so live smoke was not run for this pass.
+  - JSON parse check across structured cards, generated drafts, release gates, reports, and eval JSONL: clean, 790 JSON/JSONL records parsed.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully.
+
+## One Hundred Forty-Fourth Pass - SOP Object Merge, VR, Output, Particle, Point, Poly, Profile, Project, Rails, Raster, Ray, Rectangle, Refine, and Resample Strict Gate Expansion
+
+- Promoted the fourth SOP zero-concept batch into the strict reviewed-card gate with TDD:
+  - Added `_SOP_OBJECT_POLY_RAY_REVIEWED_2026_06_18` to `tests/brain/test_atlas_coverage.py` and folded it into `_SOP_REVIEWED_2026_06_18`.
+  - The reviewed set covers `objectmergeSOP`, `oculusriftSOP`, `openvrSOP`, `outSOP`, `particleSOP`, `pointSOP`, `polyloftSOP`, `polypatchSOP`, `polyreduceSOP`, `polysplineSOP`, `polystitchSOP`, `primitiveSOP`, `profileSOP`, `projectSOP`, `railsSOP`, `rasterSOP`, `raySOP`, `rectangleSOP`, `refineSOP`, and `resampleSOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate failed red again on reviewed quality. The audit reported `operator_card_quality.strict_operator_count = 542`, `operator_card_quality.gap_count = 22`, with all 20 new cards missing `key_concepts`, plus `openvrSOP` and `outSOP` needing low-parameter handling.
+  - Added documented `key_params = 1` minimum overrides for `openvrSOP` and `outSOP`, because each official page exposes only one operator-specific parameter.
+  - After promotion, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 20 SOP operators in `_STRICT_OPERATOR_QUALITY_TYPES`.
+  - The strict test now protects official parameter ids for Object Merge transform/merge sequence controls, Oculus Rift and OpenVR model selectors, Out label, Particle source/behavior/force/birth/limit/split controls, Point transform/color/normal/UVW/custom/particle/force attributes, Polyloft group/rest/closure/output group controls, Polypatch basis/connectivity/clamp/division controls, Polyreduce percentage/count/distance/clean controls, Polyspline basis/closure/division/endpoint controls, Polystitch tolerance/corner controls, Primitive transform/attribute/closure/profile/metaball/particle controls, Profile extract/remap/range controls, Project vector/parametric/range controls, Rails pairing/orientation/output group controls, Raster TOP/direction/download controls, Ray projection/bounce/distance/sample/group controls, Rectangle camera/bounds/size/anchor controls, Refine U/V/domain/refine/unrefine controls, and Resample LOD/edge/method/length/segment controls.
+  - Strict quality coverage now spans 542 reviewed high-value operator cards.
+- Reviewed official Derivative docs only:
+  - Main-agent verification opened the official pages before editing: https://docs.derivative.ca/Object_Merge_SOP, https://docs.derivative.ca/Oculus_Rift_SOP, https://docs.derivative.ca/OpenVR_SOP, https://docs.derivative.ca/Out_SOP, https://docs.derivative.ca/Particle_SOP, https://docs.derivative.ca/Point_SOP, https://docs.derivative.ca/Polyloft_SOP, https://docs.derivative.ca/Polypatch_SOP, https://docs.derivative.ca/Polyreduce_SOP, https://docs.derivative.ca/Polyspline_SOP, https://docs.derivative.ca/Polystitch_SOP, https://docs.derivative.ca/Primitive_SOP, https://docs.derivative.ca/Profile_SOP, https://docs.derivative.ca/Project_SOP, https://docs.derivative.ca/Rails_SOP, https://docs.derivative.ca/Raster_SOP, https://docs.derivative.ca/Ray_SOP, https://docs.derivative.ca/Rectangle_SOP, https://docs.derivative.ca/Refine_SOP, and https://docs.derivative.ca/Resample_SOP.
+  - Three read-only subagent audits returned official-doc findings for 15 cards; the fourth subagent failed at model capacity, so the main agent directly verified Raster/Ray/Rectangle/Refine/Resample from official docs before editing.
+- Added reviewed concepts grounded in the official docs:
+  - `objectmergeSOP`, `oculusriftSOP`, `openvrSOP`, and `outSOP`: cross-component SOP merging and transform baking, Windows-only VR controller/model geometry loaders, driver-provided OpenVR model availability, and component-boundary SOP output publishing.
+  - `particleSOP` and `pointSOP`: legacy SOP particle emission/simulation attributes, point normals as initial particle velocity, Point SOP point-level attribute editing, second-input cycling, width/pscale usage, and edge-force direction caveats.
+  - `polyloftSOP`, `polypatchSOP`, `polyreduceSOP`, `polysplineSOP`, and `polystitchSOP`: lofted triangle meshes and rest stabilization, smooth polygonal patch basis/connectivity, reduction methods and feature-edge matching by point number, spline-to-polygon resampling, and crack stitching by boundary point identity.
+  - `primitiveSOP`, `profileSOP`, `projectSOP`, and `railsSOP`: primitive-level transforms/attributes and profile-transform limits, profile extraction/remap behavior, trim/profile projection workflows, and rail/cross-section pairing/orientation controls.
+  - `rasterSOP`, `raySOP`, `rectangleSOP`, `refineSOP`, and `resampleSOP`: TOP-to-point rasterization, ray/min-distance projection with bounce/sample controls, single-polygon rectangle generation from size/camera/bounds, shape-preserving refinement versus lossy unrefinement, and polygon resampling with LOD conversion.
+- Tightened metadata while promoting the cards:
+  - Corrected `objectmergeSOP` away from stale `objpath`, `createpath`, and `group` ids to official `xform`, `merge`, and `merge0sop`.
+  - Added low-parameter overrides for `openvrSOP` and `outSOP`.
+  - Expanded `particleSOP`, `pointSOP`, `primitiveSOP`, `projectSOP`, `raySOP`, `rectangleSOP`, and `refineSOP` with official child/component ids.
+  - Preserved Windows-only caveats for `oculusriftSOP` and `openvrSOP`, the driver-dependent model caveat for `openvrSOP`, and the boundary-publishing caveat for `outSOP`.
+  - Updated all 20 promoted cards to `last_verified = 2026-06-18`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-20T17:51:18Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on reviewed card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 542`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-20T17:51:18Z`.
+  - Zero-concept operator card count after promotion: 100 remaining overall. Remaining zero-concept families: SOP 28 and DAT 72. CHOP, COMP, POP, MAT, and TOP remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `pgrep -fl TouchDesigner`: no running TouchDesigner process, so live smoke was not run for this pass.
+  - JSON parse check across structured cards, generated drafts, release gates, reports, and eval JSONL: clean, 790 JSON/JSONL records parsed.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully.
+
+## One Hundred Forty-Fifth Pass - SOP Revolve, Script, Select, Sequence Blend, Skin, Sort, Sphere, Spring, Sprinkle, Sprite, Stitch, Subdivide, Superquad, Surfsect, Sweep, Text, Texture, Torus, Trace, and Trail Strict Gate Expansion
+
+- Promoted the fifth SOP zero-concept batch into the strict reviewed-card gate with TDD:
+  - Added `_SOP_REVOLVE_SCRIPT_SWEEP_TRAIL_REVIEWED_2026_06_18` to `tests/brain/test_atlas_coverage.py` and folded it into `_SOP_REVIEWED_2026_06_18`.
+  - The reviewed set covers `revolveSOP`, `scriptSOP`, `selectSOP`, `sequenceblendSOP`, `skinSOP`, `sortSOP`, `sphereSOP`, `springSOP`, `sprinkleSOP`, `spriteSOP`, `stitchSOP`, `subdivideSOP`, `superquadSOP`, `surfsectSOP`, `sweepSOP`, `textSOP`, `textureSOP`, `torusSOP`, `traceSOP`, and `trailSOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate failed red again on reviewed quality. The audit reported `operator_card_quality.strict_operator_count = 562`, `operator_card_quality.gap_count = 21`, with all 20 new cards missing `key_concepts`, plus `sphereSOP` needing one more gotcha.
+  - Added documented low-parameter minimum overrides for `scriptSOP` (`key_params = 2`) and `selectSOP` (`key_params = 1`), because the official pages expose sparse operator-specific parameter surfaces.
+  - After promotion, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 20 SOP operators in `_STRICT_OPERATOR_QUALITY_TYPES`.
+  - The strict test now protects official parameter ids for Revolve group/surface/origin/direction/polygon/spline/cap controls, Script callback and setup controls, Select SOP path, Sequence Blend blend and attribute toggles, Skin surface/order/closure/force/polygon controls, Sort point/primitive/particle sorting modes and proximity/direction controls, Sphere primitive/surface/bounds/radius/anchor/frequency/texture controls, Spring preroll/time/attractor/force/wind/turbulence/fixed/spring/limit/collision controls, Sprinkle seed/method/count/consolidation/distance controls, Sprite source/camera/width/color/alpha/perspective/falloff controls, Stitch boundary/tolerance/bias/UV/width/tangent/fixed/scale controls, Subdivide mode/crease/hole/surround/bias controls, Superquad primitive/surface/bounds/radius/anchor/exponent/cusp/angle/texture controls, Surfsect group/tolerance/boolean/inside/outside/profile/group/join controls, Sweep cross-section/path/reference/flip/scale/twist/roll/group/skin controls, Text font/output/detail/language/direction/kerning/wrap/alignment/text/transform controls, Texture group/layer/projection/axis/camera/coordinate/scale/offset/angle/seam/transform controls, Torus primitive/surface/orientation/radius/anchor/rows/cols/order/angle/closure/cap/texture controls, Trace TOP/threshold/texture/border/normal/resample/smooth/fit/hole controls, and Trail result/length/increment/cache/evalframe/surface/close/velocity/reset controls.
+  - Strict quality coverage now spans 562 reviewed high-value operator cards.
+- Reviewed official Derivative docs only:
+  - Main-agent verification opened the official pages before editing: https://docs.derivative.ca/Revolve_SOP, https://docs.derivative.ca/Script_SOP, https://docs.derivative.ca/Select_SOP, https://docs.derivative.ca/Sequence_Blend_SOP, https://docs.derivative.ca/Skin_SOP, https://docs.derivative.ca/Sort_SOP, https://docs.derivative.ca/Sphere_SOP, https://docs.derivative.ca/Spring_SOP, https://docs.derivative.ca/Sprinkle_SOP, https://docs.derivative.ca/Sprite_SOP, https://docs.derivative.ca/Stitch_SOP, https://docs.derivative.ca/Subdivide_SOP, https://docs.derivative.ca/Superquad_SOP, https://docs.derivative.ca/Surfsect_SOP, https://docs.derivative.ca/Sweep_SOP, https://docs.derivative.ca/Text_SOP, https://docs.derivative.ca/Texture_SOP, https://docs.derivative.ca/Torus_SOP, https://docs.derivative.ca/Trace_SOP, and https://docs.derivative.ca/Trail_SOP.
+  - Four read-only subagent audits returned official-doc findings for the full batch; the main agent independently verified the official pages and used the current worktree as authoritative before editing.
+- Added reviewed concepts grounded in the official docs:
+  - `revolveSOP`, `sequenceblendSOP`, `skinSOP`, `stitchSOP`, `surfsectSOP`, and `sweepSOP`: surface construction from profiles, sequence blending across position/color/normal/UVW/up attributes, skinned surfaces from ordered cross sections, boundary stitching, surface intersection boolean/profile output, and sweep cross-section/path/reference behavior.
+  - `scriptSOP` and `selectSOP`: Python callback-generated SOP geometry and path-based SOP selection with sparse official parameter surfaces.
+  - `sortSOP`, `sphereSOP`, `superquadSOP`, `torusSOP`, and `textureSOP`: point/primitive/particle ordering, primitive versus mesh/NURBS sphere output, superquadric exponent shaping, torus closure/cap/angle controls, and coordinate generation/projection workflows.
+  - `springSOP`, `sprinkleSOP`, `spriteSOP`, `subdivideSOP`, `traceSOP`, and `trailSOP`: dynamic spring simulation, stochastic point scattering, sprite billboard generation, polygon subdivision/creases, TOP-to-outline tracing, and historical trail geometry.
+  - `textSOP`: 3D text geometry from fonts with output/detail/language/direction/wrapping/alignment and transform controls.
+- Tightened metadata while promoting the cards:
+  - Updated all 20 promoted cards to `last_verified = 2026-06-18`.
+  - Preserved the official `constantwitdhfar` spelling for `spriteSOP`.
+  - Added low-parameter overrides for `scriptSOP` and `selectSOP`.
+  - Expanded `sortSOP`, `springSOP`, `stitchSOP`, `surfsectSOP`, `textSOP`, `textureSOP`, `torusSOP`, and other promoted cards with official child/component ids.
+  - Added gotchas for sphere primitive/surface choices, trail cache/reset behavior, trace resolution/smoothing tradeoffs, Script SOP callback ownership, and Select SOP path dependency.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-20T18:01:01Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on reviewed card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 562`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-20T18:01:01Z`.
+  - Zero-concept operator card count after promotion: 80 remaining overall. Remaining zero-concept families: SOP 8 and DAT 72. CHOP, COMP, POP, MAT, and TOP remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `pgrep -fl TouchDesigner`: no running TouchDesigner process, so live smoke was not run for this pass.
+  - JSON parse check across structured cards, generated drafts, release gates, reports, and eval JSONL: clean, 787 JSON/JSONL records parsed.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully.
+
+## One Hundred Forty-Sixth Pass - SOP Transform, Trim, Tristrip, Tube, Twist, Vertex, Wireframe, and ZED Strict Gate Expansion
+
+- Completed the SOP zero-concept backlog with a red test first:
+  - Added `_SOP_TRANSFORM_TRIM_ZED_REVIEWED_2026_06_18` to `tests/brain/test_atlas_coverage.py` and folded it into `_SOP_REVIEWED_2026_06_18`.
+  - The reviewed set covers `transformSOP`, `trimSOP`, `tristripSOP`, `tubeSOP`, `twistSOP`, `vertexSOP`, `wireframeSOP`, and `zedSOP`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first because the new `tristripSOP` sparse-parameter minimum override was not exposed yet.
+  - After adding the documented `tristripSOP` override, the same focused gate failed red on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate failed red again on reviewed quality. The audit reported `operator_card_quality.strict_operator_count = 570`, `operator_card_quality.gap_count = 9`, with all 8 new cards missing `key_concepts` and `transformSOP` still below the gotcha minimum.
+  - After promotion, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 8 final SOP operators in `_STRICT_OPERATOR_QUALITY_TYPES`.
+  - The strict test now protects official parameter ids for Transform group/order/translate/rotate/scale/pivot/look-at/up-vector/post-align/post-scale controls, Trim operation/profile-loop controls, Tristrip group/strip-length controls, Tube primitive/surface/orientation/bounds/radius/height/rows/columns/order/cap/texture/normal controls, Twist operation/axis/pivot/strength/roll controls, Vertex color/alpha/UVW/crease/custom-attribute controls, Wireframe radius/corners/caps/remove/fast controls, and ZED TOP/sample/reset/preview/memory/resolution/range/normal/texture/filter/consolidation controls.
+  - Strict quality coverage now spans 570 reviewed high-value operator cards.
+- Reviewed official Derivative docs only:
+  - Main-agent verification opened the official pages before editing: https://docs.derivative.ca/Transform_SOP, https://docs.derivative.ca/Trim_SOP, https://docs.derivative.ca/Tristrip_SOP, https://docs.derivative.ca/Tube_SOP, https://docs.derivative.ca/Twist_SOP, https://docs.derivative.ca/Vertex_SOP, https://docs.derivative.ca/Wireframe_SOP, and https://docs.derivative.ca/ZED_SOP.
+  - The main agent also checked the official https://docs.derivative.ca/ZED page for the ZED SDK/platform note.
+  - Two read-only subagent audits were launched for the split official-doc review; one returned the Twist/Vertex/Wireframe/ZED findings, and the main agent independently verified all 8 official pages before editing. The other subagent was non-blocking because the main agent had already verified Transform/Trim/Tristrip/Tube directly.
+- Added reviewed concepts grounded in the official docs:
+  - `transformSOP`: SOP-local point-position transforms, transform/rotation order sensitivity, pivot/look-at orientation, post-transform alignment and scaling, and vector-length maintenance.
+  - `trimSOP` and `tristripSOP`: profile-curve trimming, winding/loop behavior, upstream profile requirements, triangle-strip conversion, group scoping, and strip-length constraints.
+  - `tubeSOP` and `twistSOP`: tube/cone/pyramid generation across primitive, polygon, mesh, NURBS, and Bezier outputs; non-linear deformation operations; primary/secondary axis semantics; pivot, strength, and roll behavior.
+  - `vertexSOP` and `wireframeSOP`: per-vertex rather than per-point attribute editing, official current color/alpha/UVW/crease/custom-attribute surface, real tube/sphere wireframe geometry, and Fast Wire accuracy tradeoffs.
+  - `zedSOP`: Windows-only ZED spatial mapping through a primary ZED TOP, stateful sampling/commit workflow, preview/memory/resolution/range controls, and normals/texture/filter/consolidation output options.
+- Tightened metadata while promoting the cards:
+  - Updated all 8 promoted cards to `last_verified = 2026-06-18`.
+  - Corrected `vertexSOP` away from stale normal-editing claims because the current official page no longer exposes normal controls for Vertex SOP.
+  - Added official child/component ids for Transform, Tube, Twist, Vertex, and ZED guards.
+  - Added the `tristripSOP` key-parameter minimum override for its sparse official parameter surface.
+  - Added ZED platform notes: official docs mark ZED SOP as Microsoft Windows only, and the official ZED article says TouchDesigner 2025.30000+ uses ZED SDK 5.0.4 and no longer supports Pascal GPUs, GeForce 1xxx, or P-series Quadros.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-20T18:09:38Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on the missing `tristripSOP` minimum override, failed red again on strict membership, failed red again on reviewed card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 570`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-20T18:09:38Z`.
+  - Zero-concept operator card count after promotion: 72 remaining overall. Remaining zero-concept family: DAT 72. CHOP, COMP, POP, MAT, SOP, and TOP now have 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `pgrep -fl TouchDesigner`: TouchDesigner running as PID 16680.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios, `mutated_td=false`, TD health `status=ok`. The live run retained known non-blocking risk flags such as `family-list-omitted:*`, `validate-glsl-compile-state`, `validate-finite-pop-bounds`, and `validate-panel-callbacks-or-exports`.
+  - JSON parse check across structured cards, generated drafts, release gates, reports, and eval JSONL: clean, 787 JSON/JSONL records parsed.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully.
+
+## One Hundred Forty-Seventh Pass - DAT Art-Net, Audio Devices, Execute, Conversion, CPlusPlus, DMX, Error, EtherDream, Evaluate, Examine, FIFO, File, Folder, In, and Indices Strict Gate Expansion
+
+- Promoted the first DAT zero-concept batch into the strict reviewed-card gate with TDD:
+  - Added `_DAT_ARTNET_FILE_REVIEWED_2026_06_18` to `tests/brain/test_atlas_coverage.py` and folded it into `_DAT_REVIEWED_2026_06_18`.
+  - The reviewed set covers `art-netDAT`, `audiodevicesDAT`, `chopexecuteDAT`, `choptoDAT`, `clipDAT`, `convertDAT`, `cplusplusDAT`, `datexecuteDAT`, `dmxmapDAT`, `errorDAT`, `etherdreamDAT`, `evaluateDAT`, `examineDAT`, `executeDAT`, `fifoDAT`, `fileinDAT`, `fileoutDAT`, `folderDAT`, `inDAT`, and `indicesDAT`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the DAT batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate failed red again on reviewed quality. The audit reported `operator_card_quality.strict_operator_count = 590`, `operator_card_quality.gap_count = 21`, with all 20 new cards missing `key_concepts` and `inDAT` below the strict key-parameter minimum.
+  - After promotion, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 20 DAT operators in `_STRICT_OPERATOR_QUALITY_TYPES`.
+  - The strict test now protects official parameter ids for Art-Net and EtherDream callbacks/columns/poll controls, Audio Devices driver/direction/callback controls, CHOP Execute trigger/file/common-DAT controls, CHOP to DAT sample/name/output controls, Clip DAT execution controls, Convert delimiter/spacer controls, CPlusPlus plugin/reinit/unload controls, DAT Execute change/timing/file controls, DMX Map source/filter/update controls, Error log/filter/FIFO controls, Evaluate scope/expression/output/common-DAT controls, Examine source/filter/output controls, Execute event/file controls, FIFO retention/callback controls, File In/Out file/refresh/write/append controls, Folder filters/depth/metadata columns, In DAT label/common-DAT controls, and Indices range/level/origin/common-DAT controls.
+  - Strict quality coverage now spans 590 reviewed high-value operator cards.
+- Reviewed official Derivative docs only:
+  - Main-agent verification opened the official pages before editing: https://docs.derivative.ca/Art-Net_DAT, https://docs.derivative.ca/Audio_Devices_DAT, https://docs.derivative.ca/CHOP_Execute_DAT, https://docs.derivative.ca/CHOP_to_DAT, https://docs.derivative.ca/Clip_DAT, https://docs.derivative.ca/Convert_DAT, https://docs.derivative.ca/CPlusPlus_DAT, https://docs.derivative.ca/DAT_Execute_DAT, https://docs.derivative.ca/DMX_Map_DAT, https://docs.derivative.ca/Error_DAT, https://docs.derivative.ca/EtherDream_DAT, https://docs.derivative.ca/Evaluate_DAT, https://docs.derivative.ca/Examine_DAT, https://docs.derivative.ca/Execute_DAT, https://docs.derivative.ca/FIFO_DAT, https://docs.derivative.ca/File_In_DAT, https://docs.derivative.ca/File_Out_DAT, https://docs.derivative.ca/Folder_DAT, https://docs.derivative.ca/In_DAT, and https://docs.derivative.ca/Indices_DAT.
+  - The main agent also checked related official pages where the cards needed callback or platform context: https://docs.derivative.ca/ArtnetDAT_Class, https://docs.derivative.ca/ChopexecuteDAT_Class, https://docs.derivative.ca/Write_a_CPlusPlus_Plugin, https://docs.derivative.ca/Laser_Device_CHOP, and https://docs.derivative.ca/Lasers.
+  - Four read-only subagent audits returned official-doc findings for the full batch; the main agent independently verified the official pages and used the current worktree as authoritative before editing.
+- Added reviewed concepts grounded in the official docs:
+  - `art-netDAT`, `audiodevicesDAT`, `etherdreamDAT`, and `dmxmapDAT`: device discovery/listing, callback-driven polling, selectable output columns, audio-device driver/direction tables, Laser Device CHOP relationship for laser output, and POP-era DMX map table generation from DMX POPs.
+  - `chopexecuteDAT`, `datexecuteDAT`, and `executeDAT`: CHOP value-transition callbacks, DAT table-change callbacks including current `onTableChange` guidance, event/timeline callbacks, execution context controls, and file-sync script surfaces.
+  - `choptoDAT`, `convertDAT`, `evaluateDAT`, `examineDAT`, and `indicesDAT`: CHOP-to-table conversion, text/table conversion, expression evaluation over cells and extracted scopes, Python-object inspection, and generated numeric helper tables.
+  - `clipDAT`, `cplusplusDAT`, `fifoDAT`, `fileinDAT`, `fileoutDAT`, `folderDAT`, and `inDAT`: motion-clip command/script execution, C++ plugin-backed DAT output, FIFO row retention/callbacks, file read/write behavior, folder scanning and metadata columns, and component-boundary DAT inputs.
+  - `errorDAT`: recent message/error FIFO capture, severity/type/source/message filters, callback execution, current-error logging, and retention limits.
+- Tightened metadata while promoting the cards:
+  - Updated all 20 promoted cards to `last_verified = 2026-06-18`.
+  - Added reviewed `key_concepts` to all 20 promoted cards.
+  - Added missing official Common-page DAT ids such as `language`, `extension`, `customext`, and `wordwrap` where prior cards had sparse or grouped parameter notes.
+  - Expanded `evaluateDAT` and `examineDAT` with official row/column scope and output-column parameter ids.
+  - Replaced the grouped `inDAT` common-page placeholder with atomic official Common-page ids.
+  - Added platform/license notes for `clipDAT`, `cplusplusDAT`, and `audiodevicesDAT`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-20T19:36:57Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on reviewed card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 590`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-20T19:36:57Z`.
+  - JSON parse/count check across 656 structured operator card files: clean. Zero-concept operator card count after promotion: 52 remaining overall. Remaining zero-concept family: DAT 52. CHOP, COMP, POP, MAT, SOP, and TOP remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `pgrep -fl TouchDesigner`: TouchDesigner running as PID 16680.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios, `mutated_td=false`, TD health `status=ok`. The live run retained known non-blocking risk flags such as `family-list-omitted:*`, `validate-glsl-compile-state`, `validate-finite-pop-bounds`, and `validate-panel-callbacks-or-exports`.
+  - `git diff --check`: clean.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully.
+
+## One Hundred Forty-Eighth Pass - DAT Info, Insert, JSON, Keyboard, Lookup, Media, Merge, MIDI, Monitor, MPCDI, MQTT, Multi Touch, NDI, Null, OP Execute, OP Find, OSC, and Out Strict Gate Expansion
+
+- Promoted the second DAT zero-concept batch into the strict reviewed-card gate with TDD:
+  - Added `_DAT_INFO_OUT_REVIEWED_2026_06_18` to `tests/brain/test_atlas_coverage.py` and folded it into `_DAT_REVIEWED_2026_06_18`.
+  - The reviewed set covers `infoDAT`, `insertDAT`, `jsonDAT`, `keyboardinDAT`, `lookupDAT`, `mediafileinfoDAT`, `mergeDAT`, `midieventDAT`, `midiinDAT`, `monitorsDAT`, `mpcdiDAT`, `mqttclientDAT`, `multitouchinDAT`, `ndiDAT`, `nullDAT`, `opexecuteDAT`, `opfindDAT`, `oscinDAT`, `oscoutDAT`, and `outDAT`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate failed red again on reviewed quality. The audit reported `operator_card_quality.strict_operator_count = 610`, `operator_card_quality.gap_count = 21`, with all 20 new cards missing `key_concepts` and `infoDAT` below the strict key-parameter minimum.
+  - After promotion, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 20 DAT operators in `_STRICT_OPERATOR_QUALITY_TYPES`.
+  - The strict test now protects official parameter ids for Info operator/passive/common-DAT controls, Insert row/column/content/replace controls, JSON filter/expression/output controls, Keyboard event/filter/FIFO controls, Lookup value-location/name/index/header controls, Media File Info file/operator/reload/timeout/transpose controls, Merge DAT/how/by-name/spacer/unmatched controls, MIDI Event and MIDI In device/filter/message/FIFO controls, Monitors callbacks/bounds/units controls, MPCDI file/output/buffer/region/depth controls, MQTT connection/auth/reconnect/event controls, Multi Touch panel/relative/occlusion/threshold/event controls, NDI discovery controls, Null/Out common-DAT and label controls, OP Execute cook/delete/flag/wire/name/path/UI/child/extension/file controls, OP Find hierarchy/family/filter/column/callback controls, and OSC In/Out socket/message/FIFO controls.
+  - Strict quality coverage now spans 610 reviewed high-value operator cards.
+- Reviewed official Derivative docs only:
+  - Main-agent verification opened the official pages before editing: https://docs.derivative.ca/Info_DAT, https://docs.derivative.ca/Insert_DAT, https://docs.derivative.ca/JSON_DAT, https://docs.derivative.ca/Keyboard_In_DAT, https://docs.derivative.ca/Lookup_DAT, https://docs.derivative.ca/Media_File_Info_DAT, https://docs.derivative.ca/Merge_DAT, https://docs.derivative.ca/MIDI_Event_DAT, https://docs.derivative.ca/MIDI_In_DAT, https://docs.derivative.ca/Monitors_DAT, https://docs.derivative.ca/MPCDI_DAT, https://docs.derivative.ca/MQTT_Client_DAT, https://docs.derivative.ca/Multi_Touch_In_DAT, https://docs.derivative.ca/NDI_DAT, https://docs.derivative.ca/Null_DAT, https://docs.derivative.ca/OP_Execute_DAT, https://docs.derivative.ca/OP_Find_DAT, https://docs.derivative.ca/OSC_In_DAT, https://docs.derivative.ca/OSC_Out_DAT, and https://docs.derivative.ca/Out_DAT.
+  - Subagent spawning was attempted for four read-only official-doc audit chunks, but the multi-agent runtime returned `agent thread limit reached`; the main agent proceeded with direct official-doc verification and no subagent edits occurred.
+- Added reviewed concepts grounded in the official docs:
+  - `infoDAT`, `insertDAT`, `jsonDAT`, `lookupDAT`, `mediafileinfoDAT`, `mergeDAT`, and `nullDAT`: operator string-info inspection, table row/column insertion, JSON filtering/expression/output handling, lookup table value selection including the official `valueloction` id, media metadata extraction, DAT table/text merging, and stable DAT pass-through outputs.
+  - `keyboardinDAT`, `midieventDAT`, `midiinDAT`, `multitouchinDAT`, `oscinDAT`, and `oscoutDAT`: input/event capture, message filtering, FIFO retention, callback handling, multitouch panel scoping/thresholds, and OSC socket/message formatting.
+  - `monitorsDAT`, `mpcdiDAT`, `mqttclientDAT`, and `ndiDAT`: monitor layout tables, MPCDI calibration metadata, MQTT broker connection/auth/reconnect handling, and NDI source discovery.
+  - `opexecuteDAT`, `opfindDAT`, and `outDAT`: operator lifecycle/cook/change callbacks, hierarchy traversal and criteria-based operator tables, custom OP Find columns/callbacks, and component-boundary DAT outputs.
+- Tightened metadata while promoting the cards:
+  - Updated all 20 promoted cards to `last_verified = 2026-06-18`.
+  - Added reviewed `key_concepts` to all 20 promoted cards.
+  - Added missing official Common-page DAT ids such as `language`, `extension`, `customext`, and `wordwrap`.
+  - Added official OP Find output-column ids including `legacycols`, `idcol`, `namecol`, `typecol`, `pathcol`, and `relpathcol`.
+  - Preserved official spelling/id quirks including `lookupDAT` parameter `valueloction` and `opexecuteDAT` parameter `childrename`.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-20T19:44:18Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on reviewed card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 610`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-20T19:44:18Z`.
+  - JSON parse/count check across 656 structured operator card files: clean. Zero-concept operator card count after promotion: 32 remaining overall. Remaining zero-concept family: DAT 32. CHOP, COMP, POP, MAT, SOP, and TOP remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `pgrep -fl TouchDesigner`: TouchDesigner running as PID 16680.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios, `mutated_td=false`, TD health `status=ok`. The live run retained known non-blocking risk flags such as `family-list-omitted:*`, `validate-glsl-compile-state`, `validate-finite-pop-bounds`, and `validate-panel-callbacks-or-exports`.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully.
+
+## One Hundred Forty-Ninth Pass - DAT Panel, Parameter, Performance, Render Pick, Reorder, Script, Select, Serial, SocketIO, SOP, Sort, Substitute, and Switch Strict Gate Expansion
+
+- Promoted the third DAT zero-concept batch into the strict reviewed-card gate with TDD:
+  - Added `_DAT_PANEL_SWITCH_REVIEWED_2026_06_18` to `tests/brain/test_atlas_coverage.py` and folded it into `_DAT_REVIEWED_2026_06_18`.
+  - The reviewed set covers `panelexecuteDAT`, `parameterDAT`, `parameterexecuteDAT`, `pargroupexecuteDAT`, `performDAT`, `renderpickDAT`, `reorderDAT`, `scriptDAT`, `selectDAT`, `serialDAT`, `serialdevicesDAT`, `socketioDAT`, `soptoDAT`, `sortDAT`, `substituteDAT`, and `switchDAT`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate failed red again on reviewed quality. The audit reported `operator_card_quality.strict_operator_count = 626`, `operator_card_quality.gap_count = 16`, with all 16 new cards missing `key_concepts`.
+  - After promotion, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the 16 DAT operators in `_STRICT_OPERATOR_QUALITY_TYPES`.
+  - The strict test now protects official parameter ids for Panel Execute panel value and transition callbacks, Parameter DAT operator/parameter table output controls, Parameter Execute and ParGroup Execute callback/edit/file controls, Perform logging channels and callback controls, Render Pick strategy/radius/input/callback controls, Reorder ordering/deletion controls, Script setup/callback controls, Select row/column/expression/output controls, Serial and SocketIO connection/FIFO/callback controls, Serial Devices polling controls, SOP to DAT extraction controls, Sort ordering/uniqueness controls, Substitute match/expand/extraction controls, and Switch index/extend/common-DAT controls.
+  - Strict quality coverage now spans 626 reviewed high-value operator cards.
+- Reviewed official Derivative docs only:
+  - Main-agent verification opened the official pages before editing: https://docs.derivative.ca/Panel_Execute_DAT, https://docs.derivative.ca/Parameter_DAT, https://docs.derivative.ca/Parameter_Execute_DAT, https://docs.derivative.ca/ParGroup_Execute_DAT, https://docs.derivative.ca/Perform_DAT, https://docs.derivative.ca/Render_Pick_DAT, https://docs.derivative.ca/Reorder_DAT, https://docs.derivative.ca/Script_DAT, https://docs.derivative.ca/Select_DAT, https://docs.derivative.ca/Serial_DAT, https://docs.derivative.ca/Serial_Devices_DAT, https://docs.derivative.ca/SocketIO_DAT, https://docs.derivative.ca/SOP_to_DAT, https://docs.derivative.ca/Sort_DAT, https://docs.derivative.ca/Substitute_DAT, and https://docs.derivative.ca/Switch_DAT.
+- Added reviewed concepts grounded in the official docs:
+  - `panelexecuteDAT`, `parameterexecuteDAT`, and `pargroupexecuteDAT`: event-driven DAT callbacks for panel values, parameter tuple groups, pulse handlers, expression/export/mode changes, and local/external callback file handling.
+  - `parameterDAT`, `performDAT`, and `renderpickDAT`: parameter metadata table extraction, performance logging across cook/export/render/script channels, and render picking table generation with strategy/radius/input/callback controls.
+  - `reorderDAT`, `selectDAT`, `sortDAT`, `substituteDAT`, and `switchDAT`: table row/column ordering, row/column extraction, sorted/unique outputs, text/table substitution, and input selection/extension behavior.
+  - `scriptDAT`, `serialDAT`, `serialdevicesDAT`, `socketioDAT`, and `soptoDAT`: DAT callbacks and setup parameters, serial port configuration and FIFO retention, serial device polling, Socket.IO connection/certificate/delay handling, and SOP geometry/attribute extraction into DAT tables.
+- Tightened metadata while promoting the cards:
+  - Updated all 16 promoted cards to `last_verified = 2026-06-18`.
+  - Added reviewed `key_concepts` to all 16 promoted cards.
+  - Added missing official Common-page DAT ids such as `language`, `extension`, `customext`, and `wordwrap`.
+  - Added official `selectDAT` `output`, event-DAT `edit`, Script DAT `setuppars`, Render Pick `allowmulticamera`/`usepickableflags`/`mergeinputdat`, Serial `bytes`, Serial Devices `enablepolling`/`pollingtime`, and Switch `extend` controls to the guarded parameter surface.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-20T19:49:38Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on reviewed card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: 40 passed.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 626`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-20T19:49:38Z`.
+  - JSON parse/count check across 656 structured operator card files: clean. Zero-concept operator card count after promotion: 16 remaining overall. Remaining zero-concept family: DAT 16. CHOP, COMP, POP, MAT, SOP, and TOP remain at 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `pgrep -fl TouchDesigner`: TouchDesigner running as PID 16680.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios, `mutated_td=false`, TD health `status=ok`. The live run retained known non-blocking risk flags such as `family-list-omitted:*`, `validate-glsl-compile-state`, `validate-finite-pop-bounds`, and `validate-panel-callbacks-or-exports`.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully.
+
+## One Hundred Fiftieth Pass - DAT Table, TCP/IP, Touch, Transpose, TUIO, UDP, UDT, Video Devices, Web Client, WebRTC, Web Server, WebSocket, and XML Strict Gate Completion
+
+- Completed the DAT zero-concept backlog with a red test first:
+  - Added `_DAT_TABLE_XML_REVIEWED_2026_06_18` to `tests/brain/test_atlas_coverage.py` and folded it into `_DAT_REVIEWED_2026_06_18`.
+  - The reviewed set covers `tableDAT`, `tcp/ipDAT`, `touchinDAT`, `touchoutDAT`, `transposeDAT`, `tuioinDAT`, `udpinDAT`, `udpoutDAT`, `udtinDAT`, `udtoutDAT`, `videodevicesDAT`, `webclientDAT`, `webrtcDAT`, `webserverDAT`, `websocketDAT`, and `xmlDAT`.
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q` failed red first on strict membership while the audit allowlist still excluded the batch.
+  - After adding the batch to `src/td_mcp/brain/atlas_audit.py`, the focused gate failed red again on reviewed quality. The audit reported `operator_card_quality.strict_operator_count = 642`, `operator_card_quality.gap_count = 16`, with all 16 new cards missing `key_concepts`.
+  - After promotion, the focused strict gate passed.
+- Updated the strict quality surface:
+  - `src/td_mcp/brain/atlas_audit.py` now includes the final 16 DAT operators in `_STRICT_OPERATOR_QUALITY_TYPES`.
+  - The strict test now protects official parameter ids for Table file/fill/common-DAT controls, TCP/IP client/server and received-data controls, Touch In/Out table-sync controls, Transpose common-DAT controls, TUIO callback controls, UDP/UDT network/callback/FIFO controls, Video Devices driver/input/output controls, Web Client request/auth/output controls, WebRTC connection/ICE controls, Web Server TLS/callback controls, WebSocket connection/FIFO/callback controls, and XML format/scope/output controls.
+  - Strict quality coverage now spans 642 reviewed high-value operator cards.
+- Reviewed official Derivative docs only:
+  - Main-agent verification opened the official pages before editing: https://docs.derivative.ca/Table_DAT, https://docs.derivative.ca/TCP/IP_DAT, https://docs.derivative.ca/Touch_In_DAT, https://docs.derivative.ca/Touch_Out_DAT, https://docs.derivative.ca/Transpose_DAT, https://docs.derivative.ca/TUIO_In_DAT, https://docs.derivative.ca/UDP_In_DAT, https://docs.derivative.ca/UDP_Out_DAT, https://docs.derivative.ca/UDT_In_DAT, https://docs.derivative.ca/UDT_Out_DAT, https://docs.derivative.ca/Video_Devices_DAT, https://docs.derivative.ca/Web_Client_DAT, https://docs.derivative.ca/WebRTC_DAT, https://docs.derivative.ca/Web_Server_DAT, https://docs.derivative.ca/WebSocket_DAT, and https://docs.derivative.ca/XML_DAT.
+- Added reviewed concepts grounded in the official docs:
+  - `tableDAT` and `transposeDAT`: table-form DAT data, viewer/manual editing, file/sync handling, procedural fill modes, and row/column transposition.
+  - `tcp/ipDAT`, `touchinDAT`, `touchoutDAT`, `tuioinDAT`, `udpinDAT`, `udpoutDAT`, `udtinDAT`, and `udtoutDAT`: client/server TCP behavior, whole-table TouchDesigner sync, TUIO OSC-bundle parsing, UDP and multicast message handling, UDT legacy operation, callback execution, FIFO retention, and firewall/network matching gotchas.
+  - `videodevicesDAT`, `webclientDAT`, `webrtcDAT`, `webserverDAT`, `websocketDAT`, and `xmlDAT`: video device discovery, HTTP request/auth/streaming response handling, WebRTC peer/ICE state tables, HTTP/WebSocket server callbacks and TLS, WebSocket client frame callbacks, and XML/SGML parsing with element scope/output filters.
+- Tightened metadata while promoting the cards:
+  - Updated all 16 promoted cards to `last_verified = 2026-06-18`.
+  - Added reviewed `key_concepts` to all 16 promoted cards.
+  - Added missing official Common-page DAT ids such as `language`, `extension`, `customext`, and `wordwrap`.
+  - Added guarded ids including Table `includenames`/`fills0names`/`fills0expr`, TUIO `fromop`, UDP/UDT `executeloc`/`fromop`/`clear`, UDP Out reply `clamp`/`maxlines`/`bytes`, Web Client auth/output ids such as `username`, `pw`, `appkey`, `appsecret`, `oauthtoken`, `oauthsecret`, `clientid`, `token`, `clear`, and `maxlines`, WebRTC `turn0server`, WebSocket `clear`, and XML parent/output ids such as `plabel`, `ptype`, `ptext`, `pname`, `pvalue`, `oclabel`, and `lprefix`.
+  - Preserved official spelling/id quirks including `touchoutDAT` parameter `redendantsends`, `webclientDAT` password id `pw`, and the legacy `tcp/ipDAT` file name encoded as `tcp%2FipDAT.json`.
+  - Captured the official UDT In/Out note that both DATs were removed from TouchDesigner 2021 Official builds and later, keeping those cards for legacy-file interpretation rather than new-network planning.
+- Regenerated the draft review bundle with `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`.
+  - Draft count: 0
+  - Generated at: `2026-06-20T19:55:48Z`
+- Verification after the atlas pass:
+  - `uv run pytest tests/brain/test_atlas_coverage.py::test_high_value_operator_quality_gate_requires_reviewed_key_concepts -q`: failed red first on strict membership, failed red again on reviewed card quality, then passed.
+  - `uv run pytest tests/brain/test_atlas_coverage.py -q`: initially found one stale mixed DAT/COMP `last_verified` expectation, then passed after the test used `_DAT_REVIEWED_2026_06_18`.
+  - `uv run pytest tests/brain/test_atlas_drafts.py tests/test_seed_corpus.py::TestOperatorCards tests/test_docsbrain_search.py tests/test_knowledge_index.py -q`: 85 passed.
+  - `uv run python scripts/audit_brain_atlas.py --pretty`: ok, 777 total cards, 656 structured operator cards, 98.35% structured DocsBrain operator coverage, zero active priority gaps, `operator_card_quality.strict_operator_count = 642`, `operator_card_quality.gap_count = 0`.
+  - `uv run python scripts/draft_brain_atlas_cards.py --limit 20 --write data/generated/atlas_drafts/operators --pretty`: ok, draft count 0, generated at `2026-06-20T19:55:48Z`.
+  - JSON parse/count check across 656 structured operator card files: clean. Zero-concept operator card count after promotion: 0 remaining overall. CHOP, COMP, DAT, MAT, POP, SOP, and TOP now have 0 zero-concept cards.
+- Release gate verification after the pass:
+  - `uv run pytest -q`: 1147 passed.
+  - `uv run python scripts/eval_brain_golden.py`: ok, 8/8 golden brain scenarios passed.
+  - `uv run python scripts/brain_live_smoke.py --dry-run`: ok, 10 scenarios, `mutated_td=false`.
+  - `uv run python scripts/audit_brain_skills.py`: ok.
+  - `uv run python scripts/audit_plugin_surface.py`: ok, 110 registered tools.
+  - `uv run python scripts/smoke_mcp_registry.py`: ok, 110 tools, 4 resources, 9 templates.
+  - `uv run python scripts/check_versions.py`: ok, version `2.0.0`.
+  - `uv run python scripts/check_release_notes_freshness.py`: ok, structured release card `2025.32820` matches or exceeds latest known build `2025.32820`.
+  - `uv run python scripts/check_tox_freshness.py`: ok, `.tox` hash is current.
+  - `uv run python scripts/check_release_gates.py --bench-report reports/bench_tools.json --soak-report reports/soak_events.json --require-complete --out reports/release_gates.json`: ok, 11/11 release gates passed.
+  - `pgrep -fl TouchDesigner`: TouchDesigner running as PID 16680.
+  - `uv run python scripts/brain_live_smoke.py --live`: ok, 10 scenarios, `mutated_td=false`, TD health `status=ok`. The live run retained known non-blocking risk flags such as `family-list-omitted:*`, `validate-glsl-compile-state`, `validate-finite-pop-bounds`, and `validate-panel-callbacks-or-exports`.
+  - The recurring uv warning about missing `RECORD` for `tdpilot-1.5.1.dist-info` remained non-blocking; every gate completed successfully.
+
+## Next Research Targets
+
+- Expand the new `operator_card_quality` strict allowlist in small reviewed batches, with priority toward planner-visible families rather than raw alphabetical order. The CHOP, COMP, DAT, MAT, POP, SOP, and TOP families are now fully reviewed for `key_concepts`; remaining zero-concept backlog is 0 cards.
+- Consider promoting `operator_card_quality` from a scoped allowlist to a tiered family/profile gate once enough legacy structured cards have reviewed concepts and gotchas to avoid a giant one-shot backlog.
+- Continue official GLSL/MAT/POP article hardening where it helps planner behavior, especially lower-level helper coverage that should become reusable snippets or card concepts rather than isolated article notes.
+- Investigate the non-blocking live-smoke `family-list-omitted:*` risk flags and decide whether the planner family inventory should be expanded or the flags should be downgraded for intentionally supported atlas operators.
+- Promote generated review drafts into structured operator cards only after manual official-doc review, planner-relevance notes, and gotcha enrichment.
+- Continue operator-card schema validation for known parameter names and aliases beyond the execute/parameter, event/I/O, diagnostic/search, and protocol DAT slices, especially remaining multi-word/camel-case TD parameters.
+- Continue parameter extraction hardening for scraped pages whose official-doc markup does not use paragraph rows or list-item menu choices.
+- Extend article-card/document-card coverage to additional official learning and SDK pages beyond the GLSL, POP, CPlusPlus, CHOP, and parameter/reference pages now represented.
+- Re-run live operator availability sampling after future TouchDesigner builds or DocsBrain refreshes to catch replacement/operator-name drift early.

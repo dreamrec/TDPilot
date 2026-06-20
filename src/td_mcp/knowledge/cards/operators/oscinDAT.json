@@ -1,0 +1,137 @@
+{
+  "card_type": "operator",
+  "op_type": "oscinDAT",
+  "family": "DAT",
+  "display_name": "OSC In DAT",
+  "docs_url": "https://docs.derivative.ca/OSC_In_DAT",
+  "summary": "Receives Open Sound Control packets, parses messages or bundles into FIFO table rows, and can run a callback for each received OSC packet or message.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable listening on the network port; incoming data is lost while off"
+    },
+    {
+      "name": "protocol",
+      "type": "Menu",
+      "note": "Use UDP messaging, multicast UDP, or reliable UDT-style messaging"
+    },
+    {
+      "name": "address",
+      "type": "String",
+      "note": "Multicast listen address or UDT server address"
+    },
+    {
+      "name": "port",
+      "type": "Int",
+      "note": "Network port that OSC In accepts packets on"
+    },
+    {
+      "name": "localaddress",
+      "type": "String",
+      "note": "Local network interface address for multi-NIC systems"
+    },
+    {
+      "name": "shared",
+      "type": "Toggle",
+      "note": "Share a connection with other networking DATs using the same protocol"
+    },
+    {
+      "name": "addscope",
+      "type": "Pattern",
+      "note": "Filter OSC address names by TouchDesigner pattern syntax"
+    },
+    {
+      "name": "typetag",
+      "type": "Toggle",
+      "note": "Include OSC argument type tags in output rows"
+    },
+    {
+      "name": "splitbundle",
+      "type": "Toggle",
+      "note": "Split bundle contents into one row per contained message"
+    },
+    {
+      "name": "splitmessage",
+      "type": "Toggle",
+      "note": "Split OSC address and arguments into separate columns"
+    },
+    {
+      "name": "bundletimestamp",
+      "type": "Toggle",
+      "note": "Include bundle timestamp values as a column"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT Path",
+      "note": "Callback DAT executed once per received message"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose where callback scripts execute from"
+    },
+    {
+      "name": "fromop",
+      "type": "OP path",
+      "note": "Operator context used when Execute From is set to Specified Operator"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Limit FIFO output to a bounded number of messages"
+    },
+    {
+      "name": "maxlines",
+      "type": "Int",
+      "note": "Maximum retained message rows when Clamp Output is on"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear all logged rows except the heading"
+    },
+    {
+      "name": "bytes",
+      "type": "Toggle",
+      "note": "Output raw OSC packet bytes in a separate column"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when Extension is set to Custom Extension"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "Edit/view file extension exposed to external editors"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language selection"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Common DAT node-display word wrap setting"
+    }
+  ],
+  "common_gotchas": [
+    "The table is FIFO and defaults to a limited line count, so long captures need Max Lines or no clamp.",
+    "Bundles can stay as single rows or split into per-message rows; downstream schemas must match the Split Bundle setting.",
+    "Blob, MIDI, RGBA, and unknown argument types are serialized into readable text or byte lists rather than native binary objects.",
+    "Windows firewall can block OSC traffic even when the DAT parameters are correct."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "osc-message-ingest",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Receives OSC messages and bundles into a DAT table.",
+    "Protocol, address, port, local address, and shared options define socket binding.",
+    "Scope, type-tag, bundle, message, and timestamp options control parsed OSC output shape.",
+    "Callbacks and FIFO retention controls manage received-message scripts and table size."
+  ]
+}

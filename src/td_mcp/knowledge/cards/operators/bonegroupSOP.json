@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "bonegroupSOP",
+  "family": "SOP",
+  "display_name": "Bone Group SOP",
+  "docs_url": "https://docs.derivative.ca/Bone_Group_SOP",
+  "summary": "Splits captured geometry into primitive groups by shared bone influence and rewrites capture attributes into per-bone-group pCaptData/pCaptPath sets.",
+  "key_params": [
+    {
+      "name": "bonesperpoint",
+      "type": "Int",
+      "note": "Maximum number of bone influences kept per point"
+    },
+    {
+      "name": "bonespergroup",
+      "type": "Int",
+      "note": "Maximum bones allowed per primitive bone group before creating another group"
+    }
+  ],
+  "common_gotchas": [
+    "Modern well-authored models often do not need Bone Group SOP; use it only when splitting captured geometry for material/deform workflows.",
+    "Original pCaptData and pCaptPath are deleted and replaced with numbered pCaptData0/pCaptPath0 style detail attributes.",
+    "After grouping, isolate primitive groups with Delete SOP and point deform-aware MATs at the matching numbered capture attributes."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "legacy-character-rig",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Bone Group SOP groups captured primitives by the bone influences they share.",
+    "The operator rewrites capture data into numbered pCaptData and pCaptPath detail attributes and numbered pCapt vertex attributes.",
+    "Primitive groups such as boneGroup0 and boneGroup1 can then be isolated for material or deform workflows.",
+    "Capture weights are renormalized after grouping, and modern well-authored models often do not need this operator."
+  ]
+}

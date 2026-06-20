@@ -1,0 +1,27 @@
+{
+  "card_type": "operator",
+  "op_type": "poptoSOP",
+  "family": "SOP",
+  "display_name": "POP to SOP",
+  "docs_url": "https://docs.derivative.ca/POP_to_SOP",
+  "summary": "Converts POP geometry into SOP geometry, bridging the new POP GPU workflow back into SOP-based tools and render pipelines.",
+  "key_params": [
+    {"name": "pop", "type": "POP", "note": "POP source to convert"},
+    {"name": "downloadtype", "type": "Menu", "note": "GPU download mode for conversion"}
+  ],
+  "key_concepts": [
+    "POP geometry to SOP geometry bridge",
+    "Immediate versus Next Frame download",
+    "GPU-to-CPU geometry conversion",
+    "SOP compatibility for downstream legacy tools",
+    "Info CHOP num_points, num_prims, and num_particles diagnostics"
+  ],
+  "common_gotchas": [
+    "POP to SOP downloads POP data into SOP form, so dense GPU point clouds can become expensive.",
+    "Use this bridge when SOP compatibility is needed; keep processing in POPs when possible for GPU-side workflows.",
+    "Attribute support depends on what the POP source contains and what the SOP conversion can represent."
+  ],
+  "related_snippets": ["POP_snippets", "SOP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

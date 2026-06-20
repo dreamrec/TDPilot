@@ -1,0 +1,46 @@
+{
+  "card_type": "operator",
+  "op_type": "dattoCHOP",
+  "family": "CHOP",
+  "display_name": "DAT to CHOP",
+  "docs_url": "https://docs.derivative.ca/DAT_to_CHOP",
+  "summary": "Creates CHOP channels from values in a table DAT, with row and column selection controls and output modes for channel-per-row, channel-per-column, or channel-per-value workflows.",
+  "key_params": [
+    {"name": "dat", "type": "DAT", "note": "Source table DAT"},
+    {"name": "extractrows", "type": "Menu", "note": "How rows are selected"},
+    {"name": "extractcols", "type": "Menu", "note": "How columns are selected"},
+    {"name": "output", "type": "Menu", "note": "Channel layout mode"},
+    {"name": "firstrow", "type": "Menu", "note": "Interpret first row as ignored, names, or values"},
+    {"name": "firstcolumn", "type": "Menu", "note": "Interpret first column as ignored, names, or values"},
+    {"name": "rownamestart", "type": "String", "note": "Start row name for named row ranges"},
+    {"name": "rowindexstart", "type": "Integer", "note": "Start row index for indexed row ranges"},
+    {"name": "rownameend", "type": "String", "note": "End row name for named row ranges"},
+    {"name": "rowindexend", "type": "Integer", "note": "End row index for indexed row ranges"},
+    {"name": "rownames", "type": "Pattern", "note": "Explicit row values or patterns for row selection"},
+    {"name": "rowexpr", "type": "Expression", "note": "Condition expression for row selection"},
+    {"name": "fromcol", "type": "Integer", "note": "Column used when matching row values"},
+    {"name": "colnamestart", "type": "String", "note": "Start column name for named column ranges"},
+    {"name": "colindexstart", "type": "Integer", "note": "Start column index for indexed column ranges"},
+    {"name": "colnameend", "type": "String", "note": "End column name for named column ranges"},
+    {"name": "colindexend", "type": "Integer", "note": "End column index for indexed column ranges"},
+    {"name": "colnames", "type": "Pattern", "note": "Explicit column values or patterns for column selection"},
+    {"name": "colexpr", "type": "Expression", "note": "Condition expression for column selection"},
+    {"name": "fromrow", "type": "Integer", "note": "Row used when matching column values"}
+  ],
+  "key_concepts": [
+    "Creates CHOP channels from numeric values in a DAT table.",
+    "The source DAT should already be in table format; Convert DAT set to To Table is the official normalization path for non-table text.",
+    "Row extraction and column extraction each support all, name range, index range, mixed name/index, explicit values, and expression-condition modes.",
+    "Selection by values depends on From Column for rows and From Row for columns, so planners must preserve the intended label axis.",
+    "Output mode changes the resulting CHOP shape between one channel, channel per row, channel per column, or channel per extracted value.",
+    "First Row and First Column can be ignored, used as names, or treated as values, which affects both channel names and sample data."
+  ],
+  "common_gotchas": [
+    "The source DAT should be in table form; use Convert DAT to normalize arbitrary text before conversion.",
+    "Named row and column selection relies on table labels matching exactly or by pattern.",
+    "First row/first column naming settings can silently change channel names and values."
+  ],
+  "related_snippets": ["DAT_snippets", "CHOP_snippets"],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18"
+}

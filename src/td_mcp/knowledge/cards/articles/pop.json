@@ -1,0 +1,48 @@
+{
+  "card_type": "article",
+  "article_id": "pop",
+  "title": "POP",
+  "family": "POP",
+  "families": [
+    "POP",
+    "GPU",
+    "TOP"
+  ],
+  "summary": "Official Derivative glossary page for POPs, covering Point Operators as a GPU-accelerated operator family for 3D geometry or general numeric data, Render TOP rendering, external device workflows, OP Snippets, and the POP Class reference.",
+  "source_url": "https://docs.derivative.ca/POP",
+  "docsbrain_page_id": "pop",
+  "covered_operators": [
+    "circlePOP",
+    "gridPOP",
+    "glslPOP",
+    "poptoTOP",
+    "renderTOP",
+    "rendersimpleTOP"
+  ],
+  "key_concepts": [
+    "POP",
+    "Point Operators",
+    "Operator Family",
+    "3D geometry",
+    "general numeric data",
+    "GPU-accelerated",
+    "Render TOP",
+    "DMX lighting",
+    "LED arrays",
+    "lasers",
+    "OP Snippets",
+    "POP Class",
+    "Category:POPs"
+  ],
+  "guidance": [
+    "Use this article when a plan needs a compact grounding for why POPs are the correct family for point geometry, numeric GPU data, or device-bound point streams.",
+    "POPs work with 3D geometry or general numeric data and run on GPU-accelerated graphics cards or chips.",
+    "Render POP networks through Render TOP or route their data toward systems such as DMX lighting, LED arrays, lasers, and other external outputs.",
+    "Use Help > OP Snippets for live POP examples and the POP Class page when Python access to POP attributes or dimensions is needed."
+  ],
+  "related_snippets": [
+    "POP_snippets",
+    "POP_attribute_ontology"
+  ],
+  "last_verified": "2026-06-18"
+}

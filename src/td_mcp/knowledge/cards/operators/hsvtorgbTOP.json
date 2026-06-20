@@ -1,0 +1,73 @@
+{
+  "card_type": "operator",
+  "op_type": "hsvtorgbTOP",
+  "family": "TOP",
+  "display_name": "HSV to RGB TOP",
+  "docs_url": "https://docs.derivative.ca/HSV_to_RGB_TOP",
+  "summary": "Converts HSV-encoded TOP image data to RGB, with behavior primarily governed by Common TOP parameters.",
+  "key_params": [
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution policy"
+    },
+    {
+      "name": "resolution",
+      "type": "WH",
+      "note": "Common TOP custom resolution"
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Common TOP output aspect policy"
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Common TOP input smoothing mode"
+    },
+    {
+      "name": "fillmode",
+      "type": "Menu",
+      "note": "Common TOP viewer fill mode"
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Common TOP viewer smoothing mode"
+    },
+    {
+      "name": "npasses",
+      "type": "Int",
+      "note": "Common TOP pass repeat count"
+    },
+    {
+      "name": "chanmask",
+      "type": "String",
+      "note": "Common TOP channel mask"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "Feed HSV-encoded image data, not ordinary RGB, or the conversion result will be meaningless.",
+    "The official page is sparse, so keep behavior notes tied to the operator name and common TOP controls.",
+    "Channel Mask can make conversion look incomplete.",
+    "Low-precision formats can clip or quantize converted color values."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "HSV to RGB TOP converts HSV-encoded image data into RGB image data.",
+    "The official page has no unique operator-specific parameter rows under its operator page.",
+    "The operator has one TOP input and common TOP output controls.",
+    "Common output resolution, channel mask, and pixel format settings can affect visible conversion results.",
+    "The official TOP supports 3D textures and 2D texture arrays."
+  ]
+}

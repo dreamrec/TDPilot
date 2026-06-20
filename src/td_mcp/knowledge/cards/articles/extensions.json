@@ -1,0 +1,51 @@
+{
+  "card_type": "article",
+  "article_id": "extensions",
+  "title": "Extensions",
+  "family": "COMP",
+  "families": [
+    "COMP",
+    "PYTHON",
+    "PARAMETER",
+    "DAT"
+  ],
+  "summary": "Official Derivative guide for Python Extensions on custom Components, covering extension setup, extension parameters, ownerComp, promoted members, dependable properties, StorageManager, ext/extensions access, and initialization and cleanup gotchas.",
+  "source_url": "https://docs.derivative.ca/Extensions",
+  "docsbrain_page_id": "extensions",
+  "covered_operators": [
+    "baseCOMP",
+    "containerCOMP",
+    "textDAT",
+    "scriptDAT"
+  ],
+  "key_concepts": [
+    "Python Extensions",
+    "Component Editor",
+    "Extension Object",
+    "Extension Name",
+    "Promote Extension",
+    "ownerComp",
+    "TDF.createProperty()",
+    "StorageManager",
+    "Promoted Extensions",
+    "ext",
+    "extensions",
+    "extensionsReady",
+    "onInitTD",
+    "onDestroyTD",
+    "dependable values",
+    "ColorExt"
+  ],
+  "guidance": [
+    "Use this article when a generated custom COMP needs Python state, promoted methods, dependable properties, or hidden persistent state beyond custom parameters.",
+    "Use ownerComp as the extension's reference back to the component that owns it.",
+    "Use TDF.createProperty() or StorageManager for dependable values that parameter expressions should update from.",
+    "Prefer ext access when members should remain unpromoted, and promote only capitalized methods or attributes that should appear directly on the component.",
+    "Guard parameter expressions with extensionsReady when an extension may still be initializing, and use onInitTD for work that must wait until the component is ready.",
+    "Use onDestroyTD to clean references during reinitialization when old extension objects might otherwise stay in memory."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

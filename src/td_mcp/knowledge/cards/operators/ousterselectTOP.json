@@ -1,0 +1,63 @@
+{
+  "card_type": "operator",
+  "op_type": "ousterselectTOP",
+  "family": "TOP",
+  "display_name": "Ouster Select TOP",
+  "docs_url": "https://docs.derivative.ca/Ouster_Select_TOP",
+  "summary": "Selects additional Ouster lidar data images from an Ouster TOP, mapping sensor channels such as range, signal, reflectivity, near IR, flags, and XYZ into RGBA outputs.",
+  "key_params": [
+    {
+      "name": "oustertop",
+      "type": "TOP",
+      "note": "Primary Ouster TOP receiving sensor data."
+    },
+    {
+      "name": "redchannel",
+      "type": "Menu",
+      "note": "Sensor data assigned to output red."
+    },
+    {
+      "name": "greenchannel",
+      "type": "Menu",
+      "note": "Sensor data assigned to output green."
+    },
+    {
+      "name": "bluechannel",
+      "type": "Menu",
+      "note": "Sensor data assigned to output blue."
+    },
+    {
+      "name": "alphachannel",
+      "type": "Menu",
+      "note": "Sensor data assigned to output alpha."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP pixel format; preserve float precision downstream."
+    }
+  ],
+  "common_gotchas": [
+    "Documented as available in Educational, Commercial, and Pro licenses.",
+    "Outputs are 4-channel 32-bit float data images; downstream display or math should preserve float precision.",
+    "The primary Ouster TOP must be configured and cooking for selection to produce useful data.",
+    "Second-return fields only make sense with a matching Ouster data format.",
+    "Common TOP viewer filtering notes say 32-bit float data uses nearest filtering regardless of selection."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Creates additional output images from sensor data collected by an Ouster TOP.",
+    "Each output is a 4-channel 32-bit float RGBA data image.",
+    "Can select range, signal, reflectivity, near IR, flags, constants, and XYZ positions per channel.",
+    "Raw range is measured in millimeters while calculated XYZ positions are in meters."
+  ]
+}

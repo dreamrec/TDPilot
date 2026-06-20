@@ -1,0 +1,53 @@
+{
+  "card_type": "article",
+  "article_id": "tablecomp_class",
+  "title": "tableCOMP Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "COMP",
+    "PANEL"
+  ],
+  "summary": "Official Derivative Python API reference for Table COMP instances, covering cell ID conversion helpers, simulated table cell clicks, keyboard focus, and inherited PanelCOMP / COMP behavior.",
+  "source_url": "https://docs.derivative.ca/TableCOMP_Class",
+  "docsbrain_page_id": "tablecomp_class",
+  "covered_operators": [
+    "tableCOMP"
+  ],
+  "key_concepts": [
+    "tableCOMP Class",
+    "Table COMP",
+    "COMP class",
+    "PanelCOMP Class",
+    "No operator specific members",
+    "getRowFromID()",
+    "getColFromID()",
+    "getCellID()",
+    "click()",
+    "clickID()",
+    "setKeyboardFocus()",
+    "celloverid",
+    "cellfocusid",
+    "row",
+    "col",
+    "clickCount",
+    "force",
+    "left",
+    "middle",
+    "right",
+    "default left mouse button",
+    "disabled",
+    "selectAll"
+  ],
+  "guidance": [
+    "Use this article when a script needs to convert between a Table COMP cell ID and row or column coordinates, including IDs from panel values such as celloverid or cellfocusid.",
+    "Use click(row, col) for row and column addressing, or clickID(id) when the workflow already has a cell ID.",
+    "The click helpers use the left mouse button by default when left, middle, and right are all false.",
+    "Use force carefully because it can force a table cell click even when the panel is disabled.",
+    "Use setKeyboardFocus(row, col, selectAll=True) only when the target cell is an editable field and the script should select its contents."
+  ],
+  "related_snippets": [
+    "panel_ui"
+  ],
+  "last_verified": "2026-06-18"
+}

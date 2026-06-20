@@ -1,0 +1,40 @@
+{
+  "card_type": "operator",
+  "op_type": "nullCOMP",
+  "family": "COMP",
+  "display_name": "Null COMP",
+  "docs_url": "https://docs.derivative.ca/Null_COMP",
+  "summary": "A lightweight object-component placeholder used for grouping transforms, look-at targets, camera/light focus points, and bone-chain end affectors in 3D scene hierarchies.",
+  "key_params": [
+    {"name": "xord", "type": "Menu", "note": "Transform order for translate, rotate, and scale"},
+    {"name": "rord", "type": "Menu", "note": "Rotation order"},
+    {"name": "t", "type": "XYZ", "note": "Translate in world/object transform space"},
+    {"name": "r", "type": "XYZ", "note": "Rotation in degrees"},
+    {"name": "s", "type": "XYZ", "note": "Non-uniform scale"},
+    {"name": "p", "type": "XYZ", "note": "Pivot point for scale and rotation"},
+    {"name": "scale", "type": "Float", "note": "Uniform scale"},
+    {"name": "parentxformsrc", "type": "Menu", "note": "Initial parent transform source"},
+    {"name": "lookat", "type": "COMP path", "note": "Object this Null or child object should face"},
+    {"name": "forwarddir", "type": "Menu", "note": "Axis considered the forward direction"},
+    {"name": "pathsop", "type": "SOP", "note": "Path for moving the component along a curve"},
+    {"name": "pathorient", "type": "Toggle", "note": "Orient along the path"}
+  ],
+  "key_concepts": [
+    "Null COMP is a scene placeholder object for transforming attached components without adding visible geometry.",
+    "It is the standard invisible target for Look At workflows, including camera and light center-of-interest controls.",
+    "It can act as a bone-chain end affector when rigging object hierarchies.",
+    "Xform parameters such as transform order, rotate order, translate, rotate, scale, pivot, and parent transform source determine final object placement.",
+    "Path SOP, Orient Along Path, up-vector, and auto-bank controls let a Null COMP drive path-following motion for cameras or other components."
+  ],
+  "common_gotchas": [
+    "Null COMP has no visible geometry by default; it is mainly a transform and hierarchy helper.",
+    "Look At behavior can flip or animate poorly when the target crosses the up vector; choose an appropriate up-vector mode.",
+    "Transform order and rotation order materially change final placement.",
+    "Pivot changes can make scaling and rotation appear to slide the object.",
+    "Use a Null COMP as a camera or light focus target when the target itself should not render.",
+    "As a bone end affector, keep transform parenting clean so the IK setup receives predictable target positions."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ object hierarchy transforms and look-at targets",
+  "last_verified": "2026-06-18"
+}

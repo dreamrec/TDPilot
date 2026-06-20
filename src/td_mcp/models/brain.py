@@ -16,6 +16,8 @@ BrainProfile = Literal[
     "audio_reactive",
     "pop",
     "glsl",
+    "glsl_material",
+    "glsl_pop",
     "render_pipeline",
     "panel_ui",
     "control_rig",

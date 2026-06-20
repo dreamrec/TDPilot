@@ -1,0 +1,62 @@
+{
+  "card_type": "operator",
+  "op_type": "renderselectTOP",
+  "family": "TOP",
+  "display_name": "Render Select TOP",
+  "docs_url": "https://docs.derivative.ca/Render_Select_TOP",
+  "summary": "Selects a color buffer or related render output from Render TOP, GLSL TOP, or CPlusPlus TOP sources, including camera index, peel layer index, and image output selection.",
+  "key_params": [
+    {
+      "name": "top",
+      "type": "TOP",
+      "note": "Render TOP, GLSL TOP, or CPlusPlus TOP source."
+    },
+    {
+      "name": "colorbufindex",
+      "type": "Int",
+      "note": "Color buffer index to select."
+    },
+    {
+      "name": "cameraindex",
+      "type": "Int",
+      "note": "Camera output index when source renders multiple cameras."
+    },
+    {
+      "name": "peellayerindex",
+      "type": "Int",
+      "note": "Depth peel layer to select."
+    },
+    {
+      "name": "imageoutput",
+      "type": "Toggle",
+      "note": "Select image output enabled on the source Render TOP GLSL page."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP Generator output resolution behavior."
+    },
+    {
+      "name": "resolution",
+      "type": "XY",
+      "note": "Common TOP custom output resolution."
+    }
+  ],
+  "common_gotchas": [
+    "The source TOP must be a compatible Render TOP, GLSL TOP, or CPlusPlus TOP.",
+    "Image Output requires the source Render TOP GLSL page to enable image output.",
+    "Color buffer index must match the number of color buffers produced by the source render.",
+    "Camera index only matters when the source Render TOP renders multiple cameras."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Selects a color buffer or related output from Render TOP, GLSL TOP, or CPlusPlus TOP sources.",
+    "Camera Index selects among multiple camera outputs from the source render.",
+    "Peel Layer Index selects Render TOP depth-peel layers.",
+    "Image Output only works when the source Render TOP GLSL image output is enabled."
+  ]
+}

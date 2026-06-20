@@ -1,0 +1,110 @@
+{
+  "card_type": "operator",
+  "op_type": "nvidiaflowTOP",
+  "family": "TOP",
+  "display_name": "NVIDIA Flow TOP",
+  "docs_url": "https://docs.derivative.ca/NVIDIA_Flow_TOP",
+  "summary": "Runs an NVIDIA Flow smoke/fire fluid simulation with emitter, simulation, combustion, allocation, and debug rendering controls.",
+  "key_params": [
+    {
+      "name": "initialize",
+      "type": "Pulse",
+      "note": "Initialize the simulation."
+    },
+    {
+      "name": "start",
+      "type": "Pulse",
+      "note": "Start simulation playback."
+    },
+    {
+      "name": "play",
+      "type": "Toggle",
+      "note": "Pause or advance simulation stepping."
+    },
+    {
+      "name": "camera",
+      "type": "COMP",
+      "note": "Perspective Camera COMP used to view the simulation."
+    },
+    {
+      "name": "emitters",
+      "type": "COMP list",
+      "note": "NVIDIA Flow Emitter COMPs included in the simulation."
+    },
+    {
+      "name": "simposition",
+      "type": "XYZ",
+      "note": "World-space center of the simulation volume."
+    },
+    {
+      "name": "simsize",
+      "type": "XYZ",
+      "note": "World-space size of the simulation volume and block scale."
+    },
+    {
+      "name": "memusage",
+      "type": "Float",
+      "note": "Relative fraction of simulation blocks allocated for the volume."
+    },
+    {
+      "name": "showblocks",
+      "type": "Toggle",
+      "note": "Display simulation blocks and volume edges for debugging."
+    },
+    {
+      "name": "speed",
+      "type": "Float",
+      "note": "Simulation update rate."
+    },
+    {
+      "name": "maxsteps",
+      "type": "Int",
+      "note": "Maximum simulation steps per update."
+    },
+    {
+      "name": "rendermode",
+      "type": "Menu",
+      "note": "Density or debug render modes."
+    },
+    {
+      "name": "gravity",
+      "type": "XYZ",
+      "note": "Gravity direction used with buoyancy."
+    },
+    {
+      "name": "vortstrength",
+      "type": "Float",
+      "note": "Rotation/turbulence multiplier."
+    },
+    {
+      "name": "enableshadow",
+      "type": "Toggle",
+      "note": "Enable volume shadow rendering."
+    },
+    {
+      "name": "shadowresolution",
+      "type": "Int",
+      "note": "Resolution of the volume shadow map texture."
+    }
+  ],
+  "common_gotchas": [
+    "Official docs mark NVIDIA Flow TOP as Windows-only and NVIDIA-GPU-only.",
+    "The camera must use perspective projection.",
+    "Smaller simulation blocks increase accuracy but require more GPU work.",
+    "High memusage can cause extremely high memory usage.",
+    "MacCormack blend controls can sharpen the result but may introduce artifacts."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Simulation_snippets",
+    "NVIDIA_snippets"
+  ],
+  "build_relevance": "gpu_fluid_simulation",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Runs and renders a volumetric NVIDIA Flow fire, smoke, and burning-gas simulation.",
+    "Requires one or more NVIDIA Flow Emitter COMPs and a perspective Camera COMP.",
+    "Simulation position and size define the bounded volume where gas can exist.",
+    "Memory allocation, debug block views, and volume-shadow controls are central to performance tuning."
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "card_type": "operator",
+  "op_type": "bulletsolverCOMP",
+  "family": "COMP",
+  "display_name": "Bullet Solver COMP",
+  "docs_url": "https://docs.derivative.ca/Bullet_Solver_COMP",
+  "summary": "Runs a Bullet physics world for Actor COMPs, Force COMPs, Impulse Force COMPs, and Constraint COMPs, stepping the simulation at a configured sample rate and updating actor transforms as playback advances.",
+  "key_params": [
+    {"name": "actors", "type": "COMP list", "note": "Actor COMPs to include in this Bullet simulation"},
+    {"name": "forces", "type": "COMP list", "note": "Global Force COMPs applied to non-static actors"},
+    {"name": "gravity", "type": "XYZ", "note": "Global gravitational acceleration in meters per second squared"},
+    {"name": "dimension", "type": "Menu", "note": "Constrains the simulation to 1D, 2D, or full 3D motion"},
+    {"name": "linmult", "type": "XYZ", "note": "Linear velocity multipliers, combined with the Dimension setting"},
+    {"name": "angmult", "type": "XYZ", "note": "Angular velocity multipliers, combined with the Dimension setting"},
+    {"name": "initall", "type": "Pulse", "note": "Resets bodies and recreates collision shapes"},
+    {"name": "init", "type": "Pulse", "note": "Resets simulation state without recreating Actor COMP collision shapes"},
+    {"name": "start", "type": "Pulse", "note": "Initializes and begins stepping the simulation"},
+    {"name": "play", "type": "Toggle", "note": "Runs or pauses simulation stepping"},
+    {"name": "rate", "type": "Float", "note": "Simulation sample rate that determines timestep"},
+    {"name": "substeps", "type": "Integer", "note": "Additional solver substeps per frame for stability"}
+  ],
+  "key_concepts": [
+    "Bullet Solver COMP is the Bullet physics world that steps Actor COMPs and updates their transforms at the solver sample rate.",
+    "Actors can be anywhere in the project, but an Actor COMP can be referenced by only one Bullet Solver COMP.",
+    "Global Force and Impulse Force COMPs affect non-static actors; the solver itself runs in a vacuum with no built-in air resistance.",
+    "Dimension, linear multiplier, and angular multiplier constrain which translation and rotation axes actors can use.",
+    "Initialize Sim and Collision Shapes recreates actor collision shapes, while Initialize Sim only resets simulation state."
+  ],
+  "common_gotchas": [
+    "An Actor COMP can be referenced by only one Bullet Solver COMP at a time.",
+    "The solver operates in a vacuum; there is no air resistance unless the build adds forces or feedback explicitly.",
+    "Initialize Sim and Collision Shapes can be expensive because Actor COMP collision shapes are rebuilt.",
+    "Changing actor source SOPs, instancing, or scale-dependent collision setup usually requires collision-shape reinitialization.",
+    "Dimension, linear multiplier, and angular multiplier are combined, so a restrictive Dimension menu can override apparently open axis multipliers.",
+    "Use Bullet Solver CHOP or Info CHOP channels to inspect body transforms and solver state instead of assuming actor transforms updated as expected."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2020.20000+ Bullet physics world and solver control",
+  "last_verified": "2026-06-18"
+}

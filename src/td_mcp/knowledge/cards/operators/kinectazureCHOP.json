@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "kinectazureCHOP",
+  "family": "CHOP",
+  "display_name": "Kinect Azure CHOP",
+  "docs_url": "https://docs.derivative.ca/Kinect_Azure_CHOP",
+  "summary": "Outputs Kinect Azure or compatible Orbbec body-tracking joint data, rotations, confidence, and optional IMU channels using a Kinect Azure TOP connection.",
+  "key_concepts": [
+    "Uses a Kinect Azure TOP connection to output body-tracking joint positions, rotations, confidence, and optional IMU data.",
+    "The source TOP configures the camera; body tracking cannot be planned from the CHOP alone.",
+    "Max Players determines how many skeleton channel sets are emitted, with missing detected bodies zeroing the extra channels.",
+    "World, color-image, and depth-image position toggles choose whether joint data is emitted in meters or image-space coordinates.",
+    "Body tracking data can lag image data by multiple frames; the docs point to Sync Body Tracking To Image on the primary TOP when synchronization matters."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable body tracking capture"},
+    {"name": "top", "type": "TOP", "note": "Kinect Azure TOP connected to the camera"},
+    {"name": "maxplayers", "type": "Integer", "note": "Number of player skeletons to track"},
+    {"name": "relbonerotations", "type": "Toggle", "note": "Output bone rotations relative to each parent"},
+    {"name": "absbonerotations", "type": "Toggle", "note": "Output absolute world bone rotations"},
+    {"name": "bonelengths", "type": "Toggle", "note": "Output bone length channels"},
+    {"name": "worldspace", "type": "Toggle", "note": "Output 3D world positions"},
+    {"name": "colorspace", "type": "Toggle", "note": "Output color image positions"},
+    {"name": "depthspace", "type": "Toggle", "note": "Output depth image positions"},
+    {"name": "aspectcorrectuv", "type": "Toggle", "note": "Aspect-correct UV-style image positions"},
+    {"name": "flipimagev", "type": "Toggle", "note": "Mirror image V positions"},
+    {"name": "flipskelu", "type": "Toggle", "note": "Mirror skeleton U positions"},
+    {"name": "confidence", "type": "Toggle", "note": "Output bone confidence channels"},
+    {"name": "imuchans", "type": "Toggle", "note": "Output acceleration and rotation IMU channels"}
+  ],
+  "common_gotchas": [
+    "Official docs list this operator as Windows 10 April 2018 or newer only.",
+    "A Kinect Azure TOP must connect to and configure the camera; the CHOP alone cannot open the device.",
+    "Not every Kinect Azure TOP configuration supports body tracking, such as Passive IR depth mode.",
+    "Body tracking can lag multiple frames behind image data; use the TOP sync option if tighter synchronization matters.",
+    "Only one hardware type can use body tracking in a project at a time; the first cooked Microsoft or Orbbec node wins.",
+    "Extra player channels are zeroed when fewer bodies are detected than Max Players."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ Windows device tracking",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,65 @@
+{
+  "card_type": "article",
+  "article_id": "mat",
+  "title": "MAT",
+  "family": "MAT",
+  "families": [
+    "MAT",
+    "SOP",
+    "COMP",
+    "TOP",
+    "GLSL"
+  ],
+  "summary": "Official Derivative MAT overview for material operators that apply shaders to SOP or 3D Geometry Object surfaces, including object Display-page material assignment, Phong/GLSL/TOP shader inputs, normals and texture coordinates, PBR with Environment Light COMP, and common MAT types.",
+  "source_url": "https://docs.derivative.ca/MAT",
+  "docsbrain_page_id": "mat",
+  "covered_operators": [
+    "phongMAT",
+    "pbrMAT",
+    "lineMAT",
+    "constantMAT",
+    "depthMAT",
+    "glslMAT",
+    "pointspriteMAT",
+    "geometryCOMP",
+    "environmentlightCOMP",
+    "substanceTOP"
+  ],
+  "key_concepts": [
+    "MAT",
+    "Materials",
+    "Shader",
+    "SOP",
+    "3D Geometry Object",
+    "Material parameter",
+    "Display page",
+    "Object Components",
+    "Phong MAT",
+    "GLSL MAT",
+    "TOPs",
+    "GLSL",
+    "pixel shaders",
+    "vertex shaders",
+    "normals",
+    "Texture Coordinates",
+    "PBR MAT",
+    "Environment Light COMP",
+    ".sbsar",
+    "Substance TOP",
+    "Line MAT",
+    "Constant MAT",
+    "Depth MAT",
+    "Point Sprite MAT"
+  ],
+  "guidance": [
+    "Use this article when selecting a material family or explaining how MATs attach to renderable geometry.",
+    "Apply MATs through the Material parameter on the Display page of Object Components or through compatible material workflows such as Material SOP when appropriate.",
+    "Phong MAT and GLSL MAT can use TOP inputs and GLSL pixel/vertex shader programs; geometry usually needs normals for specular shading and texture coordinates for maps.",
+    "Use PBR MAT with Environment Light COMP for physically based material workflows, including Substance TOP assets loaded from .sbsar files.",
+    "Use Constant MAT for unlit flat color, Depth MAT for depth-pass output, Line MAT for edges/points, and Point Sprite MAT for point-sprite geometry."
+  ],
+  "related_snippets": [
+    "GLSL_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

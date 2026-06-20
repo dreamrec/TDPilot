@@ -1,0 +1,51 @@
+{
+  "card_type": "operator",
+  "op_type": "pangolinCHOP",
+  "family": "CHOP",
+  "display_name": "Pangolin CHOP",
+  "docs_url": "https://docs.derivative.ca/Pangolin_CHOP",
+  "summary": "Constructs laser image frames from SOP, CHOP, or POP sources and sends them to Pangolin Beyond show-control software.",
+  "key_concepts": [
+    "Pangolin CHOP is a Windows-only interface from TouchDesigner to Pangolin Beyond laser show-control software.",
+    "It sends laser image frames from SOP, CHOP, or POP sources into a selected Beyond zone.",
+    "Pangolin Beyond must be open before active input displays the laser image in the selected zone.",
+    "CHOP input requires x and y point channels, with optional z, r, g, b, id, and zone channels.",
+    "SOP and POP sources use point positions and color/zone attributes for laser image grouping and routing.",
+    "Because this is live laser output, generated plans should include explicit laser safety and licensing checks."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Send/clear images in Beyond"},
+    {"name": "source", "type": "Menu", "note": "SOP, CHOP, or POP source"},
+    {"name": "sop", "type": "SOP", "note": "SOP source path"},
+    {"name": "chop", "type": "CHOP", "note": "CHOP source with named point/color channels"},
+    {"name": "pop", "type": "POP", "note": "POP source path"},
+    {"name": "zone", "type": "Integer", "note": "Beyond zone index"},
+    {"name": "ratemode", "type": "Menu", "note": "Percent of projector sample rate or explicit sample rate"},
+    {"name": "sample", "type": "MenuItem", "note": "Explicit sample-rate mode"},
+    {"name": "percent", "type": "Float", "note": "Projector sample-rate percentage"},
+    {"name": "rate", "type": "Float", "note": "Explicit sample rate"},
+    {"name": "repeat", "type": "Toggle", "note": "Repeat source data to fit output rate"},
+    {"name": "vector", "type": "Toggle", "note": "Vector/laser image handling"},
+    {"name": "resend", "type": "Pulse", "note": "Resend current frame"},
+    {"name": "enableout", "type": "Toggle", "note": "Output enable state"},
+    {"name": "disableout", "type": "Toggle", "note": "Output disable state"},
+    {"name": "blackout", "type": "Toggle", "note": "Trigger blackout behavior"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"}
+  ],
+  "common_gotchas": [
+    "Official docs list this operator as Windows-only.",
+    "Pangolin Beyond must be open; with the CHOP active and connected, the laser image appears immediately in the selected Beyond zone.",
+    "Non-Commercial TouchDesigner only works with the demo version of Beyond; licensed Beyond requires Commercial, Educational, or Pro TouchDesigner.",
+    "CHOP input requires x and y channels; optional z, r, g, b, id, and zone channels control shape grouping, color, and zone overrides.",
+    "POP input requires point position attribute P; point Color defaults to white if absent, and primitive Zone can route primitives.",
+    "This is live laser/show-control output, so generated plans should require explicit laser-safety review."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2025.30000+ Windows laser/Pangolin Beyond",
+  "last_verified": "2026-06-18"
+}

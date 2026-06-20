@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "clipCHOP",
+  "family": "CHOP",
+  "display_name": "Clip CHOP",
+  "docs_url": "https://docs.derivative.ca/Clip_CHOP",
+  "summary": "Represents animation clip channel data for Clip Blender CHOP workflows, with rule/callback DAT support, rotation-order control, transitions, and loop behavior.",
+  "key_concepts": [
+    "Clip CHOP is a TouchDesigner Pro operator documented as part of the Clip Blender CHOP animation workflow.",
+    "The official parameter surface defines rule and callback DATs, rotation order, transition mode, blend timing, next-clip controls, loop behavior, index channel, position type, and rotation type.",
+    "Transition chooses Blend or Wait Until End, while Blend Time and Next Blend Time control how clip changes are smoothed.",
+    "Position Type and Rotation Type choose whether root motion overrides, blends to the end, blends to the Clip Blender target, or adds to existing motion.",
+    "Pause at End holds clip playback at the end rather than immediately continuing through the broader clip sequence."
+  ],
+  "key_params": [
+    {"name": "rdat", "type": "DAT", "note": "Rule DAT for clip behavior"},
+    {"name": "callbacks", "type": "DAT", "note": "Callbacks DAT for clip logic"},
+    {"name": "reload", "type": "Pulse", "note": "Reload rule/callback DATs"},
+    {"name": "rord", "type": "Menu", "note": "Rotation order"},
+    {"name": "transtion", "type": "Menu", "note": "Transition mode: blend or wait until end"},
+    {"name": "blendtime", "type": "Float", "note": "Blend duration"},
+    {"name": "blendtimeunit", "type": "Menu", "note": "Blend duration unit"},
+    {"name": "next", "type": "Pulse", "note": "Advance to the next clip"},
+    {"name": "nblendtime", "type": "Float", "note": "Next-clip blend time"},
+    {"name": "loopactive", "type": "Toggle", "note": "Loop while active"},
+    {"name": "looprelease", "type": "Menu", "note": "Loop release rule"},
+    {"name": "indexchannel", "type": "String", "note": "Channel used as an index"},
+    {"name": "abspos", "type": "Menu", "note": "Position type: override, blend to end, blend to target, or add"},
+    {"name": "rottype", "type": "Menu", "note": "Rotation type"},
+    {"name": "pauseend", "type": "Toggle", "note": "Pause at clip end"}
+  ],
+  "common_gotchas": [
+    "Official docs mark Clip CHOP as TouchDesigner Pro-only.",
+    "Clip CHOP is normally used with Clip Blender CHOP rather than as a general-purpose animation mixer.",
+    "Rotation order and rotation type must match the source asset or root motion can twist unexpectedly.",
+    "Rule and callback DAT paths should be validated before executing a generated plan.",
+    "The documented parameter token is spelled transtion, so atlas data should preserve that TD parameter name."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ TouchDesigner Pro",
+  "last_verified": "2026-06-18"
+}

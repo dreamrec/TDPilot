@@ -1,0 +1,35 @@
+{
+  "card_type": "operator",
+  "op_type": "ambientlightCOMP",
+  "family": "COMP",
+  "display_name": "Ambient Light COMP",
+  "docs_url": "https://docs.derivative.ca/Ambient_Light_COMP",
+  "summary": "Controls the color and intensity of environmental light in a 3D scene, contributing light from everywhere rather than from a point, spot, or directional source.",
+  "key_params": [
+    {"name": "c", "type": "RGB", "note": "Ambient light color"},
+    {"name": "dimmer", "type": "Float", "note": "Light intensity multiplier"},
+    {"name": "material", "type": "MAT", "note": "Render page material for any geometry inside the component"},
+    {"name": "render", "type": "Toggle", "note": "Render visibility in conjunction with the render flag"},
+    {"name": "drawpriority", "type": "Integer", "note": "Draw ordering relative to sibling components"},
+    {"name": "pickpriority", "type": "Integer", "note": "Priority for Render Pick CHOP/DAT selection"},
+    {"name": "wcolor", "type": "RGB", "note": "Wireframe display color"},
+    {"name": "lightmask", "type": "String", "note": "Subset of lights used by geometry when listed in Render TOP"}
+  ],
+  "key_concepts": [
+    "Ambient Light COMP controls scene-wide environmental light color and intensity rather than emitting from a position or spotlight cone.",
+    "Light Color and Dimmer shape the global fill contribution, so small changes can affect every lit object in the render.",
+    "Ambient lighting has no source position, focus direction, cone, or local falloff; use Light COMP for point, cone, or distant-light behavior.",
+    "The Render page and Render TOP lighting setup still determine whether the component contributes to the rendered scene.",
+    "Light Mask limits which Render TOP lights affect a geometry object, but the masked lights must also be listed in the Render TOP."
+  ],
+  "common_gotchas": [
+    "Ambient Light COMP has no particular source, position, or focus direction.",
+    "It provides global environmental illumination rather than shadows, cones, or local falloff.",
+    "The light still must be part of the Render TOP lighting setup to affect rendered geometry.",
+    "Dimmer and color can wash out contrast quickly because the contribution is scene-wide.",
+    "Use Light COMP when a build needs point, spot, or directional behavior instead of ambient fill."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ scene-wide ambient lighting",
+  "last_verified": "2026-06-18"
+}

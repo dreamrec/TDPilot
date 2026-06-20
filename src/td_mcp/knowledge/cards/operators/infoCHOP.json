@@ -1,0 +1,36 @@
+{
+  "card_type": "operator",
+  "op_type": "infoCHOP",
+  "family": "CHOP",
+  "display_name": "Info CHOP",
+  "docs_url": "https://docs.derivative.ca/Info_CHOP",
+  "summary": "Outputs extra information channels from any referenced operator, including family-specific info, general info, optional timecode, and filtered values.",
+  "key_concepts": [
+    "Outputs information channels for the operator referenced by the Operator path.",
+    "Info Type can output all channels, general/operator-family channels, or optional timecode channels when the target has a .timecode member.",
+    "Scope filters info channel names with patterns, while Values and Range filter channels by numeric value.",
+    "Passive off forces the target operator to cook before query; Passive on avoids the forced cook and can be a frame late.",
+    "Children Cook Time adds a component child cook-time total channel but can cost more on large networks."
+  ],
+  "key_params": [
+    {"name": "op", "type": "OP", "note": "Operator path to query"},
+    {"name": "infotype", "type": "Menu", "note": "All, general, timecode, or OP-specific channel set"},
+    {"name": "iscope", "type": "Pattern", "note": "Attribute/channel name pattern to keep"},
+    {"name": "values", "type": "Menu", "note": "Select all, inside range, or outside range"},
+    {"name": "range", "type": "Float2", "note": "Range bounds used by value filtering"},
+    {"name": "range1", "type": "Float", "note": "Lower range bound"},
+    {"name": "range2", "type": "Float", "note": "Upper range bound"},
+    {"name": "passive", "type": "Toggle", "note": "Avoid forcing the target operator to cook before querying"},
+    {"name": "childcooktime", "type": "Toggle", "note": "Include child cook-time total for components"}
+  ],
+  "common_gotchas": [
+    "When Passive is off, Info CHOP can force the target OP to cook.",
+    "When Passive is on, data can be one frame late if target and Info cook in the same frame.",
+    "Timecode info only appears for operators with a .timecode member.",
+    "Info CHOP channels are also often exposed as Python members on the target operator class.",
+    "Use Info CHOP for diagnostics and monitoring, not as a substitute for stable semantic outputs when those exist."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+ diagnostics",
+  "last_verified": "2026-06-18"
+}

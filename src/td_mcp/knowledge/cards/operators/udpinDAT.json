@@ -1,0 +1,113 @@
+{
+  "card_type": "operator",
+  "op_type": "udpinDAT",
+  "family": "DAT",
+  "display_name": "UDP In DAT",
+  "docs_url": "https://docs.derivative.ca/UDP_In_DAT",
+  "summary": "Receives UDP or multicast UDP data from remote computers, appends incoming data to a DAT table, and can run callbacks for received messages.",
+  "key_params": [
+    {
+      "name": "protocol",
+      "type": "Menu",
+      "note": "UDP messaging or multicast UDP"
+    },
+    {
+      "name": "address",
+      "type": "String",
+      "note": "Multicast address to listen on when multicast is selected"
+    },
+    {
+      "name": "port",
+      "type": "Integer",
+      "note": "Network port to listen on"
+    },
+    {
+      "name": "shared",
+      "type": "Toggle",
+      "note": "Share the network connection with compatible DATs"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Parse incoming data one row per byte, line, or message"
+    },
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable the connection"
+    },
+    {
+      "name": "callbacks",
+      "type": "DAT",
+      "note": "Callback DAT executed for each incoming message"
+    },
+    {
+      "name": "clamp",
+      "type": "Toggle",
+      "note": "Limit output rows instead of allowing unlimited accumulation"
+    },
+    {
+      "name": "maxlines",
+      "type": "Integer",
+      "note": "Maximum retained rows when clamping is enabled"
+    },
+    {
+      "name": "bytes",
+      "type": "Toggle",
+      "note": "Output raw message bytes in a separate column"
+    },
+    {
+      "name": "executeloc",
+      "type": "Menu",
+      "note": "Choose the execution context for received-data callbacks"
+    },
+    {
+      "name": "fromop",
+      "type": "OP Path",
+      "note": "Operator path used when Execute from is set to Specified Operator"
+    },
+    {
+      "name": "clear",
+      "type": "Pulse",
+      "note": "Clear accumulated received-message rows"
+    },
+    {
+      "name": "language",
+      "type": "Menu",
+      "note": "Common DAT script-language handling mode"
+    },
+    {
+      "name": "extension",
+      "type": "Menu",
+      "note": "External editor file extension mode"
+    },
+    {
+      "name": "customext",
+      "type": "String",
+      "note": "Custom editor extension when extension mode uses a custom extension"
+    },
+    {
+      "name": "wordwrap",
+      "type": "Menu",
+      "note": "Node viewer word-wrap behavior"
+    }
+  ],
+  "common_gotchas": [
+    "UDP has no delivery, ordering, or connection guarantee; design protocols to tolerate missing packets.",
+    "The send command cannot reply until a message has been received because the DAT has no peer address yet.",
+    "In multicast mode, replies go directly to the originator of the last received multicast message.",
+    "Row/Callback Format changes table shape and callback granularity, so choose per-message for packet protocols.",
+    "Windows firewall or OS network permissions can prevent packets from arriving."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "build_relevance": "2021.10000+ UDP and multicast message ingest",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "UDP In DAT receives UDP or multicast UDP data and appends received messages to a DAT table.",
+    "It captures messages without transport-level delivery guarantees or persistent queuing.",
+    "Replies through send methods only work after a sender address has been learned from received data.",
+    "Callbacks and clamp settings control per-message handling and bounded output history."
+  ]
+}

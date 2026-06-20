@@ -1,0 +1,39 @@
+{
+  "card_type": "article",
+  "article_id": "parametercomp_class",
+  "title": "parameterCOMP Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "COMP",
+    "PANEL",
+    "PARAMETER"
+  ],
+  "summary": "Official Derivative Python API reference for Parameter COMP instances, covering the parameter-dialog minimum width member, lack of operator-specific methods, and inherited PanelCOMP / COMP behavior.",
+  "source_url": "https://docs.derivative.ca/ParameterCOMP_Class",
+  "docsbrain_page_id": "parametercomp_class",
+  "covered_operators": [
+    "parameterCOMP"
+  ],
+  "key_concepts": [
+    "parameterCOMP Class",
+    "Parameter COMP",
+    "COMP class",
+    "PanelCOMP Class",
+    "minWidth",
+    "parameter dialog",
+    "No operator specific methods",
+    "panel",
+    "PanelValue Class",
+    "Panel Values"
+  ],
+  "guidance": [
+    "Use this article when a script needs the Parameter COMP's minimum width before the parameter dialog requires scaling.",
+    "The page defines minWidth as the operator-specific member and documents no operator-specific methods.",
+    "A parameterCOMP inherits PanelCOMP behavior, so use inherited panel members and methods for panel values, hierarchy, focus, and interaction state."
+  ],
+  "related_snippets": [
+    "panel_ui"
+  ],
+  "last_verified": "2026-06-18"
+}

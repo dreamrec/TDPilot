@@ -1,0 +1,57 @@
+{
+  "card_type": "operator",
+  "op_type": "sharedmeminTOP",
+  "family": "TOP",
+  "display_name": "Shared Mem In TOP",
+  "docs_url": "https://docs.derivative.ca/Shared_Mem_In_TOP",
+  "summary": "Reads TOP image data from a named shared-memory block created by another TouchDesigner process or a third-party application.",
+  "key_params": [
+    {
+      "name": "name",
+      "type": "String",
+      "note": "Shared memory block name to read from."
+    },
+    {
+      "name": "memtype",
+      "type": "Menu",
+      "note": "Memory scope: Local or Global."
+    },
+    {
+      "name": "local",
+      "type": "Menu Option",
+      "note": "Use a unique local shared memory segment."
+    },
+    {
+      "name": "global",
+      "type": "Menu Option",
+      "note": "Use the combined global shared memory segment."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "Name and memory type must match the Shared Mem Out TOP or external writer.",
+    "Use Local for sharing with applications other than TouchDesigner.",
+    "Global memory can conflict because it is a combined segment shared by TouchDesigner nodes.",
+    "Shared-memory workflows still need matching resolution, format, and producer lifetime outside this node."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "shared_memory_io",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Shared Mem In reads image data from a named shared-memory block.",
+    "The writer can be another TouchDesigner process or a third-party application.",
+    "Local shared memory is required for non-TouchDesigner applications, while Global uses a combined segment across TouchDesigner nodes.",
+    "The reader must match the writer name, memory type, and practical data layout expectations."
+  ]
+}

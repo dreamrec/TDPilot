@@ -1,0 +1,40 @@
+{
+  "card_type": "operator",
+  "op_type": "fbxCOMP",
+  "family": "COMP",
+  "display_name": "FBX COMP",
+  "docs_url": "https://docs.derivative.ca/FBX_COMP",
+  "summary": "Imports FBX scenes, geometry, cameras, lights, textures, and animation into a component network, caching imported assets in a TDImportCache .tdc file and exposing them through Import Select operators.",
+  "key_params": [
+    {"name": "file", "type": "File", "note": "FBX file path to import"},
+    {"name": "importmethod", "type": "Menu", "note": "Full Replacement, Merge with Existing, or Reload Assets import behavior"},
+    {"name": "imp", "type": "Pulse", "note": "Imports or updates the network according to Import Method"},
+    {"name": "importscale", "type": "Float", "note": "Scales imported geometry"},
+    {"name": "texdir", "type": "Folder", "note": "Directory used to locate external texture files"},
+    {"name": "lights", "type": "Toggle", "note": "Import supported lights from the FBX file"},
+    {"name": "cameras", "type": "Toggle", "note": "Import supported cameras from the FBX file"},
+    {"name": "genactors", "type": "Toggle", "note": "Generate Actor COMPs for physics-oriented imported geometry"},
+    {"name": "mergegeo", "type": "Toggle", "note": "Merge compatible imported geometry for a simpler network"},
+    {"name": "pops", "type": "Toggle", "note": "Import geometry through POP-oriented paths when available"},
+    {"name": "gpudirect", "type": "Toggle", "note": "Use direct-to-GPU asset flow when supported"},
+    {"name": "keepconnections", "type": "Toggle", "note": "Keep existing network connections during supported update paths"}
+  ],
+  "key_concepts": [
+    "FBX COMP imports geometry, animations, textures, cameras, lights, and scenes from FBX and related model formats into a component network.",
+    "Imported assets are cached as .tdc files in TDImportCache and read through Import Select TOP/SOP/CHOP operators.",
+    "Import Method controls whether import fully replaces, merges with existing contents, or reloads Import Select assets.",
+    "Most FBX page changes require a rebuild/update before the generated network reflects them.",
+    "Texture Directory helps resolve external texture paths when FBX files move between machines or were exported with absolute paths."
+  ],
+  "common_gotchas": [
+    "Most FBX page changes are not applied until the FBX file is imported, rebuilt, or updated.",
+    "Full Replacement rebuilds the internal network and can delete manual edits inside the FBX COMP.",
+    "Merge with Existing is useful for relocated or changed assets but can still alter imported nodes.",
+    "Reload Assets updates Import Select assets without rebuilding the whole network.",
+    "External textures exported with absolute paths can fail after moving machines; use Texture Directory or embedded textures.",
+    "The TDImportCache .tdc file avoids re-import cost, but missing cache files require reopening the FBX to rebuild the cache."
+  ],
+  "related_snippets": ["COMP_snippets"],
+  "build_relevance": "2021.10000+ FBX scene import and cached asset workflow",
+  "last_verified": "2026-06-18"
+}

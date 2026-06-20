@@ -1,0 +1,39 @@
+{
+  "card_type": "operator",
+  "op_type": "facetrackCHOP",
+  "family": "CHOP",
+  "display_name": "Face Track CHOP",
+  "docs_url": "https://docs.derivative.ca/Face_Track_CHOP",
+  "summary": "Uses Nvidia Maxine AR face tracking to detect faces, landmarks, confidence, rotations, and optional fitted face-mesh transforms from a TOP image.",
+  "key_concepts": [
+    "Uses Nvidia Maxine AR SDK models to detect a face from a TOP image and output bounding boxes, rotations, landmarks, and confidence channels.",
+    "When multiple faces are visible, the documented behavior is to track the largest detected face rather than all faces.",
+    "Landmark output can be disabled or set to 68 or 126 points, with optional confidence values for assessing detection quality.",
+    "Mesh Transform output works with a compatible Nvidia nvf face mesh and Face Track SOP to align a fitted 3D face mesh.",
+    "For image-aligned 3D overlays, the docs recommend orthographic camera alignment with bottom-left origin and Aspect Correct UVs enabled."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable face tracking"},
+    {"name": "modelfolder", "type": "Folder", "note": "Folder containing required AI model files"},
+    {"name": "meshfile", "type": "File", "note": "Nvidia nvf 3D morphable face mesh for Face Track SOP fitting"},
+    {"name": "top", "type": "TOP", "note": "Input image or video TOP to analyze"},
+    {"name": "bbox", "type": "Toggle", "note": "Output face bounding-box channels"},
+    {"name": "bboxconfidence", "type": "Toggle", "note": "Output face detection confidence"},
+    {"name": "rotations", "type": "Toggle", "note": "Output face orientation rx, ry, rz"},
+    {"name": "landmarks", "type": "Menu", "note": "Landmark count: none, 68, or 126"},
+    {"name": "landmarkconfidence", "type": "Toggle", "note": "Output confidence per landmark"},
+    {"name": "meshtransform", "type": "Toggle", "note": "Output transform channels for a fitted face mesh"},
+    {"name": "aspectcorrectuv", "type": "Toggle", "note": "Aspect-correct output UVs for 3D use"}
+  ],
+  "common_gotchas": [
+    "Official docs list this operator as Windows-only.",
+    "It requires an Nvidia RTX 20, 30, 40, or 50 series GPU and Nvidia Maxine AR SDK models.",
+    "The AI model files are not bundled in a way a planner can assume; validate the model folder before relying on output.",
+    "If multiple faces are visible, the CHOP attempts to track the largest detected face.",
+    "Mesh fitting requires a compatible nvf mesh file; older mesh files may not work with current TouchDesigner builds.",
+    "For image-aligned 3D rendering, use an orthographic camera with bottom-left origin and aspect-correct UVs."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2025.30000+ Windows/Nvidia RTX",
+  "last_verified": "2026-06-18"
+}

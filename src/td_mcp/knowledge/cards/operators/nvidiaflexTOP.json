@@ -1,0 +1,54 @@
+{
+  "card_type": "operator",
+  "op_type": "nvidiaflexTOP",
+  "family": "TOP",
+  "display_name": "NVIDIA Flex TOP",
+  "docs_url": "https://docs.derivative.ca/NVIDIA_Flex_TOP",
+  "summary": "Extracts position or velocity textures from an Actor COMP that is part of a valid NVIDIA Flex simulation.",
+  "key_params": [
+    {
+      "name": "comp",
+      "type": "COMP",
+      "note": "Actor COMP to read simulation data from."
+    },
+    {
+      "name": "output",
+      "type": "Menu",
+      "note": "Return position or velocity simulation data."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output-resolution policy."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP pixel format; keep float formats for data textures."
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Common TOP viewer filtering, relevant when inspecting float data."
+    }
+  ],
+  "common_gotchas": [
+    "Official docs mark NVIDIA Flex TOP as Windows-only and NVIDIA-GPU-only.",
+    "The referenced Actor COMP must be controlled by an NVIDIA Flex Solver COMP in a valid Flex simulation.",
+    "Output data is stored in TOP color channels, commonly 32-bit float RGBA with XYZ components in RGB.",
+    "Use explicit pixel format expectations downstream when interpreting the texture as simulation data rather than display color."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Simulation_snippets",
+    "NVIDIA_snippets"
+  ],
+  "build_relevance": "gpu_simulation_data",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Reads NVIDIA Flex simulation data from an Actor COMP.",
+    "The Actor COMP must be part of a valid Flex simulation controlled by an NVIDIA Flex Solver COMP.",
+    "Outputs either position or velocity as data textures rather than display color.",
+    "Texture color channels carry simulation components, such as XYZ in RGB for 32-bit float positional data."
+  ]
+}

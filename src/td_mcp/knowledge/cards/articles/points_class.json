@@ -1,0 +1,38 @@
+{
+  "card_type": "article",
+  "article_id": "points_class",
+  "title": "Points Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "SOP",
+    "GEOMETRY"
+  ],
+  "summary": "Official Derivative Python API reference for Points collections, covering the set of point objects owned by one SOP and the special functions used to count, index, and iterate points.",
+  "source_url": "https://docs.derivative.ca/Points_Class",
+  "docsbrain_page_id": "points_class",
+  "covered_operators": [
+    "pointSOP",
+    "scriptSOP",
+    "boxSOP"
+  ],
+  "key_concepts": [
+    "Points Class",
+    "owner",
+    "len(Points)",
+    "[index]",
+    "Iterator",
+    "td.Point",
+    "SOP",
+    "point objects"
+  ],
+  "guidance": [
+    "Use this article when generated Python needs the point collection owned by one SOP, such as op('box1').points.",
+    "Use len(Points) to count points and [index] to retrieve a specific td.Point by integer index.",
+    "Use the iterator protocol to iterate over each point in the SOP point collection.",
+    "Do not use Points Class as a POP point iteration API; use POP Class metadata methods and POP operators for POP geometry.",
+    "Do not invent collection-specific mutating methods for Points; the official page lists no operator specific methods."
+  ],
+  "related_snippets": [],
+  "last_verified": "2026-06-18"
+}

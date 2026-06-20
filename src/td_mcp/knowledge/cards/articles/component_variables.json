@@ -1,0 +1,43 @@
+{
+  "card_type": "article",
+  "article_id": "component_variables",
+  "title": "Component Variables",
+  "family": "COMP",
+  "families": [
+    "COMP",
+    "PYTHON",
+    "DAT",
+    "PARAMETER"
+  ],
+  "summary": "Official Derivative reference for component variables, covering local component scope, hierarchical lookup, Python var() reads, Tscript cvar/rvar behavior, and the internal local/variables and local/set_variables DAT storage pattern.",
+  "source_url": "https://docs.derivative.ca/Component_Variables",
+  "docsbrain_page_id": "component_variables",
+  "covered_operators": [
+    "baseCOMP",
+    "tableDAT"
+  ],
+  "key_concepts": [
+    "Component Variables",
+    "var('VARNAME')",
+    "cvar",
+    "rvar",
+    "hierarchical lookup",
+    "local",
+    "variables",
+    "set_variables",
+    "Base COMP",
+    "Table DAT",
+    "Root variables"
+  ],
+  "guidance": [
+    "Use this article when a legacy network or Tscript-era component depends on component variables rather than Python extensions or custom parameters.",
+    "Prefer Extensions or custom parameters for new Python-heavy components because official docs call extension properties more flexible in Python.",
+    "Use var('VARNAME') to fetch a component variable in Python expressions.",
+    "Remember variable lookup climbs parent components until the variable is found or the root is reached.",
+    "Treat local/variables and local/set_variables as implementation details unless maintaining a network that already uses them."
+  ],
+  "related_snippets": [
+    "DAT_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

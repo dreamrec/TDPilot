@@ -1,0 +1,95 @@
+{
+  "card_type": "operator",
+  "op_type": "kinectTOP",
+  "family": "TOP",
+  "display_name": "Kinect TOP",
+  "docs_url": "https://docs.derivative.ca/Kinect_TOP",
+  "summary": "Captures Windows Kinect color, depth, infrared, player-index, and point-cloud images from Kinect for Windows hardware.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Capture data from the Kinect sensor"
+    },
+    {
+      "name": "hwversion",
+      "type": "Menu",
+      "note": "Hardware version: version1 or version2"
+    },
+    {
+      "name": "sensor",
+      "type": "Int",
+      "note": "Kinect sensor index for Kinect v1"
+    },
+    {
+      "name": "image",
+      "type": "Menu",
+      "note": "Image stream: color, depth, rawdepth, infrared, playerindex, or colorpointcloud"
+    },
+    {
+      "name": "camerares",
+      "type": "Menu",
+      "note": "Kinect v1 camera resolution"
+    },
+    {
+      "name": "skeleton",
+      "type": "Menu",
+      "note": "Kinect v1 skeleton mode: full or seated"
+    },
+    {
+      "name": "neardepthmode",
+      "type": "Toggle",
+      "note": "Enable Kinect v1 near depth mode"
+    },
+    {
+      "name": "mirrorimage",
+      "type": "Toggle",
+      "note": "Mirror image in Y"
+    },
+    {
+      "name": "remap",
+      "type": "Toggle",
+      "note": "Remap Kinect 2 depth images to color space"
+    },
+    {
+      "name": "tooclosevalue",
+      "type": "Float",
+      "note": "Depth fallback for too-close pixels"
+    },
+    {
+      "name": "toofarvalue",
+      "type": "Float",
+      "note": "Depth fallback for too-far pixels"
+    },
+    {
+      "name": "unknownvalue",
+      "type": "Float",
+      "note": "Depth fallback for unknown pixels"
+    },
+    {
+      "name": "unknownpointvalue",
+      "type": "Menu",
+      "note": "Point-cloud fallback: onehundred or neginfinite"
+    }
+  ],
+  "common_gotchas": [
+    "Install the matching Kinect SDK/runtime before expecting data.",
+    "Many settings are v1-only or v2-only; do not assume every parameter applies to both devices.",
+    "Player-index values are approximate 8-bit increments, not exact decimal IDs.",
+    "Color point cloud requires float/point-cloud-aware downstream handling."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Kinect_snippets"
+  ],
+  "build_relevance": "depth_camera_input",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Kinect TOP is supported only on Microsoft Windows.",
+    "It supports Kinect for Windows hardware and Kinect 2, not Kinect for Xbox hardware.",
+    "Image modes include color, depth, raw depth, infrared, player index, and Kinect 2 color point cloud.",
+    "Kinect 2 color point cloud outputs 32-bit float RGB textures where RGB stores XYZ meters.",
+    "Kinect 1 and Kinect 2 have different parameter availability and runtime requirements.",
+    "Kinect 2 remap can align depth-related images into color camera space."
+  ]
+}

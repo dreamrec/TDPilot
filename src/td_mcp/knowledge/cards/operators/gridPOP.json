@@ -1,0 +1,51 @@
+{
+  "card_type": "operator",
+  "op_type": "gridPOP",
+  "family": "POP",
+  "display_name": "Grid POP",
+  "docs_url": "https://docs.derivative.ca/Grid_POP",
+  "summary": "Creates rows and columns of POP points in a plane, with optional slices for a 3D grid. Connectivity can emit triangles, quads, lines, line strips, point primitives, or points only, and the generator can output dimension metadata, normals, and texture coordinates.",
+  "key_params": [
+    {"name": "surftype", "type": "Menu", "note": "Connectivity primitive type: none, points, lines, line strips, triangles, alternating triangles, or quads"},
+    {"name": "modifybounds", "type": "Toggle", "note": "Use connected input POP bounds as the starting grid bounds"},
+    {"name": "cols", "type": "Int", "note": "Number of columns in X"},
+    {"name": "rows", "type": "Int", "note": "Number of rows in Y"},
+    {"name": "slices", "type": "Int", "note": "Number of slices in Z"},
+    {"name": "uniquepoints", "type": "Toggle", "note": "Create unique points per primitive vertex, losing original grid dimensions"},
+    {"name": "size", "type": "Float3", "note": "3D size of the generated grid"},
+    {"name": "seed", "type": "Float", "note": "Randomization seed for point placement"},
+    {"name": "random", "type": "Float3", "note": "Randomizes point position within cells"},
+    {"name": "randomsizefit", "type": "Float3", "note": "Scale randomized grid bounds relative to the unrandomized grid"},
+    {"name": "line", "type": "Toggle3", "note": "Enable line or line-strip output along X, Y, and Z axes"},
+    {"name": "plane", "type": "Toggle3", "note": "Enable triangle or quad planes in XY, YZ, and ZX orientations"},
+    {"name": "anchoru", "type": "Menu", "note": "Anchor left, middle, or right side at X=0"},
+    {"name": "anchorv", "type": "Menu", "note": "Anchor bottom, middle, or top side at Y=0"},
+    {"name": "anchorw", "type": "Menu", "note": "Anchor back, middle, or front side at Z=0"},
+    {"name": "t", "type": "Float3", "note": "Post-translate generated points"},
+    {"name": "r", "type": "Float3", "note": "Post-rotate generated points in degrees"},
+    {"name": "scale", "type": "Float", "note": "Uniform post-scale for generated points"},
+    {"name": "normal", "type": "Menu", "note": "Choose whether to create point, vertex, or primitive normals"},
+    {"name": "texture", "type": "Menu", "note": "Choose whether to create point or vertex Tex coordinates"},
+    {"name": "dimension", "type": "Menu", "note": "Control when row/column/slice dimension metadata is appended"}
+  ],
+  "key_concepts": [
+    "rows and columns",
+    "3D grid slices",
+    "Connectivity menu",
+    "Line X/Y/Z",
+    "Plane XY/YZ/ZX",
+    "randomized cells",
+    "Append Dimension",
+    "_Dim metadata",
+    "Unique Points dimension loss",
+    "Modify Bounds"
+  ],
+  "common_gotchas": [
+    "Use Append Dimension intentionally; downstream POP and GLSL logic can read dimension metadata like _Dim[].",
+    "Unique Points makes each primitive vertex use a unique point, but the original grid dimension is lost.",
+    "Randomize set to 1 gives one randomized point per cell, which is useful for stable point distributions."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

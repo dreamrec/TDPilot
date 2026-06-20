@@ -1,0 +1,78 @@
+{
+  "card_type": "operator",
+  "op_type": "projectionTOP",
+  "family": "TOP",
+  "display_name": "Projection TOP",
+  "docs_url": "https://docs.derivative.ca/Projection_TOP",
+  "summary": "Converts cube map, equirectangular, fish-eye, or dual-paraboloid imagery between projection formats for dome, spherical, and cube-map workflows.",
+  "key_params": [
+    {
+      "name": "input",
+      "type": "Menu",
+      "note": "Input projection format."
+    },
+    {
+      "name": "output",
+      "type": "Menu",
+      "note": "Output projection format."
+    },
+    {
+      "name": "fov",
+      "type": "Float",
+      "note": "Fish-eye field-of-view angle."
+    },
+    {
+      "name": "r",
+      "type": "XYZ",
+      "note": "Projection rotation."
+    },
+    {
+      "name": "rx",
+      "type": "Float",
+      "note": "Projection X rotation."
+    },
+    {
+      "name": "ry",
+      "type": "Float",
+      "note": "Projection Y rotation."
+    },
+    {
+      "name": "rz",
+      "type": "Float",
+      "note": "Projection Z rotation."
+    },
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Output resolution policy."
+    },
+    {
+      "name": "resolution",
+      "type": "XY",
+      "note": "Custom output width and height."
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Common TOP output aspect-ratio policy."
+    }
+  ],
+  "common_gotchas": [
+    "Equirectangular output should normally use a 2:1 aspect ratio.",
+    "Fish-eye output is normally square, with image data inside the circle and corners black.",
+    "For better antialiasing, render or convert at a larger resolution and downsample with high-quality resize.",
+    "Official docs list multiple input menu items while also warning that cube map is the only input option in some wording."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "Render_snippets"
+  ],
+  "build_relevance": "projection_conversion",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Converts between cube map, equirectangular, fish-eye, and dual-paraboloid projections.",
+    "Equirectangular output maps longitude/latitude across a 2:1 image.",
+    "Fish-eye output is normally square with valid image data inside a circle and black corners.",
+    "Projection output samples once per output pixel; high-quality antialiasing comes from oversize conversion and downsampling."
+  ]
+}

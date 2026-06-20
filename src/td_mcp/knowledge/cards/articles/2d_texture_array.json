@@ -1,0 +1,45 @@
+{
+  "card_type": "article",
+  "article_id": "2d_texture_array",
+  "title": "2D Texture Array",
+  "family": "TOP",
+  "families": [
+    "TOP",
+    "GLSL",
+    "MAT",
+    "GPU"
+  ],
+  "summary": "Official Derivative texturing page contrasting 2D Texture Arrays with 3D Textures, including Texture 3D TOP and GLSL TOP creation paths, non-normalized W slice indexing, no between-slice blending, per-slice mipmaps, and GLSL sampler2DArray usage.",
+  "source_url": "https://docs.derivative.ca/2D_Texture_Array",
+  "docsbrain_page_id": "2d_texture_array",
+  "covered_operators": [
+    "texture3dTOP",
+    "glslTOP",
+    "glslMAT"
+  ],
+  "key_concepts": [
+    "2D Texture Array",
+    "3D Texture",
+    "Texture 3D TOP",
+    "GLSL TOP",
+    "non-normalized w coordinate",
+    "no blending between slices",
+    "mipmapped",
+    "GL_EXT_texture_array",
+    "sampler2DArray",
+    "texture2DArray()",
+    "last slice"
+  ],
+  "guidance": [
+    "Use this article when a plan needs discrete texture slices rather than a normalized, blended 3D texture volume.",
+    "Sample a 2D Texture Array with non-normalized W slice coordinates: 0 for the first slice, 1 for the second slice, and so on.",
+    "Do not expect between-slice blending from the sampler; blend slices manually in GLSL if fractional selection is needed.",
+    "Enable GL_EXT_texture_array and use sampler2DArray plus texture2DArray(samplerName, vec3) for GLSL array sampling.",
+    "Choose 2D Texture Arrays over 3D Textures when per-slice mipmapping matters."
+  ],
+  "related_snippets": [
+    "GLSL_snippets",
+    "TOP_snippets"
+  ],
+  "last_verified": "2026-06-18"
+}

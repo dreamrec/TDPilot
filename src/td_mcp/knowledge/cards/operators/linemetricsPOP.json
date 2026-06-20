@@ -1,0 +1,44 @@
+{
+  "card_type": "operator",
+  "op_type": "linemetricsPOP",
+  "family": "POP",
+  "display_name": "Line Metrics POP",
+  "docs_url": "https://docs.derivative.ca/Line_Metrics_POP",
+  "summary": "Adds useful point or vertex attributes for line-strip context, including displacement, distance, direction to next or previous vertices, tangent, curvature, angle per distance, and line-strip identity.",
+  "key_params": [
+    {"name": "attrclass", "type": "Menu", "note": "Create metrics on point or vertex attributes"},
+    {"name": "dispnext", "type": "Toggle", "note": "Output displacement to the next line vertex"},
+    {"name": "dispprev", "type": "Toggle", "note": "Output displacement to the previous line vertex"},
+    {"name": "distnext", "type": "Toggle", "note": "Output distance to the next line vertex"},
+    {"name": "distprev", "type": "Toggle", "note": "Output distance to the previous line vertex"},
+    {"name": "dirnext", "type": "Toggle", "note": "Output direction to the next line vertex"},
+    {"name": "dirprev", "type": "Toggle", "note": "Output direction to the previous line vertex"},
+    {"name": "tangent", "type": "Toggle", "note": "Output tangent attribute"},
+    {"name": "curvature", "type": "Toggle", "note": "Output curvature attribute"},
+    {"name": "angleperdist", "type": "Toggle", "note": "Output angular change per unit distance"},
+    {"name": "continuousdir", "type": "Toggle", "note": "Stabilizes direction vectors across coincident points"},
+    {"name": "maxneighbors", "type": "Int", "note": "Neighbor search limit used when resolving continuous directions"},
+    {"name": "diststart", "type": "Toggle", "note": "Output cumulative distance from the start of each line strip"},
+    {"name": "distend", "type": "Toggle", "note": "Output cumulative distance to the end of each line strip"},
+    {"name": "diststartnorm", "type": "Toggle", "note": "Output normalized distance from the start of each line strip"},
+    {"name": "distendnorm", "type": "Toggle", "note": "Output normalized distance to the end of each line strip"},
+    {"name": "primlen", "type": "Toggle", "note": "Output total line-strip length"},
+    {"name": "pointindex", "type": "Toggle", "note": "Output source point index along the line strip"},
+    {"name": "numverts", "type": "Toggle", "note": "Output number of vertices in the line strip"},
+    {"name": "linestripindex", "type": "Toggle", "note": "Output integer line-strip index"},
+    {"name": "lsindexnorm", "type": "Toggle", "note": "Output normalized line-strip index"}
+  ],
+  "key_concepts": [
+    "Line Metrics converts line-strip topology into attributes such as displacement, distance, direction, tangent, curvature, and angle-per-distance.",
+    "Start/end distance and normalized distance attributes are useful lookup coordinates for gradients, widths, effects, and resampling workflows.",
+    "Continuous Direction and neighbor controls help keep direction-style attributes stable when line strips contain coincident points."
+  ],
+  "common_gotchas": [
+    "Use Continuous Direction when duplicate or coincident points would otherwise produce unstable direction vectors.",
+    "Metrics depend on line-strip topology; run Line Break or Primitive first if the input is only loose points.",
+    "Distance and tangent attributes are excellent inputs for Lookup, Math Mix, and Line Smooth stages."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

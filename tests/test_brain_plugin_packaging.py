@@ -71,6 +71,32 @@ def test_plugin_surface_audit_proves_codex_claude_and_package_mirrors():
     assert report["hooks"]["has_stop_release_guard"] is True
 
 
+def test_codex_claude_plugin_surfaces_advertise_reviewed_operator_atlas():
+    claude_manifest = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    codex_manifest = json.loads(
+        (ROOT / "plugins" / "tdpilot" / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")
+    )
+    codex_interface = codex_manifest["interface"]
+    readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
+    plugin_readme_text = (ROOT / "plugin_README.md").read_text(encoding="utf-8")
+
+    advertised_surfaces = "\n".join(
+        [
+            claude_manifest["description"],
+            codex_manifest["description"],
+            codex_interface["longDescription"],
+            "\n".join(codex_interface["defaultPrompt"]),
+            readme_text,
+            plugin_readme_text,
+        ]
+    )
+
+    assert "656-card reviewed operator atlas" in advertised_surfaces
+    assert "zero-concept backlog" in advertised_surfaces
+    assert "concept-to-node" in advertised_surfaces
+    assert "Official Derivative" in advertised_surfaces
+
+
 def test_audit_plugin_surface_cli_outputs_json_report():
     proc = subprocess.run(
         [sys.executable, "scripts/audit_plugin_surface.py", "--root", str(ROOT)],

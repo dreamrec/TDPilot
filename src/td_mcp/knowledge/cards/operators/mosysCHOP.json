@@ -1,0 +1,41 @@
+{
+  "card_type": "operator",
+  "op_type": "mosysCHOP",
+  "family": "CHOP",
+  "display_name": "MoSys CHOP",
+  "docs_url": "https://docs.derivative.ca/MoSys_CHOP",
+  "summary": "Receives MoSys camera-tracking packets over UDP or multicast UDP for virtual camera control and lens-distortion workflows.",
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Receive MoSys packets while on"},
+    {"name": "protocol", "type": "Menu", "note": "Messaging UDP or multicast messaging UDP"},
+    {"name": "netaddress", "type": "String", "note": "Multicast address to listen on"},
+    {"name": "port", "type": "Integer", "note": "Network port for incoming MoSys packets"},
+    {"name": "localaddress", "type": "String", "note": "Local NIC/IP address to receive on"},
+    {"name": "cameraid", "type": "Integer/String", "note": "Filter packets by camera ID; blank accepts the latest packet per frame"},
+    {"name": "screenwidth", "type": "Float", "note": "Camera image width in pixels for focal-distance to FOV conversion"},
+    {"name": "timeslice", "type": "Toggle", "note": "Common CHOP time-slice output"},
+    {"name": "scope", "type": "String", "note": "Common CHOP scope pattern"},
+    {"name": "srselect", "type": "Menu", "note": "Sample-rate match policy"},
+    {"name": "exportmethod", "type": "Menu", "note": "Common CHOP export method"},
+    {"name": "autoexportroot", "type": "COMP", "note": "Root path for automatic channel-name exports"},
+    {"name": "exporttable", "type": "DAT", "note": "DAT table used by DAT table export methods"}
+  ],
+  "key_concepts": [
+    "MoSys CHOP is available only in TouchDesigner Pro.",
+    "It receives data from a MoSys camera-tracking system.",
+    "The output channels are intended to control a virtual camera.",
+    "MoSys TOP can be paired with the CHOP for lens distortion and compositing in virtual production.",
+    "Network input is UDP messaging or multicast UDP messaging.",
+    "Camera ID filters packets when multiple cameras send data to the same machine."
+  ],
+  "common_gotchas": [
+    "TouchDesigner Pro is required.",
+    "When Active is off, data sent to the network port is lost rather than buffered.",
+    "On multi-NIC systems, set Local Address so packets arrive on the intended interface.",
+    "A blank Camera ID displays the most recent packet each frame regardless of source camera.",
+    "Screen Width affects focal-distance to FOV conversion, so it should match the camera image width."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2023.11280+ MoSys virtual production tracking",
+  "last_verified": "2026-06-18"
+}

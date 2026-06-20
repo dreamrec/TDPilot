@@ -1,0 +1,103 @@
+{
+  "card_type": "operator",
+  "op_type": "circleSOP",
+  "family": "SOP",
+  "display_name": "Circle SOP",
+  "docs_url": "https://docs.derivative.ca/Circle_SOP",
+  "summary": "Creates open or closed arcs, circles, and ellipses as primitive, polygon, NURBS, or Bezier curve geometry.",
+  "key_params": [
+    {
+      "name": "type",
+      "type": "Menu",
+      "note": "Primitive type: Primitive, Polygon, NURBS Curve, or Bezier Curve"
+    },
+    {
+      "name": "orient",
+      "type": "Menu",
+      "note": "Circle plane: XY, YZ, or ZX"
+    },
+    {
+      "name": "modifybounds",
+      "type": "Toggle",
+      "note": "Modify input-derived bounds when an input is connected"
+    },
+    {
+      "name": "rad",
+      "type": "XY",
+      "note": "Radius in X and Y"
+    },
+    {
+      "name": "t",
+      "type": "XYZ",
+      "note": "Circle center"
+    },
+    {
+      "name": "reverseanchors",
+      "type": "Toggle",
+      "note": "Reverse anchor behavior"
+    },
+    {
+      "name": "anchoru",
+      "type": "Float",
+      "note": "Horizontal anchor"
+    },
+    {
+      "name": "anchorv",
+      "type": "Float",
+      "note": "Vertical anchor"
+    },
+    {
+      "name": "order",
+      "type": "Int",
+      "note": "Spline order for NURBS or Bezier curves"
+    },
+    {
+      "name": "divs",
+      "type": "Int",
+      "note": "Number of divisions"
+    },
+    {
+      "name": "arc",
+      "type": "Menu",
+      "note": "Closed, open arc, closed arc, or sliced arc mode"
+    },
+    {
+      "name": "angle",
+      "type": "Pair",
+      "note": "Begin and end arc angles"
+    },
+    {
+      "name": "imperfect",
+      "type": "Toggle",
+      "note": "Use imperfect non-rational NURBS/Bezier circle approximation"
+    },
+    {
+      "name": "texture",
+      "type": "Menu",
+      "note": "Texture coordinate generation mode"
+    },
+    {
+      "name": "normals",
+      "type": "Toggle",
+      "note": "Compute normals"
+    }
+  ],
+  "common_gotchas": [
+    "Primitive type is not recommended for instancing; use polygon or curve types when instance compatibility matters.",
+    "Unequal X/Y radii on non-rational NURBS circles can produce unexpected isoparms when skinned.",
+    "For skinning two circles, start from the same circle and transform one copy to keep compatible knot structure.",
+    "Arc angle can exceed 360 degrees and open/closed arc modes produce different point counts.",
+    "ZX orientation normals changed in build 2021.10000 to point along positive Y."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Circle SOP creates open or closed arcs, circles, and ellipses as primitive, polygon, NURBS, or Bezier geometry.",
+    "Primitive type controls which options are meaningful and whether the output suits instancing or downstream spline work.",
+    "Orientation selects the construction plane, while radius, translation, anchor, and arc controls shape the result.",
+    "Imperfect non-rational curves can avoid certain NURBS ellipse skinning artifacts but are approximations."
+  ]
+}

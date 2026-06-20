@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "particlePOP",
+  "family": "POP",
+  "display_name": "Particle POP",
+  "docs_url": "https://docs.derivative.ca/Particle_POP",
+  "summary": "Creates and controls GPU particle simulations. Particles are POP points with attributes such as P, PartVel, PartMass, PartLifeSpan, PartDrag, and PartForce, usually maintained through a feedback-style POP loop.",
+  "key_params": [
+    {"name": "targetpop", "type": "POP", "note": "Downstream feedback-loop POP that supplies previous-frame state"},
+    {"name": "initializepulse", "type": "Pulse", "note": "Initialize the simulation state before starting"},
+    {"name": "startpulse", "type": "Pulse", "note": "Start an initialized particle simulation"},
+    {"name": "birthrate", "type": "Float", "note": "Particle emission rate"},
+    {"name": "life", "type": "Float", "note": "Particle life expectancy when available"}
+  ],
+  "key_concepts": [
+    "feedback-style particle simulation",
+    "Initialize and Start lifecycle",
+    "Pre-Roll before simulation start",
+    "particle attributes PartId, P, PartVel, PartAge, and PartLifeSpan",
+    "PartForce, PartMass, PartDrag, and PartDeath attributes",
+    "Time Integration from force to velocity to position",
+    "input point attribute transfer and renaming"
+  ],
+  "common_gotchas": [
+    "A real Particle POP system needs a valid target feedback-loop POP; a lone Particle POP is not a complete simulation.",
+    "Force and motion often flow through PartForce and PartVel attributes, so inspect those attributes when debugging.",
+    "Use Initialize/Start discipline and Info channels rather than assuming the first frame is ready."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

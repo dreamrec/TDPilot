@@ -1,0 +1,76 @@
+{
+  "card_type": "operator",
+  "op_type": "clipSOP",
+  "family": "SOP",
+  "display_name": "Clip SOP",
+  "docs_url": "https://docs.derivative.ca/Clip_SOP",
+  "summary": "Cuts and creases source geometry with a clipping plane, keeping primitives above, below, or on both sides of the plane.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Optional input group to clip."
+    },
+    {
+      "name": "clipop",
+      "type": "Menu",
+      "note": "Keep primitives above, below, or on both sides of the clipping plane."
+    },
+    {
+      "name": "dist",
+      "type": "Float",
+      "note": "Offset the clipping plane along the direction vector."
+    },
+    {
+      "name": "dir",
+      "type": "XYZ",
+      "note": "Normal vector defining the clipping plane orientation."
+    },
+    {
+      "name": "dirx",
+      "type": "Float",
+      "note": "X component of the plane normal."
+    },
+    {
+      "name": "diry",
+      "type": "Float",
+      "note": "Y component of the plane normal."
+    },
+    {
+      "name": "dirz",
+      "type": "Float",
+      "note": "Z component of the plane normal."
+    },
+    {
+      "name": "newg",
+      "type": "Toggle",
+      "note": "Create named groups for geometry above and below the plane when all primitives are kept."
+    },
+    {
+      "name": "above",
+      "type": "String",
+      "note": "Group name assigned through Create Groups for one side of the clipping plane."
+    },
+    {
+      "name": "below",
+      "type": "String",
+      "note": "Group name assigned through Create Groups for the other side of the clipping plane."
+    }
+  ],
+  "common_gotchas": [
+    "Create Groups is only available when `clipop` is All Primitives / `both`.",
+    "The official `above` and `below` ids are both menu values and group-name parameter ids, so guard context matters.",
+    "Clip is a plane cut, not a solid Boolean; use Boolean SOP for closed-volume set operations."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Clip SOP is a plane-based cut and crease operation, not a closed-volume Boolean operation.",
+    "The `clipop` menu chooses whether to retain primitives above the plane, below the plane, or all generated primitives on both sides.",
+    "`dist` offsets the clipping plane along the `dir` normal vector, so diagonal or non-normalized directions change the cut orientation.",
+    "`newg` enables separate above/below output group names and is only available when `clipop` keeps all primitives."
+  ]
+}

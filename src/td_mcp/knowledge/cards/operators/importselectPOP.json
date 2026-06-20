@@ -1,0 +1,52 @@
+{
+  "card_type": "operator",
+  "op_type": "importselectPOP",
+  "family": "POP",
+  "display_name": "Import Select POP",
+  "docs_url": "https://docs.derivative.ca/Import_Select_POP",
+  "summary": "Selects and loads geometry primitives from USD COMP or FBX COMP imports directly into POP GPU memory. Unsupported geometry types are converted into POP triangles, quads, line strips, or point primitives, with optional playback controls.",
+  "key_params": [
+    {"name": "parent", "type": "COMP", "note": "USD/FBX import parent to search"},
+    {"name": "geometry", "type": "Str", "note": "Geometry path in the imported file"},
+    {"name": "reload", "type": "Pulse", "note": "Re-import and reload geometry"},
+    {"name": "blendshape", "type": "Str", "note": "Blend shape name to load"},
+    {"name": "comptang", "type": "Toggle", "note": "Compute tangents"},
+    {"name": "useparentanim", "type": "Toggle", "note": "Use parent import animation controls"},
+    {"name": "shiftanimationstart", "type": "Toggle", "note": "Shift imported animation to its start time"},
+    {"name": "sampleratemode", "type": "Menu", "note": "Use file FPS or custom sample rate"},
+    {"name": "samplerate", "type": "Float", "note": "Custom animation sample rate"},
+    {"name": "playmode", "type": "Menu", "note": "Animation playback mode"},
+    {"name": "initialize", "type": "Pulse", "note": "Reset animation to initial state"},
+    {"name": "start", "type": "Pulse", "note": "Start animation playback"},
+    {"name": "cue", "type": "Toggle", "note": "Hold animation at cue point when enabled"},
+    {"name": "cuepulse", "type": "Pulse", "note": "Jump to the cue point"},
+    {"name": "cuepoint", "type": "Float", "note": "Cue point index/time/fraction"},
+    {"name": "cuepointunit", "type": "Menu", "note": "Cue point unit"},
+    {"name": "play", "type": "Toggle", "note": "Enable playback"},
+    {"name": "index", "type": "Float", "note": "Specified animation index/time/fraction"},
+    {"name": "indexunit", "type": "Menu", "note": "Index unit: index, frames, seconds, or fraction"},
+    {"name": "speed", "type": "Float", "note": "Playback speed"},
+    {"name": "trim", "type": "Toggle", "note": "Enable trim start and end controls"},
+    {"name": "tstart", "type": "Float", "note": "Trim start time"},
+    {"name": "tstartunit", "type": "Menu", "note": "Trim start unit"},
+    {"name": "tend", "type": "Float", "note": "Trim end time"},
+    {"name": "tendunit", "type": "Menu", "note": "Trim end unit"},
+    {"name": "textendleft", "type": "Menu", "note": "Hold, cycle, or mirror before trim start"},
+    {"name": "textendright", "type": "Menu", "note": "Hold, cycle, or mirror after trim end"}
+  ],
+  "key_concepts": [
+    "Import Select POP loads geometry primitives from USD COMP or FBX COMP imports directly into POP GPU memory.",
+    "The parent COMP and geometry path define the import source; when no parent is specified, TouchDesigner searches for an import parent in the path.",
+    "Unsupported source geometry types are converted into POP-compatible triangles, quads, line strips, and point primitives.",
+    "Merged imported geometry can create an Info DAT next to the POP to preserve original primitive path provenance.",
+    "Playback can use the parent import animation or the POP's own playback controls, including sample-rate mode, specified index, cueing, trimming, and extension behavior."
+  ],
+  "common_gotchas": [
+    "Import Select POP depends on a valid USD or FBX parent COMP; without one it cannot locate geometry paths.",
+    "Merged geometry can create an Info DAT with original primitive paths; preserve that when path provenance matters.",
+    "Geometry is loaded directly to GPU memory, so large assets need memory-aware planning before downstream duplication."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

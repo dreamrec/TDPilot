@@ -1,0 +1,38 @@
+{
+  "card_type": "article",
+  "article_id": "selectcomp_class",
+  "title": "selectCOMP Class",
+  "family": "PYTHON",
+  "families": [
+    "PYTHON",
+    "COMP",
+    "PANEL"
+  ],
+  "summary": "Official Derivative Python API reference for Select COMP instances, documenting that the class has no operator-specific Python members or methods and relies on inherited PanelCOMP / COMP behavior.",
+  "source_url": "https://docs.derivative.ca/SelectCOMP_Class",
+  "docsbrain_page_id": "selectcomp_class",
+  "covered_operators": [
+    "selectCOMP"
+  ],
+  "key_concepts": [
+    "selectCOMP Class",
+    "Select COMP",
+    "COMP class",
+    "PanelCOMP Class",
+    "No operator specific members",
+    "No operator specific methods",
+    "inherited PanelCOMP",
+    "panel",
+    "PanelValue Class",
+    "Panel Values"
+  ],
+  "guidance": [
+    "Use this article to avoid inventing Select COMP Python members or methods when the official class page does not document operator-specific API.",
+    "For Select COMP panel values, hierarchy, focus, mouse/touch simulation, or component utilities, use inherited PanelCOMP and COMP behavior.",
+    "Do not treat inherited PanelCOMP members such as panel or panelParent() as selectCOMP-specific methods."
+  ],
+  "related_snippets": [
+    "panel_ui"
+  ],
+  "last_verified": "2026-06-18"
+}

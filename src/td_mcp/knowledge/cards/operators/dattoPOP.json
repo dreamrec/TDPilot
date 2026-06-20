@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "dattoPOP",
+  "family": "POP",
+  "display_name": "DAT to POP",
+  "docs_url": "https://docs.derivative.ca/DAT_to_POP",
+  "summary": "Converts a DAT table into a POP point list, using column headers as POP attribute names and one row per POP point. Vector components use column names such as P(0), P(1), and P(2).",
+  "key_params": [
+    {"name": "pointsdat", "type": "DAT", "note": "DAT table containing point attributes"},
+    {"name": "attr", "type": "Sequential", "note": "Attribute creation blocks"},
+    {"name": "attr0columnstype", "type": "Menu", "note": "Select DAT columns by name or number"},
+    {"name": "attr0columns", "type": "String", "note": "Column pattern to convert"},
+    {"name": "attr0outputscope", "type": "String/Menu", "note": "Output attribute or components"},
+    {"name": "attr0type", "type": "Menu", "note": "Attribute numeric type"},
+    {"name": "attr0numcomps", "type": "Int", "note": "Number of attribute components"}
+  ],
+  "key_concepts": [
+    "DAT table rows become POP points",
+    "column headers as POP attribute component names",
+    "POP to DAT-compatible table structure",
+    "P(0), P(1), P(2), Color(3), and array component headers",
+    "sequential attribute creation blocks",
+    "question-mark component gathering such as P(?)",
+    "point-list conversion without primitive or vertex topology"
+  ],
+  "common_gotchas": [
+    "The DAT must be structured like POP to DAT output, though the index column is optional for DAT to POP.",
+    "Use ? in P(?) to gather P(0), P(1), and P(2) into one float3 P attribute.",
+    "Current DAT to POP support converts point lists; primitives and vertices are not yet represented."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-17"
+}

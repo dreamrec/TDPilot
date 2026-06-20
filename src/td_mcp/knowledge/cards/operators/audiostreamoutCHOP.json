@@ -1,0 +1,34 @@
+{
+  "card_type": "operator",
+  "op_type": "audiostreamoutCHOP",
+  "family": "CHOP",
+  "display_name": "Audio Stream Out CHOP",
+  "docs_url": "https://docs.derivative.ca/Audio_Stream_Out_CHOP",
+  "summary": "Publishes CHOP audio as a network stream using RTSP or WebRTC modes, with port, stream-name, and WebRTC track controls.",
+  "key_concepts": [
+    "Audio Stream Out CHOP streams CHOP audio out to RTSP clients or a WebRTC peer.",
+    "RTSP receivers need a URL composed from the sender IP address, Port, and Stream Name.",
+    "Mode selects whether the output is RTSP or WebRTC.",
+    "WebRTC output uses a WebRTC DAT, WebRTC Connection, and WebRTC Track to identify the peer-to-peer route.",
+    "The operator should be activated only after the input audio and network receiver details are stable."
+  ],
+  "key_params": [
+    {"name": "active", "type": "Toggle", "note": "Enable stream output"},
+    {"name": "mode", "type": "Menu", "note": "RTSP or WebRTC output mode"},
+    {"name": "port", "type": "Int", "note": "RTSP/network output port"},
+    {"name": "streamname", "type": "String", "note": "Stream name used by receivers"},
+    {"name": "webrtc", "type": "DAT", "note": "WebRTC DAT when publishing via WebRTC"},
+    {"name": "webrtcconnection", "type": "String", "note": "WebRTC connection identifier"},
+    {"name": "peer", "type": "String", "note": "WebRTC peer"},
+    {"name": "webrtctrack", "type": "String", "note": "WebRTC track name"}
+  ],
+  "common_gotchas": [
+    "RTSP receivers need the matching IP address, port, and stream name.",
+    "Only enable Active once the intended input audio and routing are stable.",
+    "WebRTC publishing requires coordinated connection, peer, and track names with the receiver.",
+    "Network streaming introduces latency and firewall/port considerations distinct from local Audio Device Out."
+  ],
+  "related_snippets": ["CHOP_snippets"],
+  "build_relevance": "2021.10000+",
+  "last_verified": "2026-06-18"
+}

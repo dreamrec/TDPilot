@@ -1,0 +1,91 @@
+{
+  "card_type": "operator",
+  "op_type": "facetSOP",
+  "family": "SOP",
+  "display_name": "Facet SOP",
+  "docs_url": "https://docs.derivative.ca/Facet_SOP",
+  "summary": "Controls polygon faceting, point consolidation, unique points, cusp edges, surface normal generation, inline-point cleanup, and polygon orientation.",
+  "key_params": [
+    {
+      "name": "group",
+      "type": "String",
+      "note": "Polygon group to process."
+    },
+    {
+      "name": "unit",
+      "type": "Menu",
+      "note": "Distance unit mode for consolidation/removal."
+    },
+    {
+      "name": "prenml",
+      "type": "Toggle",
+      "note": "Compute normals before faceting operations."
+    },
+    {
+      "name": "unique",
+      "type": "Toggle",
+      "note": "Make points unique."
+    },
+    {
+      "name": "cons",
+      "type": "Menu",
+      "note": "Consolidate points and/or normals."
+    },
+    {
+      "name": "dist",
+      "type": "Float",
+      "note": "Consolidation distance."
+    },
+    {
+      "name": "inline",
+      "type": "Toggle",
+      "note": "Remove inline points."
+    },
+    {
+      "name": "inlinedist",
+      "type": "Float",
+      "note": "Inline-point removal tolerance."
+    },
+    {
+      "name": "orientpolys",
+      "type": "Toggle",
+      "note": "Orient polygon winding consistently."
+    },
+    {
+      "name": "cusp",
+      "type": "Toggle",
+      "note": "Enable cusp-angle normal splitting."
+    },
+    {
+      "name": "angle",
+      "type": "Float",
+      "note": "Cusp angle threshold."
+    },
+    {
+      "name": "remove",
+      "type": "Toggle",
+      "note": "Remove degenerate geometry."
+    },
+    {
+      "name": "postnml",
+      "type": "Toggle",
+      "note": "Compute normals after faceting operations."
+    }
+  ],
+  "common_gotchas": [
+    "A `dist` value of 0.0 requires exact coincident positions for consolidation.",
+    "`cons` is a menu-style consolidation mode, not a simple toggle.",
+    "Use `unique` carefully because it hardens all shared edges by separating points."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Facet SOP is a staged polygon cleanup operator for normals, unique points, consolidation, inline point removal, orientation, cusping, and final normal generation.",
+    "`prenml` computes normals before topology edits, while `postnml` computes normals after cleanup.",
+    "`unique` hardens all polygon edges by making points unique, and `cons` can merge positions or normals back together.",
+    "`cusp` splits normals by angle threshold for faceted edges without necessarily changing all topology."
+  ]
+}

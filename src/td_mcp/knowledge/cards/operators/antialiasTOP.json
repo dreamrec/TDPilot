@@ -1,0 +1,70 @@
+{
+  "card_type": "operator",
+  "op_type": "antialiasTOP",
+  "family": "TOP",
+  "display_name": "Anti Alias TOP",
+  "docs_url": "https://docs.derivative.ca/Anti_Alias_TOP",
+  "summary": "Applies SMAA-style screen-space antialiasing by detecting luminance or RGB edges and smoothing those edges in the current frame.",
+  "key_params": [
+    {
+      "name": "quality",
+      "type": "Menu",
+      "note": "Antialias quality preset: low, medium, high, ultra, or custom"
+    },
+    {
+      "name": "edgedetectsource",
+      "type": "Menu",
+      "note": "Detect edges from luminance or RGB"
+    },
+    {
+      "name": "edgethreshold",
+      "type": "Float",
+      "note": "Threshold for detecting edges"
+    },
+    {
+      "name": "maxsearchsteps",
+      "type": "Int",
+      "note": "Maximum horizontal/vertical edge-search distance"
+    },
+    {
+      "name": "maxdiagsearchsteps",
+      "type": "Int",
+      "note": "Maximum diagonal edge-search distance"
+    },
+    {
+      "name": "cornerrounding",
+      "type": "Float",
+      "note": "Corner rounding strength for custom quality"
+    },
+    {
+      "name": "outputedges",
+      "type": "Toggle",
+      "note": "Output detected edges for debugging"
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Common TOP output pixel format"
+    }
+  ],
+  "common_gotchas": [
+    "This is per-frame antialiasing; it does not accumulate temporal samples.",
+    "Too-low edge thresholds can soften texture detail as well as polygon edges.",
+    "High quality and custom long search distances cost more GPU time.",
+    "Use Output Edges to debug missed or excessive smoothing."
+  ],
+  "related_snippets": [
+    "TOP_snippets",
+    "rendering_snippets"
+  ],
+  "build_relevance": "2020.20000+",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Anti Alias TOP applies screen-space antialiasing to an already-rendered image.",
+    "Edge detection is based on luminance or RGB, not temporal history.",
+    "Quality presets trade GPU cost for smoother edges.",
+    "Custom quality exposes search-step and corner-rounding controls for tuning edge reconstruction.",
+    "Output Edges is the diagnostic view for checking what the node is smoothing.",
+    "It uses less memory than rendering the source with regular Render TOP antialiasing."
+  ]
+}

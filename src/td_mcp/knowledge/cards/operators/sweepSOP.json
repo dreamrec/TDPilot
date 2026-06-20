@@ -1,0 +1,114 @@
+{
+  "card_type": "operator",
+  "op_type": "sweepSOP",
+  "family": "SOP",
+  "display_name": "Sweep SOP",
+  "docs_url": "https://docs.derivative.ca/Sweep_SOP",
+  "summary": "Sweeps cross-section primitives along backbone curves to build path-following ribbons, tubes, ropes, rails, and skinned surfaces.",
+  "key_params": [
+    {
+      "name": "xgrp",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    },
+    {
+      "name": "pathgrp",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    },
+    {
+      "name": "refgrp",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    },
+    {
+      "name": "cycle",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    },
+    {
+      "name": "angle",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    },
+    {
+      "name": "noflip",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    },
+    {
+      "name": "skipcoin",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    },
+    {
+      "name": "aimatref",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    },
+    {
+      "name": "usevtx",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    },
+    {
+      "name": "vertex",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    },
+    {
+      "name": "scale",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    },
+    {
+      "name": "twist",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    },
+    {
+      "name": "roll",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    },
+    {
+      "name": "newg",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    },
+    {
+      "name": "sweepgrp",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    },
+    {
+      "name": "skin",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    },
+    {
+      "name": "fast",
+      "type": "Parameter",
+      "note": "Sweep SOP official parameter"
+    }
+  ],
+  "common_gotchas": [
+    "Reference aiming requires the third input point count to exactly match the backbone point count.",
+    "fast needs consistent topology and equal cross-section vertex counts.",
+    "skipcoin can silently ignore coincident path points.",
+    "scale, twist, and roll may come from point attributes with those names.",
+    "Pre-skinned point replacement can outperform recomputing Sweep/Skin every frame."
+  ],
+  "related_snippets": [
+    "SOP_snippets"
+  ],
+  "build_relevance": "cross-section-sweep-geometry",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Sweep SOP sweeps one or more cross-section primitives along one or more backbone primitives.",
+    "Backbones must have at least two points, and XY-plane cross-sections are normally easiest to orient.",
+    "Point color and texture coordinates on the backbone are preserved.",
+    "Reference-point aiming requires third-input reference points to match the backbone point count exactly.",
+    "Skin output and Fast Sweep are topology-sensitive performance choices."
+  ]
+}

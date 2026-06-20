@@ -1,0 +1,53 @@
+{
+  "card_type": "operator",
+  "op_type": "forceradialPOP",
+  "family": "POP",
+  "display_name": "Force Radial POP",
+  "docs_url": "https://docs.derivative.ca/Force_Radial_POP",
+  "summary": "Generates or adds a float3 PartForce attribute for Particle POP feedback loops. It combines global force, wind, and local radial, axial, spiral, or planar forces, and can read a specification POP to define many forces from point attributes.",
+  "key_params": [
+    {"name": "specpop", "type": "POP", "note": "Optional POP where each point defines a local force with attributes matching parameter names"},
+    {"name": "pos", "type": "Float3", "note": "Force center position"},
+    {"name": "direction", "type": "Float3", "note": "Base local force direction"},
+    {"name": "radial", "type": "Toggle", "note": "Enables radial force contribution"},
+    {"name": "radialstrength", "type": "Float", "note": "Strength of the radial force"},
+    {"name": "axial", "type": "Toggle", "note": "Enable force along the direction axis"},
+    {"name": "axialr", "type": "Float3", "note": "Axis rotation for the axial force"},
+    {"name": "axialstrength", "type": "Float", "note": "Strength along the force axis"},
+    {"name": "spiral", "type": "Toggle", "note": "Enable spiral force around the direction axis"},
+    {"name": "spiralr", "type": "Float3", "note": "Axis rotation for the spiral force"},
+    {"name": "spiralstrength", "type": "Float", "note": "Strength around the force axis"},
+    {"name": "planar", "type": "Toggle", "note": "Enable planar force"},
+    {"name": "planarexponent", "type": "Float", "note": "Planar force distance exponent"},
+    {"name": "planarstrength", "type": "Float", "note": "Planar force strength"},
+    {"name": "falloff", "type": "Menu", "note": "Falloff shape such as S curve, bias power, inverse distance, or none"},
+    {"name": "falloffsteepness", "type": "Float", "note": "S-curve falloff steepness"},
+    {"name": "falloffbias", "type": "Float", "note": "S-curve falloff bias"},
+    {"name": "falloffexponent", "type": "Float", "note": "Inverse-distance falloff exponent"},
+    {"name": "falloffradius", "type": "Float", "note": "Falloff radius"},
+    {"name": "falloffplateau", "type": "Float", "note": "Falloff plateau"},
+    {"name": "fallofflimitrange", "type": "Toggle", "note": "Limit the near range of the falloff"},
+    {"name": "globforce", "type": "Float3", "note": "Global force vector"},
+    {"name": "globforcemult", "type": "Float", "note": "Global force multiplier"},
+    {"name": "windspeed", "type": "Float3", "note": "Global wind speed converted to force"},
+    {"name": "windspeedmult", "type": "Float", "note": "Global wind speed multiplier"},
+    {"name": "map", "type": "Sequential", "note": "Map attributes to force parameters"},
+    {"name": "map0op", "type": "Menu", "note": "Source operator for the first mapping block"},
+    {"name": "map0element", "type": "Str", "note": "Source element for the first mapping block"},
+    {"name": "map0parm", "type": "Menu", "note": "Target parameter for the first mapping block"},
+    {"name": "map0combineop", "type": "Menu", "note": "Combine operation for mapped values"}
+  ],
+  "key_concepts": [
+    "Force Radial POP writes or adds to the `PartForce` attribute used by Particle POP-style feedback simulations.",
+    "A single node can combine local radial, axial, spiral, and planar forces with global force and wind contributions.",
+    "Specification POP points and Map page controls let attributes define many local forces or vary force parameters per point."
+  ],
+  "common_gotchas": [
+    "Force Radial POP is a convenience for PartForce; Noise, Math Mix, Lookup, or GLSL POPs can also author PartForce directly.",
+    "If PartForce already exists, this operator adds to it, so stacked force nodes accumulate.",
+    "For masked forces, use Field POP Weight to scale PartForce instead of assuming the force operator has region masking built in."
+  ],
+  "related_snippets": ["POP_snippets"],
+  "build_relevance": "2025.30000+",
+  "last_verified": "2026-06-18"
+}

@@ -1,0 +1,83 @@
+{
+  "card_type": "operator",
+  "op_type": "rgbtohsvTOP",
+  "family": "TOP",
+  "display_name": "RGB to HSV TOP",
+  "docs_url": "https://docs.derivative.ca/RGB_to_HSV_TOP",
+  "summary": "Converts RGB image data into HSV color space, where R becomes hue, G becomes saturation, and B becomes value.",
+  "key_params": [
+    {
+      "name": "outputresolution",
+      "type": "Menu",
+      "note": "Common TOP output resolution behavior."
+    },
+    {
+      "name": "resolution",
+      "type": "XY",
+      "note": "Common TOP custom output resolution."
+    },
+    {
+      "name": "resolutionw",
+      "type": "Pixels",
+      "note": "Custom output width."
+    },
+    {
+      "name": "resolutionh",
+      "type": "Pixels",
+      "note": "Custom output height."
+    },
+    {
+      "name": "resmenu",
+      "type": "Menu",
+      "note": "Preset resolution menu."
+    },
+    {
+      "name": "resmult",
+      "type": "Toggle",
+      "note": "Apply global TOP resolution multiplier."
+    },
+    {
+      "name": "outputaspect",
+      "type": "Menu",
+      "note": "Common TOP output aspect policy."
+    },
+    {
+      "name": "inputfiltertype",
+      "type": "Menu",
+      "note": "Common TOP input filtering."
+    },
+    {
+      "name": "npasses",
+      "type": "Int",
+      "note": "Repeat the operation multiple passes."
+    },
+    {
+      "name": "chanmask",
+      "type": "String",
+      "note": "Channels affected by the operation."
+    },
+    {
+      "name": "format",
+      "type": "Menu",
+      "note": "Output pixel format."
+    }
+  ],
+  "common_gotchas": [
+    "This TOP has no RGB-to-HSV page parameters; most control comes from common TOP settings.",
+    "Hue/saturation/value are packed into RGB channels, so downstream nodes must interpret channels accordingly.",
+    "Channel Mask can limit which channels are processed.",
+    "Pixel format choice matters for precision and color range.",
+    "Pair with HSV to RGB TOP when doing color adjustments in HSV space."
+  ],
+  "related_snippets": [
+    "TOP_snippets"
+  ],
+  "build_relevance": "color_space_conversion",
+  "last_verified": "2026-06-18",
+  "key_concepts": [
+    "Converts RGB image data into HSV color space.",
+    "Hue, saturation, and value are packed into the output R, G, and B channels.",
+    "The official RGB to HSV page has no operator-specific parameters.",
+    "Common TOP controls still define output resolution, channel mask, and pixel format."
+  ]
+}
