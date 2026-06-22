@@ -17,6 +17,7 @@ The 1.6 observability layer remains: `_read_journal` hints, a 200-entry `activit
 
 ### Packaged Add-ons
 - **Reviewed operator atlas** — 656 structured operator cards across CHOP, COMP, DAT, MAT, POP, SOP, and TOP. The zero-concept backlog is closed, so agents can use Official Derivative docs, reviewed `key_concepts`, `key_params`, and gotchas to move from concept-to-node instead of guessing.
+- **Concept-to-node eval gate** — A 50+ case concept-to-node golden eval corpus is checked by `scripts/eval_brain_golden.py`, covering compiler-backed patterns, assembly macros, generated-code diagnostics, device-source prompts, and stable/debug output conventions.
 - **Brain skills and agents** — Codex and Claude Code get the same explorer, builder, validator, recovery, and release workflows, with deterministic local hooks.
 - **Local knowledge packs** — The core atlas ships with TDPilot. Optional packs such as POPX remain local add-ons and must be built from user-owned licensed documentation.
 

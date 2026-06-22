@@ -29,6 +29,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--timeout", type=float, default=15.0, help="TouchDesigner request timeout for --live."
     )
+    parser.add_argument(
+        "--transactional-generated-code",
+        action="store_true",
+        help="With --live, apply a tiny generated-code PatchPlan transactionally and undo it.",
+    )
     parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON output.")
     return parser.parse_args()
 
@@ -42,6 +47,7 @@ def main() -> int:
             host=args.host,
             port=args.port,
             timeout=args.timeout,
+            run_transactional_generated_code=args.transactional_generated_code,
         )
     )
     print(json.dumps(report, indent=2 if args.pretty else None, sort_keys=True))

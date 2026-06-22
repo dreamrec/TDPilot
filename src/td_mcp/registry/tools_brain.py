@@ -13,7 +13,9 @@ from pydantic import Field, ValidationError
 
 from td_mcp import tool_registry as _tr
 from td_mcp.brain.cockpit import COCKPIT_RESOURCE_URI, build_cockpit_payload
+from td_mcp.brain.patterns import load_pattern_registry
 from td_mcp.brain.planner import build_brain_plan
+from td_mcp.brain.trace_promotion import promote_trace_to_pattern
 from td_mcp.brain.traces import append_brain_trace
 from td_mcp.brain.transaction import apply_transaction
 from td_mcp.errors import format_tool_error
@@ -171,10 +173,14 @@ async def td_brain_execute(
 
         options = _options_for_policy(transaction_policy, brain_plan.validation_profile)
         tx_result = await _run_transaction(
-            ctx, brain_plan.patch_plan, options, concept_profile=brain_plan.concept_graph.profile
+            ctx,
+            brain_plan.patch_plan,
+            options,
+            concept_profile=brain_plan.concept_graph.profile,
+            concept_profiles=_concept_profiles_for_brain_plan(brain_plan),
         )
         learned_id = None
-        if learn_on_success and tx_result.status in {"clean", "warnings"}:
+        if learn_on_success and tx_result.status in {"clean", "warnings"} and not tx_result.validation_failed:
             learned_id = await _learn_brain_trace(ctx, brain_plan, tx_result.model_dump(mode="json"))
 
         trace = BrainTrace(
@@ -254,7 +260,14 @@ async def td_transaction_apply(
         except ValidationError as exc:
             return {"success": False, "error": f"invalid TransactionOptions: {exc}"}
         concept_profile = brain_plan.concept_graph.profile if brain_plan is not None else None
-        result = await _run_transaction(ctx, patch_plan, tx_options, concept_profile=concept_profile)
+        concept_profiles = _concept_profiles_for_brain_plan(brain_plan) if brain_plan is not None else None
+        result = await _run_transaction(
+            ctx,
+            patch_plan,
+            tx_options,
+            concept_profile=concept_profile,
+            concept_profiles=concept_profiles,
+        )
         if brain_plan is not None:
             _cache_transaction(brain_plan, result.model_dump(mode="json"), None)
         _tr._audit_log(
@@ -373,6 +386,7 @@ async def _run_transaction(
     options: TransactionOptions,
     *,
     concept_profile: str | None = None,
+    concept_profiles: list[str] | None = None,
 ):
     client = _tr._get_client(ctx)
     services = _tr._get_services(ctx)
@@ -408,10 +422,21 @@ async def _run_transaction(
         options=options,
         sentinel=_tr._PATCH_SENTINEL,
         concept_profile=concept_profile,
+        concept_profiles=concept_profiles,
         macro_engine=macro_engine,
         create_snapshot=create_snapshot,
         restore_snapshot=restore_snapshot,
     )
+
+
+def _concept_profiles_for_brain_plan(brain_plan: BrainPlan) -> list[str]:
+    """Return validation profile layers selected by a BrainPlan."""
+    profiles: list[str] = []
+    if brain_plan.concept_graph.profile == "concept_compiled" and brain_plan.candidate_graphs:
+        profiles.extend(brain_plan.candidate_graphs[0].profiles)
+    if brain_plan.concept_graph.profile:
+        profiles.append(brain_plan.concept_graph.profile)
+    return list(dict.fromkeys(profiles))
 
 
 async def _learn_brain_trace(ctx: Context, brain_plan: BrainPlan, tx_result: dict[str, Any]) -> str | None:
@@ -498,6 +523,11 @@ def _export_trace_safely(
     duration_ms: float,
 ) -> str | None:
     try:
+        promoted_pattern = _promoted_pattern_candidate_for_export(
+            brain_plan,
+            trace,
+            validation_report=tx_result.get("validation_report"),
+        )
         return append_brain_trace(
             {
                 "type": "brain_execution",
@@ -524,8 +554,28 @@ def _export_trace_safely(
                     "failed_op": tx_result.get("failed_op"),
                 },
                 "learned_memory_id": learned_id,
+                "promoted_pattern_candidate": promoted_pattern,
                 "trace": trace,
             }
         )
     except Exception:
         return None
+
+
+def _promoted_pattern_candidate_for_export(
+    brain_plan: BrainPlan,
+    trace: dict[str, Any],
+    *,
+    validation_report: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    try:
+        brain_trace = BrainTrace.model_validate(trace)
+        pattern = promote_trace_to_pattern(
+            brain_plan,
+            brain_trace,
+            pattern_registry=load_pattern_registry(),
+            validation_report=validation_report,
+        )
+    except Exception:
+        return None
+    return pattern.model_dump(mode="json")

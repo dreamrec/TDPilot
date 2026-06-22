@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 from td_mcp.brain.hook_check import evaluate_post_tool_use, evaluate_release_stop
@@ -96,6 +99,32 @@ def test_hooks_json_uses_deterministic_hook_module_and_is_mirrored():
 
     assert plugin_hooks == root_hooks
     hook_text = json.dumps(root_hooks)
-    assert "td_mcp.brain.hook_check" in hook_text
+    assert "hooks/run_hook.py" in hook_text
+    assert "td_mcp.brain.hook_check" in (ROOT / "hooks" / "run_hook.py").read_text(
+        encoding="utf-8"
+    )
     assert "PostToolUse" in root_hooks["hooks"]
     assert "Stop" in root_hooks["hooks"]
+
+
+def test_packaged_hook_runner_delegates_from_plugin_cache_root(tmp_path):
+    package_root = tmp_path / "tdpilot"
+    shutil.copytree(ROOT / "plugins" / "tdpilot", package_root)
+
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(package_root / "hooks" / "run_hook.py"),
+            "release-stop",
+            "--root",
+            str(ROOT),
+        ],
+        input="{}",
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    payload = json.loads(proc.stdout)
+    assert payload["hookSpecificOutput"]["hookEventName"] == "Stop"

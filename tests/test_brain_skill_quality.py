@@ -91,6 +91,20 @@ def test_brain_builder_teaches_reviewed_atlas_concept_to_node_workflow():
         assert "choose the smallest operator chain" in text
 
 
+def test_brain_builder_teaches_compiler_pattern_availability_validation_workflow():
+    for skill_root in (ROOT / "skills", ROOT / ".agents" / "skills", ROOT / "plugins" / "tdpilot" / "skills"):
+        text = (skill_root / "tdpilot-brain-builder" / "SKILL.md").read_text(encoding="utf-8")
+
+        assert "Compiler-Backed Planning Workflow" in text
+        assert "compiled_task" in text
+        assert "candidate_graphs" in text
+        assert "pattern resolver" in text
+        assert "availability matrix" in text
+        assert "parameter semantics" in text
+        assert "validation probes" in text
+        assert "assembly macros" in text
+
+
 def test_agents_md_points_codex_to_brain_skills():
     agents_md = ROOT / "AGENTS.md"
     assert agents_md.exists()
@@ -129,6 +143,12 @@ def test_audit_brain_skills_cli_outputs_json_report():
 
 
 def test_release_skill_includes_plugin_surface_audit_gate():
-    text = (ROOT / "skills" / "tdpilot-brain-release" / "SKILL.md").read_text(encoding="utf-8")
+    for skill_root in (ROOT / "skills", ROOT / ".agents" / "skills", ROOT / "plugins" / "tdpilot" / "skills"):
+        text = (skill_root / "tdpilot-brain-release" / "SKILL.md").read_text(encoding="utf-8")
 
-    assert "uv run python scripts/audit_plugin_surface.py" in text
+        assert "uv run python scripts/audit_plugin_surface.py" in text
+        assert "scripts/check_release_gates.py" in text
+        assert "--plugin-surface-report" in text
+        assert "--require-plugin-surface" in text
+        assert "--brain-live-smoke-report" in text
+        assert "--require-live-smoke" in text

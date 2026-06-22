@@ -64,7 +64,13 @@ def main() -> int:
 
     errors += [
         check_json_version(ROOT / "npm" / "package.json", expected, "npm/package.json"),
+        check_json_version(ROOT / "mcp" / "manifest.json", expected, "mcp/manifest.json"),
         check_json_version(ROOT / ".claude-plugin" / "plugin.json", expected, ".claude-plugin/plugin.json"),
+        check_json_version(
+            ROOT / "plugins" / "tdpilot" / ".codex-plugin" / "plugin.json",
+            expected,
+            "plugins/tdpilot/.codex-plugin/plugin.json",
+        ),
         check_line(
             ROOT / ".claude-plugin" / "marketplace.json",
             r'"version"\s*:\s*"([^"]+)"',

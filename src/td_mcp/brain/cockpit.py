@@ -18,8 +18,9 @@ def build_cockpit_payload(
     """Return compact, widget-friendly state for the optional cockpit UI."""
     brain_plan = _unwrap(plan, "plan")
     tx_result = _unwrap(transaction_result, "result")
+    transaction_payload = transaction_result if isinstance(transaction_result, dict) else {}
     validation_report = _first_dict(
-        tx_result.get("validation_report"), transaction_result.get("validation_report")
+        tx_result.get("validation_report"), transaction_payload.get("validation_report")
     )
 
     return {
@@ -176,6 +177,8 @@ def _plan_summary(plan: dict[str, Any]) -> dict[str, Any]:
     patch_plan = _first_dict(plan.get("patch_plan"))
     operations = patch_plan.get("operations") if isinstance(patch_plan.get("operations"), list) else []
     operators = graph.get("operators") if isinstance(graph.get("operators"), list) else []
+    concept_nodes = graph.get("concepts") if isinstance(graph.get("concepts"), list) else graph.get("nodes")
+    concept_edges = graph.get("edges") if isinstance(graph.get("edges"), list) else []
     return {
         "id": plan.get("id"),
         "intent": task.get("intent") or plan.get("intent"),
@@ -186,11 +189,16 @@ def _plan_summary(plan: dict[str, Any]) -> dict[str, Any]:
         "operators": operators,
         "operator_count": len(operators),
         "operation_count": len(operations),
-        "concept_nodes": graph.get("nodes") if isinstance(graph.get("nodes"), list) else [],
-        "concept_edges": graph.get("edges") if isinstance(graph.get("edges"), list) else [],
+        "concept_nodes": concept_nodes if isinstance(concept_nodes, list) else [],
+        "concept_edges": concept_edges,
+        "grounding_evidence": _list(plan.get("grounding_evidence"))[:24],
         "risk_flags": _list(plan.get("risk_flags")),
         "blocked_questions": _list(plan.get("blocked_questions")),
         "missing_facts": _list(plan.get("missing_facts")),
+        "corpus_evidence": _corpus_evidence_summary(plan.get("corpus_evidence")),
+        "substitution_explanations": _substitution_explanations_summary(
+            plan.get("substitution_explanations")
+        ),
     }
 
 
@@ -230,6 +238,53 @@ def _rollback_summary(result: dict[str, Any]) -> dict[str, Any]:
 
 def _list(value: Any) -> list[Any]:
     return value if isinstance(value, list) else []
+
+
+def _corpus_evidence_summary(value: Any) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    rows: list[dict[str, Any]] = []
+    for item in value[:12]:
+        if not isinstance(item, dict):
+            continue
+        rows.append(
+            {
+                "evidence_id": item.get("evidence_id"),
+                "source": item.get("source"),
+                "op_type": item.get("op_type"),
+                "display_name": item.get("display_name"),
+                "docs_url": item.get("docs_url"),
+                "key_params": _list(item.get("key_params"))[:6],
+                "matched_terms": _list(item.get("matched_terms"))[:8],
+                "score": item.get("score"),
+            }
+        )
+    return rows
+
+
+def _substitution_explanations_summary(value: Any) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    rows: list[dict[str, Any]] = []
+    for item in value[:12]:
+        if not isinstance(item, dict):
+            continue
+        rows.append(
+            {
+                "missing_op": item.get("missing_op"),
+                "replacement_target": item.get("replacement_target"),
+                "replacement_ops": _list(item.get("replacement_ops")),
+                "confidence": item.get("confidence"),
+                "requires_approval": bool(item.get("requires_approval")),
+                "approval_state": item.get("approval_state"),
+                "approval_evidence": _list(item.get("approval_evidence")),
+                "availability_reason": item.get("availability_reason"),
+                "tradeoffs": _list(item.get("tradeoffs")),
+                "official_sources": _list(item.get("official_sources")),
+                "summary": item.get("summary"),
+            }
+        )
+    return rows
 
 
 __all__ = ["COCKPIT_RESOURCE_URI", "build_cockpit_payload", "cockpit_html"]

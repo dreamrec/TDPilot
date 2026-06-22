@@ -6,7 +6,7 @@ import pytest
 
 from patch.conftest import FakeTDClient
 from td_mcp.models.patch import PatchOperation, PatchPlan
-from td_mcp.patch.planner import build_plan
+from td_mcp.patch.planner import build_plan, preview_plan
 
 
 class StubTechniqueStore:
@@ -112,6 +112,36 @@ async def test_unknown_op_type_prefixed():
     )
     assert "noise" in plan.required_ops
     assert "unknown:zzzz_unknown" in plan.required_ops
+
+
+@pytest.mark.asyncio
+async def test_preview_allows_create_node_parent_created_earlier_in_same_plan():
+    def nodes(params):
+        if params["path"] == "/p/generated_shell":
+            raise RuntimeError("not created yet")
+        return {"nodes": []}
+
+    client = FakeTDClient(scripted={"nodes": nodes})
+    plan = await build_plan(
+        td_client=client,
+        target_root="/p",
+        operations=[
+            {
+                "kind": "create_node",
+                "target": "/p",
+                "args": {"op_type": "baseCOMP", "name": "generated_shell"},
+            },
+            {
+                "kind": "create_node",
+                "target": "/p/generated_shell",
+                "args": {"op_type": "noiseTOP", "name": "source"},
+            },
+        ],
+    )
+
+    preview = await preview_plan(client, plan)
+
+    assert "target-missing:/p/generated_shell" not in preview["live_risk_flags"]
 
 
 @pytest.mark.asyncio

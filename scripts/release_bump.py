@@ -122,6 +122,7 @@ def _register_version_transforms(new_ver: str, api_ver: str) -> None:
     for rel in (
         ".claude-plugin/plugin.json",
         ".claude-plugin/marketplace.json",
+        "plugins/tdpilot/.codex-plugin/plugin.json",
         "npm/package.json",
         "mcp/manifest.json",
     ):

@@ -80,3 +80,68 @@ async def test_transaction_rolls_back_when_validation_fails():
     assert result.validation_report is not None
     assert result.validation_report.ok is False
     assert ("project/lifecycle", {"action": "undo"}) in client.calls
+
+
+@pytest.mark.asyncio
+async def test_transaction_rolls_back_when_generated_code_runtime_contract_fails():
+    ops = [
+        PatchOperation(kind="create_node", target="/p", args={"op_type": "glslTOP", "name": "glsl1"}),
+        PatchOperation(kind="create_node", target="/p", args={"op_type": "textDAT", "name": "pixel_code"}),
+        PatchOperation(kind="set_params", target="/p/glsl1", args={"params": {"pixeldat": "/p/pixel_code"}}),
+        PatchOperation(
+            kind="set_dat_content",
+            target="/p/pixel_code",
+            args={
+                "text": "out vec4 fragColor;\nvoid main() { fragColor = vec4(1.0); }\n",
+                "generated_code": {
+                    "block_id": "pixel_shader",
+                    "language": "glsl",
+                    "target_op": "/p/glsl1",
+                    "target_param": "pixeldat",
+                    "source_kind": "textDAT",
+                    "source_refs": ["/p/pixel_code"],
+                    "static_checks": ["glsl_entrypoint"],
+                    "runtime_checks": ["compile_state"],
+                    "expected_outputs": ["/p/out1"],
+                    "risk_flags": ["generated_code"],
+                    "official_sources": ["https://docs.derivative.ca/GLSL_TOP"],
+                },
+            },
+        ),
+    ]
+
+    def node_errors(params):
+        if params.get("path") == "/p/glsl1":
+            return {"issues": [{"path": "/p/glsl1", "message": "shader compile failed"}]}
+        return {"issues": []}
+
+    client = FakeTDClient(
+        scripted={
+            "nodes": {"nodes": []},
+            "node/create": lambda params: {"path": f"{params['parent_path']}/{params['name']}"},
+            "node/params/set": {"ok": True},
+            "node/content/set": {"ok": True},
+            "node/errors": node_errors,
+            "cooking": {"stuck": []},
+        }
+    )
+
+    result = await apply_transaction(
+        client,
+        _plan(ops),
+        options=TransactionOptions(validation_profile="structural_visual_safe"),
+        sentinel=UndoBlockSentinel(),
+    )
+
+    assert result.status == "rolled_back"
+    assert result.rollback_performed is True
+    assert result.validation_failed is True
+    assert result.validation_report is not None
+    assert result.validation_report.ok is False
+    assert "generated_code_runtime_checks" in result.validation_report.checks
+    assert result.validation_report.cheap_metrics["generated_code_runtime"]["checked_contract_count"] == 1
+    assert any(
+        issue.code == "generated_code_runtime_compile_state_error"
+        for issue in result.validation_report.issues
+    )
+    assert ("project/lifecycle", {"action": "undo"}) in client.calls

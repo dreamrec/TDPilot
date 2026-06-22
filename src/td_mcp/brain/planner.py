@@ -2,14 +2,24 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from td_mcp.brain.assembly_macros import macros_for_profiles
+from td_mcp.brain.code_harness import validate_patch_plan_generated_code
 from td_mcp.brain.concept_compiler import (
     build_candidate_graphs,
     compile_visual_task,
     is_supported_compiler_route,
 )
+from td_mcp.brain.corpus_bridge import build_corpus_evidence, corpus_evidence_markers
+from td_mcp.brain.operator_availability import (
+    build_operator_availability_matrix,
+    load_operator_availability_report,
+    substitution_explanations_from_evidence,
+)
+from td_mcp.brain.param_semantics import parameter_risk_flags_for_plan, validate_patch_plan_parameter_contract
 from td_mcp.brain.validators import classify_intent_profile
 from td_mcp.hints import query_hints
 from td_mcp.models.brain import (
@@ -18,6 +28,7 @@ from td_mcp.models.brain import (
     ConceptEdge,
     ConceptGraph,
     ConceptNode,
+    OperatorAvailabilityMatrix,
     VisualTaskSpec,
 )
 from td_mcp.models.patch import PatchOperation, PatchPlan, ValidationPlan
@@ -132,6 +143,7 @@ _PROFILE_SPECS: dict[str, _ProfileSpec] = {
                 "role": "output",
                 "domain": "TOP",
                 "op_type": "renderTOP",
+                "params": {"camera": "${path:camera}", "geometry": "${path:geo}"},
             },
             {
                 "id": "output",
@@ -227,6 +239,35 @@ _PROFILE_SPECS: dict[str, _ProfileSpec] = {
                 "role": "validator",
                 "domain": "DAT",
                 "op_type": "textDAT",
+                "content": {
+                    "text": (
+                        "layout(location = 0) out vec4 fragColor;\n"
+                        "void main() {\n"
+                        "    vec4 color = vec4(vUV.st, 0.5, 1.0);\n"
+                        "    fragColor = TDOutputSwizzle(color);\n"
+                        "}\n"
+                    )
+                },
+                "generated_code": {
+                    "block_id": "glsl_top_shader",
+                    "language": "glsl",
+                    "target_op": "${path:shader}",
+                    "target_param": "pixeldat",
+                    "source_kind": "generated",
+                    "source_refs": ["${path:source_code}"],
+                    "static_checks": [
+                        "glsl_no_version_line",
+                        "glsl_top_declares_pixel_output",
+                        "glsl_top_uses_td_output_swizzle",
+                    ],
+                    "runtime_checks": ["compile_state"],
+                    "expected_outputs": ["${path:output}"],
+                    "risk_flags": ["validate-glsl-compile-state"],
+                    "official_sources": [
+                        "https://docs.derivative.ca/GLSL_TOP",
+                        "https://docs.derivative.ca/Write_a_GLSL_TOP",
+                    ],
+                },
             },
             {
                 "id": "output",
@@ -334,6 +375,33 @@ _PROFILE_SPECS: dict[str, _ProfileSpec] = {
                 "role": "validator",
                 "domain": "DAT",
                 "op_type": "textDAT",
+                "content": {
+                    "text": (
+                        "void main() {\n"
+                        "    uint idx = TDIndex();\n"
+                        "    if (idx >= TDNumElements()) {\n"
+                        "        return;\n"
+                        "    }\n"
+                        "    P += vec3(0.0, 0.04 * sin(float(idx) * 0.17), 0.0);\n"
+                        "}\n"
+                    )
+                },
+                "generated_code": {
+                    "block_id": "glsl_pop_compute_shader",
+                    "language": "glsl",
+                    "target_op": "${path:shader}",
+                    "target_param": "computedat",
+                    "source_kind": "generated",
+                    "source_refs": ["${path:source_code}"],
+                    "static_checks": ["glsl_no_version_line", "glsl_pop_bounds_guard"],
+                    "runtime_checks": ["compile_state", "finite_pop_bounds"],
+                    "expected_outputs": ["${path:pop_out}", "${path:output}"],
+                    "risk_flags": ["validate-glsl-compile-state", "validate-finite-pop-bounds"],
+                    "official_sources": [
+                        "https://docs.derivative.ca/GLSL_POP",
+                        "https://docs.derivative.ca/Write_a_GLSL_POP",
+                    ],
+                },
             },
             {
                 "id": "pop_out",
@@ -484,11 +552,12 @@ async def build_brain_plan(
     card_index=None,
 ) -> BrainPlan:
     """Build a grounded BrainPlan without mutating TouchDesigner."""
+    constraints_data = constraints or {}
     task = VisualTaskSpec(
         intent=intent,
         target_root=target_root,
         output_top=output_top,
-        constraints=constraints or {},
+        constraints=constraints_data,
         preferred_domains=preferred_domains or [],
         validation_profile=validation_profile,
         include_memory=include_memory,
@@ -504,9 +573,29 @@ async def build_brain_plan(
         card_index=card_index if include_docs else None,
     )
     if is_supported_compiler_route(compiled_task):
-        candidate_graphs = build_candidate_graphs(compiled_task)
+        available_ops = await _read_available_ops(td_client)
+        constraint_availability_matrix = _availability_matrix_from_constraints(constraints_data)
+        sampled_unavailable_ops = _sampled_unavailable_ops_from_constraints(constraints_data)
+        sampled_unavailable_reasons = _sampled_unavailable_reasons_from_constraints(constraints_data)
+        available_ops = available_ops - sampled_unavailable_ops
+        availability_matrix = build_operator_availability_matrix(
+            available_ops,
+            required_ops=_compiler_route_required_ops(),
+            td_build=_availability_td_build(constraints_data, constraint_availability_matrix),
+            platform=_availability_platform(constraints_data, constraint_availability_matrix),
+            installed_addons=_availability_installed_addons(constraints_data, constraint_availability_matrix),
+        )
+        availability_matrix = _availability_matrix_with_sampled_reasons(
+            availability_matrix,
+            sampled_unavailable_reasons,
+        )
+        candidate_graphs = build_candidate_graphs(
+            compiled_task,
+            patterns=_compiler_pattern_registry(include_memory=include_memory),
+            availability_matrix=availability_matrix,
+            device_sources=_device_sources_from_constraints(constraints_data),
+        )
         if candidate_graphs:
-            available_ops = await _read_available_ops(td_client)
             existing_names = await _read_existing_names(td_client, target_root)
             return _plan_from_candidate_graph(
                 task=task,
@@ -516,6 +605,9 @@ async def build_brain_plan(
                 existing_names=existing_names,
                 card_index=card_index if include_docs else None,
                 validation_profile=validation_profile,
+                sampled_unavailable_ops=sampled_unavailable_ops,
+                sampled_unavailable_reasons=sampled_unavailable_reasons,
+                availability_matrix=availability_matrix,
             )
 
     profile = classify_intent_profile(intent, preferred_domains)
@@ -548,6 +640,12 @@ async def build_brain_plan(
         operators=operators,
         card_index=card_index if include_docs else None,
     )
+    corpus_evidence = build_corpus_evidence(
+        intent=intent,
+        operators=operators,
+        card_index=card_index if include_docs else None,
+    )
+    grounding = _dedupe([*grounding, *corpus_evidence_markers(corpus_evidence)])
     if technique_store is not None and include_memory:
         grounding.extend(_memory_evidence(technique_store, intent))
 
@@ -583,6 +681,13 @@ async def build_brain_plan(
         patch_plan = _empty_patch(task, reason="missing required operators")
     else:
         patch_plan = _compile_patch_plan(task, graph, existing_names)
+        graph, patch_plan = _with_param_semantics_risk_flags(graph, patch_plan)
+        param_issues = _blocking_param_issues(patch_plan)
+        if param_issues:
+            blocked_questions.append(_param_semantics_block_message(param_issues))
+            missing_facts.extend(_param_issue_facts(param_issues))
+            graph.risk_flags = _dedupe([*graph.risk_flags, *_param_issue_risk_flags(param_issues)])
+            patch_plan = _empty_patch(task, reason="invalid parameter semantics")
 
     return BrainPlan(
         task=task,
@@ -592,6 +697,7 @@ async def build_brain_plan(
         blocked_questions=blocked_questions,
         missing_facts=missing_facts,
         grounding_evidence=grounding,
+        corpus_evidence=corpus_evidence,
         risk_flags=list(graph.risk_flags),
     )
 
@@ -619,6 +725,195 @@ def _intent_is_under_specified(intent: str, preferred_domains: list[str] | None)
     )
 
 
+def _device_sources_from_constraints(constraints: dict[str, Any]) -> set[str]:
+    raw_sources = constraints.get("device_sources")
+    if raw_sources is None:
+        return set()
+    if isinstance(raw_sources, str):
+        return {raw_sources} if raw_sources else set()
+    if isinstance(raw_sources, list | tuple | set):
+        return {str(item) for item in raw_sources if str(item)}
+    return set()
+
+
+def _sampled_unavailable_ops_from_constraints(constraints: dict[str, Any]) -> set[str]:
+    unavailable = _unavailable_ops_from_availability_matrix(_availability_matrix_from_constraints(constraints))
+    report = constraints.get("availability_report")
+    if not isinstance(report, dict):
+        return unavailable
+    results = report.get("results")
+    if not isinstance(results, list):
+        return unavailable
+    for item in results:
+        if not isinstance(item, dict) or item.get("available") is not False:
+            continue
+        op_type = str(item.get("op_type") or "").strip()
+        if op_type:
+            unavailable.add(op_type)
+    return unavailable
+
+
+def _sampled_unavailable_reasons_from_constraints(constraints: dict[str, Any]) -> dict[str, str]:
+    reasons: dict[str, str] = {}
+    matrix = _availability_matrix_from_constraints(constraints)
+    if matrix is not None:
+        for op_type, reason in matrix.unavailable_reasons.items():
+            if matrix.operators.get(op_type, {}).get("available") is False:
+                reasons[op_type] = _availability_reason_text(reason)
+
+    report = constraints.get("availability_report")
+    if not isinstance(report, dict):
+        return {op_type: reason for op_type, reason in reasons.items() if reason}
+    results = report.get("results")
+    if not isinstance(results, list):
+        return {op_type: reason for op_type, reason in reasons.items() if reason}
+    for item in results:
+        if not isinstance(item, dict) or item.get("available") is not False:
+            continue
+        op_type = str(item.get("op_type") or "").strip()
+        reason = _availability_reason_text(item.get("error") or item.get("reason"))
+        if op_type and reason:
+            reasons[op_type] = reason
+    return {op_type: reason for op_type, reason in reasons.items() if reason}
+
+
+def _availability_matrix_from_constraints(constraints: dict[str, Any]) -> OperatorAvailabilityMatrix | None:
+    raw = constraints.get("availability_matrix") or constraints.get("operator_availability_matrix")
+    if isinstance(raw, OperatorAvailabilityMatrix):
+        return raw
+    if raw is None:
+        report_path = constraints.get("availability_report_path") or constraints.get(
+            "operator_availability_report_path"
+        )
+        if isinstance(report_path, str) and report_path.strip():
+            report = load_operator_availability_report(report_path)
+            raw = report.get("availability_matrix")
+    if not isinstance(raw, dict):
+        return None
+    try:
+        return OperatorAvailabilityMatrix.model_validate(raw)
+    except ValueError:
+        return None
+
+
+def _unavailable_ops_from_availability_matrix(matrix: OperatorAvailabilityMatrix | None) -> set[str]:
+    if matrix is None:
+        return set()
+    return {op_type for op_type, data in matrix.operators.items() if data.get("available") is False}
+
+
+def _availability_td_build(
+    constraints: dict[str, Any],
+    matrix: OperatorAvailabilityMatrix | None,
+) -> str:
+    return str(constraints.get("td_build") or (matrix.td_build if matrix is not None else None) or "unknown")
+
+
+def _availability_platform(
+    constraints: dict[str, Any],
+    matrix: OperatorAvailabilityMatrix | None,
+) -> str:
+    return str(constraints.get("platform") or (matrix.platform if matrix is not None else None) or "unknown")
+
+
+def _availability_installed_addons(
+    constraints: dict[str, Any],
+    matrix: OperatorAvailabilityMatrix | None,
+) -> list[str]:
+    addons = constraints.get("installed_addons")
+    if not isinstance(addons, list) and matrix is not None:
+        addons = matrix.installed_addons
+    if not isinstance(addons, list):
+        return []
+    return [str(item) for item in addons]
+
+
+def _availability_sample_evidence(
+    unavailable_ops: set[str] | None,
+    unavailable_reasons: dict[str, str] | None = None,
+) -> list[str]:
+    reasons = unavailable_reasons or {}
+    evidence: list[str] = []
+    for op_type in sorted(unavailable_ops or set()):
+        evidence.append(f"availability-sample:unavailable:{op_type}")
+        reason = _availability_reason_text(reasons.get(op_type))
+        if reason:
+            evidence.append(f"availability-sample-reason:{op_type}:{reason}")
+    return evidence
+
+
+def _availability_matrix_with_sampled_reasons(
+    matrix: OperatorAvailabilityMatrix,
+    unavailable_reasons: dict[str, str] | None,
+) -> OperatorAvailabilityMatrix:
+    reasons = dict(matrix.unavailable_reasons)
+    changed = False
+    for op_type, reason_value in (unavailable_reasons or {}).items():
+        reason = _availability_reason_text(reason_value)
+        if not reason:
+            continue
+        if matrix.operators.get(op_type, {}).get("available") is not False:
+            continue
+        if reasons.get(op_type) == reason:
+            continue
+        reasons[op_type] = reason
+        changed = True
+    if not changed:
+        return matrix
+    return matrix.model_copy(update={"unavailable_reasons": reasons})
+
+
+def _availability_reason_text(value: Any) -> str:
+    return re.sub(r"\s+", " ", str(value or "")).strip()
+
+
+def _compiler_route_required_ops() -> list[str]:
+    return [
+        "analyzeCHOP",
+        "audiodeviceinCHOP",
+        "audiofileinCHOP",
+        "baseCOMP",
+        "buttonCOMP",
+        "cameraCOMP",
+        "circlePOP",
+        "compositeTOP",
+        "constantTOP",
+        "containerCOMP",
+        "datexecuteDAT",
+        "errorDAT",
+        "feedbackTOP",
+        "geometryCOMP",
+        "glslMAT",
+        "glsladvancedPOP",
+        "glslTOP",
+        "gridSOP",
+        "infoCHOP",
+        "levelTOP",
+        "mathCHOP",
+        "mathmixPOP",
+        "midiinCHOP",
+        "ndiinTOP",
+        "noisePOP",
+        "noiseSOP",
+        "noiseTOP",
+        "nullDAT",
+        "nullCHOP",
+        "nullPOP",
+        "nullSOP",
+        "nullTOP",
+        "oscinDAT",
+        "panelCHOP",
+        "renderTOP",
+        "rendersimpleTOP",
+        "serialDAT",
+        "sliderCOMP",
+        "tableDAT",
+        "textDAT",
+        "topologyPOP",
+        "websocketDAT",
+    ]
+
+
 async def _read_available_ops(td_client) -> set[str]:
     try:
         response = await td_client.request("families", {})
@@ -640,7 +935,10 @@ async def _read_available_ops(td_client) -> set[str]:
 _LIVE_FAMILY_ALIASES: dict[tuple[str, str], tuple[str, ...]] = {
     ("COMP", "cam"): ("cameraCOMP",),
     ("COMP", "geo"): ("geometryCOMP",),
+    ("POP", "glsladv"): ("glsladvancedPOP",),
 }
+
+_AVAILABILITY_CRITICAL_OPS = {"glsladvancedPOP", "topologyPOP"}
 
 
 def _available_op_names(family: str, raw_name: str) -> set[str]:
@@ -717,19 +1015,75 @@ def _classify_required_ops(
     available_ops: set[str],
     *,
     card_index,
+    strict_missing_ops: set[str] | None = None,
 ) -> tuple[list[str], list[str]]:
     if not available_ops:
         return [], []
     missing: list[str] = []
     family_omitted: list[str] = []
+    strict_missing = strict_missing_ops or set()
     for op_type in operators:
+        if op_type in strict_missing:
+            missing.append(op_type)
+            continue
         if op_type in available_ops:
+            continue
+        if op_type in _AVAILABILITY_CRITICAL_OPS:
+            missing.append(op_type)
             continue
         if _operator_has_docs(card_index, op_type):
             family_omitted.append(op_type)
             continue
         missing.append(op_type)
     return sorted(missing), sorted(family_omitted)
+
+
+_COMPILER_PATH_CAPABILITY_PARTS = {
+    "debug_output": "debug-output",
+    "terrain_surface": "terrain-surface",
+    "serial_dat_protocol": "serial-dat-protocol",
+    "osc_dat_protocol": "osc-dat-protocol",
+    "websocket_dat_protocol": "websocket-dat-protocol",
+    "mqtt_dat_protocol": "mqtt-dat-protocol",
+    "udp_dat_protocol": "udp-dat-protocol",
+    "dat_table_render_switch": "dat-table-render-switch",
+    "dat_execute_callback": "dat-execute-callback",
+    "ndi_input": "ndi-input",
+    "post_fx_output": "post-fx-output",
+    "glsl_top_shader": "glsl-top-shader",
+    "pop_particle_field_preview": "pop-particle-field-preview",
+    "glsl_advanced_pop_topology": "glsl-advanced-pop-topology",
+}
+
+
+def _compiler_path_evidence(compiled_task, candidate: CandidateConceptGraph) -> list[str]:
+    if _is_audio_feedback_panel_debug_route(compiled_task, candidate):
+        return ["compiler:path:phase1-audio-feedback-panel-debug"]
+
+    route_parts = [_compiler_path_part(profile) for profile in candidate.profiles]
+    for capability in compiled_task.required_capabilities:
+        part = _COMPILER_PATH_CAPABILITY_PARTS.get(str(capability))
+        if part and part not in route_parts:
+            route_parts.append(part)
+
+    if not route_parts and candidate.pattern_ids:
+        route_parts.append(_compiler_path_part(candidate.pattern_ids[0]))
+
+    route_slug = "-".join(part for part in route_parts if part) or "unknown"
+    return [f"compiler:path:phase1-{route_slug}"]
+
+
+def _is_audio_feedback_panel_debug_route(compiled_task, candidate: CandidateConceptGraph) -> bool:
+    return {"audio_reactive", "feedback", "panel_ui"}.issubset(set(candidate.profiles)) and {
+        "audio_analysis",
+        "feedback_loop",
+        "panel_controls",
+        "debug_output",
+    }.issubset(set(compiled_task.required_capabilities))
+
+
+def _compiler_path_part(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", str(value).strip().lower()).strip("-")
 
 
 def _plan_from_candidate_graph(
@@ -741,26 +1095,47 @@ def _plan_from_candidate_graph(
     existing_names: set[str],
     card_index,
     validation_profile: str,
+    sampled_unavailable_ops: set[str] | None = None,
+    sampled_unavailable_reasons: dict[str, str] | None = None,
+    availability_matrix: OperatorAvailabilityMatrix | None = None,
 ) -> BrainPlan:
     candidate = candidate_graphs[0]
+    assembly_macros = macros_for_profiles(["concept_compiled", *candidate.profiles])
+    assembly_required_ops = _assembly_required_ops(assembly_macros)
+    required_ops = _dedupe([*candidate.required_ops, *assembly_required_ops])
+    sample_evidence = _availability_sample_evidence(sampled_unavailable_ops, sampled_unavailable_reasons)
+    corpus_evidence = build_corpus_evidence(
+        intent=task.intent,
+        operators=required_ops,
+        card_index=card_index,
+    )
     grounding = _dedupe(
         [
             *compiled_task.grounding_evidence,
             *candidate.grounding_evidence,
-            "compiler:path:phase1-audio-feedback-panel-debug",
+            *sample_evidence,
+            *[f"docs:{op_type}" for op_type in assembly_required_ops],
+            *corpus_evidence_markers(corpus_evidence),
+            *[f"assembly:{macro.macro_id}" for macro in assembly_macros],
+            *_compiler_path_evidence(compiled_task, candidate),
         ]
     )
+    substitution_explanations = substitution_explanations_from_evidence(
+        grounding,
+        availability_matrix=availability_matrix,
+    )
     missing_ops, family_omitted_ops = _classify_required_ops(
-        candidate.required_ops,
+        required_ops,
         available_ops,
         card_index=card_index,
+        strict_missing_ops=sampled_unavailable_ops,
     )
     graph = ConceptGraph(
         task=task,
         profile="concept_compiled",
         concepts=candidate.concepts,
         edges=candidate.edges,
-        operators=list(candidate.required_ops),
+        operators=required_ops,
         unresolved=missing_ops,
         evidence=grounding,
         risk_flags=[
@@ -770,14 +1145,47 @@ def _plan_from_candidate_graph(
         ],
     )
     missing_facts = [f"missing_op:{op}" for op in missing_ops]
+    sampled_missing_ops = sorted(set(missing_ops).intersection(sampled_unavailable_ops or set()))
+    missing_facts.extend(f"availability_sample_unavailable:{op}" for op in sampled_missing_ops)
+    missing_device_sources = _missing_device_source_facts(candidate, task.constraints)
+    missing_facts.extend(missing_device_sources)
     blocked_questions = []
     if missing_ops:
         blocked_questions.append(
             "The current TouchDesigner operator family list does not include every required operator for the compiler-backed candidate graph."
         )
         patch_plan = _empty_patch(task, reason="missing required operators")
+    elif missing_device_sources:
+        blocked_questions.append(
+            "The selected compiler-backed pattern depends on an external device or network source. "
+            "Declare the available source in constraints.device_sources before mutation."
+        )
+        patch_plan = _empty_patch(task, reason="missing device source")
     else:
         patch_plan = _compile_patch_plan(task, graph, existing_names)
+        graph, patch_plan = _with_param_semantics_risk_flags(graph, patch_plan)
+        param_issues = _blocking_param_issues(patch_plan, require_param_semantics=True)
+        if param_issues:
+            blocked_questions.append(_param_semantics_block_message(param_issues))
+            missing_facts.extend(_param_issue_facts(param_issues))
+            graph.risk_flags = _dedupe([*graph.risk_flags, *_param_issue_risk_flags(param_issues)])
+            patch_plan = _empty_patch(task, reason="invalid parameter semantics")
+        else:
+            patch_plan = _with_assembly_operations(
+                patch_plan,
+                task=task,
+                graph=graph,
+                candidate=candidate,
+                assembly_macros=assembly_macros,
+                existing_names=existing_names,
+            )
+            graph, patch_plan = _with_param_semantics_risk_flags(graph, patch_plan)
+            param_issues = _blocking_param_issues(patch_plan, require_param_semantics=True)
+            if param_issues:
+                blocked_questions.append(_param_semantics_block_message(param_issues))
+                missing_facts.extend(_param_issue_facts(param_issues))
+                graph.risk_flags = _dedupe([*graph.risk_flags, *_param_issue_risk_flags(param_issues)])
+                patch_plan = _empty_patch(task, reason="invalid parameter semantics")
 
     return BrainPlan(
         task=task,
@@ -785,12 +1193,55 @@ def _plan_from_candidate_graph(
         patch_plan=patch_plan,
         compiled_task=compiled_task,
         candidate_graphs=candidate_graphs,
+        availability_matrix=availability_matrix,
         validation_profile=_resolve_validation_profile(validation_profile),
         blocked_questions=blocked_questions,
         missing_facts=missing_facts,
         grounding_evidence=grounding,
+        corpus_evidence=corpus_evidence,
+        substitution_explanations=substitution_explanations,
         risk_flags=list(graph.risk_flags),
     )
+
+
+_DEVICE_SOURCE_REQUIREMENTS: dict[str, str] = {
+    "audio_device_to_analysis_chop": "audio_device",
+    "midi_in_to_control_chop": "midi_device",
+    "serial_dat_protocol_bridge": "serial_device",
+    "osc_in_dat_protocol_bridge": "osc_source",
+    "websocket_dat_protocol_bridge": "websocket_endpoint",
+    "mqtt_client_dat_protocol_bridge": "mqtt_broker",
+    "udp_in_dat_protocol_bridge": "udp_source",
+    "ndi_in_to_post_fx_output": "ndi_source",
+}
+
+
+def _compiler_pattern_registry(*, include_memory: bool):
+    from td_mcp.brain.patterns import load_pattern_registry
+
+    patterns = load_pattern_registry()
+    if not include_memory:
+        return patterns
+    try:
+        from td_mcp.brain.traces import promoted_patterns_from_traces
+
+        promoted = promoted_patterns_from_traces(limit=50)
+    except Exception:
+        promoted = []
+    return [*patterns, *promoted]
+
+
+def _missing_device_source_facts(
+    candidate: CandidateConceptGraph,
+    constraints: dict[str, Any],
+) -> list[str]:
+    declared = _device_sources_from_constraints(constraints)
+    missing = [
+        source
+        for pattern_id, source in _DEVICE_SOURCE_REQUIREMENTS.items()
+        if pattern_id in candidate.pattern_ids and source not in declared
+    ]
+    return [f"missing_device_source:{source}" for source in missing]
 
 
 def _operator_has_docs(card_index, op_type: str) -> bool:
@@ -800,6 +1251,439 @@ def _operator_has_docs(card_index, op_type: str) -> bool:
         return card_index.get_operator(op_type) is not None
     except Exception:
         return False
+
+
+def _blocking_param_issues(patch_plan: PatchPlan, *, require_param_semantics: bool = False):
+    return [
+        issue
+        for issue in [
+            *validate_patch_plan_parameter_contract(
+                patch_plan,
+                require_semantics_for_set_params=require_param_semantics,
+            ),
+            *validate_patch_plan_generated_code(patch_plan),
+        ]
+        if issue.severity in {"error", "critical"}
+    ]
+
+
+def _param_semantics_block_message(issues) -> str:
+    first = issues[0]
+    return (
+        "The generated PatchPlan has unsafe or ungrounded parameter bindings before transaction apply "
+        f"({first.code})."
+    )
+
+
+def _param_issue_facts(issues) -> list[str]:
+    return _dedupe([f"param_semantics:{issue.code}" for issue in issues])
+
+
+def _param_issue_risk_flags(issues) -> list[str]:
+    return _dedupe([f"param-semantics:{issue.code}" for issue in issues])
+
+
+def _with_param_semantics_risk_flags(graph: ConceptGraph, patch_plan: PatchPlan) -> tuple[ConceptGraph, PatchPlan]:
+    risk_flags = parameter_risk_flags_for_plan(patch_plan)
+    if not risk_flags:
+        return graph, patch_plan
+    graph.risk_flags = _dedupe([*graph.risk_flags, *risk_flags])
+    return graph, patch_plan.model_copy(update={"risk_flags": _dedupe([*patch_plan.risk_flags, *risk_flags])})
+
+
+def _assembly_required_ops(assembly_macros) -> list[str]:
+    required_ops: list[str] = []
+    if any(macro.macro_id == "make_component_shell" for macro in assembly_macros):
+        required_ops.append("baseCOMP")
+    if any(macro.macro_id == "annotate_operator_chain" for macro in assembly_macros):
+        required_ops.append("annotateCOMP")
+    if any(macro.macro_id == "add_debug_panel" for macro in assembly_macros):
+        required_ops.extend(["textDAT", "infoCHOP", "errorDAT"])
+    return _dedupe(required_ops)
+
+
+def _with_assembly_operations(
+    patch_plan: PatchPlan,
+    *,
+    task: VisualTaskSpec,
+    graph: ConceptGraph,
+    candidate: CandidateConceptGraph,
+    assembly_macros,
+    existing_names: set[str],
+) -> PatchPlan:
+    if not assembly_macros or not patch_plan.operations:
+        return patch_plan
+
+    macro_ids = {macro.macro_id for macro in assembly_macros}
+    assembly_task = task
+    if "make_component_shell" in macro_ids:
+        shell_name = _component_shell_name(existing_names)
+        shell_path = _join_path(task.target_root, shell_name)
+        shell_op = PatchOperation(
+            kind="create_node",
+            target=task.target_root,
+            args={
+                "op_type": "baseCOMP",
+                "name": shell_name,
+                "x": -360,
+                "y": 240,
+                "assembly_macro_id": "make_component_shell",
+            },
+        )
+        validation_plan = patch_plan.validation_plan.model_copy(
+            update={
+                "target_root": shell_path,
+                "capture_frames": _rebase_path_values(
+                    patch_plan.validation_plan.capture_frames,
+                    from_root=task.target_root,
+                    to_root=shell_path,
+                ),
+            }
+        )
+        patch_plan = patch_plan.model_copy(
+            update={
+                "operations": [
+                    shell_op,
+                    *_rebase_operations_to_shell(
+                        patch_plan.operations,
+                        from_root=task.target_root,
+                        to_root=shell_path,
+                    ),
+                ],
+                "validation_plan": validation_plan,
+            }
+        )
+        assembly_task = task.model_copy(
+            update={
+                "target_root": shell_path,
+                "output_top": _rebase_path_value(task.output_top, from_root=task.target_root, to_root=shell_path)
+                if task.output_top
+                else None,
+            }
+        )
+
+    concept_paths = _concept_paths_from_patch_plan(assembly_task, graph, patch_plan)
+    operations = list(patch_plan.operations)
+
+    if "group_by_domain" in macro_ids:
+        operations.extend(_domain_layout_ops(graph, concept_paths))
+    if "add_named_outputs" in macro_ids:
+        operations.extend(_role_layout_ops(graph, concept_paths, role="output", macro_id="add_named_outputs"))
+    if "add_debug_panel" in macro_ids:
+        operations.extend(_debug_diagnostic_ops(assembly_task, graph, concept_paths))
+        operations.extend(
+            _matching_layout_ops(
+                graph,
+                concept_paths,
+                macro_id="add_debug_panel",
+                predicate=lambda concept: concept.id == "debug_notes"
+                or "debug" in concept.id
+                or concept.role == "validator",
+            )
+        )
+    if "add_user_controls" in macro_ids:
+        operations.extend(
+            _matching_layout_ops(
+                graph,
+                concept_paths,
+                macro_id="add_user_controls",
+                predicate=lambda concept: concept.role in {"control", "ui"},
+            )
+        )
+    if "annotate_operator_chain" in macro_ids:
+        operations.append(_assembly_annotation_op(assembly_task, candidate, assembly_macros))
+
+    return patch_plan.model_copy(update={"operations": operations})
+
+
+def _component_shell_name(existing_names: set[str]) -> str:
+    base = "tdpilot_concept"
+    candidate = base
+    counter = 1
+    while candidate in existing_names:
+        counter += 1
+        candidate = f"{base}{counter}"
+    return candidate
+
+
+def _rebase_operations_to_shell(
+    operations: list[PatchOperation],
+    *,
+    from_root: str,
+    to_root: str,
+) -> list[PatchOperation]:
+    return [
+        operation.model_copy(
+            update={
+                "target": _rebase_path_value(operation.target, from_root=from_root, to_root=to_root),
+                "args": _rebase_path_value(operation.args, from_root=from_root, to_root=to_root),
+            }
+        )
+        for operation in operations
+    ]
+
+
+def _rebase_path_values(values: list[str], *, from_root: str, to_root: str) -> list[str]:
+    return [
+        str(_rebase_path_value(value, from_root=from_root, to_root=to_root))
+        for value in values
+    ]
+
+
+def _rebase_path_value(value: Any, *, from_root: str, to_root: str) -> Any:
+    if isinstance(value, dict):
+        return {
+            key: _rebase_path_value(item, from_root=from_root, to_root=to_root)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_rebase_path_value(item, from_root=from_root, to_root=to_root) for item in value]
+    if isinstance(value, str):
+        root = from_root.rstrip("/") or "/"
+        if value == root:
+            return to_root
+        prefix = f"{root}/" if root != "/" else "/"
+        if value.startswith(prefix):
+            suffix = value[len(prefix) :]
+            return _join_path(to_root, suffix)
+        if root != "/" and prefix in value:
+            return value.replace(prefix, f"{to_root.rstrip('/')}/")
+    return value
+
+
+def _debug_diagnostic_ops(
+    task: VisualTaskSpec,
+    graph: ConceptGraph,
+    concept_paths: dict[str, str],
+) -> list[PatchOperation]:
+    stable_target = _stable_top_path(graph, concept_paths) or task.output_top or task.target_root
+    debug_notes_path = _join_path(task.target_root, "debug_notes")
+    debug_info_path = _join_path(task.target_root, "debug_info")
+    error_log_path = _join_path(task.target_root, "error_log")
+    operations: list[PatchOperation] = []
+    if "debug_notes" not in concept_paths:
+        operations.extend(
+            [
+                PatchOperation(
+                    kind="create_node",
+                    target=task.target_root,
+                    args={
+                        "op_type": "textDAT",
+                        "name": "debug_notes",
+                        "x": _DOMAIN_COLUMNS["DAT"],
+                        "y": -840,
+                        "assembly_macro_id": "add_debug_panel",
+                    },
+                ),
+                PatchOperation(
+                    kind="set_dat_content",
+                    target=debug_notes_path,
+                    args={
+                        "text": f"TDPilot debug notes\nstable_target: {stable_target}",
+                        "assembly_macro_id": "add_debug_panel",
+                    },
+                ),
+            ]
+        )
+    operations.extend(
+        [
+            PatchOperation(
+                kind="create_node",
+                target=task.target_root,
+                args={
+                    "op_type": "infoCHOP",
+                    "name": "debug_info",
+                    "x": _DOMAIN_COLUMNS["CHOP"],
+                    "y": -960,
+                    "assembly_macro_id": "add_debug_panel",
+                },
+            ),
+            PatchOperation(
+                kind="set_params",
+                target=debug_info_path,
+                args={
+                    "params": {
+                        "op": stable_target,
+                        "passive": True,
+                    },
+                    "assembly_macro_id": "add_debug_panel",
+                },
+            ),
+            PatchOperation(
+                kind="create_node",
+                target=task.target_root,
+                args={
+                    "op_type": "errorDAT",
+                    "name": "error_log",
+                    "x": _DOMAIN_COLUMNS["DAT"],
+                    "y": -960,
+                    "assembly_macro_id": "add_debug_panel",
+                },
+            ),
+            PatchOperation(
+                kind="set_params",
+                target=error_log_path,
+                args={
+                    "params": {
+                        "active": True,
+                        "source": f"{task.target_root.rstrip('/')}/*",
+                        "clamp": True,
+                        "maxlines": 50,
+                    },
+                    "assembly_macro_id": "add_debug_panel",
+                },
+            ),
+        ]
+    )
+    return operations
+
+
+def _stable_top_path(graph: ConceptGraph, concept_paths: dict[str, str]) -> str | None:
+    for concept in graph.concepts:
+        if concept.role == "output" and concept.domain == "TOP":
+            path = concept_paths.get(concept.id)
+            if path:
+                return path
+    return None
+
+
+def _concept_paths_from_patch_plan(
+    task: VisualTaskSpec,
+    graph: ConceptGraph,
+    patch_plan: PatchPlan,
+) -> dict[str, str]:
+    create_ops = [operation for operation in patch_plan.operations if operation.kind == "create_node"]
+    paths: dict[str, str] = {}
+    create_index = 0
+    for concept in graph.concepts:
+        if not concept.op_type:
+            continue
+        while (
+            create_index < len(create_ops)
+            and create_ops[create_index].args.get("assembly_macro_id") == "make_component_shell"
+        ):
+            create_index += 1
+        if create_index >= len(create_ops):
+            break
+        name = create_ops[create_index].args.get("name")
+        parent = create_ops[create_index].target or task.target_root
+        if name:
+            paths[concept.id] = _join_path(str(parent), str(name))
+        create_index += 1
+    return paths
+
+
+_DOMAIN_COLUMNS = {
+    "CHOP": 0,
+    "TOP": 360,
+    "COMP": 720,
+    "DAT": 1080,
+    "POP": 1440,
+    "SOP": 1800,
+    "MAT": 2160,
+}
+
+
+def _domain_layout_ops(graph: ConceptGraph, concept_paths: dict[str, str]) -> list[PatchOperation]:
+    offsets: dict[str, int] = {}
+    operations: list[PatchOperation] = []
+    for concept in graph.concepts:
+        path = concept_paths.get(concept.id)
+        if not path:
+            continue
+        domain = str(concept.domain)
+        x = _DOMAIN_COLUMNS.get(domain, 2520)
+        y = offsets.get(domain, 0) * -160
+        offsets[domain] = offsets.get(domain, 0) + 1
+        operations.append(
+            PatchOperation(
+                kind="layout",
+                target=path,
+                args={
+                    "x": x,
+                    "y": y,
+                    "domain": domain,
+                    "assembly_macro_id": "group_by_domain",
+                },
+            )
+        )
+    return operations
+
+
+def _role_layout_ops(
+    graph: ConceptGraph,
+    concept_paths: dict[str, str],
+    *,
+    role: str,
+    macro_id: str,
+) -> list[PatchOperation]:
+    return _matching_layout_ops(
+        graph,
+        concept_paths,
+        macro_id=macro_id,
+        predicate=lambda concept: concept.role == role,
+    )
+
+
+def _matching_layout_ops(
+    graph: ConceptGraph,
+    concept_paths: dict[str, str],
+    *,
+    macro_id: str,
+    predicate,
+) -> list[PatchOperation]:
+    operations: list[PatchOperation] = []
+    for concept in graph.concepts:
+        if not predicate(concept):
+            continue
+        path = concept_paths.get(concept.id)
+        if not path:
+            continue
+        domain = str(concept.domain)
+        operations.append(
+            PatchOperation(
+                kind="layout",
+                target=path,
+                args={
+                    "x": _DOMAIN_COLUMNS.get(domain, 2520),
+                    "y": -720 - (len(operations) * 120),
+                    "domain": domain,
+                    "assembly_macro_id": macro_id,
+                },
+            )
+        )
+    return operations
+
+
+def _assembly_annotation_op(task: VisualTaskSpec, candidate: CandidateConceptGraph, assembly_macros) -> PatchOperation:
+    validation = _dedupe(
+        [
+            *candidate.validation_needs,
+            *[addon for macro in assembly_macros for addon in macro.validation_addons],
+        ]
+    )
+    macro_notes = _dedupe([note for macro in assembly_macros for note in macro.notes])
+    text = "\n".join(
+        [
+            "TDPilot assembled concept graph",
+            f"patterns: {', '.join(candidate.pattern_ids)}",
+            f"validation: {', '.join(validation)}",
+            f"notes: {'; '.join(macro_notes)}",
+            f"evidence: {', '.join(candidate.grounding_evidence[:8])}",
+        ]
+    )
+    return PatchOperation(
+        kind="annotate",
+        target=task.target_root,
+        args={
+            "name": "assembly_notes",
+            "text": text,
+            "assembly_macro_id": "annotate_operator_chain",
+            "validation_addons": validation,
+            "macro_notes": macro_notes,
+            "evidence": candidate.grounding_evidence[:8],
+        },
+    )
 
 
 def _compile_patch_plan(task: VisualTaskSpec, graph: ConceptGraph, existing_names: set[str]) -> PatchPlan:
@@ -823,6 +1707,23 @@ def _compile_patch_plan(task: VisualTaskSpec, graph: ConceptGraph, existing_name
                     kind="set_params",
                     target=_join_path(task.target_root, name),
                     args={"params": resolved_params},
+                )
+            )
+        if concept.content or concept.generated_code:
+            args = _resolve_param_refs(concept.content or {}, concept_names, task.target_root)
+            if concept.generated_code:
+                args["generated_code"] = _resolve_param_refs(
+                    concept.generated_code,
+                    concept_names,
+                    task.target_root,
+                )
+                if "text" not in args and "code" in args["generated_code"]:
+                    args["text"] = args["generated_code"]["code"]
+            operations.append(
+                PatchOperation(
+                    kind="set_dat_content",
+                    target=_join_path(task.target_root, name),
+                    args=args,
                 )
             )
 
@@ -877,9 +1778,21 @@ def _assign_node_names(concepts: list[ConceptNode], existing_names: set[str]) ->
 
 
 def _base_name_for(concept: ConceptNode) -> str:
+    if concept.id == "debug_notes":
+        return "debug_notes"
     if concept.role == "output":
         if concept.domain == "POP":
             return "out_pop"
+        if concept.domain == "CHOP":
+            return "out_chop"
+        if concept.domain == "DAT":
+            return "out_dat"
+        if concept.domain == "SOP":
+            return "out_sop"
+        if concept.domain == "MAT":
+            return "out_mat"
+        if concept.domain == "COMP":
+            return "out_comp"
         return "out1"
     if concept.role in {"control", "ui"}:
         return concept.id
@@ -908,12 +1821,22 @@ def _resolve_param_refs(value: Any, concept_names: dict[str, str], target_root: 
         return {key: _resolve_param_refs(item, concept_names, target_root) for key, item in value.items()}
     if isinstance(value, list):
         return [_resolve_param_refs(item, concept_names, target_root) for item in value]
-    if isinstance(value, str) and value.startswith("${path:") and value.endswith("}"):
-        concept_id = value[len("${path:") : -1]
-        node_name = concept_names.get(concept_id)
-        if node_name:
-            return _join_path(target_root, node_name)
+    if isinstance(value, str):
+        return _resolve_path_refs_in_string(value, concept_names, target_root)
     return value
+
+
+_PATH_REF_PATTERN = re.compile(r"\$\{path:([A-Za-z0-9_]+)\}")
+
+
+def _resolve_path_refs_in_string(value: str, concept_names: dict[str, str], target_root: str) -> str:
+    def replace(match: re.Match[str]) -> str:
+        node_name = concept_names.get(match.group(1))
+        if not node_name:
+            return match.group(0)
+        return _join_path(target_root, node_name)
+
+    return _PATH_REF_PATTERN.sub(replace, value)
 
 
 def _empty_graph(task: VisualTaskSpec, *, profile: str) -> ConceptGraph:

@@ -31,12 +31,22 @@ async def test_golden_eval_case_maps_to_expected_profile_and_ops(case: dict):
     client = FakeTDClient(
         scripted={
             "families": {"families": _families_for(case["expected_ops"])},
-            "nodes": {"nodes": []},
+            "nodes": {"nodes": case.get("existing_nodes") or []},
         }
     )
 
-    plan = await build_brain_plan(client, intent=case["intent"], target_root=case["target_root"])
+    plan = await build_brain_plan(
+        client,
+        intent=case["intent"],
+        target_root=case["target_root"],
+        constraints=case.get("constraints") if isinstance(case.get("constraints"), dict) else None,
+    )
 
-    assert plan.blocked_questions == []
-    assert plan.concept_graph.profile == case["expected_profile"]
-    assert set(case["expected_ops"]).issubset(set(plan.concept_graph.operators))
+    if case.get("expected_blocked") is True:
+        assert plan.blocked_questions
+        assert plan.patch_plan.operations == []
+        assert set(plan.concept_graph.operators) == set()
+    else:
+        assert plan.blocked_questions == []
+        assert plan.concept_graph.profile == case["expected_profile"]
+        assert set(case["expected_ops"]).issubset(set(plan.concept_graph.operators))

@@ -28,7 +28,7 @@ class PatchOperation(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    kind: Literal["create_node", "set_params", "connect", "layout", "annotate", "macro"]
+    kind: Literal["create_node", "set_params", "set_dat_content", "connect", "layout", "annotate", "macro"]
     target: str | None = None
     args: dict[str, Any] = Field(default_factory=dict)
     depends_on: list[int] = Field(default_factory=list)

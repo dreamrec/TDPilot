@@ -192,6 +192,35 @@ async def test_set_params_uses_node_params_set_endpoint():
 
 
 @pytest.mark.asyncio
+async def test_set_dat_content_uses_node_content_set_endpoint():
+    ops = [
+        PatchOperation(
+            kind="set_dat_content",
+            target="/p/callbacks",
+            args={"text": "def onTableChange(dat, prevDAT, info):\n    return\n"},
+        )
+    ]
+    client = FakeTDClient(
+        scripted={
+            "node/content/set": {"success": True},
+            "node/errors": {"issues": []},
+            "cooking": {},
+        }
+    )
+    sentinel = UndoBlockSentinel()
+
+    result = await apply_plan(client, _plan(ops), sentinel=sentinel)
+
+    assert result.status == "clean"
+    content_calls = [call for call in client.calls if call[0] == "node/content/set"]
+    assert len(content_calls) == 1
+    assert content_calls[0][1] == {
+        "path": "/p/callbacks",
+        "text": "def onTableChange(dat, prevDAT, info):\n    return\n",
+    }
+
+
+@pytest.mark.asyncio
 async def test_connect_uses_source_target_path_fields():
     """v1.5.1: connect body uses ``source_path`` / ``target_path`` /
     ``source_index`` / ``target_index`` matching TD's handle_connect_nodes."""

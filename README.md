@@ -74,6 +74,7 @@ Using Claude Desktop instead of Claude Code? See [`docs/INSTALL_CLAUDE_PLUGIN.md
 - A correctness-first visual programming brain that plans TD concepts before it mutates networks.
 - A technique memory system that learns from your projects and builds a reusable library.
 - A 656-card reviewed operator atlas with zero-concept backlog, covering CHOP, COMP, DAT, MAT, POP, SOP, and TOP with Official Derivative docs, `key_concepts`, `key_params`, and gotchas.
+- A 50+ case concept-to-node golden eval corpus gated by `scripts/eval_brain_golden.py`, covering compiler-backed patterns, assembly macros, generated-code paths, device-source prompts, and stable output conventions.
 - 110-tool runtime surface with focus + locations, hint injection, component notes, knowledge corpus, vision diagnostics, TD 2025 native inspection, official recommendations, job resources, memory, optimizer, safety, POPx inspection, project lifecycle control, custom parameter authoring, typed patch sessions, BrainPlan transactions, optional cockpit rendering, agent activity log, and one-tool self-update.
 
 ## Packaged Add-ons
@@ -111,6 +112,7 @@ TDPilot v2.0.0 turns the mature 1.6 tool surface into a correctness-first visual
 - **`td_transaction_apply`** — safe low-level executor for `PatchPlan` or `BrainPlan`, with preflight, max-op limits, snapshots, dry-run support, dependency ordering, rollback flags, and validation profiles.
 - **`td_cockpit_render`** — read-only MCP Apps cockpit payload for concept graph, transaction, validation, rollback, and trace summaries. The open MCP core stays local-first and has no hosted LLM dependency.
 - **Brain validators and atlas coverage** — concept profiles now cover feedback, audio-reactive, POP, GLSL, render pipeline, panel UI, control rigs, and generic TOP/CHOP/SOP/DAT chains. The 656-card reviewed operator atlas now has zero-concept backlog across CHOP, COMP, DAT, MAT, POP, SOP, and TOP, and `scripts/audit_brain_atlas.py` gates it.
+- **Concept-to-node evals** — the 50+ case concept-to-node golden eval corpus is checked by `scripts/eval_brain_golden.py`, with coverage for compiler-backed candidate graphs, pattern composition, assembly macros, generated-code diagnostics, device-source constraints, and stable/debug outputs.
 - **Client packaging** — Codex and Claude plugin surfaces include brain skills, brain agents, deterministic hooks, MCP prompts, live cached resources, schema snapshots, and release audits.
 
 Recent v1.6 groundwork remains in place: read journals, agent activity log, self-update, hint routing, TD 2025 knowledge cards, and the one-button `.tox` installer.

@@ -2,11 +2,24 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+import math
+from collections.abc import Awaitable, Callable, Iterable
 from typing import Any
 
 from td_mcp import patch
-from td_mcp.brain.validators import build_validation_report_v2, validate_reference_params_for_plan
+from td_mcp.brain.code_harness import (
+    patch_plan_generated_code_runtime_contracts,
+    validate_generated_code_runtime_contracts,
+    validate_patch_plan_generated_code,
+)
+from td_mcp.brain.param_semantics import validate_patch_plan_parameter_contract
+from td_mcp.brain.repair import build_validation_repair_plan
+from td_mcp.brain.validators import (
+    build_validation_report_v2,
+    static_profile_probe_metrics_for_plan,
+    static_profile_probe_metrics_for_profiles,
+    validate_reference_params_for_plan,
+)
 from td_mcp.models.brain import TransactionOptions, TransactionResult, ValidationIssue, ValidationReportV2
 from td_mcp.models.patch import PatchPlan, PatchPreview
 from td_mcp.patch.undo_sentinel import UndoBlockSentinel
@@ -22,6 +35,7 @@ async def apply_transaction(
     options: TransactionOptions | None = None,
     sentinel: UndoBlockSentinel,
     concept_profile: str | None = None,
+    concept_profiles: Iterable[str | None] | None = None,
     macro_engine=None,
     create_snapshot: SnapshotCallback | None = None,
     restore_snapshot: RestoreCallback | None = None,
@@ -43,6 +57,28 @@ async def apply_transaction(
                 target_root=plan.target_root,
                 concept_profile=concept_profile,
                 issues=reference_issues,
+            )
+            return result
+
+        param_semantics_issues = validate_patch_plan_parameter_contract(plan)
+        if param_semantics_issues:
+            result.failed_reason = "; ".join(issue.message for issue in param_semantics_issues)
+            result.validation_failed = True
+            result.validation_report = _param_semantics_report(
+                target_root=plan.target_root,
+                concept_profile=concept_profile,
+                issues=param_semantics_issues,
+            )
+            return result
+
+        code_issues = validate_patch_plan_generated_code(plan)
+        if code_issues:
+            result.failed_reason = "; ".join(issue.message for issue in code_issues)
+            result.validation_failed = True
+            result.validation_report = _generated_code_report(
+                target_root=plan.target_root,
+                concept_profile=concept_profile,
+                issues=code_issues,
             )
             return result
 
@@ -82,14 +118,35 @@ async def apply_transaction(
     result.failed_op = apply_result.failed_op
     result.failed_reason = apply_result.failed_reason
 
-    validation_report = build_validation_report_v2(
-        target_root=plan.target_root,
-        profile=opts.validation_profile,
+    profile_layers = _transaction_concept_profiles(
         concept_profile=concept_profile,
-        patch_result=apply_result,
+        concept_profiles=concept_profiles,
+    )
+    validation_report = await _build_transaction_validation_report(
+        td_client,
+        plan,
+        apply_result,
+        options=opts,
+        concept_profile=concept_profile,
+        concept_profiles=profile_layers,
     )
     result.validation_report = validation_report
     result.validation_failed = not validation_report.ok
+    if result.validation_failed and opts.auto_repair and opts.max_repair_attempts > 0:
+        repaired_report = await _attempt_validation_repair(
+            td_client,
+            plan,
+            result,
+            validation_report,
+            options=opts,
+            sentinel=sentinel,
+            concept_profile=concept_profile,
+            concept_profiles=profile_layers,
+            macro_engine=macro_engine,
+        )
+        if repaired_report is not None:
+            result.validation_report = repaired_report
+            result.validation_failed = not repaired_report.ok
 
     should_rollback = (
         apply_result.status == "broken"
@@ -104,6 +161,970 @@ async def apply_transaction(
 
     result.status = apply_result.status
     return result
+
+
+async def _build_transaction_validation_report(
+    td_client,
+    plan: PatchPlan,
+    apply_result,
+    *,
+    options: TransactionOptions,
+    concept_profile: str | None,
+    concept_profiles: Iterable[str | None],
+) -> ValidationReportV2:
+    profile_layers = [str(profile) for profile in concept_profiles if profile]
+    if len(profile_layers) > 1:
+        cheap_metrics = static_profile_probe_metrics_for_profiles(
+            plan,
+            validation_profile=options.validation_profile,
+            concept_profiles=profile_layers,
+        )
+    else:
+        cheap_metrics = static_profile_probe_metrics_for_plan(
+            plan,
+            validation_profile=options.validation_profile,
+            concept_profile=concept_profile,
+        )
+    runtime_contracts = patch_plan_generated_code_runtime_contracts(plan)
+    runtime_report: dict[str, Any] | None = None
+    if runtime_contracts:
+        runtime_report = await validate_generated_code_runtime_contracts(td_client, runtime_contracts)
+        cheap_metrics["generated_code_runtime"] = {
+            "contract_count": runtime_report["contract_count"],
+            "checked_contract_count": runtime_report["checked_contract_count"],
+            "evidence": runtime_report["evidence"],
+        }
+    await _validate_runtime_profile_probes(td_client, plan, cheap_metrics)
+    validation_report = build_validation_report_v2(
+        target_root=plan.target_root,
+        profile=options.validation_profile,
+        concept_profile=concept_profile,
+        concept_profiles=profile_layers,
+        patch_result=apply_result,
+        cheap_metrics=cheap_metrics,
+    )
+    if runtime_report is not None:
+        _merge_generated_code_runtime_report(validation_report, runtime_report)
+    return validation_report
+
+
+async def _attempt_validation_repair(
+    td_client,
+    plan: PatchPlan,
+    result: TransactionResult,
+    validation_report: ValidationReportV2,
+    *,
+    options: TransactionOptions,
+    sentinel: UndoBlockSentinel,
+    concept_profile: str | None,
+    concept_profiles: Iterable[str | None],
+    macro_engine=None,
+) -> ValidationReportV2 | None:
+    repair_plan = build_validation_repair_plan(plan, validation_report)
+    if repair_plan is None:
+        return None
+    attempt = {
+        "status": "planned",
+        "source_issue_codes": [issue.code for issue in validation_report.issues],
+        "repair_plan": repair_plan.model_dump(mode="json"),
+    }
+    result.repair_attempts.append(attempt)
+    try:
+        repair_apply_result = await patch.apply_plan(
+            td_client,
+            repair_plan,
+            sentinel=sentinel,
+            auto_validate=True,
+            macro_engine=macro_engine,
+        )
+    except patch.NestedBlockError as exc:
+        attempt["status"] = "failed"
+        attempt["error"] = str(exc)
+        return None
+    attempt["apply_result"] = repair_apply_result.model_dump(mode="json")
+    if repair_apply_result.status == "broken":
+        attempt["status"] = "failed"
+        attempt["error"] = repair_apply_result.failed_reason or "repair apply failed"
+        return None
+    repaired_report = await _build_transaction_validation_report(
+        td_client,
+        plan,
+        repair_apply_result,
+        options=options,
+        concept_profile=concept_profile,
+        concept_profiles=concept_profiles,
+    )
+    attempt["status"] = "applied" if repaired_report.ok else "validation_failed"
+    attempt["validation_ok"] = repaired_report.ok
+    attempt["validation_issue_codes"] = [issue.code for issue in repaired_report.issues]
+    return repaired_report
+
+
+def _transaction_concept_profiles(
+    *,
+    concept_profile: str | None,
+    concept_profiles: Iterable[str | None] | None,
+) -> list[str]:
+    profiles = [str(profile) for profile in (concept_profiles or []) if profile]
+    if concept_profile:
+        profiles.append(str(concept_profile))
+    return list(dict.fromkeys(profiles))
+
+
+async def _validate_runtime_profile_probes(td_client, plan: PatchPlan, metrics: dict[str, Any]) -> None:
+    for result in metrics.get("profile_probe_results", []):
+        if not isinstance(result, dict):
+            continue
+        if result.get("status") != "runtime_contract_present":
+            continue
+        if result.get("probe_id") == "audio_signal_activity":
+            await _validate_audio_signal_activity(td_client, plan, result)
+        elif result.get("probe_id") == "callback_guard_present":
+            await _validate_callback_guard_readback(td_client, plan, result)
+        elif result.get("probe_id") == "compile_state":
+            await _validate_compile_state_readback(td_client, plan, result)
+        elif result.get("probe_id") == "panel_state_readback":
+            await _validate_panel_state_readback(td_client, plan, result)
+        elif result.get("probe_id") == "attribute_sample_available":
+            await _validate_pop_attribute_metadata_readback(td_client, plan, result)
+        elif result.get("probe_id") == "finite_pop_bounds":
+            await _validate_pop_bounds_readback(td_client, plan, result)
+        elif result.get("probe_id") == "camera_frustum_coverage":
+            await _validate_render_camera_frustum_readback(td_client, plan, result)
+        elif result.get("probe_id") in {"nonblack_output", "render_top_output"}:
+            await _validate_optional_top_sample_readback(td_client, plan, result)
+        elif result.get("probe_id") == "feedback_output_readback":
+            await _validate_feedback_output_readback(td_client, plan, result)
+        elif result.get("probe_id") == "visual_output_sample":
+            await _validate_visual_output_sample_readback(td_client, plan, result)
+
+
+async def _validate_audio_signal_activity(
+    td_client,
+    plan: PatchPlan,
+    result: dict[str, Any],
+) -> None:
+    readback_path = _runtime_probe_chop_path(plan)
+    result["runtime_required"] = True
+    if not readback_path:
+        _mark_runtime_probe_unavailable(
+            result,
+            "No created Null CHOP output path was available for runtime readback.",
+        )
+        return
+
+    result["readback_path"] = readback_path
+    try:
+        payload = await td_client.request("chop/data", {"path": readback_path})
+    except Exception as exc:  # noqa: BLE001
+        _mark_runtime_probe_unavailable(result, f"CHOP readback failed: {exc}")
+        return
+
+    if not isinstance(payload, dict) or payload.get("error"):
+        message = str(payload.get("error") if isinstance(payload, dict) else "invalid CHOP readback")
+        _mark_runtime_probe_unavailable(result, message)
+        return
+
+    delta, sample_count = _chop_payload_delta(payload)
+    result["runtime_metric_values"] = {
+        "audio_analysis_channel_delta": delta,
+        "audio_analysis_channel_samples": sample_count,
+    }
+    result["runtime_evidence"] = {
+        "endpoint": "chop/data",
+        "path": readback_path,
+        "channel_count": len(payload.get("channels", {}) or {}),
+    }
+    if sample_count > 1 and delta > 1e-6:
+        result["status"] = "runtime_pass"
+        result.pop("pending_metric_names", None)
+        return
+
+    result["status"] = "runtime_failed"
+    result["issue_code"] = "profile_probe_runtime_no_activity"
+    result["issue_message"] = (
+        "audio_signal_activity: Audio-reactive runtime validation sampled "
+        f"{readback_path} but observed no channel movement."
+    )
+
+
+async def _validate_panel_state_readback(
+    td_client,
+    plan: PatchPlan,
+    result: dict[str, Any],
+) -> None:
+    readback_path = _runtime_probe_chop_path(plan)
+    result["runtime_required"] = True
+    if not readback_path:
+        _mark_runtime_probe_unavailable(
+            result,
+            "No created Null CHOP output path was available for panel state readback.",
+        )
+        return
+
+    result["readback_path"] = readback_path
+    try:
+        payload = await td_client.request("chop/data", {"path": readback_path})
+    except Exception as exc:  # noqa: BLE001
+        _mark_runtime_probe_unavailable(result, f"Panel CHOP readback failed: {exc}")
+        return
+
+    if not isinstance(payload, dict) or payload.get("error"):
+        message = str(payload.get("error") if isinstance(payload, dict) else "invalid panel CHOP readback")
+        _mark_runtime_probe_unavailable(result, message)
+        return
+
+    channel_count, sample_count = _chop_payload_presence(payload)
+    result["runtime_metric_values"] = {
+        "panel_state_channel_count": channel_count,
+        "panel_state_sample_count": sample_count,
+    }
+    result["runtime_evidence"] = {
+        "endpoint": "chop/data",
+        "path": readback_path,
+        "channel_count": channel_count,
+    }
+    if channel_count > 0 and sample_count > 0:
+        result["status"] = "runtime_pass"
+        result.pop("pending_metric_names", None)
+        return
+
+    result["status"] = "runtime_failed"
+    result["issue_code"] = "profile_probe_runtime_no_panel_state"
+    result["issue_message"] = (
+        "panel_state_readback: Panel UI runtime validation sampled "
+        f"{readback_path} but observed no panel state channels."
+    )
+
+
+async def _validate_feedback_output_readback(
+    td_client,
+    plan: PatchPlan,
+    result: dict[str, Any],
+) -> None:
+    readback_path = _runtime_probe_top_path(plan)
+    result["runtime_required"] = True
+    if not readback_path:
+        _mark_runtime_probe_unavailable(
+            result,
+            "No created Null TOP output path was available for feedback output readback.",
+        )
+        return
+
+    result["readback_path"] = readback_path
+    try:
+        payload = await td_client.request("analyze_frame", {"path": readback_path, "modes": ["luminance"]})
+    except Exception as exc:  # noqa: BLE001
+        _mark_runtime_probe_unavailable(result, f"TOP luminance readback failed: {exc}")
+        return
+
+    if not isinstance(payload, dict) or payload.get("error"):
+        message = str(payload.get("error") if isinstance(payload, dict) else "invalid TOP luminance readback")
+        _mark_runtime_probe_unavailable(result, message)
+        return
+
+    mean, max_value = _top_luminance_metrics(payload)
+    result["runtime_metric_values"] = {
+        "feedback_output_luminance_mean": mean,
+        "feedback_output_luminance_max": max_value,
+    }
+    result["runtime_evidence"] = {
+        "endpoint": "analyze_frame",
+        "path": readback_path,
+        "resolution": payload.get("resolution"),
+        "channels": payload.get("channels"),
+    }
+    if max_value > 1e-6 and mean > 1e-6:
+        result["status"] = "runtime_pass"
+        result.pop("pending_metric_names", None)
+        return
+
+    result["status"] = "runtime_failed"
+    result["issue_code"] = "profile_probe_runtime_black_feedback_output"
+    result["issue_message"] = (
+        "feedback_output_readback: Feedback runtime validation sampled "
+        f"{readback_path} but observed black or empty luminance."
+    )
+
+
+async def _validate_optional_top_sample_readback(
+    td_client,
+    plan: PatchPlan,
+    result: dict[str, Any],
+) -> None:
+    readback_path = _runtime_probe_top_path(plan)
+    probe_id = str(result.get("probe_id") or "top_sample_optional")
+    result["runtime_required"] = True
+    if not readback_path:
+        _mark_runtime_probe_unavailable(
+            result,
+            "No created Null TOP output path was available for optional TOP sample readback.",
+        )
+        return
+
+    result["readback_path"] = readback_path
+    request = {"path": readback_path, "modes": ["luminance", "alpha_coverage"]}
+    try:
+        payload = await td_client.request("analyze_frame", request)
+    except Exception as exc:  # noqa: BLE001
+        _mark_runtime_probe_unavailable(result, f"Optional TOP analysis readback failed: {exc}")
+        return
+
+    if not isinstance(payload, dict) or payload.get("error"):
+        message = str(payload.get("error") if isinstance(payload, dict) else "invalid optional TOP analysis")
+        _mark_runtime_probe_unavailable(result, message)
+        return
+
+    mean, max_value, std = _top_luminance_stats(payload)
+    coverage = _top_alpha_coverage(payload, fallback=1.0 if max_value > 1e-6 else 0.0)
+    result["runtime_evidence"] = {
+        "endpoint": "analyze_frame",
+        "path": readback_path,
+        "resolution": payload.get("resolution"),
+        "channels": payload.get("channels"),
+        "modes": ["luminance", "alpha_coverage"],
+    }
+    if probe_id == "render_top_output":
+        _record_render_top_output_result(result, mean=mean, max_value=max_value, coverage=coverage)
+        return
+
+    _record_nonblack_top_output_result(result, mean=mean, max_value=max_value, std=std)
+
+
+async def _validate_visual_output_sample_readback(
+    td_client,
+    plan: PatchPlan,
+    result: dict[str, Any],
+) -> None:
+    readback_path = _runtime_probe_top_path(plan)
+    result["runtime_required"] = True
+    if not readback_path:
+        _mark_runtime_probe_unavailable(
+            result,
+            "No created Null TOP output path was available for cheap visual output sampling.",
+        )
+        return
+
+    result["readback_path"] = readback_path
+    request = {"path": readback_path, "modes": ["luminance", "alpha_coverage"]}
+    try:
+        payload = await td_client.request("analyze_frame", request)
+    except Exception as exc:  # noqa: BLE001
+        _mark_runtime_probe_unavailable(result, f"Cheap TOP visual analysis failed: {exc}")
+        return
+
+    if payload == {}:
+        result["status"] = "runtime_deferred"
+        result["deferred_reason"] = "analyze_frame returned no visual metrics for cheap output sampling."
+        return
+
+    if not isinstance(payload, dict) or payload.get("error"):
+        message = str(payload.get("error") if isinstance(payload, dict) else "invalid cheap TOP analysis")
+        _mark_runtime_probe_unavailable(result, message)
+        return
+
+    mean, max_value, std = _top_luminance_stats(payload)
+    coverage = _top_alpha_coverage(payload, fallback=1.0 if max_value > 1e-6 else 0.0)
+    result["runtime_metric_values"] = {
+        "output_luminance": mean,
+        "output_alpha_coverage": coverage,
+        "output_entropy": std,
+    }
+    result["runtime_evidence"] = {
+        "endpoint": "analyze_frame",
+        "path": readback_path,
+        "resolution": payload.get("resolution"),
+        "channels": payload.get("channels"),
+        "modes": ["luminance", "alpha_coverage"],
+    }
+    if mean > 1e-6 and max_value > 1e-6 and coverage > 1e-6:
+        result["status"] = "runtime_pass"
+        result.pop("pending_metric_names", None)
+        return
+
+    result["status"] = "runtime_failed"
+    result["issue_code"] = "profile_probe_runtime_empty_visual_output"
+    result["issue_message"] = (
+        "visual_output_sample: Cheap visual validation sampled "
+        f"{readback_path} but observed black, transparent, or empty output."
+    )
+
+
+async def _validate_render_camera_frustum_readback(
+    td_client,
+    plan: PatchPlan,
+    result: dict[str, Any],
+) -> None:
+    render_path = _runtime_probe_render_path(plan)
+    camera_paths = set(_created_paths_for_op_types(plan, ("cameraCOMP",)))
+    geometry_paths = set(_created_paths_for_op_types(plan, ("geometryCOMP",)))
+    result["runtime_required"] = True
+    if not render_path:
+        _mark_runtime_probe_unavailable(
+            result,
+            "No created Render TOP path was available for camera/frustum readback.",
+        )
+        return
+
+    result["readback_path"] = render_path
+    try:
+        payload = await td_client.request(
+            "node/params",
+            {"path": render_path, "names": ["camera", "geometry"]},
+        )
+    except Exception as exc:  # noqa: BLE001
+        _mark_runtime_probe_unavailable(result, f"Render camera/frustum readback failed: {exc}")
+        return
+
+    if not isinstance(payload, dict) or payload.get("error"):
+        message = str(payload.get("error") if isinstance(payload, dict) else "invalid render param readback")
+        _mark_runtime_probe_unavailable(result, message)
+        return
+
+    camera_value = _param_readback_value(payload, "camera")
+    geometry_value = _param_readback_value(payload, "geometry")
+    camera_bound = _readback_value_matches_created_path(camera_value, camera_paths)
+    geometry_bound = _readback_value_matches_created_path(geometry_value, geometry_paths)
+    result["runtime_metric_values"] = {
+        "render_camera_ref_bound": camera_bound,
+        "render_geometry_ref_bound": geometry_bound,
+    }
+    result["runtime_evidence"] = {
+        "endpoint": "node/params",
+        "path": render_path,
+        "camera": camera_value,
+        "geometry": geometry_value,
+    }
+    if camera_bound and geometry_bound:
+        result["status"] = "runtime_pass"
+        result.pop("pending_metric_names", None)
+        return
+
+    result["status"] = "runtime_failed"
+    result["issue_code"] = "profile_probe_runtime_render_refs_unbound"
+    result["issue_message"] = (
+        "camera_frustum_coverage: Render runtime validation sampled "
+        f"{render_path} but did not find bound planned camera and geometry references."
+    )
+
+
+def _record_render_top_output_result(
+    result: dict[str, Any],
+    *,
+    mean: float,
+    max_value: float,
+    coverage: float,
+) -> None:
+    result["runtime_metric_values"] = {
+        "render_luminance": mean,
+        "render_coverage": coverage,
+    }
+    if mean > 1e-6 and max_value > 1e-6 and coverage > 1e-6:
+        result["status"] = "runtime_pass"
+        result.pop("pending_metric_names", None)
+        return
+
+    result["status"] = "runtime_failed"
+    result["issue_code"] = "profile_probe_runtime_invisible_render_output"
+    result["issue_message"] = (
+        "render_top_output: Optional render runtime validation sampled "
+        f"{result.get('readback_path')} but observed invisible or empty output."
+    )
+
+
+def _record_nonblack_top_output_result(
+    result: dict[str, Any],
+    *,
+    mean: float,
+    max_value: float,
+    std: float,
+) -> None:
+    result["runtime_metric_values"] = {
+        "output_luminance": mean,
+        "output_entropy": std,
+    }
+    if mean > 1e-6 and max_value > 1e-6 and std > 1e-6:
+        result["status"] = "runtime_pass"
+        result.pop("pending_metric_names", None)
+        return
+
+    result["status"] = "runtime_failed"
+    result["issue_code"] = "profile_probe_runtime_trivial_top_output"
+    result["issue_message"] = (
+        "nonblack_output: Optional TOP runtime validation sampled "
+        f"{result.get('readback_path')} but observed black or trivially constant output."
+    )
+
+
+async def _validate_compile_state_readback(
+    td_client,
+    plan: PatchPlan,
+    result: dict[str, Any],
+) -> None:
+    readback_path = _runtime_probe_shader_path(plan, result)
+    metric_name = _first_metric_name(result, fallback="shader_compile_clean")
+    result["runtime_required"] = True
+    if not readback_path:
+        _mark_runtime_probe_unavailable(
+            result,
+            "No created GLSL operator path was available for compile-state readback.",
+        )
+        return
+
+    result["readback_path"] = readback_path
+    try:
+        payload = await td_client.request("node/errors", {"path": readback_path})
+    except Exception as exc:  # noqa: BLE001
+        _mark_runtime_probe_unavailable(result, f"GLSL compile-state readback failed: {exc}")
+        return
+
+    if not isinstance(payload, dict) or payload.get("error"):
+        message = str(payload.get("error") if isinstance(payload, dict) else "invalid node/errors readback")
+        _mark_runtime_probe_unavailable(result, message)
+        return
+
+    issues = payload.get("issues")
+    issue_count = len(issues) if isinstance(issues, list) else 0
+    clean = issue_count == 0
+    result["runtime_metric_values"] = {metric_name: clean}
+    result["runtime_evidence"] = {
+        "endpoint": "node/errors",
+        "path": readback_path,
+        "issue_count": issue_count,
+    }
+    if clean:
+        result["status"] = "runtime_pass"
+        result.pop("pending_metric_names", None)
+        return
+
+    result["status"] = "runtime_failed"
+    result["issue_code"] = "profile_probe_runtime_compile_state_error"
+    result["issue_message"] = (
+        "compile_state: GLSL runtime validation sampled "
+        f"{readback_path} and found {issue_count} compile/error issue(s): {_first_runtime_issue_message(issues)}"
+    )
+
+
+async def _validate_callback_guard_readback(
+    td_client,
+    plan: PatchPlan,
+    result: dict[str, Any],
+) -> None:
+    readback_path = _runtime_probe_dat_execute_path(plan)
+    metric_name = _first_metric_name(result, fallback="modern_table_change_callback_present")
+    result["runtime_required"] = True
+    if not readback_path:
+        _mark_runtime_probe_unavailable(
+            result,
+            "No created DAT Execute DAT path was available for callback guard readback.",
+        )
+        return
+
+    result["readback_path"] = readback_path
+    try:
+        payload = await td_client.request("node/content", {"path": readback_path})
+    except Exception as exc:  # noqa: BLE001
+        _mark_runtime_probe_unavailable(result, f"DAT Execute callback content readback failed: {exc}")
+        return
+
+    callback_text = _content_text(payload)
+    ok = _has_callback_guard_contract(callback_text)
+    result["runtime_metric_values"] = {metric_name: ok}
+    result["runtime_evidence"] = {
+        "endpoint": "node/content",
+        "path": readback_path,
+    }
+    if ok:
+        result["status"] = "runtime_pass"
+        result.pop("pending_metric_names", None)
+        return
+
+    result["status"] = "runtime_failed"
+    result["issue_code"] = "profile_probe_runtime_callback_guard_missing"
+    result["issue_message"] = (
+        "callback_guard_present: DAT Execute runtime validation sampled "
+        f"{readback_path} but did not find a guarded onTableChange callback."
+    )
+
+
+async def _validate_pop_bounds_readback(
+    td_client,
+    plan: PatchPlan,
+    result: dict[str, Any],
+) -> None:
+    readback_path = _runtime_probe_pop_path(plan)
+    result["runtime_required"] = True
+    if not readback_path:
+        _mark_runtime_probe_unavailable(
+            result,
+            "No created Null POP output path was available for POP bounds readback.",
+        )
+        return
+
+    result["readback_path"] = readback_path
+    try:
+        payload = await td_client.request("pop/bounds", {"path": readback_path})
+    except Exception as exc:  # noqa: BLE001
+        _mark_runtime_probe_unavailable(result, f"POP bounds readback failed: {exc}")
+        return
+
+    if not isinstance(payload, dict) or payload.get("error"):
+        message = str(payload.get("error") if isinstance(payload, dict) else "invalid POP bounds readback")
+        _mark_runtime_probe_unavailable(result, message)
+        return
+
+    finite = _pop_bounds_are_finite(payload)
+    result["runtime_metric_values"] = {"pop_bounds_finite": finite}
+    result["runtime_evidence"] = {
+        "endpoint": "pop/bounds",
+        "path": readback_path,
+    }
+    if finite:
+        result["status"] = "runtime_pass"
+        result.pop("pending_metric_names", None)
+        return
+
+    result["status"] = "runtime_failed"
+    result["issue_code"] = "profile_probe_runtime_nonfinite_pop_bounds"
+    result["issue_message"] = (
+        "finite_pop_bounds: POP runtime validation sampled "
+        f"{readback_path} but observed missing or non-finite bounds."
+    )
+
+
+async def _validate_pop_attribute_metadata_readback(
+    td_client,
+    plan: PatchPlan,
+    result: dict[str, Any],
+) -> None:
+    readback_path = _runtime_probe_pop_path(plan)
+    metric_name = _first_metric_name(result, fallback="pop_attribute_count_present")
+    result["runtime_required"] = True
+    if not readback_path:
+        _mark_runtime_probe_unavailable(
+            result,
+            "No created Null POP output path was available for POP attribute metadata readback.",
+        )
+        return
+
+    result["readback_path"] = readback_path
+    request = {
+        "path": readback_path,
+        "include_bounds": False,
+        "include_attributes": True,
+        "point_attributes": ["P"],
+        "prim_attributes": [],
+        "vert_attributes": [],
+        "start": 0,
+        "count": 8,
+        "delayed": True,
+    }
+    try:
+        payload = await td_client.request("pop/inspect", request)
+    except Exception as exc:  # noqa: BLE001
+        _mark_runtime_probe_unavailable(result, f"POP attribute metadata readback failed: {exc}")
+        return
+
+    if not isinstance(payload, dict) or payload.get("error"):
+        message = str(payload.get("error") if isinstance(payload, dict) else "invalid POP inspect readback")
+        _mark_runtime_probe_unavailable(result, message)
+        return
+
+    attribute_count = _pop_attribute_metadata_count(payload)
+    present = attribute_count > 0
+    result["runtime_metric_values"] = {metric_name: present}
+    result["runtime_evidence"] = {
+        "endpoint": "pop/inspect",
+        "path": readback_path,
+        "attribute_count": attribute_count,
+    }
+    if present:
+        result["status"] = "runtime_pass"
+        result.pop("pending_metric_names", None)
+        return
+
+    result["status"] = "runtime_failed"
+    result["issue_code"] = "profile_probe_runtime_missing_pop_attributes"
+    result["issue_message"] = (
+        "attribute_sample_available: POP runtime validation sampled "
+        f"{readback_path} but found no point, primitive, or vertex attribute metadata."
+    )
+
+
+def _runtime_probe_chop_path(plan: PatchPlan) -> str | None:
+    created: list[tuple[str, str]] = []
+    for operation in plan.operations:
+        if operation.kind != "create_node":
+            continue
+        op_type = str(operation.args.get("op_type") or "")
+        if op_type != "nullCHOP":
+            continue
+        name = str(operation.args.get("name") or "")
+        parent = operation.target or plan.target_root
+        path = f"{parent.rstrip('/')}/{name}".replace("//", "/")
+        created.append((name, path))
+    for name, path in created:
+        if name == "out_chop":
+            return path
+    return created[0][1] if created else None
+
+
+def _runtime_probe_top_path(plan: PatchPlan) -> str | None:
+    created: list[tuple[str, str]] = []
+    for operation in plan.operations:
+        if operation.kind != "create_node":
+            continue
+        op_type = str(operation.args.get("op_type") or "")
+        if op_type != "nullTOP":
+            continue
+        name = str(operation.args.get("name") or "")
+        parent = operation.target or plan.target_root
+        path = f"{parent.rstrip('/')}/{name}".replace("//", "/")
+        created.append((name, path))
+    for name, path in created:
+        if name == "out1":
+            return path
+    return created[0][1] if created else None
+
+
+def _runtime_probe_shader_path(plan: PatchPlan, result: dict[str, Any]) -> str | None:
+    profile = str(result.get("profile") or "")
+    if profile == "glsl_material":
+        op_types = ("glslMAT",)
+    elif profile == "glsl_pop":
+        op_types = ("glslPOP", "glsladvancedPOP")
+    else:
+        op_types = ("glslTOP",)
+    paths = _created_paths_for_op_types(plan, op_types)
+    return paths[0] if paths else None
+
+
+def _runtime_probe_render_path(plan: PatchPlan) -> str | None:
+    paths = _created_paths_for_op_types(plan, ("renderTOP",))
+    return paths[0] if paths else None
+
+
+def _runtime_probe_dat_execute_path(plan: PatchPlan) -> str | None:
+    paths = _created_paths_for_op_types(plan, ("datexecuteDAT",))
+    return paths[0] if paths else None
+
+
+def _runtime_probe_pop_path(plan: PatchPlan) -> str | None:
+    created: list[tuple[str, str]] = []
+    for operation in plan.operations:
+        if operation.kind != "create_node":
+            continue
+        op_type = str(operation.args.get("op_type") or "")
+        if op_type != "nullPOP":
+            continue
+        name = str(operation.args.get("name") or "")
+        parent = operation.target or plan.target_root
+        path = f"{parent.rstrip('/')}/{name}".replace("//", "/")
+        created.append((name, path))
+    for name, path in created:
+        if name == "out_pop":
+            return path
+    return created[0][1] if created else None
+
+
+def _created_paths_for_op_types(plan: PatchPlan, op_types: tuple[str, ...]) -> list[str]:
+    wanted = set(op_types)
+    paths: list[str] = []
+    for operation in plan.operations:
+        if operation.kind != "create_node":
+            continue
+        op_type = str(operation.args.get("op_type") or "")
+        if op_type not in wanted:
+            continue
+        name = str(operation.args.get("name") or "")
+        parent = operation.target or plan.target_root
+        paths.append(f"{parent.rstrip('/')}/{name}".replace("//", "/"))
+    return paths
+
+
+def _chop_payload_delta(payload: dict[str, Any]) -> tuple[float, int]:
+    values: list[float] = []
+    channels = payload.get("channels")
+    if isinstance(channels, dict):
+        for channel in channels.values():
+            if not isinstance(channel, dict):
+                continue
+            raw_values = channel.get("values")
+            if not isinstance(raw_values, list):
+                continue
+            for value in raw_values:
+                if isinstance(value, bool):
+                    continue
+                if isinstance(value, (int, float)):
+                    values.append(float(value))
+                    continue
+                try:
+                    values.append(float(value))
+                except (TypeError, ValueError):
+                    continue
+    if not values:
+        return 0.0, 0
+    return max(values) - min(values), len(values)
+
+
+def _chop_payload_presence(payload: dict[str, Any]) -> tuple[int, int]:
+    channels = payload.get("channels")
+    if not isinstance(channels, dict):
+        return 0, 0
+    sample_count = 0
+    channel_count = 0
+    for channel in channels.values():
+        if not isinstance(channel, dict):
+            continue
+        raw_values = channel.get("values")
+        if not isinstance(raw_values, list) or not raw_values:
+            continue
+        channel_count += 1
+        sample_count += len(raw_values)
+    return channel_count, sample_count
+
+
+def _param_readback_value(payload: dict[str, Any], name: str) -> Any:
+    params = payload.get("parameters")
+    if isinstance(params, dict):
+        entry = params.get(name)
+        if isinstance(entry, dict):
+            return entry.get("value")
+        if entry is not None:
+            return entry
+    return payload.get(name)
+
+
+def _readback_value_matches_created_path(value: Any, created_paths: set[str]) -> bool:
+    if not created_paths:
+        return False
+    tokens = _path_tokens(value)
+    return any(token in created_paths for token in tokens)
+
+
+def _path_tokens(value: Any) -> set[str]:
+    if isinstance(value, str):
+        return {token for token in value.split() if token}
+    if isinstance(value, (list, tuple, set)):
+        tokens: set[str] = set()
+        for item in value:
+            tokens.update(_path_tokens(item))
+        return tokens
+    return set()
+
+
+def _top_luminance_metrics(payload: dict[str, Any]) -> tuple[float, float]:
+    mean, max_value, _std = _top_luminance_stats(payload)
+    return mean, max_value
+
+
+def _top_luminance_stats(payload: dict[str, Any]) -> tuple[float, float, float]:
+    modes = payload.get("modes")
+    luminance = modes.get("luminance") if isinstance(modes, dict) else payload.get("luminance")
+    if not isinstance(luminance, dict) or luminance.get("error"):
+        return 0.0, 0.0, 0.0
+    return (
+        _coerce_float(luminance.get("mean")),
+        _coerce_float(luminance.get("max")),
+        _coerce_float(luminance.get("std")),
+    )
+
+
+def _top_alpha_coverage(payload: dict[str, Any], *, fallback: float) -> float:
+    modes = payload.get("modes")
+    alpha = modes.get("alpha_coverage") if isinstance(modes, dict) else payload.get("alpha_coverage")
+    if not isinstance(alpha, dict) or alpha.get("error"):
+        return fallback
+    return _coerce_float(alpha.get("opaque_fraction"))
+
+
+def _pop_bounds_are_finite(payload: dict[str, Any]) -> bool:
+    bounds = payload.get("bounds")
+    if not isinstance(bounds, dict):
+        return False
+    values: list[float] = []
+    for key in ("min", "max"):
+        raw = bounds.get(key)
+        if not isinstance(raw, list | tuple) or not raw:
+            return False
+        for item in raw:
+            value = _coerce_float(item)
+            if not isinstance(item, (int, float)) or isinstance(item, bool):
+                return False
+            values.append(value)
+    return bool(values) and all(math.isfinite(value) for value in values)
+
+
+def _pop_attribute_metadata_count(payload: dict[str, Any]) -> int:
+    attributes = payload.get("attributes")
+    if not isinstance(attributes, dict):
+        return 0
+    count = 0
+    for key in ("point", "prim", "vert"):
+        descriptors = attributes.get(key)
+        if isinstance(descriptors, list):
+            count += len([item for item in descriptors if item])
+    return count
+
+
+def _first_metric_name(result: dict[str, Any], *, fallback: str) -> str:
+    metric_names = result.get("metric_names")
+    if isinstance(metric_names, list) and metric_names:
+        return str(metric_names[0])
+    return fallback
+
+
+def _first_runtime_issue_message(issues: Any) -> str:
+    if not isinstance(issues, list) or not issues:
+        return "unknown issue"
+    first = issues[0]
+    if isinstance(first, dict):
+        return str(first.get("message") or first.get("error") or first)
+    return str(first)
+
+
+def _content_text(payload: Any) -> str:
+    if isinstance(payload, str):
+        return payload
+    if isinstance(payload, dict):
+        for key in ("text", "content", "data"):
+            value = payload.get(key)
+            if isinstance(value, str):
+                return value
+        rows = payload.get("rows")
+        if isinstance(rows, list):
+            return "\n".join(
+                "\t".join(str(cell) for cell in row) if isinstance(row, list | tuple) else str(row)
+                for row in rows
+            )
+    return ""
+
+
+def _has_callback_guard_contract(text: str) -> bool:
+    lowered = text.lower()
+    return (
+        "def ontablechange" in lowered
+        and "tdpilot_callback_guard" in lowered
+        and "try:" in text
+        and "finally:" in text
+    )
+
+
+def _coerce_float(value: Any) -> float:
+    if isinstance(value, bool):
+        return 0.0
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _mark_runtime_probe_unavailable(result: dict[str, Any], message: str) -> None:
+    result["status"] = "runtime_unavailable"
+    result["issue_code"] = "profile_probe_runtime_unavailable"
+    result["issue_message"] = f"{result.get('probe_id', 'runtime_probe')}: {message}"
 
 
 async def _rollback(
@@ -155,3 +1176,68 @@ def _reference_param_report(
         cheap_metrics={},
         summary=f"{len(issues)} reference parameter issue(s)",
     )
+
+
+def _param_semantics_report(
+    *,
+    target_root: str,
+    concept_profile: str | None,
+    issues: list[ValidationIssue],
+) -> ValidationReportV2:
+    severity_counts: dict[str, int] = {}
+    for issue in issues:
+        severity_counts[issue.severity] = severity_counts.get(issue.severity, 0) + 1
+    return ValidationReportV2(
+        profile="structural_visual_safe",
+        concept_profile=concept_profile,
+        target_root=target_root,
+        ok=False,
+        checks=["param_semantics"],
+        issues=issues,
+        severity_counts=severity_counts,
+        cheap_metrics={},
+        summary=f"{len(issues)} parameter semantics issue(s)",
+    )
+
+
+def _generated_code_report(
+    *,
+    target_root: str,
+    concept_profile: str | None,
+    issues: list[ValidationIssue],
+) -> ValidationReportV2:
+    severity_counts: dict[str, int] = {}
+    for issue in issues:
+        severity_counts[issue.severity] = severity_counts.get(issue.severity, 0) + 1
+    return ValidationReportV2(
+        profile="structural_visual_safe",
+        concept_profile=concept_profile,
+        target_root=target_root,
+        ok=False,
+        checks=["generated_code_static_checks"],
+        issues=issues,
+        severity_counts=severity_counts,
+        cheap_metrics={},
+        summary=f"{len(issues)} generated code issue(s)",
+    )
+
+
+def _merge_generated_code_runtime_report(
+    validation_report: ValidationReportV2,
+    runtime_report: dict[str, Any],
+) -> None:
+    if "generated_code_runtime_checks" not in validation_report.checks:
+        validation_report.checks.append("generated_code_runtime_checks")
+
+    runtime_issues = [
+        issue if isinstance(issue, ValidationIssue) else ValidationIssue.model_validate(issue)
+        for issue in runtime_report.get("issues", [])
+    ]
+    validation_report.issues.extend(runtime_issues)
+    validation_report.ok = validation_report.ok and not runtime_issues
+
+    severity_counts: dict[str, int] = {}
+    for issue in validation_report.issues:
+        severity_counts[issue.severity] = severity_counts.get(issue.severity, 0) + 1
+    validation_report.severity_counts = severity_counts
+    validation_report.summary = "clean" if validation_report.ok else f"{len(validation_report.issues)} validation issue(s)"

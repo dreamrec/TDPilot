@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run --directory \"${CLAUDE_PLUGIN_ROOT:-${CLAUDE_PROJECT_DIR:-.}}\" python -m td_mcp.brain.hook_check post-tool-use"
+            "command": "uv run --directory \"${CLAUDE_PLUGIN_ROOT:-${CODEX_PLUGIN_ROOT:-${CLAUDE_PROJECT_DIR:-.}}}\" python hooks/run_hook.py post-tool-use"
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run --directory \"${CLAUDE_PLUGIN_ROOT:-${CLAUDE_PROJECT_DIR:-.}}\" python -m td_mcp.brain.hook_check release-stop"
+            "command": "uv run --directory \"${CLAUDE_PLUGIN_ROOT:-${CODEX_PLUGIN_ROOT:-${CLAUDE_PROJECT_DIR:-.}}}\" python hooks/run_hook.py release-stop"
           }
         ]
       }

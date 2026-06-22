@@ -180,8 +180,22 @@ async def preview_plan(
     live_flags: list[str] = []
 
     existing_by_parent: dict[str, set[str]] = {}
+    created_paths: set[str] = set()
+
+    def normalize(path: str) -> str:
+        stripped = path.rstrip("/")
+        return stripped or "/"
+
+    def join(parent: str, name: str) -> str:
+        parent = normalize(parent)
+        if parent == "/":
+            return f"/{name}"
+        return f"{parent}/{name}"
 
     async def children(path: str) -> set[str]:
+        path = normalize(path)
+        if path in created_paths:
+            return existing_by_parent.setdefault(path, set())
         if path in existing_by_parent:
             return existing_by_parent[path]
         try:
@@ -201,13 +215,15 @@ async def preview_plan(
     for op in plan.operations:
         if op.kind != "create_node":
             continue
-        parent = op.target or plan.target_root
+        parent = normalize(op.target or plan.target_root)
         name = op.args.get("name")
         if not name:
             continue
         siblings = await children(parent)
         if name in siblings:
             live_flags.append(f"name-conflict:{parent}/{name}")
+        siblings.add(str(name))
+        created_paths.add(join(parent, str(name)))
 
     summary = _summarize(plan)
     return {

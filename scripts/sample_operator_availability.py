@@ -16,6 +16,7 @@ from td_mcp.brain.atlas_audit import audit_brain_atlas  # noqa: E402
 from td_mcp.brain.operator_availability import (  # noqa: E402
     build_availability_targets,
     sample_operator_availability,
+    save_operator_availability_report,
 )
 from td_mcp.td_client import TDClient  # noqa: E402
 
@@ -28,6 +29,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--parent-path", default="/project1")
     parser.add_argument("--scratch-name", default="tdpilot_availability_probe")
     parser.add_argument("--out", default="")
+    parser.add_argument(
+        "--store-root",
+        default="",
+        help="Optionally persist successful reports by TD build, platform, and installed add-ons.",
+    )
     parser.add_argument("--pretty", action="store_true")
     return parser.parse_args()
 
@@ -67,6 +73,11 @@ def main() -> int:
             "ok": False,
             "error": str(exc),
         }
+
+    if report.get("ok") and args.store_root:
+        report["stored_availability_report"] = str(
+            save_operator_availability_report(report, root=args.store_root)
+        )
 
     output = json.dumps(report, indent=2 if args.pretty else None, sort_keys=args.pretty)
     print(output)

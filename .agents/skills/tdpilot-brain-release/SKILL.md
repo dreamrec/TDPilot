@@ -41,6 +41,11 @@ constraint check.
   - Codex skills and custom agents point users toward the brain loop.
   - Claude plugin agents and hooks are deterministic and local.
   - Plugin surface audit passes with `uv run python scripts/audit_plugin_surface.py`.
+  - Complete plugin release gates include `scripts/check_release_gates.py` with
+    `--plugin-surface-report` and `--require-plugin-surface`.
+  - When TouchDesigner is available, complete release gates also include the
+    captured live-smoke report with `--brain-live-smoke-report` and
+    `--require-live-smoke`.
   - The open MCP core has no hosted LLM dependency.
 
 ## Minimum Local Test Set
@@ -58,10 +63,22 @@ uv run python scripts/audit_plugin_surface.py
 uv run python scripts/smoke_mcp_registry.py
 ```
 
-If TouchDesigner is running, also run:
+For a plugin or public surface release, capture the brain and plugin reports
+and run the complete gate:
 
 ```bash
-uv run python scripts/brain_live_smoke.py --live
+uv run python scripts/eval_brain_golden.py > /tmp/tdpilot_brain_eval.json
+uv run python scripts/brain_live_smoke.py --dry-run > /tmp/tdpilot_brain_smoke.json
+uv run python scripts/audit_plugin_surface.py --root . > /tmp/tdpilot_plugin_surface.json
+uv run python scripts/check_release_gates.py --brain-eval-report /tmp/tdpilot_brain_eval.json --brain-smoke-report /tmp/tdpilot_brain_smoke.json --plugin-surface-report /tmp/tdpilot_plugin_surface.json --require-plugin-surface --require-complete
+```
+
+If TouchDesigner is running, also capture live smoke and require it in the
+complete gate:
+
+```bash
+uv run python scripts/brain_live_smoke.py --live > /tmp/tdpilot_brain_live_smoke.json
+uv run python scripts/check_release_gates.py --brain-eval-report /tmp/tdpilot_brain_eval.json --brain-smoke-report /tmp/tdpilot_brain_smoke.json --brain-live-smoke-report /tmp/tdpilot_brain_live_smoke.json --plugin-surface-report /tmp/tdpilot_plugin_surface.json --require-plugin-surface --require-live-smoke --require-complete
 ```
 
 If TouchDesigner is not running, state that live smoke validation was not run.

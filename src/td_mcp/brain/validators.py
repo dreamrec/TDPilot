@@ -6,6 +6,11 @@ import re
 from collections.abc import Iterable
 from typing import Any
 
+from td_mcp.brain.validation_probes import (
+    probe_ids_for_profiles,
+    probe_summaries_for_profile,
+    probe_summaries_for_profiles,
+)
 from td_mcp.models.brain import ValidationIssue, ValidationReportV2
 from td_mcp.models.patch import PatchPlan, PatchResult
 
@@ -29,31 +34,6 @@ STRUCTURAL_CHECKS: tuple[str, ...] = (
     "cook_health",
     "cheap_visual_metrics",
 )
-
-CONCEPT_CHECKS: dict[str, tuple[str, ...]] = {
-    "feedback": ("feedback_cycle", "decay_control", "feedback_static_warning_review"),
-    "audio_reactive": ("audio_source_present", "analysis_stage", "range_mapping", "visual_or_chop_target"),
-    "pop": ("pop_source_present", "pop_output_attached", "finite_pop_bounds", "attribute_sample_available"),
-    "glsl": ("shader_source_present", "compile_state", "sampler_uniforms", "nonblack_output"),
-    "glsl_material": (
-        "shader_source_present",
-        "material_assigned",
-        "vertex_position_transform",
-        "compile_state",
-        "render_top_output",
-    ),
-    "glsl_pop": (
-        "shader_source_present",
-        "pop_attribute_class",
-        "compile_state",
-        "finite_pop_bounds",
-        "attribute_sample_available",
-    ),
-    "render_pipeline": ("camera_present", "geometry_present", "material_or_default", "render_top_output"),
-    "panel_ui": ("panel_components_present", "panel_state_reader", "callbacks_or_exports", "control_output"),
-    "control_rig": ("custom_parameters_present", "bounds_or_ranges", "mapping_output", "target_bindings"),
-    "generic": ("output_node_present",),
-}
 
 _CREATE_TYPE_ALIASES: dict[str, str] = {
     "glsl": "glslTOP",
@@ -87,6 +67,14 @@ _REFERENCE_PARAM_RULES: dict[str, tuple[dict[str, Any], ...]] = {
             "source": "GLSL POP",
         },
     ),
+    "glsladvancedPOP": (
+        {
+            "param": "computedat",
+            "expected_family": "DAT",
+            "label": "compute shader DAT",
+            "source": "GLSL Advanced POP",
+        },
+    ),
     "rendersimpleTOP": (
         {"param": "pop", "expected_family": "POP", "label": "POP to render", "source": "Render Simple TOP"},
     ),
@@ -99,7 +87,32 @@ _REFERENCE_PARAM_RULES: dict[str, tuple[dict[str, Any], ...]] = {
             "source": "Render TOP",
         },
     ),
+    "datexecuteDAT": (
+        {"param": "dat", "expected_family": "DAT", "label": "Monitored DAT", "source": "DAT Execute DAT"},
+    ),
 }
+
+_ALTERNATIVE_PROBE_INPUTS: dict[tuple[str, str], tuple[tuple[str, ...], ...]] = {
+    ("concept_compiled", "audio_source_present"): (("audiofileinCHOP", "audiodeviceinCHOP"),),
+    ("concept_compiled", "output_node_present"): (("nullTOP", "nullCHOP", "nullDAT", "nullPOP"),),
+    ("audio_reactive", "audio_signal_activity"): (("audiofileinCHOP", "audiodeviceinCHOP"),),
+}
+_STRUCTURAL_VALIDATION_PROFILES = {"auto", "structural_visual_safe", "structural_visual_expensive"}
+_RUNTIME_READBACK_STRATEGIES = {
+    "chop_channel_delta_runtime",
+    "chop_channel_presence_runtime",
+    "node_content_runtime",
+    "node_errors_runtime",
+    "pop_attribute_metadata_runtime",
+    "pop_bounds_runtime",
+    "render_camera_frustum_runtime",
+    "top_sample_optional",
+    "top_luminance_runtime",
+    "top_visual_cheap_runtime",
+}
+_RENDER_SWITCH_INDEX_EXPR = re.compile(
+    r"^min\(1,\s*max\(0,\s*int\(op\('(?P<table_path>[^']+)'\)\[1,\s*'selected_index'\]\)\)\)$"
+)
 
 
 def classify_intent_profile(intent: str, preferred_domains: Iterable[str] | None = None) -> str:
@@ -159,13 +172,17 @@ def classify_validation_issues(errors: list[dict[str, Any]]) -> list[ValidationI
 
 def checks_for_profile(validation_profile: str, concept_profile: str | None = None) -> list[str]:
     """Return stable check identifiers for a validation profile/concept pair."""
+    return checks_for_profiles(validation_profile, [concept_profile])
+
+
+def checks_for_profiles(validation_profile: str, concept_profiles: Iterable[str | None]) -> list[str]:
+    """Return stable check identifiers for one or more concept profiles."""
     checks: list[str] = []
-    if validation_profile in {"auto", "structural_visual_safe"}:
+    if validation_profile in _STRUCTURAL_VALIDATION_PROFILES:
         checks.extend(STRUCTURAL_CHECKS)
     else:
         checks.append(validation_profile)
-    if concept_profile:
-        checks.extend(CONCEPT_CHECKS.get(concept_profile, ()))
+    checks.extend(probe_ids_for_profiles(concept_profiles))
     return list(dict.fromkeys(checks))
 
 
@@ -341,27 +358,345 @@ def build_validation_report_v2(
     target_root: str,
     profile: str,
     concept_profile: str | None = None,
+    concept_profiles: Iterable[str | None] | None = None,
     patch_result: PatchResult | None,
     cheap_metrics: dict[str, Any] | None = None,
 ) -> ValidationReportV2:
     """Build a profile-aware report from a PatchResult's validation payload."""
     raw_errors: list[dict[str, Any]] = []
+    cook_stats: dict[str, Any] = {}
     if patch_result and patch_result.validation:
         raw_errors = list(patch_result.validation.errors)
+        cook_stats = dict(patch_result.validation.cook_stats or {})
     issues = classify_validation_issues(raw_errors)
+    metrics = dict(cheap_metrics or {})
+    if patch_result and patch_result.validation:
+        metrics.setdefault("cook_health", _cook_health_metrics(cook_stats))
+    issues.extend(_cook_health_issues(cook_stats, target_root=target_root))
+    selected_profiles = _report_concept_profiles(
+        concept_profile=concept_profile,
+        concept_profiles=concept_profiles,
+    )
+    if selected_profiles:
+        metrics.setdefault("concept_profiles", selected_profiles)
+        metrics.setdefault("profile_probes", probe_summaries_for_profiles(profile, selected_profiles))
+    else:
+        metrics.setdefault("profile_probes", probe_summaries_for_profile(profile, concept_profile))
+    issues.extend(_profile_probe_issues(metrics, target_root=target_root))
     severity_counts: dict[str, int] = {}
     for issue in issues:
         severity_counts[issue.severity] = severity_counts.get(issue.severity, 0) + 1
     ok = not any(issue.severity in {"error", "critical"} for issue in issues)
     summary = "clean" if ok else f"{len(issues)} validation issue(s)"
+    checks = (
+        checks_for_profiles(profile, selected_profiles)
+        if selected_profiles
+        else checks_for_profile(profile, concept_profile)
+    )
     return ValidationReportV2(
         profile=profile,
         concept_profile=concept_profile,
         target_root=target_root,
         ok=ok,
-        checks=checks_for_profile(profile, concept_profile),
+        checks=checks,
         issues=issues,
         severity_counts=severity_counts,
-        cheap_metrics=cheap_metrics or {},
+        cheap_metrics=metrics,
         summary=summary,
     )
+
+
+def static_profile_probe_metrics_for_plan(
+    plan: PatchPlan,
+    *,
+    validation_profile: str,
+    concept_profile: str | None,
+) -> dict[str, Any]:
+    """Return cheap profile-probe metrics derived from a PatchPlan's operator contract."""
+    available_ops = _available_op_types_for_plan(plan)
+    probe_results: list[dict[str, Any]] = []
+    for probe in probe_summaries_for_profile(validation_profile, concept_profile):
+        required_inputs = list(probe["required_inputs"])
+        present, missing = _probe_input_presence(
+            profile=str(probe["profile"]),
+            probe_id=str(probe["probe_id"]),
+            required_inputs=required_inputs,
+            available_ops=available_ops,
+        )
+        status = "static_pass" if not missing else "static_incomplete"
+        result = {
+            "probe_id": probe["probe_id"],
+            "profile": probe["profile"],
+            "readback_strategy": probe["readback_strategy"],
+            "metric_names": list(probe["metric_names"]),
+            "present_required_inputs": present,
+            "missing_required_inputs": missing,
+            "status": status,
+            "failure_message": probe["failure_message"],
+        }
+        if status == "static_pass":
+            result.update(_static_probe_parameter_metrics(plan, probe=result))
+            if result.get("missing_parameter_bindings"):
+                status = "static_incomplete"
+                result["status"] = status
+            elif _requires_runtime_readback(str(result["readback_strategy"])):
+                status = "runtime_contract_present"
+                result["status"] = status
+                result["runtime_required"] = True
+                result["pending_metric_names"] = list(result["metric_names"])
+        if status == "static_incomplete":
+            if result.get("missing_parameter_bindings"):
+                result["issue_code"] = "profile_probe_missing_parameter_binding"
+                result["issue_message"] = _profile_probe_parameter_issue_message(result)
+            else:
+                result["issue_code"] = "profile_probe_missing_required_inputs"
+                result["issue_message"] = _profile_probe_issue_message(result)
+        probe_results.append(result)
+    visual_sample = _default_visual_output_sample_result(plan, validation_profile=validation_profile)
+    if visual_sample is not None:
+        probe_results.append(visual_sample)
+    return {"profile_probe_results": probe_results}
+
+
+def _cook_health_metrics(cook_stats: dict[str, Any]) -> dict[str, Any]:
+    stuck = cook_stats.get("stuck")
+    if not isinstance(stuck, list):
+        stuck = []
+    metrics = {
+        "stuck_count": len(stuck),
+        "probe_error": cook_stats.get("probe_error"),
+    }
+    if "total_cook_ms" in cook_stats:
+        metrics["total_cook_ms"] = cook_stats.get("total_cook_ms")
+    if stuck:
+        metrics["stuck_paths"] = [_cook_issue_path(item, fallback="") for item in stuck]
+    return metrics
+
+
+def _cook_health_issues(cook_stats: dict[str, Any], *, target_root: str) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    probe_error = cook_stats.get("probe_error")
+    if probe_error:
+        issues.append(
+            ValidationIssue(
+                severity="error",
+                code="cook_health_probe_failed",
+                message=f"cook_health: Cooking probe failed: {probe_error}",
+                path=target_root,
+                source="touchdesigner",
+            )
+        )
+
+    stuck = cook_stats.get("stuck")
+    if not isinstance(stuck, list):
+        return issues
+    for item in stuck:
+        path = _cook_issue_path(item, fallback=target_root)
+        duration = _cook_issue_duration(item)
+        duration_text = f" after {duration:g} ms" if duration is not None else ""
+        issues.append(
+            ValidationIssue(
+                severity="error",
+                code="cook_health_stuck",
+                message=f"cook_health: {path} is stuck cooking{duration_text}.",
+                path=path,
+                source="touchdesigner",
+            )
+        )
+    return issues
+
+
+def _cook_issue_path(item: Any, *, fallback: str) -> str:
+    if isinstance(item, dict):
+        raw_path = item.get("path") or item.get("node") or item.get("op")
+        if raw_path:
+            return str(raw_path)
+    if isinstance(item, str) and item:
+        return item
+    return fallback
+
+
+def _cook_issue_duration(item: Any) -> float | None:
+    if not isinstance(item, dict):
+        return None
+    for key in ("cook_time_ms", "cook_ms", "duration_ms", "total_cook_ms"):
+        value = item.get(key)
+        if isinstance(value, bool):
+            continue
+        if isinstance(value, (int, float)):
+            return float(value)
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+def static_profile_probe_metrics_for_profiles(
+    plan: PatchPlan,
+    *,
+    validation_profile: str,
+    concept_profiles: Iterable[str | None],
+) -> dict[str, Any]:
+    """Return deduplicated static profile-probe metrics for several profile layers."""
+    profiles = [profile for profile in dict.fromkeys(concept_profiles) if profile]
+    results: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for profile in profiles:
+        metrics = static_profile_probe_metrics_for_plan(
+            plan,
+            validation_profile=validation_profile,
+            concept_profile=profile,
+        )
+        for result in metrics["profile_probe_results"]:
+            key = (str(result["profile"]), str(result["probe_id"]))
+            if key in seen:
+                continue
+            seen.add(key)
+            results.append(result)
+    return {"concept_profiles": profiles, "profile_probe_results": results}
+
+
+def _report_concept_profiles(
+    *,
+    concept_profile: str | None,
+    concept_profiles: Iterable[str | None] | None,
+) -> list[str]:
+    profiles = [str(profile) for profile in (concept_profiles or []) if profile]
+    if concept_profile:
+        profiles.append(str(concept_profile))
+    return list(dict.fromkeys(profiles))
+
+
+def _profile_probe_issues(metrics: dict[str, Any], *, target_root: str) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for result in metrics.get("profile_probe_results", []):
+        if not isinstance(result, dict) or result.get("status") not in {
+            "static_incomplete",
+            "runtime_failed",
+            "runtime_unavailable",
+        }:
+            continue
+        probe_id = str(result.get("probe_id") or "unknown_probe")
+        code = str(result.get("issue_code") or "profile_probe_missing_required_inputs")
+        message = str(result.get("issue_message") or _profile_probe_issue_message(result))
+        issues.append(
+            ValidationIssue(
+                severity="error",
+                code=code,
+                message=message,
+                path=target_root,
+                source="tdpilot-brain",
+            )
+        )
+    return issues
+
+
+def _profile_probe_issue_message(result: dict[str, Any]) -> str:
+    probe_id = str(result.get("probe_id") or "unknown_probe")
+    missing = [str(item) for item in result.get("missing_required_inputs", [])]
+    missing_text = ", ".join(missing) if missing else "required inputs"
+    message = str(result.get("failure_message") or f"Profile probe {probe_id} is incomplete.")
+    return f"{probe_id}: {message} Missing required inputs: {missing_text}."
+
+
+def _profile_probe_parameter_issue_message(result: dict[str, Any]) -> str:
+    probe_id = str(result.get("probe_id") or "unknown_probe")
+    missing = [str(item) for item in result.get("missing_parameter_bindings", [])]
+    missing_text = ", ".join(missing) if missing else "required parameter bindings"
+    message = str(result.get("failure_message") or f"Profile probe {probe_id} is incomplete.")
+    return f"{probe_id}: {message} Missing parameter bindings: {missing_text}."
+
+
+def _static_probe_parameter_metrics(plan: PatchPlan, *, probe: dict[str, Any]) -> dict[str, list[str]]:
+    if probe.get("profile") == "dat_protocol" and probe.get("probe_id") == "render_switch_index_binding":
+        return _render_switch_index_binding_metrics(plan)
+    return {}
+
+
+def _requires_runtime_readback(readback_strategy: str) -> bool:
+    return readback_strategy in _RUNTIME_READBACK_STRATEGIES
+
+
+def _default_visual_output_sample_result(
+    plan: PatchPlan,
+    *,
+    validation_profile: str,
+) -> dict[str, Any] | None:
+    if validation_profile not in _STRUCTURAL_VALIDATION_PROFILES:
+        return None
+    available_ops = _available_op_types_for_plan(plan)
+    if "nullTOP" not in available_ops:
+        return None
+    return {
+        "probe_id": "visual_output_sample",
+        "profile": "visual_output",
+        "readback_strategy": "top_visual_cheap_runtime",
+        "metric_names": ["output_luminance", "output_alpha_coverage", "output_entropy"],
+        "present_required_inputs": ["nullTOP"],
+        "missing_required_inputs": [],
+        "status": "runtime_contract_present",
+        "runtime_required": True,
+        "pending_metric_names": ["output_luminance", "output_alpha_coverage", "output_entropy"],
+        "failure_message": "Visual plans must expose a sampleable TOP output with non-empty pixels.",
+    }
+
+
+def _render_switch_index_binding_metrics(plan: PatchPlan) -> dict[str, list[str]]:
+    created_types = _created_node_types(plan)
+    params_by_target = _params_by_target(plan)
+    table_paths = {path for path, op_type in created_types.items() if op_type == "tableDAT"}
+    switch_paths = [path for path, op_type in created_types.items() if op_type == "switchTOP"]
+    for switch_path in switch_paths:
+        expression = params_by_target.get(switch_path, {}).get("index")
+        if not isinstance(expression, dict) or set(expression) != {"expr"}:
+            continue
+        expr_text = expression.get("expr")
+        if not isinstance(expr_text, str):
+            continue
+        match = _RENDER_SWITCH_INDEX_EXPR.fullmatch(expr_text.strip())
+        if match and match.group("table_path") in table_paths:
+            return {
+                "present_parameter_bindings": ["switchTOP.index<-tableDAT"],
+                "missing_parameter_bindings": [],
+            }
+    return {
+        "present_parameter_bindings": [],
+        "missing_parameter_bindings": ["switchTOP.index<-tableDAT"],
+    }
+
+
+def _available_op_types_for_plan(plan: PatchPlan) -> set[str]:
+    op_types = {_canonical_op_type(op_type) for op_type in plan.required_ops}
+    op_types.update(_created_node_types(plan).values())
+    return op_types
+
+
+def _probe_input_presence(
+    *,
+    profile: str,
+    probe_id: str,
+    required_inputs: list[str],
+    available_ops: set[str],
+) -> tuple[list[str], list[str]]:
+    present: list[str] = []
+    missing: list[str] = []
+    grouped: set[str] = set()
+    for group in _ALTERNATIVE_PROBE_INPUTS.get((profile, probe_id), ()):
+        group_inputs = [op_type for op_type in required_inputs if op_type in group]
+        if not group_inputs:
+            continue
+        grouped.update(group_inputs)
+        group_present = [op_type for op_type in group_inputs if op_type in available_ops]
+        if group_present:
+            present.extend(group_present)
+        else:
+            missing.extend(group_inputs)
+    for op_type in required_inputs:
+        if op_type in grouped:
+            continue
+        if op_type in available_ops:
+            present.append(op_type)
+        else:
+            missing.append(op_type)
+    return present, missing

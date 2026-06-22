@@ -65,6 +65,25 @@ When intent is abstract:
 5. If the atlas cannot ground the concept in real operators for the current TD
    build, stop with `blocked_questions` instead of improvising.
 
+## Compiler-Backed Planning Workflow
+
+For supported multi-domain prompts, `td_brain_plan` may return a
+compiler-backed concept plan. Inspect the compiler evidence before execution:
+
+- `compiled_task` states domains, motifs, capabilities, risks, and docs facts.
+- `candidate_graphs` show pattern resolver choices, scores, required operators,
+  substitutions, and blocked alternatives.
+- The availability matrix explains missing operators, live-family omissions, and
+  safe substitutions before a `PatchPlan` exists.
+- parameter semantics must pass before mutation; unsafe OP refs, ranges, enums,
+  or tuple shapes are hard stops.
+- validation probes and assembly macros should match the selected profiles:
+  named outputs, component shell, controls, debug taps, notes, and layout are
+  part of the readable network contract.
+
+If any compiler-backed evidence is absent, stale, or under-grounded, block or
+ask for more information instead of filling gaps by hand.
+
 ## Valid Networks
 
 A good BrainPlan states:

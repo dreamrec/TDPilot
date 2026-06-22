@@ -50,6 +50,7 @@ def test_plugin_zip_bundles_brain_skills_agents_and_hooks():
         "agents/td-brain-validator.md",
         "agents/td-release-auditor.md",
         "hooks/hooks.json",
+        "hooks/run_hook.py",
     ):
         assert (ROOT / rel).exists(), f"missing plugin package file: {rel}"
 
@@ -62,11 +63,16 @@ def test_plugin_surface_audit_proves_codex_claude_and_package_mirrors():
     assert report["agent_count"] == 4
     assert report["hook_count"] >= 1
     assert report["tool_count"] == 110
+    assert report["registry_tool_count"] == 110
+    assert report["registry_tool_count"] == report["tool_count"]
+    assert report["local_first"]["ok"] is True
+    assert report["local_first"]["hosted_llm_dependency_leaks"] == []
     assert report["personal_path_leaks"] == []
     assert report["missing_artifacts"] == []
     assert report["mirror_mismatches"] == []
     assert report["mcp_config"]["uses_plugin_root_placeholder"] is True
     assert report["hooks"]["uses_hook_check_module"] is True
+    assert report["hooks"]["uses_hook_runner"] is True
     assert report["hooks"]["has_post_tool_use_guard"] is True
     assert report["hooks"]["has_stop_release_guard"] is True
 
@@ -95,6 +101,16 @@ def test_codex_claude_plugin_surfaces_advertise_reviewed_operator_atlas():
     assert "zero-concept backlog" in advertised_surfaces
     assert "concept-to-node" in advertised_surfaces
     assert "Official Derivative" in advertised_surfaces
+
+
+def test_readmes_advertise_measured_concept_to_node_eval_gate():
+    readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
+    plugin_readme_text = (ROOT / "plugin_README.md").read_text(encoding="utf-8")
+
+    for text in (readme_text, plugin_readme_text):
+        assert "50+ case concept-to-node golden eval corpus" in text
+        assert "50-case concept-to-node golden eval corpus" not in text
+        assert "scripts/eval_brain_golden.py" in text
 
 
 def test_concept_to_node_master_plan_is_linked_and_implementation_ready():

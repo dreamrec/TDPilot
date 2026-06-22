@@ -31,6 +31,7 @@ class PatchOperationArgsError(ValueError):
 _KIND_REQUIRED: dict[str, tuple[str, ...]] = {
     "create_node": ("op_type", "name"),
     "set_params": ("params",),
+    "set_dat_content": (),
     "connect": ("from", "to"),
     "layout": ("x", "y"),
     "annotate": ("text",),
@@ -43,6 +44,13 @@ def _validate_args(op: PatchOperation, index: int) -> None:
     missing = [k for k in required if k not in op.args]
     if missing:
         raise PatchOperationArgsError(f"op[{index}] kind={op.kind}: missing required arg(s) {missing}")
+    if op.kind == "set_dat_content":
+        if not op.target:
+            raise PatchOperationArgsError(f"op[{index}] kind={op.kind}: missing target path")
+        if "text" not in op.args and "table" not in op.args:
+            raise PatchOperationArgsError(
+                f"op[{index}] kind={op.kind}: missing required arg 'text' or 'table'"
+            )
 
 
 async def apply_plan(
@@ -138,6 +146,13 @@ async def _apply_op(td_client, op: PatchOperation, *, macro_engine=None) -> dict
             )
             or {}
         )
+    if op.kind == "set_dat_content":
+        body = {"path": op.target}
+        if "text" in op.args:
+            body["text"] = op.args["text"]
+        if "table" in op.args:
+            body["table"] = op.args["table"]
+        return await td_client.request("node/content/set", body) or {}
     if op.kind == "connect":
         # Mirrors legacy td_connect_nodes (tools_graph.py:415):
         # body uses ``source_path`` / ``target_path`` / ``source_index`` /
@@ -254,6 +269,14 @@ def _record_outcome(
                     "new": new_value,
                 }
             )
+    elif op.kind == "set_dat_content":
+        result.changed_params.append(
+            {
+                "path": op.target,
+                "name": "content",
+                "new": op.args.get("text", op.args.get("table")),
+            }
+        )
     elif op.kind == "connect":
         result.connections_made.append((op.args["from"], op.args["to"]))
 

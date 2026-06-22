@@ -3,6 +3,9 @@ from __future__ import annotations
 import asyncio
 
 import td_mcp.server as server
+from td_mcp.models.brain import BrainPlan, ConceptGraph, TransactionResult, VisualTaskSpec
+from td_mcp.models.patch import PatchPlan, ValidationPlan
+from td_mcp.registry import tools_brain
 from td_mcp.brain.cockpit import build_cockpit_payload
 
 
@@ -50,6 +53,40 @@ def test_cockpit_payload_summarizes_brain_plan_transaction_and_validation():
         "risk_flags": ["feedback-static-warning-review"],
         "blocked_questions": [],
         "missing_facts": [],
+        "substitution_explanations": [
+            {
+                "missing_op": "audiofileinCHOP",
+                "replacement_target": "audio_device_to_analysis_chop",
+                "replacement_ops": ["audiodeviceinCHOP"],
+                "confidence": "medium",
+                "requires_approval": True,
+                "approval_state": "approved",
+                "approval_evidence": ["device-source-declared:audio_device"],
+                "availability_reason": "missing from live family list",
+                "tradeoffs": ["uses a live audio input device instead of a deterministic audio file"],
+                "official_sources": [
+                    "https://docs.derivative.ca/Audio_File_In_CHOP",
+                    "https://docs.derivative.ca/Audio_Device_In_CHOP",
+                ],
+                "summary": "audiofileinCHOP is unavailable; using audiodeviceinCHOP.",
+            }
+        ],
+        "corpus_evidence": [
+            {
+                "evidence_id": "corpus:exact:feedbackTOP",
+                "source": "exact_operator",
+                "op_type": "feedbackTOP",
+                "family": "TOP",
+                "display_name": "Feedback TOP",
+                "docs_url": "https://docs.derivative.ca/Feedback_TOP",
+                "summary": "Feedback TOP official docs summary.",
+                "key_params": ["top", "reset"],
+                "key_concepts": ["feedback effects"],
+                "matched_terms": ["feedback"],
+                "query": "feedbackTOP",
+                "score": 0.92,
+            }
+        ],
     }
     transaction = {
         "status": "clean",
@@ -71,11 +108,40 @@ def test_cockpit_payload_summarizes_brain_plan_transaction_and_validation():
     assert payload["plan"]["profile"] == "feedback"
     assert payload["plan"]["operator_count"] == 4
     assert payload["plan"]["operation_count"] == 2
+    assert payload["plan"]["corpus_evidence"][0]["evidence_id"] == "corpus:exact:feedbackTOP"
+    assert payload["plan"]["corpus_evidence"][0]["docs_url"] == "https://docs.derivative.ca/Feedback_TOP"
+    assert payload["plan"]["substitution_explanations"][0]["missing_op"] == "audiofileinCHOP"
+    assert payload["plan"]["substitution_explanations"][0]["replacement_ops"] == ["audiodeviceinCHOP"]
+    assert payload["plan"]["substitution_explanations"][0]["approval_state"] == "approved"
     assert payload["transaction"]["status"] == "clean"
     assert payload["transaction"]["snapshot_id"] == "snap-1"
     assert payload["validation"]["status"] == "passed"
     assert payload["rollback"]["needs_manual_recovery"] is False
     assert payload["trace"]["trace_id"] == "trace-1"
+
+
+def test_cockpit_payload_reads_real_brain_plan_concepts_and_grounding_evidence():
+    plan = {
+        "id": "brain-2",
+        "task": {"intent": "Build feedback loop", "target_root": "/project1"},
+        "concept_graph": {
+            "profile": "feedback",
+            "concepts": [
+                {"id": "source", "label": "Noise source", "role": "source", "op_type": "noiseTOP"},
+                {"id": "out", "label": "Stable output", "role": "output", "op_type": "nullTOP"},
+            ],
+            "edges": [{"source": "source", "target": "out", "kind": "data"}],
+            "operators": ["noiseTOP", "nullTOP"],
+        },
+        "patch_plan": {"operations": [{"kind": "create_node"}]},
+        "grounding_evidence": ["profile:feedback", "corpus:exact:noiseTOP"],
+    }
+
+    payload = build_cockpit_payload(plan=plan)
+
+    assert payload["plan"]["concept_nodes"][0]["id"] == "source"
+    assert payload["plan"]["concept_edges"][0]["target"] == "out"
+    assert payload["plan"]["grounding_evidence"] == ["profile:feedback", "corpus:exact:noiseTOP"]
 
 
 def test_brain_prompts_are_registered():
@@ -90,3 +156,53 @@ def test_brain_prompts_are_registered():
         "td_recover_network",
         "td_learn_validated_technique",
     }.issubset(names)
+
+
+def _minimal_brain_plan() -> BrainPlan:
+    task = VisualTaskSpec(intent="Build a feedback loop", target_root="/project1")
+    patch = PatchPlan(
+        target_root="/project1",
+        source="operations",
+        operations=[],
+        undo_label="brain transaction",
+        validation_plan=ValidationPlan(target_root="/project1"),
+    )
+    graph = ConceptGraph(task=task, profile="feedback", concepts=[], edges=[], operators=["feedbackTOP"])
+    return BrainPlan(task=task, concept_graph=graph, patch_plan=patch)
+
+
+def test_brain_execute_does_not_learn_when_validation_failed(monkeypatch, mcp_ctx):
+    learned_calls = []
+    tx_result = TransactionResult(
+        plan_id="patch-1",
+        status="warnings",
+        validation_failed=True,
+        rollback_performed=False,
+    )
+
+    async def fake_run_transaction(*args, **kwargs):
+        return tx_result
+
+    async def fake_learn_trace(*args, **kwargs):
+        learned_calls.append((args, kwargs))
+        return "memory-1"
+
+    monkeypatch.setattr(tools_brain._tr, "_start_tool", lambda ctx, name: lambda: None)
+    monkeypatch.setattr(tools_brain._tr, "_audit_log", lambda *args, **kwargs: None)
+    monkeypatch.setattr(tools_brain, "_run_transaction", fake_run_transaction)
+    monkeypatch.setattr(tools_brain, "_learn_brain_trace", fake_learn_trace)
+    monkeypatch.setattr(tools_brain, "_export_trace_safely", lambda **kwargs: None)
+    monkeypatch.setattr(tools_brain, "_cache_transaction", lambda *args, **kwargs: None)
+
+    result = asyncio.run(
+        tools_brain.td_brain_execute(
+            mcp_ctx,
+            _minimal_brain_plan().model_dump(mode="json"),
+            transaction_policy="no_rollback",
+            learn_on_success=True,
+        )
+    )
+
+    assert learned_calls == []
+    assert result["learned_memory_id"] is None
+    assert result["trace"]["validation_ok"] is False
