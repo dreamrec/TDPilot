@@ -1,0 +1,101 @@
+schema_version: 2
+op_types: [midiinCHOP, midiinmapCHOP, midiinDAT, midioutCHOP]
+hints:
+  - id: midi_device_mapper_first
+    priority: critical
+    rule: |
+      TD MIDI operators reference devices through the MIDI Device Mapper, not
+      raw OS device names. Before live MIDI input or output, configure the
+      device in Dialogs > MIDI Device Mapper and use the mapped device/table
+      and row id expected by the operator. Skipping this often produces a
+      cooking operator with no channels or no events.
+    source: tdpilot-core external-sync-and-control.md
+    source_kind: skill_pitfall
+
+  - id: midiinchop_sample_rate_collapse
+    priority: critical
+    rule: |
+      MIDI In CHOP is sampled. Low sample rates can miss fast note on/off
+      pairs or dense controller motion. Use a sufficiently high rate for live
+      performance control, or use MIDI In DAT when exact message order matters.
+    source: https://docs.derivative.ca/MIDI_In_CHOP
+    source_kind: operator_docs
+    when:
+      op_type: midiinCHOP
+
+  - id: midi_14bit_msb_lsb_pairing
+    priority: critical
+    rule: |
+      14-bit MIDI controller values require paired MSB/LSB controller
+      messages. A single high-resolution controller message without its pair
+      can appear to output nothing. Only enable 14-bit handling when the
+      controller is known to send paired values.
+    source: tdpilot-core external-sync-and-control.md
+    source_kind: skill_pitfall
+    when:
+      op_type: midiinCHOP
+      intent_match: "14[\\s-]?bit|high.?resolution|msb|lsb"
+
+  - id: midi_channel_naming_convention
+    priority: useful
+    rule: |
+      Raw MIDI In CHOP channels use event-oriented names such as note,
+      control, velocity, and pitch-wheel channels with the configured prefix.
+      MIDI In Map CHOP uses abstract mapped controls such as s1/s2 for sliders
+      and b1/b2 for buttons. Prefer MIDI In Map CHOP for portable controller
+      rigs; prefer MIDI In CHOP when exact channel/note/controller addressing
+      is part of the design.
+    source: tdpilot-core external-sync-and-control.md
+    source_kind: skill_pitfall
+    when:
+      op_type: midiinCHOP
+
+  - id: midi_values_persist_in_toe
+    priority: useful
+    rule: |
+      MIDI values can persist in a saved .toe. If a project is saved with a
+      virtual value that does not match the physical controller position, the
+      value may jump on first touch after reload. Smooth via Lag CHOP or reset
+      controller state on project open when that jump matters.
+    source: tdpilot-core external-sync-and-control.md
+    source_kind: skill_pitfall
+    when:
+      op_type: midiinCHOP
+
+  - id: midi_use_midiindat_for_sequencing
+    priority: useful
+    rule: |
+      Use MIDI In DAT instead of MIDI In CHOP when message order, exact event
+      timing, sysex, program changes, or note-on/note-off pairing is the data
+      model. Callback DATs must match the documented callback signature; a
+      mismatched callback can silently miss events.
+    source: https://docs.derivative.ca/MIDI_In_DAT
+    source_kind: operator_docs
+    when:
+      op_type: midiinDAT
+
+  - id: midioutchop_cookalways_required
+    priority: critical
+    rule: |
+      Enable Cook Every Frame on MIDI Out CHOP for production output that must
+      keep sending clock, held controls, or realtime state. Without it, output
+      depends on cooking and input changes, so downstream hardware can appear
+      dead even though the CHOP holds the right values.
+    source: https://docs.derivative.ca/MIDI_Out_CHOP
+    source_kind: operator_docs
+    when:
+      op_type: midioutCHOP
+
+  - id: midioutchop_python_send_methods
+    priority: useful
+    rule: |
+      For scripted MIDI output, use the MIDI Out CHOP Python API:
+      op('midiout1').sendControl(...), .sendNoteOn(...), .sendNoteOff(...),
+      .sendPitchBend(...), .sendProgram(...), .sendExclusive(...), .send(...)
+      for raw bytes, and .panic() for all-notes-off/reset behavior. There is
+      no midioutDAT operator; MIDI Event DAT is for monitoring/receiving.
+    source: https://docs.derivative.ca/MidioutCHOP_Class
+    source_kind: operator_docs
+    when:
+      op_type: midioutCHOP
+next_tools: [td_get_param_help, td_chop_data, td_set_params, td_exec_python]

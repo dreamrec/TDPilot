@@ -36,7 +36,10 @@
     "Realtime timing is preserved only when the TouchDesigner timeline is running in realtime.",
     "If Normalize is None, note/control values must already be in MIDI 0-127 range; normalized mode maps 0-1 to 0-127.",
     "Use Rename CHOP before MIDI Out CHOP when generated channel names do not match MIDI event naming rules.",
-    "The midioutCHOP Python class can send more flexible MIDI events through an existing MIDI Out CHOP."
+    "The midioutCHOP Python class can send more flexible MIDI events through an existing MIDI Out CHOP.",
+    "Enable Cook Every Frame for production MIDI output that must keep sending clock, held controls, or other realtime state.",
+    "For scripted MIDI out, use the MIDI Out CHOP Python methods such as sendControl, sendNoteOn, sendNoteOff, sendExclusive, send, and panic.",
+    "There is no MIDI Out DAT; MIDI Event DAT is for monitoring and receiving MIDI traffic rather than sending it."
   ],
   "related_snippets": ["CHOP_snippets"],
   "build_relevance": "2021.10000+ MIDI/control output",

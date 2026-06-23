@@ -550,6 +550,8 @@ _STOCK_OP_TYPES: frozenset[str] = frozenset(
         "tonemap",
         # CHOPs
         "wave",
+        "abletonlink",
+        "abletonlinkchop",
         "analyze",
         "beat",
         "count",

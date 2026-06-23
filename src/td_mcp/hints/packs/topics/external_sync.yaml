@@ -1,0 +1,57 @@
+schema_version: 2
+topic: external_sync
+op_types: [abletonlinkCHOP, midiinCHOP, midioutCHOP, midiinmapCHOP, midiinDAT, audiostreaminCHOP]
+hints:
+  - id: external_sync_three_paths
+    priority: critical
+    rule: |
+      TouchDesigner has three different ways to follow an external music
+      system. Use audiostreaminCHOP for audio/spectrum/envelope reactivity,
+      abletonlinkCHOP for symbolic tempo/beat/phase sync with Ableton Link,
+      and MIDI In CHOP or MIDI In DAT for MIDI controller, clock, or hardware
+      sequencer workflows. These paths can be layered, but they solve
+      different timing problems.
+    source: tdpilot-core external-sync-and-control.md
+    source_kind: skill_pitfall
+    when:
+      intent_match: "sync|tempo|beat|bpm|ableton|live link|midi clock|controller"
+
+  - id: external_sync_link_preferred_for_ableton
+    priority: useful
+    rule: |
+      For Ableton Live beat/phase sync, prefer Ableton Link via
+      abletonlinkCHOP over MIDI Clock unless the user specifically needs a
+      hardware MIDI-clock workflow. Link is peer-to-peer and designed for
+      shared tempo/phase, while MIDI Clock is more brittle for DAW transport
+      changes.
+    source: tdpilot-core external-sync-and-control.md
+    source_kind: skill_pitfall
+    when:
+      intent_match: "ableton|live link"
+
+  - id: external_sync_audio_path_routing
+    priority: useful
+    rule: |
+      For DAW audio driving visuals, route the DAW to a virtual or streamed
+      audio device, then capture it in TD with audiostreaminCHOP. On macOS,
+      BlackHole is the common loopback path. On Windows, use VB-Audio Cable or
+      Voicemeeter. For cross-machine setups, route NDI audio into
+      audiostreaminCHOP.
+    source: tdpilot-core external-sync-and-control.md
+    source_kind: skill_pitfall
+    when:
+      intent_match: "blackhole|virtual cable|loopback|voicemeeter|ndi.?audio|daw.?audio"
+
+  - id: external_sync_cross_plugin_handoff
+    priority: useful
+    rule: |
+      With both LivePilot and TDPilot connected, split responsibility:
+      LivePilot configures Ableton Link, tempo, transport, clips, and
+      automation; TDPilot creates the abletonlinkCHOP and binds Link channels
+      into TouchDesigner visuals. Neither plugin knows about the other, so the
+      agent must coordinate the handoff.
+    source: tdpilot-core external-sync-and-control.md
+    source_kind: skill_pitfall
+    when:
+      intent_match: "ableton|live link|livepilot|av.?performance"
+next_tools: [td_get_hints, td_create_node, td_get_param_help, td_chop_data]

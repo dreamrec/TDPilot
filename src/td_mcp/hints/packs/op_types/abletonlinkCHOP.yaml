@@ -1,0 +1,90 @@
+schema_version: 2
+op_types: [abletonlinkCHOP]
+hints:
+  - id: abletonlink_enable_link_on_ableton_side
+    priority: critical
+    rule: |
+      abletonlinkCHOP joins an Ableton Link session, but every peer must
+      have Link enabled before TouchDesigner can discover it. In Ableton
+      Live 12, use Settings > Link > Show Link Toggle, then click Link in
+      the transport. In Live 11, use Preferences > Link/Tempo/MIDI.
+      If TD stays at numpeers=0, first confirm Link is visible and enabled
+      on the Ableton side.
+    source: tdpilot-core external-sync-and-control.md
+    source_kind: skill_pitfall
+    when:
+      op_type: abletonlinkCHOP
+
+  - id: abletonlink_windows_needs_asio
+    priority: critical
+    rule: |
+      On Windows, Ableton Live disables Link when using DirectX/MME audio
+      drivers. The Link toggle will not appear in the transport. Switch
+      Live to ASIO or ASIO4ALL before debugging TouchDesigner networking.
+    source: tdpilot-core external-sync-and-control.md
+    source_kind: skill_pitfall
+    when:
+      op_type: abletonlinkCHOP
+
+  - id: abletonlink_no_quantum_channel
+    priority: critical
+    rule: |
+      Do not plan for a quantum output channel on abletonlinkCHOP. Link's
+      quantum concept is exposed through the time-signature parameters,
+      commonly signature1/signature2. For cycle-relative position use phase;
+      for the monotonic beat counter use beats; for beat-within-bar use beat.
+    source: https://docs.derivative.ca/Ableton_Link_CHOP
+    source_kind: operator_docs
+    when:
+      op_type: abletonlinkCHOP
+
+  - id: abletonlink_enable_output_channel_toggles
+    priority: useful
+    rule: |
+      Ableton Link output channels are gated by Output-page toggles. When a
+      downstream Select CHOP cannot find tempo, beats, phase, rampbeat, or
+      status channels, explicitly enable the needed channels on the
+      abletonlinkCHOP before wiring the rest of the chain.
+    source: https://docs.derivative.ca/Ableton_Link_CHOP
+    source_kind: operator_docs
+    when:
+      op_type: abletonlinkCHOP
+
+  - id: abletonlink_multicast_network_gotchas
+    priority: useful
+    rule: |
+      Ableton Link peer discovery uses UDP multicast on group 224.76.78.75
+      port 20808, not mDNS. If numpeers stays at 0 with Link enabled, check
+      VPN routes, mobile-hotspot client isolation, local firewall UDP 20808,
+      Docker bridge networking, and cross-subnet multicast routing.
+    source: tdpilot-core external-sync-and-control.md
+    source_kind: skill_pitfall
+    when:
+      op_type: abletonlinkCHOP
+
+  - id: abletonlink_setting_tempo_is_global
+    priority: useful
+    rule: |
+      Treat tempo writes to an Ableton Link peer as session-level behavior.
+      If the active parameter surface exposes tempo writeback, changing it can
+      propagate to other Link peers, including Ableton. Do not bind tempo as
+      a casual macro override; drive it only when the user explicitly wants
+      TD to lead the Link session.
+    source: tdpilot-core external-sync-and-control.md
+    source_kind: skill_pitfall
+    when:
+      op_type: abletonlinkCHOP
+
+  - id: abletonlink_handoff_to_livepilot
+    priority: context
+    rule: |
+      When a sibling LivePilot MCP server is available, use it to configure
+      Ableton-side Link, tempo, transport, clips, and automation. Use TDPilot
+      for the TouchDesigner side: create abletonlinkCHOP, enable Link output
+      channels, and bind phase/beats/rampbeat into visual controls. The two
+      plugins do not call each other automatically; the agent coordinates both.
+    source: tdpilot-core external-sync-and-control.md
+    source_kind: skill_pitfall
+    when:
+      op_type: abletonlinkCHOP
+next_tools: [td_get_param_help, td_chop_data, td_set_params, td_screenshot]

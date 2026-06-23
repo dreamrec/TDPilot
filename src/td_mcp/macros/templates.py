@@ -116,6 +116,94 @@ def build_default_templates() -> dict[str, MacroTemplate]:
         exit_node="out",
     )
 
+    templates["ableton_link_sync"] = MacroTemplate(
+        name="ableton_link_sync",
+        description=(
+            "Ableton Link timing chain: abletonlinkCHOP -> selectCHOP -> mathCHOP -> nullCHOP. "
+            "Output toggles are enabled for tempo, beats, phase, and rampbeat; tempo is not exposed "
+            "as a user override because Link tempo writeback affects the whole session."
+        ),
+        nodes=[
+            NodeSpec(
+                "abletonlinkCHOP",
+                "link",
+                dx=0,
+                dy=0,
+                params={
+                    "active": 1,
+                    "enable": 1,
+                    "signature1": 4,
+                    "signature2": 4,
+                    "tempo": 1,
+                    "beats": 1,
+                    "phase": 1,
+                    "rampbeat": 1,
+                },
+            ),
+            NodeSpec("selectCHOP", "select_sync", dx=220, dy=0, params={"channames": "phase beats tempo rampbeat"}),
+            NodeSpec("mathCHOP", "normalize", dx=440, dy=0, params={"mult": 1.0}),
+            NodeSpec("nullCHOP", "out", dx=660, dy=0),
+        ],
+        connections=[
+            ConnectionSpec("link", "select_sync"),
+            ConnectionSpec("select_sync", "normalize"),
+            ConnectionSpec("normalize", "out"),
+        ],
+        param_schema={
+            "quantum": ParamSpec(
+                type="int",
+                default=4,
+                min_value=1,
+                max_value=16,
+                description="Time-signature numerator used for Link phase wrapping.",
+            ),
+        },
+        param_targets={
+            "quantum": [ParamTarget(node="link", param="signature1", mode="value")],
+        },
+        entry_node="link",
+        exit_node="out",
+    )
+
+    templates["midi_control_mapping"] = MacroTemplate(
+        name="midi_control_mapping",
+        description=(
+            "Mapped MIDI control chain: midiinmapCHOP -> selectCHOP -> mathCHOP -> nullCHOP. "
+            "Requires MIDI Device Mapper setup and normalizes slider controls from 0..127 to 0..1."
+        ),
+        nodes=[
+            NodeSpec(
+                "midiinmapCHOP",
+                "midi_in",
+                dx=0,
+                dy=0,
+                params={"active": 1, "sliders": "s[1-16]", "buttons": "b[1-16]"},
+            ),
+            NodeSpec("selectCHOP", "select_sliders", dx=220, dy=0, params={"channames": "s*"}),
+            NodeSpec("mathCHOP", "normalize", dx=440, dy=0, params={"mult": 1.0 / 127.0}),
+            NodeSpec("nullCHOP", "out", dx=660, dy=0),
+        ],
+        connections=[
+            ConnectionSpec("midi_in", "select_sliders"),
+            ConnectionSpec("select_sliders", "normalize"),
+            ConnectionSpec("normalize", "out"),
+        ],
+        param_schema={
+            "normalize_scale": ParamSpec(
+                type="float",
+                default=1.0 / 127.0,
+                min_value=0.0,
+                max_value=1.0,
+                description="Math CHOP multiplier used to normalize 0..127 MIDI values to 0..1.",
+            ),
+        },
+        param_targets={
+            "normalize_scale": [ParamTarget(node="normalize", param="mult", mode="value")],
+        },
+        entry_node="midi_in",
+        exit_node="out",
+    )
+
     templates["particle_gpu"] = MacroTemplate(
         name="particle_gpu",
         description="Minimal POP preview chain: point source -> noise -> null POP -> Render Simple TOP -> out.",

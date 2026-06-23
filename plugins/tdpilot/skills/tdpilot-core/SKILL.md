@@ -416,3 +416,4 @@ The `references/` directory contains deep-dive guides for specialized topics:
 
 - **`advanced-workflows.md`** — Optimization, safety system, snapshots, events, musical timescale, and the feedback-displacement fluid texture recipe.
 - **`preset-systems-and-ui.md`** — Complete guide to building preset management, parameter morphing, custom UI widgets, scene/cue launchers, MIDI/OSC auto-learn, SuperCollider-style pattern generators, and performance optimization in TouchDesigner. Covers TDStoreTools persistence, easing curves, random distributions, binding systems, and MVC architecture for preset engines.
+- **`external-sync-and-control.md`** — Ableton Link, MIDI input/output, DAW audio routing, Device Mapper setup, and cross-plugin LivePilot/TDPilot handoff patterns for external music control.

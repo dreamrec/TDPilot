@@ -121,7 +121,10 @@
     "Device setup usually depends on the MIDI Device Mapper before the DAT receives messages.",
     "Controller indices are documented as 1-based values from 1 to 128.",
     "14-bit mode only outputs when matching MSB and LSB controller pairs are received.",
-    "High-rate MIDI streams can overflow small FIFO settings or call callbacks very frequently."
+    "High-rate MIDI streams can overflow small FIFO settings or call callbacks very frequently.",
+    "Use MIDI In DAT rather than MIDI In CHOP when message order, sysex, program changes, or note-on/note-off pairing is the data model.",
+    "Callback DATs must match the documented MIDI callback signature; mismatched arguments can make incoming events appear to vanish.",
+    "There is no MIDI Out DAT; scripted or channel-driven MIDI output goes through MIDI Out CHOP and its Python methods."
   ],
   "related_snippets": [
     "DAT_snippets"

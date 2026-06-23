@@ -27,7 +27,10 @@
     "The CHOP only reflects a Link session after Enable is initialized and network peers are discoverable.",
     "Ableton Link timing can be affected by audio driver choice; the official docs call out DirectX driver issues on Ableton's side.",
     "Output channels are opt-in, so downstream plans should enable the status, tempo, beat, phase, or ramp channels they intend to consume.",
-    "Start/stop sync is session-wide behavior, not a local transport button; only enable it when peers should share start and stop signals."
+    "Start/stop sync is session-wide behavior, not a local transport button; only enable it when peers should share start and stop signals.",
+    "There is no separate quantum output channel; use the time-signature parameters for the Link quantum concept and phase or rampbeat for cycle-relative animation.",
+    "Peer discovery uses UDP multicast on group 224.76.78.75 port 20808, so VPN routes, firewalls, mobile-hotspot isolation, Docker bridge networking, or cross-subnet routing can leave numpeers at 0.",
+    "Treat tempo writeback as session-level behavior: if the parameter surface writes Link tempo, that value can affect other Link peers including Ableton."
   ],
   "related_snippets": ["CHOP_snippets"],
   "build_relevance": "2018.24410+",

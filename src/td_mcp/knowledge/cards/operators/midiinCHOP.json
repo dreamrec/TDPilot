@@ -35,7 +35,10 @@
     "Multiple MIDI CHOPs can read the same or different sources, so shared device access is possible but may duplicate events.",
     "MIDI Start/Stop/Continue can control the Timeline/Beat Dialog when configured, which can affect global project timing.",
     "Use MIDI In Map CHOP when portability through the MIDI Device Mapper matters more than direct channel/note/controller addressing.",
-    "For event-table workflows, consider MIDI In DAT or MIDI Event DAT instead of CHOP channels."
+    "For event-table workflows, consider MIDI In DAT or MIDI Event DAT instead of CHOP channels.",
+    "Low sample rates can miss or collapse fast note on/off pairs; use a sufficiently high sample rate for performance control or switch to MIDI In DAT for exact event ordering.",
+    "14-bit controller data requires paired MSB/LSB controller messages; enabling 14-bit behavior without a matching controller pair can produce no useful output.",
+    "Do not assume raw OS device names are enough for live MIDI; TouchDesigner MIDI workflows commonly depend on the MIDI Device Mapper and the selected device/id mapping."
   ],
   "related_snippets": ["CHOP_snippets"],
   "build_relevance": "2021.10000+ MIDI/control",

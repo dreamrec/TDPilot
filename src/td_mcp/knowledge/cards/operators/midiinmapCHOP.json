@@ -36,7 +36,9 @@
     "The device table and device ID must match the intended MIDI device.",
     "Slider and button patterns select mapper names, not raw MIDI note/controller addresses.",
     "Button velocity only appears when the mapped control provides velocity data.",
-    "Use MIDI In DAT or MIDI Event DAT when the event stream itself is the desired data model."
+    "Use MIDI In DAT or MIDI Event DAT when the event stream itself is the desired data model.",
+    "Mapped slider channels use names such as s1, s2, and sN; mapped button channels use names such as b1, b2, and bN.",
+    "Use MIDI In Map CHOP for portable controller rigs where remapping in the Device Mapper is preferable to hard-coded note or controller numbers."
   ],
   "related_snippets": ["CHOP_snippets"],
   "build_relevance": "2020.20000+ mapped MIDI controls",
