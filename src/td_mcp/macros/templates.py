@@ -140,7 +140,9 @@ def build_default_templates() -> dict[str, MacroTemplate]:
                     "rampbeat": 1,
                 },
             ),
-            NodeSpec("selectCHOP", "select_sync", dx=220, dy=0, params={"channames": "phase beats tempo rampbeat"}),
+            NodeSpec(
+                "selectCHOP", "select_sync", dx=220, dy=0, params={"channames": "phase beats tempo rampbeat"}
+            ),
             NodeSpec("mathCHOP", "normalize", dx=440, dy=0, params={"mult": 1.0}),
             NodeSpec("nullCHOP", "out", dx=660, dy=0),
         ],

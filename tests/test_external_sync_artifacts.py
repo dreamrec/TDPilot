@@ -49,9 +49,7 @@ def _make_ctx(*, client, card_index):
     services = ServiceContainer(td_client=client, technique_store=None, preference_store=None)
     services.card_index = card_index
     state = {"services": services}
-    return SimpleNamespace(
-        request_context=SimpleNamespace(lifespan_context=state, lifespan_state=state)
-    )
+    return SimpleNamespace(request_context=SimpleNamespace(lifespan_context=state, lifespan_state=state))
 
 
 def test_default_registry_ships_external_sync_hint_packs():
@@ -79,13 +77,10 @@ def test_external_sync_topic_routes_ableton_and_daw_audio_intents():
         match.hint.id
         for match in reg.find(topic="external_sync", intent="sync TouchDesigner visuals to Ableton Link")
     }
-    assert {"external_sync_three_paths", "external_sync_link_preferred_for_ableton"}.issubset(
-        ableton_ids
-    )
+    assert {"external_sync_three_paths", "external_sync_link_preferred_for_ableton"}.issubset(ableton_ids)
 
     audio_ids = {
-        match.hint.id
-        for match in reg.find(topic="external_sync", intent="route BlackHole DAW audio into TD")
+        match.hint.id for match in reg.find(topic="external_sync", intent="route BlackHole DAW audio into TD")
     }
     assert "external_sync_audio_path_routing" in audio_ids
 
