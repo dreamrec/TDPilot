@@ -10,7 +10,7 @@ Tools in this module (3):
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from mcp.server.fastmcp import Context
 from pydantic import Field
@@ -64,6 +64,17 @@ async def td_create_macro(
             description="Override template parameter defaults with custom values.",
         ),
     ] = None,
+    param_semantics_policy: Annotated[
+        Literal["warn", "block"],
+        Field(
+            default="warn",
+            description=(
+                "Docs-grounded parameter safety policy for macro parameter writes. "
+                "'warn' preserves macro creation with attached warnings; 'block' refuses "
+                "invalid or high-risk macro param writes before setting them."
+            ),
+        ),
+    ] = "warn",
 ) -> str:
     """Create a macro template network."""
     finish = _tr._start_tool(ctx, "td_create_macro")
@@ -76,6 +87,7 @@ async def td_create_macro(
             node_x=nodeX,
             node_y=nodeY,
             overrides=params,
+            param_semantics_policy=param_semantics_policy,
         )
         _tr._audit_log(
             ctx,

@@ -6,8 +6,8 @@ import pytest
 
 from td_mcp.brain.concept_compiler import build_candidate_graphs, compile_visual_task
 from td_mcp.brain.operator_availability import build_operator_availability_matrix
-from td_mcp.brain.patterns import load_pattern_registry
 from td_mcp.brain.pattern_resolver import resolve_candidate_graphs
+from td_mcp.brain.patterns import load_pattern_registry
 
 
 class FakeCardIndex:
@@ -109,9 +109,7 @@ def test_compiler_extracts_audio_reactive_glsl_material_render_task():
     assert compiled.blocked_questions == []
     assert compiled.domains == ["CHOP", "TOP", "COMP", "DAT", "MAT"]
     assert {"audio-reactive", "rendered-3d", "material-modulation"}.issubset(set(compiled.motifs))
-    assert {"audio_reactive", "render_pipeline", "glsl_material"}.issubset(
-        set(compiled.candidate_profiles)
-    )
+    assert {"audio_reactive", "render_pipeline", "glsl_material"}.issubset(set(compiled.candidate_profiles))
     assert "audio_signal_activity" in compiled.validation_needs
     assert {"audio_analysis", "render_pipeline", "material_modulation"}.issubset(
         set(compiled.required_capabilities)
@@ -141,9 +139,13 @@ def test_compiler_extracts_audio_reactive_glsl_material_render_with_panel_task()
     assert {"audio_reactive", "render_pipeline", "glsl_material", "panel_ui"}.issubset(
         set(compiled.candidate_profiles)
     )
-    assert {"audio_analysis", "render_pipeline", "material_modulation", "panel_controls", "debug_output"}.issubset(
-        set(compiled.required_capabilities)
-    )
+    assert {
+        "audio_analysis",
+        "render_pipeline",
+        "material_modulation",
+        "panel_controls",
+        "debug_output",
+    }.issubset(set(compiled.required_capabilities))
     assert "docs:audiofileinCHOP" in compiled.grounding_evidence
     assert "docs:glslMAT" in compiled.grounding_evidence
     assert "docs:panelCHOP" in compiled.grounding_evidence
@@ -474,7 +476,11 @@ def test_pattern_registry_validates_all_seed_patterns_from_json(tmp_path):
 
     assert [pattern.pattern_id for pattern in loaded] == [pattern.pattern_id for pattern in expected]
     assert loaded[0].concept_nodes[0].op_type == expected[0].concept_nodes[0].op_type
-    assert all(source.startswith("https://docs.derivative.ca/") for pattern in loaded for source in pattern.official_sources)
+    assert all(
+        source.startswith("https://docs.derivative.ca/")
+        for pattern in loaded
+        for source in pattern.official_sources
+    )
 
 
 def test_pattern_registry_rejects_invalid_json_pattern_records(tmp_path):
@@ -509,6 +515,64 @@ def test_pattern_registry_covers_master_plan_first_pattern_set():
         "midi_in_to_control_chop",
         "ndi_in_to_post_fx_output",
     }.issubset(by_id)
+
+    audio = by_id["audio_file_to_analysis_chop"]
+    audio_analyze = next(node for node in audio.concept_nodes if node.id == "audio_analyze")
+    audio_math = next(node for node in audio.concept_nodes if node.id == "audio_math")
+    assert audio_analyze.params == {
+        "function": "RMS Power",
+        "allowstart": False,
+        "allowend": False,
+        "valleys": False,
+    }
+    assert audio_math.params == {"fromrange": (0.0, 1.0), "torange": (0.0, 1.0), "interppars": True}
+
+    audio_device = by_id["audio_device_to_analysis_chop"]
+    audio_device_source = next(
+        node for node in audio_device.concept_nodes if node.id == "audio_device_source"
+    )
+    assert audio_device_source.params == {"active": True, "errormissing": True, "format": "stereo"}
+
+    feedback = by_id["feedback_decay_top_loop"]
+    feedback_decay = next(node for node in feedback.concept_nodes if node.id == "feedback_decay")
+    assert feedback_decay.params == {"opacity": 0.92}
+
+    midi = by_id["midi_in_to_control_chop"]
+    midi_source = next(node for node in midi.concept_nodes if node.id == "midi_source")
+    assert midi_source.params == {"simplified": True, "record": False, "timer": False, "sys": False}
+    midi_range = next(node for node in midi.concept_nodes if node.id == "midi_range")
+    assert midi_range.params == {
+        "fromrange": (0.0, 127.0),
+        "torange": (0.0, 1.0),
+        "interppars": True,
+        "integer": "off",
+    }
+
+    serial = by_id["serial_dat_protocol_bridge"]
+    serial_source = next(node for node in serial.concept_nodes if node.id == "serial_source")
+    assert serial_source.params == {"active": True, "format": "perline", "clamp": True, "maxlines": 256}
+
+    osc = by_id["osc_in_dat_protocol_bridge"]
+    osc_source = next(node for node in osc.concept_nodes if node.id == "osc_source")
+    assert osc_source.params == {"active": True, "protocol": "msging", "clamp": True, "maxlines": 256}
+
+    websocket = by_id["websocket_dat_protocol_bridge"]
+    websocket_source = next(node for node in websocket.concept_nodes if node.id == "websocket_source")
+    assert websocket_source.params == {"active": True, "clamp": True, "maxlines": 256}
+
+    mqtt = by_id["mqtt_client_dat_protocol_bridge"]
+    mqtt_source = next(node for node in mqtt.concept_nodes if node.id == "mqtt_source")
+    assert mqtt_source.params == {"active": True, "reconnect": True, "clamp": True, "maxlines": 256}
+
+    udp = by_id["udp_in_dat_protocol_bridge"]
+    udp_source = next(node for node in udp.concept_nodes if node.id == "udp_source")
+    assert udp_source.params == {
+        "active": True,
+        "protocol": "msging",
+        "format": "permessage",
+        "clamp": True,
+        "maxlines": 256,
+    }
 
     pop = by_id["pop_particle_field_preview"]
     assert pop.required_ops == [
@@ -588,6 +652,10 @@ def test_candidate_graph_composes_seed_patterns_and_docs_grounded_required_ops()
     assert "feedback_output_readback" in candidate.validation_needs
     assert "panel_state_readback" in candidate.validation_needs
     assert any(edge.kind == "control" and edge.source == "audio_out" for edge in candidate.edges)
+    concept_params = {node.id: node.params for node in candidate.concepts if node.params}
+    assert concept_params["audio_analyze"]["function"] == "RMS Power"
+    assert concept_params["audio_math"]["torange"] == (0.0, 1.0)
+    assert concept_params["feedback_decay"]["opacity"] == 0.92
     assert all(f"docs:{op_type}" in candidate.grounding_evidence for op_type in candidate.required_ops)
 
 
@@ -621,7 +689,10 @@ def test_candidate_graph_composes_audio_reactive_glsl_material_render():
         "textDAT",
         "nullTOP",
     }.issubset(set(candidate.required_ops))
-    assert any(edge.kind == "control" and edge.source == "audio_out" and edge.target == "material" for edge in candidate.edges)
+    assert any(
+        edge.kind == "control" and edge.source == "audio_out" and edge.target == "material"
+        for edge in candidate.edges
+    )
     assert all(f"docs:{op_type}" in candidate.grounding_evidence for op_type in candidate.required_ops)
 
 
@@ -737,6 +808,15 @@ def test_candidate_graph_composes_midi_control_pattern_and_marks_device_dependen
     assert candidate.profiles == ["midi_control"]
     assert "midi_in_to_control_chop" in candidate.pattern_ids
     assert {"midiinCHOP", "mathCHOP", "nullCHOP"}.issubset(set(candidate.required_ops))
+    midi_source = next(node for node in candidate.concepts if node.id == "midi_source")
+    assert midi_source.params == {"simplified": True, "record": False, "timer": False, "sys": False}
+    midi_range = next(node for node in candidate.concepts if node.id == "midi_range")
+    assert midi_range.params == {
+        "fromrange": (0.0, 127.0),
+        "torange": (0.0, 1.0),
+        "interppars": True,
+        "integer": "off",
+    }
     assert "device-source-required" in candidate.risk_flags
 
 
@@ -754,6 +834,8 @@ def test_candidate_graph_composes_serial_dat_protocol_pattern_and_marks_device_d
     assert candidate.profiles == ["dat_protocol"]
     assert "serial_dat_protocol_bridge" in candidate.pattern_ids
     assert {"serialDAT", "tableDAT", "nullDAT"}.issubset(set(candidate.required_ops))
+    serial_source = next(node for node in candidate.concepts if node.id == "serial_source")
+    assert serial_source.params == {"active": True, "format": "perline", "clamp": True, "maxlines": 256}
     assert "device-source-required" in candidate.risk_flags
 
 
@@ -771,6 +853,8 @@ def test_candidate_graph_composes_osc_dat_protocol_pattern_and_marks_device_depe
     assert candidate.profiles == ["dat_protocol"]
     assert "osc_in_dat_protocol_bridge" in candidate.pattern_ids
     assert {"oscinDAT", "tableDAT", "nullDAT"}.issubset(set(candidate.required_ops))
+    osc_source = next(node for node in candidate.concepts if node.id == "osc_source")
+    assert osc_source.params == {"active": True, "protocol": "msging", "clamp": True, "maxlines": 256}
     assert "device-source-required" in candidate.risk_flags
     assert "osc_source_present" in candidate.validation_needs
 
@@ -789,6 +873,8 @@ def test_candidate_graph_composes_websocket_dat_protocol_pattern_and_marks_devic
     assert candidate.profiles == ["dat_protocol"]
     assert "websocket_dat_protocol_bridge" in candidate.pattern_ids
     assert {"websocketDAT", "tableDAT", "nullDAT"}.issubset(set(candidate.required_ops))
+    websocket_source = next(node for node in candidate.concepts if node.id == "websocket_source")
+    assert websocket_source.params == {"active": True, "clamp": True, "maxlines": 256}
     assert "device-source-required" in candidate.risk_flags
     assert "websocket_source_present" in candidate.validation_needs
 
@@ -900,9 +986,15 @@ def test_candidate_graph_composes_pop_particle_preview_and_debug_patterns():
     candidate = candidates[0]
     assert candidate.profiles == ["pop"]
     assert {"pop_particle_field_preview", "debug_output_conventions"}.issubset(set(candidate.pattern_ids))
-    assert {"circlePOP", "noisePOP", "mathmixPOP", "nullPOP", "rendersimpleTOP", "nullTOP", "textDAT"}.issubset(
-        set(candidate.required_ops)
-    )
+    assert {
+        "circlePOP",
+        "noisePOP",
+        "mathmixPOP",
+        "nullPOP",
+        "rendersimpleTOP",
+        "nullTOP",
+        "textDAT",
+    }.issubset(set(candidate.required_ops))
     assert "finite_pop_bounds" in candidate.validation_needs
     assert "validate-pop-render-preview" in candidate.risk_flags
     assert any(edge.kind == "reference" and edge.source == "stable_output" for edge in candidate.edges)
@@ -922,9 +1014,7 @@ def test_candidate_graph_composes_glsl_top_shader_and_debug_patterns():
     assert candidates
     candidate = candidates[0]
     assert candidate.profiles == ["glsl"]
-    assert {"glsl_top_shader_with_text_dat", "debug_output_conventions"}.issubset(
-        set(candidate.pattern_ids)
-    )
+    assert {"glsl_top_shader_with_text_dat", "debug_output_conventions"}.issubset(set(candidate.pattern_ids))
     assert {"constantTOP", "glslTOP", "textDAT", "nullTOP"}.issubset(set(candidate.required_ops))
     assert "shader_source_present" in candidate.validation_needs
     assert "compile_state" in candidate.validation_needs
@@ -950,7 +1040,9 @@ def test_pattern_resolver_returns_ranked_file_and_device_candidates():
     assert len(candidates) >= 2
     assert candidates[0].score > candidates[1].score
     assert "audio_file_to_analysis_chop" in candidates[0].pattern_ids
-    assert "audio_device_to_analysis_chop" in {pid for candidate in candidates for pid in candidate.pattern_ids}
+    assert "audio_device_to_analysis_chop" in {
+        pid for candidate in candidates for pid in candidate.pattern_ids
+    }
     assert "profiles:audio_reactive+feedback+panel_ui" in candidates[0].explanation
 
 
@@ -982,6 +1074,361 @@ def test_pattern_resolver_prefers_promoted_trace_patterns_when_inputs_are_availa
     )
 
 
+def test_pattern_resolver_marks_runtime_validated_trace_evidence_and_ranking_bonus():
+    compiled = compile_visual_task(
+        "Build an audio-reactive feedback visual with a control panel and debug output",
+        target_root="/project1",
+        output_top="/project1/out1",
+        card_index=FakeCardIndex(ALL_SEED_OPS | {"audiodeviceinCHOP"}),
+    )
+    patterns = [
+        pattern.model_copy(
+            update={
+                "promoted_from_trace": "trace:audio-device-feedback-green",
+                "layout": {
+                    **pattern.layout,
+                    "trace_support_count": 1,
+                    "support_trace_ids": ["trace:audio-device-feedback-green"],
+                    "runtime_validation": {
+                        "required_probe_ids": ["audio_signal_activity", "feedback_output_readback"],
+                        "passed_probe_ids": ["audio_signal_activity", "feedback_output_readback"],
+                    },
+                },
+            }
+        )
+        if pattern.pattern_id == "audio_device_to_analysis_chop"
+        else pattern
+        for pattern in load_pattern_registry()
+    ]
+
+    candidates = resolve_candidate_graphs(
+        compiled,
+        patterns=patterns,
+        available_ops=ALL_SEED_OPS | {"audiodeviceinCHOP"},
+        device_sources={"audio_device"},
+    )
+
+    assert "audio_device_to_analysis_chop" in candidates[0].pattern_ids
+    assert "trace-runtime-validation:2" in candidates[0].grounding_evidence
+    assert "runtime_validation:2" in candidates[0].explanation
+
+
+def test_pattern_resolver_marks_weighted_runtime_validation_evidence():
+    compiled = compile_visual_task(
+        "Build an audio-reactive feedback visual with a control panel and debug output",
+        target_root="/project1",
+        output_top="/project1/out1",
+        card_index=FakeCardIndex(ALL_SEED_OPS | {"audiodeviceinCHOP"}),
+    )
+    patterns = [
+        pattern.model_copy(
+            update={
+                "promoted_from_trace": "trace:audio-device-feedback-weighted",
+                "layout": {
+                    **pattern.layout,
+                    "trace_support_count": 1,
+                    "support_trace_ids": ["trace:audio-device-feedback-weighted"],
+                    "runtime_validation": {
+                        "required_probe_ids": ["audio_signal_activity", "feedback_output_readback"],
+                        "passed_probe_ids": ["audio_signal_activity", "feedback_output_readback"],
+                        "passed_probe_weights": {
+                            "audio_signal_activity": 0.75,
+                            "feedback_output_readback": 1.5,
+                        },
+                        "confidence_decay": 0.8,
+                    },
+                },
+            }
+        )
+        if pattern.pattern_id == "audio_device_to_analysis_chop"
+        else pattern
+        for pattern in load_pattern_registry()
+    ]
+
+    candidates = resolve_candidate_graphs(
+        compiled,
+        patterns=patterns,
+        available_ops=ALL_SEED_OPS | {"audiodeviceinCHOP"},
+        device_sources={"audio_device"},
+    )
+
+    top = candidates[0]
+    assert "audio_device_to_analysis_chop" in top.pattern_ids
+    assert (
+        "runtime-validation-probe:audio_device_to_analysis_chop:audio_signal_activity:0.7500"
+        in top.grounding_evidence
+    )
+    assert (
+        "runtime-validation-probe:audio_device_to_analysis_chop:feedback_output_readback:1.5000"
+        in top.grounding_evidence
+    )
+    assert "runtime-validation-decay:audio_device_to_analysis_chop:0.8000" in top.grounding_evidence
+    assert "runtime-validation-score:audio_device_to_analysis_chop:1.8000" in top.grounding_evidence
+    assert "runtime_validation_score:1.8000" in top.explanation
+
+
+def test_pattern_resolver_penalizes_promoted_traces_with_missing_runtime_probes():
+    compiled = compile_visual_task(
+        "Build an audio-reactive feedback visual with a control panel and debug output",
+        target_root="/project1",
+        output_top="/project1/out1",
+        card_index=FakeCardIndex(ALL_SEED_OPS | {"audiodeviceinCHOP"}),
+    )
+    patterns = []
+    for pattern in load_pattern_registry():
+        if pattern.pattern_id == "audio_file_to_analysis_chop":
+            patterns.append(
+                pattern.model_copy(
+                    update={
+                        "promoted_from_trace": "trace:audio-file-feedback-complete",
+                        "layout": {
+                            **pattern.layout,
+                            "trace_support_count": 1,
+                            "support_trace_ids": ["trace:audio-file-feedback-complete"],
+                            "runtime_validation": {
+                                "required_probe_ids": [
+                                    "audio_signal_activity",
+                                    "feedback_output_readback",
+                                ],
+                                "passed_probe_ids": [
+                                    "audio_signal_activity",
+                                    "feedback_output_readback",
+                                ],
+                            },
+                        },
+                    }
+                )
+            )
+        elif pattern.pattern_id == "audio_device_to_analysis_chop":
+            patterns.append(
+                pattern.model_copy(
+                    update={
+                        "promoted_from_trace": "trace:audio-device-feedback-incomplete",
+                        "layout": {
+                            **pattern.layout,
+                            "trace_support_count": 1,
+                            "support_trace_ids": ["trace:audio-device-feedback-incomplete"],
+                            "runtime_validation": {
+                                "required_probe_ids": [
+                                    "audio_signal_activity",
+                                    "feedback_output_readback",
+                                    "top_output_present",
+                                    "panel_state_readback",
+                                ],
+                                "passed_probe_ids": [
+                                    "audio_signal_activity",
+                                    "feedback_output_readback",
+                                ],
+                                "missing_probe_ids": [
+                                    "top_output_present",
+                                    "panel_state_readback",
+                                ],
+                            },
+                        },
+                    }
+                )
+            )
+        else:
+            patterns.append(pattern)
+
+    candidates = resolve_candidate_graphs(
+        compiled,
+        patterns=patterns,
+        available_ops=ALL_SEED_OPS | {"audiodeviceinCHOP"},
+        device_sources={"audio_device"},
+    )
+
+    file_candidate = next(
+        candidate for candidate in candidates if "audio_file_to_analysis_chop" in candidate.pattern_ids
+    )
+    device_candidate = next(
+        candidate for candidate in candidates if "audio_device_to_analysis_chop" in candidate.pattern_ids
+    )
+    assert file_candidate.score > device_candidate.score
+    assert (
+        "runtime-validation-missing:audio_device_to_analysis_chop:top_output_present"
+        in device_candidate.grounding_evidence
+    )
+    assert (
+        "runtime-validation-missing:audio_device_to_analysis_chop:panel_state_readback"
+        in device_candidate.grounding_evidence
+    )
+    assert "runtime_validation_missing:2" in device_candidate.explanation
+
+
+def test_pattern_resolver_penalizes_promoted_traces_with_failed_runtime_probes():
+    compiled = compile_visual_task(
+        "Build an audio-reactive feedback visual with a control panel and debug output",
+        target_root="/project1",
+        output_top="/project1/out1",
+        card_index=FakeCardIndex(ALL_SEED_OPS | {"audiodeviceinCHOP"}),
+    )
+    patterns = []
+    for pattern in load_pattern_registry():
+        if pattern.pattern_id == "audio_file_to_analysis_chop":
+            patterns.append(
+                pattern.model_copy(
+                    update={
+                        "promoted_from_trace": "trace:audio-file-feedback-clean",
+                        "layout": {
+                            **pattern.layout,
+                            "trace_support_count": 1,
+                            "support_trace_ids": ["trace:audio-file-feedback-clean"],
+                            "runtime_validation": {
+                                "required_probe_ids": [
+                                    "audio_signal_activity",
+                                    "feedback_output_readback",
+                                ],
+                                "passed_probe_ids": [
+                                    "audio_signal_activity",
+                                    "feedback_output_readback",
+                                ],
+                            },
+                        },
+                    }
+                )
+            )
+        elif pattern.pattern_id == "audio_device_to_analysis_chop":
+            patterns.append(
+                pattern.model_copy(
+                    update={
+                        "promoted_from_trace": "trace:audio-device-feedback-failed-visual",
+                        "layout": {
+                            **pattern.layout,
+                            "trace_support_count": 1,
+                            "support_trace_ids": ["trace:audio-device-feedback-failed-visual"],
+                            "runtime_validation": {
+                                "required_probe_ids": [
+                                    "audio_signal_activity",
+                                    "feedback_output_readback",
+                                ],
+                                "passed_probe_ids": [
+                                    "audio_signal_activity",
+                                    "feedback_output_readback",
+                                ],
+                                "failed_probe_ids": [
+                                    "cheap_visual_metrics",
+                                ],
+                                "failed_probe_statuses": {
+                                    "cheap_visual_metrics": "runtime_fail",
+                                },
+                            },
+                        },
+                    }
+                )
+            )
+        else:
+            patterns.append(pattern)
+
+    candidates = resolve_candidate_graphs(
+        compiled,
+        patterns=patterns,
+        available_ops=ALL_SEED_OPS | {"audiodeviceinCHOP"},
+        device_sources={"audio_device"},
+    )
+
+    file_candidate = next(
+        candidate for candidate in candidates if "audio_file_to_analysis_chop" in candidate.pattern_ids
+    )
+    device_candidate = next(
+        candidate for candidate in candidates if "audio_device_to_analysis_chop" in candidate.pattern_ids
+    )
+    assert file_candidate.score > device_candidate.score
+    assert (
+        "runtime-validation-failed:audio_device_to_analysis_chop:cheap_visual_metrics:runtime_fail"
+        in device_candidate.grounding_evidence
+    )
+    assert "runtime_validation_failed:1" in device_candidate.explanation
+
+
+def test_pattern_resolver_does_not_let_support_hide_failed_runtime_probes():
+    compiled = compile_visual_task(
+        "Build an audio-reactive feedback visual with a control panel and debug output",
+        target_root="/project1",
+        output_top="/project1/out1",
+        card_index=FakeCardIndex(ALL_SEED_OPS | {"audiodeviceinCHOP"}),
+    )
+    patterns = []
+    for pattern in load_pattern_registry():
+        if pattern.pattern_id == "audio_file_to_analysis_chop":
+            patterns.append(
+                pattern.model_copy(
+                    update={
+                        "promoted_from_trace": "trace:audio-file-feedback-clean",
+                        "layout": {
+                            **pattern.layout,
+                            "trace_support_count": 1,
+                            "support_trace_ids": ["trace:audio-file-feedback-clean"],
+                            "runtime_validation": {
+                                "required_probe_ids": [
+                                    "audio_signal_activity",
+                                    "feedback_output_readback",
+                                ],
+                                "passed_probe_ids": [
+                                    "audio_signal_activity",
+                                    "feedback_output_readback",
+                                ],
+                            },
+                        },
+                    }
+                )
+            )
+        elif pattern.pattern_id == "audio_device_to_analysis_chop":
+            patterns.append(
+                pattern.model_copy(
+                    update={
+                        "promoted_from_trace": "trace:audio-device-feedback-supported-but-failed",
+                        "layout": {
+                            **pattern.layout,
+                            "trace_support_count": 12,
+                            "support_trace_ids": [
+                                f"trace:audio-device-feedback-supported-but-failed-{index}"
+                                for index in range(12)
+                            ],
+                            "runtime_validation": {
+                                "required_probe_ids": [
+                                    "audio_signal_activity",
+                                    "feedback_output_readback",
+                                ],
+                                "passed_probe_ids": [
+                                    "audio_signal_activity",
+                                    "feedback_output_readback",
+                                ],
+                                "failed_probe_ids": [
+                                    "cheap_visual_metrics",
+                                ],
+                                "failed_probe_statuses": {
+                                    "cheap_visual_metrics": "runtime_fail",
+                                },
+                            },
+                        },
+                    }
+                )
+            )
+        else:
+            patterns.append(pattern)
+
+    candidates = resolve_candidate_graphs(
+        compiled,
+        patterns=patterns,
+        available_ops=ALL_SEED_OPS | {"audiodeviceinCHOP"},
+        device_sources={"audio_device"},
+    )
+
+    file_candidate = next(
+        candidate for candidate in candidates if "audio_file_to_analysis_chop" in candidate.pattern_ids
+    )
+    device_candidate = next(
+        candidate for candidate in candidates if "audio_device_to_analysis_chop" in candidate.pattern_ids
+    )
+    assert file_candidate.score > device_candidate.score
+    assert "runtime_validation_failed:1" in device_candidate.explanation
+    assert (
+        "runtime-validation-failed:audio_device_to_analysis_chop:cheap_visual_metrics:runtime_fail"
+        in device_candidate.grounding_evidence
+    )
+
+
 def test_pattern_resolver_marks_device_candidate_without_device_source():
     compiled = compile_visual_task(
         "Build an audio-reactive feedback visual with a control panel and debug output",
@@ -997,7 +1444,9 @@ def test_pattern_resolver_marks_device_candidate_without_device_source():
         device_sources=set(),
     )
 
-    device_candidates = [candidate for candidate in candidates if "audio_device_to_analysis_chop" in candidate.pattern_ids]
+    device_candidates = [
+        candidate for candidate in candidates if "audio_device_to_analysis_chop" in candidate.pattern_ids
+    ]
     assert device_candidates
     assert "device-source-required" in device_candidates[0].risk_flags
     assert device_candidates[0].score < candidates[0].score

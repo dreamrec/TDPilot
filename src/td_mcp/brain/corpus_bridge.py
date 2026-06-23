@@ -54,7 +54,9 @@ def build_corpus_evidence(
         for query in _search_queries(intent, selected_ops):
             for card in _safe_search(card_index, query, limit=limit_per_query):
                 op_type = _extract_op_type(card)
-                enriched = _merge_operator_card(card, _safe_get_operator(card_index, op_type) if op_type else None)
+                enriched = _merge_operator_card(
+                    card, _safe_get_operator(card_index, op_type) if op_type else None
+                )
                 record = _record_from_card(
                     enriched,
                     source="docs_search",

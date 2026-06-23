@@ -56,3 +56,73 @@ def test_list_macros_has_defaults():
     names = {entry["name"] for entry in summary["macros"]}
     assert "feedback_loop" in names
     assert "post_processing" in names
+
+
+@pytest.mark.asyncio
+async def test_macro_engine_routes_param_writes_through_shared_preflight():
+    client = FakeTDClient()
+    preflight_calls = []
+
+    class Result:
+        adjusted_params = {"opacity": 0.5}
+        safety_warnings = ["clamped opacity"]
+        param_semantics_warnings = []
+        blocked = False
+
+    def preflight(**kwargs):
+        preflight_calls.append(kwargs)
+        return Result()
+
+    engine = MacroEngine(td_client=client, param_preflight=preflight)
+
+    result = await engine.create_macro(
+        parent_path="/project1",
+        macro_type="feedback_loop",
+        name_prefix="demo",
+        param_semantics_policy="block",
+    )
+
+    decay_call = next(
+        body
+        for endpoint, body in client.calls
+        if endpoint == "node/params/set" and body["path"].endswith("/demo_decay")
+    )
+    assert decay_call["params"] == {"opacity": 0.5}
+    assert preflight_calls
+    assert preflight_calls[0]["path"] == "/project1/demo_decay"
+    assert preflight_calls[0]["op_type"] == "levelTOP"
+    assert preflight_calls[0]["param_semantics_policy"] == "block"
+    assert "clamped opacity" in result["warnings"]
+
+
+@pytest.mark.asyncio
+async def test_macro_engine_block_policy_preflights_before_creating_nodes():
+    client = FakeTDClient()
+    preflight_calls = []
+
+    class Result:
+        adjusted_params = {"opacity": "definitely"}
+        safety_warnings = []
+        param_semantics_warnings = ["invalid_bool_param"]
+        blocked = True
+
+    def preflight(**kwargs):
+        preflight_calls.append(kwargs)
+        return Result()
+
+    engine = MacroEngine(td_client=client, param_preflight=preflight)
+
+    result = await engine.create_macro(
+        parent_path="/project1",
+        macro_type="feedback_loop",
+        name_prefix="demo",
+        param_semantics_policy="block",
+    )
+
+    assert result["success"] is False
+    assert result["blocked"] is True
+    assert result["param_semantics_status"] == "blocked"
+    assert preflight_calls
+    assert preflight_calls[0]["path"] == "/project1/demo_decay"
+    assert preflight_calls[0]["op_type"] == "levelTOP"
+    assert not client.calls

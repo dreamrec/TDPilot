@@ -15,7 +15,7 @@ removed, rewired) use TouchDesigner's native Ctrl+Z stack instead.
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from mcp.server.fastmcp import Context
 from pydantic import Field
@@ -190,6 +190,17 @@ async def td_restore_snapshot(
             description="Return diff only without applying.",
         ),
     ] = False,
+    param_semantics_policy: Annotated[
+        Literal["warn", "block"],
+        Field(
+            default="warn",
+            description=(
+                "Docs-grounded parameter safety policy for restored snapshot params. "
+                "'warn' preserves restore behavior with attached findings; 'block' refuses "
+                "unsafe parameter restores before any live mutation."
+            ),
+        ),
+    ] = "warn",
 ) -> str:
     """Restore parameter values from a previously saved snapshot.
 
@@ -222,16 +233,20 @@ async def td_restore_snapshot(
             snapshot_nodes,
             partial_filters=partial or [],
             dry_run=dry_run,
+            param_semantics_policy=param_semantics_policy,
         )
         restored = restore_result["restored"]
         skipped = restore_result["skipped"]
         failures = restore_result["failures"]
         warnings = restore_result["safety_warnings"]
+        param_semantics_warnings = restore_result.get("param_semantics_warnings") or []
+        blocked = bool(restore_result.get("blocked"))
 
         payload = {
-            "success": not failures,
+            "success": not failures and not blocked,
             "snapshot_id": snapshot_id,
             "dry_run": dry_run,
+            "blocked": blocked,
             "restored_count": len(restored),
             "skipped_count": len(skipped),
             "failure_count": len(failures),
@@ -240,8 +255,11 @@ async def td_restore_snapshot(
             "failures": failures,
             "safety_warnings": warnings,
         }
+        if param_semantics_warnings:
+            payload["param_semantics_status"] = "blocked" if blocked else "warnings"
+            payload["param_semantics_warnings"] = param_semantics_warnings
 
-        if not dry_run:
+        if not dry_run and not blocked:
             _tr._audit_log(
                 ctx,
                 "td_restore_snapshot",
@@ -250,6 +268,8 @@ async def td_restore_snapshot(
                     "restored_count": len(restored),
                     "failure_count": len(failures),
                     "partial": partial,
+                    "param_semantics_warning_count": len(param_semantics_warnings),
+                    "param_semantics_policy": param_semantics_policy,
                 },
             )
 

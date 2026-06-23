@@ -278,7 +278,9 @@ async def test_generated_code_runtime_validation_reads_callback_contract_without
     assert report["ok"] is True
     assert report["checked_contract_count"] == 2
     assert {item["status"] for item in report["evidence"]} == {"runtime_pass"}
-    assert all("code" not in item and "text" not in item and "content" not in item for item in report["evidence"])
+    assert all(
+        "code" not in item and "text" not in item and "content" not in item for item in report["evidence"]
+    )
 
 
 @pytest.mark.asyncio
@@ -1172,12 +1174,7 @@ def test_glsl_pop_generated_code_metadata_must_target_compute_shader_param():
         target_op="/project1/pop_code",
         target_param="text",
         source_refs=["/project1/pop_code"],
-        code=(
-            "void main() {\n"
-            "    uint idx = TDIndex();\n"
-            "    if (idx >= TDNumElements()) { return; }\n"
-            "}\n"
-        ),
+        code=("void main() {\n    uint idx = TDIndex();\n    if (idx >= TDNumElements()) { return; }\n}\n"),
         static_checks=["glsl_pop_bounds_guard"],
         runtime_checks=["compile_state", "finite_pop_bounds"],
         official_sources=["https://docs.derivative.ca/Write_a_GLSL_POP"],

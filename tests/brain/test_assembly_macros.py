@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from td_mcp.brain.assembly_macros import load_assembly_macro_registry, macros_for_profiles
 from td_mcp.brain import assembly_macros
+from td_mcp.brain.assembly_macros import load_assembly_macro_registry, macros_for_profiles
 from td_mcp.brain.patterns import load_pattern_registry
 from td_mcp.brain.validators import checks_for_profile
 
@@ -47,11 +47,7 @@ def test_macros_for_profiles_filters_deterministically():
 def test_assembly_macro_validation_addons_are_backed_by_concept_compiled_checks():
     macros = load_assembly_macro_registry()
     backed_checks = set(checks_for_profile("structural_visual_safe", "concept_compiled"))
-    addons = {
-        addon
-        for macro in macros
-        for addon in macro.validation_addons
-    }
+    addons = {addon for macro in macros for addon in macro.validation_addons}
 
     assert addons
     assert addons.issubset(backed_checks)

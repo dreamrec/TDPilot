@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from td_mcp.brain.assembly_macros import macros_for_profiles
+from td_mcp.brain.atlas_drafter import AtlasDraftResult, draft_atlas_candidate_graph
 from td_mcp.brain.code_harness import validate_patch_plan_generated_code
 from td_mcp.brain.concept_compiler import (
     build_candidate_graphs,
@@ -19,7 +20,12 @@ from td_mcp.brain.operator_availability import (
     load_operator_availability_report,
     substitution_explanations_from_evidence,
 )
-from td_mcp.brain.param_semantics import parameter_risk_flags_for_plan, validate_patch_plan_parameter_contract
+from td_mcp.brain.param_semantics import (
+    load_param_semantics_registry,
+    parameter_risk_flags_for_plan,
+    validate_patch_plan_parameter_contract,
+)
+from td_mcp.brain.param_semantics_drafts import draft_param_semantics_from_docs
 from td_mcp.brain.validators import classify_intent_profile
 from td_mcp.hints import query_hints
 from td_mcp.models.brain import (
@@ -572,7 +578,8 @@ async def build_brain_plan(
         validation_profile=validation_profile,
         card_index=card_index if include_docs else None,
     )
-    if is_supported_compiler_route(compiled_task):
+    supported_compiler_route = is_supported_compiler_route(compiled_task)
+    if supported_compiler_route:
         available_ops = await _read_available_ops(td_client)
         constraint_availability_matrix = _availability_matrix_from_constraints(constraints_data)
         sampled_unavailable_ops = _sampled_unavailable_ops_from_constraints(constraints_data)
@@ -613,9 +620,23 @@ async def build_brain_plan(
     profile = classify_intent_profile(intent, preferred_domains)
     spec = _PROFILE_SPECS.get(profile)
     if profile == "generic" and _intent_is_under_specified(intent, preferred_domains):
+        corpus_evidence = build_corpus_evidence(
+            intent=intent,
+            operators=[],
+            card_index=card_index if include_docs else None,
+            limit_per_query=16,
+            max_records=12,
+        )
         spec = _PROFILE_SPECS["generic"]
         graph = _empty_graph(task, profile="generic")
         patch_plan = _empty_patch(task, reason="under-specified intent")
+        grounding = _dedupe(
+            [
+                "profile:generic",
+                "planner:block_under_specified",
+                *corpus_evidence_markers(corpus_evidence),
+            ]
+        )
         return BrainPlan(
             task=task,
             concept_graph=graph,
@@ -624,8 +645,63 @@ async def build_brain_plan(
                 "What visual system should TDPilot build: feedback, audio-reactive, POP, GLSL, render pipeline, panel UI, or a specific operator chain?"
             ],
             missing_facts=["under-specified intent: no supported visual concept matched"],
-            grounding_evidence=["profile:generic", "planner:block_under_specified"],
+            grounding_evidence=grounding,
+            corpus_evidence=corpus_evidence,
             risk_flags=["under-specified"],
+        )
+
+    if profile == "generic" and not supported_compiler_route:
+        corpus_evidence = build_corpus_evidence(
+            intent=intent,
+            operators=[],
+            card_index=card_index if include_docs else None,
+            limit_per_query=16,
+            max_records=24,
+        )
+        atlas_draft = draft_atlas_candidate_graph(
+            task=task,
+            compiled_task=compiled_task,
+            corpus_evidence=corpus_evidence,
+            card_index=card_index if include_docs else None,
+        )
+        if atlas_draft.accepted and atlas_draft.candidate_graph is not None:
+            available_ops = await _read_available_ops(td_client)
+            existing_names = await _read_existing_names(td_client, target_root)
+            return _plan_from_atlas_candidate_graph(
+                task=task,
+                compiled_task=compiled_task,
+                atlas_draft=atlas_draft,
+                available_ops=available_ops,
+                existing_names=existing_names,
+                card_index=card_index if include_docs else None,
+                validation_profile=validation_profile,
+            )
+
+        graph = _empty_graph(task, profile="generic")
+        patch_plan = _empty_patch(task, reason="open prompt requires atlas-grounded planner")
+        grounding = _dedupe(
+            [
+                "profile:generic",
+                "planner:open_prompt_atlas_grounded",
+                *atlas_draft.grounding_evidence,
+                *corpus_evidence_markers(corpus_evidence),
+            ]
+        )
+        return BrainPlan(
+            task=task,
+            concept_graph=graph,
+            patch_plan=patch_plan,
+            validation_profile=_resolve_validation_profile(validation_profile),
+            blocked_questions=[
+                "The operator atlas returned grounding evidence, but no safe topology compiler route exists yet. Use the cited corpus evidence to draft a BrainPlan before mutation."
+            ],
+            missing_facts=[
+                "unsupported_open_prompt:atlas_grounded_planner_required",
+                *atlas_draft.rejection_reasons,
+            ],
+            grounding_evidence=grounding,
+            corpus_evidence=corpus_evidence,
+            risk_flags=["open-prompt-atlas-grounding"],
         )
 
     spec = spec or _PROFILE_SPECS["generic"]
@@ -654,6 +730,36 @@ async def build_brain_plan(
         available_ops,
         card_index=card_index if include_docs else None,
     )
+    if missing_ops and include_docs and card_index is not None:
+        atlas_corpus_evidence = build_corpus_evidence(
+            intent=intent,
+            operators=[],
+            card_index=card_index,
+            limit_per_query=16,
+            max_records=16,
+        )
+        atlas_draft = draft_atlas_candidate_graph(
+            task=task,
+            compiled_task=compiled_task,
+            corpus_evidence=atlas_corpus_evidence,
+            card_index=card_index,
+        )
+        if atlas_draft.accepted and atlas_draft.candidate_graph is not None:
+            atlas_missing_ops, _atlas_family_omitted_ops = _classify_required_ops(
+                atlas_draft.candidate_graph.required_ops,
+                available_ops,
+                card_index=card_index,
+            )
+            if not atlas_missing_ops:
+                return _plan_from_atlas_candidate_graph(
+                    task=task,
+                    compiled_task=compiled_task,
+                    atlas_draft=atlas_draft,
+                    available_ops=available_ops,
+                    existing_names=existing_names,
+                    card_index=card_index,
+                    validation_profile=validation_profile,
+                )
     graph = ConceptGraph(
         task=task,
         profile=profile,
@@ -681,6 +787,7 @@ async def build_brain_plan(
         patch_plan = _empty_patch(task, reason="missing required operators")
     else:
         patch_plan = _compile_patch_plan(task, graph, existing_names)
+        patch_plan = _with_graph_output_capture(task, graph, patch_plan)
         graph, patch_plan = _with_param_semantics_risk_flags(graph, patch_plan)
         param_issues = _blocking_param_issues(patch_plan)
         if param_issues:
@@ -696,7 +803,7 @@ async def build_brain_plan(
         validation_profile=_resolve_validation_profile(validation_profile),
         blocked_questions=blocked_questions,
         missing_facts=missing_facts,
-        grounding_evidence=grounding,
+        grounding_evidence=list(graph.evidence),
         corpus_evidence=corpus_evidence,
         risk_flags=list(graph.risk_flags),
     )
@@ -737,7 +844,9 @@ def _device_sources_from_constraints(constraints: dict[str, Any]) -> set[str]:
 
 
 def _sampled_unavailable_ops_from_constraints(constraints: dict[str, Any]) -> set[str]:
-    unavailable = _unavailable_ops_from_availability_matrix(_availability_matrix_from_constraints(constraints))
+    unavailable = _unavailable_ops_from_availability_matrix(
+        _availability_matrix_from_constraints(constraints)
+    )
     report = constraints.get("availability_report")
     if not isinstance(report, dict):
         return unavailable
@@ -1197,9 +1306,101 @@ def _plan_from_candidate_graph(
         validation_profile=_resolve_validation_profile(validation_profile),
         blocked_questions=blocked_questions,
         missing_facts=missing_facts,
-        grounding_evidence=grounding,
+        grounding_evidence=list(graph.evidence),
         corpus_evidence=corpus_evidence,
         substitution_explanations=substitution_explanations,
+        risk_flags=list(graph.risk_flags),
+    )
+
+
+def _plan_from_atlas_candidate_graph(
+    *,
+    task: VisualTaskSpec,
+    compiled_task,
+    atlas_draft: AtlasDraftResult,
+    available_ops: set[str],
+    existing_names: set[str],
+    card_index,
+    validation_profile: str,
+) -> BrainPlan:
+    candidate = atlas_draft.candidate_graph
+    if candidate is None:
+        raise ValueError("accepted atlas draft must include a candidate graph")
+
+    ranked_candidates = list(atlas_draft.candidate_graphs or [candidate])
+    required_ops = list(candidate.required_ops)
+    corpus_evidence = build_corpus_evidence(
+        intent=task.intent,
+        operators=required_ops,
+        card_index=card_index,
+    )
+    draft_evidence = _param_semantics_draft_evidence(required_ops, card_index)
+    grounding = _dedupe(
+        [
+            "profile:generic",
+            "planner:open_prompt_atlas_drafted",
+            *candidate.grounding_evidence,
+            *corpus_evidence_markers(corpus_evidence),
+            *draft_evidence,
+        ]
+    )
+    missing_ops, family_omitted_ops = _classify_required_ops(
+        required_ops,
+        available_ops,
+        card_index=card_index,
+    )
+    graph = ConceptGraph(
+        task=task,
+        profile="generic",
+        concepts=candidate.concepts,
+        edges=candidate.edges,
+        operators=required_ops,
+        unresolved=missing_ops,
+        evidence=grounding,
+        risk_flags=[
+            *candidate.risk_flags,
+            *(["param-semantics-drafts-need-review"] if draft_evidence else []),
+            *[f"missing-op:{op}" for op in missing_ops],
+            *[f"family-list-omitted:{op}" for op in family_omitted_ops],
+        ],
+    )
+    missing_facts = [f"missing_op:{op}" for op in missing_ops]
+    missing_device_sources = _missing_device_source_facts(candidate, task.constraints)
+    missing_facts.extend(missing_device_sources)
+    blocked_questions = []
+    if missing_ops:
+        blocked_questions.append(
+            "The atlas-grounded draft names operators that are not available in the current TouchDesigner build."
+        )
+        patch_plan = _empty_patch(task, reason="missing required operators")
+    elif missing_device_sources:
+        blocked_questions.append(
+            "The selected atlas-grounded draft depends on an external device or network source. "
+            "Declare the available source in constraints.device_sources before mutation."
+        )
+        patch_plan = _empty_patch(task, reason="missing device source")
+    else:
+        patch_plan = _compile_patch_plan(task, graph, existing_names)
+        patch_plan = _with_graph_output_capture(task, graph, patch_plan)
+        graph, patch_plan = _with_param_semantics_risk_flags(graph, patch_plan)
+        param_issues = _blocking_param_issues(patch_plan)
+        if param_issues:
+            blocked_questions.append(_param_semantics_block_message(param_issues))
+            missing_facts.extend(_param_issue_facts(param_issues))
+            graph.risk_flags = _dedupe([*graph.risk_flags, *_param_issue_risk_flags(param_issues)])
+            patch_plan = _empty_patch(task, reason="invalid parameter semantics")
+
+    return BrainPlan(
+        task=task,
+        concept_graph=graph,
+        patch_plan=patch_plan,
+        compiled_task=compiled_task,
+        candidate_graphs=ranked_candidates,
+        validation_profile=_resolve_validation_profile(validation_profile),
+        blocked_questions=blocked_questions,
+        missing_facts=missing_facts,
+        grounding_evidence=list(graph.evidence),
+        corpus_evidence=corpus_evidence,
         risk_flags=list(graph.risk_flags),
     )
 
@@ -1207,9 +1408,12 @@ def _plan_from_candidate_graph(
 _DEVICE_SOURCE_REQUIREMENTS: dict[str, str] = {
     "audio_device_to_analysis_chop": "audio_device",
     "midi_in_to_control_chop": "midi_device",
+    "atlas:midi_chop_control_bridge": "midi_device",
     "serial_dat_protocol_bridge": "serial_device",
     "osc_in_dat_protocol_bridge": "osc_source",
     "websocket_dat_protocol_bridge": "websocket_endpoint",
+    "atlas:web_client_dat_request_output": "http_endpoint",
+    "atlas:web_server_dat_endpoint": "network_listener",
     "mqtt_client_dat_protocol_bridge": "mqtt_broker",
     "udp_in_dat_protocol_bridge": "udp_source",
     "ndi_in_to_post_fx_output": "ndi_source",
@@ -1283,11 +1487,14 @@ def _param_issue_risk_flags(issues) -> list[str]:
     return _dedupe([f"param-semantics:{issue.code}" for issue in issues])
 
 
-def _with_param_semantics_risk_flags(graph: ConceptGraph, patch_plan: PatchPlan) -> tuple[ConceptGraph, PatchPlan]:
+def _with_param_semantics_risk_flags(
+    graph: ConceptGraph, patch_plan: PatchPlan
+) -> tuple[ConceptGraph, PatchPlan]:
     risk_flags = parameter_risk_flags_for_plan(patch_plan)
     if not risk_flags:
         return graph, patch_plan
     graph.risk_flags = _dedupe([*graph.risk_flags, *risk_flags])
+    graph.evidence = _dedupe([*graph.evidence, *[f"direct-param-risk:{flag}" for flag in risk_flags]])
     return graph, patch_plan.model_copy(update={"risk_flags": _dedupe([*patch_plan.risk_flags, *risk_flags])})
 
 
@@ -1356,7 +1563,9 @@ def _with_assembly_operations(
         assembly_task = task.model_copy(
             update={
                 "target_root": shell_path,
-                "output_top": _rebase_path_value(task.output_top, from_root=task.target_root, to_root=shell_path)
+                "output_top": _rebase_path_value(
+                    task.output_top, from_root=task.target_root, to_root=shell_path
+                )
                 if task.output_top
                 else None,
             }
@@ -1376,9 +1585,9 @@ def _with_assembly_operations(
                 graph,
                 concept_paths,
                 macro_id="add_debug_panel",
-                predicate=lambda concept: concept.id == "debug_notes"
-                or "debug" in concept.id
-                or concept.role == "validator",
+                predicate=lambda concept: (
+                    concept.id == "debug_notes" or "debug" in concept.id or concept.role == "validator"
+                ),
             )
         )
     if "add_user_controls" in macro_ids:
@@ -1424,17 +1633,13 @@ def _rebase_operations_to_shell(
 
 
 def _rebase_path_values(values: list[str], *, from_root: str, to_root: str) -> list[str]:
-    return [
-        str(_rebase_path_value(value, from_root=from_root, to_root=to_root))
-        for value in values
-    ]
+    return [str(_rebase_path_value(value, from_root=from_root, to_root=to_root)) for value in values]
 
 
 def _rebase_path_value(value: Any, *, from_root: str, to_root: str) -> Any:
     if isinstance(value, dict):
         return {
-            key: _rebase_path_value(item, from_root=from_root, to_root=to_root)
-            for key, item in value.items()
+            key: _rebase_path_value(item, from_root=from_root, to_root=to_root) for key, item in value.items()
         }
     if isinstance(value, list):
         return [_rebase_path_value(item, from_root=from_root, to_root=to_root) for item in value]
@@ -1539,12 +1744,48 @@ def _debug_diagnostic_ops(
 
 
 def _stable_top_path(graph: ConceptGraph, concept_paths: dict[str, str]) -> str | None:
+    final_output = next(
+        (concept for concept in graph.concepts if concept.id == "output" and concept.role == "output"),
+        None,
+    )
+    if final_output is not None:
+        if final_output.domain != "TOP":
+            return None
+        return concept_paths.get(final_output.id)
     for concept in graph.concepts:
         if concept.role == "output" and concept.domain == "TOP":
             path = concept_paths.get(concept.id)
             if path:
                 return path
     return None
+
+
+def _with_graph_output_capture(task: VisualTaskSpec, graph: ConceptGraph, patch_plan: PatchPlan) -> PatchPlan:
+    if task.output_top or patch_plan.validation_plan.capture_frames:
+        return patch_plan
+    concept_paths = _concept_paths_from_patch_plan(task, graph, patch_plan)
+    stable_top = _stable_top_path(graph, concept_paths)
+    if not stable_top:
+        return patch_plan
+    validation_plan = patch_plan.validation_plan.model_copy(update={"capture_frames": [stable_top]})
+    return patch_plan.model_copy(update={"validation_plan": validation_plan})
+
+
+def _param_semantics_draft_evidence(required_ops: list[str], card_index) -> list[str]:
+    if card_index is None or not required_ops:
+        return []
+    try:
+        report = draft_param_semantics_from_docs(
+            card_index,
+            required_ops,
+            existing_registry=load_param_semantics_registry(),
+            max_per_operator=12,
+        )
+    except Exception:
+        return []
+    return [
+        f"param-semantics-draft:{draft.op_type}.{draft.name}:needs-live-readback" for draft in report.drafts
+    ]
 
 
 def _concept_paths_from_patch_plan(
@@ -1655,7 +1896,9 @@ def _matching_layout_ops(
     return operations
 
 
-def _assembly_annotation_op(task: VisualTaskSpec, candidate: CandidateConceptGraph, assembly_macros) -> PatchOperation:
+def _assembly_annotation_op(
+    task: VisualTaskSpec, candidate: CandidateConceptGraph, assembly_macros
+) -> PatchOperation:
     validation = _dedupe(
         [
             *candidate.validation_needs,

@@ -7,6 +7,7 @@ MCP-free: accepts td_client and sentinel by injection.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from td_mcp.models.patch import (
@@ -17,6 +18,8 @@ from td_mcp.models.patch import (
 )
 from td_mcp.patch.undo_sentinel import UndoBlockSentinel
 from td_mcp.patch.validator import validate_target
+
+ParamPreflightCallback = Callable[..., Any]
 
 
 class NestedBlockError(RuntimeError):
@@ -61,6 +64,8 @@ async def apply_plan(
     label: str | None = None,
     auto_validate: bool = True,
     macro_engine=None,
+    param_preflight: ParamPreflightCallback | None = None,
+    param_semantics_policy: str = "warn",
 ) -> PatchResult:
     """Apply a PatchPlan inside one TD undo block.
 
@@ -77,6 +82,21 @@ async def apply_plan(
     block_label = label or plan.undo_label
     result = PatchResult(plan_id=plan.id, status="clean", undo_label=block_label)
 
+    effective_plan, preflight_info = await _preflight_set_param_ops(
+        td_client,
+        plan,
+        macro_engine=macro_engine,
+        param_preflight=param_preflight,
+        param_semantics_policy=param_semantics_policy,
+    )
+    result.safety_warnings.extend(preflight_info.get("safety_warnings", []))
+    result.param_semantics_warnings.extend(preflight_info.get("param_semantics_warnings", []))
+    if preflight_info.get("blocked"):
+        result.status = "broken"
+        result.failed_op = preflight_info.get("index")
+        result.failed_reason = str(preflight_info.get("reason") or "set_params preflight blocked mutation")
+        return result
+
     sentinel.mark_active(block_label)
     try:
         await td_client.request(
@@ -84,10 +104,15 @@ async def apply_plan(
             {"action": "start_undo_block", "name": block_label},
         )
         try:
-            for i, op in enumerate(plan.operations):
+            for i, op in enumerate(effective_plan.operations):
                 try:
                     _validate_args(op, i)
-                    outcome = await _apply_op(td_client, op, macro_engine=macro_engine)
+                    outcome = await _apply_op(
+                        td_client,
+                        op,
+                        macro_engine=macro_engine,
+                        param_semantics_policy=param_semantics_policy,
+                    )
                     _record_outcome(result, i, op, outcome)
                 except Exception as exc:  # noqa: BLE001
                     result.failed_op = i
@@ -111,7 +136,176 @@ async def apply_plan(
     return result
 
 
-async def _apply_op(td_client, op: PatchOperation, *, macro_engine=None) -> dict[str, Any]:
+async def _preflight_set_param_ops(
+    td_client,
+    plan: PatchPlan,
+    *,
+    macro_engine=None,
+    param_preflight: ParamPreflightCallback | None,
+    param_semantics_policy: str,
+) -> tuple[PatchPlan, dict[str, Any]]:
+    can_preflight_macro = (
+        param_semantics_policy == "block"
+        and macro_engine is not None
+        and hasattr(macro_engine, "preflight_macro")
+    )
+    if param_preflight is None and not can_preflight_macro:
+        return plan, {}
+
+    created_op_types = _created_op_types_by_path(plan)
+    operations: list[PatchOperation] = []
+    safety_warnings: list[str] = []
+    param_semantics_warnings: list[Any] = []
+
+    for index, op in enumerate(plan.operations):
+        if param_preflight is not None and op.kind == "annotate" and "text" in op.args:
+            params = {"text": str(op.args["text"])}
+            preflight = param_preflight(
+                path=_predicted_annotate_path(plan, op),
+                params=params,
+                op_type="annotateCOMP",
+                param_semantics_policy=param_semantics_policy,
+            )
+            safety_warnings.extend(str(item) for item in getattr(preflight, "safety_warnings", []) or [])
+            param_semantics_warnings.extend(
+                _serialize_param_semantics_warning(item)
+                for item in getattr(preflight, "param_semantics_warnings", []) or []
+            )
+            if bool(getattr(preflight, "blocked", False)):
+                return plan, {
+                    "blocked": True,
+                    "index": index,
+                    "reason": "param semantics blocked annotate text preflight",
+                    "safety_warnings": safety_warnings,
+                    "param_semantics_warnings": param_semantics_warnings,
+                }
+            adjusted = getattr(preflight, "adjusted_params", params) or params
+            operations.append(
+                op.model_copy(
+                    update={"args": {**op.args, "text": str(dict(adjusted).get("text", params["text"]))}}
+                )
+            )
+            continue
+
+        if op.kind == "macro" and can_preflight_macro and op.args.get("macro_type"):
+            preflight = macro_engine.preflight_macro(
+                parent_path=op.target or plan.target_root or "/project1",
+                macro_type=str(op.args.get("macro_type") or ""),
+                name_prefix=op.args.get("name_prefix") or op.args.get("prefix") or None,
+                overrides=op.args.get("params"),
+                param_semantics_policy=param_semantics_policy,
+            )
+            safety_warnings.extend(str(item) for item in preflight.get("warnings", []) or [])
+            param_semantics_warnings.extend(
+                _serialize_param_semantics_warning(item)
+                for item in preflight.get("param_semantics_warnings", []) or []
+            )
+            if bool(preflight.get("blocked")):
+                return plan, {
+                    "blocked": True,
+                    "index": index,
+                    "reason": "param semantics blocked macro preflight",
+                    "safety_warnings": safety_warnings,
+                    "param_semantics_warnings": param_semantics_warnings,
+                }
+            operations.append(op)
+            continue
+
+        if param_preflight is None or op.kind != "set_params" or not isinstance(op.args.get("params"), dict):
+            operations.append(op)
+            continue
+        path = str(op.target or "")
+        params = dict(op.args["params"])
+        op_type = created_op_types.get(path)
+        if op_type is None:
+            op_type = await _read_existing_op_type(td_client, path)
+        preflight = param_preflight(
+            path=path,
+            params=params,
+            op_type=op_type,
+            param_semantics_policy=param_semantics_policy,
+        )
+        safety_warnings.extend(str(item) for item in getattr(preflight, "safety_warnings", []) or [])
+        param_semantics_warnings.extend(
+            _serialize_param_semantics_warning(item)
+            for item in getattr(preflight, "param_semantics_warnings", []) or []
+        )
+        if bool(getattr(preflight, "blocked", False)):
+            return plan, {
+                "blocked": True,
+                "index": index,
+                "reason": f"param semantics blocked set_params preflight for {path}",
+                "safety_warnings": safety_warnings,
+                "param_semantics_warnings": param_semantics_warnings,
+            }
+        adjusted = getattr(preflight, "adjusted_params", params) or params
+        operations.append(op.model_copy(update={"args": {**op.args, "params": dict(adjusted)}}))
+
+    return (
+        plan.model_copy(update={"operations": operations}),
+        {
+            "safety_warnings": safety_warnings,
+            "param_semantics_warnings": param_semantics_warnings,
+        }
+        if safety_warnings or param_semantics_warnings
+        else {},
+    )
+
+
+def _predicted_annotate_path(plan: PatchPlan, op: PatchOperation) -> str:
+    parent = str(op.target or plan.target_root or "/project1").rstrip("/") or "/"
+    name = str(op.args.get("name") or "annotation1").strip() or "annotation1"
+    return f"{parent}/{name}".replace("//", "/")
+
+
+def _created_op_types_by_path(plan: PatchPlan) -> dict[str, str]:
+    created: dict[str, str] = {}
+    for op in plan.operations:
+        if op.kind != "create_node":
+            continue
+        name = str(op.args.get("name") or "").strip()
+        op_type = str(op.args.get("op_type") or "").strip()
+        if not name or not op_type:
+            continue
+        parent = str(op.target or plan.target_root or "/project1").rstrip("/")
+        created[f"{parent}/{name}"] = op_type
+    return created
+
+
+async def _read_existing_op_type(td_client, path: str) -> str | None:
+    if not path:
+        return None
+    try:
+        detail = await td_client.request("node/detail", {"path": path})
+    except Exception:  # noqa: BLE001
+        return None
+    if not isinstance(detail, dict):
+        return None
+    raw_type = str(detail.get("type") or detail.get("op_type") or detail.get("node_type") or "").strip()
+    family = str(detail.get("family") or "").strip().upper()
+    if not raw_type:
+        return None
+    if family and not raw_type.upper().endswith(family):
+        return f"{raw_type}{family}"
+    return raw_type
+
+
+def _serialize_param_semantics_warning(item: Any) -> Any:
+    if hasattr(item, "model_dump"):
+        try:
+            return item.model_dump(mode="json")
+        except Exception:  # noqa: BLE001
+            return str(item)
+    return item
+
+
+async def _apply_op(
+    td_client,
+    op: PatchOperation,
+    *,
+    macro_engine=None,
+    param_semantics_policy: str = "warn",
+) -> dict[str, Any]:
     """Route one operation to its TD endpoint. Returns the response.
 
     Wire formats are aligned with the legacy MCP tools (see tools_graph.py /
@@ -233,7 +427,12 @@ async def _apply_op(td_client, op: PatchOperation, *, macro_engine=None) -> dict
             node_x=int(op.args.get("nodeX", 0)),
             node_y=int(op.args.get("nodeY", 0)),
             overrides=op.args.get("params"),
+            param_semantics_policy=str(op.args.get("param_semantics_policy") or param_semantics_policy),
         )
+        if isinstance(result, dict) and result.get("blocked"):
+            raise PatchOperationArgsError("param semantics blocked macro params")
+        if isinstance(result, dict) and result.get("success") is False:
+            raise PatchOperationArgsError(str(result.get("error") or "macro creation failed"))
         return result or {}
     raise PatchOperationArgsError(f"unreachable: unknown kind {op.kind!r}")
 

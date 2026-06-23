@@ -276,6 +276,8 @@ def test_param_semantics_registry_loads_seed_contracts():
     assert ("executeDAT", "executeloc") in keys
     assert ("executeDAT", "fromop") in keys
     assert ("serialDAT", "callbacks") in keys
+    assert ("midiinCHOP", "simplified") in keys
+    assert ("midiinCHOP", "source") in keys
     assert ("oscinDAT", "protocol") in keys
     assert ("oscinDAT", "callbacks") in keys
     assert ("oscinDAT", "executeloc") in keys
@@ -283,6 +285,16 @@ def test_param_semantics_registry_loads_seed_contracts():
     assert ("websocketDAT", "callbacks") in keys
     assert ("websocketDAT", "executeloc") in keys
     assert ("websocketDAT", "fromop") in keys
+    assert ("webclientDAT", "request") in keys
+    assert ("webclientDAT", "callbacks") in keys
+    assert ("mqttclientDAT", "active") in keys
+    assert ("mqttclientDAT", "callbacks") in keys
+    assert ("udpinDAT", "protocol") in keys
+    assert ("udpinDAT", "callbacks") in keys
+    assert ("lfoCHOP", "frequency") in keys
+    assert ("lfoCHOP", "amp") in keys
+    assert ("lfoCHOP", "reset") in keys
+    assert ("lfoCHOP", "resetpulse") in keys
     assert all(item.official_source.startswith("https://docs.derivative.ca/") for item in registry)
 
 
@@ -299,6 +311,7 @@ def test_param_semantics_coverage_report_covers_master_plan_priority_bands():
         "glsl",
         "feedback_top_processing",
         "pop",
+        "sop_geometry",
         "audio_control",
         "panel_parameters",
         "dat_callbacks_protocols",
@@ -316,7 +329,14 @@ async def test_compiler_audio_feedback_debug_set_params_are_covered_by_semantics
         scripted={
             "families": {
                 "families": {
-                    "CHOP": ["audiofileinCHOP", "analyzeCHOP", "mathCHOP", "nullCHOP", "panelCHOP", "infoCHOP"],
+                    "CHOP": [
+                        "audiofileinCHOP",
+                        "analyzeCHOP",
+                        "mathCHOP",
+                        "nullCHOP",
+                        "panelCHOP",
+                        "infoCHOP",
+                    ],
                     "TOP": ["noiseTOP", "feedbackTOP", "levelTOP", "compositeTOP", "nullTOP"],
                     "COMP": ["baseCOMP", "containerCOMP", "sliderCOMP", "buttonCOMP", "annotateCOMP"],
                     "DAT": ["textDAT", "errorDAT"],
@@ -368,9 +388,7 @@ def test_switch_top_index_accepts_bounded_integer_and_safe_table_expression():
                 target="/project1/switch",
                 args={
                     "params": {
-                        "index": {
-                            "expr": "min(1, max(0, int(op('/project1/table')[1, 'selected_index'])))"
-                        }
+                        "index": {"expr": "min(1, max(0, int(op('/project1/table')[1, 'selected_index'])))"}
                     }
                 },
             ),
@@ -392,8 +410,7 @@ def test_switch_top_index_accepts_bounded_integer_and_safe_table_expression():
     )
 
     assert (
-        validate_patch_plan_parameter_contract(expression_plan, require_semantics_for_set_params=True)
-        == []
+        validate_patch_plan_parameter_contract(expression_plan, require_semantics_for_set_params=True) == []
     )
     assert validate_patch_plan_parameter_contract(integer_plan, require_semantics_for_set_params=True) == []
 
@@ -422,6 +439,447 @@ def test_switch_top_index_blocks_arbitrary_expression_bindings():
     issues = validate_patch_plan_parameter_contract(plan, require_semantics_for_set_params=True)
 
     assert any(issue.code == "unsafe_param_expression" for issue in issues)
+
+
+def test_lfo_chop_has_bounded_control_semantics():
+    keys = set(semantics_by_op_and_param())
+    assert ("lfoCHOP", "frequency") in keys
+    assert ("lfoCHOP", "amp") in keys
+    assert ("lfoCHOP", "bias") in keys
+    assert ("lfoCHOP", "timeslice") in keys
+
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "lfoCHOP", "name": "lfo"},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/lfo",
+                args={"params": {"frequency": -1, "amp": -0.5, "reset": "yes please"}},
+            ),
+        ]
+    )
+
+    issues = validate_patch_plan_parameter_contract(plan, require_semantics_for_set_params=True)
+
+    assert {"param_out_of_range", "invalid_bool_param"}.issubset({issue.code for issue in issues})
+
+
+def test_lfo_wave_and_noise_chop_promote_verified_menu_and_rate_semantics():
+    registry = load_param_semantics_registry()
+    by_key = {(item.op_type, item.name): item for item in registry}
+
+    assert by_key[("lfoCHOP", "wavetype")].value_kind == "enum"
+    assert {"sine", "pulse"}.issubset(
+        {value.lower() for value in by_key[("lfoCHOP", "wavetype")].enum_values}
+    )
+    assert by_key[("lfoCHOP", "resetcondition")].value_kind == "enum"
+    assert {"offtoon", "whileon", "ontooff", "whileoff"}.issubset(
+        {value.lower() for value in by_key[("lfoCHOP", "resetcondition")].enum_values}
+    )
+    assert by_key[("lfoCHOP", "rate")].value_kind == "float"
+    assert by_key[("waveCHOP", "wavetype")].value_kind == "enum"
+    assert {"const", "sin", "normal", "expr"}.issubset(
+        {value.lower() for value in by_key[("waveCHOP", "wavetype")].enum_values}
+    )
+    assert by_key[("waveCHOP", "periodunit")].value_kind == "enum"
+    assert {"samples", "frames", "seconds"}.issubset(
+        {value.lower() for value in by_key[("waveCHOP", "periodunit")].enum_values}
+    )
+    assert by_key[("noiseCHOP", "type")].value_kind == "enum"
+    assert {"sparse", "brownian", "random"}.issubset(
+        {value.lower() for value in by_key[("noiseCHOP", "type")].enum_values}
+    )
+    assert by_key[("noiseCHOP", "periodunit")].value_kind == "enum"
+    assert "fraction" in {value.lower() for value in by_key[("noiseCHOP", "periodunit")].enum_values}
+
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "lfoCHOP", "name": "lfo"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "waveCHOP", "name": "wave"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "noiseCHOP", "name": "noise"}
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/lfo",
+                args={"params": {"wavetype": "sawtooth", "resetcondition": "surprise", "rate": "fast"}},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/wave",
+                args={"params": {"wavetype": "sawtooth", "periodunit": "beats"}},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/noise",
+                args={"params": {"type": "marble", "periodunit": "beats"}},
+            ),
+        ]
+    )
+
+    issues = validate_patch_plan_parameter_contract(plan, require_semantics_for_set_params=True)
+    by_path = {}
+    for issue in issues:
+        by_path.setdefault(issue.path, set()).add(issue.code)
+
+    assert {"invalid_enum_param", "invalid_float_param"}.issubset(by_path["/project1/lfo"])
+    assert any(
+        issue.code == "invalid_enum_param"
+        and issue.path == "/project1/lfo"
+        and "resetcondition" in issue.message
+        for issue in issues
+    )
+    assert "invalid_enum_param" in by_path["/project1/wave"]
+    assert any(
+        issue.code == "invalid_enum_param"
+        and issue.path == "/project1/wave"
+        and "periodunit" in issue.message
+        for issue in issues
+    )
+    assert "invalid_enum_param" in by_path["/project1/noise"]
+
+
+def test_wave_and_noise_chop_have_docs_grounded_control_semantics():
+    registry = load_param_semantics_registry()
+    by_key = {(item.op_type, item.name): item for item in registry}
+    expected_by_source = {
+        "https://docs.derivative.ca/Wave_CHOP": {
+            ("waveCHOP", "wavetype"),
+            ("waveCHOP", "period"),
+            ("waveCHOP", "periodunit"),
+            ("waveCHOP", "phase"),
+            ("waveCHOP", "bias"),
+            ("waveCHOP", "amp"),
+            ("waveCHOP", "offset"),
+            ("waveCHOP", "decay"),
+            ("waveCHOP", "channelname"),
+            ("waveCHOP", "rate"),
+            ("waveCHOP", "left"),
+            ("waveCHOP", "right"),
+            ("waveCHOP", "timeslice"),
+            ("waveCHOP", "exportmethod"),
+            ("waveCHOP", "exporttable"),
+        },
+        "https://docs.derivative.ca/Noise_CHOP": {
+            ("noiseCHOP", "type"),
+            ("noiseCHOP", "seed"),
+            ("noiseCHOP", "period"),
+            ("noiseCHOP", "periodunit"),
+            ("noiseCHOP", "harmon"),
+            ("noiseCHOP", "spread"),
+            ("noiseCHOP", "rough"),
+            ("noiseCHOP", "exp"),
+            ("noiseCHOP", "numint"),
+            ("noiseCHOP", "amp"),
+            ("noiseCHOP", "reset"),
+            ("noiseCHOP", "resetpulse"),
+            ("noiseCHOP", "sustain"),
+            ("noiseCHOP", "minsustain"),
+            ("noiseCHOP", "channame"),
+            ("noiseCHOP", "specifyrate"),
+            ("noiseCHOP", "rate"),
+            ("noiseCHOP", "timeslice"),
+            ("noiseCHOP", "exportmethod"),
+            ("noiseCHOP", "exporttable"),
+        },
+    }
+
+    for official_source, expected in expected_by_source.items():
+        assert expected - set(by_key) == set()
+        assert all(by_key[key].official_source == official_source for key in expected)
+
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "waveCHOP", "name": "wave"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "noiseCHOP", "name": "noise"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "not_dat"}
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/wave",
+                args={
+                    "params": {
+                        "period": "fast",
+                        "periodunit": "beats",
+                        "amp": -1,
+                        "rate": "fast",
+                        "left": "yes",
+                        "exportmethod": "spreadsheet",
+                        "exporttable": "/project1/not_dat",
+                    }
+                },
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/noise",
+                args={
+                    "params": {
+                        "type": "marble",
+                        "seed": "random",
+                        "numint": 1.5,
+                        "amp": -0.25,
+                        "reset": "please",
+                        "specifyrate": "yes",
+                        "exportmethod": "spreadsheet",
+                        "exporttable": "/project1/not_dat",
+                    }
+                },
+            ),
+        ]
+    )
+
+    issues = validate_patch_plan_parameter_contract(plan, require_semantics_for_set_params=True)
+    codes = {issue.code for issue in issues}
+
+    assert {"invalid_enum_param", "invalid_float_param", "invalid_int_param", "invalid_bool_param"}.issubset(
+        codes
+    )
+    assert "param_out_of_range" in codes
+    assert any(
+        issue.code == "invalid_enum_param"
+        and issue.path == "/project1/wave"
+        and "periodunit" in issue.message
+        for issue in issues
+    )
+    assert any(
+        issue.code == "param_reference_type_mismatch" and issue.path == "/project1/wave" for issue in issues
+    )
+    assert any(
+        issue.code == "param_reference_type_mismatch" and issue.path == "/project1/noise" for issue in issues
+    )
+
+
+def test_transform_sop_has_docs_grounded_geometry_semantics_and_preflight_checks():
+    registry = load_param_semantics_registry()
+    by_key = {(item.op_type, item.name): item for item in registry}
+    expected = {
+        ("transformSOP", "tx"),
+        ("transformSOP", "ty"),
+        ("transformSOP", "tz"),
+        ("transformSOP", "rx"),
+        ("transformSOP", "ry"),
+        ("transformSOP", "rz"),
+        ("transformSOP", "sx"),
+        ("transformSOP", "sy"),
+        ("transformSOP", "sz"),
+    }
+
+    assert expected - set(by_key) == set()
+    assert all(by_key[key].official_source == "https://docs.derivative.ca/Transform_SOP" for key in expected)
+
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "transformSOP", "name": "transform"},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/transform",
+                args={"params": {"tx": "left", "sx": 25000, "rz": 45}},
+            ),
+        ]
+    )
+
+    issues = validate_patch_plan_parameter_contract(
+        plan,
+        require_semantics_for_set_params=True,
+    )
+
+    assert any(
+        issue.code == "invalid_float_param" and issue.path == "/project1/transform" and "tx" in issue.message
+        for issue in issues
+    )
+    assert any(
+        issue.code == "param_out_of_range" and issue.path == "/project1/transform" and "sx" in issue.message
+        for issue in issues
+    )
+
+
+def test_noise_top_source_params_have_docs_grounded_semantics_and_preflight_checks():
+    registry = load_param_semantics_registry()
+    by_key = {(item.op_type, item.name): item for item in registry}
+    expected = {
+        ("noiseTOP", "type"),
+        ("noiseTOP", "seed"),
+        ("noiseTOP", "period"),
+        ("noiseTOP", "harmon"),
+        ("noiseTOP", "spread"),
+        ("noiseTOP", "gain"),
+        ("noiseTOP", "rough"),
+        ("noiseTOP", "exp"),
+        ("noiseTOP", "amp"),
+        ("noiseTOP", "offset"),
+        ("noiseTOP", "mono"),
+        ("noiseTOP", "aspectcorrect"),
+        ("noiseTOP", "xord"),
+        ("noiseTOP", "rord"),
+        ("noiseTOP", "t"),
+        ("noiseTOP", "r"),
+        ("noiseTOP", "s"),
+        ("noiseTOP", "p"),
+        ("noiseTOP", "t4d"),
+        ("noiseTOP", "s4d"),
+        ("noiseTOP", "rgb"),
+        ("noiseTOP", "inputscale"),
+        ("noiseTOP", "noisescale"),
+        ("noiseTOP", "alpha"),
+        ("noiseTOP", "dither"),
+        ("noiseTOP", "gradient"),
+        ("noiseTOP", "mode"),
+        ("noiseTOP", "outputresolution"),
+        ("noiseTOP", "resolution"),
+        ("noiseTOP", "resmult"),
+        ("noiseTOP", "npasses"),
+    }
+
+    assert expected - set(by_key) == set()
+    assert all(by_key[key].official_source == "https://docs.derivative.ca/Noise_TOP" for key in expected)
+
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "noiseTOP", "name": "noise"}
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/noise",
+                args={
+                    "params": {
+                        "type": "clouds",
+                        "seed": "random",
+                        "period": -1,
+                        "harmon": 0,
+                        "amp": -0.25,
+                        "mono": "yes",
+                        "aspectcorrect": "maybe",
+                        "xord": "spin",
+                        "t": (0.0, 0.0),
+                        "s": (1.0, 1.0, 1.0, 1.0),
+                        "outputresolution": "enormous",
+                        "resolution": (8192, 8192),
+                        "resmult": "yes",
+                        "npasses": 0,
+                    }
+                },
+            ),
+        ]
+    )
+
+    issues = validate_patch_plan_parameter_contract(plan, require_semantics_for_set_params=True)
+    risk_flags = parameter_risk_flags_for_plan(plan)
+    codes = {issue.code for issue in issues}
+
+    assert {
+        "invalid_enum_param",
+        "invalid_int_param",
+        "invalid_bool_param",
+        "param_tuple_size_mismatch",
+        "param_out_of_range",
+    }.issubset(codes)
+    assert "missing_param_semantics" not in codes
+    assert "param-semantics:high-resolution:noiseTOP.resolution" in risk_flags
+
+
+def test_level_top_accepts_narrow_chop_reference_expression_for_control_binding():
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "levelTOP", "name": "level"}
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/level",
+                args={"params": {"brightness1": {"expr": "op('/project1/out_chop')[0]"}}},
+            ),
+        ]
+    )
+
+    issues = validate_patch_plan_parameter_contract(plan, require_semantics_for_set_params=True)
+
+    assert all(issue.code != "unsupported_param_expression" for issue in issues)
+
+
+def test_level_top_rejects_non_chop_reference_expression_for_control_binding():
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "levelTOP", "name": "level"}
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/level",
+                args={"params": {"brightness1": {"expr": "op('/project1/out1')[0]"}}},
+            ),
+        ]
+    )
+
+    issues = validate_patch_plan_parameter_contract(plan, require_semantics_for_set_params=True)
+
+    assert any(issue.code == "param_expression_reference_type_mismatch" for issue in issues)
+
+
+def test_table_select_dat_and_switch_top_have_cue_switch_semantics():
+    keys = set(semantics_by_op_and_param())
+    assert ("tableDAT", "rows") in keys
+    assert ("tableDAT", "cols") in keys
+    assert ("selectDAT", "rowselect") in keys
+    assert ("selectDAT", "colselect") in keys
+    assert ("switchTOP", "index") in keys
+
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "tableDAT", "name": "cue_table"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "selectDAT", "name": "cue_select"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "switchTOP", "name": "cue_switch"},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/cue_table",
+                args={"params": {"rows": 0, "cols": -1}},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/cue_switch",
+                args={"params": {"index": -1}},
+            ),
+        ]
+    )
+
+    issues = validate_patch_plan_parameter_contract(plan, require_semantics_for_set_params=True)
+
+    assert [issue.code for issue in issues].count("param_out_of_range") == 3
 
 
 @pytest.mark.asyncio
@@ -458,11 +916,7 @@ async def test_dat_table_render_switch_emits_docs_grounded_switch_index_expressi
 
     assert plan.blocked_questions == []
     assert switch_params == [
-        {
-            "index": {
-                "expr": "min(1, max(0, int(op('/project1/tdpilot_concept/table')[1, 'selected_index'])))"
-            }
-        }
+        {"index": {"expr": "min(1, max(0, int(op('/project1/tdpilot_concept/table')[1, 'selected_index'])))"}}
     ]
     assert _missing_set_param_semantics(plan.patch_plan) == []
     assert validate_patch_plan_parameter_contract(plan.patch_plan) == []
@@ -496,7 +950,14 @@ async def test_compiler_path_blocks_unknown_generated_set_param_before_returning
         scripted={
             "families": {
                 "families": {
-                    "CHOP": ["audiofileinCHOP", "analyzeCHOP", "mathCHOP", "nullCHOP", "panelCHOP", "infoCHOP"],
+                    "CHOP": [
+                        "audiofileinCHOP",
+                        "analyzeCHOP",
+                        "mathCHOP",
+                        "nullCHOP",
+                        "panelCHOP",
+                        "infoCHOP",
+                    ],
                     "TOP": ["noiseTOP", "feedbackTOP", "levelTOP", "compositeTOP", "nullTOP"],
                     "COMP": ["baseCOMP", "containerCOMP", "sliderCOMP", "buttonCOMP", "annotateCOMP"],
                     "DAT": ["textDAT", "errorDAT"],
@@ -563,14 +1024,14 @@ async def test_compiler_routes_only_emit_docs_grounded_set_param_bindings():
             "ndi_post_fx",
             "Build an NDI input with post FX and stable TOP output",
             NDI_POST_FX_OPS,
-                {
-                    "TOP": ["ndiinTOP", "levelTOP", "nullTOP"],
-                    "COMP": ["baseCOMP", "annotateCOMP"],
-                    "CHOP": ["infoCHOP"],
-                    "DAT": ["textDAT", "errorDAT"],
-                },
-                {"device_sources": ["ndi_source"]},
-            ),
+            {
+                "TOP": ["ndiinTOP", "levelTOP", "nullTOP"],
+                "COMP": ["baseCOMP", "annotateCOMP"],
+                "CHOP": ["infoCHOP"],
+                "DAT": ["textDAT", "errorDAT"],
+            },
+            {"device_sources": ["ndi_source"]},
+        ),
         (
             "pop_preview",
             "Build a POP particle field preview with stable TOP output and debug output",
@@ -613,9 +1074,7 @@ async def test_compiler_routes_only_emit_docs_grounded_set_param_bindings():
         assert plan.blocked_questions == []
         missing_by_case[case_id] = _missing_set_param_semantics(plan.patch_plan)
 
-    assert missing_by_case == {
-        case_id: [] for case_id, *_ in cases
-    }
+    assert missing_by_case == {case_id: [] for case_id, *_ in cases}
 
 
 def test_param_semantics_flags_high_resolution_top_without_blocking():
@@ -842,12 +1301,24 @@ def test_glsl_top_params_have_docs_grounded_semantics_and_preflight_checks():
 
     plan = _plan_with_ops(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "glslTOP", "name": "shader"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "shader_text"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "constantTOP", "name": "source_top"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "mathCHOP", "name": "control_chop"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullPOP", "name": "pop_source"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_dat"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "glslTOP", "name": "shader"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "shader_text"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "constantTOP", "name": "source_top"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "mathCHOP", "name": "control_chop"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullPOP", "name": "pop_source"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_dat"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/shader",
@@ -983,7 +1454,9 @@ def test_render_material_and_light_params_require_compatible_created_refs_and_me
     ref_issues = [issue for issue in issues if issue.code == "param_reference_type_mismatch"]
     assert len(ref_issues) == 5
     assert any(issue.code == "invalid_enum_param" and issue.path == "/project1/key_light" for issue in issues)
-    assert any(issue.code == "invalid_float_param" and issue.path == "/project1/key_light" for issue in issues)
+    assert any(
+        issue.code == "invalid_float_param" and issue.path == "/project1/key_light" for issue in issues
+    )
 
 
 def test_render_top_output_advanced_and_sampler_params_have_semantics_and_preflight_checks():
@@ -1032,13 +1505,27 @@ def test_render_top_output_advanced_and_sampler_params_have_semantics_and_prefli
 
     plan = _plan_with_ops(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "renderTOP", "name": "render"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "cameraCOMP", "name": "camera"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "lightCOMP", "name": "key_light"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "phongMAT", "name": "mat"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "source_top"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "not_render_ref"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "renderTOP", "name": "render"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "cameraCOMP", "name": "camera"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "lightCOMP", "name": "key_light"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "phongMAT", "name": "mat"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "source_top"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "not_render_ref"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/render",
@@ -1172,13 +1659,27 @@ def test_glsl_mat_shader_sampler_deform_and_render_params_have_semantics_and_pre
 
     plan = _plan_with_ops(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "glslMAT", "name": "mat_shader"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "shader_text"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_ref"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "source_top"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullSOP", "name": "sop_source"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "baseCOMP", "name": "rig"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "phongMAT", "name": "phong"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "glslMAT", "name": "mat_shader"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "shader_text"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_ref"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "source_top"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullSOP", "name": "sop_source"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "baseCOMP", "name": "rig"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "phongMAT", "name": "phong"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/mat_shader",
@@ -1306,13 +1807,25 @@ def test_geometry_comp_xform_instancing_and_render_params_have_semantics_and_pre
 
     plan = _plan_with_ops(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_ref"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullSOP", "name": "surface"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "baseCOMP", "name": "target"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "lightCOMP", "name": "key_light"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_ref"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullSOP", "name": "surface"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "baseCOMP", "name": "target"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "lightCOMP", "name": "key_light"}
+            ),
             PatchOperation(kind="create_node", target="/project1", args={"op_type": "pbrMAT", "name": "mat"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "constantCHOP", "name": "instances"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "constantCHOP", "name": "instances"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/geo",
@@ -1437,14 +1950,28 @@ def test_camera_comp_xform_view_fog_and_render_params_have_semantics_and_preflig
 
     plan = _plan_with_ops(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "cameraCOMP", "name": "camera"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_ref"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "baseCOMP", "name": "target"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullSOP", "name": "path"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "custom_proj"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "lightCOMP", "name": "key_light"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "cameraCOMP", "name": "camera"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_ref"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "baseCOMP", "name": "target"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullSOP", "name": "path"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "custom_proj"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "lightCOMP", "name": "key_light"}
+            ),
             PatchOperation(kind="create_node", target="/project1", args={"op_type": "pbrMAT", "name": "mat"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "constantCHOP", "name": "proj_chop"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "constantCHOP", "name": "proj_chop"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/camera",
@@ -1599,14 +2126,28 @@ def test_light_comp_xform_light_shadow_view_and_render_params_have_semantics_and
 
     plan = _plan_with_ops(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "lightCOMP", "name": "key_light"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_ref"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "baseCOMP", "name": "target"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullSOP", "name": "path"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "custom_proj"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "lightCOMP", "name": "key_light"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_ref"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "baseCOMP", "name": "target"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullSOP", "name": "path"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "custom_proj"}
+            ),
             PatchOperation(kind="create_node", target="/project1", args={"op_type": "pbrMAT", "name": "mat"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "constantCHOP", "name": "proj_chop"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "constantCHOP", "name": "proj_chop"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/key_light",
@@ -1761,15 +2302,25 @@ def test_pbr_and_phong_material_texture_sampling_and_shader_output_params_have_s
     missing = (pbr_expected | phong_expected) - set(by_key)
     assert missing == set()
     assert all(by_key[key].official_source == "https://docs.derivative.ca/PBR_MAT" for key in pbr_expected)
-    assert all(by_key[key].official_source == "https://docs.derivative.ca/Phong_MAT" for key in phong_expected)
+    assert all(
+        by_key[key].official_source == "https://docs.derivative.ca/Phong_MAT" for key in phong_expected
+    )
 
     plan = _plan_with_ops(
         [
             PatchOperation(kind="create_node", target="/project1", args={"op_type": "pbrMAT", "name": "pbr"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "phongMAT", "name": "phong"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "texture"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "shader_dat"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "baseCOMP", "name": "not_a_texture"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "phongMAT", "name": "phong"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "texture"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "shader_dat"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "baseCOMP", "name": "not_a_texture"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/pbr",
@@ -2192,7 +2743,9 @@ def test_op_execute_dat_params_have_docs_grounded_semantics_and_preflight_checks
 
     issues = validate_patch_plan_parameter_contract(plan)
 
-    assert any(issue.code == "missing_reference_param" and issue.path == "/project1/op_exec" for issue in issues)
+    assert any(
+        issue.code == "missing_reference_param" and issue.path == "/project1/op_exec" for issue in issues
+    )
     assert any(issue.code == "invalid_enum_param" and issue.path == "/project1/op_exec" for issue in issues)
     assert any(issue.code == "invalid_bool_param" and issue.path == "/project1/op_exec" for issue in issues)
 
@@ -2286,9 +2839,16 @@ def test_parameter_panel_and_pargroup_execute_dat_params_have_semantics():
 
     issues = validate_patch_plan_parameter_contract(plan)
 
-    assert any(issue.code == "missing_reference_param" and issue.path == "/project1/par_exec" for issue in issues)
-    assert any(issue.code == "param_reference_type_mismatch" and issue.path == "/project1/panel_exec" for issue in issues)
-    assert any(issue.code == "invalid_enum_param" and issue.path == "/project1/group_exec" for issue in issues)
+    assert any(
+        issue.code == "missing_reference_param" and issue.path == "/project1/par_exec" for issue in issues
+    )
+    assert any(
+        issue.code == "param_reference_type_mismatch" and issue.path == "/project1/panel_exec"
+        for issue in issues
+    )
+    assert any(
+        issue.code == "invalid_enum_param" and issue.path == "/project1/group_exec" for issue in issues
+    )
     assert sum(1 for issue in issues if issue.code == "invalid_bool_param") == 3
 
 
@@ -2515,7 +3075,9 @@ def test_panel_control_params_require_compatible_refs_menus_toggles_and_dimensio
     assert sum(1 for issue in issues if issue.code == "invalid_int_param") == 3
     assert sum(1 for issue in issues if issue.code == "invalid_float_param") == 2
     assert sum(1 for issue in issues if issue.code == "param_out_of_range") == 5
-    assert any(issue.code == "missing_reference_param" and issue.path == "/project1/param_panel" for issue in issues)
+    assert any(
+        issue.code == "missing_reference_param" and issue.path == "/project1/param_panel" for issue in issues
+    )
 
 
 def test_panel_shell_parameter_comp_and_panel_chop_extended_params_have_semantics():
@@ -2566,12 +3128,19 @@ def test_panel_shell_parameter_comp_and_panel_chop_extended_params_have_semantic
     missing = (base_expected | panel_chop_expected | parameter_comp_expected) - set(by_key)
     assert missing == set()
     assert all(by_key[key].official_source == "https://docs.derivative.ca/Base_COMP" for key in base_expected)
-    assert all(by_key[key].official_source == "https://docs.derivative.ca/Panel_CHOP" for key in panel_chop_expected)
-    assert all(by_key[key].official_source == "https://docs.derivative.ca/Parameter_COMP" for key in parameter_comp_expected)
+    assert all(
+        by_key[key].official_source == "https://docs.derivative.ca/Panel_CHOP" for key in panel_chop_expected
+    )
+    assert all(
+        by_key[key].official_source == "https://docs.derivative.ca/Parameter_COMP"
+        for key in parameter_comp_expected
+    )
 
     plan = _plan_with_ops(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "baseCOMP", "name": "shell"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "baseCOMP", "name": "shell"}
+            ),
             PatchOperation(
                 kind="create_node",
                 target="/project1",
@@ -2582,8 +3151,12 @@ def test_panel_shell_parameter_comp_and_panel_chop_extended_params_have_semantic
                 target="/project1",
                 args={"op_type": "panelCHOP", "name": "panel_reader"},
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_dat"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "not_a_top"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_dat"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "not_a_top"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/shell",
@@ -2727,9 +3300,7 @@ def test_glsl_pop_thread_dispatch_params_have_semantics_and_preflight_checks():
         "npasses",
     }
 
-    assert expected_params.issubset(
-        {param_name for op_type, param_name in semantics if op_type == "glslPOP"}
-    )
+    assert expected_params.issubset({param_name for op_type, param_name in semantics if op_type == "glslPOP"})
 
     plan = _plan_with_ops(
         [
@@ -2820,10 +3391,18 @@ def test_glsl_multi_top_params_have_semantics_and_preflight_checks():
 
     plan = _plan_with_ops(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "glslmultiTOP", "name": "shader"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "shader_text"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_dat"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "mathCHOP", "name": "control"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "glslmultiTOP", "name": "shader"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "shader_text"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_dat"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "mathCHOP", "name": "control"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/shader",
@@ -2897,10 +3476,18 @@ def test_glsl_comp_params_have_semantics_and_preflight_checks():
 
     plan = _plan_with_ops(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "glslCOMP", "name": "panel_shader"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "shader_text"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "source_top"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "baseCOMP", "name": "panel_shell"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "glslCOMP", "name": "panel_shader"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "shader_text"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "source_top"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "baseCOMP", "name": "panel_shell"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/panel_shader",
@@ -3086,16 +3673,26 @@ def test_pop_generator_and_attribute_processing_params_have_semantics_and_prefli
 
     plan = _plan_with_ops(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "circlePOP", "name": "circle"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "noisePOP", "name": "noise"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "mathmixPOP", "name": "mix"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "circlePOP", "name": "circle"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "noisePOP", "name": "noise"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "mathmixPOP", "name": "mix"}
+            ),
             PatchOperation(
                 kind="create_node",
                 target="/project1",
                 args={"op_type": "attributecombinePOP", "name": "combine"},
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_pop"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullPOP", "name": "pop_in"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_pop"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullPOP", "name": "pop_in"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/circle",
@@ -3170,12 +3767,18 @@ def test_pop_generator_and_attribute_processing_params_have_semantics_and_prefli
     for issue in issues:
         by_path.setdefault(issue.path, set()).add(issue.code)
 
-    assert {"invalid_enum_param", "invalid_bool_param", "param_tuple_size_mismatch", "param_out_of_range"}.issubset(
-        by_path["/project1/circle"]
-    )
-    assert {"invalid_enum_param", "invalid_bool_param", "invalid_float_param", "param_tuple_size_mismatch"}.issubset(
-        by_path["/project1/noise"]
-    )
+    assert {
+        "invalid_enum_param",
+        "invalid_bool_param",
+        "param_tuple_size_mismatch",
+        "param_out_of_range",
+    }.issubset(by_path["/project1/circle"])
+    assert {
+        "invalid_enum_param",
+        "invalid_bool_param",
+        "invalid_float_param",
+        "param_tuple_size_mismatch",
+    }.issubset(by_path["/project1/noise"])
     assert "param_reference_type_mismatch" in by_path["/project1/noise"]
     assert {"param_reference_type_mismatch", "invalid_enum_param", "param_tuple_size_mismatch"}.issubset(
         by_path["/project1/mix"]
@@ -3213,13 +3816,23 @@ def test_render_simple_top_params_have_docs_grounded_semantics_and_preflight_che
 
     missing = expected - set(by_key)
     assert missing == set()
-    assert all(by_key[key].official_source == "https://docs.derivative.ca/Render_Simple_TOP" for key in expected)
+    assert all(
+        by_key[key].official_source == "https://docs.derivative.ca/Render_Simple_TOP" for key in expected
+    )
 
     plan = _plan_with_ops(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "rendersimpleTOP", "name": "preview"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_a_pop_or_mat"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "not_a_top"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "rendersimpleTOP", "name": "preview"}
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "nullTOP", "name": "not_a_pop_or_mat"},
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "not_a_top"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/preview",
@@ -3378,9 +3991,12 @@ def test_serial_dat_connection_and_output_params_have_semantics_and_preflight_ch
     issues = validate_patch_plan_parameter_contract(plan)
     codes = {issue.code for issue in issues if issue.path == "/project1/serial_in"}
 
-    assert {"invalid_bool_param", "invalid_enum_param", "invalid_int_param", "missing_reference_param"}.issubset(
-        codes
-    )
+    assert {
+        "invalid_bool_param",
+        "invalid_enum_param",
+        "invalid_int_param",
+        "missing_reference_param",
+    }.issubset(codes)
 
 
 def test_chop_execute_dat_params_require_chop_target_and_known_menus():
@@ -3414,7 +4030,10 @@ def test_chop_execute_dat_params_require_chop_target_and_known_menus():
 
     enum_issues = [issue for issue in issues if issue.code == "invalid_enum_param"]
     assert len(enum_issues) == 2
-    assert any(issue.code == "param_reference_type_mismatch" and issue.path == "/project1/chop_exec" for issue in issues)
+    assert any(
+        issue.code == "param_reference_type_mismatch" and issue.path == "/project1/chop_exec"
+        for issue in issues
+    )
 
 
 def test_execute_dat_fromop_requires_operator_reference_and_known_execute_location():
@@ -3435,8 +4054,12 @@ def test_execute_dat_fromop_requires_operator_reference_and_known_execute_locati
 
     issues = validate_patch_plan_parameter_contract(plan)
 
-    assert any(issue.code == "invalid_enum_param" and issue.path == "/project1/project_exec" for issue in issues)
-    assert any(issue.code == "missing_reference_param" and issue.path == "/project1/project_exec" for issue in issues)
+    assert any(
+        issue.code == "invalid_enum_param" and issue.path == "/project1/project_exec" for issue in issues
+    )
+    assert any(
+        issue.code == "missing_reference_param" and issue.path == "/project1/project_exec" for issue in issues
+    )
 
 
 def test_execute_dat_event_and_file_params_have_semantics_and_preflight_checks():
@@ -3496,7 +4119,9 @@ def test_execute_dat_event_and_file_params_have_semantics_and_preflight_checks()
     issues = validate_patch_plan_parameter_contract(plan)
 
     assert sum(1 for issue in issues if issue.code == "invalid_bool_param") == 11
-    assert any(issue.code == "empty_path_param" and issue.path == "/project1/project_exec" for issue in issues)
+    assert any(
+        issue.code == "empty_path_param" and issue.path == "/project1/project_exec" for issue in issues
+    )
 
 
 def test_network_dat_callbacks_require_dat_reference_and_known_protocol_menus():
@@ -3573,11 +4198,57 @@ def test_network_dat_connection_output_params_have_docs_grounded_semantics_and_p
         ("websocketDAT", "clear"),
         ("websocketDAT", "bytes"),
     }
+    webclient_expected = {
+        ("webclientDAT", "active"),
+        ("webclientDAT", "reqmethod"),
+        ("webclientDAT", "url"),
+        ("webclientDAT", "uploadfile"),
+        ("webclientDAT", "request"),
+        ("webclientDAT", "stop"),
+        ("webclientDAT", "stream"),
+        ("webclientDAT", "verifycert"),
+        ("webclientDAT", "timeout"),
+        ("webclientDAT", "includeheader"),
+        ("webclientDAT", "authtype"),
+        ("webclientDAT", "clamp"),
+        ("webclientDAT", "callbacks"),
+        ("webclientDAT", "maxlines"),
+        ("webclientDAT", "clear"),
+        ("webclientDAT", "username"),
+        ("webclientDAT", "pw"),
+        ("webclientDAT", "appkey"),
+        ("webclientDAT", "appsecret"),
+        ("webclientDAT", "oauthtoken"),
+        ("webclientDAT", "oauthsecret"),
+        ("webclientDAT", "clientid"),
+        ("webclientDAT", "token"),
+    }
+    webserver_expected = {
+        ("webserverDAT", "active"),
+        ("webserverDAT", "restart"),
+        ("webserverDAT", "port"),
+        ("webserverDAT", "secure"),
+        ("webserverDAT", "privatekey"),
+        ("webserverDAT", "certificate"),
+        ("webserverDAT", "password"),
+        ("webserverDAT", "callbacks"),
+    }
 
-    missing = (osc_expected | websocket_expected) - set(by_key)
+    missing = (osc_expected | websocket_expected | webclient_expected | webserver_expected) - set(by_key)
     assert missing == set()
     assert all(by_key[key].official_source == "https://docs.derivative.ca/OSC_In_DAT" for key in osc_expected)
-    assert all(by_key[key].official_source == "https://docs.derivative.ca/WebSocket_DAT" for key in websocket_expected)
+    assert all(
+        by_key[key].official_source == "https://docs.derivative.ca/WebSocket_DAT"
+        for key in websocket_expected
+    )
+    assert all(
+        by_key[key].official_source == "https://docs.derivative.ca/Web_Client_DAT"
+        for key in webclient_expected
+    )
+    assert all(
+        by_key[key].official_source == "https://docs.derivative.ca/Web_Server_DAT"
+        for key in webserver_expected
+    )
 
     plan = _plan_with_ops(
         [
@@ -3590,6 +4261,21 @@ def test_network_dat_connection_output_params_have_docs_grounded_semantics_and_p
                 kind="create_node",
                 target="/project1",
                 args={"op_type": "websocketDAT", "name": "websocket_in"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "webclientDAT", "name": "web_client"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "webserverDAT", "name": "web_server"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "nullTOP", "name": "not_dat"},
             ),
             PatchOperation(
                 kind="set_params",
@@ -3623,6 +4309,39 @@ def test_network_dat_connection_output_params_have_docs_grounded_semantics_and_p
                     }
                 },
             ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/web_client",
+                args={
+                    "params": {
+                        "active": "yes",
+                        "reqmethod": "CONNECT",
+                        "uploadfile": "",
+                        "stream": "please",
+                        "verifycert": "sometimes",
+                        "timeout": "forever",
+                        "includeheader": "sure",
+                        "authtype": "Bearer",
+                        "clamp": "sure",
+                        "callbacks": "/project1/not_dat",
+                        "maxlines": "many",
+                    }
+                },
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/web_server",
+                args={
+                    "params": {
+                        "active": "yes",
+                        "port": "443",
+                        "secure": "sometimes",
+                        "privatekey": "",
+                        "certificate": "",
+                        "callbacks": "/project1/not_dat",
+                    }
+                },
+            ),
         ]
     )
 
@@ -3635,6 +4354,593 @@ def test_network_dat_connection_output_params_have_docs_grounded_semantics_and_p
     assert by_path["/project1/osc_in"].count("invalid_int_param") == 2
     assert by_path["/project1/websocket_in"].count("invalid_bool_param") == 3
     assert by_path["/project1/websocket_in"].count("invalid_int_param") == 3
+    assert by_path["/project1/web_client"].count("invalid_bool_param") == 5
+    assert by_path["/project1/web_client"].count("invalid_enum_param") == 2
+    assert by_path["/project1/web_client"].count("invalid_int_param") == 2
+    assert "empty_path_param" in by_path["/project1/web_client"]
+    assert "param_reference_type_mismatch" in by_path["/project1/web_client"]
+    assert by_path["/project1/web_server"].count("invalid_bool_param") == 2
+    assert by_path["/project1/web_server"].count("invalid_int_param") == 1
+    assert by_path["/project1/web_server"].count("empty_path_param") == 2
+    assert "param_reference_type_mismatch" in by_path["/project1/web_server"]
+
+
+def test_web_client_dat_request_pulse_is_ranked_as_direct_live_write_risk():
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "webclientDAT", "name": "web_client"},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/web_client",
+                args={"params": {"request": True}},
+            ),
+        ]
+    )
+
+    assert parameter_risk_flags_for_plan(plan) == ["param-semantics:http-request:webclientDAT.request"]
+
+
+def test_web_client_dat_active_and_stream_are_ranked_as_direct_live_write_risks():
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "webclientDAT", "name": "web_client"},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/web_client",
+                args={"params": {"active": True, "stream": True}},
+            ),
+        ]
+    )
+
+    assert parameter_risk_flags_for_plan(plan) == [
+        "param-semantics:http-client-active:webclientDAT.active",
+        "param-semantics:http-streaming-response:webclientDAT.stream",
+    ]
+
+
+def test_web_server_dat_active_and_restart_are_ranked_as_direct_live_write_risks():
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "webserverDAT", "name": "web_server"},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/web_server",
+                args={"params": {"active": True, "restart": True}},
+            ),
+        ]
+    )
+
+    assert parameter_risk_flags_for_plan(plan) == [
+        "param-semantics:web-server-listener:webserverDAT.active",
+        "param-semantics:web-server-restart:webserverDAT.restart",
+    ]
+
+
+def test_live_source_activation_params_are_ranked_as_direct_live_write_risks():
+    registry = load_param_semantics_registry()
+    by_key = {(item.op_type, item.name): item for item in registry}
+    assert (
+        by_key[("kinectazureTOP", "active")].official_source == "https://docs.derivative.ca/Kinect_Azure_TOP"
+    )
+    assert by_key[("kinectazureTOP", "active")].cook_risk == "high"
+
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "audiodeviceinCHOP", "name": "audio_in"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "videodeviceinTOP", "name": "video_in"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "kinectazureTOP", "name": "depth_in"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "midiinCHOP", "name": "midi_in"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "serialDAT", "name": "serial_in"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "oscinDAT", "name": "osc_in"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "websocketDAT", "name": "websocket_in"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "mqttclientDAT", "name": "mqtt_in"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "udpinDAT", "name": "udp_in"},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/audio_in",
+                args={"params": {"active": True}},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/video_in",
+                args={"params": {"active": True, "capture": True}},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/depth_in",
+                args={"params": {"active": True}},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/midi_in",
+                args={"params": {"source": "device"}},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/serial_in",
+                args={"params": {"active": True}},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/osc_in",
+                args={"params": {"active": True}},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/websocket_in",
+                args={"params": {"active": True}},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/mqtt_in",
+                args={"params": {"active": True}},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/udp_in",
+                args={"params": {"active": True}},
+            ),
+        ]
+    )
+
+    assert parameter_risk_flags_for_plan(plan) == [
+        "param-semantics:live-audio-input:audiodeviceinCHOP.active",
+        "param-semantics:live-video-input:videodeviceinTOP.active",
+        "param-semantics:live-video-capture:videodeviceinTOP.capture",
+        "param-semantics:kinect-azure-sensor-input:kinectazureTOP.active",
+        "param-semantics:midi-device-input:midiinCHOP.source",
+        "param-semantics:serial-device-listener:serialDAT.active",
+        "param-semantics:osc-network-listener:oscinDAT.active",
+        "param-semantics:websocket-network-client:websocketDAT.active",
+        "param-semantics:mqtt-broker-client:mqttclientDAT.active",
+        "param-semantics:udp-network-listener:udpinDAT.active",
+    ]
+
+
+def test_callback_dat_execution_params_are_ranked_as_direct_execution_risks():
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "callbacks"}
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "datexecuteDAT", "name": "dat_execute"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "executeDAT", "name": "project_execute"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "mqttclientDAT", "name": "mqtt"},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/dat_execute",
+                args={
+                    "params": {
+                        "active": True,
+                        "executeloc": "current",
+                        "tablechange": True,
+                        "execute": "end",
+                    }
+                },
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/project_execute",
+                args={"params": {"active": True, "framestart": True, "writepulse": True}},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/mqtt",
+                args={"params": {"callbacks": "/project1/callbacks", "executeloc": "callbacks"}},
+            ),
+        ]
+    )
+
+    assert parameter_risk_flags_for_plan(plan) == [
+        "param-semantics:callback-execution-enabled:datexecuteDAT.active",
+        "param-semantics:callback-execute-location:datexecuteDAT.executeloc",
+        "param-semantics:callback-trigger-enabled:datexecuteDAT.tablechange",
+        "param-semantics:callback-execution-timing:datexecuteDAT.execute",
+        "param-semantics:callback-execution-enabled:executeDAT.active",
+        "param-semantics:callback-trigger-enabled:executeDAT.framestart",
+        "param-semantics:script-file-write:executeDAT.writepulse",
+        "param-semantics:callback-dat-binding:mqttclientDAT.callbacks",
+        "param-semantics:callback-execute-location:mqttclientDAT.executeloc",
+    ]
+
+
+def test_mqtt_credentials_and_tls_params_are_ranked_as_direct_security_risks():
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "mqttclientDAT", "name": "mqtt"},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/mqtt",
+                args={"params": {"username": "user", "password": "secret", "verifycert": False}},
+            ),
+        ]
+    )
+
+    assert parameter_risk_flags_for_plan(plan) == [
+        "param-semantics:mqtt-credential-username:mqttclientDAT.username",
+        "param-semantics:mqtt-credential-secret:mqttclientDAT.password",
+        "param-semantics:mqtt-tls-verification-disabled:mqttclientDAT.verifycert",
+    ]
+
+
+def test_web_client_and_server_credentials_are_ranked_as_direct_security_risks():
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "webclientDAT", "name": "web_client"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "webserverDAT", "name": "web_server"},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/web_client",
+                args={
+                    "params": {
+                        "username": "user",
+                        "pw": "secret",
+                        "appsecret": "app-secret",
+                        "oauthtoken": "oauth-token",
+                        "oauthsecret": "oauth-secret",
+                        "token": "bearer-token",
+                        "verifycert": False,
+                    }
+                },
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/web_server",
+                args={
+                    "params": {
+                        "privatekey": "/project1/private_key",
+                        "certificate": "/project1/certificate",
+                        "password": "cert-secret",
+                    }
+                },
+            ),
+        ]
+    )
+
+    assert parameter_risk_flags_for_plan(plan) == [
+        "param-semantics:http-credential-username:webclientDAT.username",
+        "param-semantics:http-credential-secret:webclientDAT.pw",
+        "param-semantics:http-credential-secret:webclientDAT.appsecret",
+        "param-semantics:http-credential-secret:webclientDAT.oauthtoken",
+        "param-semantics:http-credential-secret:webclientDAT.oauthsecret",
+        "param-semantics:http-credential-secret:webclientDAT.token",
+        "param-semantics:http-tls-verification-disabled:webclientDAT.verifycert",
+        "param-semantics:web-server-tls-private-key:webserverDAT.privatekey",
+        "param-semantics:web-server-tls-certificate:webserverDAT.certificate",
+        "param-semantics:web-server-tls-credential-secret:webserverDAT.password",
+    ]
+
+
+def test_high_cook_risk_semantics_audit_maps_direct_risk_and_validation_only_behavior():
+    report = param_semantics.audit_high_cook_risk_direct_param_coverage()
+    direct = {(item["op_type"], item["name"]): item for item in report["direct_risk_parameters"]}
+    validation_only = {(item["op_type"], item["name"]): item for item in report["validation_only_parameters"]}
+
+    assert report["ok"] is True
+    assert report["contract"] == "high_cook_risk_direct_param_coverage_v1"
+    assert report["unclassified_high_cook_risk_parameters"] == []
+    assert ("datexecuteDAT", "active") in direct
+    assert ("datexecuteDAT", "executeloc") in direct
+    assert ("mqttclientDAT", "password") in direct
+    assert ("mqttclientDAT", "verifycert") in direct
+    assert ("webclientDAT", "pw") in direct
+    assert ("webclientDAT", "token") in direct
+    assert ("webserverDAT", "password") in direct
+    assert ("mqttclientDAT", "netaddress") in validation_only
+    assert direct[("mqttclientDAT", "password")]["behavior"] == "direct-risk"
+    assert direct[("webserverDAT", "password")]["behavior"] == "direct-risk"
+    assert validation_only[("mqttclientDAT", "netaddress")]["behavior"] == "validation-only"
+
+
+def test_midi_mqtt_and_udp_source_params_have_semantics_and_preflight_checks():
+    registry = load_param_semantics_registry()
+    by_key = {(item.op_type, item.name): item for item in registry}
+    midi_expected = {
+        ("midiinCHOP", "source"),
+        ("midiinCHOP", "device"),
+        ("midiinCHOP", "file"),
+        ("midiinCHOP", "simplified"),
+        ("midiinCHOP", "record"),
+        ("midiinCHOP", "timer"),
+        ("midiinCHOP", "sys"),
+        ("midiinCHOP", "start"),
+        ("midiinCHOP", "end"),
+        ("midiinCHOP", "rate"),
+        ("midiinCHOP", "controlname"),
+        ("midiinCHOP", "controltype"),
+        ("midiinCHOP", "notename"),
+        ("midiinCHOP", "chan"),
+    }
+    mqtt_expected = {
+        ("mqttclientDAT", "active"),
+        ("mqttclientDAT", "netaddress"),
+        ("mqttclientDAT", "keepalive"),
+        ("mqttclientDAT", "maxinflight"),
+        ("mqttclientDAT", "reconnect"),
+        ("mqttclientDAT", "callbacks"),
+        ("mqttclientDAT", "executeloc"),
+        ("mqttclientDAT", "fromop"),
+        ("mqttclientDAT", "clamp"),
+        ("mqttclientDAT", "maxlines"),
+        ("mqttclientDAT", "clear"),
+        ("mqttclientDAT", "bytes"),
+    }
+    udp_expected = {
+        ("udpinDAT", "active"),
+        ("udpinDAT", "protocol"),
+        ("udpinDAT", "address"),
+        ("udpinDAT", "port"),
+        ("udpinDAT", "shared"),
+        ("udpinDAT", "format"),
+        ("udpinDAT", "callbacks"),
+        ("udpinDAT", "executeloc"),
+        ("udpinDAT", "fromop"),
+        ("udpinDAT", "clamp"),
+        ("udpinDAT", "maxlines"),
+        ("udpinDAT", "clear"),
+        ("udpinDAT", "bytes"),
+    }
+
+    missing = (midi_expected | mqtt_expected | udp_expected) - set(by_key)
+    assert missing == set()
+    assert all(
+        by_key[key].official_source == "https://docs.derivative.ca/MIDI_In_CHOP" for key in midi_expected
+    )
+    assert all(
+        by_key[key].official_source == "https://docs.derivative.ca/MQTT_Client_DAT" for key in mqtt_expected
+    )
+    assert all(by_key[key].official_source == "https://docs.derivative.ca/UDP_In_DAT" for key in udp_expected)
+
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "midiinCHOP", "name": "midi"}
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "mqttclientDAT", "name": "mqtt"},
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "udpinDAT", "name": "udp"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "not_dat"}
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/midi",
+                args={"params": {"source": "Smoke Signals", "simplified": "yes", "rate": "fast"}},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/mqtt",
+                args={
+                    "params": {
+                        "active": "yes",
+                        "keepalive": "forever",
+                        "maxinflight": "many",
+                        "callbacks": "/project1/not_dat",
+                        "executeloc": "Nowhere",
+                    }
+                },
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/udp",
+                args={
+                    "params": {
+                        "active": "yes",
+                        "protocol": "Carrier Signal",
+                        "format": "paragraph",
+                        "port": "9000",
+                        "callbacks": "/project1/not_dat",
+                    }
+                },
+            ),
+        ]
+    )
+
+    issues = validate_patch_plan_parameter_contract(plan)
+    codes_by_path = {}
+    for issue in issues:
+        codes_by_path.setdefault(issue.path, set()).add(issue.code)
+
+    assert {"invalid_enum_param", "invalid_bool_param", "invalid_float_param"}.issubset(
+        codes_by_path["/project1/midi"]
+    )
+    assert {
+        "invalid_bool_param",
+        "invalid_int_param",
+        "invalid_enum_param",
+        "param_reference_type_mismatch",
+    }.issubset(codes_by_path["/project1/mqtt"])
+    assert {
+        "invalid_bool_param",
+        "invalid_enum_param",
+        "invalid_int_param",
+        "param_reference_type_mismatch",
+    }.issubset(codes_by_path["/project1/udp"])
+
+
+def test_movie_and_video_device_top_source_params_have_semantics_and_preflight_checks():
+    registry = load_param_semantics_registry()
+    by_key = {(item.op_type, item.name): item for item in registry}
+    movie_expected = {
+        ("moviefileinTOP", "file"),
+        ("moviefileinTOP", "reload"),
+        ("moviefileinTOP", "reloadpulse"),
+        ("moviefileinTOP", "playmode"),
+        ("moviefileinTOP", "play"),
+        ("moviefileinTOP", "index"),
+        ("moviefileinTOP", "speed"),
+        ("moviefileinTOP", "imageindexing"),
+        ("moviefileinTOP", "inputcolorspace"),
+        ("moviefileinTOP", "decodepixelformat"),
+        ("moviefileinTOP", "prereadframes"),
+        ("moviefileinTOP", "hwdecode"),
+    }
+    device_expected = {
+        ("videodeviceinTOP", "active"),
+        ("videodeviceinTOP", "driver"),
+        ("videodeviceinTOP", "device"),
+        ("videodeviceinTOP", "specifyip"),
+        ("videodeviceinTOP", "ip"),
+        ("videodeviceinTOP", "deinterlace"),
+        ("videodeviceinTOP", "precedence"),
+        ("videodeviceinTOP", "signalformat"),
+        ("videodeviceinTOP", "inputpixelformat"),
+        ("videodeviceinTOP", "inputcolorspace"),
+        ("videodeviceinTOP", "inputreferencewhite"),
+        ("videodeviceinTOP", "transfermode"),
+        ("videodeviceinTOP", "memorymode"),
+        ("videodeviceinTOP", "syncinputs"),
+        ("videodeviceinTOP", "capture"),
+    }
+
+    missing = (movie_expected | device_expected) - set(by_key)
+    assert missing == set()
+    assert all(
+        by_key[key].official_source == "https://docs.derivative.ca/Movie_File_In_TOP"
+        for key in movie_expected
+    )
+    assert all(
+        by_key[key].official_source == "https://docs.derivative.ca/Video_Device_In_TOP"
+        for key in device_expected
+    )
+
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "moviefileinTOP", "name": "movie"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "videodeviceinTOP", "name": "camera"},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/movie",
+                args={
+                    "params": {
+                        "file": "",
+                        "reload": "yes",
+                        "playmode": "shuffle",
+                        "play": "sometimes",
+                        "index": "first",
+                        "speed": "fast",
+                        "imageindexing": "mystery",
+                        "prereadframes": "many",
+                        "hwdecode": "gpu-ish",
+                    }
+                },
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/camera",
+                args={
+                    "params": {
+                        "active": "yes",
+                        "driver": "imaginary",
+                        "specifyip": "maybe",
+                        "ip": "",
+                        "deinterlace": "sometimes",
+                        "precedence": "random",
+                        "transfermode": "warp",
+                        "syncinputs": "yes",
+                        "capture": "snapshot",
+                    }
+                },
+            ),
+        ]
+    )
+
+    issues = validate_patch_plan_parameter_contract(plan)
+    codes_by_path = {}
+    for issue in issues:
+        codes_by_path.setdefault(issue.path, set()).add(issue.code)
+
+    assert {"empty_path_param", "invalid_bool_param", "invalid_enum_param", "invalid_float_param"}.issubset(
+        codes_by_path["/project1/movie"]
+    )
+    assert {"invalid_bool_param", "invalid_enum_param", "empty_path_param"}.issubset(
+        codes_by_path["/project1/camera"]
+    )
 
 
 def test_info_chop_op_reference_requires_a_target():
@@ -3655,7 +4961,9 @@ def test_info_chop_op_reference_requires_a_target():
 
     issues = validate_patch_plan_parameter_contract(plan)
 
-    assert any(issue.code == "missing_reference_param" and issue.path == "/project1/debug_info" for issue in issues)
+    assert any(
+        issue.code == "missing_reference_param" and issue.path == "/project1/debug_info" for issue in issues
+    )
 
 
 def test_error_dat_debug_params_require_typed_callbacks_and_output_limits():
@@ -3694,7 +5002,9 @@ def test_error_dat_debug_params_require_typed_callbacks_and_output_limits():
     assert len(bool_issues) == 2
     assert any(issue.code == "invalid_int_param" and issue.path == "/project1/error_log" for issue in issues)
     assert any(issue.code == "invalid_enum_param" and issue.path == "/project1/error_log" for issue in issues)
-    assert any(issue.code == "missing_reference_param" and issue.path == "/project1/error_log" for issue in issues)
+    assert any(
+        issue.code == "missing_reference_param" and issue.path == "/project1/error_log" for issue in issues
+    )
     assert any(
         issue.code == "param_reference_type_mismatch" and issue.path == "/project1/error_log"
         for issue in issues
@@ -3727,6 +5037,16 @@ def test_audio_source_params_have_docs_grounded_semantics_and_preflight_checks()
             ("audiofileinCHOP", "mono"),
             ("audiofileinCHOP", "volume"),
         },
+        "https://docs.derivative.ca/Audio_File_Out_CHOP": {
+            ("audiofileoutCHOP", "filetype"),
+            ("audiofileoutCHOP", "uniquesuff"),
+            ("audiofileoutCHOP", "file"),
+            ("audiofileoutCHOP", "codec"),
+            ("audiofileoutCHOP", "bitrate"),
+            ("audiofileoutCHOP", "record"),
+            ("audiofileoutCHOP", "pause"),
+            ("audiofileoutCHOP", "headerdat"),
+        },
         "https://docs.derivative.ca/Audio_Device_In_CHOP": {
             ("audiodeviceinCHOP", "active"),
             ("audiodeviceinCHOP", "driver"),
@@ -3741,6 +5061,14 @@ def test_audio_source_params_have_docs_grounded_semantics_and_preflight_checks()
             ("audiodeviceinCHOP", "frontright"),
             ("audiodeviceinCHOP", "sideleft"),
             ("audiodeviceinCHOP", "sideright"),
+        },
+        "https://docs.derivative.ca/Audio_Device_Out_CHOP": {
+            ("audiodeviceoutCHOP", "active"),
+            ("audiodeviceoutCHOP", "driver"),
+            ("audiodeviceoutCHOP", "device"),
+            ("audiodeviceoutCHOP", "outputs"),
+            ("audiodeviceoutCHOP", "adjustspeed"),
+            ("audiodeviceoutCHOP", "clampoutput"),
         },
     }
 
@@ -3760,6 +5088,16 @@ def test_audio_source_params_have_docs_grounded_semantics_and_preflight_checks()
                 kind="create_node",
                 target="/project1",
                 args={"op_type": "audiodeviceinCHOP", "name": "live_audio"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "audiofileoutCHOP", "name": "recorder_audio"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "audiodeviceoutCHOP", "name": "speaker_audio"},
             ),
             PatchOperation(
                 kind="set_params",
@@ -3782,6 +5120,21 @@ def test_audio_source_params_have_docs_grounded_semantics_and_preflight_checks()
             ),
             PatchOperation(
                 kind="set_params",
+                target="/project1/recorder_audio",
+                args={
+                    "params": {
+                        "filetype": "telepathy",
+                        "uniquesuff": "maybe",
+                        "file": "",
+                        "bitrate": "fast",
+                        "record": "now",
+                        "pause": 2,
+                        "headerdat": "/project1/live_audio",
+                    }
+                },
+            ),
+            PatchOperation(
+                kind="set_params",
                 target="/project1/live_audio",
                 args={
                     "params": {
@@ -3797,6 +5150,18 @@ def test_audio_source_params_have_docs_grounded_semantics_and_preflight_checks()
                     }
                 },
             ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/speaker_audio",
+                args={
+                    "params": {
+                        "active": "yes",
+                        "driver": "bluetooth",
+                        "adjustspeed": "sometimes",
+                        "clampoutput": "loud please",
+                    }
+                },
+            ),
         ]
     )
 
@@ -3805,12 +5170,23 @@ def test_audio_source_params_have_docs_grounded_semantics_and_preflight_checks()
     for issue in issues:
         by_path.setdefault(issue.path, set()).add(issue.code)
 
-    assert {"invalid_bool_param", "invalid_enum_param", "invalid_float_param", "missing_reference_param"}.issubset(
-        by_path["/project1/file_audio"]
-    )
+    assert {
+        "invalid_bool_param",
+        "invalid_enum_param",
+        "invalid_float_param",
+        "missing_reference_param",
+    }.issubset(by_path["/project1/file_audio"])
+    assert {
+        "invalid_bool_param",
+        "invalid_enum_param",
+        "invalid_int_param",
+        "empty_path_param",
+        "param_reference_type_mismatch",
+    }.issubset(by_path["/project1/recorder_audio"])
     assert {"invalid_bool_param", "invalid_enum_param", "invalid_float_param", "invalid_int_param"}.issubset(
         by_path["/project1/live_audio"]
     )
+    assert {"invalid_bool_param", "invalid_enum_param"}.issubset(by_path["/project1/speaker_audio"])
 
 
 def test_analyze_chop_function_rejects_unknown_menu_value():
@@ -3831,7 +5207,9 @@ def test_analyze_chop_function_rejects_unknown_menu_value():
 
     issues = validate_patch_plan_parameter_contract(plan)
 
-    assert any(issue.code == "invalid_enum_param" and issue.path == "/project1/audio_analysis" for issue in issues)
+    assert any(
+        issue.code == "invalid_enum_param" and issue.path == "/project1/audio_analysis" for issue in issues
+    )
 
 
 def test_math_chop_range_params_require_two_values():
@@ -3876,7 +5254,9 @@ def test_filter_chop_type_and_effect_contracts_block_invalid_values():
 
     enum_issues = [issue for issue in issues if issue.code == "invalid_enum_param"]
     assert len(enum_issues) == 2
-    assert any(issue.code == "param_out_of_range" and issue.path == "/project1/control_filter" for issue in issues)
+    assert any(
+        issue.code == "param_out_of_range" and issue.path == "/project1/control_filter" for issue in issues
+    )
 
 
 def test_audio_analysis_math_and_filter_control_params_have_semantics_and_preflight_checks():
@@ -3953,10 +5333,18 @@ def test_audio_analysis_math_and_filter_control_params_have_semantics_and_prefli
 
     plan = _plan_with_ops(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "analyzeCHOP", "name": "analysis"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "mathCHOP", "name": "range"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "filterCHOP", "name": "smooth"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "not_dat"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "analyzeCHOP", "name": "analysis"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "mathCHOP", "name": "range"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "filterCHOP", "name": "smooth"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "not_dat"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/analysis",
@@ -4160,3 +5548,8 @@ async def test_planner_carries_non_blocking_param_semantics_risk_flags(monkeypat
     assert plan.patch_plan.operations
     assert "param-semantics:high-resolution:renderTOP.resolution" in plan.risk_flags
     assert "param-semantics:high-resolution:renderTOP.resolution" in plan.patch_plan.risk_flags
+    assert "direct-param-risk:param-semantics:high-resolution:renderTOP.resolution" in plan.grounding_evidence
+    assert (
+        "direct-param-risk:param-semantics:high-resolution:renderTOP.resolution"
+        in plan.concept_graph.evidence
+    )

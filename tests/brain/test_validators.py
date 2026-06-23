@@ -102,15 +102,15 @@ def test_validation_report_promotes_cook_health_stuck_entries_to_stable_issues()
 async def test_transaction_rolls_back_when_cook_health_reports_stuck_nodes():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["nullTOP"],
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/errors": {"issues": []},
             "cooking": {"stuck": [{"path": "/project1/out1", "cook_time_ms": 999.0}]},
         }
@@ -135,15 +135,21 @@ async def test_transaction_rolls_back_when_cook_health_reports_stuck_nodes():
 async def test_transaction_report_includes_static_profile_probe_results():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "noiseTOP", "name": "noise"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "noiseTOP", "name": "noise"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "feedbackTOP", "name": "feedback"}
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "levelTOP", "name": "level"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "levelTOP", "name": "level"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "compositeTOP", "name": "composite"}
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["noiseTOP", "feedbackTOP", "levelTOP", "compositeTOP", "nullTOP"],
     )
@@ -212,7 +218,10 @@ async def test_transaction_runs_default_visual_output_sample_for_any_null_top_pl
         "output_alpha_coverage": 0.91,
         "output_entropy": 0.08,
     }
-    assert ("analyze_frame", {"path": "/project1/out1", "modes": ["luminance", "alpha_coverage"]}) in client.calls
+    assert (
+        "analyze_frame",
+        {"path": "/project1/out1", "modes": ["luminance", "alpha_coverage"]},
+    ) in client.calls
 
 
 @pytest.mark.asyncio
@@ -270,9 +279,7 @@ async def test_transaction_auto_repair_revalidates_empty_visual_output_when_enab
     client = FakeTDClient(
         scripted={
             "analyze_frame": analyze_frame,
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/params/set": {"ok": True},
             "node/connect": {"ok": True},
             "node/errors": {"issues": []},
@@ -389,9 +396,7 @@ async def test_transaction_report_aggregates_compiler_candidate_profile_probe_re
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/errors": {"issues": []},
             "cooking": {"stuck": []},
             "analyze_frame": {
@@ -457,17 +462,21 @@ async def test_transaction_audio_activity_probe_records_runtime_pass_from_chop_s
                 target="/project1",
                 args={"op_type": "audiofileinCHOP", "name": "audio"},
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "analyzeCHOP", "name": "analyze"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "mathCHOP", "name": "range"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "analyzeCHOP", "name": "analyze"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "mathCHOP", "name": "range"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}
+            ),
         ],
         required_ops=["audiofileinCHOP", "analyzeCHOP", "mathCHOP", "nullCHOP"],
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/errors": {"issues": []},
             "cooking": {"stuck": []},
             "chop/data": {
@@ -510,17 +519,21 @@ async def test_transaction_audio_activity_probe_rolls_back_when_chop_samples_are
                 target="/project1",
                 args={"op_type": "audiofileinCHOP", "name": "audio"},
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "analyzeCHOP", "name": "analyze"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "mathCHOP", "name": "range"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "analyzeCHOP", "name": "analyze"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "mathCHOP", "name": "range"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}
+            ),
         ],
         required_ops=["audiofileinCHOP", "analyzeCHOP", "mathCHOP", "nullCHOP"],
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/errors": {"issues": []},
             "cooking": {"stuck": []},
             "chop/data": {
@@ -564,7 +577,9 @@ def test_static_profile_probe_metrics_treat_audio_source_inputs_as_alternatives(
                 target="/project1",
                 args={"op_type": "audiofileinCHOP", "name": "audio"},
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}
+            ),
         ],
         required_ops=["audiofileinCHOP", "nullCHOP"],
     )
@@ -591,9 +606,15 @@ def test_static_profile_probe_metrics_reports_audio_activity_runtime_contract():
                 target="/project1",
                 args={"op_type": "audiofileinCHOP", "name": "audio"},
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "analyzeCHOP", "name": "analyze"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "mathCHOP", "name": "range"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "analyzeCHOP", "name": "analyze"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "mathCHOP", "name": "range"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}
+            ),
         ],
         required_ops=["audiofileinCHOP", "analyzeCHOP", "mathCHOP", "nullCHOP"],
     )
@@ -611,21 +632,30 @@ def test_static_profile_probe_metrics_reports_audio_activity_runtime_contract():
     assert activity["present_required_inputs"] == ["audiofileinCHOP", "analyzeCHOP", "nullCHOP"]
     assert activity["missing_required_inputs"] == []
     assert activity["runtime_required"] is True
-    assert activity["pending_metric_names"] == ["audio_analysis_channel_delta", "audio_analysis_channel_samples"]
+    assert activity["pending_metric_names"] == [
+        "audio_analysis_channel_delta",
+        "audio_analysis_channel_samples",
+    ]
 
 
 def test_static_profile_probe_metrics_reports_feedback_output_runtime_contract():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "noiseTOP", "name": "noise"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "noiseTOP", "name": "noise"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "feedbackTOP", "name": "feedback"}
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "levelTOP", "name": "level"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "levelTOP", "name": "level"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "compositeTOP", "name": "composite"}
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["noiseTOP", "feedbackTOP", "levelTOP", "compositeTOP", "nullTOP"],
     )
@@ -652,15 +682,23 @@ def test_static_profile_probe_metrics_reports_feedback_output_runtime_contract()
 def test_static_profile_probe_metrics_excludes_render_top_output_until_expensive_profile():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "cameraCOMP", "name": "camera"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "renderTOP", "name": "render"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "cameraCOMP", "name": "camera"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "renderTOP", "name": "render"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/render",
                 args={"params": {"camera": "/project1/camera", "geometry": "/project1/geo"}},
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["cameraCOMP", "geometryCOMP", "renderTOP", "nullTOP"],
     )
@@ -676,14 +714,9 @@ def test_static_profile_probe_metrics_excludes_render_top_output_until_expensive
         concept_profile="render_pipeline",
     )
 
-    assert all(
-        item["probe_id"] != "render_top_output"
-        for item in safe_metrics["profile_probe_results"]
-    )
+    assert all(item["probe_id"] != "render_top_output" for item in safe_metrics["profile_probe_results"])
     render_output = next(
-        item
-        for item in expensive_metrics["profile_probe_results"]
-        if item["probe_id"] == "render_top_output"
+        item for item in expensive_metrics["profile_probe_results"] if item["probe_id"] == "render_top_output"
     )
     assert render_output["readback_strategy"] == "top_sample_optional"
     assert render_output["status"] == "runtime_contract_present"
@@ -694,15 +727,23 @@ def test_static_profile_probe_metrics_excludes_render_top_output_until_expensive
 def test_static_profile_probe_metrics_requires_render_camera_frustum_runtime_contract():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "cameraCOMP", "name": "camera"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "renderTOP", "name": "render"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "cameraCOMP", "name": "camera"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "renderTOP", "name": "render"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/render",
                 args={"params": {"camera": "/project1/camera", "geometry": "/project1/geo"}},
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["cameraCOMP", "geometryCOMP", "renderTOP", "nullTOP"],
     )
@@ -714,9 +755,7 @@ def test_static_profile_probe_metrics_requires_render_camera_frustum_runtime_con
     )
 
     coverage = next(
-        item
-        for item in metrics["profile_probe_results"]
-        if item["probe_id"] == "camera_frustum_coverage"
+        item for item in metrics["profile_probe_results"] if item["probe_id"] == "camera_frustum_coverage"
     )
     assert coverage["readback_strategy"] == "render_camera_frustum_runtime"
     assert coverage["status"] == "runtime_contract_present"
@@ -731,23 +770,27 @@ def test_static_profile_probe_metrics_requires_render_camera_frustum_runtime_con
 async def test_transaction_feedback_output_probe_records_runtime_pass_from_top_luminance():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "noiseTOP", "name": "noise"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "noiseTOP", "name": "noise"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "feedbackTOP", "name": "feedback"}
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "levelTOP", "name": "level"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "levelTOP", "name": "level"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "compositeTOP", "name": "composite"}
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["noiseTOP", "feedbackTOP", "levelTOP", "compositeTOP", "nullTOP"],
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/errors": {"issues": []},
             "cooking": {"stuck": []},
             "analyze_frame": {
@@ -792,23 +835,29 @@ async def test_transaction_feedback_output_probe_records_runtime_pass_from_top_l
 async def test_transaction_expensive_render_output_probe_records_runtime_pass_from_top_analysis():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "cameraCOMP", "name": "camera"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "renderTOP", "name": "render"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "cameraCOMP", "name": "camera"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "renderTOP", "name": "render"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/render",
                 args={"params": {"camera": "/project1/camera", "geometry": "/project1/geo"}},
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["cameraCOMP", "geometryCOMP", "renderTOP", "nullTOP"],
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/params/set": {"ok": True},
             "node/params": {
                 "path": "/project1/render",
@@ -863,23 +912,29 @@ async def test_transaction_expensive_render_output_probe_records_runtime_pass_fr
 async def test_transaction_render_camera_frustum_probe_records_runtime_pass_from_render_params():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "cameraCOMP", "name": "camera"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "renderTOP", "name": "render"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "cameraCOMP", "name": "camera"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "renderTOP", "name": "render"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/render",
                 args={"params": {"camera": "/project1/camera", "geometry": "/project1/geo"}},
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["cameraCOMP", "geometryCOMP", "renderTOP", "nullTOP"],
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/params/set": {"ok": True},
             "node/errors": {"issues": []},
             "cooking": {"stuck": []},
@@ -925,23 +980,29 @@ async def test_transaction_render_camera_frustum_probe_records_runtime_pass_from
 async def test_transaction_render_camera_frustum_probe_rolls_back_when_refs_are_unbound():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "cameraCOMP", "name": "camera"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "renderTOP", "name": "render"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "cameraCOMP", "name": "camera"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "renderTOP", "name": "render"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/render",
                 args={"params": {"camera": "/project1/camera", "geometry": "/project1/geo"}},
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["cameraCOMP", "geometryCOMP", "renderTOP", "nullTOP"],
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/params/set": {"ok": True},
             "node/errors": {"issues": []},
             "cooking": {"stuck": []},
@@ -983,23 +1044,29 @@ async def test_transaction_render_camera_frustum_probe_rolls_back_when_refs_are_
 async def test_transaction_expensive_render_output_probe_rolls_back_when_render_is_invisible():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "cameraCOMP", "name": "camera"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "renderTOP", "name": "render"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "cameraCOMP", "name": "camera"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "geometryCOMP", "name": "geo"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "renderTOP", "name": "render"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/render",
                 args={"params": {"camera": "/project1/camera", "geometry": "/project1/geo"}},
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["cameraCOMP", "geometryCOMP", "renderTOP", "nullTOP"],
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/params/set": {"ok": True},
             "node/params": {
                 "path": "/project1/render",
@@ -1053,23 +1120,27 @@ async def test_transaction_expensive_render_output_probe_rolls_back_when_render_
 async def test_transaction_feedback_output_probe_rolls_back_when_top_is_black():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "noiseTOP", "name": "noise"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "noiseTOP", "name": "noise"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "feedbackTOP", "name": "feedback"}
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "levelTOP", "name": "level"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "levelTOP", "name": "level"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "compositeTOP", "name": "composite"}
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["noiseTOP", "feedbackTOP", "levelTOP", "compositeTOP", "nullTOP"],
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/errors": {"issues": []},
             "cooking": {"stuck": []},
             "analyze_frame": {
@@ -1116,11 +1187,21 @@ async def test_transaction_feedback_output_probe_rolls_back_when_top_is_black():
 def test_static_profile_probe_metrics_reports_panel_state_readback_runtime_contract():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "containerCOMP", "name": "panel"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "sliderCOMP", "name": "slider"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "buttonCOMP", "name": "button"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "panelCHOP", "name": "panel_reader"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "containerCOMP", "name": "panel"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "sliderCOMP", "name": "slider"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "buttonCOMP", "name": "button"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "panelCHOP", "name": "panel_reader"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}
+            ),
         ],
         required_ops=["containerCOMP", "sliderCOMP", "buttonCOMP", "panelCHOP", "nullCHOP"],
     )
@@ -1144,8 +1225,12 @@ def test_static_profile_probe_metrics_reports_panel_state_readback_runtime_contr
 def test_static_profile_probe_metrics_reports_pop_bounds_runtime_contract():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "circlePOP", "name": "source"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullPOP", "name": "out_pop"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "circlePOP", "name": "source"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullPOP", "name": "out_pop"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "rendersimpleTOP", "name": "preview"}
             ),
@@ -1177,15 +1262,23 @@ def test_static_profile_probe_metrics_reports_pop_bounds_runtime_contract():
 def test_static_profile_probe_metrics_reports_glsl_compile_runtime_contract():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "constantTOP", "name": "input"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "pixel"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "glslTOP", "name": "shader"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "constantTOP", "name": "input"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "pixel"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "glslTOP", "name": "shader"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/shader",
                 args={"params": {"pixeldat": "/project1/pixel"}},
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["constantTOP", "textDAT", "glslTOP", "nullTOP"],
     )
@@ -1209,7 +1302,9 @@ def test_static_profile_probe_metrics_reports_glsl_compile_runtime_contract():
 def test_static_profile_probe_metrics_reports_dat_callback_guard_runtime_contract():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "tableDAT", "name": "table"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "tableDAT", "name": "table"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "datexecuteDAT", "name": "callback"}
             ),
@@ -1241,27 +1336,51 @@ def test_static_profile_probe_metrics_reports_dat_callback_guard_runtime_contrac
 def _complete_dat_protocol_callback_plan(callback_text: str) -> PatchPlan:
     return _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "serialDAT", "name": "serial"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "oscinDAT", "name": "osc"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "serialDAT", "name": "serial"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "oscinDAT", "name": "osc"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "websocketDAT", "name": "websocket"}
             ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "mqttclientDAT", "name": "mqtt"}
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "udpinDAT", "name": "udp"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "tableDAT", "name": "table"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullDAT", "name": "out_dat"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "constantTOP", "name": "input_a"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "noiseTOP", "name": "input_b"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "switchTOP", "name": "switch"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "udpinDAT", "name": "udp"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "tableDAT", "name": "table"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullDAT", "name": "out_dat"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "constantTOP", "name": "input_a"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "noiseTOP", "name": "input_b"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "switchTOP", "name": "switch"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/switch",
-                args={"params": {"index": {"expr": "min(1, max(0, int(op('/project1/table')[1, 'selected_index'])))"}}},
+                args={
+                    "params": {
+                        "index": {"expr": "min(1, max(0, int(op('/project1/table')[1, 'selected_index'])))"}
+                    }
+                },
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "callback_source"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "callback_source"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "datexecuteDAT", "name": "callback"}
             ),
@@ -1298,19 +1417,27 @@ def _complete_dat_protocol_callback_plan(callback_text: str) -> PatchPlan:
 async def test_transaction_panel_state_readback_probe_records_runtime_pass_from_chop_channels():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "containerCOMP", "name": "panel"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "sliderCOMP", "name": "slider"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "buttonCOMP", "name": "button"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "panelCHOP", "name": "panel_reader"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "containerCOMP", "name": "panel"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "sliderCOMP", "name": "slider"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "buttonCOMP", "name": "button"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "panelCHOP", "name": "panel_reader"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}
+            ),
         ],
         required_ops=["containerCOMP", "sliderCOMP", "buttonCOMP", "panelCHOP", "nullCHOP"],
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/errors": {"issues": []},
             "cooking": {"stuck": []},
             "chop/data": {
@@ -1351,19 +1478,27 @@ async def test_transaction_panel_state_readback_probe_records_runtime_pass_from_
 async def test_transaction_panel_state_readback_probe_rolls_back_when_channels_missing():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "containerCOMP", "name": "panel"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "sliderCOMP", "name": "slider"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "buttonCOMP", "name": "button"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "panelCHOP", "name": "panel_reader"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "containerCOMP", "name": "panel"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "sliderCOMP", "name": "slider"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "buttonCOMP", "name": "button"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "panelCHOP", "name": "panel_reader"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}
+            ),
         ],
         required_ops=["containerCOMP", "sliderCOMP", "buttonCOMP", "panelCHOP", "nullCHOP"],
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/errors": {"issues": []},
             "cooking": {"stuck": []},
             "chop/data": {
@@ -1404,8 +1539,12 @@ async def test_transaction_panel_state_readback_probe_rolls_back_when_channels_m
 async def test_transaction_pop_bounds_probe_records_runtime_pass_from_pop_bounds():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "circlePOP", "name": "source"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullPOP", "name": "out_pop"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "circlePOP", "name": "source"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullPOP", "name": "out_pop"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "rendersimpleTOP", "name": "preview"}
             ),
@@ -1419,9 +1558,7 @@ async def test_transaction_pop_bounds_probe_records_runtime_pass_from_pop_bounds
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/errors": {"issues": []},
             "cooking": {"stuck": []},
             "pop/bounds": {
@@ -1467,8 +1604,12 @@ async def test_transaction_pop_bounds_probe_records_runtime_pass_from_pop_bounds
 async def test_transaction_pop_bounds_probe_rolls_back_when_bounds_are_nonfinite():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "circlePOP", "name": "source"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullPOP", "name": "out_pop"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "circlePOP", "name": "source"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullPOP", "name": "out_pop"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "rendersimpleTOP", "name": "preview"}
             ),
@@ -1482,9 +1623,7 @@ async def test_transaction_pop_bounds_probe_rolls_back_when_bounds_are_nonfinite
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/errors": {"issues": []},
             "cooking": {"stuck": []},
             "pop/bounds": {
@@ -1523,8 +1662,12 @@ async def test_transaction_pop_bounds_probe_rolls_back_when_bounds_are_nonfinite
 def test_static_profile_probe_metrics_reports_pop_attribute_runtime_contract():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "circlePOP", "name": "source"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullPOP", "name": "out_pop"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "circlePOP", "name": "source"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullPOP", "name": "out_pop"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "rendersimpleTOP", "name": "preview"}
             ),
@@ -1544,9 +1687,7 @@ def test_static_profile_probe_metrics_reports_pop_attribute_runtime_contract():
     )
 
     attributes = next(
-        item
-        for item in metrics["profile_probe_results"]
-        if item["probe_id"] == "attribute_sample_available"
+        item for item in metrics["profile_probe_results"] if item["probe_id"] == "attribute_sample_available"
     )
     assert attributes["readback_strategy"] == "pop_attribute_metadata_runtime"
     assert attributes["status"] == "runtime_contract_present"
@@ -1558,8 +1699,12 @@ def test_static_profile_probe_metrics_reports_pop_attribute_runtime_contract():
 async def test_transaction_pop_attribute_probe_records_runtime_pass_from_pop_inspect():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "circlePOP", "name": "source"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullPOP", "name": "out_pop"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "circlePOP", "name": "source"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullPOP", "name": "out_pop"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "rendersimpleTOP", "name": "preview"}
             ),
@@ -1573,9 +1718,7 @@ async def test_transaction_pop_attribute_probe_records_runtime_pass_from_pop_ins
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/errors": {"issues": []},
             "cooking": {"stuck": []},
             "pop/bounds": {
@@ -1637,8 +1780,12 @@ async def test_transaction_pop_attribute_probe_records_runtime_pass_from_pop_ins
 async def test_transaction_pop_attribute_probe_rolls_back_when_pop_inspect_has_no_attributes():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "circlePOP", "name": "source"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullPOP", "name": "out_pop"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "circlePOP", "name": "source"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullPOP", "name": "out_pop"}
+            ),
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "rendersimpleTOP", "name": "preview"}
             ),
@@ -1652,9 +1799,7 @@ async def test_transaction_pop_attribute_probe_rolls_back_when_pop_inspect_has_n
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/errors": {"issues": []},
             "cooking": {"stuck": []},
             "pop/bounds": {
@@ -1700,23 +1845,29 @@ async def test_transaction_pop_attribute_probe_rolls_back_when_pop_inspect_has_n
 async def test_transaction_glsl_compile_probe_records_runtime_pass_from_node_errors():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "constantTOP", "name": "input"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "pixel"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "glslTOP", "name": "shader"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "constantTOP", "name": "input"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "pixel"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "glslTOP", "name": "shader"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/shader",
                 args={"params": {"pixeldat": "/project1/pixel"}},
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["constantTOP", "textDAT", "glslTOP", "nullTOP"],
     )
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/params/set": {"ok": True},
             "node/errors": {"issues": []},
             "cooking": {"stuck": []},
@@ -1748,15 +1899,23 @@ async def test_transaction_glsl_compile_probe_records_runtime_pass_from_node_err
 async def test_transaction_glsl_compile_probe_rolls_back_on_node_errors():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "constantTOP", "name": "input"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "pixel"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "glslTOP", "name": "shader"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "constantTOP", "name": "input"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "pixel"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "glslTOP", "name": "shader"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/shader",
                 args={"params": {"pixeldat": "/project1/pixel"}},
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["constantTOP", "textDAT", "glslTOP", "nullTOP"],
     )
@@ -1768,9 +1927,7 @@ async def test_transaction_glsl_compile_probe_rolls_back_on_node_errors():
 
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/params/set": {"ok": True},
             "node/errors": node_errors,
             "cooking": {"stuck": []},
@@ -1818,9 +1975,7 @@ async def test_transaction_dat_callback_guard_probe_records_runtime_pass_from_no
     plan = _complete_dat_protocol_callback_plan(callback_text)
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/params/set": {"ok": True},
             "node/content/set": {"ok": True},
             "node/content": {"text": callback_text},
@@ -1856,9 +2011,7 @@ async def test_transaction_dat_callback_guard_probe_rolls_back_when_guard_is_mis
     plan = _complete_dat_protocol_callback_plan(callback_text)
     client = FakeTDClient(
         scripted={
-            "node/create": lambda params: {
-                "path": f"{params['parent_path'].rstrip('/')}/{params['name']}"
-            },
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/params/set": {"ok": True},
             "node/content/set": {"ok": True},
             "node/content": {"text": callback_text},
@@ -1894,8 +2047,12 @@ async def test_transaction_dat_callback_guard_probe_rolls_back_when_guard_is_mis
 def test_static_profile_probe_metrics_treat_stable_output_families_as_alternatives():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "debug"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "textDAT", "name": "debug"}
+            ),
         ],
         required_ops=["nullTOP", "textDAT"],
     )
@@ -1917,9 +2074,15 @@ def test_static_profile_probe_metrics_treat_stable_output_families_as_alternativ
 def test_static_profile_probe_metrics_requires_render_switch_index_binding():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "tableDAT", "name": "table"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "switchTOP", "name": "switch"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "tableDAT", "name": "table"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "switchTOP", "name": "switch"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["tableDAT", "switchTOP", "nullTOP"],
     )
@@ -1944,20 +2107,24 @@ def test_static_profile_probe_metrics_requires_render_switch_index_binding():
 def test_static_profile_probe_metrics_accepts_render_switch_table_index_binding():
     plan = _patch_plan(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "tableDAT", "name": "table"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "switchTOP", "name": "switch"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "tableDAT", "name": "table"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "switchTOP", "name": "switch"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/switch",
                 args={
                     "params": {
-                        "index": {
-                            "expr": "min(1, max(0, int(op('/project1/table')[1, 'selected_index'])))"
-                        }
+                        "index": {"expr": "min(1, max(0, int(op('/project1/table')[1, 'selected_index'])))"}
                     }
                 },
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["tableDAT", "switchTOP", "nullTOP"],
     )
@@ -1985,7 +2152,9 @@ def test_profile_probe_failures_emit_stable_validation_issues():
             PatchOperation(
                 kind="create_node", target="/project1", args={"op_type": "compositeTOP", "name": "composite"}
             ),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
         ],
         required_ops=["feedbackTOP", "compositeTOP", "nullTOP"],
     )
@@ -1994,7 +2163,9 @@ def test_profile_probe_failures_emit_stable_validation_issues():
         validation_profile="structural_visual_safe",
         concept_profile="feedback",
     )
-    decay_probe = next(item for item in metrics["profile_probe_results"] if item["probe_id"] == "decay_control")
+    decay_probe = next(
+        item for item in metrics["profile_probe_results"] if item["probe_id"] == "decay_control"
+    )
 
     report = build_validation_report_v2(
         target_root="/project1",

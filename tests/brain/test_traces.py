@@ -176,9 +176,7 @@ def test_promoted_patterns_from_traces_loads_valid_docs_grounded_candidates(tmp_
 
     patterns = promoted_patterns_from_traces(trace_path)
 
-    assert [pattern.pattern_id for pattern in patterns] == [
-        "trace_audio_feedback_green_audio_feedback_panel"
-    ]
+    assert [pattern.pattern_id for pattern in patterns] == ["trace_audio_feedback_green_audio_feedback_panel"]
     assert patterns[0].promoted_from_trace == "trace-audio-feedback-green"
     assert patterns[0].required_ops == promoted.required_ops
     assert all(source.startswith("https://docs.derivative.ca/") for source in patterns[0].official_sources)
@@ -328,4 +326,371 @@ async def test_replay_brain_trace_detects_promoted_pattern_operator_drift():
     assert result["promoted_pattern_operator_drift"] == {
         "pattern_id": "trace_audio_feedback_green_audio_feedback_panel",
         "missing": ["futureMagicTOP"],
+    }
+
+
+@pytest.mark.asyncio
+async def test_replay_brain_trace_reports_promoted_pattern_runtime_probe_issues():
+    record = {
+        "type": "brain_execution",
+        "intent": "Build an audio-reactive feedback visual with a control panel and debug output",
+        "profile": "concept_compiled",
+        "target_root": "/project1",
+        "trace": {
+            "operators": [
+                "audiofileinCHOP",
+                "analyzeCHOP",
+                "mathCHOP",
+                "nullCHOP",
+                "noiseTOP",
+                "feedbackTOP",
+                "levelTOP",
+                "compositeTOP",
+                "nullTOP",
+                "containerCOMP",
+                "sliderCOMP",
+                "buttonCOMP",
+                "panelCHOP",
+                "textDAT",
+                "baseCOMP",
+                "annotateCOMP",
+                "infoCHOP",
+                "errorDAT",
+            ]
+        },
+        "promoted_pattern_candidate": {
+            "pattern_id": "trace_audio_feedback_green_audio_feedback_panel",
+            "promoted_from_trace": "trace-audio-feedback-green",
+            "required_ops": ["audiofileinCHOP", "feedbackTOP"],
+            "layout": {
+                "runtime_validation": {
+                    "required_probe_ids": [
+                        "audio_signal_activity",
+                        "feedback_output_readback",
+                    ],
+                    "passed_probe_ids": ["audio_signal_activity"],
+                    "missing_probe_ids": ["feedback_output_readback"],
+                    "missing_probe_details": {
+                        "feedback_output_readback": {
+                            "profile": "feedback",
+                            "status": "runtime_contract_present",
+                            "readback_strategy": "top_luminance_runtime",
+                            "pending_metric_names": [
+                                "feedback_output_luminance_mean",
+                                "feedback_output_luminance_max",
+                            ],
+                        }
+                    },
+                    "failed_probe_ids": ["cheap_visual_metrics"],
+                    "failed_probe_statuses": {
+                        "cheap_visual_metrics": "runtime_fail",
+                    },
+                    "failed_optional_probe_ids": ["cheap_visual_metrics"],
+                    "confidence_decay": 0.86,
+                    "confidence_penalty_reasons": [
+                        "missing_required_probe:feedback_output_readback",
+                        "failed_optional_probe:cheap_visual_metrics",
+                    ],
+                }
+            },
+        },
+    }
+
+    result = await replay_brain_trace(record)
+
+    assert result["ok"] is False
+    assert result["promoted_pattern_runtime_validation_clean"] is False
+    assert result["promoted_pattern_runtime_validation_issues"] == {
+        "pattern_id": "trace_audio_feedback_green_audio_feedback_panel",
+        "missing_probe_ids": ["feedback_output_readback"],
+        "missing_probe_details": {
+            "feedback_output_readback": {
+                "profile": "feedback",
+                "status": "runtime_contract_present",
+                "readback_strategy": "top_luminance_runtime",
+                "pending_metric_names": [
+                    "feedback_output_luminance_mean",
+                    "feedback_output_luminance_max",
+                ],
+            }
+        },
+        "failed_probe_ids": ["cheap_visual_metrics"],
+        "failed_probe_statuses": {"cheap_visual_metrics": "runtime_fail"},
+        "failed_optional_probe_ids": ["cheap_visual_metrics"],
+        "confidence_decay": 0.86,
+        "confidence_penalty_reasons": [
+            "missing_required_probe:feedback_output_readback",
+            "failed_optional_probe:cheap_visual_metrics",
+        ],
+    }
+
+
+@pytest.mark.asyncio
+async def test_replay_brain_trace_reports_trace_promotion_rejection_probe_issues():
+    record = {
+        "type": "brain_execution",
+        "intent": "Build an audio-reactive feedback visual with a control panel and debug output",
+        "profile": "concept_compiled",
+        "target_root": "/project1",
+        "trace": {
+            "operators": [
+                "audiofileinCHOP",
+                "analyzeCHOP",
+                "mathCHOP",
+                "nullCHOP",
+                "noiseTOP",
+                "feedbackTOP",
+                "levelTOP",
+                "compositeTOP",
+                "nullTOP",
+                "containerCOMP",
+                "sliderCOMP",
+                "buttonCOMP",
+                "panelCHOP",
+                "textDAT",
+                "baseCOMP",
+                "annotateCOMP",
+                "infoCHOP",
+                "errorDAT",
+            ]
+        },
+        "trace_promotion_rejection": {
+            "blockers": [
+                "missing runtime validation passes: feedback_output_readback",
+                "failed required runtime validation probes: feedback_output_readback",
+            ],
+            "runtime_validation_issues": {
+                "missing_probe_ids": ["feedback_output_readback"],
+                "missing_probe_details": {
+                    "feedback_output_readback": {
+                        "profile": "feedback",
+                        "status": "runtime_contract_present",
+                        "readback_strategy": "top_luminance_runtime",
+                        "pending_metric_names": [
+                            "feedback_output_luminance_mean",
+                            "feedback_output_luminance_max",
+                        ],
+                    }
+                },
+                "failed_required_probe_ids": ["feedback_output_readback"],
+                "failed_probe_ids": ["feedback_output_readback", "cheap_visual_metrics"],
+                "failed_probe_statuses": {
+                    "feedback_output_readback": "runtime_failed",
+                    "cheap_visual_metrics": "runtime_fail",
+                },
+                "failed_required_probe_details": {
+                    "feedback_output_readback": {
+                        "profile": "feedback",
+                        "status": "runtime_failed",
+                        "issue_code": "profile_probe_runtime_feedback_output_missing",
+                        "readback_path": "/project1/tdpilot_concept/out1",
+                        "runtime_metric_values": {
+                            "feedback_output_luminance_mean": 0.0,
+                            "feedback_output_luminance_max": 0.0,
+                        },
+                    }
+                },
+                "failed_probe_details": {
+                    "feedback_output_readback": {
+                        "profile": "feedback",
+                        "status": "runtime_failed",
+                        "issue_code": "profile_probe_runtime_feedback_output_missing",
+                        "readback_path": "/project1/tdpilot_concept/out1",
+                        "runtime_metric_values": {
+                            "feedback_output_luminance_mean": 0.0,
+                            "feedback_output_luminance_max": 0.0,
+                        },
+                    },
+                    "cheap_visual_metrics": {
+                        "profile": "visual",
+                        "status": "runtime_fail",
+                        "issue_code": "cheap_visual_metrics_black_frame",
+                        "readback_path": "/project1/tdpilot_concept/out1",
+                        "runtime_metric_values": {"luminance_mean": 0.0, "entropy": 0.0},
+                    },
+                },
+                "failed_optional_probe_ids": ["cheap_visual_metrics"],
+                "confidence_decay": 0.68,
+                "confidence_penalty_reasons": [
+                    "missing_required_probe:feedback_output_readback",
+                    "failed_required_probe:feedback_output_readback",
+                    "failed_optional_probe:cheap_visual_metrics",
+                ],
+            },
+        },
+    }
+
+    result = await replay_brain_trace(record)
+
+    assert result["ok"] is False
+    assert result["trace_promotion_rejection_clean"] is False
+    assert result["trace_promotion_rejection_issues"] == {
+        "blockers": [
+            "missing runtime validation passes: feedback_output_readback",
+            "failed required runtime validation probes: feedback_output_readback",
+        ],
+        "runtime_validation_issues": {
+            "missing_probe_ids": ["feedback_output_readback"],
+            "missing_probe_details": {
+                "feedback_output_readback": {
+                    "profile": "feedback",
+                    "status": "runtime_contract_present",
+                    "readback_strategy": "top_luminance_runtime",
+                    "pending_metric_names": [
+                        "feedback_output_luminance_mean",
+                        "feedback_output_luminance_max",
+                    ],
+                }
+            },
+            "failed_required_probe_ids": ["feedback_output_readback"],
+            "failed_probe_ids": ["feedback_output_readback", "cheap_visual_metrics"],
+            "failed_probe_statuses": {
+                "feedback_output_readback": "runtime_failed",
+                "cheap_visual_metrics": "runtime_fail",
+            },
+            "failed_optional_probe_ids": ["cheap_visual_metrics"],
+            "failed_required_probe_details": {
+                "feedback_output_readback": {
+                    "profile": "feedback",
+                    "status": "runtime_failed",
+                    "issue_code": "profile_probe_runtime_feedback_output_missing",
+                    "readback_path": "/project1/tdpilot_concept/out1",
+                    "runtime_metric_values": {
+                        "feedback_output_luminance_mean": 0.0,
+                        "feedback_output_luminance_max": 0.0,
+                    },
+                }
+            },
+            "failed_probe_details": {
+                "feedback_output_readback": {
+                    "profile": "feedback",
+                    "status": "runtime_failed",
+                    "issue_code": "profile_probe_runtime_feedback_output_missing",
+                    "readback_path": "/project1/tdpilot_concept/out1",
+                    "runtime_metric_values": {
+                        "feedback_output_luminance_mean": 0.0,
+                        "feedback_output_luminance_max": 0.0,
+                    },
+                },
+                "cheap_visual_metrics": {
+                    "profile": "visual",
+                    "status": "runtime_fail",
+                    "issue_code": "cheap_visual_metrics_black_frame",
+                    "readback_path": "/project1/tdpilot_concept/out1",
+                    "runtime_metric_values": {"luminance_mean": 0.0, "entropy": 0.0},
+                },
+            },
+            "confidence_decay": 0.68,
+            "confidence_penalty_reasons": [
+                "missing_required_probe:feedback_output_readback",
+                "failed_required_probe:feedback_output_readback",
+                "failed_optional_probe:cheap_visual_metrics",
+            ],
+        },
+    }
+
+
+@pytest.mark.asyncio
+async def test_replay_brain_trace_reports_generated_code_runtime_rejection_details():
+    record = {
+        "type": "brain_execution",
+        "intent": "Build a GLSL TOP shader with source texture, shader DAT, stable TOP output, and debug output",
+        "profile": "concept_compiled",
+        "target_root": "/project1",
+        "trace": {
+            "operators": ["constantTOP", "glslTOP", "textDAT", "nullTOP"],
+        },
+        "trace_promotion_rejection": {
+            "blockers": [
+                "missing generated code runtime validation passes: glsl_top_pixel_shader:compile_state"
+            ],
+            "generated_code_runtime_issues": {
+                "missing_contract_ids": ["glsl_top_pixel_shader:compile_state"],
+                "missing_contract_details": {
+                    "glsl_top_pixel_shader:compile_state": {
+                        "block_id": "glsl_top_pixel_shader",
+                        "check_id": "compile_state",
+                        "language": "glsl",
+                        "target_op": "/project1/glsl",
+                        "target_param": "pixeldat",
+                        "endpoint": "node/errors",
+                        "status": "runtime_fail",
+                        "issue_count": 1,
+                        "expected_outputs": ["/project1/out1"],
+                        "risk_flags": ["validate-glsl-compile-state"],
+                        "official_sources": ["https://docs.derivative.ca/GLSL_TOP"],
+                    }
+                },
+                "failed_contract_ids": ["glsl_top_pixel_shader:compile_state"],
+                "failed_contract_statuses": {"glsl_top_pixel_shader:compile_state": "runtime_fail"},
+                "confidence_decay": 0.66,
+                "confidence_penalty_reasons": [
+                    "missing_generated_code_contract:glsl_top_pixel_shader:compile_state",
+                    "failed_generated_code_contract:glsl_top_pixel_shader:compile_state",
+                ],
+                "failed_contract_details": {
+                    "glsl_top_pixel_shader:compile_state": {
+                        "block_id": "glsl_top_pixel_shader",
+                        "check_id": "compile_state",
+                        "language": "glsl",
+                        "target_op": "/project1/glsl",
+                        "target_param": "pixeldat",
+                        "endpoint": "node/errors",
+                        "status": "runtime_fail",
+                        "issue_count": 1,
+                        "expected_outputs": ["/project1/out1"],
+                        "risk_flags": ["validate-glsl-compile-state"],
+                        "official_sources": ["https://docs.derivative.ca/GLSL_TOP"],
+                    }
+                },
+            },
+        },
+    }
+
+    result = await replay_brain_trace(record)
+
+    assert result["ok"] is False
+    assert result["trace_promotion_rejection_clean"] is False
+    assert result["trace_promotion_rejection_issues"] == {
+        "blockers": ["missing generated code runtime validation passes: glsl_top_pixel_shader:compile_state"],
+        "generated_code_runtime_issues": {
+            "missing_contract_ids": ["glsl_top_pixel_shader:compile_state"],
+            "missing_contract_details": {
+                "glsl_top_pixel_shader:compile_state": {
+                    "block_id": "glsl_top_pixel_shader",
+                    "check_id": "compile_state",
+                    "language": "glsl",
+                    "target_op": "/project1/glsl",
+                    "target_param": "pixeldat",
+                    "endpoint": "node/errors",
+                    "status": "runtime_fail",
+                    "issue_count": 1,
+                    "expected_outputs": ["/project1/out1"],
+                    "risk_flags": ["validate-glsl-compile-state"],
+                    "official_sources": ["https://docs.derivative.ca/GLSL_TOP"],
+                }
+            },
+            "failed_contract_ids": ["glsl_top_pixel_shader:compile_state"],
+            "failed_contract_statuses": {"glsl_top_pixel_shader:compile_state": "runtime_fail"},
+            "confidence_decay": 0.66,
+            "confidence_penalty_reasons": [
+                "missing_generated_code_contract:glsl_top_pixel_shader:compile_state",
+                "failed_generated_code_contract:glsl_top_pixel_shader:compile_state",
+            ],
+            "failed_contract_details": {
+                "glsl_top_pixel_shader:compile_state": {
+                    "block_id": "glsl_top_pixel_shader",
+                    "check_id": "compile_state",
+                    "language": "glsl",
+                    "target_op": "/project1/glsl",
+                    "target_param": "pixeldat",
+                    "endpoint": "node/errors",
+                    "status": "runtime_fail",
+                    "issue_count": 1,
+                    "expected_outputs": ["/project1/out1"],
+                    "risk_flags": ["validate-glsl-compile-state"],
+                    "official_sources": ["https://docs.derivative.ca/GLSL_TOP"],
+                }
+            },
+        },
     }

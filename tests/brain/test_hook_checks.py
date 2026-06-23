@@ -91,6 +91,16 @@ def test_release_stop_hook_runs_audits_for_relevant_files():
     assert "atlas audit ok" in output["hookSpecificOutput"]["additionalContext"]
 
 
+def test_release_stop_hook_suppresses_when_no_release_files_changed():
+    output = evaluate_release_stop(
+        {"hook_event_name": "Stop"},
+        root=ROOT,
+        changed_files=["README.md", "docs/notes.md"],
+    )
+
+    assert output == {"suppressOutput": True}
+
+
 def test_hooks_json_uses_deterministic_hook_module_and_is_mirrored():
     root_hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text(encoding="utf-8"))
     plugin_hooks = json.loads(
@@ -100,9 +110,7 @@ def test_hooks_json_uses_deterministic_hook_module_and_is_mirrored():
     assert plugin_hooks == root_hooks
     hook_text = json.dumps(root_hooks)
     assert "hooks/run_hook.py" in hook_text
-    assert "td_mcp.brain.hook_check" in (ROOT / "hooks" / "run_hook.py").read_text(
-        encoding="utf-8"
-    )
+    assert "td_mcp.brain.hook_check" in (ROOT / "hooks" / "run_hook.py").read_text(encoding="utf-8")
     assert "PostToolUse" in root_hooks["hooks"]
     assert "Stop" in root_hooks["hooks"]
 
@@ -115,11 +123,23 @@ def test_packaged_hook_runner_delegates_from_plugin_cache_root(tmp_path):
         [
             sys.executable,
             str(package_root / "hooks" / "run_hook.py"),
-            "release-stop",
+            "post-tool-use",
             "--root",
             str(ROOT),
         ],
-        input="{}",
+        input=json.dumps(
+            {
+                "tool_name": "td_brain_execute",
+                "tool_response": {
+                    "success": True,
+                    "result": {
+                        "status": "clean",
+                        "validation_failed": False,
+                        "validation_report": {"ok": True},
+                    },
+                },
+            }
+        ),
         text=True,
         capture_output=True,
         check=False,
@@ -127,4 +147,5 @@ def test_packaged_hook_runner_delegates_from_plugin_cache_root(tmp_path):
 
     assert proc.returncode == 0, proc.stderr
     payload = json.loads(proc.stdout)
-    assert payload["hookSpecificOutput"]["hookEventName"] == "Stop"
+    assert payload["hookSpecificOutput"]["hookEventName"] == "PostToolUse"
+    assert "validation ok" in payload["hookSpecificOutput"]["additionalContext"]

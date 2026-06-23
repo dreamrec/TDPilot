@@ -64,6 +64,99 @@ def test_evaluate_marks_operator_availability_missing_when_required():
     assert report["summary"]["missing"] == 1
 
 
+def test_evaluate_gates_direct_param_preflight_report():
+    report = check_release_gates.evaluate(
+        None,
+        None,
+        direct_param_preflight={
+            "ok": True,
+            "write_count": 11,
+            "guarded_count": 11,
+            "unguarded_count": 0,
+            "unguarded_writes": [],
+            "wrapper_call_count": 10,
+            "wrapper_guarded_count": 10,
+            "wrapper_unguarded_count": 0,
+            "wrapper_unguarded_calls": [],
+        },
+    )
+
+    labels = {check["label"]: check for check in report["checks"]}
+    assert labels["direct param preflight report ok"]["status"] == "pass"
+    assert labels["direct param preflight unguarded write count"]["status"] == "pass"
+    assert labels["direct param preflight guarded coverage"]["status"] == "pass"
+    assert labels["direct param preflight unguarded wrapper count"]["status"] == "pass"
+    assert labels["direct param preflight wrapper coverage"]["status"] == "pass"
+
+    failed = check_release_gates.evaluate(
+        None,
+        None,
+        direct_param_preflight={
+            "ok": False,
+            "write_count": 11,
+            "guarded_count": 10,
+            "unguarded_count": 1,
+            "unguarded_writes": [{"path": "src/td_mcp/registry/unsafe.py"}],
+            "wrapper_call_count": 10,
+            "wrapper_guarded_count": 9,
+            "wrapper_unguarded_count": 1,
+            "wrapper_unguarded_calls": [{"path": "src/td_mcp/registry/unsafe_wrapper.py"}],
+        },
+    )
+    failed_labels = {check["label"]: check for check in failed["checks"]}
+    assert failed_labels["direct param preflight report ok"]["status"] == "fail"
+    assert failed_labels["direct param preflight unguarded write count"]["status"] == "fail"
+    assert failed_labels["direct param preflight guarded coverage"]["status"] == "fail"
+    assert failed_labels["direct param preflight unguarded wrapper count"]["status"] == "fail"
+    assert failed_labels["direct param preflight wrapper coverage"]["status"] == "fail"
+    assert failed["summary"]["ok"] is False
+
+
+def test_evaluate_marks_param_semantics_risk_missing_when_required():
+    report = check_release_gates.evaluate(
+        None,
+        None,
+        required_reports={"param_semantics_risk"},
+    )
+
+    labels = {check["label"]: check for check in report["checks"]}
+    assert labels["param semantics risk report provided"]["status"] == "missing"
+    assert report["summary"]["missing"] == 1
+
+
+def test_evaluate_gates_param_semantics_risk_report():
+    report = check_release_gates.evaluate(
+        None,
+        None,
+        param_semantics_risk=_complete_param_semantics_risk_payload(),
+    )
+
+    labels = {check["label"]: check for check in report["checks"]}
+    assert labels["param semantics high cook risk report ok"]["status"] == "pass"
+    assert labels["param semantics high cook risk unclassified count"]["status"] == "pass"
+    assert labels["param semantics high cook risk classified coverage"]["status"] == "pass"
+    assert labels["param semantics direct risk parameter count"]["status"] == "pass"
+
+    failed_payload = _complete_param_semantics_risk_payload()
+    failed_payload["ok"] = False
+    failed_payload["unclassified_count"] = 1
+    failed_payload["unclassified_high_cook_risk_parameters"] = [
+        {"op_type": "executeDAT", "name": "active", "behavior": "unclassified"}
+    ]
+    failed_payload["validation_only_count"] = 5
+    failed = check_release_gates.evaluate(
+        None,
+        None,
+        param_semantics_risk=failed_payload,
+    )
+
+    failed_labels = {check["label"]: check for check in failed["checks"]}
+    assert failed_labels["param semantics high cook risk report ok"]["status"] == "fail"
+    assert failed_labels["param semantics high cook risk unclassified count"]["status"] == "fail"
+    assert failed_labels["param semantics high cook risk classified coverage"]["status"] == "fail"
+    assert failed["summary"]["ok"] is False
+
+
 def test_cli_require_plugin_surface_fails_complete_gate_when_report_absent(tmp_path: Path):
     bench_path = tmp_path / "bench.json"
     bench_path.write_text(
@@ -165,8 +258,9 @@ def test_cli_require_complete_requires_brain_eval_and_dry_run_smoke_reports(tmp_
     assert labels["brain eval report provided"]["status"] == "missing"
     assert labels["brain smoke report provided"]["status"] == "missing"
     assert labels["operator availability report provided"]["status"] == "missing"
-    assert readiness["required_category_count"] == 5
-    assert readiness["missing_required_category_count"] == 3
+    assert labels["param semantics risk report provided"]["status"] == "missing"
+    assert readiness["required_category_count"] == 6
+    assert readiness["missing_required_category_count"] == 4
 
 
 def test_evaluate_passes_with_valid_benchmark_payload():
@@ -499,6 +593,27 @@ def _complete_plugin_surface_payload() -> dict:
             "has_hooks": True,
             "has_mcp_servers": True,
         },
+    }
+
+
+def _complete_param_semantics_risk_payload() -> dict:
+    return {
+        "ok": True,
+        "contract": "high_cook_risk_direct_param_coverage_v1",
+        "high_cook_risk_count": 10,
+        "direct_risk_count": 4,
+        "validation_only_count": 6,
+        "unclassified_count": 0,
+        "direct_risk_parameters": [
+            {"op_type": "executeDAT", "name": "active", "behavior": "direct-risk"},
+            {"op_type": "mqttclientDAT", "name": "password", "behavior": "direct-risk"},
+            {"op_type": "webclientDAT", "name": "pw", "behavior": "direct-risk"},
+            {"op_type": "webserverDAT", "name": "password", "behavior": "direct-risk"},
+        ],
+        "validation_only_parameters": [
+            {"op_type": "renderTOP", "name": "camera", "behavior": "validation-only"}
+        ],
+        "unclassified_high_cook_risk_parameters": [],
     }
 
 
@@ -1525,9 +1640,7 @@ def test_operator_availability_report_gate_fails_unknown_build_and_missing_advan
     operator_availability["availability_matrix"]["td_build"] = "unknown"
     operator_availability["availability_matrix"]["platform"] = "unknown"
     operator_availability["results"] = [
-        item
-        for item in operator_availability["results"]
-        if item["op_type"] != "glsladvancedPOP"
+        item for item in operator_availability["results"] if item["op_type"] != "glsladvancedPOP"
     ]
 
     report = check_release_gates.evaluate(
@@ -1780,9 +1893,7 @@ def test_evaluate_passes_with_valid_brain_smoke_payload():
                 "validation_profile": "structural_visual_expensive",
                 "missing_expected_ops": [],
                 "blocked_questions": [],
-                "profile_probes": [
-                    {"probe_id": "render_top_output", "cost_level": "expensive"}
-                ],
+                "profile_probes": [{"probe_id": "render_top_output", "cost_level": "expensive"}],
                 "profile_probe_results": [
                     {"probe_id": "render_top_output", "status": "runtime_contract_present"}
                 ],
@@ -1865,9 +1976,7 @@ def test_evaluate_fails_when_brain_smoke_has_uncontrolled_expensive_probe():
                 "validation_profile": "structural_visual_safe",
                 "missing_expected_ops": [],
                 "blocked_questions": [],
-                "profile_probes": [
-                    {"probe_id": "render_top_output", "cost_level": "expensive"}
-                ],
+                "profile_probes": [{"probe_id": "render_top_output", "cost_level": "expensive"}],
                 "profile_probe_results": [
                     {"probe_id": "render_top_output", "status": "runtime_contract_present"}
                 ],
@@ -2164,9 +2273,7 @@ def test_evaluate_fails_when_brain_live_smoke_has_uncontrolled_expensive_probe()
                 "status": "planned",
                 "validation_profile": "structural_visual_safe",
                 "blocked_questions": [],
-                "profile_probes": [
-                    {"probe_id": "render_top_output", "cost_level": "expensive"}
-                ],
+                "profile_probes": [{"probe_id": "render_top_output", "cost_level": "expensive"}],
                 "profile_probe_results": [
                     {"probe_id": "render_top_output", "status": "runtime_contract_present"}
                 ],
@@ -2214,9 +2321,7 @@ def test_evaluate_passes_with_valid_plugin_surface_payload():
         },
     }
 
-    report = check_release_gates.evaluate(
-        None, None, None, brain_smoke=None, plugin_surface=plugin_surface
-    )
+    report = check_release_gates.evaluate(None, None, None, brain_smoke=None, plugin_surface=plugin_surface)
 
     assert report["summary"]["ok"] is True
     labels = {check["label"]: check for check in report["checks"]}
@@ -2236,9 +2341,7 @@ def test_evaluate_fails_when_plugin_surface_has_hosted_llm_dependency_leaks():
         "hosted_llm_dependency_leaks": ["pyproject.toml dependency openai"],
     }
 
-    report = check_release_gates.evaluate(
-        None, None, None, brain_smoke=None, plugin_surface=plugin_surface
-    )
+    report = check_release_gates.evaluate(None, None, None, brain_smoke=None, plugin_surface=plugin_surface)
 
     assert report["summary"]["ok"] is False
     labels = {check["label"]: check for check in report["checks"]}
@@ -2272,9 +2375,7 @@ def test_evaluate_fails_when_plugin_surface_packaging_is_incomplete():
         },
     }
 
-    report = check_release_gates.evaluate(
-        None, None, None, brain_smoke=None, plugin_surface=plugin_surface
-    )
+    report = check_release_gates.evaluate(None, None, None, brain_smoke=None, plugin_surface=plugin_surface)
 
     assert report["summary"]["ok"] is False
     labels = {check["label"]: check for check in report["checks"]}
@@ -2539,12 +2640,14 @@ def test_evaluate_reports_release_readiness_for_complete_master_plan_payloads(tm
         brain_live_smoke=_complete_brain_live_smoke_payload(),
         operator_availability=_complete_operator_availability_payload(str(stored_path)),
         plugin_surface=_complete_plugin_surface_payload(),
+        param_semantics_risk=_complete_param_semantics_risk_payload(),
         required_reports={
             "brain_eval",
             "brain_smoke",
             "brain_live_smoke",
             "operator_availability",
             "plugin_surface",
+            "param_semantics_risk",
         },
     )
 
@@ -2552,7 +2655,7 @@ def test_evaluate_reports_release_readiness_for_complete_master_plan_payloads(tm
     categories = {category["id"]: category for category in readiness["categories"]}
 
     assert readiness["ok"] is True
-    assert readiness["required_category_count"] == 5
+    assert readiness["required_category_count"] == 6
     assert readiness["missing_required_category_count"] == 0
     assert readiness["failed_category_count"] == 0
     assert categories["brain_eval"]["present"] is True
@@ -2562,6 +2665,7 @@ def test_evaluate_reports_release_readiness_for_complete_master_plan_payloads(tm
     assert categories["brain_live_smoke"]["ok"] is True
     assert categories["operator_availability"]["ok"] is True
     assert categories["plugin_surface"]["ok"] is True
+    assert categories["param_semantics_risk"]["ok"] is True
 
 
 def test_evaluate_release_readiness_marks_required_brain_smoke_missing():

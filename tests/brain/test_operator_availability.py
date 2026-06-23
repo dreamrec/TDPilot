@@ -224,7 +224,13 @@ def test_build_operator_availability_matrix_records_available_and_missing_ops():
     assert matrix.installed_addons == ["POPX"]
     assert matrix.operators["audiofileinCHOP"] == {"family": "CHOP", "available": True}
     assert matrix.operators["audiodeviceinCHOP"] == {"family": "CHOP", "available": False}
-    assert matrix.family_aliases["CHOP"] == ["analyzeCHOP", "audiodeviceinCHOP", "audiofileinCHOP", "mathCHOP", "nullCHOP"]
+    assert matrix.family_aliases["CHOP"] == [
+        "analyzeCHOP",
+        "audiodeviceinCHOP",
+        "audiofileinCHOP",
+        "mathCHOP",
+        "nullCHOP",
+    ]
     assert matrix.unavailable_reasons["audiodeviceinCHOP"] == "missing from live family list"
 
 
@@ -314,9 +320,7 @@ def test_load_operator_substitution_rules_returns_docs_grounded_phase_two_seed_r
     assert realsense.tradeoffs
 
     assert all(
-        source.startswith("https://docs.derivative.ca/")
-        for rule in rules
-        for source in rule.official_sources
+        source.startswith("https://docs.derivative.ca/") for rule in rules for source in rule.official_sources
     )
 
 

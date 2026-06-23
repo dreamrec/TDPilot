@@ -20,6 +20,33 @@ class FakeCardIndex:
         return None
 
 
+class AtlasCardIndex:
+    def __init__(self, cards: list[dict]):
+        self.cards = {str(card["op_type"]): card for card in cards}
+
+    def get_operator(self, op_type: str):
+        return self.cards.get(op_type)
+
+    def search(
+        self,
+        query: str,
+        card_types: list[str] | None = None,
+        family: str | None = None,
+        limit: int = 10,
+    ):
+        tokens = {token for token in query.lower().split() if len(token) > 2}
+        hits = []
+        for card in self.cards.values():
+            text = " ".join(
+                str(card.get(key, "")) for key in ("op_type", "display_name", "summary", "key_concepts")
+            ).lower()
+            if family and str(card.get("family", "")).upper() != family.upper():
+                continue
+            if not tokens or tokens.intersection(text.split()):
+                hits.append(card)
+        return hits[:limit]
+
+
 PHASE_ONE_SEED_OPS = {
     "audiofileinCHOP",
     "analyzeCHOP",
@@ -40,6 +67,41 @@ PHASE_ONE_SEED_OPS = {
     "infoCHOP",
     "errorDAT",
 }
+
+
+def _first_created_target(plan, op_type: str) -> str:
+    for operation in plan.patch_plan.operations:
+        if operation.kind != "create_node" or operation.args.get("op_type") != op_type:
+            continue
+        return f"{operation.target.rstrip('/')}/{operation.args['name']}"
+    raise AssertionError(f"missing created {op_type}")
+
+
+def _set_params_for(plan, target: str) -> dict:
+    for operation in plan.patch_plan.operations:
+        if operation.kind == "set_params" and operation.target == target:
+            return operation.args["params"]
+    raise AssertionError(f"missing set_params for {target}")
+
+
+def _atlas_card(
+    op_type: str,
+    family: str,
+    summary: str,
+    concepts: list[str],
+    *,
+    params: list[str] | None = None,
+) -> dict:
+    return {
+        "card_type": "operator",
+        "op_type": op_type,
+        "family": family,
+        "display_name": op_type,
+        "docs_url": f"https://docs.derivative.ca/{op_type}",
+        "summary": summary,
+        "key_params": [{"name": param} for param in (params or [])],
+        "key_concepts": concepts,
+    }
 
 
 def _promoted_audio_feedback_pattern() -> BrainPattern:
@@ -141,6 +203,7 @@ def _promoted_audio_feedback_pattern() -> BrainPattern:
         ],
         promoted_from_trace="trace-audio-feedback-green",
     )
+
 
 MATERIAL_RENDER_OPS = PHASE_ONE_SEED_OPS | {
     "geometryCOMP",
@@ -562,7 +625,14 @@ async def test_compiler_path_builds_audio_feedback_panel_debug_candidate_graph()
         scripted={
             "families": {
                 "families": {
-                    "CHOP": ["audiofileinCHOP", "analyzeCHOP", "mathCHOP", "nullCHOP", "panelCHOP", "infoCHOP"],
+                    "CHOP": [
+                        "audiofileinCHOP",
+                        "analyzeCHOP",
+                        "mathCHOP",
+                        "nullCHOP",
+                        "panelCHOP",
+                        "infoCHOP",
+                    ],
                     "TOP": ["noiseTOP", "feedbackTOP", "levelTOP", "compositeTOP", "nullTOP"],
                     "COMP": ["baseCOMP", "containerCOMP", "sliderCOMP", "buttonCOMP", "annotateCOMP"],
                     "DAT": ["textDAT", "errorDAT"],
@@ -589,7 +659,9 @@ async def test_compiler_path_builds_audio_feedback_panel_debug_candidate_graph()
     assert plan.candidate_graphs[0].score >= plan.candidate_graphs[1].score
     assert any("device-source-required" in candidate.risk_flags for candidate in plan.candidate_graphs)
     device_candidate = next(
-        candidate for candidate in plan.candidate_graphs if "audio_device_to_analysis_chop" in candidate.pattern_ids
+        candidate
+        for candidate in plan.candidate_graphs
+        if "audio_device_to_analysis_chop" in candidate.pattern_ids
     )
     assert "missing-op:audiodeviceinCHOP" in device_candidate.risk_flags
     candidate = plan.candidate_graphs[0]
@@ -641,6 +713,18 @@ async def test_compiler_path_builds_audio_feedback_panel_debug_candidate_graph()
     ]
     assert panel_reader_params and panel_reader_params[0]["component"] == f"{shell_path}/panel_container"
 
+    audio_analyze_params = _set_params_for(plan, _first_created_target(plan, "analyzeCHOP"))
+    assert audio_analyze_params == {
+        "function": "RMS Power",
+        "allowstart": False,
+        "allowend": False,
+        "valleys": False,
+    }
+    audio_math_params = _set_params_for(plan, _first_created_target(plan, "mathCHOP"))
+    assert audio_math_params == {"fromrange": (0.0, 1.0), "torange": (0.0, 1.0), "interppars": True}
+    feedback_decay_params = _set_params_for(plan, _first_created_target(plan, "levelTOP"))
+    assert feedback_decay_params == {"opacity": 0.92}
+
     debug_info_params = [
         op.args["params"]
         for op in plan.patch_plan.operations
@@ -685,7 +769,10 @@ async def test_compiler_path_builds_audio_feedback_panel_debug_candidate_graph()
     assert "audio_analysis_chop_chain" in annotation.args["text"]
     assert "validation:" in annotation.args["text"]
     assert "notes:" in annotation.args["text"]
-    assert "Place the assembled concept graph inside a deterministic Base COMP shell." in annotation.args["macro_notes"]
+    assert (
+        "Place the assembled concept graph inside a deterministic Base COMP shell."
+        in annotation.args["macro_notes"]
+    )
     assert "Make stable output nodes easy to identify and validate." in annotation.args["macro_notes"]
 
 
@@ -709,7 +796,14 @@ async def test_compiler_path_uses_trace_promoted_patterns_when_memory_is_enabled
         scripted={
             "families": {
                 "families": {
-                    "CHOP": ["audiofileinCHOP", "analyzeCHOP", "mathCHOP", "nullCHOP", "panelCHOP", "infoCHOP"],
+                    "CHOP": [
+                        "audiofileinCHOP",
+                        "analyzeCHOP",
+                        "mathCHOP",
+                        "nullCHOP",
+                        "panelCHOP",
+                        "infoCHOP",
+                    ],
                     "TOP": ["noiseTOP", "feedbackTOP", "levelTOP", "compositeTOP", "nullTOP"],
                     "COMP": ["baseCOMP", "containerCOMP", "sliderCOMP", "buttonCOMP", "annotateCOMP"],
                     "DAT": ["textDAT", "errorDAT"],
@@ -729,10 +823,9 @@ async def test_compiler_path_uses_trace_promoted_patterns_when_memory_is_enabled
     )
 
     assert plan.blocked_questions == []
-    assert plan.candidate_graphs[0].pattern_ids == [
-        "trace_audio_feedback_green_audio_feedback_panel"
-    ]
+    assert plan.candidate_graphs[0].pattern_ids == ["trace_audio_feedback_green_audio_feedback_panel"]
     assert "trace-promoted:trace-audio-feedback-green" in plan.grounding_evidence
+    assert "runtime-validation:trace_audio_feedback_green_audio_feedback_panel:3" in plan.grounding_evidence
     assert "promoted_trace:trace-audio-feedback-green" in plan.candidate_graphs[0].explanation
 
 
@@ -756,7 +849,14 @@ async def test_compiler_path_ignores_trace_promoted_patterns_when_memory_is_disa
         scripted={
             "families": {
                 "families": {
-                    "CHOP": ["audiofileinCHOP", "analyzeCHOP", "mathCHOP", "nullCHOP", "panelCHOP", "infoCHOP"],
+                    "CHOP": [
+                        "audiofileinCHOP",
+                        "analyzeCHOP",
+                        "mathCHOP",
+                        "nullCHOP",
+                        "panelCHOP",
+                        "infoCHOP",
+                    ],
                     "TOP": ["noiseTOP", "feedbackTOP", "levelTOP", "compositeTOP", "nullTOP"],
                     "COMP": ["baseCOMP", "containerCOMP", "sliderCOMP", "buttonCOMP", "annotateCOMP"],
                     "DAT": ["textDAT", "errorDAT"],
@@ -785,7 +885,14 @@ async def test_compiler_path_uses_device_audio_substitution_when_file_audio_miss
         scripted={
             "families": {
                 "families": {
-                    "CHOP": ["audiodeviceinCHOP", "analyzeCHOP", "mathCHOP", "nullCHOP", "panelCHOP", "infoCHOP"],
+                    "CHOP": [
+                        "audiodeviceinCHOP",
+                        "analyzeCHOP",
+                        "mathCHOP",
+                        "nullCHOP",
+                        "panelCHOP",
+                        "infoCHOP",
+                    ],
                     "TOP": ["noiseTOP", "feedbackTOP", "levelTOP", "compositeTOP", "nullTOP"],
                     "COMP": ["baseCOMP", "containerCOMP", "sliderCOMP", "buttonCOMP", "annotateCOMP"],
                     "DAT": ["textDAT", "errorDAT"],
@@ -809,6 +916,8 @@ async def test_compiler_path_uses_device_audio_substitution_when_file_audio_miss
     assert "audio_device_to_analysis_chop" in plan.candidate_graphs[0].pattern_ids
     assert "audiodeviceinCHOP" in plan.patch_plan.required_ops
     assert "audiofileinCHOP" not in plan.patch_plan.required_ops
+    audio_device_params = _set_params_for(plan, _first_created_target(plan, "audiodeviceinCHOP"))
+    assert audio_device_params == {"active": True, "errormissing": True, "format": "stereo"}
     assert "substitution:audiofileinCHOP->audio_device_to_analysis_chop" in plan.grounding_evidence
     assert (
         "substitution-rule:audiofileinCHOP->audiodeviceinCHOP:medium:requires-approval"
@@ -846,7 +955,14 @@ async def test_compiler_path_blocks_unapproved_available_audio_device_substituti
         scripted={
             "families": {
                 "families": {
-                    "CHOP": ["audiodeviceinCHOP", "analyzeCHOP", "mathCHOP", "nullCHOP", "panelCHOP", "infoCHOP"],
+                    "CHOP": [
+                        "audiodeviceinCHOP",
+                        "analyzeCHOP",
+                        "mathCHOP",
+                        "nullCHOP",
+                        "panelCHOP",
+                        "infoCHOP",
+                    ],
                     "TOP": ["noiseTOP", "feedbackTOP", "levelTOP", "compositeTOP", "nullTOP"],
                     "COMP": ["baseCOMP", "containerCOMP", "sliderCOMP", "buttonCOMP", "annotateCOMP"],
                     "DAT": ["textDAT", "errorDAT"],
@@ -870,7 +986,10 @@ async def test_compiler_path_blocks_unapproved_available_audio_device_substituti
     assert "audio_device_to_analysis_chop" in plan.candidate_graphs[0].pattern_ids
     assert "audiodeviceinCHOP" in plan.candidate_graphs[0].required_ops
     assert "audiofileinCHOP" not in plan.candidate_graphs[0].required_ops
-    assert "substitution:audiofileinCHOP->audio_device_to_analysis_chop:pending-approval" in plan.grounding_evidence
+    assert (
+        "substitution:audiofileinCHOP->audio_device_to_analysis_chop:pending-approval"
+        in plan.grounding_evidence
+    )
     assert "substitution-rule:audiofileinCHOP->audiodeviceinCHOP:medium:requires-approval" in (
         plan.grounding_evidence
     )
@@ -951,8 +1070,7 @@ async def test_compiler_path_builds_audio_reactive_glsl_material_render_candidat
         if op.kind == "set_dat_content" and isinstance(op.args.get("generated_code"), dict)
     ]
     generated_by_target = {
-        op.args["generated_code"]["target_param"]: op.args["generated_code"]
-        for op in generated_ops
+        op.args["generated_code"]["target_param"]: op.args["generated_code"] for op in generated_ops
     }
     assert {"vdat", "pdat"}.issubset(generated_by_target)
     assert generated_by_target["vdat"]["target_op"] == f"{shell_path}/glsl"
@@ -1040,9 +1158,7 @@ async def test_compiler_path_builds_audio_reactive_glsl_material_render_with_pan
         for edge in plan.concept_graph.edges
     )
     assembly_ids = {
-        op.args["assembly_macro_id"]
-        for op in plan.patch_plan.operations
-        if op.args.get("assembly_macro_id")
+        op.args["assembly_macro_id"] for op in plan.patch_plan.operations if op.args.get("assembly_macro_id")
     }
     assert "add_user_controls" in assembly_ids
 
@@ -1145,9 +1261,7 @@ async def test_compiler_path_builds_audio_reactive_terrain_material_with_control
     assert geometry_params[0]["sop"] == f"{shell_path}/out_sop"
     assert geometry_params[0]["material"] == f"{shell_path}/glsl"
     assert "add_user_controls" in {
-        op.args["assembly_macro_id"]
-        for op in plan.patch_plan.operations
-        if op.args.get("assembly_macro_id")
+        op.args["assembly_macro_id"] for op in plan.patch_plan.operations if op.args.get("assembly_macro_id")
     }
     assert plan.patch_plan.validation_plan.capture_frames == [f"{shell_path}/out1"]
 
@@ -1183,9 +1297,7 @@ async def test_compiler_path_builds_dat_execute_callback_with_valid_generated_co
     candidate = plan.candidate_graphs[0]
     assert candidate.profiles == ["dat_protocol"]
     assert "dat_execute_table_change_callback" in candidate.pattern_ids
-    assert {"datexecuteDAT", "tableDAT", "textDAT", "nullDAT"}.issubset(
-        set(candidate.required_ops)
-    )
+    assert {"datexecuteDAT", "tableDAT", "textDAT", "nullDAT"}.issubset(set(candidate.required_ops))
     assert "callback_guard_present" in candidate.validation_needs
 
     generated_ops = [
@@ -1424,6 +1536,147 @@ async def test_compiler_path_blocks_ndi_post_fx_without_declared_network_source(
 
 
 @pytest.mark.asyncio
+async def test_open_prompt_atlas_ignores_ndi_docs_distractor_for_procedural_top():
+    cards = [
+        _atlas_card(
+            "ndiinTOP",
+            "TOP",
+            "NDI In TOP receives network video input; distractor device source docs.",
+            ["ndi", "network", "video", "source"],
+            params=["source"],
+        ),
+        _atlas_card(
+            "noiseTOP",
+            "TOP",
+            "Procedural noise texture source for a stable texture wash.",
+            ["procedural", "texture", "source"],
+            params=["period"],
+        ),
+        _atlas_card(
+            "levelTOP",
+            "TOP",
+            "Level TOP shapes brightness for a texture wash.",
+            ["brightness", "level", "process"],
+            params=["brightness1"],
+        ),
+        _atlas_card(
+            "nullTOP",
+            "TOP",
+            "Stable TOP output for final texture.",
+            ["stable", "output", "texture"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "TOP": ["ndiinTOP", "noiseTOP", "levelTOP", "nullTOP"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent="procedural texture wash with stable TOP output while NDI In TOP docs are present",
+        target_root="/project1",
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.missing_facts == []
+    assert plan.concept_graph.profile == "generic"
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:synthesized:top_card_chain"]
+    assert candidate.required_ops == ["noiseTOP", "levelTOP", "nullTOP"]
+    assert "ndiinTOP" not in candidate.required_ops
+    assert "missing_device_source:ndi_source" not in plan.missing_facts
+    assert "atlas-synthesis:source:noiseTOP" in plan.grounding_evidence
+
+
+@pytest.mark.asyncio
+async def test_open_prompt_atlas_ignores_audio_docs_distractor_for_procedural_top():
+    cards = [
+        _atlas_card(
+            "audiofileinCHOP",
+            "CHOP",
+            "Audio File In CHOP plays sound files; distractor audio source docs.",
+            ["audio", "sound", "source"],
+            params=["file"],
+        ),
+        _atlas_card(
+            "analyzeCHOP",
+            "CHOP",
+            "Analyze CHOP measures amplitude of audio channels.",
+            ["audio", "analyze", "amplitude"],
+            params=["function"],
+        ),
+        _atlas_card(
+            "mathCHOP",
+            "CHOP",
+            "Math CHOP normalizes audio control ranges.",
+            ["audio", "normalize", "process"],
+            params=["fromrange", "torange"],
+        ),
+        _atlas_card(
+            "nullCHOP",
+            "CHOP",
+            "Stable CHOP output for audio control.",
+            ["stable", "output", "audio"],
+        ),
+        _atlas_card(
+            "noiseTOP",
+            "TOP",
+            "Procedural noise texture source for a stable texture wash.",
+            ["procedural", "texture", "source"],
+            params=["period"],
+        ),
+        _atlas_card(
+            "levelTOP",
+            "TOP",
+            "Level TOP shapes brightness for a texture wash.",
+            ["brightness", "level", "process"],
+            params=["brightness1"],
+        ),
+        _atlas_card(
+            "nullTOP",
+            "TOP",
+            "Stable TOP output for final texture.",
+            ["stable", "output", "texture"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "CHOP": ["audiofileinCHOP", "analyzeCHOP", "mathCHOP", "nullCHOP"],
+                    "TOP": ["noiseTOP", "levelTOP", "nullTOP"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent="procedural texture wash with stable TOP output while Audio File In CHOP docs are present",
+        target_root="/project1",
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.missing_facts == []
+    assert plan.concept_graph.profile == "generic"
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:synthesized:top_card_chain"]
+    assert candidate.required_ops == ["noiseTOP", "levelTOP", "nullTOP"]
+    assert "audiofileinCHOP" not in candidate.required_ops
+    assert "atlas-synthesis:source:noiseTOP" in plan.grounding_evidence
+    assert "profile:audio_reactive" not in plan.grounding_evidence
+
+
+@pytest.mark.asyncio
 async def test_compiler_path_blocks_osc_dat_protocol_without_declared_network_source():
     client = FakeTDClient(
         scripted={
@@ -1495,10 +1748,10 @@ async def test_compiler_path_builds_osc_dat_protocol_candidate_graph():
     assert "table" in create_names
     assert "out_dat" in create_names
     assert "debug_notes" in create_names
+    osc_params = _set_params_for(plan, _first_created_target(plan, "oscinDAT"))
+    assert osc_params == {"active": True, "protocol": "msging", "clamp": True, "maxlines": 256}
     connect_pairs = [
-        (op.args["from"], op.args["to"])
-        for op in plan.patch_plan.operations
-        if op.kind == "connect"
+        (op.args["from"], op.args["to"]) for op in plan.patch_plan.operations if op.kind == "connect"
     ]
     assert (f"{shell_path}/oscin", f"{shell_path}/out_dat") in connect_pairs
 
@@ -1575,10 +1828,10 @@ async def test_compiler_path_builds_websocket_dat_protocol_candidate_graph():
     assert "table" in create_names
     assert "out_dat" in create_names
     assert "debug_notes" in create_names
+    websocket_params = _set_params_for(plan, _first_created_target(plan, "websocketDAT"))
+    assert websocket_params == {"active": True, "clamp": True, "maxlines": 256}
     connect_pairs = [
-        (op.args["from"], op.args["to"])
-        for op in plan.patch_plan.operations
-        if op.kind == "connect"
+        (op.args["from"], op.args["to"]) for op in plan.patch_plan.operations if op.kind == "connect"
     ]
     assert (f"{shell_path}/websocket", f"{shell_path}/out_dat") in connect_pairs
 
@@ -1656,10 +1909,10 @@ async def test_compiler_path_builds_mqtt_dat_protocol_candidate_graph():
     assert "table" in create_names
     assert "out_dat" in create_names
     assert "debug_notes" in create_names
+    mqtt_params = _set_params_for(plan, _first_created_target(plan, "mqttclientDAT"))
+    assert mqtt_params == {"active": True, "reconnect": True, "clamp": True, "maxlines": 256}
     connect_pairs = [
-        (op.args["from"], op.args["to"])
-        for op in plan.patch_plan.operations
-        if op.kind == "connect"
+        (op.args["from"], op.args["to"]) for op in plan.patch_plan.operations if op.kind == "connect"
     ]
     assert (f"{shell_path}/mqttclient", f"{shell_path}/out_dat") in connect_pairs
 
@@ -1737,10 +1990,16 @@ async def test_compiler_path_builds_udp_dat_protocol_candidate_graph():
     assert "table" in create_names
     assert "out_dat" in create_names
     assert "debug_notes" in create_names
+    udp_params = _set_params_for(plan, _first_created_target(plan, "udpinDAT"))
+    assert udp_params == {
+        "active": True,
+        "protocol": "msging",
+        "format": "permessage",
+        "clamp": True,
+        "maxlines": 256,
+    }
     connect_pairs = [
-        (op.args["from"], op.args["to"])
-        for op in plan.patch_plan.operations
-        if op.kind == "connect"
+        (op.args["from"], op.args["to"]) for op in plan.patch_plan.operations if op.kind == "connect"
     ]
     assert (f"{shell_path}/udpin", f"{shell_path}/out_dat") in connect_pairs
 
@@ -1798,14 +2057,14 @@ async def test_compiler_path_builds_dat_table_render_switch_candidate_graph():
     assert plan.patch_plan.validation_plan.capture_frames == [f"{shell_path}/out1"]
 
     connect_pairs = [
-        (op.args["from"], op.args["to"])
-        for op in plan.patch_plan.operations
-        if op.kind == "connect"
+        (op.args["from"], op.args["to"]) for op in plan.patch_plan.operations if op.kind == "connect"
     ]
     assert (f"{shell_path}/constant", f"{shell_path}/switch") in connect_pairs
     assert (f"{shell_path}/noise", f"{shell_path}/switch") in connect_pairs
     assert (f"{shell_path}/switch", f"{shell_path}/out1") in connect_pairs
-    assert not any(pair[0] == f"{shell_path}/table" or pair[1] == f"{shell_path}/table" for pair in connect_pairs)
+    assert not any(
+        pair[0] == f"{shell_path}/table" or pair[1] == f"{shell_path}/table" for pair in connect_pairs
+    )
     assert any(
         edge.kind == "reference" and edge.source == "switch_table" and edge.target == "render_switch"
         for edge in plan.concept_graph.edges
@@ -1826,11 +2085,7 @@ async def test_compiler_path_builds_dat_table_render_switch_candidate_graph():
         if op.kind == "set_params" and op.target == f"{shell_path}/switch"
     ]
     assert switch_params == [
-        {
-            "index": {
-                "expr": "min(1, max(0, int(op('/project1/tdpilot_concept/table')[1, 'selected_index'])))"
-            }
-        }
+        {"index": {"expr": "min(1, max(0, int(op('/project1/tdpilot_concept/table')[1, 'selected_index'])))"}}
     ]
 
 
@@ -1889,12 +2144,1538 @@ async def test_compiler_path_builds_ndi_post_fx_output_candidate_graph():
     assert debug_notes_ops[0].args["assembly_macro_id"] == "add_debug_panel"
     assert plan.patch_plan.validation_plan.capture_frames == [f"{shell_path}/out1"]
     connect_pairs = [
-        (op.args["from"], op.args["to"])
-        for op in plan.patch_plan.operations
-        if op.kind == "connect"
+        (op.args["from"], op.args["to"]) for op in plan.patch_plan.operations if op.kind == "connect"
     ]
     assert (f"{shell_path}/ndiin", f"{shell_path}/level") in connect_pairs
     assert (f"{shell_path}/level", f"{shell_path}/out1") in connect_pairs
+
+
+@pytest.mark.asyncio
+async def test_open_prompt_atlas_synthesizes_typed_sop_render_preview_graph():
+    cards = [
+        _atlas_card(
+            "gridSOP",
+            "SOP",
+            "SOP mesh source grid for a surface that should become a visual texture output.",
+            ["sop", "mesh", "surface", "source"],
+            params=["rows", "cols"],
+        ),
+        _atlas_card(
+            "noiseSOP",
+            "SOP",
+            "Noise SOP shapes and displaces the mesh surface before rendering.",
+            ["surface", "noise", "process", "shaping"],
+            params=["amp"],
+        ),
+        _atlas_card(
+            "nullSOP",
+            "SOP",
+            "Stable SOP output for downstream render references.",
+            ["stable", "output", "sop"],
+        ),
+        _atlas_card(
+            "geometryCOMP",
+            "COMP",
+            "Geometry COMP references a SOP output for TOP rendering.",
+            ["geometry", "sop", "render"],
+            params=["sop"],
+        ),
+        _atlas_card(
+            "cameraCOMP",
+            "COMP",
+            "Camera COMP frames the render output.",
+            ["camera", "render"],
+        ),
+        _atlas_card(
+            "lightCOMP",
+            "COMP",
+            "Light COMP provides illumination for the rendered SOP surface.",
+            ["light", "render"],
+        ),
+        _atlas_card(
+            "renderTOP",
+            "TOP",
+            "Render TOP creates a visual texture output from geometry, camera, and lights.",
+            ["top", "render", "texture", "visual"],
+            params=["geometry", "camera", "lights"],
+        ),
+        _atlas_card(
+            "nullTOP",
+            "TOP",
+            "Stable TOP output for the final visual texture.",
+            ["stable", "output", "texture"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "SOP": ["gridSOP", "noiseSOP", "nullSOP"],
+                    "COMP": ["geometryCOMP", "cameraCOMP", "lightCOMP"],
+                    "TOP": ["renderTOP", "nullTOP"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent="SOP mesh surface becomes a visual texture output with noise shaping",
+        target_root="/project1",
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.missing_facts == []
+    assert plan.concept_graph.profile == "generic"
+    assert plan.candidate_graphs
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:synthesized:typed_role_graph_sop_render_preview_top_card_chain"]
+    assert {
+        "atlas-synthesis:typed-role-graph",
+        "atlas-synthesis:role-graph:source->preview->output",
+        "atlas-synthesis:multi-domain:sop-to-render-top-preview",
+        "atlas-synthesis:family:sop+comp+top",
+    }.issubset(set(plan.grounding_evidence))
+    assert {
+        "gridSOP",
+        "noiseSOP",
+        "nullSOP",
+        "geometryCOMP",
+        "cameraCOMP",
+        "lightCOMP",
+        "renderTOP",
+        "nullTOP",
+    } == set(candidate.required_ops)
+    assert "soptoTOP" not in candidate.required_ops
+
+    geometry_params = _set_params_for(plan, "/project1/geometry")
+    render_params = _set_params_for(plan, "/project1/render")
+    assert geometry_params == {"sop": "/project1/out_sop"}
+    assert render_params == {
+        "geometry": "/project1/geometry",
+        "camera": "/project1/camera",
+        "lights": "/project1/light",
+    }
+    assert plan.patch_plan.validation_plan.capture_frames == ["/project1/out1"]
+
+    connect_pairs = [
+        (op.args["from"], op.args["to"]) for op in plan.patch_plan.operations if op.kind == "connect"
+    ]
+    assert ("/project1/grid", "/project1/noise") in connect_pairs
+    assert ("/project1/noise", "/project1/out_sop") in connect_pairs
+    assert ("/project1/render", "/project1/out1") in connect_pairs
+    assert ("/project1/out_sop", "/project1/render") not in connect_pairs
+
+
+@pytest.mark.asyncio
+async def test_open_prompt_atlas_synthesizes_chop_export_bound_sop_render_preview():
+    cards = [
+        _atlas_card(
+            "lfoCHOP",
+            "CHOP",
+            "Oscillator CHOP source for repeating control signals and modulation.",
+            ["oscillator", "control", "source"],
+            params=["frequency", "amp", "channelname"],
+        ),
+        _atlas_card(
+            "mathCHOP",
+            "CHOP",
+            "Scales and remaps CHOP channels for terrain displacement ranges.",
+            ["scale", "control", "range", "process"],
+            params=["fromrange", "torange"],
+        ),
+        _atlas_card(
+            "nullCHOP",
+            "CHOP",
+            "Stable CHOP output for exported modulation control channels.",
+            ["stable", "output", "export"],
+            params=["exportmethod", "autoexportroot", "exporttable"],
+        ),
+        _atlas_card(
+            "gridSOP",
+            "SOP",
+            "SOP mesh source grid for a terrain surface.",
+            ["sop", "mesh", "terrain", "source"],
+            params=["rows", "cols"],
+        ),
+        _atlas_card(
+            "noiseSOP",
+            "SOP",
+            "Noise SOP displaces the terrain surface with an amplitude parameter.",
+            ["surface", "noise", "displacement", "process"],
+            params=["amp"],
+        ),
+        _atlas_card(
+            "nullSOP",
+            "SOP",
+            "Stable SOP output for downstream render references.",
+            ["stable", "output", "sop"],
+        ),
+        _atlas_card(
+            "geometryCOMP",
+            "COMP",
+            "Geometry COMP references a SOP output for TOP rendering.",
+            ["geometry", "sop", "render"],
+            params=["sop"],
+        ),
+        _atlas_card(
+            "cameraCOMP",
+            "COMP",
+            "Camera COMP frames the render output.",
+            ["camera", "render"],
+        ),
+        _atlas_card(
+            "lightCOMP",
+            "COMP",
+            "Light COMP provides illumination for the rendered SOP surface.",
+            ["light", "render"],
+        ),
+        _atlas_card(
+            "renderTOP",
+            "TOP",
+            "Render TOP creates a visual texture output from geometry, camera, and lights.",
+            ["top", "render", "texture", "visual"],
+            params=["geometry", "camera", "lights"],
+        ),
+        _atlas_card(
+            "nullTOP",
+            "TOP",
+            "Stable TOP output for the final visual texture.",
+            ["stable", "output", "texture"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "CHOP": ["lfoCHOP", "mathCHOP", "nullCHOP"],
+                    "SOP": ["gridSOP", "noiseSOP", "nullSOP"],
+                    "COMP": ["geometryCOMP", "cameraCOMP", "lightCOMP"],
+                    "TOP": ["renderTOP", "nullTOP"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent="LFO export binding drives terrain SOP displacement and renders a visual TOP preview",
+        target_root="/project1",
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.missing_facts == []
+    assert plan.concept_graph.profile == "generic"
+    assert plan.candidate_graphs
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:synthesized:chop_export_bound_sop_render_preview_card_chain"]
+    assert {
+        "atlas-synthesis:typed-role-graph",
+        "atlas-synthesis:typed-role-path-search:v1:CHOP:control->process->output",
+        "atlas-synthesis:typed-role-path-search:v1:SOP:source->process->output",
+        "atlas-synthesis:role-graph:control->source->preview->output",
+        "atlas-synthesis:multi-domain:chop-export-to-sop-render-top-preview",
+        "atlas-synthesis:family:chop+sop+comp+top",
+        "atlas-synthesis:chop-export-binding:path-parameter",
+        "atlas-synthesis:binding:out_chop->noiseSOP.amp",
+        "atlas-synthesis:sop-control-target:noiseSOP.amp",
+    }.issubset(set(plan.grounding_evidence))
+    assert {
+        "lfoCHOP",
+        "mathCHOP",
+        "nullCHOP",
+        "gridSOP",
+        "noiseSOP",
+        "nullSOP",
+        "geometryCOMP",
+        "cameraCOMP",
+        "lightCOMP",
+        "renderTOP",
+        "nullTOP",
+    } == set(candidate.required_ops)
+    assert "export-flag-requires-review" in candidate.risk_flags
+
+    assert _set_params_for(plan, "/project1/lfo") == {"channelname": "/project1/noise:amp"}
+    assert _set_params_for(plan, "/project1/out_chop") == {"exportmethod": "Channel Name is Path:Parameter"}
+    assert _set_params_for(plan, "/project1/geometry") == {"sop": "/project1/out_sop"}
+    assert _set_params_for(plan, "/project1/render") == {
+        "geometry": "/project1/geometry",
+        "camera": "/project1/camera",
+        "lights": "/project1/light",
+    }
+
+    noise_param_sets = [
+        operation.args["params"]
+        for operation in plan.patch_plan.operations
+        if operation.kind == "set_params" and operation.target == "/project1/noise"
+    ]
+    assert noise_param_sets == []
+
+    connect_pairs = [
+        (op.args["from"], op.args["to"]) for op in plan.patch_plan.operations if op.kind == "connect"
+    ]
+    assert ("/project1/lfo", "/project1/math") in connect_pairs
+    assert ("/project1/math", "/project1/out_chop") in connect_pairs
+    assert ("/project1/grid", "/project1/noise") in connect_pairs
+    assert ("/project1/noise", "/project1/out_sop") in connect_pairs
+    assert ("/project1/render", "/project1/out1") in connect_pairs
+    assert ("/project1/out_chop", "/project1/noise") not in connect_pairs
+
+
+@pytest.mark.asyncio
+async def test_open_prompt_atlas_searches_messy_chop_export_sop_binding_candidates():
+    cards = [
+        _atlas_card(
+            "noiseCHOP",
+            "CHOP",
+            "Noise CHOP random modulation source distractor for control channels.",
+            ["random", "control", "source"],
+            params=["amp", "period", "channelname"],
+        ),
+        _atlas_card(
+            "lfoCHOP",
+            "CHOP",
+            "LFO CHOP oscillator source for deliberate export binding modulation.",
+            ["lfo", "oscillator", "control", "source"],
+            params=["frequency", "amp", "channelname"],
+        ),
+        _atlas_card(
+            "lagCHOP",
+            "CHOP",
+            "Lag CHOP smoothing detour for control channels.",
+            ["smooth", "control", "process"],
+            params=["lag1"],
+        ),
+        _atlas_card(
+            "mathCHOP",
+            "CHOP",
+            "Math CHOP scales exported terrain displacement control ranges.",
+            ["scale", "control", "range", "process"],
+            params=["fromrange", "torange"],
+        ),
+        _atlas_card(
+            "nullCHOP",
+            "CHOP",
+            "Stable CHOP output for path-parameter export binding.",
+            ["stable", "output", "export"],
+            params=["exportmethod", "autoexportroot"],
+        ),
+        _atlas_card(
+            "gridSOP",
+            "SOP",
+            "SOP mesh source grid for a terrain surface.",
+            ["sop", "mesh", "terrain", "source"],
+            params=["rows", "cols"],
+        ),
+        _atlas_card(
+            "transformSOP",
+            "SOP",
+            "Transform SOP layout distractor with translate parameters for camera framing.",
+            ["layout", "camera", "transform", "process"],
+            params=["tx", "ty", "tz"],
+        ),
+        _atlas_card(
+            "noiseSOP",
+            "SOP",
+            "Noise SOP adds terrain displacement amplitude before rendering.",
+            ["terrain", "noise", "displacement", "process"],
+            params=["amp", "height"],
+        ),
+        _atlas_card(
+            "nullSOP",
+            "SOP",
+            "Stable SOP output for downstream render references.",
+            ["stable", "output", "sop"],
+        ),
+        _atlas_card(
+            "geometryCOMP",
+            "COMP",
+            "Geometry COMP references a SOP output for TOP rendering.",
+            ["geometry", "sop", "render"],
+            params=["sop"],
+        ),
+        _atlas_card(
+            "cameraCOMP",
+            "COMP",
+            "Camera COMP frames the render output.",
+            ["camera", "render"],
+        ),
+        _atlas_card(
+            "lightCOMP",
+            "COMP",
+            "Light COMP provides illumination for the rendered SOP surface.",
+            ["light", "render"],
+        ),
+        _atlas_card(
+            "renderTOP",
+            "TOP",
+            "Render TOP creates a visual texture output from geometry, camera, and lights.",
+            ["top", "render", "texture", "visual"],
+            params=["geometry", "camera", "lights"],
+        ),
+        _atlas_card(
+            "nullTOP",
+            "TOP",
+            "Stable TOP output for the final visual texture.",
+            ["stable", "output", "texture"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "CHOP": ["noiseCHOP", "lfoCHOP", "lagCHOP", "mathCHOP", "nullCHOP"],
+                    "SOP": ["gridSOP", "transformSOP", "noiseSOP", "nullSOP"],
+                    "COMP": ["geometryCOMP", "cameraCOMP", "lightCOMP"],
+                    "TOP": ["renderTOP", "nullTOP"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent=(
+            "LFO export binding drives terrain noise SOP amplitude and renders a "
+            "visual TOP preview while random noise and transform layout cards are present"
+        ),
+        target_root="/project1",
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.missing_facts == []
+    assert plan.candidate_graphs
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:synthesized:chop_export_bound_sop_render_preview_card_chain"]
+    assert candidate.required_ops == [
+        "lfoCHOP",
+        "mathCHOP",
+        "nullCHOP",
+        "gridSOP",
+        "noiseSOP",
+        "nullSOP",
+        "geometryCOMP",
+        "cameraCOMP",
+        "lightCOMP",
+        "renderTOP",
+        "nullTOP",
+    ]
+
+    evidence = set(plan.grounding_evidence)
+    assert "atlas-synthesis:typed-role-graph-search:v1" in evidence
+    assert "atlas-synthesis:typed-role-path-search:v1:CHOP:control->process->output" in evidence
+    assert "atlas-synthesis:typed-role-path-search:v1:SOP:source->process->output" in evidence
+    assert "atlas-synthesis:role-graph-search:CHOP:control->process->output" in evidence
+    assert "atlas-synthesis:role-graph-selected:CHOP:1:lfoCHOP>mathCHOP>nullCHOP" in evidence
+    assert "atlas-synthesis:control-branch-exportable:true" in evidence
+    assert any(
+        marker.startswith("atlas-synthesis:role-graph-candidate:CHOP:")
+        and ":alternative:noiseCHOP>mathCHOP>nullCHOP:" in marker
+        for marker in evidence
+    )
+    assert "atlas-synthesis:role-node:CHOP:control:lfoCHOP" in evidence
+    assert "atlas-synthesis:role-node:CHOP:output:nullCHOP" in evidence
+    assert "atlas-synthesis:sop-control-target-selected:noiseSOP.amp" in evidence
+    assert "atlas-synthesis:sop-control-target-candidate-count:2" in evidence
+    assert any(
+        marker.startswith("atlas-synthesis:sop-control-target-candidate:")
+        and ":alternative:noiseSOP.height:" in marker
+        for marker in evidence
+    )
+
+    assert _set_params_for(plan, "/project1/lfo") == {"channelname": "/project1/noise:amp"}
+    assert _set_params_for(plan, "/project1/out_chop") == {"exportmethod": "Channel Name is Path:Parameter"}
+    assert _set_params_for(plan, "/project1/geometry") == {"sop": "/project1/out_sop"}
+    noise_param_sets = [
+        operation.args["params"]
+        for operation in plan.patch_plan.operations
+        if operation.kind == "set_params" and operation.target == "/project1/noise"
+    ]
+    assert noise_param_sets == []
+
+
+@pytest.mark.asyncio
+async def test_open_prompt_atlas_synthesizes_chop_export_path_parameter_binding():
+    cards = [
+        _atlas_card(
+            "lfoCHOP",
+            "CHOP",
+            "Oscillator CHOP source for repeating control signals and modulation.",
+            ["oscillator", "control", "source"],
+            params=["frequency", "amp", "channelname"],
+        ),
+        _atlas_card(
+            "mathCHOP",
+            "CHOP",
+            "Scales and remaps CHOP channels for brightness control ranges.",
+            ["scale", "control", "range", "process"],
+            params=["fromrange", "torange"],
+        ),
+        _atlas_card(
+            "nullCHOP",
+            "CHOP",
+            "Stable CHOP output for exported modulation control channels.",
+            ["stable", "output", "export"],
+            params=["exportmethod", "autoexportroot", "exporttable"],
+        ),
+        _atlas_card(
+            "noiseTOP",
+            "TOP",
+            "Procedural texture source for a brightness wash visual.",
+            ["procedural", "texture", "source"],
+            params=["period", "harmonics"],
+        ),
+        _atlas_card(
+            "levelTOP",
+            "TOP",
+            "Brightness and level adjustment stage for a procedural texture.",
+            ["brightness", "level", "visual", "process"],
+            params=["brightness1", "opacity"],
+        ),
+        _atlas_card(
+            "nullTOP",
+            "TOP",
+            "Stable TOP output for the final controlled texture.",
+            ["stable", "output", "texture"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "CHOP": ["lfoCHOP", "mathCHOP", "nullCHOP"],
+                    "TOP": ["noiseTOP", "levelTOP", "nullTOP"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent="CHOP export binding overrides level brightness over a procedural texture output",
+        target_root="/project1",
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.missing_facts == []
+    assert plan.concept_graph.profile == "generic"
+    assert plan.candidate_graphs
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:synthesized:chop_export_bound_top_card_chain"]
+    assert {
+        "atlas-synthesis:chop-export-binding:path-parameter",
+        "atlas-synthesis:binding-method:Channel Name is Path:Parameter",
+        "atlas-synthesis:binding:out_chop->levelTOP.brightness1",
+        "atlas-synthesis:channelname-source:lfoCHOP",
+        "atlas-synthesis:exportmethod-output:nullCHOP",
+        "atlas-synthesis:typed-role-path-search:v1:CHOP:control->process->output",
+        "atlas-synthesis:typed-role-path-search:v1:TOP:source->process->output",
+        "atlas-synthesis:role-graph-search:TOP:source->process->output",
+        "atlas-synthesis:role-graph-selected:TOP:1:noiseTOP>levelTOP>nullTOP",
+    }.issubset(set(plan.grounding_evidence))
+    assert candidate.validation_needs == [
+        "output_node_present",
+        "control_output",
+        "chop_export_method_readback",
+        "export_flag_review",
+        "top_output_present",
+        "cheap_visual_metrics",
+    ]
+    assert "export-flag-requires-review" in candidate.risk_flags
+
+    lfo_params = _set_params_for(plan, "/project1/lfo")
+    out_chop_params = _set_params_for(plan, "/project1/out_chop")
+    assert lfo_params == {"channelname": "/project1/level:brightness1"}
+    assert out_chop_params == {"exportmethod": "Channel Name is Path:Parameter"}
+
+    level_param_sets = [
+        operation.args["params"]
+        for operation in plan.patch_plan.operations
+        if operation.kind == "set_params" and operation.target == "/project1/level"
+    ]
+    assert level_param_sets == []
+
+    connect_pairs = [
+        (op.args["from"], op.args["to"]) for op in plan.patch_plan.operations if op.kind == "connect"
+    ]
+    assert ("/project1/lfo", "/project1/math") in connect_pairs
+    assert ("/project1/math", "/project1/out_chop") in connect_pairs
+    assert ("/project1/noise", "/project1/level") in connect_pairs
+    assert ("/project1/level", "/project1/out1") in connect_pairs
+    assert ("/project1/out_chop", "/project1/level") not in connect_pairs
+
+
+@pytest.mark.asyncio
+async def test_open_prompt_atlas_searches_messy_chop_controlled_top_candidates():
+    cards = [
+        _atlas_card(
+            "waveCHOP",
+            "CHOP",
+            "Wave CHOP oscillator source distractor for generic control signals.",
+            ["wave", "oscillator", "control", "source"],
+            params=["wavetype", "period", "amp", "channelname"],
+        ),
+        _atlas_card(
+            "lfoCHOP",
+            "CHOP",
+            "LFO CHOP source for deliberate brightness modulation control.",
+            ["lfo", "oscillator", "control", "source"],
+            params=["frequency", "amp", "channelname"],
+        ),
+        _atlas_card(
+            "lagCHOP",
+            "CHOP",
+            "Lag CHOP smoothing detour for control channels.",
+            ["smooth", "control", "process"],
+            params=["lag1"],
+        ),
+        _atlas_card(
+            "mathCHOP",
+            "CHOP",
+            "Math CHOP scales LFO brightness control ranges.",
+            ["scale", "brightness", "control", "process"],
+            params=["fromrange", "torange"],
+        ),
+        _atlas_card(
+            "nullCHOP",
+            "CHOP",
+            "Stable CHOP output for modulation control channels.",
+            ["stable", "output", "control"],
+        ),
+        _atlas_card(
+            "noiseTOP",
+            "TOP",
+            "Procedural noise texture source for the brightness wash visual.",
+            ["procedural", "noise", "texture", "source"],
+            params=["period", "harmonics"],
+        ),
+        _atlas_card(
+            "transformTOP",
+            "TOP",
+            "Transform TOP layout distractor for texture placement.",
+            ["layout", "transform", "process"],
+            params=["tx", "ty"],
+        ),
+        _atlas_card(
+            "levelTOP",
+            "TOP",
+            "Level TOP brightness stage for the procedural texture.",
+            ["brightness", "level", "visual", "process"],
+            params=["brightness1", "opacity"],
+        ),
+        _atlas_card(
+            "nullTOP",
+            "TOP",
+            "Stable TOP output for the final controlled texture.",
+            ["stable", "output", "texture"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "CHOP": ["waveCHOP", "lfoCHOP", "lagCHOP", "mathCHOP", "nullCHOP"],
+                    "TOP": ["noiseTOP", "transformTOP", "levelTOP", "nullTOP"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent=(
+            "LFO controlled brightness wash over a procedural noise texture output "
+            "while wave and transform cards are present"
+        ),
+        target_root="/project1",
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.missing_facts == []
+    assert plan.candidate_graphs
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:synthesized:chop_controlled_top_card_chain"]
+    assert "operator-intent:chop_controlled_texture" in candidate.grounding_evidence
+    assert "atlas_intent:chop_controlled_texture" in candidate.explanation
+    assert candidate.required_ops == [
+        "lfoCHOP",
+        "mathCHOP",
+        "nullCHOP",
+        "noiseTOP",
+        "levelTOP",
+        "nullTOP",
+    ]
+
+    evidence = set(plan.grounding_evidence)
+    assert "atlas-synthesis:typed-role-graph-search:v1" in evidence
+    assert "atlas-synthesis:typed-role-path-search:v1:CHOP:control->process->output" in evidence
+    assert "atlas-synthesis:typed-role-path-search:v1:TOP:source->process->output" in evidence
+    assert "atlas-synthesis:role-graph-search:CHOP:control->process->output" in evidence
+    assert "atlas-synthesis:role-graph-selected:CHOP:1:lfoCHOP>mathCHOP>nullCHOP" in evidence
+    assert "atlas-synthesis:role-node:CHOP:control:lfoCHOP" in evidence
+    assert "atlas-synthesis:role-node:CHOP:output:nullCHOP" in evidence
+    assert any(
+        marker.startswith("atlas-synthesis:role-graph-candidate:CHOP:")
+        and ":alternative:waveCHOP>mathCHOP>nullCHOP:" in marker
+        for marker in evidence
+    )
+    assert "atlas-synthesis:role-graph-search:TOP:source->process->output" in evidence
+    assert "atlas-synthesis:role-graph-selected:TOP:1:noiseTOP>levelTOP>nullTOP" in evidence
+    assert "atlas-synthesis:role-node:TOP:source:noiseTOP" in evidence
+    assert "atlas-synthesis:role-node:TOP:process:levelTOP" in evidence
+    assert any(
+        marker.startswith("atlas-synthesis:role-graph-candidate:TOP:")
+        and ":alternative:noiseTOP>transformTOP>nullTOP:" in marker
+        for marker in evidence
+    )
+    assert "atlas-synthesis:binding:out_chop->levelTOP.brightness1" in evidence
+
+    level_params = _set_params_for(plan, "/project1/level")
+    assert level_params == {"brightness1": {"expr": "op('/project1/out_chop')[0]"}}
+    connect_pairs = [
+        (op.args["from"], op.args["to"]) for op in plan.patch_plan.operations if op.kind == "connect"
+    ]
+    assert ("/project1/lfo", "/project1/math") in connect_pairs
+    assert ("/project1/math", "/project1/out_chop") in connect_pairs
+    assert ("/project1/noise", "/project1/level") in connect_pairs
+    assert ("/project1/level", "/project1/out1") in connect_pairs
+    assert ("/project1/out_chop", "/project1/level") not in connect_pairs
+
+
+@pytest.mark.asyncio
+async def test_open_prompt_atlas_ignores_midi_docs_distractor_for_chop_controlled_top():
+    cards = [
+        _atlas_card(
+            "midiinCHOP",
+            "CHOP",
+            "MIDI In CHOP receives controller note and CC channels; distractor device source docs.",
+            ["midi", "controller", "source"],
+            params=["device", "source"],
+        ),
+        _atlas_card(
+            "lfoCHOP",
+            "CHOP",
+            "LFO CHOP oscillator source for repeating brightness modulation.",
+            ["lfo", "oscillator", "control", "source"],
+            params=["frequency", "amp"],
+        ),
+        _atlas_card(
+            "mathCHOP",
+            "CHOP",
+            "Math CHOP scales oscillator channels for brightness control ranges.",
+            ["scale", "control", "process"],
+            params=["fromrange", "torange"],
+        ),
+        _atlas_card(
+            "nullCHOP",
+            "CHOP",
+            "Stable CHOP output for modulation control channels.",
+            ["stable", "output", "control"],
+        ),
+        _atlas_card(
+            "noiseTOP",
+            "TOP",
+            "Procedural noise texture source for brightness wash visual.",
+            ["procedural", "texture", "source"],
+            params=["period"],
+        ),
+        _atlas_card(
+            "levelTOP",
+            "TOP",
+            "Level TOP brightness stage for procedural texture.",
+            ["brightness", "level", "process"],
+            params=["brightness1"],
+        ),
+        _atlas_card(
+            "nullTOP",
+            "TOP",
+            "Stable TOP output for final texture.",
+            ["stable", "output", "texture"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "CHOP": ["midiinCHOP", "lfoCHOP", "mathCHOP", "nullCHOP"],
+                    "TOP": ["noiseTOP", "levelTOP", "nullTOP"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent=(
+            "oscillator controlled brightness wash over procedural texture with final TOP output "
+            "while MIDI In CHOP docs are present"
+        ),
+        target_root="/project1",
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.missing_facts == []
+    assert plan.concept_graph.profile == "generic"
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:synthesized:chop_controlled_top_card_chain"]
+    assert candidate.required_ops == [
+        "lfoCHOP",
+        "mathCHOP",
+        "nullCHOP",
+        "noiseTOP",
+        "levelTOP",
+        "nullTOP",
+    ]
+    assert "midiinCHOP" not in candidate.required_ops
+    assert "operator-intent:chop_controlled_texture" in plan.grounding_evidence
+    assert "operator-intent:midi_chop_control_bridge" not in plan.grounding_evidence
+
+
+@pytest.mark.asyncio
+async def test_open_prompt_atlas_blocks_midi_control_bridge_without_declared_device():
+    cards = [
+        _atlas_card(
+            "waveCHOP",
+            "CHOP",
+            "Wave CHOP generic oscillator source distractor for control signals.",
+            ["wave", "oscillator", "control", "source"],
+            params=["wavetype", "period", "amp"],
+        ),
+        _atlas_card(
+            "noiseCHOP",
+            "CHOP",
+            "Noise CHOP random modulation source distractor for control signals.",
+            ["random", "control", "source"],
+            params=["type", "period", "amp"],
+        ),
+        _atlas_card(
+            "midiinCHOP",
+            "CHOP",
+            "MIDI In CHOP receives MIDI CC controller note and performance channel data.",
+            ["midi", "controller", "cc", "performance", "source"],
+            params=["source", "device", "simplified", "controlname"],
+        ),
+        _atlas_card(
+            "mathCHOP",
+            "CHOP",
+            "Math CHOP normalizes and scales incoming MIDI control channels.",
+            ["normalize", "scale", "control", "process"],
+            params=["fromrange", "torange"],
+        ),
+        _atlas_card(
+            "nullCHOP",
+            "CHOP",
+            "Stable CHOP output for normalized MIDI controls.",
+            ["stable", "output", "control"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "CHOP": ["waveCHOP", "noiseCHOP", "midiinCHOP", "mathCHOP", "nullCHOP"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent="CC performance controller should become a normalized CHOP output while oscillator cards are present",
+        target_root="/project1",
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions
+    assert "missing_device_source:midi_device" in plan.missing_facts
+    assert "device-source-required" in plan.risk_flags
+    assert plan.patch_plan.operations == []
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:midi_chop_control_bridge"]
+    assert candidate.required_ops == ["midiinCHOP", "mathCHOP", "nullCHOP"]
+    assert "waveCHOP" not in candidate.required_ops
+    assert "noiseCHOP" not in candidate.required_ops
+    assert "operator-intent:midi_chop_control_bridge" in plan.grounding_evidence
+
+
+@pytest.mark.asyncio
+async def test_open_prompt_atlas_builds_declared_midi_control_bridge_over_distractors():
+    cards = [
+        _atlas_card(
+            "waveCHOP",
+            "CHOP",
+            "Wave CHOP generic oscillator source distractor for control signals.",
+            ["wave", "oscillator", "control", "source"],
+            params=["wavetype", "period", "amp"],
+        ),
+        _atlas_card(
+            "noiseCHOP",
+            "CHOP",
+            "Noise CHOP random modulation source distractor for control signals.",
+            ["random", "control", "source"],
+            params=["type", "period", "amp"],
+        ),
+        _atlas_card(
+            "midiinCHOP",
+            "CHOP",
+            "MIDI In CHOP receives MIDI CC controller note and performance channel data.",
+            ["midi", "controller", "cc", "performance", "source"],
+            params=["source", "device", "simplified", "controlname"],
+        ),
+        _atlas_card(
+            "mathCHOP",
+            "CHOP",
+            "Math CHOP normalizes and scales incoming MIDI control channels.",
+            ["normalize", "scale", "control", "process"],
+            params=["fromrange", "torange"],
+        ),
+        _atlas_card(
+            "nullCHOP",
+            "CHOP",
+            "Stable CHOP output for normalized MIDI controls.",
+            ["stable", "output", "control"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "CHOP": ["waveCHOP", "noiseCHOP", "midiinCHOP", "mathCHOP", "nullCHOP"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent="CC performance controller should become a normalized CHOP output while oscillator cards are present",
+        target_root="/project1",
+        constraints={"device_sources": ["midi_device"]},
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.missing_facts == []
+    assert plan.concept_graph.profile == "generic"
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:midi_chop_control_bridge"]
+    assert candidate.required_ops == ["midiinCHOP", "mathCHOP", "nullCHOP"]
+    assert "waveCHOP" not in candidate.required_ops
+    assert "noiseCHOP" not in candidate.required_ops
+    assert {
+        "operator-intent:midi_chop_control_bridge",
+        "docs:midiinCHOP",
+        "docs:mathCHOP",
+        "docs:nullCHOP",
+    }.issubset(set(plan.grounding_evidence))
+
+    create_ops = [
+        operation.args["op_type"]
+        for operation in plan.patch_plan.operations
+        if operation.kind == "create_node"
+    ]
+    assert create_ops == ["midiinCHOP", "mathCHOP", "nullCHOP"]
+    connect_pairs = [
+        (operation.args["from"], operation.args["to"])
+        for operation in plan.patch_plan.operations
+        if operation.kind == "connect"
+    ]
+    assert ("/project1/midiin", "/project1/math") in connect_pairs
+    assert ("/project1/math", "/project1/out_chop") in connect_pairs
+
+
+@pytest.mark.asyncio
+async def test_open_prompt_atlas_dat_pipeline_prefers_requested_protocol_source_over_distractors():
+    cards = [
+        _atlas_card(
+            "serialDAT",
+            "DAT",
+            "Serial device message source distractor that appends COM port sensor rows to a DAT table.",
+            ["serial", "sensor", "message", "source"],
+            params=["port", "baudrate", "active", "clamp", "maxlines"],
+        ),
+        _atlas_card(
+            "udpinDAT",
+            "DAT",
+            "UDP packet source distractor that appends received network packets to a DAT table.",
+            ["udp", "packet", "network", "source"],
+            params=["protocol", "port", "active", "clamp", "maxlines"],
+        ),
+        _atlas_card(
+            "mqttclientDAT",
+            "DAT",
+            "MQTT Client DAT subscribes to broker topic payloads and appends messages to a DAT table.",
+            ["mqtt", "broker", "topic", "payload", "source"],
+            params=["netaddress", "keepalive", "active", "clamp", "maxlines"],
+        ),
+        _atlas_card(
+            "tableDAT",
+            "DAT",
+            "Table DAT processing stage normalizes MQTT payload rows for diagnostics.",
+            ["table", "normalize", "process", "rows"],
+            params=["rows", "cols"],
+        ),
+        _atlas_card(
+            "nullDAT",
+            "DAT",
+            "Stable DAT table output for normalized MQTT message consumers.",
+            ["stable", "table", "output"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "DAT": ["serialDAT", "udpinDAT", "mqttclientDAT", "tableDAT", "nullDAT"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent=(
+            "subscribe to mqtt broker topic payload rows and normalize them into a stable "
+            "table output while serial and udp source cards are present"
+        ),
+        target_root="/project1",
+        constraints={"device_sources": ["mqtt_broker"]},
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.missing_facts == []
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:synthesized:typed_role_graph_dat_pipeline_card_chain"]
+    assert candidate.required_ops == ["mqttclientDAT", "tableDAT", "nullDAT"]
+    assert "serialDAT" not in candidate.required_ops
+    assert "udpinDAT" not in candidate.required_ops
+    assert "atlas-synthesis:source:mqttclientDAT" in plan.grounding_evidence
+
+
+@pytest.mark.asyncio
+async def test_open_prompt_atlas_blocks_web_client_request_without_declared_endpoint():
+    cards = [
+        _atlas_card(
+            "webDAT",
+            "DAT",
+            "Deprecated Web DAT HTTP request source; use Web Client DAT for modern requests.",
+            ["deprecated", "web", "http", "request"],
+            params=["url"],
+        ),
+        _atlas_card(
+            "webclientDAT",
+            "DAT",
+            "Web Client DAT sends HTTP requests and outputs API responses to a DAT.",
+            ["web", "http", "api", "request", "response", "source"],
+            params=["url", "reqmethod", "request", "verifycert", "clamp"],
+        ),
+        _atlas_card(
+            "nullDAT",
+            "DAT",
+            "Stable DAT output for HTTP response rows.",
+            ["stable", "output", "dat"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "DAT": ["webclientDAT", "nullDAT"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent="fetch an HTTP API response into a stable DAT output while deprecated Web DAT docs are present",
+        target_root="/project1",
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions
+    assert "missing_device_source:http_endpoint" in plan.missing_facts
+    assert "device-source-required" in plan.risk_flags
+    assert plan.patch_plan.operations == []
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:web_client_dat_request_output"]
+    assert candidate.required_ops == ["webclientDAT", "nullDAT"]
+    assert "webDAT" not in candidate.required_ops
+
+
+@pytest.mark.asyncio
+async def test_open_prompt_atlas_builds_web_client_request_output_over_deprecated_web_dat_card():
+    cards = [
+        _atlas_card(
+            "webDAT",
+            "DAT",
+            "Deprecated Web DAT HTTP request source; use Web Client DAT for modern requests.",
+            ["deprecated", "web", "http", "request"],
+            params=["url"],
+        ),
+        _atlas_card(
+            "webclientDAT",
+            "DAT",
+            "Web Client DAT sends HTTP requests and outputs API responses to a DAT.",
+            ["web", "http", "api", "request", "response", "source"],
+            params=["url", "reqmethod", "request", "verifycert", "clamp"],
+        ),
+        _atlas_card(
+            "nullDAT",
+            "DAT",
+            "Stable DAT output for HTTP response rows.",
+            ["stable", "output", "dat"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "DAT": ["webclientDAT", "nullDAT"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent="fetch an HTTP API response into a stable DAT output while deprecated Web DAT docs are present",
+        target_root="/project1",
+        constraints={"device_sources": ["http_endpoint"]},
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.missing_facts == []
+    assert plan.concept_graph.profile == "generic"
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:web_client_dat_request_output"]
+    assert candidate.required_ops == ["webclientDAT", "nullDAT"]
+    assert "webDAT" not in candidate.required_ops
+    assert {
+        "operator-intent:web_client_dat_request_output",
+        "docs:webclientDAT",
+        "docs:nullDAT",
+    }.issubset(set(plan.grounding_evidence))
+
+    create_ops = [
+        operation.args["op_type"]
+        for operation in plan.patch_plan.operations
+        if operation.kind == "create_node"
+    ]
+    assert create_ops == ["webclientDAT", "nullDAT"]
+    connect_pairs = [
+        (operation.args["from"], operation.args["to"])
+        for operation in plan.patch_plan.operations
+        if operation.kind == "connect"
+    ]
+    assert ("/project1/webclient", "/project1/out_dat") in connect_pairs
+
+
+@pytest.mark.asyncio
+async def test_open_prompt_atlas_blocks_web_server_endpoint_without_declared_listener():
+    cards = [
+        _atlas_card(
+            "webclientDAT",
+            "DAT",
+            "Web Client DAT sends HTTP requests and outputs API responses to a DAT.",
+            ["web", "http", "api", "request", "response", "client"],
+            params=["url", "request"],
+        ),
+        _atlas_card(
+            "webserverDAT",
+            "DAT",
+            "Web Server DAT hosts HTTP and WebSocket endpoints inside TouchDesigner with callbacks.",
+            ["web", "http", "websocket", "server", "endpoint", "callbacks"],
+            params=["active", "restart", "port", "callbacks"],
+        ),
+        _atlas_card(
+            "nullDAT",
+            "DAT",
+            "Stable DAT output for server callback rows.",
+            ["stable", "output", "dat"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "DAT": ["webclientDAT", "webserverDAT", "nullDAT"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent="host an HTTP server endpoint with callback DAT rows and stable output",
+        target_root="/project1",
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions
+    assert "missing_device_source:network_listener" in plan.missing_facts
+    assert "device-source-required" in plan.risk_flags
+    assert plan.patch_plan.operations == []
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:web_server_dat_endpoint"]
+    assert candidate.required_ops == ["webserverDAT", "nullDAT"]
+    assert "webclientDAT" not in candidate.required_ops
+
+
+@pytest.mark.asyncio
+async def test_open_prompt_atlas_builds_web_server_endpoint_over_web_client_distractor():
+    cards = [
+        _atlas_card(
+            "webclientDAT",
+            "DAT",
+            "Web Client DAT sends HTTP requests and outputs API responses to a DAT.",
+            ["web", "http", "api", "request", "response", "client"],
+            params=["url", "request"],
+        ),
+        _atlas_card(
+            "webserverDAT",
+            "DAT",
+            "Web Server DAT hosts HTTP and WebSocket endpoints inside TouchDesigner with callbacks.",
+            ["web", "http", "websocket", "server", "endpoint", "callbacks"],
+            params=["active", "restart", "port", "callbacks"],
+        ),
+        _atlas_card(
+            "nullDAT",
+            "DAT",
+            "Stable DAT output for server callback rows.",
+            ["stable", "output", "dat"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "DAT": ["webclientDAT", "webserverDAT", "nullDAT"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent="host an HTTP server endpoint with callback DAT rows and stable output",
+        target_root="/project1",
+        constraints={"device_sources": ["network_listener"]},
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.missing_facts == []
+    assert plan.concept_graph.profile == "generic"
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:web_server_dat_endpoint"]
+    assert candidate.required_ops == ["webserverDAT", "nullDAT"]
+    assert "webclientDAT" not in candidate.required_ops
+    assert {
+        "operator-intent:web_server_dat_endpoint",
+        "docs:webserverDAT",
+        "docs:nullDAT",
+    }.issubset(set(plan.grounding_evidence))
+
+    create_ops = [
+        operation.args["op_type"]
+        for operation in plan.patch_plan.operations
+        if operation.kind == "create_node"
+    ]
+    assert create_ops == ["webserverDAT", "nullDAT"]
+    connect_pairs = [
+        (operation.args["from"], operation.args["to"])
+        for operation in plan.patch_plan.operations
+        if operation.kind == "connect"
+    ]
+    assert ("/project1/webserver", "/project1/out_dat") in connect_pairs
+
+
+@pytest.mark.asyncio
+async def test_open_prompt_atlas_typed_bridge_search_explains_selected_path_and_alternatives():
+    cards = [
+        _atlas_card(
+            "gridSOP",
+            "SOP",
+            "SOP mesh source grid for geometry sampling.",
+            ["sop", "mesh", "source"],
+            params=["rows", "cols"],
+        ),
+        _atlas_card(
+            "noiseSOP",
+            "SOP",
+            "Displaces SOP surface before conversion.",
+            ["surface", "process", "displacement"],
+            params=["amp"],
+        ),
+        _atlas_card(
+            "nullSOP",
+            "SOP",
+            "Stable SOP output for downstream bridge references.",
+            ["stable", "output", "sop"],
+        ),
+        _atlas_card(
+            "soptoCHOP",
+            "CHOP",
+            "SOP to CHOP bridge samples stable SOP geometry into control channels.",
+            ["bridge", "sop", "chop", "channels"],
+            params=["sop"],
+        ),
+        _atlas_card(
+            "mathCHOP",
+            "CHOP",
+            "Range shaping stage for sampled geometry control channels.",
+            ["range", "channel", "process"],
+            params=["range1", "range2"],
+        ),
+        _atlas_card(
+            "nullCHOP",
+            "CHOP",
+            "Stable CHOP output for sampled geometry control channels.",
+            ["stable", "output", "channels"],
+        ),
+        _atlas_card(
+            "soptoPOP",
+            "POP",
+            "SOP to POP bridge converts stable SOP geometry into a point field.",
+            ["bridge", "sop", "pop", "point"],
+            params=["sop"],
+        ),
+        _atlas_card(
+            "noisePOP",
+            "POP",
+            "Adds point displacement to converted POP fields.",
+            ["point", "field", "process"],
+            params=["amplitude"],
+        ),
+        _atlas_card(
+            "nullPOP",
+            "POP",
+            "Stable POP output before TOP preview.",
+            ["stable", "output", "pop"],
+        ),
+        _atlas_card(
+            "poptoTOP",
+            "TOP",
+            "POP to TOP bridge previews stable POP point fields as texture pixels.",
+            ["bridge", "pop", "top", "texture"],
+            params=["pop"],
+        ),
+        _atlas_card(
+            "levelTOP",
+            "TOP",
+            "Texture shaping stage for geometry preview pixels.",
+            ["texture", "preview", "process"],
+            params=["brightness1", "opacity"],
+        ),
+        _atlas_card(
+            "nullTOP",
+            "TOP",
+            "Stable TOP output for geometry preview texture.",
+            ["stable", "output", "top"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "SOP": ["gridSOP", "noiseSOP", "nullSOP"],
+                    "CHOP": ["soptoCHOP", "mathCHOP", "nullCHOP"],
+                    "POP": ["soptoPOP", "noisePOP", "nullPOP"],
+                    "TOP": ["poptoTOP", "levelTOP", "nullTOP"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent="SOP mesh surface becomes sampled control channels with stable CHOP output",
+        target_root="/project1",
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.missing_facts == []
+    assert len(plan.candidate_graphs) == 3
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:synthesized:typed_bridge_graph_sop_to_chop_card_chain"]
+    assert candidate.required_ops == [
+        "gridSOP",
+        "noiseSOP",
+        "nullSOP",
+        "soptoCHOP",
+        "mathCHOP",
+        "nullCHOP",
+    ]
+    evidence = set(plan.grounding_evidence)
+    assert "atlas-synthesis:typed-bridge-selected:sop_to_chop:soptoCHOP" in evidence
+    assert "atlas-synthesis:typed-bridge-alternative-count:2" in evidence
+    assert any(
+        marker.startswith("atlas-synthesis:typed-bridge-candidate:") and ":sop_to_pop:soptoPOP:" in marker
+        for marker in evidence
+    )
+    assert any(
+        marker.startswith("atlas-synthesis:typed-bridge-candidate:")
+        and ":sop_to_pop_to_top:soptoPOP+poptoTOP:" in marker
+        for marker in evidence
+    )
+    assert "candidate_paths:3" in candidate.explanation
+    assert "selected_path:sop_to_chop" in candidate.explanation
+    assert plan.candidate_graphs[1].pattern_ids == [
+        "atlas:synthesized:typed_bridge_graph_sop_to_pop_to_top_card_chain"
+    ]
+    assert "alternative_path:sop_to_pop_to_top" in plan.candidate_graphs[1].explanation
+    assert (
+        "atlas-synthesis:typed-bridge-alternative:2:sop_to_pop_to_top:soptoPOP+poptoTOP"
+        in plan.candidate_graphs[1].grounding_evidence
+    )
+    assert {
+        "gridSOP",
+        "noiseSOP",
+        "nullSOP",
+        "soptoPOP",
+        "nullPOP",
+        "poptoTOP",
+        "nullTOP",
+    } == set(plan.candidate_graphs[1].required_ops)
+
+
+@pytest.mark.asyncio
+async def test_open_prompt_atlas_typed_bridge_uses_requested_protocol_source_before_table_stage():
+    cards = [
+        _atlas_card(
+            "serialDAT",
+            "DAT",
+            "Serial device source distractor that appends COM port sensor rows to a DAT table.",
+            ["serial", "sensor", "source"],
+            params=["port", "baudrate"],
+        ),
+        _atlas_card(
+            "udpinDAT",
+            "DAT",
+            "UDP packet source distractor that appends network packets to a DAT table.",
+            ["udp", "packet", "source"],
+            params=["port", "protocol"],
+        ),
+        _atlas_card(
+            "mqttclientDAT",
+            "DAT",
+            "MQTT Client DAT subscribes to broker topic payload rows.",
+            ["mqtt", "broker", "topic", "payload", "source"],
+            params=["netaddress", "keepalive"],
+        ),
+        _atlas_card(
+            "tableDAT",
+            "DAT",
+            "Table DAT processing stage that normalizes MQTT payload rows.",
+            ["table", "normalize", "process", "rows"],
+            params=["rows", "cols"],
+        ),
+        _atlas_card(
+            "dattoCHOP",
+            "CHOP",
+            "DAT to CHOP bridge converts selected payload rows into control channels.",
+            ["bridge", "dat", "chop", "channels"],
+            params=["dat"],
+        ),
+        _atlas_card(
+            "mathCHOP",
+            "CHOP",
+            "Math CHOP range shaping stage for normalized MQTT payload channels.",
+            ["range", "channel", "process"],
+            params=["range1", "range2"],
+        ),
+        _atlas_card(
+            "nullCHOP",
+            "CHOP",
+            "Stable CHOP output for normalized MQTT payload channels.",
+            ["stable", "output", "channels"],
+        ),
+        _atlas_card(
+            "choptoTOP",
+            "TOP",
+            "CHOP to TOP bridge converts normalized MQTT channels into texture pixels.",
+            ["bridge", "chop", "top", "texture"],
+            params=["chop"],
+        ),
+        _atlas_card(
+            "levelTOP",
+            "TOP",
+            "Texture shaping stage after channel conversion.",
+            ["texture", "process", "level"],
+            params=["brightness1", "opacity"],
+        ),
+        _atlas_card(
+            "nullTOP",
+            "TOP",
+            "Stable TOP output for the converted MQTT payload texture.",
+            ["stable", "output", "texture"],
+        ),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "DAT": ["serialDAT", "udpinDAT", "mqttclientDAT", "tableDAT"],
+                    "CHOP": ["dattoCHOP", "mathCHOP", "nullCHOP"],
+                    "TOP": ["choptoTOP", "levelTOP", "nullTOP"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent=(
+            "mqtt broker payload rows become normalized channels and then a texture output "
+            "while serial and udp source cards are present"
+        ),
+        target_root="/project1",
+        card_index=AtlasCardIndex(cards),
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.missing_facts == []
+    candidate = plan.candidate_graphs[0]
+    assert candidate.pattern_ids == ["atlas:synthesized:typed_bridge_graph_dat_to_chop_to_top_card_chain"]
+    assert candidate.required_ops == [
+        "mqttclientDAT",
+        "tableDAT",
+        "dattoCHOP",
+        "mathCHOP",
+        "nullCHOP",
+        "choptoTOP",
+        "levelTOP",
+        "nullTOP",
+    ]
+    assert "serialDAT" not in candidate.required_ops
+    assert "udpinDAT" not in candidate.required_ops
+    assert "atlas-synthesis:source:mqttclientDAT" in plan.grounding_evidence
+    assert "atlas-synthesis:process:tableDAT" in plan.grounding_evidence
 
 
 @pytest.mark.asyncio
@@ -1932,9 +3713,15 @@ async def test_compiler_path_builds_pop_particle_preview_candidate_graph():
     candidate = plan.candidate_graphs[0]
     assert candidate.profiles == ["pop"]
     assert {"pop_particle_field_preview", "debug_output_conventions"}.issubset(set(candidate.pattern_ids))
-    assert {"circlePOP", "noisePOP", "mathmixPOP", "nullPOP", "rendersimpleTOP", "nullTOP", "textDAT"}.issubset(
-        set(candidate.required_ops)
-    )
+    assert {
+        "circlePOP",
+        "noisePOP",
+        "mathmixPOP",
+        "nullPOP",
+        "rendersimpleTOP",
+        "nullTOP",
+        "textDAT",
+    }.issubset(set(candidate.required_ops))
     assert "validate-finite-pop-bounds" in plan.risk_flags
     assert "validate-pop-render-preview" in plan.risk_flags
     assert set(candidate.required_ops).issubset(set(plan.patch_plan.required_ops))
@@ -1958,9 +3745,7 @@ async def test_compiler_path_builds_pop_particle_preview_candidate_graph():
     ]
     assert render_params and render_params[0]["pop"] == f"{shell_path}/out_pop"
     connect_pairs = [
-        (op.args["from"], op.args["to"])
-        for op in plan.patch_plan.operations
-        if op.kind == "connect"
+        (op.args["from"], op.args["to"]) for op in plan.patch_plan.operations if op.kind == "connect"
     ]
     assert (f"{shell_path}/circle", f"{shell_path}/noise") in connect_pairs
     assert (f"{shell_path}/noise", f"{shell_path}/mathmix") in connect_pairs
@@ -2066,9 +3851,7 @@ async def test_compiler_path_builds_glsl_advanced_pop_topology_candidate_graph()
     assert validate_patch_plan_generated_code(plan.patch_plan) == []
 
     connect_pairs = [
-        (op.args["from"], op.args["to"])
-        for op in plan.patch_plan.operations
-        if op.kind == "connect"
+        (op.args["from"], op.args["to"]) for op in plan.patch_plan.operations if op.kind == "connect"
     ]
     assert (f"{shell_path}/circle", f"{shell_path}/glsladvanced") in connect_pairs
     assert (f"{shell_path}/glsladvanced", f"{shell_path}/topology") in connect_pairs
@@ -2076,6 +3859,45 @@ async def test_compiler_path_builds_glsl_advanced_pop_topology_candidate_graph()
     assert (f"{shell_path}/rendersimple", f"{shell_path}/out1") in connect_pairs
     assert (f"{shell_path}/text", f"{shell_path}/glsladvanced") not in connect_pairs
     assert (f"{shell_path}/out_pop", f"{shell_path}/rendersimple") not in connect_pairs
+
+
+@pytest.mark.asyncio
+async def test_compiler_path_uses_glsl_advanced_pop_for_deprecated_glsl_create_prompt():
+    client = FakeTDClient(
+        scripted={
+            "families": {
+                "families": {
+                    "POP": ["circlePOP", "glsladvancedPOP", "topologyPOP", "nullPOP"],
+                    "TOP": ["rendersimpleTOP", "nullTOP"],
+                    "DAT": ["textDAT", "errorDAT"],
+                    "COMP": ["baseCOMP", "annotateCOMP"],
+                    "CHOP": ["infoCHOP"],
+                }
+            },
+            "nodes": {"nodes": []},
+        }
+    )
+
+    plan = await build_brain_plan(
+        client,
+        intent=(
+            "Build a GLSL Create POP topology shader that changes point counts "
+            "with a stable TOP preview and debug output"
+        ),
+        target_root="/project1",
+        output_top="/project1/out1",
+        card_index=FakeCardIndex(GLSL_ADVANCED_POP_OPS | {"glslcreatePOP"}),
+    )
+
+    assert plan.blocked_questions == []
+    assert plan.missing_facts == []
+    assert plan.compiled_task is not None
+    assert "deprecated-op:glslcreatePOP" in plan.compiled_task.risk_flags
+    assert "glslcreatePOP" not in plan.concept_graph.operators
+    assert "glslcreatePOP" not in plan.patch_plan.required_ops
+    assert {"glsladvancedPOP", "topologyPOP"}.issubset(set(plan.patch_plan.required_ops))
+    assert "substitution:glslcreatePOP->glsladvancedPOP+topologyPOP" in plan.grounding_evidence
+    assert "substitution-rule:glslcreatePOP->glsladvancedPOP+topologyPOP:high" in plan.grounding_evidence
 
 
 @pytest.mark.asyncio
@@ -2148,9 +3970,7 @@ async def test_compiler_path_builds_glsl_top_shader_candidate_graph():
     assert plan.candidate_graphs
     candidate = plan.candidate_graphs[0]
     assert candidate.profiles == ["glsl"]
-    assert {"glsl_top_shader_with_text_dat", "debug_output_conventions"}.issubset(
-        set(candidate.pattern_ids)
-    )
+    assert {"glsl_top_shader_with_text_dat", "debug_output_conventions"}.issubset(set(candidate.pattern_ids))
     assert {"constantTOP", "glslTOP", "textDAT", "nullTOP"}.issubset(set(candidate.required_ops))
     assert "validate-glsl-compile-state" in plan.risk_flags
     assert set(candidate.required_ops).issubset(set(plan.patch_plan.required_ops))
@@ -2187,9 +4007,7 @@ async def test_compiler_path_builds_glsl_top_shader_candidate_graph():
     assert validate_patch_plan_generated_code(plan.patch_plan) == []
 
     connect_pairs = [
-        (op.args["from"], op.args["to"])
-        for op in plan.patch_plan.operations
-        if op.kind == "connect"
+        (op.args["from"], op.args["to"]) for op in plan.patch_plan.operations if op.kind == "connect"
     ]
     assert (f"{shell_path}/constant", f"{shell_path}/glsl") in connect_pairs
     assert (f"{shell_path}/glsl", f"{shell_path}/out1") in connect_pairs

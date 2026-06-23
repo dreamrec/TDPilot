@@ -47,4 +47,7 @@ def test_sample_operator_availability_cli_stores_report_by_build_platform_and_ad
     output = json.loads(capsys.readouterr().out)
     expected_path = tmp_path / "2025.32820" / "macos" / "popx" / "operator_availability.json"
     assert output["stored_availability_report"] == str(expected_path)
-    assert json.loads(expected_path.read_text(encoding="utf-8"))["availability_matrix"]["td_build"] == "2025.32820"
+    assert (
+        json.loads(expected_path.read_text(encoding="utf-8"))["availability_matrix"]["td_build"]
+        == "2025.32820"
+    )

@@ -18,7 +18,7 @@ from __future__ import annotations
 import asyncio
 import time
 from datetime import datetime, timezone
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from mcp.server.fastmcp import Context
 from pydantic import Field
@@ -87,6 +87,17 @@ async def td_optimize_visual(
             description=("Optimizer safety profile: conservative | balanced | aggressive"),
         ),
     ] = "balanced",
+    param_semantics_policy: Annotated[
+        Literal["warn", "block"],
+        Field(
+            default="warn",
+            description=(
+                "Docs-grounded parameter safety policy for optimizer writes. "
+                "'warn' preserves bounded search with attached findings; 'block' refuses "
+                "invalid or high-risk writes before mutation."
+            ),
+        ),
+    ] = "warn",
     root_path: Annotated[
         str,
         Field(
@@ -116,6 +127,7 @@ async def td_optimize_visual(
         max_iterations=max_iterations,
         convergence_threshold=convergence_threshold,
         safety_profile=safety_profile,
+        param_semantics_policy=param_semantics_policy,
         root_path=root_path,
         snapshot_before=snapshot_before,
     )
@@ -173,6 +185,7 @@ async def td_optimize_visual(
                 max_iterations=validated.max_iterations,
                 convergence_threshold=validated.convergence_threshold,
                 safety_profile=validated.safety_profile,
+                param_semantics_policy=validated.param_semantics_policy,
                 root_path=validated.root_path,
                 phase_label="optimize_visual",
             )
@@ -186,6 +199,7 @@ async def td_optimize_visual(
                 "output_top": validated.output_top,
                 "root_path": validated.root_path,
                 "safety_profile": validated.safety_profile,
+                "param_semantics_policy": validated.param_semantics_policy,
                 "snapshot_before": validated.snapshot_before,
                 "baseline_snapshot_id": baseline_snapshot_id,
                 "snapshot_warning": snapshot_warning,
@@ -218,6 +232,7 @@ async def td_optimize_visual(
                 "adjustable_count": len(validated.adjustable_params),
                 "max_iterations": validated.max_iterations,
                 "safety_profile": validated.safety_profile,
+                "param_semantics_policy": validated.param_semantics_policy,
                 "goal_profile": goal_profile,
                 "baseline_snapshot_id": baseline_snapshot_id,
             },
@@ -233,6 +248,7 @@ async def td_optimize_visual(
             "baseline_snapshot_id": baseline_snapshot_id,
             "snapshot_warning": snapshot_warning,
             "goal_profile": goal_profile,
+            "param_semantics_policy": validated.param_semantics_policy,
         }
         return _tr._as_json_output(payload)
     except Exception as exc:

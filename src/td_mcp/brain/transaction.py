@@ -26,6 +26,7 @@ from td_mcp.patch.undo_sentinel import UndoBlockSentinel
 
 SnapshotCallback = Callable[[str], Awaitable[str | None]]
 RestoreCallback = Callable[[str], Awaitable[dict[str, Any] | None]]
+ParamPreflightCallback = Callable[..., Any]
 
 
 async def apply_transaction(
@@ -39,6 +40,7 @@ async def apply_transaction(
     macro_engine=None,
     create_snapshot: SnapshotCallback | None = None,
     restore_snapshot: RestoreCallback | None = None,
+    param_preflight: ParamPreflightCallback | None = None,
 ) -> TransactionResult:
     """Apply a PatchPlan with preflight, snapshot, validation, and rollback."""
     opts = options or TransactionOptions()
@@ -109,6 +111,8 @@ async def apply_transaction(
             sentinel=sentinel,
             auto_validate=True,
             macro_engine=macro_engine,
+            param_preflight=param_preflight,
+            param_semantics_policy=opts.param_semantics_policy,
         )
     except patch.NestedBlockError as exc:
         result.failed_reason = str(exc)
@@ -143,6 +147,7 @@ async def apply_transaction(
             concept_profile=concept_profile,
             concept_profiles=profile_layers,
             macro_engine=macro_engine,
+            param_preflight=param_preflight,
         )
         if repaired_report is not None:
             result.validation_report = repaired_report
@@ -219,6 +224,7 @@ async def _attempt_validation_repair(
     concept_profile: str | None,
     concept_profiles: Iterable[str | None],
     macro_engine=None,
+    param_preflight: ParamPreflightCallback | None = None,
 ) -> ValidationReportV2 | None:
     repair_plan = build_validation_repair_plan(plan, validation_report)
     if repair_plan is None:
@@ -236,6 +242,8 @@ async def _attempt_validation_repair(
             sentinel=sentinel,
             auto_validate=True,
             macro_engine=macro_engine,
+            param_preflight=param_preflight,
+            param_semantics_policy=options.param_semantics_policy,
         )
     except patch.NestedBlockError as exc:
         attempt["status"] = "failed"
@@ -1240,4 +1248,6 @@ def _merge_generated_code_runtime_report(
     for issue in validation_report.issues:
         severity_counts[issue.severity] = severity_counts.get(issue.severity, 0) + 1
     validation_report.severity_counts = severity_counts
-    validation_report.summary = "clean" if validation_report.ok else f"{len(validation_report.issues)} validation issue(s)"
+    validation_report.summary = (
+        "clean" if validation_report.ok else f"{len(validation_report.issues)} validation issue(s)"
+    )

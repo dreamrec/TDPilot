@@ -122,7 +122,9 @@ def load_operator_substitution_rules() -> list[OperatorSubstitutionRule]:
             replacement_ops=["glsladvancedPOP", "topologyPOP"],
             replacement_pattern=None,
             confidence="high",
-            tradeoffs=["requires the newer GLSL Advanced POP workflow and explicit topology when output counts change"],
+            tradeoffs=[
+                "requires the newer GLSL Advanced POP workflow and explicit topology when output counts change"
+            ],
             official_sources=[
                 "https://docs.derivative.ca/GLSL_Create_POP",
                 "https://docs.derivative.ca/GLSL_Advanced_POP",
@@ -159,7 +161,9 @@ def load_operator_substitution_rules() -> list[OperatorSubstitutionRule]:
             replacement_ops=["textSOP"],
             replacement_pattern=None,
             confidence="high",
-            tradeoffs=["uses the current Text SOP TrueType/OpenType geometry path instead of the legacy Font SOP"],
+            tradeoffs=[
+                "uses the current Text SOP TrueType/OpenType geometry path instead of the legacy Font SOP"
+            ],
             official_sources=[
                 "https://docs.derivative.ca/Font_SOP",
                 "https://docs.derivative.ca/Text_SOP",
@@ -226,7 +230,10 @@ def operator_availability_coverage_report(
     )
     return {
         "schema_version": 1,
-        "ok": not missing_required and not replacement_mismatches and not invalid_sources and not missing_tradeoffs,
+        "ok": not missing_required
+        and not replacement_mismatches
+        and not invalid_sources
+        and not missing_tradeoffs,
         "rule_count": len(records),
         "required_rule_count": len(_REQUIRED_SUBSTITUTION_RULES),
         "covered_required_rule_count": len(covered_required),
@@ -505,7 +512,9 @@ async def sample_operator_availability(
 
     available_count = sum(1 for item in results if item["available"])
     report_ok = cleanup_ok and len(results) == len(targets)
-    availability_matrix = _sample_results_availability_matrix(results, health if "health" in locals() else None)
+    availability_matrix = _sample_results_availability_matrix(
+        results, health if "health" in locals() else None
+    )
 
     return {
         "schema_version": 1,

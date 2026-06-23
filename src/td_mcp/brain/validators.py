@@ -117,7 +117,7 @@ _RENDER_SWITCH_INDEX_EXPR = re.compile(
 
 def classify_intent_profile(intent: str, preferred_domains: Iterable[str] | None = None) -> str:
     """Return the best-known concept profile for an intent."""
-    text = (intent or "").lower()
+    text = _profile_request_intent_text((intent or "").lower())
     if "glsl" in text and any(
         token in text for token in ("mat", "material", "vertex shader", "geometry shader")
     ):
@@ -135,6 +135,28 @@ def classify_intent_profile(intent: str, preferred_domains: Iterable[str] | None
     if "TOP" in domains:
         return "generic"
     return "generic"
+
+
+def _profile_request_intent_text(text: str) -> str:
+    clauses = re.split(r"(?i)(?:\bwhile\b|\bwhere\b|\bwhen\b|;|,)", text)
+    kept: list[str] = []
+    for clause in clauses:
+        stripped = clause.strip()
+        if not stripped:
+            continue
+        lower = stripped.lower()
+        is_card_context = (
+            "distractor" in lower
+            or "cards" in lower
+            or "card" in lower
+            or "docs" in lower
+            or "also available" in lower
+            or "also present" in lower
+        )
+        if kept and is_card_context:
+            continue
+        kept.append(stripped)
+    return " ".join(kept) or text
 
 
 def _keyword_matches(text: str, keyword: str) -> bool:

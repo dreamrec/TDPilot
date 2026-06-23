@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from patch.conftest import FakeTDClient
+from td_mcp.macros.engine import MacroEngine
 from td_mcp.models.patch import PatchOperation, PatchPlan, ValidationPlan
 from td_mcp.patch.applier import (
     NestedBlockError,
@@ -102,6 +103,82 @@ async def test_bad_args_raises_before_td():
     # No params endpoint hit (but start/end undo block calls will be there)
     td_calls = [c for c in client.calls if c[0] not in ("project/lifecycle",)]
     assert td_calls == []
+
+
+@pytest.mark.asyncio
+async def test_param_preflight_block_refuses_before_undo_or_mutation():
+    ops = [
+        PatchOperation(kind="create_node", target="/p", args={"op_type": "levelTOP", "name": "level"}),
+        PatchOperation(kind="set_params", target="/p/level", args={"params": {"opacity": 0.5}}),
+    ]
+    client = FakeTDClient()
+    sentinel = UndoBlockSentinel()
+
+    def block_preflight(**_kwargs):
+        return type(
+            "PreflightResult",
+            (),
+            {
+                "adjusted_params": {"opacity": 0.5},
+                "safety_warnings": [],
+                "param_semantics_warnings": [{"code": "blocked_param"}],
+                "blocked": True,
+            },
+        )()
+
+    result = await apply_plan(
+        client,
+        _plan(ops),
+        sentinel=sentinel,
+        auto_validate=False,
+        param_preflight=block_preflight,
+        param_semantics_policy="block",
+    )
+
+    assert result.status == "broken"
+    assert result.failed_op == 1
+    assert result.param_semantics_warnings == [{"code": "blocked_param"}]
+    assert client.calls == []
+    assert sentinel.is_active() is False
+
+
+@pytest.mark.asyncio
+async def test_annotate_param_preflight_block_refuses_before_undo_or_mutation():
+    ops = [PatchOperation(kind="annotate", target="/p", args={"text": "unsafe note"})]
+    client = FakeTDClient()
+    sentinel = UndoBlockSentinel()
+    calls = []
+
+    def block_preflight(**kwargs):
+        calls.append(kwargs)
+        return type(
+            "PreflightResult",
+            (),
+            {
+                "adjusted_params": {"text": "unsafe note"},
+                "safety_warnings": [],
+                "param_semantics_warnings": [{"code": "blocked_annotation_text"}],
+                "blocked": True,
+            },
+        )()
+
+    result = await apply_plan(
+        client,
+        _plan(ops),
+        sentinel=sentinel,
+        auto_validate=False,
+        param_preflight=block_preflight,
+        param_semantics_policy="block",
+    )
+
+    assert result.status == "broken"
+    assert result.failed_op == 0
+    assert result.param_semantics_warnings == [{"code": "blocked_annotation_text"}]
+    assert calls[0]["path"] == "/p/annotation1"
+    assert calls[0]["op_type"] == "annotateCOMP"
+    assert calls[0]["params"] == {"text": "unsafe note"}
+    assert client.calls == []
+    assert sentinel.is_active() is False
 
 
 @pytest.mark.asyncio
@@ -336,12 +413,60 @@ async def test_macro_dispatches_through_macro_engine():
     ]
     client = FakeTDClient(scripted={"node/errors": {"issues": []}, "cooking": {}})
     sentinel = UndoBlockSentinel()
-    result = await apply_plan(client, _plan(ops), sentinel=sentinel, macro_engine=engine)
+    result = await apply_plan(
+        client,
+        _plan(ops),
+        sentinel=sentinel,
+        macro_engine=engine,
+        param_semantics_policy="block",
+    )
     assert result.status == "clean"
     assert len(engine.calls) == 1
     assert engine.calls[0]["macro_type"] == "feedback_loop"
     assert engine.calls[0]["parent_path"] == "/p"
     assert engine.calls[0]["name_prefix"] == "fb"
+    assert engine.calls[0]["param_semantics_policy"] == "block"
     # No phantom macro/create HTTP calls.
     macro_http = [c for c in client.calls if c[0] == "macro/create"]
     assert macro_http == []
+
+
+@pytest.mark.asyncio
+async def test_macro_block_policy_preflights_before_undo_or_mutation():
+    client = FakeTDClient()
+    preflight_calls = []
+
+    class Result:
+        adjusted_params = {"opacity": "unsafe"}
+        safety_warnings = []
+        param_semantics_warnings = ["invalid_bool_param"]
+        blocked = True
+
+    def preflight(**kwargs):
+        preflight_calls.append(kwargs)
+        return Result()
+
+    engine = MacroEngine(td_client=client, param_preflight=preflight)
+    ops = [PatchOperation(kind="macro", target="/p", args={"macro_type": "feedback_loop"})]
+    sentinel = UndoBlockSentinel()
+
+    result = await apply_plan(
+        client,
+        _plan(ops),
+        sentinel=sentinel,
+        auto_validate=False,
+        macro_engine=engine,
+        param_semantics_policy="block",
+    )
+
+    assert result.status == "broken"
+    assert result.failed_op == 0
+    assert result.failed_reason == "param semantics blocked macro preflight"
+    assert result.param_semantics_warnings
+    assert "invalid_bool_param" in result.param_semantics_warnings[0]
+    assert preflight_calls
+    assert preflight_calls[0]["path"] == "/p/decay"
+    assert preflight_calls[0]["op_type"] == "levelTOP"
+    assert preflight_calls[0]["param_semantics_policy"] == "block"
+    assert client.calls == []
+    assert sentinel.is_active() is False

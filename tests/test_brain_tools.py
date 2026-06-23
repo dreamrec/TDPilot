@@ -3,10 +3,10 @@ from __future__ import annotations
 import asyncio
 
 import td_mcp.server as server
+from td_mcp.brain.cockpit import build_cockpit_payload
 from td_mcp.models.brain import BrainPlan, ConceptGraph, TransactionResult, VisualTaskSpec
 from td_mcp.models.patch import PatchPlan, ValidationPlan
 from td_mcp.registry import tools_brain
-from td_mcp.brain.cockpit import build_cockpit_payload
 
 
 def test_brain_tools_are_registered_with_mcp_metadata():
@@ -25,6 +25,21 @@ def test_brain_tools_are_registered_with_mcp_metadata():
     assert by_name["td_cockpit_render"].annotations.destructiveHint is False
     assert by_name["td_cockpit_render"].meta["ui"]["resourceUri"] == "ui://tdpilot/cockpit.html"
     assert by_name["td_cockpit_render"].meta["openai/outputTemplate"] == "ui://tdpilot/cockpit.html"
+
+
+def test_legacy_patch_surfaces_guide_tool_choice_to_brain_loop():
+    tools = asyncio.run(server.mcp.list_tools())
+    by_name = {tool.name: tool for tool in tools}
+
+    legacy_plan_tools = ("td_plan_patch", "td_patch_plan", "td_patch_preview")
+    for name in legacy_plan_tools:
+        assert "td_brain_plan" in (by_name[name].description or "")
+        assert by_name[name].annotations.readOnlyHint is True
+        assert by_name[name].annotations.destructiveHint is False
+
+    assert "td_brain_execute" in (by_name["td_patch_apply"].description or "")
+    assert by_name["td_patch_apply"].annotations.destructiveHint is True
+    assert by_name["td_patch_apply"].annotations.readOnlyHint is False
 
 
 def test_cockpit_html_resource_is_registered_for_mcp_apps():

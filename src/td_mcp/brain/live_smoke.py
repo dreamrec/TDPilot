@@ -24,6 +24,7 @@ from td_mcp.brain.validators import (
 from td_mcp.models.brain import TransactionOptions
 from td_mcp.models.patch import PatchOperation, PatchPlan, ValidationPlan
 from td_mcp.patch.undo_sentinel import UndoBlockSentinel
+from td_mcp.tool_registry import _direct_param_preflight_callback
 
 SmokeMode = Literal["dry_run", "live"]
 
@@ -417,9 +418,7 @@ async def build_live_smoke_report(
 
     ok_statuses = {"planned", "skipped_unavailable"} if mode == "live" else {"planned"}
     scenarios_ok = all(item["status"] in ok_statuses for item in scenario_reports)
-    transactional_ok = (
-        transactional_smoke["status"] == "not_run" or bool(transactional_smoke.get("ok"))
-    )
+    transactional_ok = transactional_smoke["status"] == "not_run" or bool(transactional_smoke.get("ok"))
     ok = scenarios_ok and transactional_ok
     return {
         "schema_version": 1,
@@ -483,7 +482,11 @@ async def _plan_scenario(
 
     missing_expected = sorted(set(scenario.expected_ops) - set(plan.concept_graph.operators))
     status = "planned" if not plan.blocked_questions and not missing_expected else "blocked"
-    if allow_unavailable_skip and status == "blocked" and _is_unavailable_operator_skip(plan, missing_expected):
+    if (
+        allow_unavailable_skip
+        and status == "blocked"
+        and _is_unavailable_operator_skip(plan, missing_expected)
+    ):
         status = "skipped_unavailable"
     probe_profiles = _probe_profiles_for_plan(plan)
     return {
@@ -620,13 +623,11 @@ def _generated_code_summary(scenarios: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "block_count": len(blocks),
         "scenario_ids": sorted({scenario_id for scenario_id, _block in blocks if scenario_id}),
-        "languages": sorted({str(block.get("language")) for _scenario_id, block in blocks if block.get("language")}),
+        "languages": sorted(
+            {str(block.get("language")) for _scenario_id, block in blocks if block.get("language")}
+        ),
         "runtime_checks": sorted(
-            {
-                str(check)
-                for _scenario_id, block in blocks
-                for check in block.get("runtime_checks", [])
-            }
+            {str(check) for _scenario_id, block in blocks for check in block.get("runtime_checks", [])}
         ),
         "runtime_contract_count": len(contracts),
         "runtime_contract_checks": sorted(
@@ -637,11 +638,7 @@ def _generated_code_summary(scenarios: list[dict[str, Any]]) -> dict[str, Any]:
             }
         ),
         "risk_flags": sorted(
-            {
-                str(flag)
-                for _scenario_id, block in blocks
-                for flag in block.get("risk_flags", [])
-            }
+            {str(flag) for _scenario_id, block in blocks for flag in block.get("risk_flags", [])}
         ),
         "source_payloads_included": any("code" in block for _scenario_id, block in blocks),
     }
@@ -698,6 +695,7 @@ async def _run_transactional_generated_code_smoke(td_client) -> dict[str, Any]:
         sentinel=UndoBlockSentinel(),
         concept_profile="glsl",
         concept_profiles=["glsl"],
+        param_preflight=_direct_param_preflight_callback(safety_manager=None),
     )
     cleanup = await _cleanup_transactional_generated_code_smoke(
         td_client,
@@ -764,12 +762,36 @@ def _transactional_generated_code_patch_plan() -> PatchPlan:
         "        tdpilot_callback_guard = False\n"
     )
     operations = [
-        PatchOperation(kind="create_node", target=target_root, args={"op_type": "constantTOP", "name": "tdpilot_gc_smoke_const"}),
-        PatchOperation(kind="create_node", target=target_root, args={"op_type": "textDAT", "name": "tdpilot_gc_smoke_pixel"}),
-        PatchOperation(kind="create_node", target=target_root, args={"op_type": "glslTOP", "name": "tdpilot_gc_smoke_glsl"}),
-        PatchOperation(kind="create_node", target=target_root, args={"op_type": "nullTOP", "name": "tdpilot_gc_smoke_out"}),
-        PatchOperation(kind="create_node", target=target_root, args={"op_type": "tableDAT", "name": "tdpilot_gc_smoke_debug"}),
-        PatchOperation(kind="create_node", target=target_root, args={"op_type": "datexecuteDAT", "name": "tdpilot_gc_smoke_callbacks"}),
+        PatchOperation(
+            kind="create_node",
+            target=target_root,
+            args={"op_type": "constantTOP", "name": "tdpilot_gc_smoke_const"},
+        ),
+        PatchOperation(
+            kind="create_node",
+            target=target_root,
+            args={"op_type": "textDAT", "name": "tdpilot_gc_smoke_pixel"},
+        ),
+        PatchOperation(
+            kind="create_node",
+            target=target_root,
+            args={"op_type": "glslTOP", "name": "tdpilot_gc_smoke_glsl"},
+        ),
+        PatchOperation(
+            kind="create_node",
+            target=target_root,
+            args={"op_type": "nullTOP", "name": "tdpilot_gc_smoke_out"},
+        ),
+        PatchOperation(
+            kind="create_node",
+            target=target_root,
+            args={"op_type": "tableDAT", "name": "tdpilot_gc_smoke_debug"},
+        ),
+        PatchOperation(
+            kind="create_node",
+            target=target_root,
+            args={"op_type": "datexecuteDAT", "name": "tdpilot_gc_smoke_callbacks"},
+        ),
         PatchOperation(
             kind="set_dat_content",
             target=shader_path,
@@ -802,7 +824,9 @@ def _transactional_generated_code_patch_plan() -> PatchPlan:
             target=glsl_path,
             args={"params": {"pixeldat": shader_path}},
         ),
-        PatchOperation(kind="connect", args={"from": f"{target_root}/tdpilot_gc_smoke_const", "to": glsl_path}),
+        PatchOperation(
+            kind="connect", args={"from": f"{target_root}/tdpilot_gc_smoke_const", "to": glsl_path}
+        ),
         PatchOperation(kind="connect", args={"from": glsl_path, "to": out_path}),
         PatchOperation(
             kind="set_dat_content",
@@ -904,7 +928,13 @@ async def _cleanup_transactional_generated_code_smoke(
             "node/errors",
             {"path": plan.target_root, "recurse": True, "max_depth": 10},
         )
-        error_issues = errors.get("issues", []) if isinstance(errors, dict) else errors if isinstance(errors, list) else []
+        error_issues = (
+            errors.get("issues", [])
+            if isinstance(errors, dict)
+            else errors
+            if isinstance(errors, list)
+            else []
+        )
     except Exception as exc:  # noqa: BLE001
         rollback_error = rollback_error or f"cleanup errors readback failed: {exc}"
 
@@ -937,11 +967,15 @@ async def _cleanup_transactional_generated_code_smoke(
 async def _read_remaining_transactional_paths(td_client, plan: PatchPlan) -> list[str]:
     created_paths = _planned_created_paths(plan)
     payload = await td_client.request("nodes", {"path": plan.target_root, "limit": 1000})
-    nodes = payload if isinstance(payload, list) else payload.get("nodes", []) if isinstance(payload, dict) else []
+    nodes = (
+        payload
+        if isinstance(payload, list)
+        else payload.get("nodes", [])
+        if isinstance(payload, dict)
+        else []
+    )
     live_paths = {
-        str(node.get("path") or "")
-        for node in nodes
-        if isinstance(node, dict) and node.get("path")
+        str(node.get("path") or "") for node in nodes if isinstance(node, dict) and node.get("path")
     }
     return sorted(path for path in created_paths if path in live_paths)
 

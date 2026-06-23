@@ -663,7 +663,7 @@ def build_and_export():
         _populate_tdpilot_comp(export_comp, repo_root, info_text)
         export_comp.save(export_path)
         # Refresh the .tox-source-hash.json so CI's freshness gate stays green.
-        _legacy._write_tox_source_hash(repo_root)
+        _legacy._write_tox_source_hash(repo_root, export_path)
     finally:
         try:
             temp_parent.destroy()

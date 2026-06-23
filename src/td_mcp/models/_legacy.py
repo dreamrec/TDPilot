@@ -935,6 +935,13 @@ class OptimizeVisualInput(BaseModel):
         default="balanced",
         description="Optimizer safety profile: conservative | balanced | aggressive",
     )
+    param_semantics_policy: str = Field(
+        default="warn",
+        description=(
+            "Docs-grounded parameter safety policy for optimizer writes: warn | block. "
+            "Block refuses invalid or high-risk parameter writes before mutation."
+        ),
+    )
     root_path: str = Field(
         default="/project1", description="Root scope for instability checks and snapshots."
     )
@@ -947,6 +954,13 @@ class OptimizeVisualInput(BaseModel):
     def validate_safety_profile(cls, value: str) -> str:
         if value not in {"conservative", "balanced", "aggressive"}:
             raise ValueError("safety_profile must be one of: conservative, balanced, aggressive")
+        return value
+
+    @field_validator("param_semantics_policy")
+    @classmethod
+    def validate_param_semantics_policy(cls, value: str) -> str:
+        if value not in {"warn", "block"}:
+            raise ValueError("param_semantics_policy must be one of: warn, block")
         return value
 
     @field_validator("profile")

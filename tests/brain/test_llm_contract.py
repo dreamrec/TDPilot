@@ -6,7 +6,11 @@ from td_mcp.models.brain import CompiledVisualTaskSpec
 
 def _operator_card(op_type: str) -> dict:
     family = next(
-        (suffix for suffix in ("COMP", "CHOP", "SOP", "POP", "DAT", "MAT", "TOP") if op_type.endswith(suffix)),
+        (
+            suffix
+            for suffix in ("COMP", "CHOP", "SOP", "POP", "DAT", "MAT", "TOP")
+            if op_type.endswith(suffix)
+        ),
         "TOP",
     )
     return {

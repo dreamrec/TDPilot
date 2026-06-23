@@ -156,9 +156,7 @@ def validation_probe_coverage_report(
     missing_required = sorted(
         profile for profile in _REQUIRED_VALIDATION_PROFILES if not by_profile.get(profile)
     )
-    covered_required = sorted(
-        profile for profile in _REQUIRED_VALIDATION_PROFILES if by_profile.get(profile)
-    )
+    covered_required = sorted(profile for profile in _REQUIRED_VALIDATION_PROFILES if by_profile.get(profile))
     expensive = [
         {"profile": probe.profile, "probe_id": probe.probe_id}
         for probe in records
@@ -180,9 +178,7 @@ def validation_probe_coverage_report(
         "expensive_probes": expensive,
         "uncontrolled_expensive_probe_count": len(uncontrolled_expensive),
         "uncontrolled_expensive_probes": uncontrolled_expensive,
-        "probe_count_by_profile": {
-            profile: len(probes) for profile, probes in sorted(by_profile.items())
-        },
+        "probe_count_by_profile": {profile: len(probes) for profile, probes in sorted(by_profile.items())},
     }
 
 
@@ -302,7 +298,9 @@ _PROBE_RECORDS: list[dict[str, Any]] = [
         required_inputs=["audiofileinCHOP", "audiodeviceinCHOP", "analyzeCHOP", "nullCHOP"],
         readback_strategy="chop_channel_delta_runtime",
         metric_names=["audio_analysis_channel_delta", "audio_analysis_channel_samples"],
-        pass_conditions=["runtime validation samples analyzed CHOP output over frames and observes a non-zero delta"],
+        pass_conditions=[
+            "runtime validation samples analyzed CHOP output over frames and observes a non-zero delta"
+        ],
         failure_message="Audio-reactive plans require runtime evidence that analyzed audio channels move over time.",
         official_sources=[
             "https://docs.derivative.ca/Audio_File_In_CHOP",
@@ -429,7 +427,10 @@ _PROBE_RECORDS: list[dict[str, Any]] = [
         metric_names=["dat_execute_callback_source_present"],
         pass_conditions=["a DAT Execute DAT carries generated callback source for the monitored table"],
         failure_message="DAT Execute callback plans require generated callback source on the DAT Execute DAT.",
-        official_sources=["https://docs.derivative.ca/DAT_Execute_DAT", "https://docs.derivative.ca/Text_DAT"],
+        official_sources=[
+            "https://docs.derivative.ca/DAT_Execute_DAT",
+            "https://docs.derivative.ca/Text_DAT",
+        ],
     ),
     _probe(
         "callback_guard_present",

@@ -26,7 +26,7 @@ time.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from mcp.server.fastmcp import Context
 from pydantic import Field
@@ -86,6 +86,8 @@ async def td_memory_learn(
     """
     svc = _tr._get_services(ctx)
     client = _tr._get_client(ctx)
+    safety_manager = _optional_safety_manager(ctx)
+    safety_warnings: list[str] = []
     technique = await analyze_network(
         client,
         path,
@@ -242,6 +244,17 @@ async def td_memory_replay(
             ),
         ),
     ] = False,
+    param_semantics_policy: Annotated[
+        Literal["warn", "block"],
+        Field(
+            default="warn",
+            description=(
+                "Docs-grounded parameter safety policy for replayed recipe params. "
+                "'warn' preserves replay behavior with attached findings; 'block' refuses "
+                "risky or invalid parameter writes before any live mutation."
+            ),
+        ),
+    ] = "warn",
 ) -> dict:
     """Rebuild a saved technique in a new location in the TD project.
 
@@ -304,13 +317,28 @@ async def td_memory_replay(
             except Exception:
                 pass  # If we can't verify, allow replay (checked at create time anyway)
 
-    client = _tr._get_client(ctx)
     parent = parent_path.rstrip("/") or "/"
     prefix = name_prefix.strip()
 
     recipe_nodes = recipe.get("nodes", {})
     if not isinstance(recipe_nodes, dict) or not recipe_nodes:
         return {"status": "error", "message": "Technique recipe has no nodes to replay."}
+    param_semantics_warnings = _recipe_param_semantics_warnings(
+        recipe_nodes=recipe_nodes,
+        parent_path=parent,
+        name_prefix=prefix,
+        recreate_root=recreate_root,
+    )
+    if param_semantics_policy == "block" and param_semantics_warnings:
+        return {
+            "status": "blocked",
+            "param_semantics_status": "blocked",
+            "param_semantics_warnings": [issue.model_dump(mode="json") for issue in param_semantics_warnings],
+        }
+
+    client = _tr._get_client(ctx)
+    safety_manager = _optional_safety_manager(ctx)
+    safety_warnings: list[str] = []
 
     created_nodes: dict[str, str] = {"/": parent}
     skipped_nodes: list[dict[str, str]] = []
@@ -383,9 +411,29 @@ async def td_memory_replay(
                     if isinstance(root_params_to_set, dict):
                         clean_root_params = {k: v for k, v in root_params_to_set.items() if v is not None}
                         if clean_root_params:
+                            preflight = _tr._preflight_direct_param_write(
+                                safety_manager=safety_manager,
+                                path=root_actual,
+                                op_type=_recipe_op_type(root_info),
+                                params=clean_root_params,
+                                param_semantics_policy=param_semantics_policy,
+                            )
+                            safety_warnings.extend(preflight.safety_warnings)
+                            param_semantics_warnings.extend(preflight.param_semantics_warnings)
+                            if preflight.blocked:
+                                return _blocked_replay_param_payload(
+                                    param_semantics_warnings=param_semantics_warnings,
+                                    created_nodes=created_nodes,
+                                    parent=parent,
+                                    created_count=created_count,
+                                    skipped_nodes=skipped_nodes,
+                                    skipped_connections=[],
+                                    connections_wired=0,
+                                    safety_warnings=safety_warnings,
+                                )
                             await client.request(
                                 "node/params/set",
-                                {"path": root_actual, "params": clean_root_params},
+                                {"path": root_actual, "params": preflight.adjusted_params},
                             )
                 else:
                     skipped_nodes.append({"path": "/", "reason": "recreate_root_create_failed"})
@@ -451,6 +499,7 @@ async def td_memory_replay(
 
         result: dict[str, Any] | None = None
         create_error: str | None = None
+        selected_type = op_type_candidates[0] if op_type_candidates else raw_type
         for candidate_type in op_type_candidates:
             try:
                 create_result = await client.request(
@@ -463,8 +512,10 @@ async def td_memory_replay(
                 )
                 if isinstance(create_result, dict):
                     result = create_result
+                    selected_type = candidate_type
                     break
                 result = {"node": {"path": ""}}
+                selected_type = candidate_type
                 break
             except Exception as exc:
                 create_error = str(exc)
@@ -494,11 +545,31 @@ async def td_memory_replay(
         if isinstance(params_to_set, dict):
             clean_params = {key: value for key, value in params_to_set.items() if value is not None}
             if clean_params:
+                preflight = _tr._preflight_direct_param_write(
+                    safety_manager=safety_manager,
+                    path=actual_path,
+                    op_type=selected_type,
+                    params=clean_params,
+                    param_semantics_policy=param_semantics_policy,
+                )
+                safety_warnings.extend(preflight.safety_warnings)
+                param_semantics_warnings.extend(preflight.param_semantics_warnings)
+                if preflight.blocked:
+                    return _blocked_replay_param_payload(
+                        param_semantics_warnings=param_semantics_warnings,
+                        created_nodes=created_nodes,
+                        parent=parent,
+                        created_count=created_count,
+                        skipped_nodes=skipped_nodes,
+                        skipped_connections=[],
+                        connections_wired=0,
+                        safety_warnings=safety_warnings,
+                    )
                 await client.request(
                     "node/params/set",
                     {
                         "path": actual_path,
-                        "params": clean_params,
+                        "params": preflight.adjusted_params,
                     },
                 )
 
@@ -508,11 +579,31 @@ async def td_memory_replay(
                 key: {"expr": value} for key, value in expressions.items() if isinstance(value, str) and value
             }
             if expr_params:
+                preflight = _tr._preflight_direct_param_write(
+                    safety_manager=safety_manager,
+                    path=actual_path,
+                    op_type=selected_type,
+                    params=expr_params,
+                    param_semantics_policy=param_semantics_policy,
+                )
+                safety_warnings.extend(preflight.safety_warnings)
+                param_semantics_warnings.extend(preflight.param_semantics_warnings)
+                if preflight.blocked:
+                    return _blocked_replay_param_payload(
+                        param_semantics_warnings=param_semantics_warnings,
+                        created_nodes=created_nodes,
+                        parent=parent,
+                        created_count=created_count,
+                        skipped_nodes=skipped_nodes,
+                        skipped_connections=[],
+                        connections_wired=0,
+                        safety_warnings=safety_warnings,
+                    )
                 await client.request(
                     "node/params/set",
                     {
                         "path": actual_path,
-                        "params": expr_params,
+                        "params": preflight.adjusted_params,
                     },
                 )
 
@@ -588,11 +679,173 @@ async def td_memory_replay(
     }
     if validation_result is not None:
         response["validation_result"] = validation_result
+    if param_semantics_warnings:
+        response["param_semantics_status"] = "warnings"
+        response["param_semantics_warnings"] = [
+            issue.model_dump(mode="json") for issue in param_semantics_warnings
+        ]
+    if safety_warnings:
+        response["safety_warnings"] = safety_warnings
 
     # Track replay usage
     store.record_replay(technique_id, scope=scope)
 
     return response
+
+
+def _recipe_param_semantics_warnings(
+    *,
+    recipe_nodes: dict,
+    parent_path: str,
+    name_prefix: str,
+    recreate_root: bool,
+) -> list:
+    warnings = []
+    root_actual = parent_path
+    root_info = recipe_nodes.get("/")
+    if (
+        recreate_root
+        and isinstance(root_info, dict)
+        and str(root_info.get("family", "")).strip().upper() == "COMP"
+    ):
+        root_name = _recipe_node_name(root_info, fallback="wrapper", prefix=name_prefix)
+        root_actual = f"{parent_path.rstrip('/')}/{root_name}".replace("//", "/")
+        for root_params in _recipe_param_preflight_payloads(root_info):
+            preflight = _tr._preflight_direct_param_write(
+                safety_manager=None,
+                path=root_actual,
+                op_type=_recipe_op_type(root_info),
+                params=root_params,
+                param_semantics_policy="warn",
+            )
+            warnings.extend(preflight.param_semantics_warnings)
+
+    for rel_path, node_info in recipe_nodes.items():
+        if rel_path == "/" or not isinstance(rel_path, str) or not isinstance(node_info, dict):
+            continue
+        param_payloads = _recipe_param_preflight_payloads(node_info)
+        if not param_payloads:
+            continue
+        path = _recipe_target_path(
+            rel_path=rel_path,
+            node_info=node_info,
+            parent_path=parent_path,
+            root_actual=root_actual,
+            name_prefix=name_prefix,
+            recreate_root=recreate_root,
+        )
+        for params in param_payloads:
+            preflight = _tr._preflight_direct_param_write(
+                safety_manager=None,
+                path=path,
+                op_type=_recipe_op_type(node_info),
+                params=params,
+                param_semantics_policy="warn",
+            )
+            warnings.extend(preflight.param_semantics_warnings)
+    deduped = []
+    seen = set()
+    for issue in warnings:
+        key = (getattr(issue, "code", ""), getattr(issue, "message", ""), getattr(issue, "path", ""))
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(issue)
+    return deduped
+
+
+def _optional_safety_manager(ctx: Context):
+    try:
+        return _tr._get_safety_manager(ctx)
+    except Exception:
+        return None
+
+
+def _blocked_replay_param_payload(
+    *,
+    param_semantics_warnings: list,
+    created_nodes: dict[str, str],
+    parent: str,
+    created_count: int,
+    skipped_nodes: list[dict[str, str]],
+    skipped_connections: list[dict[str, str]],
+    connections_wired: int,
+    safety_warnings: list[str],
+) -> dict[str, Any]:
+    created_paths = {key: value for key, value in created_nodes.items() if key != "/"}
+    if created_nodes.get("/") and created_nodes["/"] != parent:
+        created_paths["/"] = created_nodes["/"]
+    payload: dict[str, Any] = {
+        "status": "blocked",
+        "param_semantics_status": "blocked",
+        "param_semantics_warnings": [issue.model_dump(mode="json") for issue in param_semantics_warnings],
+        "nodes_created": created_count,
+        "connections_wired": connections_wired,
+        "created_paths": created_paths,
+        "skipped_nodes": skipped_nodes,
+        "skipped_connections": skipped_connections,
+    }
+    if safety_warnings:
+        payload["safety_warnings"] = safety_warnings
+    return payload
+
+
+def _clean_recipe_params(raw_params: Any) -> dict[str, Any]:
+    if not isinstance(raw_params, dict):
+        return {}
+    return {key: value for key, value in raw_params.items() if value is not None}
+
+
+def _clean_recipe_expressions(raw_expressions: Any) -> dict[str, Any]:
+    if not isinstance(raw_expressions, dict):
+        return {}
+    return {
+        key: {"expr": value} for key, value in raw_expressions.items() if isinstance(value, str) and value
+    }
+
+
+def _recipe_param_preflight_payloads(node_info: dict) -> list[dict[str, Any]]:
+    payloads = [
+        payload
+        for payload in (
+            _clean_recipe_params(node_info.get("params")),
+            _clean_recipe_expressions(node_info.get("expressions")),
+        )
+        if payload
+    ]
+    return payloads
+
+
+def _recipe_node_name(node_info: dict, *, fallback: str, prefix: str) -> str:
+    base = str(node_info.get("name", "")).strip() or fallback
+    return f"{prefix}_{base}" if prefix else base
+
+
+def _recipe_target_path(
+    *,
+    rel_path: str,
+    node_info: dict,
+    parent_path: str,
+    root_actual: str,
+    name_prefix: str,
+    recreate_root: bool,
+) -> str:
+    parts = rel_path.strip("/").split("/")
+    fallback = parts[-1] if parts and parts[-1] else str(node_info.get("type", "node"))
+    node_name = _recipe_node_name(node_info, fallback=fallback, prefix=name_prefix)
+    if recreate_root and root_actual != parent_path:
+        parent_rel = "/" + "/".join(parts[:-1]) if len(parts) > 1 else "/"
+        if parent_rel == "/":
+            return f"{root_actual.rstrip('/')}/{node_name}".replace("//", "/")
+    return f"{parent_path.rstrip('/')}/{node_name}".replace("//", "/")
+
+
+def _recipe_op_type(node_info: dict) -> str:
+    raw_type = str(node_info.get("type", "")).strip()
+    family = str(node_info.get("family", "")).strip().upper()
+    if raw_type and family and not raw_type.upper().endswith(family):
+        return f"{raw_type}{family}"
+    return raw_type
 
 
 @mcp.tool()

@@ -344,7 +344,9 @@ class OperatorAvailabilityMatrix(BaseModel):
                 if data is None:
                     raise ValueError(f"family alias references unknown operator: {op_type}")
                 if data.get("family") != family:
-                    raise ValueError(f"family alias {family} references {op_type} from {data.get('family')} family")
+                    raise ValueError(
+                        f"family alias {family} references {op_type} from {data.get('family')} family"
+                    )
         return self
 
 
@@ -667,6 +669,7 @@ class TransactionOptions(BaseModel):
     validation_profile: str = "structural_visual_safe"
     auto_repair: bool = False
     max_repair_attempts: int = Field(default=0, ge=0, le=3)
+    param_semantics_policy: Literal["warn", "block"] = "warn"
 
 
 CorpusEvidenceSource = Literal["exact_operator", "docs_search"]

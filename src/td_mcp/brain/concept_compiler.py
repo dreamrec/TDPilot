@@ -42,6 +42,7 @@ def compile_visual_task(
     """Compile a prompt into a narrow, deterministic Phase 1 task spec."""
     text = (intent or "").strip()
     normalized = text.lower()
+    routing_text = _primary_intent_text(normalized)
     deprecated_glsl_create_pop = _has_deprecated_glsl_create_pop(normalized)
     constraints = constraints or {}
     preferred_domains = preferred_domains or []
@@ -57,7 +58,7 @@ def compile_visual_task(
     validation_needs: list[str] = []
     risk_flags: list[str] = []
 
-    if _has_audio(normalized):
+    if _has_audio(routing_text):
         domains.append("CHOP")
         families.append("CHOP")
         motifs.append("audio-reactive")
@@ -69,7 +70,7 @@ def compile_visual_task(
             ["audio_source_present", "analysis_stage", "range_mapping", "audio_signal_activity"]
         )
 
-    if _has_midi(normalized):
+    if _has_midi(routing_text):
         domains.append("CHOP")
         families.append("CHOP")
         motifs.append("midi-control")
@@ -81,7 +82,7 @@ def compile_visual_task(
         validation_needs.extend(["midi_source_present", "range_mapping", "control_output"])
         risk_flags.append("device-source-required")
 
-    if _has_serial_protocol(normalized):
+    if _has_serial_protocol(routing_text):
         domains.append("DAT")
         families.append("DAT")
         motifs.append("serial-protocol")
@@ -93,7 +94,7 @@ def compile_visual_task(
         validation_needs.extend(["serial_source_present", "protocol_table_output"])
         risk_flags.append("device-source-required")
 
-    if _has_osc_protocol(normalized):
+    if _has_osc_protocol(routing_text):
         domains.append("DAT")
         families.append("DAT")
         motifs.append("osc-protocol")
@@ -105,7 +106,7 @@ def compile_visual_task(
         validation_needs.extend(["osc_source_present", "protocol_table_output"])
         risk_flags.append("device-source-required")
 
-    if _has_websocket_protocol(normalized):
+    if _has_websocket_protocol(routing_text):
         domains.append("DAT")
         families.append("DAT")
         motifs.append("websocket-protocol")
@@ -117,7 +118,7 @@ def compile_visual_task(
         validation_needs.extend(["websocket_source_present", "protocol_table_output"])
         risk_flags.append("device-source-required")
 
-    if _has_mqtt_protocol(normalized):
+    if _has_mqtt_protocol(routing_text):
         domains.append("DAT")
         families.append("DAT")
         motifs.append("mqtt-protocol")
@@ -129,7 +130,7 @@ def compile_visual_task(
         validation_needs.extend(["mqtt_source_present", "protocol_table_output"])
         risk_flags.append("device-source-required")
 
-    if _has_udp_protocol(normalized):
+    if _has_udp_protocol(routing_text):
         domains.append("DAT")
         families.append("DAT")
         motifs.append("udp-protocol")
@@ -172,7 +173,7 @@ def compile_visual_task(
         )
         risk_flags.append("validate-python-callback")
 
-    if _has_ndi(normalized):
+    if _has_ndi(routing_text):
         domains.append("TOP")
         families.append("TOP")
         motifs.append("ndi-video-input")
@@ -369,6 +370,28 @@ def is_supported_compiler_route(compiled: CompiledVisualTaskSpec) -> bool:
     )
 
 
+def _primary_intent_text(text: str) -> str:
+    clauses = re.split(r"(?i)(?:\bwhile\b|\bwhere\b|\bwhen\b|;|,)", text)
+    kept: list[str] = []
+    for clause in clauses:
+        stripped = clause.strip()
+        if not stripped:
+            continue
+        lower = stripped.lower()
+        is_card_context = (
+            "distractor" in lower
+            or "cards" in lower
+            or "card" in lower
+            or "docs" in lower
+            or "also available" in lower
+            or "also present" in lower
+        )
+        if kept and is_card_context:
+            continue
+        kept.append(stripped)
+    return " ".join(kept) or text
+
+
 def _has_audio(text: str) -> bool:
     return any(token in text for token in ("audio", "music", "sound", "beat", "spectrum"))
 
@@ -434,15 +457,19 @@ def _has_stable_top_output(text: str) -> bool:
 
 def _has_glsl_top_shader(text: str) -> bool:
     is_pop_shader = bool(re.search(r"\bpop\b|\bparticles?\b", text))
-    return not is_pop_shader and bool(re.search(r"\bglsl\b", text)) and bool(
-        re.search(r"\bglsl\s+top\b|\btop\s+shader\b|\bfragment\b|\btexture effect\b", text)
+    return (
+        not is_pop_shader
+        and bool(re.search(r"\bglsl\b", text))
+        and bool(re.search(r"\bglsl\s+top\b|\btop\s+shader\b|\bfragment\b|\btexture effect\b", text))
     )
 
 
 def _has_pop_particle_preview(text: str) -> bool:
     has_pop_or_particle = bool(re.search(r"\bpop\b|\bparticles?\b", text))
     has_field = bool(re.search(r"\bfield\b|\bemitter\b|\bparticles?\b", text))
-    has_preview = bool(re.search(r"\bpreview\b|\brendered\s+top\b|\bstable\s+top\s+output\b|\btop\s+output\b", text))
+    has_preview = bool(
+        re.search(r"\bpreview\b|\brendered\s+top\b|\bstable\s+top\s+output\b|\btop\s+output\b", text)
+    )
     return has_pop_or_particle and has_field and has_preview
 
 
@@ -615,7 +642,17 @@ def _seed_ops_for_features(profiles: list[str], capabilities: list[str], risk_fl
     if "pop" in profiles:
         ops.extend(["circlePOP", "noisePOP", "mathmixPOP", "nullPOP", "rendersimpleTOP", "nullTOP"])
     if "glsl_advanced_pop_topology" in capabilities:
-        ops.extend(["circlePOP", "glsladvancedPOP", "topologyPOP", "textDAT", "nullPOP", "rendersimpleTOP", "nullTOP"])
+        ops.extend(
+            [
+                "circlePOP",
+                "glsladvancedPOP",
+                "topologyPOP",
+                "textDAT",
+                "nullPOP",
+                "rendersimpleTOP",
+                "nullTOP",
+            ]
+        )
     if "deprecated-op:glslcreatePOP" in risk_flags:
         ops.append("glslcreatePOP")
     if "terrain_surface" in capabilities:

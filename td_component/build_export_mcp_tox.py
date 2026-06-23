@@ -68,13 +68,36 @@ def _compute_tox_source_hash(repo_root):
     return h.hexdigest()
 
 
-def _write_tox_source_hash(repo_root):
-    """Record the .tox-source hash so CI can detect drift after edits."""
+def _compute_file_sha256(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while True:
+            chunk = f.read(1024 * 1024)
+            if not chunk:
+                break
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _tox_artifact_metadata(repo_root, tox_path):
+    return {
+        "tox_artifact_path": os.path.relpath(tox_path, repo_root),
+        "tox_artifact_sha256": _compute_file_sha256(tox_path),
+        "tox_artifact_size_bytes": os.path.getsize(tox_path),
+    }
+
+
+def _write_tox_source_hash(repo_root, tox_path=None):
+    """Record source and .tox artifact hashes so CI can detect drift after edits."""
+    if tox_path is None:
+        tox_path = os.path.join(repo_root, "td_component", "tdpilot.tox")
     manifest = {
         "tox_source_hash": _compute_tox_source_hash(repo_root),
         "built_at": datetime.now(timezone.utc).isoformat(),
         "source_files": list(_TOX_SOURCE_FILES),
     }
+    if os.path.isfile(tox_path):
+        manifest.update(_tox_artifact_metadata(repo_root, tox_path))
     out_path = os.path.join(repo_root, "td_component", ".tox-source-hash.json")
     with open(out_path, "w") as f:
         json.dump(manifest, f, indent=2)
@@ -540,7 +563,7 @@ def build_and_export():
         )
         export_comp.save(export_path)
         _save_versioned_export(repo_root, export_comp, export_path)
-        _write_tox_source_hash(repo_root)
+        _write_tox_source_hash(repo_root, export_path)
     finally:
         try:
             temp_parent.destroy()

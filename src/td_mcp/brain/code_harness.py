@@ -12,7 +12,6 @@ from pydantic import ValidationError
 from td_mcp.models.brain import GeneratedCodeBlock, ValidationIssue
 from td_mcp.models.patch import PatchPlan
 
-
 _TOPOLOGY_CAPACITY_PARAMS = (
     "maxlines",
     "maxlinestrips",
@@ -217,7 +216,11 @@ async def validate_generated_code_runtime_contracts(
                 readback_error = str(exc) or type(exc).__name__
                 error_issues = [{"message": readback_error}]
             status = "runtime_pass" if not error_issues else "runtime_fail"
-            evidence.append(_runtime_evidence(contract, status=status, endpoint="node/errors", issue_count=len(error_issues)))
+            evidence.append(
+                _runtime_evidence(
+                    contract, status=status, endpoint="node/errors", issue_count=len(error_issues)
+                )
+            )
             if error_issues:
                 if readback_error is not None:
                     issues.append(
@@ -270,11 +273,15 @@ async def validate_generated_code_runtime_contracts(
             if check_id == "callback_guard_present":
                 ok = _has_dat_execute_callback_guard(content)
                 issue_code = "generated_code_runtime_callback_guard_missing"
-                issue_message = f"{contract.get('block_id')} live callback text is missing tdpilot_callback_guard."
+                issue_message = (
+                    f"{contract.get('block_id')} live callback text is missing tdpilot_callback_guard."
+                )
             else:
                 ok = _has_callback_diagnostic_output(content, list(contract.get("expected_outputs") or []))
                 issue_code = "generated_code_runtime_diagnostic_output_missing"
-                issue_message = f"{contract.get('block_id')} live callback text does not reference expected diagnostics."
+                issue_message = (
+                    f"{contract.get('block_id')} live callback text does not reference expected diagnostics."
+                )
             evidence.append(
                 _runtime_evidence(
                     contract,
@@ -518,7 +525,9 @@ def _validate_python_block(block: GeneratedCodeBlock) -> list[ValidationIssue]:
                     path=block.target_op,
                 )
             )
-        if "callback_guard_present" in block.runtime_checks and not _has_dat_execute_callback_guard(block.code):
+        if "callback_guard_present" in block.runtime_checks and not _has_dat_execute_callback_guard(
+            block.code
+        ):
             issues.append(
                 _issue(
                     code="missing_dat_execute_callback_guard",
@@ -548,10 +557,7 @@ def _validate_python_block(block: GeneratedCodeBlock) -> list[ValidationIssue]:
         issues.append(
             _issue(
                 code="invalid_chop_execute_callback_signature",
-                message=(
-                    f"{block.block_id} must define "
-                    "onValueChange(channel, sampleIndex, val, prev)."
-                ),
+                message=(f"{block.block_id} must define onValueChange(channel, sampleIndex, val, prev)."),
                 path=block.target_op,
             )
         )
@@ -584,8 +590,7 @@ def _validate_python_block(block: GeneratedCodeBlock) -> list[ValidationIssue]:
             _issue(
                 code="missing_parameter_execute_callback_guard",
                 message=(
-                    f"{block.block_id} must include a tdpilot_callback_guard sentinel "
-                    "with try/finally reset."
+                    f"{block.block_id} must include a tdpilot_callback_guard sentinel with try/finally reset."
                 ),
                 path=block.target_op,
             )
@@ -634,8 +639,7 @@ def _validate_python_block(block: GeneratedCodeBlock) -> list[ValidationIssue]:
             _issue(
                 code="missing_panel_execute_callback_guard",
                 message=(
-                    f"{block.block_id} must include a tdpilot_callback_guard sentinel "
-                    "with try/finally reset."
+                    f"{block.block_id} must include a tdpilot_callback_guard sentinel with try/finally reset."
                 ),
                 path=block.target_op,
             )
@@ -669,8 +673,7 @@ def _validate_python_block(block: GeneratedCodeBlock) -> list[ValidationIssue]:
             _issue(
                 code="missing_pargroup_execute_callback_guard",
                 message=(
-                    f"{block.block_id} must include a tdpilot_callback_guard sentinel "
-                    "with try/finally reset."
+                    f"{block.block_id} must include a tdpilot_callback_guard sentinel with try/finally reset."
                 ),
                 path=block.target_op,
             )
@@ -824,11 +827,7 @@ def _validate_plan_attachments(plan: PatchPlan, blocks: list[GeneratedCodeBlock]
             continue
         target_params = params_by_target.get(block.target_op, {})
         value = target_params.get(block.target_param)
-        if (
-            block.target_param == "text"
-            and block.target_op in block.source_refs
-            and isinstance(value, str)
-        ):
+        if block.target_param == "text" and block.target_op in block.source_refs and isinstance(value, str):
             continue
         if _value_references_any_source(value, block.source_refs):
             continue
@@ -901,7 +900,9 @@ async def _contract_pop_bounds(td_client, path: str, cache: dict[str, dict[str, 
     return data
 
 
-async def _contract_topology_capacity(td_client, path: str, cache: dict[str, dict[str, Any]]) -> dict[str, Any]:
+async def _contract_topology_capacity(
+    td_client, path: str, cache: dict[str, dict[str, Any]]
+) -> dict[str, Any]:
     if path in cache:
         return cache[path]
     payload = await td_client.request(
@@ -1093,7 +1094,10 @@ def _has_callback_diagnostic_output(code: str, expected_outputs: list[str]) -> b
         tree = ast.parse(code)
     except SyntaxError:
         return False
-    return any(isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in candidates for node in ast.walk(tree))
+    return any(
+        isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in candidates
+        for node in ast.walk(tree)
+    )
 
 
 _WATCHED_DAT_MUTATORS = {
@@ -1225,7 +1229,11 @@ def _has_direct_watched_parameter_write(code: str) -> bool:
     except SyntaxError:
         return False
     for node in ast.walk(tree):
-        if not isinstance(node, ast.FunctionDef) or node.name not in _PARAMETER_EXECUTE_CALLBACKS or not node.args.args:
+        if (
+            not isinstance(node, ast.FunctionDef)
+            or node.name not in _PARAMETER_EXECUTE_CALLBACKS
+            or not node.args.args
+        ):
             continue
         watched_arg = node.args.args[0].arg
         for child in ast.walk(node):
@@ -1250,7 +1258,11 @@ def _has_direct_watched_pargroup_write(code: str) -> bool:
     except SyntaxError:
         return False
     for node in ast.walk(tree):
-        if not isinstance(node, ast.FunctionDef) or node.name not in _PARGROUP_EXECUTE_CALLBACKS or not node.args.args:
+        if (
+            not isinstance(node, ast.FunctionDef)
+            or node.name not in _PARGROUP_EXECUTE_CALLBACKS
+            or not node.args.args
+        ):
             continue
         watched_arg = node.args.args[0].arg
         for child in ast.walk(node):

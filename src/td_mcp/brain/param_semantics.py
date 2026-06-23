@@ -34,7 +34,14 @@ _PARGROUP_EXECUTE_DOCS = "https://docs.derivative.ca/ParGroup_Execute_DAT"
 _SERIAL_DAT_DOCS = "https://docs.derivative.ca/Serial_DAT"
 _OSC_IN_DAT_DOCS = "https://docs.derivative.ca/OSC_In_DAT"
 _WEBSOCKET_DAT_DOCS = "https://docs.derivative.ca/WebSocket_DAT"
+_WEB_CLIENT_DAT_DOCS = "https://docs.derivative.ca/Web_Client_DAT"
+_WEB_SERVER_DAT_DOCS = "https://docs.derivative.ca/Web_Server_DAT"
+_MIDI_IN_CHOP_DOCS = "https://docs.derivative.ca/MIDI_In_CHOP"
+_MQTT_CLIENT_DAT_DOCS = "https://docs.derivative.ca/MQTT_Client_DAT"
+_UDP_IN_DAT_DOCS = "https://docs.derivative.ca/UDP_In_DAT"
 _ERROR_DAT_DOCS = "https://docs.derivative.ca/Error_DAT"
+_TABLE_DAT_DOCS = "https://docs.derivative.ca/Table_DAT"
+_SELECT_DAT_DOCS = "https://docs.derivative.ca/Select_DAT"
 _RENDER_TOP_DOCS = "https://docs.derivative.ca/Render_TOP"
 _GEOMETRY_COMP_DOCS = "https://docs.derivative.ca/Geometry_COMP"
 _CAMERA_COMP_DOCS = "https://docs.derivative.ca/Camera_COMP"
@@ -53,7 +60,12 @@ _MATH_MIX_POP_DOCS = "https://docs.derivative.ca/Math_Mix_POP"
 _ATTRIBUTE_COMBINE_POP_DOCS = "https://docs.derivative.ca/Attribute_Combine_POP"
 _GRID_SOP_DOCS = "https://docs.derivative.ca/Grid_SOP"
 _NOISE_SOP_DOCS = "https://docs.derivative.ca/Noise_SOP"
+_TRANSFORM_SOP_DOCS = "https://docs.derivative.ca/Transform_SOP"
 _NDI_IN_TOP_DOCS = "https://docs.derivative.ca/NDI_In_TOP"
+_KINECT_AZURE_TOP_DOCS = "https://docs.derivative.ca/Kinect_Azure_TOP"
+_MOVIE_FILE_IN_TOP_DOCS = "https://docs.derivative.ca/Movie_File_In_TOP"
+_VIDEO_DEVICE_IN_TOP_DOCS = "https://docs.derivative.ca/Video_Device_In_TOP"
+_NOISE_TOP_DOCS = "https://docs.derivative.ca/Noise_TOP"
 _TRANSFORM_TOP_DOCS = "https://docs.derivative.ca/Transform_TOP"
 _CACHE_TOP_DOCS = "https://docs.derivative.ca/Cache_TOP"
 _FEEDBACK_TOP_DOCS = "https://docs.derivative.ca/Feedback_TOP"
@@ -66,8 +78,13 @@ _SLIDER_COMP_DOCS = "https://docs.derivative.ca/Slider_COMP"
 _BUTTON_COMP_DOCS = "https://docs.derivative.ca/Button_COMP"
 _PANEL_CHOP_DOCS = "https://docs.derivative.ca/Panel_CHOP"
 _PARAMETER_COMP_DOCS = "https://docs.derivative.ca/Parameter_COMP"
+_LFO_CHOP_DOCS = "https://docs.derivative.ca/LFO_CHOP"
+_WAVE_CHOP_DOCS = "https://docs.derivative.ca/Wave_CHOP"
+_NOISE_CHOP_DOCS = "https://docs.derivative.ca/Noise_CHOP"
 _AUDIO_FILE_IN_CHOP_DOCS = "https://docs.derivative.ca/Audio_File_In_CHOP"
+_AUDIO_FILE_OUT_CHOP_DOCS = "https://docs.derivative.ca/Audio_File_Out_CHOP"
 _AUDIO_DEVICE_IN_CHOP_DOCS = "https://docs.derivative.ca/Audio_Device_In_CHOP"
+_AUDIO_DEVICE_OUT_CHOP_DOCS = "https://docs.derivative.ca/Audio_Device_Out_CHOP"
 _ANALYZE_CHOP_DOCS = "https://docs.derivative.ca/Analyze_CHOP"
 _MATH_CHOP_DOCS = "https://docs.derivative.ca/Math_CHOP"
 _FILTER_CHOP_DOCS = "https://docs.derivative.ca/Filter_CHOP"
@@ -93,6 +110,9 @@ _PRIORITY_SEMANTICS_GROUPS: dict[str, tuple[str, ...]] = {
         "glslCOMP",
     ),
     "feedback_top_processing": (
+        "moviefileinTOP",
+        "videodeviceinTOP",
+        "noiseTOP",
         "feedbackTOP",
         "levelTOP",
         "compositeTOP",
@@ -106,9 +126,20 @@ _PRIORITY_SEMANTICS_GROUPS: dict[str, tuple[str, ...]] = {
         "attributecombinePOP",
         "rendersimpleTOP",
     ),
+    "sop_geometry": (
+        "gridSOP",
+        "noiseSOP",
+        "transformSOP",
+    ),
     "audio_control": (
         "audiofileinCHOP",
+        "audiofileoutCHOP",
         "audiodeviceinCHOP",
+        "audiodeviceoutCHOP",
+        "lfoCHOP",
+        "waveCHOP",
+        "noiseCHOP",
+        "midiinCHOP",
         "analyzeCHOP",
         "mathCHOP",
         "filterCHOP",
@@ -126,9 +157,15 @@ _PRIORITY_SEMANTICS_GROUPS: dict[str, tuple[str, ...]] = {
         "datexecuteDAT",
         "chopexecuteDAT",
         "executeDAT",
+        "tableDAT",
+        "selectDAT",
         "serialDAT",
         "oscinDAT",
         "websocketDAT",
+        "webclientDAT",
+        "webserverDAT",
+        "mqttclientDAT",
+        "udpinDAT",
     ),
 }
 _CHOP_UNIT_MENU_VALUES = ["Samples", "Frames", "Seconds", "samples", "frames", "seconds"]
@@ -144,6 +181,7 @@ _AUDIO_FILE_PLAY_MODE_VALUES = [
     "timecodeop",
 ]
 _AUDIO_REPEAT_VALUES = ["Off", "off", "On", "on"]
+_AUDIO_FILE_OUT_TYPE_VALUES = ["WAV", "wav", "OGG", "ogg", "MP3", "mp3", "AIFF", "aiff"]
 _AUDIO_DEVICE_DRIVER_VALUES = [
     "DirectSound/CoreAudio",
     "default",
@@ -177,6 +215,167 @@ _AUDIO_DEVICE_CHANNEL_TOGGLES = [
     ("topbackcenter", "Top Back Center"),
     ("topbackright", "Top Back Right"),
 ]
+_MIDI_IN_SOURCE_VALUES = ["Device", "device", "Internal", "internal", "File", "file"]
+_MOVIE_FILE_TOP_PLAY_MODE_VALUES = [
+    "Locked to Timeline",
+    "locked",
+    "Specify Index",
+    "specify",
+    "Sequential",
+    "sequential",
+]
+_MOVIE_FILE_TOP_IMAGE_INDEXING_VALUES = [
+    "Zero Based",
+    "zero",
+    "One Based",
+    "one",
+    "Native",
+    "native",
+]
+_TOP_COLOR_SPACE_VALUES = [
+    "Automatic",
+    "auto",
+    "sRGB",
+    "srgb",
+    "Linear",
+    "linear",
+    "Rec. 709",
+    "rec709",
+    "Raw",
+    "raw",
+]
+_MOVIE_DECODE_PIXEL_FORMAT_VALUES = [
+    "Automatic",
+    "auto",
+    "8-bit fixed",
+    "rgba8",
+    "16-bit float",
+    "rgba16float",
+    "32-bit float",
+    "rgba32float",
+]
+_VIDEO_DEVICE_DRIVER_VALUES = [
+    "Default",
+    "default",
+    "DirectShow",
+    "directshow",
+    "Media Foundation",
+    "mediafoundation",
+    "AVFoundation",
+    "avfoundation",
+    "Blackmagic",
+    "blackmagic",
+    "AJA",
+    "aja",
+    "DataPath",
+    "datapath",
+]
+_VIDEO_DEVICE_DEINTERLACE_VALUES = [
+    "Off",
+    "off",
+    "Blend",
+    "blend",
+    "Bob",
+    "bob",
+]
+_VIDEO_DEVICE_PRECEDENCE_VALUES = [
+    "Newest",
+    "newest",
+    "Oldest",
+    "oldest",
+]
+_VIDEO_DEVICE_SIGNAL_FORMAT_VALUES = [
+    "Automatic",
+    "auto",
+    "NTSC",
+    "ntsc",
+    "PAL",
+    "pal",
+    "720p",
+    "1080p",
+    "2160p",
+]
+_VIDEO_DEVICE_PIXEL_FORMAT_VALUES = [
+    "Automatic",
+    "auto",
+    "8-bit RGBA",
+    "rgba8",
+    "10-bit YUV",
+    "yuv10",
+    "16-bit float",
+    "rgba16float",
+]
+_VIDEO_DEVICE_REFERENCE_WHITE_VALUES = [
+    "Default",
+    "default",
+    "100 nits",
+    "100",
+    "203 nits",
+    "203",
+]
+_VIDEO_DEVICE_TRANSFER_MODE_VALUES = [
+    "Automatic",
+    "auto",
+    "CPU",
+    "cpu",
+    "GPU Direct",
+    "gpudirect",
+]
+_VIDEO_DEVICE_MEMORY_MODE_VALUES = [
+    "Automatic",
+    "auto",
+    "CPU",
+    "cpu",
+    "GPU",
+    "gpu",
+]
+_NOISE_TOP_TYPE_VALUES = [
+    "Perlin",
+    "perlin",
+    "Simplex",
+    "simplex",
+    "Simplex 2D",
+    "simplex2d",
+    "Simplex 3D",
+    "simplex3d",
+    "Simplex 4D",
+    "simplex4d",
+    "Random GPU",
+    "randomgpu",
+    "Sparse",
+    "sparse",
+    "Hermite",
+    "hermite",
+    "Harmonic Summation",
+    "harmonic",
+    "harmonicsum",
+    "Random",
+    "random",
+    "Alligator",
+    "alligator",
+]
+_NOISE_TOP_COMBINE_VALUES = [
+    "Noise",
+    "noise",
+    "Input",
+    "input",
+    "Input * Noise",
+    "multiply",
+    "inputnoise",
+    "Input + Noise",
+    "add",
+    "Input - Noise",
+    "subtract",
+    "sub",
+]
+_NOISE_TOP_ALPHA_VALUES = [
+    "Zero",
+    "zero",
+    "One",
+    "one",
+    *_NOISE_TOP_COMBINE_VALUES,
+]
+_NOISE_TOP_MODE_VALUES = ["Performance", "performance", "Quality", "quality"]
 _ANALYZE_CHOP_FUNCTIONS = [
     "Average",
     "average",
@@ -231,9 +430,72 @@ _CHOP_EXPORT_METHOD_VALUES = [
     "Channel Name is Path:Parameter",
     "autoname",
 ]
+_CHOP_RESET_CONDITION_VALUES = [
+    "Off to On",
+    "offtoon",
+    "While On",
+    "whileon",
+    "On to Off",
+    "ontooff",
+    "While Off",
+    "whileoff",
+]
+_LFO_CHOP_WAVE_TYPE_VALUES = [
+    "Sine",
+    "sine",
+    "Gaussian",
+    "gaussian",
+    "Triangle",
+    "triangle",
+    "Ramp",
+    "ramp",
+    "Square",
+    "square",
+    "Pulse",
+    "pulse",
+]
+_WAVE_CHOP_WAVE_TYPE_VALUES = [
+    "Constant",
+    "constant",
+    "const",
+    "Sine",
+    "sine",
+    "sin",
+    "Gaussian",
+    "gaussian",
+    "normal",
+    "Triangle",
+    "triangle",
+    "tri",
+    "Ramp",
+    "ramp",
+    "Square",
+    "square",
+    "Pulse",
+    "pulse",
+    "Expression",
+    "expression",
+    "expr",
+]
+_NOISE_CHOP_TYPE_VALUES = [
+    "Sparse",
+    "sparse",
+    "Hermite",
+    "hermite",
+    "Harmonic",
+    "harmonic",
+    "Brownian",
+    "brownian",
+    "Random",
+    "random",
+    "Alligator",
+    "alligator",
+]
+_NOISE_CHOP_PERIOD_UNIT_VALUES = [*_CHOP_UNIT_MENU_VALUES, "Fraction", "fraction"]
 _SWITCH_INDEX_TABLE_EXPR = re.compile(
     r"^min\(1,\s*max\(0,\s*int\(op\('(?P<path>[^']+)'\)\[1,\s*'selected_index'\]\)\)\)$"
 )
+_CHOP_REFERENCE_EXPR = re.compile(r"^op\('(?P<path>[^']+)'\)\[(?P<index>[0-9]+|'[^']+')\]$")
 _MATH_CHOP_UNARY_OP_VALUES = [
     "Off",
     "off",
@@ -477,7 +739,20 @@ _NOISE_TYPE_VALUES = [
     "simplex4d",
 ]
 _NOISE_SIZE_VALUES = ["1", "2", "3", "4"]
-_ROTATE_ORDER_VALUES = ["Rx Ry Rz", "xyz", "Rx Rz Ry", "xzy", "Ry Rx Rz", "yxz", "Ry Rz Rx", "yzx", "Rz Rx Ry", "zxy", "Rz Ry Rx", "zyx"]
+_ROTATE_ORDER_VALUES = [
+    "Rx Ry Rz",
+    "xyz",
+    "Rx Rz Ry",
+    "xzy",
+    "Ry Rx Rz",
+    "yxz",
+    "Ry Rz Rx",
+    "yzx",
+    "Rz Rx Ry",
+    "zxy",
+    "Rz Ry Rx",
+    "zyx",
+]
 _NOISE_COMBINE_VALUES = [
     "None",
     "none",
@@ -489,7 +764,20 @@ _NOISE_COMBINE_VALUES = [
     "translatealongnormal",
 ]
 _NOISE_COMBINE_ENTITY_VALUES = ["Noise", "noise", "Curl 3D", "curl3d", "Curl 2D", "curl2d"]
-_NOISE_ATTR_TYPE_VALUES = ["float", "double", "int", "uint", "Color", "color", "Color (double)", "dcolor", "Direction", "dir", "Direction (double)", "ddir"]
+_NOISE_ATTR_TYPE_VALUES = [
+    "float",
+    "double",
+    "int",
+    "uint",
+    "Color",
+    "color",
+    "Color (double)",
+    "dcolor",
+    "Direction",
+    "dir",
+    "Direction (double)",
+    "ddir",
+]
 _NOISE_MODE_VALUES = ["Performance", "performance", "Quality", "quality"]
 _NOISE_MAP_PARM_VALUES = ["period", "offset", "amp", "exp", "spread", "gain"]
 _MAP_COMBINE_VALUES = ["Set", "set", "Multiply", "mult", "Add", "add"]
@@ -1281,6 +1569,42 @@ _OSC_IN_PROTOCOL_VALUES = [
     "Reliable Messaging (UDT Library)",
     "reliablemsging",
 ]
+_UDP_IN_PROTOCOL_VALUES = [
+    "Messaging (UDP)",
+    "msging",
+    "Multi-Cast Messaging (UDP)",
+    "multicastmsging",
+]
+_UDP_IN_FORMAT_VALUES = _SERIAL_DAT_FORMAT_VALUES
+_WEB_CLIENT_REQUEST_METHOD_VALUES = [
+    "GET",
+    "get",
+    "POST",
+    "post",
+    "PUT",
+    "put",
+    "DELETE",
+    "delete",
+    "HEAD",
+    "head",
+    "OPTIONS",
+    "options",
+    "PATCH",
+    "patch",
+]
+_WEB_CLIENT_AUTH_TYPE_VALUES = [
+    "None",
+    "none",
+    "Basic",
+    "basic",
+    "Digest",
+    "digest",
+    "OAuth1",
+    "oauth1",
+    "OAuth2",
+    "oauth2",
+]
+_WEB_CLIENT_SECRET_PARAMS = {"pw", "appsecret", "oauthtoken", "oauthsecret", "token"}
 _GLSL_ADVANCED_POP_CAPACITY_PARAMS: dict[str, tuple[str, str]] = {
     "maxpoints": ("Maximum Points", "points"),
     "maxtriangles": ("Maximum Triangles", "primitives"),
@@ -1320,7 +1644,13 @@ _GLSL_MULTI_INT_PARAMS: dict[str, tuple[str, str | None, float, str, str]] = {
     "dispatchsizez": ("Dispatch Size Z", "groups", 1.0, "small_manual_dispatch_size", "high"),
     "customdepth": ("Custom Depth", "slices", 1.0, "bounded_custom_texture_depth", "high"),
     "nval": ("N Value", "inputs_per_slice", 1.0, "positive_inputs_per_slice", "medium"),
-    "numcolorbufs": ("Number of Color Buffers", "buffers", 1.0, "single_buffer_unless_multi_output_is_required", "high"),
+    "numcolorbufs": (
+        "Number of Color Buffers",
+        "buffers",
+        1.0,
+        "single_buffer_unless_multi_output_is_required",
+        "high",
+    ),
     "resolutionw": ("Resolution Width", "pixels", 1.0, "bounded_custom_output_width", "high"),
     "resolutionh": ("Resolution Height", "pixels", 1.0, "bounded_custom_output_height", "high"),
     "npasses": ("Passes", "passes", 1.0, "single_pass_unless_feedback_passes_are_explicit", "high"),
@@ -1331,7 +1661,13 @@ _GLSL_TOP_INT_PARAMS: dict[str, tuple[str, str | None, float, str, str]] = {
     "dispatchsizez": ("Dispatch Size Z", "groups", 1.0, "small_manual_dispatch_size", "high"),
     "customdepth": ("Custom Depth", "slices", 1.0, "bounded_custom_texture_depth", "high"),
     "nval": ("N Value", "inputs_per_slice", 1.0, "positive_inputs_per_slice", "medium"),
-    "numcolorbufs": ("Number of Color Buffers", "buffers", 1.0, "single_buffer_unless_multi_output_is_required", "high"),
+    "numcolorbufs": (
+        "Number of Color Buffers",
+        "buffers",
+        1.0,
+        "single_buffer_unless_multi_output_is_required",
+        "high",
+    ),
     "npasses": ("Passes", "passes", 1.0, "single_pass_unless_feedback_passes_are_explicit", "high"),
 }
 
@@ -1343,6 +1679,12 @@ def load_param_semantics_registry() -> list[ParamSemantics]:
         *_feedback_top_semantics(),
         *_composite_top_semantics(),
         *_switch_top_semantics(),
+        *_table_dat_semantics(),
+        *_select_dat_semantics(),
+        *_movie_file_in_top_semantics(),
+        *_video_device_in_top_semantics(),
+        *_kinect_azure_top_semantics(),
+        *_noise_top_semantics(),
         ParamSemantics(
             op_type="transformTOP",
             name="xord",
@@ -1639,6 +1981,30 @@ def load_param_semantics_registry() -> list[ParamSemantics]:
             validation_rule="non_negative_displacement_amplitude",
             official_source=_NOISE_SOP_DOCS,
         ),
+        *[
+            ParamSemantics(
+                op_type="transformSOP",
+                name=name,
+                label=label,
+                value_kind="float",
+                valid_range=(-10000.0, 10000.0),
+                default_strategy=default_strategy,
+                cook_risk="medium",
+                validation_rule=validation_rule,
+                official_source=_TRANSFORM_SOP_DOCS,
+            )
+            for name, label, default_strategy, validation_rule in (
+                ("tx", "Translate X", "centered_sop_translation", "bounded_sop_translation"),
+                ("ty", "Translate Y", "centered_sop_translation", "bounded_sop_translation"),
+                ("tz", "Translate Z", "centered_sop_translation", "bounded_sop_translation"),
+                ("rx", "Rotate X", "neutral_sop_rotation", "bounded_sop_rotation"),
+                ("ry", "Rotate Y", "neutral_sop_rotation", "bounded_sop_rotation"),
+                ("rz", "Rotate Z", "neutral_sop_rotation", "bounded_sop_rotation"),
+                ("sx", "Scale X", "unit_sop_scale", "bounded_sop_scale"),
+                ("sy", "Scale Y", "unit_sop_scale", "bounded_sop_scale"),
+                ("sz", "Scale Z", "unit_sop_scale", "bounded_sop_scale"),
+            )
+        ],
         ParamSemantics(
             op_type="ndiinTOP",
             name="active",
@@ -2282,8 +2648,14 @@ def load_param_semantics_registry() -> list[ParamSemantics]:
             validation_rule="integer_output_limit",
             official_source=_ERROR_DAT_DOCS,
         ),
+        *_lfo_chop_semantics(),
+        *_wave_chop_semantics(),
+        *_noise_chop_semantics(),
         *_audio_file_in_chop_semantics(),
+        *_audio_file_out_chop_semantics(),
         *_audio_device_in_chop_semantics(),
+        *_audio_device_out_chop_semantics(),
+        *_midi_in_chop_semantics(),
         *_analyze_chop_semantics(),
         *_math_chop_semantics(),
         *_filter_chop_semantics(),
@@ -3133,6 +3505,620 @@ def load_param_semantics_registry() -> list[ParamSemantics]:
             validation_rule="bool_toggle",
             official_source=_WEBSOCKET_DAT_DOCS,
         ),
+        *_web_client_dat_semantics(),
+        *_web_server_dat_semantics(),
+        *_mqtt_client_dat_semantics(),
+        *_udp_in_dat_semantics(),
+    ]
+
+
+def _web_client_dat_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="webclientDAT",
+            name="active",
+            label="Active",
+            value_kind="bool",
+            default_strategy="enable_only_when_http_client_use_is_declared",
+            cook_risk="high",
+            validation_rule="bool_toggle",
+            official_source=_WEB_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webclientDAT",
+            name="reqmethod",
+            label="Request Method",
+            value_kind="enum",
+            enum_values=_WEB_CLIENT_REQUEST_METHOD_VALUES,
+            default_strategy="get_for_read_only_requests_unless_payload_method_is_declared",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_WEB_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webclientDAT",
+            name="url",
+            label="URL",
+            value_kind="string",
+            default_strategy="explicit_http_or_https_url",
+            cook_risk="high",
+            validation_rule="http_url_scope",
+            official_source=_WEB_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webclientDAT",
+            name="uploadfile",
+            label="Upload File",
+            value_kind="path",
+            default_strategy="explicit_upload_file_only_when_request_body_file_is_declared",
+            cook_risk="high",
+            validation_rule="non_empty_path_if_set",
+            official_source=_WEB_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webclientDAT",
+            name="request",
+            label="Request",
+            value_kind="pulse",
+            default_strategy="pulse_only_for_explicit_http_request_execution",
+            cook_risk="high",
+            validation_rule="pulse_action",
+            official_source=_WEB_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webclientDAT",
+            name="stop",
+            label="Stop",
+            value_kind="pulse",
+            default_strategy="pulse_only_to_stop_declared_streaming_request",
+            cook_risk="medium",
+            validation_rule="pulse_action",
+            official_source=_WEB_CLIENT_DAT_DOCS,
+        ),
+        *[
+            ParamSemantics(
+                op_type="webclientDAT",
+                name=name,
+                label=label,
+                value_kind="bool",
+                default_strategy=default_strategy,
+                cook_risk=cook_risk,
+                validation_rule="bool_toggle",
+                official_source=_WEB_CLIENT_DAT_DOCS,
+            )
+            for name, label, default_strategy, cook_risk in (
+                ("stream", "Stream", "enable_only_for_servers_that_support_streamed_responses", "high"),
+                (
+                    "verifycert",
+                    "Verify Certificate",
+                    "verify_tls_certificates_unless_controlled_test_server_is_declared",
+                    "high",
+                ),
+                ("includeheader", "Include Header", "include_response_headers_only_when_needed", "medium"),
+                ("clamp", "Clamp Output", "bounded_streaming_response_log_output", "medium"),
+            )
+        ],
+        ParamSemantics(
+            op_type="webclientDAT",
+            name="timeout",
+            label="Timeout",
+            value_kind="int",
+            unit="milliseconds",
+            default_strategy="bounded_http_request_timeout_ms",
+            cook_risk="medium",
+            validation_rule="integer_timeout_ms",
+            official_source=_WEB_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webclientDAT",
+            name="authtype",
+            label="Authentication Type",
+            value_kind="enum",
+            enum_values=_WEB_CLIENT_AUTH_TYPE_VALUES,
+            default_strategy="none_unless_authentication_mode_is_declared",
+            cook_risk="high",
+            validation_rule="known_menu_value",
+            official_source=_WEB_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webclientDAT",
+            name="callbacks",
+            label="Callbacks DAT",
+            value_kind="op_ref",
+            expected_family="DAT",
+            default_strategy="created_callback_text_dat",
+            cook_risk="high",
+            validation_rule="created_reference_matches_family",
+            official_source=_WEB_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webclientDAT",
+            name="maxlines",
+            label="Maximum Lines",
+            value_kind="int",
+            unit="rows",
+            default_strategy="small_bounded_streaming_response_log",
+            cook_risk="medium",
+            validation_rule="integer_output_limit",
+            official_source=_WEB_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webclientDAT",
+            name="clear",
+            label="Clear Output",
+            value_kind="pulse",
+            default_strategy="pulse_only_for_explicit_response_log_clear",
+            cook_risk="medium",
+            validation_rule="pulse_action",
+            official_source=_WEB_CLIENT_DAT_DOCS,
+        ),
+        *[
+            ParamSemantics(
+                op_type="webclientDAT",
+                name=name,
+                label=label,
+                value_kind="string",
+                default_strategy=default_strategy,
+                cook_risk=cook_risk,
+                validation_rule=validation_rule,
+                official_source=_WEB_CLIENT_DAT_DOCS,
+            )
+            for name, label, default_strategy, cook_risk, validation_rule in (
+                (
+                    "username",
+                    "Username",
+                    "explicit_username_only_for_authenticated_requests",
+                    "medium",
+                    "credential_username_scope",
+                ),
+                (
+                    "pw",
+                    "Password",
+                    "explicit_secret_only_when_user_provides_http_credentials",
+                    "high",
+                    "credential_secret_scope",
+                ),
+                (
+                    "appkey",
+                    "Application Key",
+                    "explicit_oauth_application_key_only_for_oauth_requests",
+                    "medium",
+                    "client_id_scope",
+                ),
+                (
+                    "appsecret",
+                    "Application Secret",
+                    "explicit_secret_only_when_user_provides_oauth_application_secret",
+                    "high",
+                    "credential_secret_scope",
+                ),
+                (
+                    "oauthtoken",
+                    "OAuth Token",
+                    "explicit_oauth_token_only_for_oauth_requests",
+                    "high",
+                    "credential_secret_scope",
+                ),
+                (
+                    "oauthsecret",
+                    "OAuth Secret",
+                    "explicit_oauth_secret_only_for_oauth1_requests",
+                    "high",
+                    "credential_secret_scope",
+                ),
+                (
+                    "clientid",
+                    "Client ID",
+                    "explicit_oauth2_client_id_only_for_oauth2_requests",
+                    "medium",
+                    "client_id_scope",
+                ),
+                (
+                    "token",
+                    "Token",
+                    "explicit_oauth2_token_only_when_user_provides_it",
+                    "high",
+                    "credential_secret_scope",
+                ),
+            )
+        ],
+    ]
+
+
+def _web_server_dat_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="webserverDAT",
+            name="active",
+            label="Active",
+            value_kind="bool",
+            default_strategy="enable_only_when_embedded_web_server_is_declared",
+            cook_risk="high",
+            validation_rule="bool_toggle",
+            official_source=_WEB_SERVER_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webserverDAT",
+            name="restart",
+            label="Restart",
+            value_kind="pulse",
+            default_strategy="pulse_only_for_explicit_server_restart",
+            cook_risk="high",
+            validation_rule="pulse_action",
+            official_source=_WEB_SERVER_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webserverDAT",
+            name="port",
+            label="Port",
+            value_kind="int",
+            unit="port",
+            valid_range=(1.0, 65535.0),
+            default_strategy="explicit_local_server_port",
+            cook_risk="high",
+            validation_rule="network_port_range",
+            official_source=_WEB_SERVER_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webserverDAT",
+            name="secure",
+            label="Secure",
+            value_kind="bool",
+            default_strategy="enable_only_when_tls_key_and_certificate_are_declared",
+            cook_risk="high",
+            validation_rule="bool_toggle",
+            official_source=_WEB_SERVER_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webserverDAT",
+            name="privatekey",
+            label="Private Key",
+            value_kind="path",
+            default_strategy="explicit_tls_private_key_path_only_when_secure_is_enabled",
+            cook_risk="high",
+            validation_rule="non_empty_path_if_set",
+            official_source=_WEB_SERVER_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webserverDAT",
+            name="certificate",
+            label="Certificate",
+            value_kind="path",
+            default_strategy="explicit_tls_certificate_path_only_when_secure_is_enabled",
+            cook_risk="high",
+            validation_rule="non_empty_path_if_set",
+            official_source=_WEB_SERVER_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webserverDAT",
+            name="password",
+            label="Certificate Password",
+            value_kind="string",
+            default_strategy="explicit_secret_only_when_tls_certificate_requires_password",
+            cook_risk="high",
+            validation_rule="credential_secret_scope",
+            official_source=_WEB_SERVER_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webserverDAT",
+            name="callbacks",
+            label="Callbacks DAT",
+            value_kind="op_ref",
+            expected_family="DAT",
+            default_strategy="created_callback_text_dat_for_http_and_websocket_handlers",
+            cook_risk="high",
+            validation_rule="created_reference_matches_family",
+            official_source=_WEB_SERVER_DAT_DOCS,
+        ),
+    ]
+
+
+def _mqtt_client_dat_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="mqttclientDAT",
+            name="active",
+            label="Active",
+            value_kind="bool",
+            default_strategy="enable_only_when_mqtt_broker_source_is_declared",
+            cook_risk="high",
+            validation_rule="bool_toggle",
+            official_source=_MQTT_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="mqttclientDAT",
+            name="netaddress",
+            label="Network Address",
+            value_kind="string",
+            default_strategy="explicit_mqtt_broker_host",
+            cook_risk="high",
+            validation_rule="network_address_scope",
+            official_source=_MQTT_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="mqttclientDAT",
+            name="specifyid",
+            label="Specify Client ID",
+            value_kind="bool",
+            default_strategy="enable_only_when_persistent_client_identity_is_declared",
+            cook_risk="medium",
+            validation_rule="bool_toggle",
+            official_source=_MQTT_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="mqttclientDAT",
+            name="usercid",
+            label="Client ID",
+            value_kind="string",
+            default_strategy="explicit_client_id_when_specifyid_is_enabled",
+            cook_risk="medium",
+            validation_rule="client_id_scope",
+            official_source=_MQTT_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="mqttclientDAT",
+            name="keepalive",
+            label="Keep Alive",
+            value_kind="int",
+            unit="seconds",
+            valid_range=(1.0, 86400.0),
+            default_strategy="bounded_keepalive_seconds_for_broker_ping",
+            cook_risk="medium",
+            validation_rule="integer_timeout_seconds",
+            official_source=_MQTT_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="mqttclientDAT",
+            name="maxinflight",
+            label="Max Inflight",
+            value_kind="int",
+            valid_range=(1.0, 100000.0),
+            default_strategy="bounded_inflight_message_count",
+            cook_risk="medium",
+            validation_rule="integer_message_limit",
+            official_source=_MQTT_CLIENT_DAT_DOCS,
+        ),
+        *[
+            ParamSemantics(
+                op_type="mqttclientDAT",
+                name=name,
+                label=label,
+                value_kind="bool",
+                default_strategy=default_strategy,
+                cook_risk=cook_risk,
+                validation_rule="bool_toggle",
+                official_source=_MQTT_CLIENT_DAT_DOCS,
+            )
+            for name, label, default_strategy, cook_risk in (
+                ("cleansession", "Clean Session", "explicit_session_persistence_policy", "medium"),
+                (
+                    "verifycert",
+                    "Verify Certificate",
+                    "verify_tls_certificates_unless_test_broker_is_declared",
+                    "high",
+                ),
+                ("reconnect", "Reconnect", "auto_reconnect_for_live_mqtt_sources", "medium"),
+                ("clamp", "Clamp Output", "bounded_mqtt_message_log_output", "medium"),
+                ("bytes", "Bytes Column", "enable_only_when_raw_byte_diagnostics_are_requested", "medium"),
+            )
+        ],
+        ParamSemantics(
+            op_type="mqttclientDAT",
+            name="username",
+            label="Username",
+            value_kind="string",
+            default_strategy="explicit_username_only_for_authenticated_brokers",
+            cook_risk="medium",
+            validation_rule="credential_username_scope",
+            official_source=_MQTT_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="mqttclientDAT",
+            name="password",
+            label="Password",
+            value_kind="string",
+            default_strategy="explicit_secret_only_when_user_provides_broker_credentials",
+            cook_risk="high",
+            validation_rule="credential_secret_scope",
+            official_source=_MQTT_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="mqttclientDAT",
+            name="callbacks",
+            label="Callbacks DAT",
+            value_kind="op_ref",
+            expected_family="DAT",
+            default_strategy="created_callback_text_dat",
+            cook_risk="high",
+            validation_rule="created_reference_matches_family",
+            official_source=_MQTT_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="mqttclientDAT",
+            name="executeloc",
+            label="Execute From",
+            value_kind="enum",
+            enum_values=_CALLBACK_DAT_EXECUTE_LOCATION_VALUES,
+            default_strategy="callbacks_dat_for_mqtt_events",
+            cook_risk="high",
+            validation_rule="known_menu_value",
+            official_source=_MQTT_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="mqttclientDAT",
+            name="fromop",
+            label="From Operator",
+            value_kind="op_ref",
+            expected_family="ANY",
+            default_strategy="explicit_callback_context_when_specified",
+            cook_risk="high",
+            validation_rule="non_empty_operator_reference",
+            official_source=_MQTT_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="mqttclientDAT",
+            name="maxlines",
+            label="Maximum Lines",
+            value_kind="int",
+            unit="rows",
+            default_strategy="small_bounded_mqtt_message_log",
+            cook_risk="medium",
+            validation_rule="integer_output_limit",
+            official_source=_MQTT_CLIENT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="mqttclientDAT",
+            name="clear",
+            label="Clear Output",
+            value_kind="pulse",
+            default_strategy="pulse_only_for_explicit_log_clear",
+            cook_risk="medium",
+            validation_rule="pulse_action",
+            official_source=_MQTT_CLIENT_DAT_DOCS,
+        ),
+    ]
+
+
+def _udp_in_dat_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="udpinDAT",
+            name="active",
+            label="Active",
+            value_kind="bool",
+            default_strategy="enable_only_when_udp_source_is_declared",
+            cook_risk="high",
+            validation_rule="bool_toggle",
+            official_source=_UDP_IN_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="udpinDAT",
+            name="protocol",
+            label="Protocol",
+            value_kind="enum",
+            enum_values=_UDP_IN_PROTOCOL_VALUES,
+            default_strategy="udp_messaging_default",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_UDP_IN_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="udpinDAT",
+            name="address",
+            label="Network Address",
+            value_kind="string",
+            default_strategy="explicit_multicast_address_when_multicast_is_selected",
+            cook_risk="medium",
+            validation_rule="network_address_scope",
+            official_source=_UDP_IN_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="udpinDAT",
+            name="port",
+            label="Port",
+            value_kind="int",
+            unit="port",
+            valid_range=(1.0, 65535.0),
+            default_strategy="explicit_udp_receive_port",
+            cook_risk="medium",
+            validation_rule="network_port_range",
+            official_source=_UDP_IN_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="udpinDAT",
+            name="shared",
+            label="Shared Connection",
+            value_kind="bool",
+            default_strategy="share_only_when_matching_udp_dats_are_declared",
+            cook_risk="medium",
+            validation_rule="bool_toggle",
+            official_source=_UDP_IN_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="udpinDAT",
+            name="format",
+            label="Row/Callback Format",
+            value_kind="enum",
+            enum_values=_UDP_IN_FORMAT_VALUES,
+            default_strategy="per_message_for_packet_protocol_tables",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_UDP_IN_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="udpinDAT",
+            name="callbacks",
+            label="Callbacks DAT",
+            value_kind="op_ref",
+            expected_family="DAT",
+            default_strategy="created_callback_text_dat",
+            cook_risk="high",
+            validation_rule="created_reference_matches_family",
+            official_source=_UDP_IN_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="udpinDAT",
+            name="executeloc",
+            label="Execute From",
+            value_kind="enum",
+            enum_values=_CALLBACK_DAT_EXECUTE_LOCATION_VALUES,
+            default_strategy="callbacks_dat_for_received_udp_messages",
+            cook_risk="high",
+            validation_rule="known_menu_value",
+            official_source=_UDP_IN_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="udpinDAT",
+            name="fromop",
+            label="From Operator",
+            value_kind="op_ref",
+            expected_family="ANY",
+            default_strategy="explicit_callback_context_when_specified",
+            cook_risk="high",
+            validation_rule="non_empty_operator_reference",
+            official_source=_UDP_IN_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="udpinDAT",
+            name="clamp",
+            label="Clamp Output",
+            value_kind="bool",
+            default_strategy="bounded_udp_message_log_output",
+            cook_risk="medium",
+            validation_rule="bool_toggle",
+            official_source=_UDP_IN_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="udpinDAT",
+            name="maxlines",
+            label="Maximum Lines",
+            value_kind="int",
+            unit="rows",
+            default_strategy="small_bounded_udp_message_log",
+            cook_risk="medium",
+            validation_rule="integer_output_limit",
+            official_source=_UDP_IN_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="udpinDAT",
+            name="clear",
+            label="Clear Output",
+            value_kind="pulse",
+            default_strategy="pulse_only_for_explicit_log_clear",
+            cook_risk="medium",
+            validation_rule="pulse_action",
+            official_source=_UDP_IN_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="udpinDAT",
+            name="bytes",
+            label="Bytes Column",
+            value_kind="bool",
+            default_strategy="enable_only_when_raw_byte_diagnostics_are_requested",
+            cook_risk="medium",
+            validation_rule="bool_toggle",
+            official_source=_UDP_IN_DAT_DOCS,
+        ),
     ]
 
 
@@ -3633,6 +4619,564 @@ def _filter_chop_semantics() -> list[ParamSemantics]:
             official_source=_FILTER_CHOP_DOCS,
         ),
         *_common_chop_semantics("filterCHOP", _FILTER_CHOP_DOCS),
+    ]
+
+
+def _movie_file_in_top_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="moviefileinTOP",
+            name="file",
+            label="File",
+            value_kind="path",
+            default_strategy="require_explicit_movie_or_image_sequence_path",
+            cook_risk="high",
+            validation_rule="non_empty_path",
+            official_source=_MOVIE_FILE_IN_TOP_DOCS,
+        ),
+        *[
+            ParamSemantics(
+                op_type="moviefileinTOP",
+                name=name,
+                label=label,
+                value_kind="bool",
+                default_strategy=default_strategy,
+                cook_risk=cook_risk,
+                validation_rule="bool_toggle",
+                official_source=_MOVIE_FILE_IN_TOP_DOCS,
+            )
+            for name, label, default_strategy, cook_risk in (
+                ("reload", "Reload", "off_unless_reloading_source_media_is_requested", "medium"),
+                ("reloadpulse", "Reload Pulse", "pulse_only_for_explicit_media_reload", "medium"),
+                ("play", "Play", "enabled_for_timeline_or_sequential_movie_playback", "medium"),
+                ("hwdecode", "Hardware Decode", "use_default_hardware_decode_path_for_large_media", "high"),
+            )
+        ],
+        ParamSemantics(
+            op_type="moviefileinTOP",
+            name="playmode",
+            label="Play Mode",
+            value_kind="enum",
+            enum_values=_MOVIE_FILE_TOP_PLAY_MODE_VALUES,
+            default_strategy="sequential_for_free_running_video_sources",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_MOVIE_FILE_IN_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="moviefileinTOP",
+            name="index",
+            label="Index",
+            value_kind="float",
+            unit="frames",
+            valid_range=(0.0, 1_000_000_000.0),
+            default_strategy="non_negative_frame_index_when_specifying_movie_position",
+            cook_risk="medium",
+            validation_rule="non_negative_movie_index",
+            official_source=_MOVIE_FILE_IN_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="moviefileinTOP",
+            name="speed",
+            label="Speed",
+            value_kind="float",
+            valid_range=(-1000.0, 1000.0),
+            default_strategy="one_x_playback_until_time_warp_is_requested",
+            cook_risk="medium",
+            validation_rule="numeric_movie_speed",
+            official_source=_MOVIE_FILE_IN_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="moviefileinTOP",
+            name="imageindexing",
+            label="Image Indexing",
+            value_kind="enum",
+            enum_values=_MOVIE_FILE_TOP_IMAGE_INDEXING_VALUES,
+            default_strategy="native_indexing_for_image_sequences",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_MOVIE_FILE_IN_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="moviefileinTOP",
+            name="inputcolorspace",
+            label="Input Color Space",
+            value_kind="enum",
+            enum_values=_TOP_COLOR_SPACE_VALUES,
+            default_strategy="automatic_color_space_unless_media_pipeline_declares_one",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_MOVIE_FILE_IN_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="moviefileinTOP",
+            name="decodepixelformat",
+            label="Decode Pixel Format",
+            value_kind="enum",
+            enum_values=_MOVIE_DECODE_PIXEL_FORMAT_VALUES,
+            default_strategy="automatic_decode_format_unless_precision_is_declared",
+            cook_risk="high",
+            validation_rule="known_menu_value",
+            official_source=_MOVIE_FILE_IN_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="moviefileinTOP",
+            name="prereadframes",
+            label="Pre-Read Frames",
+            value_kind="int",
+            unit="frames",
+            valid_range=(0.0, 10000.0),
+            default_strategy="small_preread_window_for_responsive_movie_playback",
+            cook_risk="high",
+            validation_rule="non_negative_frame_count",
+            official_source=_MOVIE_FILE_IN_TOP_DOCS,
+        ),
+    ]
+
+
+def _video_device_in_top_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="videodeviceinTOP",
+            name="active",
+            label="Active",
+            value_kind="bool",
+            default_strategy="enable_only_when_video_device_source_is_declared",
+            cook_risk="high",
+            validation_rule="bool_toggle",
+            official_source=_VIDEO_DEVICE_IN_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="videodeviceinTOP",
+            name="driver",
+            label="Driver",
+            value_kind="enum",
+            enum_values=_VIDEO_DEVICE_DRIVER_VALUES,
+            default_strategy="default_driver_until_specific_capture_backend_is_declared",
+            cook_risk="high",
+            validation_rule="known_menu_value",
+            official_source=_VIDEO_DEVICE_IN_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="videodeviceinTOP",
+            name="device",
+            label="Device",
+            value_kind="string",
+            default_strategy="explicit_device_name_when_capture_source_is_declared",
+            cook_risk="high",
+            validation_rule="device_name_scope",
+            official_source=_VIDEO_DEVICE_IN_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="videodeviceinTOP",
+            name="ip",
+            label="IP Address",
+            value_kind="path",
+            default_strategy="explicit_ip_only_for_network_capture_devices",
+            cook_risk="high",
+            validation_rule="non_empty_address",
+            official_source=_VIDEO_DEVICE_IN_TOP_DOCS,
+        ),
+        *[
+            ParamSemantics(
+                op_type="videodeviceinTOP",
+                name=name,
+                label=label,
+                value_kind="bool",
+                default_strategy=default_strategy,
+                cook_risk="high",
+                validation_rule="bool_toggle",
+                official_source=_VIDEO_DEVICE_IN_TOP_DOCS,
+            )
+            for name, label, default_strategy in (
+                ("specifyip", "Specify IP", "off_unless_network_capture_device_is_declared"),
+                ("syncinputs", "Sync Inputs", "off_unless_multi_input_capture_sync_is_declared"),
+                ("capture", "Capture", "enable_only_for_declared_live_capture_sources"),
+            )
+        ],
+        ParamSemantics(
+            op_type="videodeviceinTOP",
+            name="deinterlace",
+            label="Deinterlace",
+            value_kind="enum",
+            enum_values=_VIDEO_DEVICE_DEINTERLACE_VALUES,
+            default_strategy="off_for_progressive_sources",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_VIDEO_DEVICE_IN_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="videodeviceinTOP",
+            name="precedence",
+            label="Precedence",
+            value_kind="enum",
+            enum_values=_VIDEO_DEVICE_PRECEDENCE_VALUES,
+            default_strategy="newest_frame_for_live_capture_responsiveness",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_VIDEO_DEVICE_IN_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="videodeviceinTOP",
+            name="signalformat",
+            label="Signal Format",
+            value_kind="enum",
+            enum_values=_VIDEO_DEVICE_SIGNAL_FORMAT_VALUES,
+            default_strategy="automatic_signal_format_until_capture_standard_is_declared",
+            cook_risk="high",
+            validation_rule="known_menu_value",
+            official_source=_VIDEO_DEVICE_IN_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="videodeviceinTOP",
+            name="inputpixelformat",
+            label="Input Pixel Format",
+            value_kind="enum",
+            enum_values=_VIDEO_DEVICE_PIXEL_FORMAT_VALUES,
+            default_strategy="automatic_pixel_format_until_capture_precision_is_declared",
+            cook_risk="high",
+            validation_rule="known_menu_value",
+            official_source=_VIDEO_DEVICE_IN_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="videodeviceinTOP",
+            name="inputcolorspace",
+            label="Input Color Space",
+            value_kind="enum",
+            enum_values=_TOP_COLOR_SPACE_VALUES,
+            default_strategy="automatic_color_space_until_capture_pipeline_declares_one",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_VIDEO_DEVICE_IN_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="videodeviceinTOP",
+            name="inputreferencewhite",
+            label="Input Reference White",
+            value_kind="enum",
+            enum_values=_VIDEO_DEVICE_REFERENCE_WHITE_VALUES,
+            default_strategy="default_reference_white_for_standard_dynamic_range_capture",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_VIDEO_DEVICE_IN_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="videodeviceinTOP",
+            name="transfermode",
+            label="Transfer Mode",
+            value_kind="enum",
+            enum_values=_VIDEO_DEVICE_TRANSFER_MODE_VALUES,
+            default_strategy="automatic_transfer_mode_until_capture_backend_requires_gpu_direct",
+            cook_risk="high",
+            validation_rule="known_menu_value",
+            official_source=_VIDEO_DEVICE_IN_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="videodeviceinTOP",
+            name="memorymode",
+            label="Memory Mode",
+            value_kind="enum",
+            enum_values=_VIDEO_DEVICE_MEMORY_MODE_VALUES,
+            default_strategy="automatic_memory_mode_until_gpu_memory_path_is_declared",
+            cook_risk="high",
+            validation_rule="known_menu_value",
+            official_source=_VIDEO_DEVICE_IN_TOP_DOCS,
+        ),
+    ]
+
+
+def _kinect_azure_top_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="kinectazureTOP",
+            name="active",
+            label="Active",
+            value_kind="bool",
+            default_strategy="enable_only_when_kinect_azure_sensor_source_is_declared",
+            cook_risk="high",
+            validation_rule="bool_toggle",
+            official_source=_KINECT_AZURE_TOP_DOCS,
+        )
+    ]
+
+
+def _noise_top_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="noiseTOP",
+            name="type",
+            label="Noise Type",
+            value_kind="enum",
+            enum_values=_NOISE_TOP_TYPE_VALUES,
+            default_strategy="simplex_or_perlin_unless_prompt_names_another_noise_type",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_NOISE_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="noiseTOP",
+            name="seed",
+            label="Seed",
+            value_kind="int",
+            default_strategy="stable_integer_seed_for_repeatable_noise_texture",
+            cook_risk="low",
+            validation_rule="integer_seed",
+            official_source=_NOISE_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="noiseTOP",
+            name="period",
+            label="Period",
+            value_kind="float",
+            valid_range=(0.0, 100000.0),
+            default_strategy="positive_spatial_period_for_readable_noise_features",
+            cook_risk="medium",
+            validation_rule="non_negative_period",
+            official_source=_NOISE_TOP_DOCS,
+        ),
+        *[
+            ParamSemantics(
+                op_type="noiseTOP",
+                name=name,
+                label=label,
+                value_kind=value_kind,
+                valid_range=valid_range,
+                default_strategy=default_strategy,
+                cook_risk=cook_risk,
+                validation_rule=validation_rule,
+                official_source=_NOISE_TOP_DOCS,
+            )
+            for name, label, value_kind, valid_range, default_strategy, cook_risk, validation_rule in (
+                (
+                    "harmon",
+                    "Harmonics",
+                    "int",
+                    (1.0, 100000.0),
+                    "small_harmonic_count_for_realtime_texture",
+                    "medium",
+                    "positive_integer",
+                ),
+                (
+                    "spread",
+                    "Spread",
+                    "float",
+                    None,
+                    "default_frequency_spread_between_harmonics",
+                    "medium",
+                    "numeric_noise_spread",
+                ),
+                (
+                    "gain",
+                    "Gain",
+                    "float",
+                    None,
+                    "default_harmonic_gain_for_balanced_texture",
+                    "medium",
+                    "numeric_noise_gain",
+                ),
+                (
+                    "rough",
+                    "Roughness",
+                    "float",
+                    None,
+                    "default_noise_roughness_for_smooth_texture",
+                    "medium",
+                    "numeric_noise_roughness",
+                ),
+                (
+                    "exp",
+                    "Exponent",
+                    "float",
+                    None,
+                    "default_noise_exponent_for_linear_response",
+                    "medium",
+                    "numeric_noise_exponent",
+                ),
+                (
+                    "amp",
+                    "Amplitude",
+                    "float",
+                    (0.0, 100000.0),
+                    "bounded_noise_texture_amplitude",
+                    "medium",
+                    "non_negative_amplitude",
+                ),
+                (
+                    "offset",
+                    "Offset",
+                    "float",
+                    None,
+                    "zero_offset_unless_mask_bias_is_requested",
+                    "medium",
+                    "numeric_offset",
+                ),
+                (
+                    "t4d",
+                    "Translate 4D",
+                    "float",
+                    None,
+                    "animate_fourth_coordinate_only_when_requested",
+                    "medium",
+                    "numeric_4d_translate",
+                ),
+                (
+                    "s4d",
+                    "Scale 4D",
+                    "float",
+                    None,
+                    "default_fourth_coordinate_scale",
+                    "medium",
+                    "numeric_4d_scale",
+                ),
+                (
+                    "inputscale",
+                    "Input Scale",
+                    "float",
+                    None,
+                    "neutral_input_mix_scale",
+                    "medium",
+                    "numeric_input_scale",
+                ),
+                (
+                    "noisescale",
+                    "Noise Scale",
+                    "float",
+                    None,
+                    "neutral_noise_mix_scale",
+                    "medium",
+                    "numeric_noise_scale",
+                ),
+            )
+        ],
+        *[
+            ParamSemantics(
+                op_type="noiseTOP",
+                name=name,
+                label=label,
+                value_kind="bool",
+                default_strategy=default_strategy,
+                cook_risk=cook_risk,
+                validation_rule="bool_toggle",
+                official_source=_NOISE_TOP_DOCS,
+            )
+            for name, label, default_strategy, cook_risk in (
+                ("mono", "Monochrome", "enable_only_when_single_channel_masks_are_requested", "low"),
+                ("aspectcorrect", "Aspect Correct", "preserve_square_noise_features_by_default", "low"),
+                ("dither", "Dither", "off_unless_reducing_8bit_banding_is_requested", "medium"),
+                ("gradient", "Gradient", "off_unless_slope_or_displacement_masks_are_requested", "high"),
+                ("resmult", "Use Global Res Multiplier", "respect_project_resolution_multiplier", "medium"),
+            )
+        ],
+        ParamSemantics(
+            op_type="noiseTOP",
+            name="xord",
+            label="Transform Order",
+            value_kind="enum",
+            enum_values=_TRANSFORM_ORDER_VALUES,
+            default_strategy="scale_rotate_translate_for_predictable_noise_space_motion",
+            cook_risk="low",
+            validation_rule="known_menu_value",
+            official_source=_NOISE_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="noiseTOP",
+            name="rord",
+            label="Rotate Order",
+            value_kind="enum",
+            enum_values=_ROTATE_ORDER_VALUES,
+            default_strategy="xyz_rotation_order_for_predictable_noise_space_motion",
+            cook_risk="low",
+            validation_rule="known_menu_value",
+            official_source=_NOISE_TOP_DOCS,
+        ),
+        *[
+            ParamSemantics(
+                op_type="noiseTOP",
+                name=name,
+                label=label,
+                value_kind="tuple",
+                tuple_size=3,
+                default_strategy=default_strategy,
+                cook_risk=cook_risk,
+                validation_rule="xyz_tuple",
+                official_source=_NOISE_TOP_DOCS,
+            )
+            for name, label, default_strategy, cook_risk in (
+                ("t", "Translate", "three_axis_noise_space_offset", "medium"),
+                ("r", "Rotate", "three_axis_noise_space_rotation", "medium"),
+                ("s", "Scale", "three_axis_noise_space_scale", "medium"),
+                ("p", "Pivot", "three_axis_noise_space_pivot", "medium"),
+            )
+        ],
+        ParamSemantics(
+            op_type="noiseTOP",
+            name="rgb",
+            label="RGB Combine",
+            value_kind="enum",
+            enum_values=_NOISE_TOP_COMBINE_VALUES,
+            default_strategy="noise_only_unless_input_texture_mixing_is_requested",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_NOISE_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="noiseTOP",
+            name="alpha",
+            label="Alpha",
+            value_kind="enum",
+            enum_values=_NOISE_TOP_ALPHA_VALUES,
+            default_strategy="opaque_or_noise_alpha_only_when_mask_output_is_requested",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_NOISE_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="noiseTOP",
+            name="mode",
+            label="Mode",
+            value_kind="enum",
+            enum_values=_NOISE_TOP_MODE_VALUES,
+            default_strategy="performance_mode_unless_quality_artifacts_are_visible",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_NOISE_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="noiseTOP",
+            name="outputresolution",
+            label="Output Resolution",
+            value_kind="enum",
+            enum_values=_TOP_OUTPUT_RESOLUTION_VALUES,
+            default_strategy="use_input_or_project_resolution_for_noise_textures",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_NOISE_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="noiseTOP",
+            name="resolution",
+            label="Resolution",
+            value_kind="tuple",
+            tuple_size=2,
+            unit="pixels",
+            valid_range=(1.0, 8192.0),
+            default_strategy="bounded_custom_noise_texture_resolution",
+            cook_risk="high",
+            validation_rule="warn_high_resolution",
+            official_source=_NOISE_TOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="noiseTOP",
+            name="npasses",
+            label="Passes",
+            value_kind="int",
+            unit="passes",
+            valid_range=(1.0, 1000.0),
+            default_strategy="single_pass_unless_multi_pass_noise_is_explicit",
+            cook_risk="high",
+            validation_rule="positive_pass_count",
+            official_source=_NOISE_TOP_DOCS,
+        ),
     ]
 
 
@@ -4206,6 +5750,422 @@ def _composite_top_semantics() -> list[ParamSemantics]:
     ]
 
 
+def _lfo_chop_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="lfoCHOP",
+            name="wavetype",
+            label="Wave Type",
+            value_kind="enum",
+            enum_values=_LFO_CHOP_WAVE_TYPE_VALUES,
+            default_strategy="sine_wave_unless_prompt_names_another_waveform",
+            cook_risk="low",
+            validation_rule="known_menu_value",
+            official_source=_LFO_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="lfoCHOP",
+            name="play",
+            label="Play",
+            value_kind="bool",
+            default_strategy="enabled_for_continuous_modulation",
+            cook_risk="medium",
+            validation_rule="bool_toggle",
+            official_source=_LFO_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="lfoCHOP",
+            name="frequency",
+            label="Frequency",
+            value_kind="float",
+            unit="cycles_per_second",
+            valid_range=(0.0, 100000.0),
+            default_strategy="low_frequency_modulation_for_visual_controls",
+            cook_risk="medium",
+            validation_rule="non_negative_frequency",
+            official_source=_LFO_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="lfoCHOP",
+            name="offset",
+            label="Offset",
+            value_kind="float",
+            default_strategy="zero_offset_unless_phase_alignment_is_requested",
+            cook_risk="medium",
+            validation_rule="numeric_offset",
+            official_source=_LFO_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="lfoCHOP",
+            name="amp",
+            label="Amplitude",
+            value_kind="float",
+            valid_range=(0.0, 100000.0),
+            default_strategy="bounded_control_amplitude",
+            cook_risk="medium",
+            validation_rule="non_negative_amplitude",
+            official_source=_LFO_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="lfoCHOP",
+            name="bias",
+            label="Bias",
+            value_kind="float",
+            default_strategy="center_control_signal_unless_unipolar_modulation_is_requested",
+            cook_risk="medium",
+            validation_rule="numeric_bias",
+            official_source=_LFO_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="lfoCHOP",
+            name="phase",
+            label="Phase",
+            value_kind="float",
+            unit="cycles",
+            default_strategy="zero_phase_unless_offset_modulation_is_requested",
+            cook_risk="low",
+            validation_rule="numeric_phase",
+            official_source=_LFO_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="lfoCHOP",
+            name="resetcondition",
+            label="Reset Condition",
+            value_kind="enum",
+            enum_values=_CHOP_RESET_CONDITION_VALUES,
+            default_strategy="off_unless_explicit_reset_trigger_is_planned",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_LFO_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="lfoCHOP",
+            name="reset",
+            label="Reset",
+            value_kind="bool",
+            default_strategy="off_until_explicit_reset_is_requested",
+            cook_risk="medium",
+            validation_rule="bool_toggle",
+            official_source=_LFO_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="lfoCHOP",
+            name="resetpulse",
+            label="Reset Pulse",
+            value_kind="pulse",
+            default_strategy="pulse_only_for_explicit_lfo_phase_reset",
+            cook_risk="medium",
+            validation_rule="pulse_action",
+            official_source=_LFO_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="lfoCHOP",
+            name="channelname",
+            label="Channel Name",
+            value_kind="string",
+            default_strategy="descriptive_control_channel_name",
+            cook_risk="low",
+            validation_rule="channel_name_pattern",
+            official_source=_LFO_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="lfoCHOP",
+            name="rate",
+            label="Rate",
+            value_kind="float",
+            default_strategy="frequency_rate_mode_for_visual_modulation",
+            cook_risk="medium",
+            validation_rule="numeric_sample_rate",
+            official_source=_LFO_CHOP_DOCS,
+        ),
+        *_common_chop_semantics("lfoCHOP", _LFO_CHOP_DOCS),
+    ]
+
+
+def _wave_chop_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="waveCHOP",
+            name="wavetype",
+            label="Wave Type",
+            value_kind="enum",
+            enum_values=_WAVE_CHOP_WAVE_TYPE_VALUES,
+            default_strategy="sine_wave_unless_prompt_names_another_waveform",
+            cook_risk="low",
+            validation_rule="known_menu_value",
+            official_source=_WAVE_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="waveCHOP",
+            name="period",
+            label="Period",
+            value_kind="float",
+            valid_range=(0.0, 100000.0),
+            default_strategy="positive_period_for_control_wave",
+            cook_risk="medium",
+            validation_rule="non_negative_period",
+            official_source=_WAVE_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="waveCHOP",
+            name="periodunit",
+            label="Period Unit",
+            value_kind="enum",
+            enum_values=_CHOP_UNIT_MENU_VALUES,
+            default_strategy="seconds_for_human_readable_wave_periods",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_WAVE_CHOP_DOCS,
+        ),
+        *[
+            ParamSemantics(
+                op_type="waveCHOP",
+                name=name,
+                label=label,
+                value_kind="float",
+                valid_range=valid_range,
+                default_strategy=default_strategy,
+                cook_risk=cook_risk,
+                validation_rule=validation_rule,
+                official_source=_WAVE_CHOP_DOCS,
+            )
+            for name, label, valid_range, default_strategy, cook_risk, validation_rule in (
+                ("phase", "Phase", None, "zero_phase_unless_alignment_is_requested", "low", "numeric_phase"),
+                (
+                    "bias",
+                    "Bias",
+                    None,
+                    "center_control_signal_unless_unipolar_modulation_is_requested",
+                    "medium",
+                    "numeric_bias",
+                ),
+                (
+                    "amp",
+                    "Amplitude",
+                    (0.0, 100000.0),
+                    "bounded_control_amplitude",
+                    "medium",
+                    "non_negative_amplitude",
+                ),
+                (
+                    "offset",
+                    "Offset",
+                    None,
+                    "zero_offset_unless_positioning_is_requested",
+                    "medium",
+                    "numeric_offset",
+                ),
+                (
+                    "decay",
+                    "Decay",
+                    (0.0, 100000.0),
+                    "no_decay_unless_damped_wave_is_requested",
+                    "medium",
+                    "non_negative_decay",
+                ),
+                (
+                    "rate",
+                    "Rate",
+                    (0.0, 100000.0),
+                    "positive_sample_rate_when_specified",
+                    "medium",
+                    "numeric_sample_rate",
+                ),
+                ("left", "Left Limit", None, "default_left_wave_limit", "low", "numeric_wave_limit"),
+                ("right", "Right Limit", None, "default_right_wave_limit", "low", "numeric_wave_limit"),
+            )
+        ],
+        ParamSemantics(
+            op_type="waveCHOP",
+            name="channelname",
+            label="Channel Name",
+            value_kind="string",
+            default_strategy="descriptive_wave_channel_name",
+            cook_risk="low",
+            validation_rule="channel_name_pattern",
+            official_source=_WAVE_CHOP_DOCS,
+        ),
+        *_common_chop_semantics("waveCHOP", _WAVE_CHOP_DOCS),
+    ]
+
+
+def _noise_chop_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="noiseCHOP",
+            name="type",
+            label="Noise Type",
+            value_kind="enum",
+            enum_values=_NOISE_CHOP_TYPE_VALUES,
+            default_strategy="docs_verified_noise_type_menu",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_NOISE_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="noiseCHOP",
+            name="seed",
+            label="Seed",
+            value_kind="int",
+            default_strategy="stable_integer_seed_for_repeatable_noise",
+            cook_risk="low",
+            validation_rule="integer_seed",
+            official_source=_NOISE_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="noiseCHOP",
+            name="period",
+            label="Period",
+            value_kind="float",
+            valid_range=(0.0, 100000.0),
+            default_strategy="positive_noise_period",
+            cook_risk="medium",
+            validation_rule="non_negative_period",
+            official_source=_NOISE_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="noiseCHOP",
+            name="periodunit",
+            label="Period Unit",
+            value_kind="enum",
+            enum_values=_NOISE_CHOP_PERIOD_UNIT_VALUES,
+            default_strategy="seconds_or_fraction_as_docs_verified_period_unit",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_NOISE_CHOP_DOCS,
+        ),
+        *[
+            ParamSemantics(
+                op_type="noiseCHOP",
+                name=name,
+                label=label,
+                value_kind=value_kind,
+                valid_range=valid_range,
+                default_strategy=default_strategy,
+                cook_risk=cook_risk,
+                validation_rule=validation_rule,
+                official_source=_NOISE_CHOP_DOCS,
+            )
+            for name, label, value_kind, valid_range, default_strategy, cook_risk, validation_rule in (
+                (
+                    "harmon",
+                    "Harmonics",
+                    "int",
+                    (1.0, 100000.0),
+                    "positive_harmonic_count",
+                    "medium",
+                    "positive_integer",
+                ),
+                ("spread", "Spread", "float", None, "default_noise_spread", "medium", "numeric_noise_spread"),
+                (
+                    "rough",
+                    "Roughness",
+                    "float",
+                    None,
+                    "default_noise_roughness",
+                    "medium",
+                    "numeric_noise_roughness",
+                ),
+                (
+                    "exp",
+                    "Exponent",
+                    "float",
+                    None,
+                    "default_noise_exponent",
+                    "medium",
+                    "numeric_noise_exponent",
+                ),
+                (
+                    "numint",
+                    "Number of Integrals",
+                    "int",
+                    (0.0, 100000.0),
+                    "integer_integral_count",
+                    "medium",
+                    "non_negative_integer",
+                ),
+                (
+                    "amp",
+                    "Amplitude",
+                    "float",
+                    (0.0, 100000.0),
+                    "bounded_noise_amplitude",
+                    "medium",
+                    "non_negative_amplitude",
+                ),
+                (
+                    "sustain",
+                    "Sustain",
+                    "float",
+                    (0.0, 100000.0),
+                    "bounded_sustain_duration",
+                    "medium",
+                    "non_negative_duration",
+                ),
+                (
+                    "minsustain",
+                    "Minimum Sustain",
+                    "float",
+                    (0.0, 100000.0),
+                    "bounded_minimum_sustain_duration",
+                    "medium",
+                    "non_negative_duration",
+                ),
+                (
+                    "rate",
+                    "Rate",
+                    "float",
+                    (0.0, 100000.0),
+                    "positive_sample_rate_when_specified",
+                    "medium",
+                    "numeric_sample_rate",
+                ),
+            )
+        ],
+        ParamSemantics(
+            op_type="noiseCHOP",
+            name="reset",
+            label="Reset",
+            value_kind="bool",
+            default_strategy="off_until_explicit_noise_reset_is_requested",
+            cook_risk="medium",
+            validation_rule="bool_toggle",
+            official_source=_NOISE_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="noiseCHOP",
+            name="resetpulse",
+            label="Reset Pulse",
+            value_kind="pulse",
+            default_strategy="pulse_only_for_explicit_noise_reset",
+            cook_risk="medium",
+            validation_rule="pulse_action",
+            official_source=_NOISE_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="noiseCHOP",
+            name="channame",
+            label="Channel Name",
+            value_kind="string",
+            default_strategy="descriptive_noise_channel_name",
+            cook_risk="low",
+            validation_rule="channel_name_pattern",
+            official_source=_NOISE_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="noiseCHOP",
+            name="specifyrate",
+            label="Specify Rate",
+            value_kind="bool",
+            default_strategy="off_unless_explicit_sample_rate_is_requested",
+            cook_risk="medium",
+            validation_rule="bool_toggle",
+            official_source=_NOISE_CHOP_DOCS,
+        ),
+        *_common_chop_semantics("noiseCHOP", _NOISE_CHOP_DOCS),
+    ]
+
+
 def _audio_file_in_chop_semantics() -> list[ParamSemantics]:
     return [
         ParamSemantics(
@@ -4366,6 +6326,94 @@ def _audio_file_unit_semantics(labels_by_name: dict[str, str]) -> list[ParamSema
     ]
 
 
+def _audio_file_out_chop_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="audiofileoutCHOP",
+            name="filetype",
+            label="File Type",
+            value_kind="enum",
+            enum_values=_AUDIO_FILE_OUT_TYPE_VALUES,
+            default_strategy="wav_for_local_review_unless_user_requests_compressed_audio",
+            cook_risk="medium",
+            validation_rule="known_menu_value",
+            official_source=_AUDIO_FILE_OUT_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="audiofileoutCHOP",
+            name="uniquesuff",
+            label="Unique Suffix",
+            value_kind="bool",
+            default_strategy="enabled_for_automated_recording_to_avoid_overwriting_takes",
+            cook_risk="medium",
+            validation_rule="bool_toggle",
+            official_source=_AUDIO_FILE_OUT_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="audiofileoutCHOP",
+            name="file",
+            label="File",
+            value_kind="path",
+            default_strategy="explicit_output_file_before_recording",
+            cook_risk="high",
+            validation_rule="non_empty_path",
+            official_source=_AUDIO_FILE_OUT_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="audiofileoutCHOP",
+            name="codec",
+            label="Codec",
+            value_kind="string",
+            default_strategy="codec_depends_on_selected_audio_file_type",
+            cook_risk="medium",
+            validation_rule="filetype_dependent_codec_menu",
+            official_source=_AUDIO_FILE_OUT_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="audiofileoutCHOP",
+            name="bitrate",
+            label="Bitrate",
+            value_kind="int",
+            unit="bits_per_second",
+            default_strategy="explicit_bitrate_only_for_compressed_output_formats",
+            cook_risk="medium",
+            validation_rule="integer_audio_bitrate",
+            official_source=_AUDIO_FILE_OUT_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="audiofileoutCHOP",
+            name="record",
+            label="Record",
+            value_kind="bool",
+            default_strategy="off_until_output_path_and_source_audio_are_confirmed",
+            cook_risk="high",
+            validation_rule="bool_toggle",
+            official_source=_AUDIO_FILE_OUT_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="audiofileoutCHOP",
+            name="pause",
+            label="Pause",
+            value_kind="bool",
+            default_strategy="off_unless_user_requests_paused_recording_state",
+            cook_risk="medium",
+            validation_rule="bool_toggle",
+            official_source=_AUDIO_FILE_OUT_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="audiofileoutCHOP",
+            name="headerdat",
+            label="Header Source DAT",
+            value_kind="op_ref",
+            expected_family="DAT",
+            default_strategy="created_metadata_table_dat_only_when_headers_are_requested",
+            cook_risk="medium",
+            validation_rule="created_reference_matches_family",
+            official_source=_AUDIO_FILE_OUT_CHOP_DOCS,
+        ),
+    ]
+
+
 def _audio_device_in_chop_semantics() -> list[ParamSemantics]:
     return [
         ParamSemantics(
@@ -4474,6 +6522,197 @@ def _audio_device_in_chop_semantics() -> list[ParamSemantics]:
             )
             for name, label in _AUDIO_DEVICE_CHANNEL_TOGGLES
         ],
+    ]
+
+
+def _audio_device_out_chop_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="audiodeviceoutCHOP",
+            name="active",
+            label="Active",
+            value_kind="bool",
+            default_strategy="enable_only_when_audio_output_is_explicitly_requested",
+            cook_risk="high",
+            validation_rule="bool_toggle",
+            official_source=_AUDIO_DEVICE_OUT_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="audiodeviceoutCHOP",
+            name="driver",
+            label="Driver",
+            value_kind="enum",
+            enum_values=_AUDIO_DEVICE_DRIVER_VALUES,
+            default_strategy="default_coreaudio_or_directsound_unless_specific_output_driver_is_requested",
+            cook_risk="high",
+            validation_rule="known_menu_value",
+            official_source=_AUDIO_DEVICE_OUT_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="audiodeviceoutCHOP",
+            name="device",
+            label="Device",
+            value_kind="string",
+            default_strategy="default_audio_output_or_explicit_user_device",
+            cook_risk="high",
+            validation_rule="device_name_scope",
+            official_source=_AUDIO_DEVICE_OUT_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="audiodeviceoutCHOP",
+            name="outputs",
+            label="Outputs",
+            value_kind="string",
+            default_strategy="explicit_output_channel_scope_for_asio_or_coreaudio",
+            cook_risk="high",
+            validation_rule="output_channel_scope",
+            official_source=_AUDIO_DEVICE_OUT_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="audiodeviceoutCHOP",
+            name="adjustspeed",
+            label="Adjust Speed",
+            value_kind="bool",
+            default_strategy="disabled_unless_clock_following_is_requested",
+            cook_risk="medium",
+            validation_rule="bool_toggle",
+            official_source=_AUDIO_DEVICE_OUT_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="audiodeviceoutCHOP",
+            name="clampoutput",
+            label="Clamp Output",
+            value_kind="bool",
+            default_strategy="enabled_for_safer_live_audio_output",
+            cook_risk="high",
+            validation_rule="bool_toggle",
+            official_source=_AUDIO_DEVICE_OUT_CHOP_DOCS,
+        ),
+    ]
+
+
+def _midi_in_chop_semantics() -> list[ParamSemantics]:
+    return [
+        *_common_chop_semantics("midiinCHOP", _MIDI_IN_CHOP_DOCS),
+        ParamSemantics(
+            op_type="midiinCHOP",
+            name="source",
+            label="Source",
+            value_kind="enum",
+            enum_values=_MIDI_IN_SOURCE_VALUES,
+            default_strategy="device_source_declared_before_live_midi_input",
+            cook_risk="high",
+            validation_rule="known_menu_value",
+            official_source=_MIDI_IN_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="midiinCHOP",
+            name="device",
+            label="Device",
+            value_kind="string",
+            default_strategy="explicit_midi_device_name_when_declared",
+            cook_risk="high",
+            validation_rule="non_empty_device_name_when_set",
+            official_source=_MIDI_IN_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="midiinCHOP",
+            name="file",
+            label="File",
+            value_kind="path",
+            default_strategy="explicit_midi_file_only_for_file_source",
+            cook_risk="medium",
+            validation_rule="non_empty_path",
+            official_source=_MIDI_IN_CHOP_DOCS,
+        ),
+        *[
+            ParamSemantics(
+                op_type="midiinCHOP",
+                name=name,
+                label=label,
+                value_kind="bool",
+                default_strategy="enable_only_requested_midi_event_streams",
+                cook_risk="medium",
+                validation_rule="bool_toggle",
+                official_source=_MIDI_IN_CHOP_DOCS,
+            )
+            for name, label in (
+                ("simplified", "Simplified Output"),
+                ("record", "Record"),
+                ("timer", "Timer Events"),
+                ("sys", "System Events"),
+            )
+        ],
+        ParamSemantics(
+            op_type="midiinCHOP",
+            name="start",
+            label="Output Range Start",
+            value_kind="float",
+            default_strategy="explicit_midi_output_range_start",
+            cook_risk="medium",
+            validation_rule="numeric_output_range_start",
+            official_source=_MIDI_IN_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="midiinCHOP",
+            name="end",
+            label="Output Range End",
+            value_kind="float",
+            default_strategy="explicit_midi_output_range_end",
+            cook_risk="medium",
+            validation_rule="numeric_output_range_end",
+            official_source=_MIDI_IN_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="midiinCHOP",
+            name="rate",
+            label="Sample Rate",
+            value_kind="float",
+            default_strategy="preserve_sufficient_sample_rate_for_midi_events",
+            cook_risk="medium",
+            validation_rule="numeric_sample_rate",
+            official_source=_MIDI_IN_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="midiinCHOP",
+            name="controlname",
+            label="Controller Channel Name",
+            value_kind="string",
+            default_strategy="explicit_controller_channel_pattern",
+            cook_risk="low",
+            validation_rule="channel_name_pattern",
+            official_source=_MIDI_IN_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="midiinCHOP",
+            name="controltype",
+            label="Controller Format",
+            value_kind="string",
+            default_strategy="leave_controller_format_default_unless_14bit_is_needed",
+            cook_risk="medium",
+            validation_rule="midi_controller_format",
+            official_source=_MIDI_IN_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="midiinCHOP",
+            name="notename",
+            label="Note Channel Name",
+            value_kind="string",
+            default_strategy="explicit_note_channel_pattern",
+            cook_risk="low",
+            validation_rule="channel_name_pattern",
+            official_source=_MIDI_IN_CHOP_DOCS,
+        ),
+        ParamSemantics(
+            op_type="midiinCHOP",
+            name="chan",
+            label="Channel Prefix",
+            value_kind="string",
+            default_strategy="explicit_channel_filter_or_prefix_when_needed",
+            cook_risk="medium",
+            validation_rule="midi_channel_scope",
+            official_source=_MIDI_IN_CHOP_DOCS,
+        ),
     ]
 
 
@@ -6914,9 +9153,24 @@ def _light_comp_semantics() -> list[ParamSemantics]:
                 official_source=_LIGHT_COMP_DOCS,
             )
             for name, label, default_strategy, validation_rule in (
-                ("attenuationstart", "Attenuation Start", "non_negative_light_attenuation_start", "non_negative_attenuation_start"),
-                ("attenuationend", "Attenuation End", "non_negative_light_attenuation_end", "non_negative_attenuation_end"),
-                ("attenuationexp", "Attenuation Rolloff", "non_negative_light_attenuation_rolloff", "non_negative_attenuation_rolloff"),
+                (
+                    "attenuationstart",
+                    "Attenuation Start",
+                    "non_negative_light_attenuation_start",
+                    "non_negative_attenuation_start",
+                ),
+                (
+                    "attenuationend",
+                    "Attenuation End",
+                    "non_negative_light_attenuation_end",
+                    "non_negative_attenuation_end",
+                ),
+                (
+                    "attenuationexp",
+                    "Attenuation Rolloff",
+                    "non_negative_light_attenuation_rolloff",
+                    "non_negative_attenuation_rolloff",
+                ),
             )
         ],
         ParamSemantics(
@@ -7080,8 +9334,18 @@ def _light_comp_semantics() -> list[ParamSemantics]:
                 official_source=_LIGHT_COMP_DOCS,
             )
             for name, label, default_strategy, validation_rule in (
-                ("filtersamples", "Filter Samples", "small_shadow_filter_sample_count", "positive_shadow_filter_samples"),
-                ("searchsteps", "Search Steps", "small_shadow_search_step_count", "positive_shadow_search_steps"),
+                (
+                    "filtersamples",
+                    "Filter Samples",
+                    "small_shadow_filter_sample_count",
+                    "positive_shadow_filter_samples",
+                ),
+                (
+                    "searchsteps",
+                    "Search Steps",
+                    "small_shadow_search_step_count",
+                    "positive_shadow_search_steps",
+                ),
             )
         ],
         ParamSemantics(
@@ -8079,13 +10343,38 @@ def _glsl_mat_semantics() -> list[ParamSemantics]:
             )
             for name, label, default_strategy, cook_risk in (
                 ("blending", "Blending", "off_unless_transparency_or_additive_material_is_requested", "high"),
-                ("separatealphafunc", "Separate Alpha Function", "off_unless_alpha_blend_requires_separate_factors", "high"),
-                ("legacyalphabehavior", "Legacy Alpha Behavior", "off_for_current_generated_materials", "medium"),
-                ("postmultalpha", "Post-Mult Color by Alpha", "off_unless_post_material_alpha_multiply_is_requested", "medium"),
+                (
+                    "separatealphafunc",
+                    "Separate Alpha Function",
+                    "off_unless_alpha_blend_requires_separate_factors",
+                    "high",
+                ),
+                (
+                    "legacyalphabehavior",
+                    "Legacy Alpha Behavior",
+                    "off_for_current_generated_materials",
+                    "medium",
+                ),
+                (
+                    "postmultalpha",
+                    "Post-Mult Color by Alpha",
+                    "off_unless_post_material_alpha_multiply_is_requested",
+                    "medium",
+                ),
                 ("depthtest", "Depth Test", "on_for_standard_3d_material_depth_occlusion", "high"),
                 ("depthwriting", "Write Depth Values", "on_for_standard_opaque_3d_materials", "high"),
-                ("alphatest", "Discard Pixels Based on Alpha", "off_unless_alpha_cutout_is_requested", "medium"),
-                ("polygonoffset", "Polygon Depth Offset", "off_unless_z_fighting_or_shadow_bias_requires_it", "medium"),
+                (
+                    "alphatest",
+                    "Discard Pixels Based on Alpha",
+                    "off_unless_alpha_cutout_is_requested",
+                    "medium",
+                ),
+                (
+                    "polygonoffset",
+                    "Polygon Depth Offset",
+                    "off_unless_z_fighting_or_shadow_bias_requires_it",
+                    "medium",
+                ),
             )
         ],
         *[
@@ -9000,6 +11289,58 @@ def _switch_top_semantics() -> list[ParamSemantics]:
     ]
 
 
+def _table_dat_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="tableDAT",
+            name="rows",
+            label="Rows",
+            value_kind="int",
+            valid_range=(1.0, 100000.0),
+            default_strategy="small_positive_cue_table_row_count",
+            cook_risk="medium",
+            validation_rule="positive_table_dimension",
+            official_source=_TABLE_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="tableDAT",
+            name="cols",
+            label="Columns",
+            value_kind="int",
+            valid_range=(1.0, 10000.0),
+            default_strategy="small_positive_cue_table_column_count",
+            cook_risk="medium",
+            validation_rule="positive_table_dimension",
+            official_source=_TABLE_DAT_DOCS,
+        ),
+    ]
+
+
+def _select_dat_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="selectDAT",
+            name="rowselect",
+            label="Row Select",
+            value_kind="string",
+            default_strategy="explicit_row_selector_or_table_control_expression",
+            cook_risk="low",
+            validation_rule="non_empty_selector_string",
+            official_source=_SELECT_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="selectDAT",
+            name="colselect",
+            label="Column Select",
+            value_kind="string",
+            default_strategy="explicit_column_selector_or_table_control_expression",
+            cook_risk="low",
+            validation_rule="non_empty_selector_string",
+            official_source=_SELECT_DAT_DOCS,
+        ),
+    ]
+
+
 def _glsl_advanced_pop_capacity_semantics() -> list[ParamSemantics]:
     return [
         ParamSemantics(
@@ -9032,7 +11373,14 @@ def _glsl_pop_thread_int_semantics() -> list[ParamSemantics]:
             validation_rule=validation_rule,
             official_source=_GLSL_POP_DOCS,
         )
-        for name, (label, unit, minimum, default_strategy, cook_risk, validation_rule) in _GLSL_POP_THREAD_INT_PARAMS.items()
+        for name, (
+            label,
+            unit,
+            minimum,
+            default_strategy,
+            cook_risk,
+            validation_rule,
+        ) in _GLSL_POP_THREAD_INT_PARAMS.items()
     ]
 
 
@@ -9062,7 +11410,11 @@ def validate_patch_plan_parameter_contract(
                         )
                     )
                 continue
-            issues.extend(_validate_semantic_value(path=target, semantic=semantic, value=value, created_types=created_types))
+            issues.extend(
+                _validate_semantic_value(
+                    path=target, semantic=semantic, value=value, created_types=created_types
+                )
+            )
     issues.extend(validate_reference_params_for_plan(plan))
     return _dedupe_issues(issues)
 
@@ -9088,6 +11440,116 @@ def parameter_risk_flags_for_plan(
     return list(dict.fromkeys(flags))
 
 
+def canonical_op_type(raw_type: str, family: str | None = None) -> str:
+    """Return the docs/semantics canonical operator type for TD detail payloads."""
+    compact = raw_type.strip()
+    if family:
+        suffix = family.strip().upper()
+        if suffix and not compact.upper().endswith(suffix):
+            compact = f"{compact}{suffix}"
+    return _canonical_op_type(_normalize_op_type_case(compact))
+
+
+def direct_param_semantics_warnings(
+    *,
+    path: str,
+    op_type: str,
+    params: dict[str, Any],
+    registry: Iterable[ParamSemantics] | None = None,
+    warn_on_missing_semantics: bool = True,
+) -> list[ValidationIssue]:
+    """Return warn-only docs-grounded parameter findings for direct MCP writes."""
+    canonical = canonical_op_type(op_type)
+    semantics = semantics_by_op_and_param(registry)
+    known_for_operator = {name for known_op, name in semantics if known_op == canonical}
+    issues: list[ValidationIssue] = []
+    for name, raw_value in params.items():
+        value, should_validate = _direct_semantic_value(raw_value)
+        if not should_validate:
+            continue
+        semantic = semantics.get((canonical, str(name)))
+        if semantic is None:
+            if warn_on_missing_semantics and known_for_operator:
+                issues.append(
+                    _warning_issue(
+                        code="missing_param_semantics",
+                        message=(
+                            f"No docs-grounded parameter semantics are registered for {canonical}.{name}; "
+                            "direct tool write executed warn-only."
+                        ),
+                        path=path,
+                    )
+                )
+            continue
+        for issue in _validate_semantic_value(
+            path=path,
+            semantic=semantic,
+            value=value,
+            created_types={},
+        ):
+            issues.append(_as_direct_warning(issue))
+        for flag in _semantic_risk_flags(semantic=semantic, value=value):
+            issues.append(
+                _warning_issue(
+                    code="param_semantics_risk",
+                    message=f"{path} ({canonical}) parameter {name} triggered {flag}.",
+                    path=path,
+                )
+            )
+    return _dedupe_issues(issues)
+
+
+def audit_high_cook_risk_direct_param_coverage(
+    registry: Iterable[ParamSemantics] | None = None,
+) -> dict[str, Any]:
+    """Classify high cook-risk semantics as direct-risk or validation-only."""
+    direct_risk_parameters: list[dict[str, Any]] = []
+    validation_only_parameters: list[dict[str, Any]] = []
+    unclassified_parameters: list[dict[str, Any]] = []
+
+    loaded_registry = list(registry) if registry is not None else load_param_semantics_registry()
+    high_risk_semantics = sorted(
+        (semantic for semantic in loaded_registry if str(semantic.cook_risk or "").lower() == "high"),
+        key=lambda item: (item.op_type, item.name),
+    )
+    for semantic in high_risk_semantics:
+        flags: list[str] = []
+        for value in _audit_sample_values(semantic):
+            flags.extend(_semantic_risk_flags(semantic=semantic, value=value))
+        flags = list(dict.fromkeys(flags))
+        base_entry = {
+            "op_type": semantic.op_type,
+            "name": semantic.name,
+            "cook_risk": semantic.cook_risk,
+            "validation_rule": semantic.validation_rule,
+        }
+        if flags:
+            direct_risk_parameters.append({**base_entry, "behavior": "direct-risk", "risk_flags": flags})
+        elif _has_validation_only_contract(semantic):
+            validation_only_parameters.append(
+                {
+                    **base_entry,
+                    "behavior": "validation-only",
+                    "reason": _validation_only_reason(semantic),
+                }
+            )
+        else:
+            unclassified_parameters.append({**base_entry, "behavior": "unclassified"})
+
+    return {
+        "schema_version": 1,
+        "contract": "high_cook_risk_direct_param_coverage_v1",
+        "ok": not unclassified_parameters,
+        "high_cook_risk_count": len(high_risk_semantics),
+        "direct_risk_count": len(direct_risk_parameters),
+        "validation_only_count": len(validation_only_parameters),
+        "unclassified_count": len(unclassified_parameters),
+        "direct_risk_parameters": direct_risk_parameters,
+        "validation_only_parameters": validation_only_parameters,
+        "unclassified_high_cook_risk_parameters": unclassified_parameters,
+    }
+
+
 def _validate_semantic_value(
     *,
     path: str,
@@ -9096,6 +11558,13 @@ def _validate_semantic_value(
     created_types: dict[str, str],
 ) -> list[ValidationIssue]:
     if isinstance(value, dict) and "expr" in value:
+        if semantic.op_type == "levelTOP" and semantic.validation_rule == "numeric_level_adjustment":
+            return _validate_chop_reference_expression(
+                path=path,
+                semantic=semantic,
+                value=value,
+                created_types=created_types,
+            )
         if semantic.validation_rule == "bounded_switch_index_or_table_expression":
             return _validate_switch_index_expression(
                 path=path,
@@ -9130,8 +11599,65 @@ def _validate_semantic_value(
     if semantic.value_kind == "path":
         issues.extend(_validate_path(path=path, semantic=semantic, value=value))
     if semantic.value_kind == "op_ref":
-        issues.extend(_validate_op_reference(path=path, semantic=semantic, value=value, created_types=created_types))
+        issues.extend(
+            _validate_op_reference(path=path, semantic=semantic, value=value, created_types=created_types)
+        )
     return issues
+
+
+def _validate_chop_reference_expression(
+    *,
+    path: str,
+    semantic: ParamSemantics,
+    value: dict[str, Any],
+    created_types: dict[str, str],
+) -> list[ValidationIssue]:
+    if set(value) != {"expr"} or not isinstance(value.get("expr"), str):
+        return [
+            _issue(
+                code="unsafe_param_expression",
+                message=f"{path} ({semantic.op_type}) parameter {semantic.name} has an unsupported expression payload.",
+                path=path,
+            )
+        ]
+    expression = value["expr"].strip()
+    match = _CHOP_REFERENCE_EXPR.fullmatch(expression)
+    if match is None:
+        return [
+            _issue(
+                code="unsafe_param_expression",
+                message=(
+                    f"{path} ({semantic.op_type}) parameter {semantic.name} expression must be a direct "
+                    "single-operator CHOP channel reference."
+                ),
+                path=path,
+            )
+        ]
+    ref_path = match.group("path")
+    ref_type = created_types.get(ref_path)
+    if ref_type is None:
+        return [
+            _issue(
+                code="param_expression_unknown_reference",
+                message=(
+                    f"{path} ({semantic.op_type}) parameter {semantic.name} expression references "
+                    f"{ref_path}, which is not created in this PatchPlan."
+                ),
+                path=path,
+            )
+        ]
+    if not ref_type.endswith("CHOP"):
+        return [
+            _issue(
+                code="param_expression_reference_type_mismatch",
+                message=(
+                    f"{path} ({semantic.op_type}) parameter {semantic.name} expression references "
+                    f"{ref_path} ({ref_type}), expected CHOP family."
+                ),
+                path=path,
+            )
+        ]
+    return []
 
 
 def _validate_switch_index_expression(
@@ -9191,6 +11717,120 @@ def _validate_switch_index_expression(
 
 def _semantic_risk_flags(*, semantic: ParamSemantics, value: Any) -> list[str]:
     flags: list[str] = []
+    live_activation_flags = {
+        ("audiodeviceinCHOP", "active"): "live-audio-input",
+        ("videodeviceinTOP", "active"): "live-video-input",
+        ("videodeviceinTOP", "capture"): "live-video-capture",
+        ("kinectazureTOP", "active"): "kinect-azure-sensor-input",
+        ("serialDAT", "active"): "serial-device-listener",
+        ("oscinDAT", "active"): "osc-network-listener",
+        ("websocketDAT", "active"): "websocket-network-client",
+        ("mqttclientDAT", "active"): "mqtt-broker-client",
+        ("udpinDAT", "active"): "udp-network-listener",
+    }
+    live_activation_flag = live_activation_flags.get((semantic.op_type, semantic.name))
+    if live_activation_flag and _is_enabled_toggle_value(value):
+        flags.append(f"param-semantics:{live_activation_flag}:{semantic.op_type}.{semantic.name}")
+    if semantic.op_type == "midiinCHOP" and semantic.name == "source" and _is_midi_device_source_value(value):
+        flags.append("param-semantics:midi-device-input:midiinCHOP.source")
+    if (
+        semantic.op_type == "audiofileoutCHOP"
+        and semantic.name == "record"
+        and _is_enabled_toggle_value(value)
+    ):
+        flags.append("param-semantics:audio-file-recording:audiofileoutCHOP.record")
+    if (
+        semantic.op_type == "audiodeviceoutCHOP"
+        and semantic.name == "active"
+        and _is_enabled_toggle_value(value)
+    ):
+        flags.append("param-semantics:live-audio-output:audiodeviceoutCHOP.active")
+    if semantic.op_type == "webclientDAT" and semantic.name == "active" and _is_enabled_toggle_value(value):
+        flags.append("param-semantics:http-client-active:webclientDAT.active")
+    if semantic.op_type == "webclientDAT" and semantic.name == "request" and _is_pulse_action_value(value):
+        flags.append("param-semantics:http-request:webclientDAT.request")
+    if semantic.op_type == "webclientDAT" and semantic.name == "stream" and _is_enabled_toggle_value(value):
+        flags.append("param-semantics:http-streaming-response:webclientDAT.stream")
+    if semantic.op_type == "webserverDAT" and semantic.name == "active" and _is_enabled_toggle_value(value):
+        flags.append("param-semantics:web-server-listener:webserverDAT.active")
+    if semantic.op_type == "webserverDAT" and semantic.name == "restart" and _is_pulse_action_value(value):
+        flags.append("param-semantics:web-server-restart:webserverDAT.restart")
+    if _is_callback_execution_semantic(semantic):
+        if semantic.name == "callbacks" and _has_nonempty_reference_value(value):
+            flags.append(f"param-semantics:callback-dat-binding:{semantic.op_type}.{semantic.name}")
+        if semantic.name == "executeloc" and _is_known_enum_value(semantic, value):
+            flags.append(f"param-semantics:callback-execute-location:{semantic.op_type}.{semantic.name}")
+        if semantic.name == "fromop" and _has_nonempty_reference_value(value):
+            flags.append(f"param-semantics:callback-context-operator:{semantic.op_type}.{semantic.name}")
+        if (
+            semantic.op_type in {"datexecuteDAT", "chopexecuteDAT", "executeDAT"}
+            and semantic.name == "active"
+            and _is_enabled_toggle_value(value)
+        ):
+            flags.append(f"param-semantics:callback-execution-enabled:{semantic.op_type}.{semantic.name}")
+        if semantic.name in _callback_trigger_param_names(semantic.op_type) and _is_enabled_toggle_value(
+            value
+        ):
+            flags.append(f"param-semantics:callback-trigger-enabled:{semantic.op_type}.{semantic.name}")
+        if semantic.name == "execute" and _is_known_enum_value(semantic, value):
+            flags.append(f"param-semantics:callback-execution-timing:{semantic.op_type}.{semantic.name}")
+        if semantic.name == "freq" and _is_known_enum_value(semantic, value):
+            flags.append(f"param-semantics:callback-execution-frequency:{semantic.op_type}.{semantic.name}")
+        if semantic.name == "callbackmode" and _is_known_enum_value(semantic, value):
+            flags.append(f"param-semantics:callback-mode:{semantic.op_type}.{semantic.name}")
+    if semantic.op_type == "executeDAT":
+        if semantic.name in {"syncfile", "loadonstart", "write"} and _is_enabled_toggle_value(value):
+            flags.append(f"param-semantics:script-file-sync:{semantic.op_type}.{semantic.name}")
+        if semantic.name == "loadonstartpulse" and _is_pulse_action_value(value):
+            flags.append(f"param-semantics:script-file-load:{semantic.op_type}.{semantic.name}")
+        if semantic.name == "writepulse" and _is_pulse_action_value(value):
+            flags.append(f"param-semantics:script-file-write:{semantic.op_type}.{semantic.name}")
+    if (
+        semantic.op_type == "mqttclientDAT"
+        and semantic.name == "username"
+        and _has_nonempty_text_value(value)
+    ):
+        flags.append("param-semantics:mqtt-credential-username:mqttclientDAT.username")
+    if (
+        semantic.op_type == "mqttclientDAT"
+        and semantic.name == "password"
+        and _has_nonempty_text_value(value)
+    ):
+        flags.append("param-semantics:mqtt-credential-secret:mqttclientDAT.password")
+    if (
+        semantic.op_type == "mqttclientDAT"
+        and semantic.name == "verifycert"
+        and _is_disabled_toggle_value(value)
+    ):
+        flags.append("param-semantics:mqtt-tls-verification-disabled:mqttclientDAT.verifycert")
+    if semantic.op_type == "webclientDAT" and semantic.name == "username" and _has_nonempty_text_value(value):
+        flags.append("param-semantics:http-credential-username:webclientDAT.username")
+    if (
+        semantic.op_type == "webclientDAT"
+        and semantic.name in _WEB_CLIENT_SECRET_PARAMS
+        and _has_nonempty_text_value(value)
+    ):
+        flags.append(f"param-semantics:http-credential-secret:webclientDAT.{semantic.name}")
+    if (
+        semantic.op_type == "webclientDAT"
+        and semantic.name == "verifycert"
+        and _is_disabled_toggle_value(value)
+    ):
+        flags.append("param-semantics:http-tls-verification-disabled:webclientDAT.verifycert")
+    if (
+        semantic.op_type == "webserverDAT"
+        and semantic.name == "privatekey"
+        and _has_nonempty_text_value(value)
+    ):
+        flags.append("param-semantics:web-server-tls-private-key:webserverDAT.privatekey")
+    if (
+        semantic.op_type == "webserverDAT"
+        and semantic.name == "certificate"
+        and _has_nonempty_text_value(value)
+    ):
+        flags.append("param-semantics:web-server-tls-certificate:webserverDAT.certificate")
+    if semantic.op_type == "webserverDAT" and semantic.name == "password" and _has_nonempty_text_value(value):
+        flags.append("param-semantics:web-server-tls-credential-secret:webserverDAT.password")
     if semantic.validation_rule == "warn_high_resolution":
         values = _numeric_values(value)
         if len(values) >= 2 and values[0] * values[1] > 3840 * 2160:
@@ -9204,6 +11844,128 @@ def _semantic_risk_flags(*, semantic: ParamSemantics, value: Any) -> list[str]:
         if values and max(values) > _LARGE_GEOMETRY_INSTANCE_THRESHOLD:
             flags.append(f"param-semantics:large-instance-count:{semantic.op_type}.{semantic.name}")
     return flags
+
+
+def _audit_sample_values(semantic: ParamSemantics) -> list[Any]:
+    if semantic.validation_rule == "warn_high_resolution":
+        return [(7680, 4320)]
+    if semantic.validation_rule in {"warn_large_pop_capacity", "warn_large_instance_count"}:
+        return [1_000_001]
+    if semantic.value_kind == "bool":
+        return [True, False]
+    if semantic.value_kind == "pulse":
+        return [True]
+    if semantic.value_kind == "enum":
+        return list(semantic.enum_values or [])
+    if semantic.value_kind == "int":
+        return [int(min(float(semantic.valid_range[1]) if semantic.valid_range else 1.0, 1_000_001.0))]
+    if semantic.value_kind == "float":
+        return [1.0]
+    if semantic.value_kind == "tuple":
+        return [(1.0,) * int(semantic.tuple_size or 2)]
+    if semantic.value_kind == "op_ref":
+        return ["/project1/callbacks"]
+    if semantic.value_kind == "path":
+        return ["/tmp/tdpilot_param_semantics_audit"]
+    return ["tdpilot-audit-value"]
+
+
+def _has_validation_only_contract(semantic: ParamSemantics) -> bool:
+    return bool(
+        semantic.validation_rule
+        or semantic.value_kind
+        or semantic.enum_values
+        or semantic.valid_range
+        or semantic.tuple_size
+    )
+
+
+def _validation_only_reason(semantic: ParamSemantics) -> str:
+    if semantic.validation_rule:
+        return f"validation_rule:{semantic.validation_rule}"
+    if semantic.valid_range is not None:
+        return f"generic_validation:{semantic.value_kind}:range"
+    if semantic.enum_values:
+        return "generic_validation:enum"
+    if semantic.tuple_size is not None:
+        return f"generic_validation:tuple_size:{semantic.tuple_size}"
+    return f"generic_validation:{semantic.value_kind}"
+
+
+def _is_callback_execution_semantic(semantic: ParamSemantics) -> bool:
+    callback_op_types = {
+        "datexecuteDAT",
+        "chopexecuteDAT",
+        "executeDAT",
+        "opexecuteDAT",
+        "parameterexecuteDAT",
+        "panelexecuteDAT",
+        "pargroupexecuteDAT",
+        "errorDAT",
+        "serialDAT",
+        "oscinDAT",
+        "websocketDAT",
+        "webclientDAT",
+        "webserverDAT",
+        "mqttclientDAT",
+        "udpinDAT",
+    }
+    return semantic.op_type in callback_op_types
+
+
+def _callback_trigger_param_names(op_type: str) -> set[str]:
+    trigger_params_by_type = {
+        "datexecuteDAT": _DAT_EXECUTE_TRIGGER_PARAMS,
+        "chopexecuteDAT": _CHOP_EXECUTE_TRIGGER_PARAMS,
+        "executeDAT": _EXECUTE_DAT_TRIGGER_PARAMS,
+        "opexecuteDAT": _OP_EXECUTE_TRIGGER_PARAMS,
+        "parameterexecuteDAT": _PARAMETER_EXECUTE_TRIGGER_PARAMS,
+        "panelexecuteDAT": _PANEL_EXECUTE_TRIGGER_PARAMS,
+        "pargroupexecuteDAT": _PARGROUP_EXECUTE_TRIGGER_PARAMS,
+    }
+    return {name for name, _label in trigger_params_by_type.get(op_type, [])}
+
+
+def _has_nonempty_reference_value(value: Any) -> bool:
+    return bool(_reference_tokens(value))
+
+
+def _has_nonempty_text_value(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _is_known_enum_value(semantic: ParamSemantics, value: Any) -> bool:
+    return str(value).lower() in {item.lower() for item in semantic.enum_values}
+
+
+def _is_enabled_toggle_value(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value == 1
+    return False
+
+
+def _is_disabled_toggle_value(value: Any) -> bool:
+    if isinstance(value, bool):
+        return not value
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value == 0
+    return False
+
+
+def _is_pulse_action_value(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value == 1
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "pulse", "press", "request"}
+    return False
+
+
+def _is_midi_device_source_value(value: Any) -> bool:
+    return isinstance(value, str) and value.strip().lower() == "device"
 
 
 def _validate_enum(*, path: str, semantic: ParamSemantics, value: Any) -> list[ValidationIssue]:
@@ -9345,7 +12107,11 @@ def _validate_op_reference(
                 )
             )
             continue
-        if semantic.expected_family and semantic.expected_family != "ANY" and not ref_type.endswith(str(semantic.expected_family)):
+        if (
+            semantic.expected_family
+            and semantic.expected_family != "ANY"
+            and not ref_type.endswith(str(semantic.expected_family))
+        ):
             issues.append(
                 _issue(
                     code="param_reference_type_mismatch",
@@ -9412,6 +12178,45 @@ def _reference_tokens(value: Any) -> list[str]:
 def _canonical_op_type(raw_type: str) -> str:
     compact = raw_type.strip()
     return _CREATE_TYPE_ALIASES.get(compact.lower(), compact)
+
+
+def _normalize_op_type_case(raw_type: str) -> str:
+    compact = raw_type.strip()
+    for suffix in ("CHOP", "COMP", "POPX", "TOP", "SOP", "DAT", "MAT", "POP"):
+        if compact.upper().endswith(suffix):
+            base = compact[: -len(suffix)]
+            return base.lower() + suffix
+    return compact
+
+
+def _direct_semantic_value(value: Any) -> tuple[Any, bool]:
+    if not isinstance(value, dict):
+        return value, True
+    if "expr" in value:
+        return value, True
+    if "val" in value:
+        return value["val"], True
+    if value.get("reset") is True:
+        return None, False
+    if value.get("mode") == "constant" and "val" in value:
+        return value["val"], True
+    return value, True
+
+
+def _warning_issue(*, code: str, message: str, path: str) -> ValidationIssue:
+    return ValidationIssue(
+        severity="warning", code=code, message=message, path=path, source="tdpilot-direct-tool"
+    )
+
+
+def _as_direct_warning(issue: ValidationIssue) -> ValidationIssue:
+    return ValidationIssue(
+        severity="warning",
+        code=issue.code,
+        message=issue.message + " Direct tool write executed warn-only.",
+        path=issue.path,
+        source="tdpilot-direct-tool",
+    )
 
 
 def _join_path(parent: str, name: str) -> str:

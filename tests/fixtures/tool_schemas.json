@@ -508,6 +508,15 @@
         "enum": null,
         "type": "integer"
       },
+      "param_semantics_policy": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": [
+          "warn",
+          "block"
+        ],
+        "type": "string"
+      },
       "params": {
         "any_of_types": [
           "null",
@@ -1812,6 +1821,15 @@
         "enum": null,
         "type": "string"
       },
+      "param_semantics_policy": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": [
+          "warn",
+          "block"
+        ],
+        "type": "string"
+      },
       "parent_path": {
         "any_of_types": [],
         "default_present": false,
@@ -1984,6 +2002,15 @@
         "enum": null,
         "type": "string"
       },
+      "param_semantics_policy": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": [
+          "warn",
+          "block"
+        ],
+        "type": "string"
+      },
       "profile": {
         "any_of_types": [
           "null",
@@ -2035,6 +2062,15 @@
         "default_present": true,
         "enum": null,
         "type": null
+      },
+      "param_semantics_policy": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": [
+          "warn",
+          "block"
+        ],
+        "type": "string"
       },
       "plan": {
         "any_of_types": [],
@@ -2440,6 +2476,15 @@
         "enum": null,
         "type": "boolean"
       },
+      "param_semantics_policy": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": [
+          "warn",
+          "block"
+        ],
+        "type": "string"
+      },
       "partial": {
         "any_of_types": [
           "array",
@@ -2654,6 +2699,15 @@
         "default_present": true,
         "enum": null,
         "type": "boolean"
+      },
+      "param_semantics_policy": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": [
+          "warn",
+          "block"
+        ],
+        "type": "string"
       },
       "params": {
         "any_of_types": [],

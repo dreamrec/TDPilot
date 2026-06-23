@@ -43,6 +43,9 @@ def docs_evidence_for_patterns(patterns: list[BrainPattern]) -> list[str]:
             support_count = _trace_support_count(layout)
             if support_count:
                 evidence.append(f"trace-support:{support_count}")
+            runtime_count = _trace_runtime_validation_count(layout)
+            if runtime_count:
+                evidence.append(f"trace-runtime-validation:{runtime_count}")
     return list(dict.fromkeys(evidence))
 
 
@@ -68,6 +71,20 @@ def _trace_support_count(layout: dict) -> int:
     return 0
 
 
+def _trace_runtime_validation_count(layout: dict) -> int:
+    runtime = layout.get("runtime_validation")
+    if not isinstance(runtime, dict):
+        return 0
+    passed_probe_ids = runtime.get("passed_probe_ids")
+    passed_contract_ids = runtime.get("generated_code_passed_contract_ids")
+    count = 0
+    if isinstance(passed_probe_ids, list):
+        count += len([item for item in passed_probe_ids if str(item).strip()])
+    if isinstance(passed_contract_ids, list):
+        count += len([item for item in passed_contract_ids if str(item).strip()])
+    return count
+
+
 _DEFAULT_PATTERNS = [
     {
         "pattern_id": "audio_file_to_analysis_chop",
@@ -91,6 +108,7 @@ _DEFAULT_PATTERNS = [
                 role="process",
                 domain="CHOP",
                 op_type="analyzeCHOP",
+                params={"function": "RMS Power", "allowstart": False, "allowend": False, "valleys": False},
                 evidence=["docs:analyzeCHOP"],
             ),
             ConceptNode(
@@ -99,6 +117,7 @@ _DEFAULT_PATTERNS = [
                 role="process",
                 domain="CHOP",
                 op_type="mathCHOP",
+                params={"fromrange": (0.0, 1.0), "torange": (0.0, 1.0), "interppars": True},
                 evidence=["docs:mathCHOP"],
             ),
             ConceptNode(
@@ -150,6 +169,7 @@ _DEFAULT_PATTERNS = [
                 role="source",
                 domain="CHOP",
                 op_type="audiodeviceinCHOP",
+                params={"active": True, "errormissing": True, "format": "stereo"},
                 evidence=["docs:audiodeviceinCHOP"],
             ),
             ConceptNode(
@@ -158,6 +178,7 @@ _DEFAULT_PATTERNS = [
                 role="process",
                 domain="CHOP",
                 op_type="analyzeCHOP",
+                params={"function": "RMS Power", "allowstart": False, "allowend": False, "valleys": False},
                 evidence=["docs:analyzeCHOP"],
             ),
             ConceptNode(
@@ -166,6 +187,7 @@ _DEFAULT_PATTERNS = [
                 role="process",
                 domain="CHOP",
                 op_type="mathCHOP",
+                params={"fromrange": (0.0, 1.0), "torange": (0.0, 1.0), "interppars": True},
                 evidence=["docs:mathCHOP"],
             ),
             ConceptNode(
@@ -225,6 +247,7 @@ _DEFAULT_PATTERNS = [
                 role="process",
                 domain="CHOP",
                 op_type="analyzeCHOP",
+                params={"function": "RMS Power", "allowstart": False, "allowend": False, "valleys": False},
                 evidence=["docs:analyzeCHOP"],
             ),
             ConceptNode(
@@ -233,6 +256,7 @@ _DEFAULT_PATTERNS = [
                 role="process",
                 domain="CHOP",
                 op_type="mathCHOP",
+                params={"fromrange": (0.0, 1.0), "torange": (0.0, 1.0), "interppars": True},
                 evidence=["docs:mathCHOP"],
             ),
             ConceptNode(
@@ -300,6 +324,7 @@ _DEFAULT_PATTERNS = [
                 role="process",
                 domain="TOP",
                 op_type="levelTOP",
+                params={"opacity": 0.92},
                 evidence=["docs:levelTOP"],
             ),
             ConceptNode(
@@ -327,9 +352,7 @@ _DEFAULT_PATTERNS = [
             ConceptEdge(source="feedback_composite", target="stable_output", kind="data"),
         ],
         "exposes": [{"port_id": "stable_top", "domain": "TOP", "node_id": "stable_output"}],
-        "consumes": [
-            {"port_id": "analysis_chop", "domain": "CHOP", "target_node_id": "feedback_decay"}
-        ],
+        "consumes": [{"port_id": "analysis_chop", "domain": "CHOP", "target_node_id": "feedback_decay"}],
         "parameters": [
             {
                 "name": "feedback_decay",
@@ -389,6 +412,7 @@ _DEFAULT_PATTERNS = [
                 role="process",
                 domain="TOP",
                 op_type="levelTOP",
+                params={"opacity": 0.92},
                 evidence=["docs:levelTOP"],
             ),
             ConceptNode(
@@ -416,9 +440,7 @@ _DEFAULT_PATTERNS = [
             ConceptEdge(source="feedback_composite", target="stable_output", kind="data"),
         ],
         "exposes": [{"port_id": "stable_top", "domain": "TOP", "node_id": "stable_output"}],
-        "consumes": [
-            {"port_id": "analysis_chop", "domain": "CHOP", "target_node_id": "feedback_decay"}
-        ],
+        "consumes": [{"port_id": "analysis_chop", "domain": "CHOP", "target_node_id": "feedback_decay"}],
         "parameters": [
             {
                 "name": "feedback_decay",
@@ -722,7 +744,15 @@ _DEFAULT_PATTERNS = [
         "title": "GLSL Advanced POP Topology Shader",
         "intent_tags": ["glsl", "pop", "topology", "output-count", "preview"],
         "profiles": ["glsl", "pop"],
-        "required_ops": ["circlePOP", "glsladvancedPOP", "topologyPOP", "textDAT", "nullPOP", "rendersimpleTOP", "nullTOP"],
+        "required_ops": [
+            "circlePOP",
+            "glsladvancedPOP",
+            "topologyPOP",
+            "textDAT",
+            "nullPOP",
+            "rendersimpleTOP",
+            "nullTOP",
+        ],
         "optional_ops": ["glslselectPOP"],
         "concept_nodes": [
             ConceptNode(
@@ -994,11 +1024,7 @@ _DEFAULT_PATTERNS = [
                 domain="DAT",
                 op_type="textDAT",
                 content={
-                    "text": (
-                        "void TDVertex() {\n"
-                        "    gl_Position = TDWorldToProj(TDDeform(TDPos()));\n"
-                        "}\n"
-                    )
+                    "text": ("void TDVertex() {\n    gl_Position = TDWorldToProj(TDDeform(TDPos()));\n}\n")
                 },
                 generated_code={
                     "block_id": "glsl_material_vertex_shader",
@@ -1081,7 +1107,9 @@ _DEFAULT_PATTERNS = [
             {"port_id": "analysis_chop", "domain": "CHOP", "target_node_id": "material"},
             {"port_id": "terrain_sop", "domain": "SOP", "target_node_id": "geo"},
         ],
-        "parameters": [{"name": "material_modulation", "source_port": "analysis_chop", "target_node_id": "material"}],
+        "parameters": [
+            {"name": "material_modulation", "source_port": "analysis_chop", "target_node_id": "material"}
+        ],
         "layout": {"column": 1},
         "debug_outputs": [{"node": "render_output", "domain": "TOP"}],
         "safety": "safe_live",
@@ -1252,6 +1280,7 @@ _DEFAULT_PATTERNS = [
                 role="source",
                 domain="CHOP",
                 op_type="midiinCHOP",
+                params={"simplified": True, "record": False, "timer": False, "sys": False},
                 evidence=["docs:midiinCHOP"],
             ),
             ConceptNode(
@@ -1260,6 +1289,12 @@ _DEFAULT_PATTERNS = [
                 role="process",
                 domain="CHOP",
                 op_type="mathCHOP",
+                params={
+                    "fromrange": (0.0, 127.0),
+                    "torange": (0.0, 1.0),
+                    "interppars": True,
+                    "integer": "off",
+                },
                 evidence=["docs:mathCHOP"],
             ),
             ConceptNode(
@@ -1304,6 +1339,7 @@ _DEFAULT_PATTERNS = [
                 role="source",
                 domain="DAT",
                 op_type="serialDAT",
+                params={"active": True, "format": "perline", "clamp": True, "maxlines": 256},
                 evidence=["docs:serialDAT"],
             ),
             ConceptNode(
@@ -1356,6 +1392,7 @@ _DEFAULT_PATTERNS = [
                 role="source",
                 domain="DAT",
                 op_type="oscinDAT",
+                params={"active": True, "protocol": "msging", "clamp": True, "maxlines": 256},
                 evidence=["docs:oscinDAT"],
             ),
             ConceptNode(
@@ -1408,6 +1445,7 @@ _DEFAULT_PATTERNS = [
                 role="source",
                 domain="DAT",
                 op_type="websocketDAT",
+                params={"active": True, "clamp": True, "maxlines": 256},
                 evidence=["docs:websocketDAT"],
             ),
             ConceptNode(
@@ -1460,6 +1498,7 @@ _DEFAULT_PATTERNS = [
                 role="source",
                 domain="DAT",
                 op_type="mqttclientDAT",
+                params={"active": True, "reconnect": True, "clamp": True, "maxlines": 256},
                 evidence=["docs:mqttclientDAT"],
             ),
             ConceptNode(
@@ -1512,6 +1551,13 @@ _DEFAULT_PATTERNS = [
                 role="source",
                 domain="DAT",
                 op_type="udpinDAT",
+                params={
+                    "active": True,
+                    "protocol": "msging",
+                    "format": "permessage",
+                    "clamp": True,
+                    "maxlines": 256,
+                },
                 evidence=["docs:udpinDAT"],
             ),
             ConceptNode(
@@ -1590,9 +1636,7 @@ _DEFAULT_PATTERNS = [
                 domain="TOP",
                 op_type="switchTOP",
                 params={
-                    "index": {
-                        "expr": "min(1, max(0, int(op('${path:switch_table}')[1, 'selected_index'])))"
-                    }
+                    "index": {"expr": "min(1, max(0, int(op('${path:switch_table}')[1, 'selected_index'])))"}
                 },
                 evidence=["docs:switchTOP"],
             ),

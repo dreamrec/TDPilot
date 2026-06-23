@@ -156,8 +156,7 @@ def _mirror_mismatches(root: Path) -> list[str]:
     if (
         root_hook_runner.exists()
         and plugin_hook_runner.exists()
-        and root_hook_runner.read_text(encoding="utf-8")
-        != plugin_hook_runner.read_text(encoding="utf-8")
+        and root_hook_runner.read_text(encoding="utf-8") != plugin_hook_runner.read_text(encoding="utf-8")
     ):
         mismatches.append("plugins/tdpilot/hooks/run_hook.py differs from hooks/run_hook.py")
     return mismatches

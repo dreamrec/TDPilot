@@ -22,6 +22,7 @@ from pydantic import Field
 from td_mcp import exec_safety
 from td_mcp import normalize_transport as _normalize_transport
 from td_mcp.audit import AuditLogger
+from td_mcp.brain.param_semantics import canonical_op_type, direct_param_semantics_warnings
 from td_mcp.capabilities import detect_capabilities
 from td_mcp.errors import format_tool_error
 from td_mcp.events import EventManager
@@ -237,7 +238,12 @@ async def server_lifespan(app: FastMCP):
     )
     telemetry = TelemetryCollector()
     audit = AuditLogger(TD_AUDIT_LOG)
-    macro_engine = MacroEngine(td_client=td_client, user_template_dir=TD_TEMPLATE_DIR)
+    safety_manager = SafetyManager()
+    macro_engine = MacroEngine(
+        td_client=td_client,
+        user_template_dir=TD_TEMPLATE_DIR,
+        param_preflight=_direct_param_preflight_callback(safety_manager=safety_manager),
+    )
     event_manager = EventManager(mcp_server=app, port=TD_WS_PORT, max_history=TD_EVENT_BUFFER)
     visual_monitor = VisualMonitor(td_client=td_client, event_manager=event_manager)
     top_streamer = TopStreamer(
@@ -245,7 +251,6 @@ async def server_lifespan(app: FastMCP):
         event_manager=event_manager,
         max_fps=TD_STREAM_MAX_FPS,
     )
-    safety_manager = SafetyManager()
     snapshot_manager = SnapshotManager(
         max_snapshots=TD_MAX_SNAPSHOTS,
         storage_dir=TD_SNAPSHOT_DIR,
@@ -958,6 +963,75 @@ def _apply_safety_to_set_params(
     return adjusted, warnings
 
 
+class DirectParamPreflightResult:
+    """Shared preflight result for direct live parameter writes."""
+
+    def __init__(
+        self,
+        *,
+        adjusted_params: dict[str, Any],
+        safety_warnings: list[str] | None = None,
+        param_semantics_warnings: list[Any] | None = None,
+        blocked: bool = False,
+    ) -> None:
+        self.adjusted_params = adjusted_params
+        self.safety_warnings = list(safety_warnings or [])
+        self.param_semantics_warnings = list(param_semantics_warnings or [])
+        self.blocked = blocked
+
+
+def _serialize_direct_param_semantics_warning(item: Any) -> Any:
+    if hasattr(item, "model_dump"):
+        try:
+            return item.model_dump(mode="json")
+        except TypeError:
+            return item.model_dump()
+    return item
+
+
+def _preflight_direct_param_write(
+    *,
+    safety_manager: SafetyManager | None,
+    path: str,
+    params: dict[str, Any],
+    op_type: str | None,
+    param_semantics_policy: str = "warn",
+) -> DirectParamPreflightResult:
+    """Apply numeric safety and docs-grounded param semantics before mutation."""
+    adjusted, safety_warnings = _apply_safety_to_set_params(safety_manager, path, dict(params))
+    param_semantics_warnings = (
+        direct_param_semantics_warnings(path=path, op_type=op_type, params=adjusted) if op_type else []
+    )
+    return DirectParamPreflightResult(
+        adjusted_params=adjusted,
+        safety_warnings=safety_warnings,
+        param_semantics_warnings=param_semantics_warnings,
+        blocked=param_semantics_policy == "block" and bool(param_semantics_warnings),
+    )
+
+
+def _direct_param_preflight_callback(
+    ctx: Context | None = None,
+    *,
+    safety_manager: SafetyManager | None = None,
+):
+    """Return the shared preflight callback for direct live parameter writes."""
+
+    def _callback(**kwargs):
+        active_safety_manager = safety_manager
+        if active_safety_manager is None and ctx is not None:
+            try:
+                active_safety_manager = _get_safety_manager(ctx)
+            except Exception:  # noqa: BLE001
+                active_safety_manager = None
+        return _preflight_direct_param_write(
+            safety_manager=active_safety_manager,
+            **kwargs,
+        )
+
+    return _callback
+
+
 def _format_nodes_markdown(nodes: list[dict[str, Any]], title: str = "Nodes") -> str:
     if not nodes:
         return f"No {title.lower()} found."
@@ -1557,6 +1631,24 @@ async def _read_adjustable_values(
     return values
 
 
+async def _resolve_optimizer_op_types(
+    client: TDClient,
+    adjustable_params: list[AdjustableParamInput],
+) -> dict[str, str]:
+    """Resolve node types for optimizer param semantics without blocking search."""
+    op_types: dict[str, str] = {}
+    for path in dict.fromkeys(adjustable.path for adjustable in adjustable_params):
+        detail = await _safe_request(client, "node/detail", {"path": path, "param_limit": 1})
+        if not isinstance(detail, dict):
+            continue
+        raw_type = detail.get("type") or detail.get("op_type") or detail.get("node_type")
+        if not raw_type:
+            continue
+        family = detail.get("family")
+        op_types[path] = canonical_op_type(str(raw_type), str(family) if family else None)
+    return op_types
+
+
 def _build_optimizer_plan(
     adjustable_params: list[AdjustableParamInput],
     current_values: dict[tuple[str, str], float],
@@ -1604,6 +1696,9 @@ async def _apply_optimizer_plan(
     client: TDClient,
     safety_manager: SafetyManager,
     plan: list[dict[str, Any]],
+    *,
+    op_types_by_path: dict[str, str] | None = None,
+    param_semantics_policy: str = "warn",
 ) -> dict[str, Any]:
     by_path: dict[str, dict[str, Any]] = {}
     for item in plan:
@@ -1612,11 +1707,32 @@ async def _apply_optimizer_plan(
     applied: list[dict[str, Any]] = []
     failed: list[dict[str, Any]] = []
     safety_warnings: list[str] = []
+    param_semantics_warnings: list[Any] = []
+    blocked = False
 
     for path, params in by_path.items():
         try:
-            adjusted, warnings = _apply_safety_to_set_params(safety_manager, path, params)
-            safety_warnings.extend(warnings)
+            preflight = _preflight_direct_param_write(
+                safety_manager=safety_manager,
+                path=path,
+                params=params,
+                op_type=(op_types_by_path or {}).get(path),
+                param_semantics_policy=param_semantics_policy,
+            )
+            safety_warnings.extend(preflight.safety_warnings)
+            param_semantics_warnings.extend(preflight.param_semantics_warnings)
+            if preflight.blocked:
+                blocked = True
+                for name in params:
+                    failed.append(
+                        {
+                            "path": path,
+                            "param": name,
+                            "error": f"param semantics blocked optimizer params for {path}",
+                        }
+                    )
+                continue
+            adjusted = preflight.adjusted_params
             await client.request("node/params/set", {"path": path, "params": adjusted})
             for name, value in adjusted.items():
                 applied.append({"path": path, "param": name, "value": value})
@@ -1628,6 +1744,13 @@ async def _apply_optimizer_plan(
         "applied": applied,
         "failed": failed,
         "safety_warnings": safety_warnings,
+        "param_semantics_warnings": [
+            _serialize_direct_param_semantics_warning(item) for item in param_semantics_warnings
+        ],
+        "param_semantics_status": "blocked"
+        if blocked
+        else ("warnings" if param_semantics_warnings else "clean"),
+        "blocked": blocked,
     }
 
 
@@ -1669,11 +1792,14 @@ async def _restore_snapshot_nodes(
     *,
     partial_filters: list[str] | None = None,
     dry_run: bool = False,
+    param_semantics_policy: str = "warn",
 ) -> dict[str, Any]:
     restored: list[dict[str, Any]] = []
     skipped: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
     warnings: list[str] = []
+    param_semantics_warnings = []
+    restore_entries: list[tuple[str, dict[str, Any]]] = []
 
     filters = partial_filters or []
     for node_path, node_snapshot in snapshot_nodes.items():
@@ -1686,9 +1812,29 @@ async def _restore_snapshot_nodes(
             skipped.append({"path": node_path, "reason": "no_params"})
             continue
 
-        adjusted, safety_warnings = _apply_safety_to_set_params(safety, node_path, values)
-        warnings.extend(safety_warnings)
+        op_type = _snapshot_node_op_type(node_snapshot if isinstance(node_snapshot, dict) else {})
+        preflight = _preflight_direct_param_write(
+            safety_manager=safety,
+            path=node_path,
+            params=values,
+            op_type=op_type,
+            param_semantics_policy=param_semantics_policy,
+        )
+        warnings.extend(preflight.safety_warnings)
+        param_semantics_warnings.extend(preflight.param_semantics_warnings)
+        restore_entries.append((node_path, preflight.adjusted_params))
 
+    if param_semantics_policy == "block" and param_semantics_warnings:
+        return {
+            "restored": [],
+            "skipped": skipped,
+            "failures": [],
+            "safety_warnings": warnings,
+            "param_semantics_warnings": [issue.model_dump(mode="json") for issue in param_semantics_warnings],
+            "blocked": True,
+        }
+
+    for node_path, adjusted in restore_entries:
         if dry_run:
             restored.append(
                 {
@@ -1710,7 +1856,17 @@ async def _restore_snapshot_nodes(
         "skipped": skipped,
         "failures": failures,
         "safety_warnings": warnings,
+        "param_semantics_warnings": [issue.model_dump(mode="json") for issue in param_semantics_warnings],
+        "blocked": False,
     }
+
+
+def _snapshot_node_op_type(node_snapshot: dict[str, Any]) -> str | None:
+    raw_type = node_snapshot.get("op_type") or node_snapshot.get("type") or node_snapshot.get("node_type")
+    if not raw_type:
+        return None
+    family = node_snapshot.get("family")
+    return canonical_op_type(str(raw_type), str(family) if family else None)
 
 
 async def _run_optimizer_iterations(
@@ -1725,6 +1881,7 @@ async def _run_optimizer_iterations(
     convergence_threshold: float,
     safety_profile: str,
     root_path: str,
+    param_semantics_policy: str = "warn",
     progress_start: float = 0.0,
     progress_end: float = 1.0,
     phase_label: str = "optimize",
@@ -1746,6 +1903,8 @@ async def _run_optimizer_iterations(
             "final_params": [],
         }
 
+    op_types_by_path = await _resolve_optimizer_op_types(client, adjustable_params)
+
     for index in range(max_iterations):
         current_values = await _read_adjustable_values(client, adjustable_params)
         plan, directions = _build_optimizer_plan(
@@ -1759,7 +1918,13 @@ async def _run_optimizer_iterations(
             stop_reason = "no_adjustable_changes"
             break
 
-        apply_result = await _apply_optimizer_plan(client, safety, plan)
+        apply_result = await _apply_optimizer_plan(
+            client,
+            safety,
+            plan,
+            op_types_by_path=op_types_by_path,
+            param_semantics_policy=param_semantics_policy,
+        )
         instability = await _compute_instability_snapshot(client, root_path)
         updated_values = await _read_adjustable_values(client, adjustable_params)
 
@@ -1777,11 +1942,18 @@ async def _run_optimizer_iterations(
             "applied_count": len(apply_result["applied"]),
             "failed_count": len(apply_result["failed"]),
             "safety_warnings": apply_result["safety_warnings"],
+            "param_semantics_status": apply_result["param_semantics_status"],
+            "param_semantics_warnings": apply_result["param_semantics_warnings"],
+            "blocked": apply_result["blocked"],
             "instability": instability,
             "applied": apply_result["applied"],
             "failed": apply_result["failed"],
         }
         iteration_logs.append(entry)
+
+        if apply_result["blocked"]:
+            stop_reason = "param_semantics_blocked"
+            break
 
         phase_progress = float(index + 1) / float(max_iterations)
         progress = progress_start + (progress_end - progress_start) * phase_progress

@@ -5,9 +5,10 @@ The .tox is a binary TD artifact and can only be rebuilt inside TouchDesigner.
 That means after any edit to the `.py` files it embeds, the .tox goes stale
 silently — users who install the plugin get outdated callback code.
 
-This guard compares the hash of the source files against the hash recorded in
-``td_component/.tox-source-hash.json`` at build time. Mismatch = "rebuild
-the .tox in TD before pushing".
+This guard compares the hash of the source files and the hash/size of the
+actual ``td_component/tdpilot.tox`` binary against metadata recorded in
+``td_component/.tox-source-hash.json`` at build time. Mismatch = "rebuild the
+.tox in TD before pushing".
 
 Runs in CI. Also runnable locally.
 """
@@ -36,14 +37,17 @@ SOURCE_FILES = (
     # from main from v1.5.6 through v1.6.6 (see CHANGELOG v1.6.7).
     "td_component/state_cache.py",
 )
-HASH_FILE = ROOT / "td_component" / ".tox-source-hash.json"
-TOX_FILE = ROOT / "td_component" / "tdpilot.tox"
+HASH_REL = Path("td_component") / ".tox-source-hash.json"
+TOX_REL = Path("td_component") / "tdpilot.tox"
+HASH_FILE = ROOT / HASH_REL
+TOX_FILE = ROOT / TOX_REL
 
 
-def compute_current_hash() -> str:
+def compute_current_hash(root: Path | None = None) -> str:
+    repo_root = Path(root or ROOT)
     h = hashlib.sha256()
     for rel in SOURCE_FILES:
-        path = ROOT / rel
+        path = repo_root / rel
         if not path.exists():
             continue
         h.update(rel.encode("utf-8"))
@@ -53,38 +57,104 @@ def compute_current_hash() -> str:
     return h.hexdigest()
 
 
-def main() -> int:
-    if not TOX_FILE.exists():
-        print("ERROR: " + str(TOX_FILE.relative_to(ROOT)) + " is missing.")
-        print("       Rebuild it inside TouchDesigner via")
-        print("       td_component/build_tdpilot_tox.py in the Textport (v1.5.6+),")
-        print("       or setup_mcp_in_td.py for legacy mcp-server-only builds.")
-        return 1
+def compute_tox_artifact_metadata(root: Path | None = None) -> dict[str, object]:
+    repo_root = Path(root or ROOT)
+    tox_file = repo_root / TOX_REL
+    digest = hashlib.sha256(tox_file.read_bytes()).hexdigest()
+    return {
+        "tox_artifact_path": str(TOX_REL),
+        "tox_artifact_sha256": digest,
+        "tox_artifact_size_bytes": tox_file.stat().st_size,
+    }
 
-    if not HASH_FILE.exists():
-        print("ERROR: " + str(HASH_FILE.relative_to(ROOT)) + " is missing.")
-        print("       Rebuild the .tox in TouchDesigner — the rebuild writes this file.")
-        return 1
 
-    stored = json.loads(HASH_FILE.read_text())
+def check_freshness(root: Path | None = None) -> tuple[bool, list[str]]:
+    repo_root = Path(root or ROOT)
+    tox_file = repo_root / TOX_REL
+    hash_file = repo_root / HASH_REL
+    messages: list[str] = []
+
+    if not tox_file.exists():
+        messages.append("ERROR: " + str(TOX_REL) + " is missing.")
+        messages.extend(_rebuild_instructions(missing_tox=True))
+        return False, messages
+
+    if not hash_file.exists():
+        messages.append("ERROR: " + str(HASH_REL) + " is missing.")
+        messages.append("       Rebuild the .tox in TouchDesigner — the rebuild writes this file.")
+        return False, messages
+
+    stored = json.loads(hash_file.read_text(encoding="utf-8"))
     stored_hash = stored.get("tox_source_hash")
-    current_hash = compute_current_hash()
+    current_hash = compute_current_hash(repo_root)
 
     if stored_hash != current_hash:
-        print("ERROR: .tox is stale relative to td_component source.")
-        print("  stored hash:  " + str(stored_hash))
-        print("  current hash: " + current_hash)
-        print("  built at:     " + str(stored.get("built_at")))
-        print("")
-        print("Rebuild the .tox in TouchDesigner before pushing (v1.5.6+):")
-        print("  1. Open TD")
-        print("  2. In Textport, run td_component/build_tdpilot_tox.py")
-        print("     (open the file, read its source, compile + exec it).")
-        print("  3. git add td_component/tdpilot.tox td_component/.tox-source-hash.json")
-        return 1
+        messages.append("ERROR: .tox is stale relative to td_component source.")
+        messages.append("  stored hash:  " + str(stored_hash))
+        messages.append("  current hash: " + current_hash)
+        messages.append("  built at:     " + str(stored.get("built_at")))
+        messages.append("")
+        messages.extend(_rebuild_instructions())
+        return False, messages
 
-    print(".tox is fresh (hash " + current_hash[:16] + "..., built " + str(stored.get("built_at")) + ")")
-    return 0
+    current_artifact = compute_tox_artifact_metadata(repo_root)
+    stored_artifact_hash = stored.get("tox_artifact_sha256")
+    stored_artifact_size = stored.get("tox_artifact_size_bytes")
+    if not stored_artifact_hash or stored_artifact_size is None:
+        messages.append("ERROR: .tox artifact metadata is missing from " + str(HASH_REL) + ".")
+        messages.append(
+            "       Rebuild the .tox so the sidecar binds source freshness to the binary artifact."
+        )
+        return False, messages
+
+    if (
+        stored_artifact_hash != current_artifact["tox_artifact_sha256"]
+        or int(stored_artifact_size) != current_artifact["tox_artifact_size_bytes"]
+    ):
+        messages.append("ERROR: .tox binary changed after the freshness sidecar was written.")
+        messages.append("  stored artifact hash:  " + str(stored_artifact_hash))
+        messages.append("  current artifact hash: " + str(current_artifact["tox_artifact_sha256"]))
+        messages.append("  stored artifact size:  " + str(stored_artifact_size))
+        messages.append("  current artifact size: " + str(current_artifact["tox_artifact_size_bytes"]))
+        messages.append("")
+        messages.extend(_rebuild_instructions())
+        return False, messages
+
+    messages.append(
+        ".tox is fresh (source hash "
+        + current_hash[:16]
+        + "..., artifact hash "
+        + str(current_artifact["tox_artifact_sha256"])[:16]
+        + "..., built "
+        + str(stored.get("built_at"))
+        + ")"
+    )
+    return True, messages
+
+
+def _rebuild_instructions(*, missing_tox: bool = False) -> list[str]:
+    if missing_tox:
+        return [
+            "       Rebuild it inside TouchDesigner via",
+            "       td_component/build_tdpilot_tox.py in the Textport (v1.5.6+),",
+            "       or setup_mcp_in_td.py for legacy mcp-server-only builds.",
+        ]
+    return [
+        "Rebuild the .tox in TouchDesigner before pushing (v1.5.6+):",
+        "  1. Open TD",
+        "  2. In Textport, run td_component/build_tdpilot_tox.py",
+        "     (open the file, read its source, compile + exec it).",
+        "  3. git add td_component/tdpilot.tox td_component/.tox-source-hash.json",
+    ]
+
+
+def main() -> int:
+    ok, messages = check_freshness(ROOT)
+    for message in messages:
+        print(message)
+    if ok:
+        return 0
+    return 1
 
 
 if __name__ == "__main__":

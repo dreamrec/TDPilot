@@ -183,7 +183,10 @@ def test_glsl_compile_probe_summaries_include_runtime_node_error_contracts():
         assert compile_state["readback_strategy"] == "node_errors_runtime"
         assert compile_state["cost_level"] == "cheap"
         assert compile_state["metric_names"] == [metric_name]
-        assert any(source.startswith("https://docs.derivative.ca/GLSL_") for source in compile_state["official_sources"])
+        assert any(
+            source.startswith("https://docs.derivative.ca/GLSL_")
+            for source in compile_state["official_sources"]
+        )
 
 
 def test_dat_callback_guard_probe_summary_includes_runtime_content_readback_contract():
@@ -205,7 +208,9 @@ def test_probe_summaries_exclude_expensive_probes_by_default():
     assert cheap
     assert all(item["cost_level"] != "expensive" for item in cheap)
     assert any(item["probe_id"] == "compile_state" for item in cheap)
-    assert any(item["probe_id"] == "nonblack_output" and item["cost_level"] == "expensive" for item in all_probes)
+    assert any(
+        item["probe_id"] == "nonblack_output" and item["cost_level"] == "expensive" for item in all_probes
+    )
     assert any(item["probe_id"] == "nonblack_output" and item["cost_level"] == "expensive" for item in opt_in)
     assert len(all_probes) > len(cheap)
 
@@ -248,9 +253,7 @@ def test_concept_compiled_report_includes_assembly_macro_shell_probe():
     )
 
     profile_probes = report.cheap_metrics["profile_probes"]
-    shell_probe = next(
-        item for item in profile_probes if item["probe_id"] == "component_shell_present"
-    )
+    shell_probe = next(item for item in profile_probes if item["probe_id"] == "component_shell_present")
 
     assert "component_shell_present" in report.checks
     assert shell_probe["required_inputs"] == ["baseCOMP"]
@@ -267,9 +270,7 @@ def test_concept_compiled_output_probe_covers_all_stable_output_families():
     )
 
     profile_probes = report.cheap_metrics["profile_probes"]
-    output_probe = next(
-        item for item in profile_probes if item["probe_id"] == "output_node_present"
-    )
+    output_probe = next(item for item in profile_probes if item["probe_id"] == "output_node_present")
 
     assert {"nullTOP", "nullCHOP", "nullDAT", "nullPOP", "textDAT"}.issubset(
         set(output_probe["required_inputs"])

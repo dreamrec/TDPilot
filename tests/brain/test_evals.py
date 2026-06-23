@@ -125,6 +125,124 @@ def test_golden_eval_corpus_uses_validation_expectations_for_showpiece_cases():
     assert material["scoring"]["validation_expectations"] >= 1
 
 
+def test_golden_eval_corpus_locks_dynamic_atlas_evidence_for_preview_and_binding():
+    cases = load_golden_cases(EVAL_PATH)
+    by_id = {case["id"]: case for case in cases}
+
+    chop_binding = by_id["open_prompt_chop_binding_texture_synthesis"]
+    sop_preview = by_id["open_prompt_sop_render_preview_top_synthesis"]
+    typed_sop_preview = by_id["open_prompt_typed_role_sop_render_output_synthesis"]
+    typed_bridge = by_id["open_prompt_typed_bridge_dat_to_chop_output"]
+    typed_chop_top_bridge = by_id["open_prompt_typed_bridge_chop_to_top_source_output"]
+    typed_dat_chop_top_bridge = by_id["open_prompt_typed_bridge_dat_to_chop_to_top_output"]
+    typed_dat_pop_top_chop_bridge = by_id["open_prompt_typed_bridge_dat_to_pop_to_top_to_chop_output"]
+    typed_sop_pop_top_bridge = by_id["open_prompt_typed_bridge_sop_to_pop_to_top_preview"]
+    messy_sop_preview = by_id["open_prompt_typed_role_sop_render_preview_top_with_bridge_distractors"]
+    sop_role_search = by_id["open_prompt_sop_role_graph_noise_over_transform_distractor"]
+    messy_chop_sop_export = by_id["open_prompt_chop_export_bound_sop_preview_with_transform_distractor"]
+    messy_chop_export = by_id["open_prompt_chop_export_binding_with_bridge_distractor"]
+
+    assert "atlas:synthesized:chop_controlled_top_card_chain" in chop_binding["required_patterns"]
+    assert (
+        "atlas-synthesis:binding:out_chop->levelTOP.brightness1"
+        in chop_binding["required_grounding_evidence"]
+    )
+    assert "atlas:synthesized:sop_render_preview_top_card_chain" in sop_preview["required_patterns"]
+    assert (
+        "atlas-synthesis:multi-domain:sop-to-render-top-preview" in sop_preview["required_grounding_evidence"]
+    )
+    assert (
+        "atlas:synthesized:typed_role_graph_sop_render_preview_top_card_chain"
+        in typed_sop_preview["required_patterns"]
+    )
+    assert (
+        "atlas-synthesis:role-graph:source->preview->output"
+        in typed_sop_preview["required_grounding_evidence"]
+    )
+    assert "atlas:synthesized:typed_bridge_graph_dat_to_chop_card_chain" in typed_bridge["required_patterns"]
+    assert "atlas-synthesis:typed-role-graph-search" in typed_bridge["required_grounding_evidence"]
+    assert "atlas-synthesis:bridge:DAT->CHOP:dattoCHOP" in typed_bridge["required_grounding_evidence"]
+    assert (
+        "atlas:synthesized:typed_bridge_graph_chop_to_top_card_chain"
+        in typed_chop_top_bridge["required_patterns"]
+    )
+    assert (
+        "atlas-synthesis:source-output-before-bridge:nullCHOP"
+        in typed_chop_top_bridge["required_grounding_evidence"]
+    )
+    assert (
+        "atlas:synthesized:typed_bridge_graph_dat_to_chop_to_top_card_chain"
+        in typed_dat_chop_top_bridge["required_patterns"]
+    )
+    assert (
+        "atlas-synthesis:typed-bridge-graph-search:multi-hop"
+        in typed_dat_chop_top_bridge["required_grounding_evidence"]
+    )
+    assert (
+        "atlas:synthesized:typed_bridge_graph_dat_to_pop_to_top_to_chop_card_chain"
+        in (typed_dat_pop_top_chop_bridge["required_patterns"])
+    )
+    assert (
+        "atlas-synthesis:bridge:TOP->CHOP:toptoCHOP"
+        in typed_dat_pop_top_chop_bridge["required_grounding_evidence"]
+    )
+    assert (
+        "atlas-synthesis:role-graph:"
+        "source->bridge->process->output->bridge->process->output->bridge->process->output"
+    ) in typed_dat_pop_top_chop_bridge["required_grounding_evidence"]
+    assert (
+        "atlas:synthesized:typed_bridge_graph_sop_to_pop_to_top_card_chain"
+        in (typed_sop_pop_top_bridge["required_patterns"])
+    )
+    assert (
+        "atlas-synthesis:bridge:SOP->POP:soptoPOP" in typed_sop_pop_top_bridge["required_grounding_evidence"]
+    )
+    assert (
+        "atlas-synthesis:bridge:POP->TOP:poptoTOP" in typed_sop_pop_top_bridge["required_grounding_evidence"]
+    )
+    assert (
+        "atlas-synthesis:topology-selected:1:atlas:synthesized:sop_render_preview_top_card_chain"
+        in (messy_sop_preview["required_grounding_evidence"])
+    )
+    assert (
+        "atlas-synthesis:topology-role-family:1:source:SOP:3"
+        in (messy_sop_preview["required_grounding_evidence"])
+    )
+    assert "transformSOP" in sop_role_search["forbidden_ops"]
+    assert (
+        "atlas-synthesis:role-graph-search:SOP:source->process->output"
+        in (sop_role_search["required_grounding_evidence"])
+    )
+    assert (
+        "atlas-synthesis:role-graph-selected:SOP:1:gridSOP>noiseSOP>nullSOP"
+        in (sop_role_search["required_grounding_evidence"])
+    )
+    assert (
+        "atlas-synthesis:role-node:SOP:process:noiseSOP" in (sop_role_search["required_grounding_evidence"])
+    )
+    assert "transformSOP" in messy_chop_sop_export["forbidden_ops"]
+    assert (
+        "atlas:synthesized:chop_export_bound_sop_render_preview_card_chain"
+        in (messy_chop_sop_export["required_patterns"])
+    )
+    assert (
+        "atlas-synthesis:sop-control-target-selected:noiseSOP.amp"
+        in (messy_chop_sop_export["required_grounding_evidence"])
+    )
+    assert (
+        "atlas-synthesis:role-graph-selected:SOP:1:gridSOP>noiseSOP>nullSOP"
+        in (messy_chop_sop_export["required_grounding_evidence"])
+    )
+    assert (
+        "atlas-synthesis:topology-selected:1:atlas:synthesized:chop_export_bound_top_card_chain"
+        in (messy_chop_export["required_grounding_evidence"])
+    )
+    assert (
+        "atlas-synthesis:topology-role-family:1:control:CHOP:1"
+        in (messy_chop_export["required_grounding_evidence"])
+    )
+
+
 def test_golden_eval_report_includes_registry_pattern_coverage():
     assert hasattr(evals, "pattern_eval_coverage_report")
 
@@ -208,7 +326,9 @@ async def test_evaluate_golden_cases_scores_all_current_profiles():
         "glsl_material_render_pipeline",
         "debug_output_conventions",
     }.issubset(set(material_case["candidate_patterns"]))
-    material_panel_case = next(item for item in report["cases"] if item["id"] == "audio_glsl_material_render_panel")
+    material_panel_case = next(
+        item for item in report["cases"] if item["id"] == "audio_glsl_material_render_panel"
+    )
     assert material_panel_case["profile"] == "concept_compiled"
     assert material_panel_case["checks"]["pattern_composition"]["ok"] is True
     assert material_panel_case["checks"]["assembly_macros"]["ok"] is True
@@ -886,6 +1006,630 @@ async def test_trace_replay_detects_promoted_pattern_operator_drift():
 
 
 @pytest.mark.asyncio
+async def test_trace_replay_detects_promoted_pattern_runtime_validation_issues():
+    cases = {case["id"]: case for case in load_golden_cases(EVAL_PATH)}
+    case = cases["audio_feedback_panel_debug"]
+    baseline = await evaluate_case(case)
+
+    report = await evals.trace_replay_drift_report(
+        [case],
+        {
+            "audio_feedback_panel_debug": {
+                "profile": baseline["profile"],
+                "operators": baseline["operators"],
+                "promoted_pattern_candidate": {
+                    "pattern_id": "trace_audio_feedback_green_audio_feedback_panel",
+                    "required_ops": ["audiofileinCHOP", "feedbackTOP"],
+                    "layout": {
+                        "runtime_validation": {
+                            "required_probe_ids": [
+                                "audio_signal_activity",
+                                "feedback_output_readback",
+                            ],
+                            "passed_probe_ids": ["audio_signal_activity"],
+                            "missing_probe_details": {
+                                "feedback_output_readback": {
+                                    "profile": "feedback",
+                                    "status": "runtime_contract_present",
+                                    "readback_strategy": "top_luminance_runtime",
+                                    "pending_metric_names": [
+                                        "feedback_output_luminance_mean",
+                                        "feedback_output_luminance_max",
+                                    ],
+                                }
+                            },
+                            "failed_probe_ids": ["cheap_visual_metrics"],
+                            "failed_probe_statuses": {
+                                "cheap_visual_metrics": "runtime_fail",
+                            },
+                        }
+                    },
+                },
+            }
+        },
+    )
+
+    assert report["ok"] is False
+    assert report["drift_count"] == 1
+    drift = report["drifts"][0]
+    assert drift["profile_drift"] is None
+    assert drift["operator_drift"] is None
+    assert drift["promoted_pattern_operator_drift"] is None
+    assert drift["promoted_pattern_runtime_validation_issues"] == {
+        "pattern_id": "trace_audio_feedback_green_audio_feedback_panel",
+        "missing_probe_ids": ["feedback_output_readback"],
+        "missing_probe_details": {
+            "feedback_output_readback": {
+                "profile": "feedback",
+                "status": "runtime_contract_present",
+                "readback_strategy": "top_luminance_runtime",
+                "pending_metric_names": [
+                    "feedback_output_luminance_mean",
+                    "feedback_output_luminance_max",
+                ],
+            }
+        },
+        "failed_probe_ids": ["cheap_visual_metrics"],
+        "failed_probe_statuses": {"cheap_visual_metrics": "runtime_fail"},
+    }
+
+
+@pytest.mark.asyncio
+async def test_trace_replay_detects_failed_only_promoted_pattern_runtime_probe():
+    cases = {case["id"]: case for case in load_golden_cases(EVAL_PATH)}
+    case = cases["audio_feedback_panel_debug"]
+    baseline = await evaluate_case(case)
+
+    report = await evals.trace_replay_drift_report(
+        [case],
+        {
+            "audio_feedback_panel_debug": {
+                "profile": baseline["profile"],
+                "operators": baseline["operators"],
+                "promoted_pattern_candidate": {
+                    "pattern_id": "trace_audio_feedback_visual_optional_failure",
+                    "required_ops": ["audiofileinCHOP", "feedbackTOP"],
+                    "layout": {
+                        "runtime_validation": {
+                            "required_probe_ids": [],
+                            "passed_probe_ids": [],
+                            "failed_probe_ids": ["cheap_visual_metrics"],
+                            "failed_probe_statuses": {
+                                "cheap_visual_metrics": "runtime_fail",
+                            },
+                            "failed_probe_details": {
+                                "cheap_visual_metrics": {
+                                    "profile": "visual",
+                                    "status": "runtime_fail",
+                                    "issue_code": "cheap_visual_metrics_black_frame",
+                                    "readback_path": "/project1/tdpilot_concept/out1",
+                                    "runtime_required": False,
+                                    "runtime_metric_values": {
+                                        "luminance_mean": 0.0,
+                                        "entropy": 0.0,
+                                    },
+                                }
+                            },
+                        }
+                    },
+                },
+            }
+        },
+    )
+
+    assert report["ok"] is False
+    assert report["drift_count"] == 1
+    drift = report["drifts"][0]
+    assert drift["profile_drift"] is None
+    assert drift["operator_drift"] is None
+    assert drift["promoted_pattern_operator_drift"] is None
+    assert drift["promoted_pattern_runtime_validation_issues"] == {
+        "pattern_id": "trace_audio_feedback_visual_optional_failure",
+        "missing_probe_ids": [],
+        "failed_probe_ids": ["cheap_visual_metrics"],
+        "failed_probe_statuses": {"cheap_visual_metrics": "runtime_fail"},
+        "failed_probe_details": {
+            "cheap_visual_metrics": {
+                "profile": "visual",
+                "status": "runtime_fail",
+                "issue_code": "cheap_visual_metrics_black_frame",
+                "readback_path": "/project1/tdpilot_concept/out1",
+                "runtime_required": False,
+                "runtime_metric_values": {
+                    "luminance_mean": 0.0,
+                    "entropy": 0.0,
+                },
+            }
+        },
+    }
+
+
+@pytest.mark.asyncio
+async def test_trace_replay_aggregates_repeated_validation_issue_memory():
+    cases = {case["id"]: case for case in load_golden_cases(EVAL_PATH)}
+    selected_ids = ["audio_feedback_panel_debug", "audio_feedback_panel_diagnostics"]
+    selected_cases = [cases[case_id] for case_id in selected_ids]
+    baselines = {case_id: await evaluate_case(cases[case_id]) for case_id in selected_ids}
+    runtime_validation = {
+        "required_probe_ids": [
+            "audio_signal_activity",
+            "feedback_output_readback",
+        ],
+        "passed_probe_ids": ["audio_signal_activity"],
+        "missing_probe_ids": ["feedback_output_readback"],
+        "failed_probe_ids": ["cheap_visual_metrics"],
+        "failed_probe_statuses": {"cheap_visual_metrics": "runtime_fail"},
+        "failed_optional_probe_ids": ["cheap_visual_metrics"],
+        "confidence_decay": 0.86,
+        "confidence_penalty_reasons": [
+            "missing_required_probe:feedback_output_readback",
+            "failed_optional_probe:cheap_visual_metrics",
+        ],
+    }
+
+    report = await evals.trace_replay_drift_report(
+        selected_cases,
+        {
+            case_id: {
+                "profile": baselines[case_id]["profile"],
+                "operators": baselines[case_id]["operators"],
+                "trace_id": f"trace-{case_id}-weak-runtime",
+                "promoted_pattern_candidate": {
+                    "pattern_id": f"trace_{case_id}_weak_runtime",
+                    "required_ops": ["audiofileinCHOP", "feedbackTOP"],
+                    "layout": {
+                        "trace_fingerprint": "tracefp:audio-feedback-weak-runtime",
+                        "intent_fingerprint": "intent:audio-feedback-panel",
+                        "operator_fingerprint": "ops:audio-feedback-panel",
+                        "validation_fingerprint": "validation:feedback-output-readback",
+                        "runtime_validation": runtime_validation,
+                    },
+                },
+            }
+            for case_id in selected_ids
+        },
+    )
+
+    assert report["ok"] is False
+    assert report["drift_count"] == 2
+    memory = report["validation_issue_memory"]
+    assert memory["ok"] is False
+    assert memory["issue_count"] == 4
+    assert memory["unique_issue_count"] == 2
+    assert memory["repeated_issue_count"] == 2
+    assert memory["promotion_demotion_candidate_count"] == 2
+
+    repeated = {(item["kind"], item["id"]): item for item in memory["repeated_issues"]}
+    missing = repeated[("runtime_missing_probe", "feedback_output_readback")]
+    assert missing["count"] == 2
+    assert missing["case_ids"] == sorted(selected_ids)
+    assert missing["sources"] == ["promoted_pattern"]
+    assert missing["promotion_audit_action"] == "block_promotion"
+    assert missing["min_confidence_decay"] == 0.86
+    assert missing["trace_ids"] == sorted(f"trace-{case_id}-weak-runtime" for case_id in selected_ids)
+    assert missing["trace_fingerprints"] == {
+        "intent_fingerprint": ["intent:audio-feedback-panel"],
+        "operator_fingerprint": ["ops:audio-feedback-panel"],
+        "trace_fingerprint": ["tracefp:audio-feedback-weak-runtime"],
+        "validation_fingerprint": ["validation:feedback-output-readback"],
+    }
+    assert missing["trace_fingerprint_count"] == 1
+    assert missing["promotion_audit_cluster_ids"] == ["tracefp:audio-feedback-weak-runtime"]
+    assert missing["confidence_penalty_reasons"] == [
+        "failed_optional_probe:cheap_visual_metrics",
+        "missing_required_probe:feedback_output_readback",
+    ]
+
+    optional = repeated[("runtime_failed_optional_probe", "cheap_visual_metrics")]
+    assert optional["count"] == 2
+    assert optional["case_ids"] == sorted(selected_ids)
+    assert optional["statuses"] == ["runtime_fail"]
+    assert optional["promotion_audit_action"] == "demote_promoted_pattern"
+    assert optional["demotion_cluster_ids"] == ["tracefp:audio-feedback-weak-runtime"]
+
+
+@pytest.mark.asyncio
+async def test_trace_replay_blocks_promotion_for_repeated_unclassified_runtime_failures():
+    cases = {case["id"]: case for case in load_golden_cases(EVAL_PATH)}
+    selected_ids = ["audio_feedback_panel_debug", "audio_feedback_panel_diagnostics"]
+    selected_cases = [cases[case_id] for case_id in selected_ids]
+    baselines = {case_id: await evaluate_case(cases[case_id]) for case_id in selected_ids}
+    runtime_validation = {
+        "failed_probe_ids": ["feedback_output_readback"],
+        "failed_probe_statuses": {
+            "feedback_output_readback": "runtime_failed",
+        },
+        "confidence_decay": 0.78,
+        "confidence_penalty_reasons": [
+            "failed_probe:feedback_output_readback",
+        ],
+    }
+
+    report = await evals.trace_replay_drift_report(
+        selected_cases,
+        {
+            case_id: {
+                "profile": baselines[case_id]["profile"],
+                "operators": baselines[case_id]["operators"],
+                "trace_id": f"trace-{case_id}-rejected",
+                "trace_promotion_rejection": {
+                    "blockers": [
+                        "failed runtime validation probes: feedback_output_readback",
+                    ],
+                    "trace_fingerprints": {
+                        "trace_fingerprint": "tracefp:feedback-output-readback-failed",
+                        "intent_fingerprint": "intent:audio-feedback-panel",
+                        "operator_fingerprint": "ops:audio-feedback-panel",
+                        "validation_fingerprint": "validation:feedback-output-readback",
+                    },
+                    "runtime_validation_issues": runtime_validation,
+                },
+            }
+            for case_id in selected_ids
+        },
+    )
+
+    assert report["ok"] is False
+    memory = report["validation_issue_memory"]
+    assert memory["promotion_demotion_candidate_count"] == 1
+    repeated = {(item["kind"], item["id"]): item for item in memory["promotion_demotion_candidates"]}
+    failed = repeated[("runtime_failed_probe", "feedback_output_readback")]
+    assert failed["count"] == 2
+    assert failed["case_ids"] == sorted(selected_ids)
+    assert failed["sources"] == ["trace_promotion_rejection"]
+    assert failed["statuses"] == ["runtime_failed"]
+    assert failed["promotion_audit_action"] == "block_promotion"
+    assert failed["min_confidence_decay"] == 0.78
+    assert failed["trace_ids"] == sorted(f"trace-{case_id}-rejected" for case_id in selected_ids)
+    assert failed["trace_fingerprints"] == {
+        "intent_fingerprint": ["intent:audio-feedback-panel"],
+        "operator_fingerprint": ["ops:audio-feedback-panel"],
+        "trace_fingerprint": ["tracefp:feedback-output-readback-failed"],
+        "validation_fingerprint": ["validation:feedback-output-readback"],
+    }
+    assert failed["trace_fingerprint_count"] == 1
+    assert failed["promotion_audit_cluster_ids"] == ["tracefp:feedback-output-readback-failed"]
+    assert failed["confidence_penalty_reasons"] == [
+        "failed_probe:feedback_output_readback",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_trace_replay_aggregates_repeated_generated_code_contract_memory():
+    cases = {case["id"]: case for case in load_golden_cases(EVAL_PATH)}
+    selected_ids = ["glsl_top_shader_compiled", "glsl_fragment_inspector_compiled"]
+    selected_cases = [cases[case_id] for case_id in selected_ids]
+    baselines = {case_id: await evaluate_case(cases[case_id]) for case_id in selected_ids}
+    generated_code_issues = {
+        "missing_contract_ids": ["glsl_top_pixel_shader:compile_state"],
+        "failed_contract_ids": ["glsl_top_pixel_shader:compile_state"],
+        "failed_contract_statuses": {"glsl_top_pixel_shader:compile_state": "runtime_fail"},
+        "confidence_decay": 0.66,
+        "confidence_penalty_reasons": [
+            "missing_generated_code_contract:glsl_top_pixel_shader:compile_state",
+            "failed_generated_code_contract:glsl_top_pixel_shader:compile_state",
+        ],
+    }
+
+    report = await evals.trace_replay_drift_report(
+        selected_cases,
+        {
+            case_id: {
+                "profile": baselines[case_id]["profile"],
+                "operators": baselines[case_id]["operators"],
+                "trace_id": f"trace-{case_id}-generated-code-rejected",
+                "trace_promotion_rejection": {
+                    "blockers": [
+                        "missing generated code runtime validation passes: "
+                        "glsl_top_pixel_shader:compile_state"
+                    ],
+                    "trace_fingerprints": {
+                        "trace_fingerprint": "tracefp:glsl-compile-contract-failed",
+                        "intent_fingerprint": "intent:glsl-top-shader",
+                        "operator_fingerprint": "ops:glsl-top",
+                        "validation_fingerprint": "validation:glsl-compile-state",
+                    },
+                    "generated_code_runtime_issues": generated_code_issues,
+                },
+            }
+            for case_id in selected_ids
+        },
+    )
+
+    assert report["ok"] is False
+    assert report["drift_count"] == 2
+    memory = report["validation_issue_memory"]
+    assert memory["issue_count"] == 4
+    assert memory["unique_issue_count"] == 2
+    assert memory["repeated_issue_count"] == 2
+    assert memory["promotion_demotion_candidate_count"] == 2
+
+    repeated = {(item["kind"], item["id"]): item for item in memory["repeated_issues"]}
+    missing = repeated[
+        (
+            "generated_code_missing_contract",
+            "glsl_top_pixel_shader:compile_state",
+        )
+    ]
+    assert missing["count"] == 2
+    assert missing["case_ids"] == sorted(selected_ids)
+    assert missing["promotion_audit_action"] == "block_promotion"
+    assert missing["min_confidence_decay"] == 0.66
+    assert missing["trace_ids"] == sorted(
+        f"trace-{case_id}-generated-code-rejected" for case_id in selected_ids
+    )
+    assert missing["trace_fingerprints"] == {
+        "intent_fingerprint": ["intent:glsl-top-shader"],
+        "operator_fingerprint": ["ops:glsl-top"],
+        "trace_fingerprint": ["tracefp:glsl-compile-contract-failed"],
+        "validation_fingerprint": ["validation:glsl-compile-state"],
+    }
+    assert missing["promotion_audit_cluster_ids"] == ["tracefp:glsl-compile-contract-failed"]
+
+    failed = repeated[
+        (
+            "generated_code_failed_contract",
+            "glsl_top_pixel_shader:compile_state",
+        )
+    ]
+    assert failed["count"] == 2
+    assert failed["statuses"] == ["runtime_fail"]
+    assert failed["promotion_audit_action"] == "block_promotion"
+    assert failed["trace_fingerprint_count"] == 1
+
+
+@pytest.mark.asyncio
+async def test_trace_replay_detects_trace_promotion_rejection_probe_issues():
+    cases = {case["id"]: case for case in load_golden_cases(EVAL_PATH)}
+    case = cases["audio_feedback_panel_debug"]
+    baseline = await evaluate_case(case)
+
+    report = await evals.trace_replay_drift_report(
+        [case],
+        {
+            "audio_feedback_panel_debug": {
+                "profile": baseline["profile"],
+                "operators": baseline["operators"],
+                "trace_promotion_rejection": {
+                    "blockers": [
+                        "missing runtime validation passes: feedback_output_readback",
+                        "failed required runtime validation probes: feedback_output_readback",
+                    ],
+                    "runtime_validation_issues": {
+                        "missing_probe_ids": ["feedback_output_readback"],
+                        "missing_probe_details": {
+                            "feedback_output_readback": {
+                                "profile": "feedback",
+                                "status": "runtime_contract_present",
+                                "readback_strategy": "top_luminance_runtime",
+                                "pending_metric_names": [
+                                    "feedback_output_luminance_mean",
+                                    "feedback_output_luminance_max",
+                                ],
+                            }
+                        },
+                        "failed_required_probe_ids": ["feedback_output_readback"],
+                        "failed_probe_ids": [
+                            "feedback_output_readback",
+                            "cheap_visual_metrics",
+                        ],
+                        "failed_probe_statuses": {
+                            "feedback_output_readback": "runtime_failed",
+                            "cheap_visual_metrics": "runtime_fail",
+                        },
+                        "failed_required_probe_details": {
+                            "feedback_output_readback": {
+                                "profile": "feedback",
+                                "status": "runtime_failed",
+                                "issue_code": "profile_probe_runtime_feedback_output_missing",
+                                "readback_path": "/project1/tdpilot_concept/out1",
+                                "runtime_metric_values": {
+                                    "feedback_output_luminance_mean": 0.0,
+                                    "feedback_output_luminance_max": 0.0,
+                                },
+                            }
+                        },
+                        "failed_probe_details": {
+                            "feedback_output_readback": {
+                                "profile": "feedback",
+                                "status": "runtime_failed",
+                                "issue_code": "profile_probe_runtime_feedback_output_missing",
+                                "readback_path": "/project1/tdpilot_concept/out1",
+                                "runtime_metric_values": {
+                                    "feedback_output_luminance_mean": 0.0,
+                                    "feedback_output_luminance_max": 0.0,
+                                },
+                            },
+                            "cheap_visual_metrics": {
+                                "profile": "visual",
+                                "status": "runtime_fail",
+                                "issue_code": "cheap_visual_metrics_black_frame",
+                                "readback_path": "/project1/tdpilot_concept/out1",
+                                "runtime_metric_values": {
+                                    "luminance_mean": 0.0,
+                                    "entropy": 0.0,
+                                },
+                            },
+                        },
+                    },
+                },
+            }
+        },
+    )
+
+    assert report["ok"] is False
+    assert report["drift_count"] == 1
+    drift = report["drifts"][0]
+    assert drift["profile_drift"] is None
+    assert drift["operator_drift"] is None
+    assert drift["promoted_pattern_operator_drift"] is None
+    assert drift["promoted_pattern_runtime_validation_issues"] is None
+    assert drift["trace_promotion_rejection_issues"] == {
+        "blockers": [
+            "missing runtime validation passes: feedback_output_readback",
+            "failed required runtime validation probes: feedback_output_readback",
+        ],
+        "runtime_validation_issues": {
+            "missing_probe_ids": ["feedback_output_readback"],
+            "missing_probe_details": {
+                "feedback_output_readback": {
+                    "profile": "feedback",
+                    "status": "runtime_contract_present",
+                    "readback_strategy": "top_luminance_runtime",
+                    "pending_metric_names": [
+                        "feedback_output_luminance_mean",
+                        "feedback_output_luminance_max",
+                    ],
+                }
+            },
+            "failed_required_probe_ids": ["feedback_output_readback"],
+            "failed_probe_ids": ["feedback_output_readback", "cheap_visual_metrics"],
+            "failed_probe_statuses": {
+                "feedback_output_readback": "runtime_failed",
+                "cheap_visual_metrics": "runtime_fail",
+            },
+            "failed_required_probe_details": {
+                "feedback_output_readback": {
+                    "profile": "feedback",
+                    "status": "runtime_failed",
+                    "issue_code": "profile_probe_runtime_feedback_output_missing",
+                    "readback_path": "/project1/tdpilot_concept/out1",
+                    "runtime_metric_values": {
+                        "feedback_output_luminance_mean": 0.0,
+                        "feedback_output_luminance_max": 0.0,
+                    },
+                }
+            },
+            "failed_probe_details": {
+                "feedback_output_readback": {
+                    "profile": "feedback",
+                    "status": "runtime_failed",
+                    "issue_code": "profile_probe_runtime_feedback_output_missing",
+                    "readback_path": "/project1/tdpilot_concept/out1",
+                    "runtime_metric_values": {
+                        "feedback_output_luminance_mean": 0.0,
+                        "feedback_output_luminance_max": 0.0,
+                    },
+                },
+                "cheap_visual_metrics": {
+                    "profile": "visual",
+                    "status": "runtime_fail",
+                    "issue_code": "cheap_visual_metrics_black_frame",
+                    "readback_path": "/project1/tdpilot_concept/out1",
+                    "runtime_metric_values": {
+                        "luminance_mean": 0.0,
+                        "entropy": 0.0,
+                    },
+                },
+            },
+        },
+    }
+
+
+@pytest.mark.asyncio
+async def test_trace_replay_detects_generated_code_runtime_rejection_details():
+    cases = {case["id"]: case for case in load_golden_cases(EVAL_PATH)}
+    case = cases["glsl_top_shader_compiled"]
+    baseline = await evaluate_case(case)
+
+    report = await evals.trace_replay_drift_report(
+        [case],
+        {
+            "glsl_top_shader_compiled": {
+                "profile": baseline["profile"],
+                "operators": baseline["operators"],
+                "trace_promotion_rejection": {
+                    "blockers": [
+                        "missing generated code runtime validation passes: glsl_top_pixel_shader:compile_state"
+                    ],
+                    "generated_code_runtime_issues": {
+                        "missing_contract_ids": ["glsl_top_pixel_shader:compile_state"],
+                        "missing_contract_details": {
+                            "glsl_top_pixel_shader:compile_state": {
+                                "block_id": "glsl_top_pixel_shader",
+                                "check_id": "compile_state",
+                                "language": "glsl",
+                                "target_op": "/project1/glsl",
+                                "target_param": "pixeldat",
+                                "endpoint": "node/errors",
+                                "status": "runtime_fail",
+                                "issue_count": 1,
+                                "expected_outputs": ["/project1/out1"],
+                                "risk_flags": ["validate-glsl-compile-state"],
+                                "official_sources": ["https://docs.derivative.ca/GLSL_TOP"],
+                            }
+                        },
+                        "failed_contract_ids": ["glsl_top_pixel_shader:compile_state"],
+                        "failed_contract_statuses": {"glsl_top_pixel_shader:compile_state": "runtime_fail"},
+                        "failed_contract_details": {
+                            "glsl_top_pixel_shader:compile_state": {
+                                "block_id": "glsl_top_pixel_shader",
+                                "check_id": "compile_state",
+                                "language": "glsl",
+                                "target_op": "/project1/glsl",
+                                "target_param": "pixeldat",
+                                "endpoint": "node/errors",
+                                "status": "runtime_fail",
+                                "issue_count": 1,
+                                "expected_outputs": ["/project1/out1"],
+                                "risk_flags": ["validate-glsl-compile-state"],
+                                "official_sources": ["https://docs.derivative.ca/GLSL_TOP"],
+                            }
+                        },
+                    },
+                },
+            }
+        },
+    )
+
+    assert report["ok"] is False
+    assert report["drift_count"] == 1
+    drift = report["drifts"][0]
+    assert drift["profile_drift"] is None
+    assert drift["operator_drift"] is None
+    assert drift["promoted_pattern_operator_drift"] is None
+    assert drift["promoted_pattern_runtime_validation_issues"] is None
+    assert drift["trace_promotion_rejection_issues"] == {
+        "blockers": ["missing generated code runtime validation passes: glsl_top_pixel_shader:compile_state"],
+        "generated_code_runtime_issues": {
+            "missing_contract_ids": ["glsl_top_pixel_shader:compile_state"],
+            "missing_contract_details": {
+                "glsl_top_pixel_shader:compile_state": {
+                    "block_id": "glsl_top_pixel_shader",
+                    "check_id": "compile_state",
+                    "language": "glsl",
+                    "target_op": "/project1/glsl",
+                    "target_param": "pixeldat",
+                    "endpoint": "node/errors",
+                    "status": "runtime_fail",
+                    "issue_count": 1,
+                    "expected_outputs": ["/project1/out1"],
+                    "risk_flags": ["validate-glsl-compile-state"],
+                    "official_sources": ["https://docs.derivative.ca/GLSL_TOP"],
+                }
+            },
+            "failed_contract_ids": ["glsl_top_pixel_shader:compile_state"],
+            "failed_contract_statuses": {"glsl_top_pixel_shader:compile_state": "runtime_fail"},
+            "failed_contract_details": {
+                "glsl_top_pixel_shader:compile_state": {
+                    "block_id": "glsl_top_pixel_shader",
+                    "check_id": "compile_state",
+                    "language": "glsl",
+                    "target_op": "/project1/glsl",
+                    "target_param": "pixeldat",
+                    "endpoint": "node/errors",
+                    "status": "runtime_fail",
+                    "issue_count": 1,
+                    "expected_outputs": ["/project1/out1"],
+                    "risk_flags": ["validate-glsl-compile-state"],
+                    "official_sources": ["https://docs.derivative.ca/GLSL_TOP"],
+                }
+            },
+        },
+    }
+
+
+@pytest.mark.asyncio
 async def test_trace_replay_passes_when_saved_trace_matches_current_plan():
     cases = {case["id"]: case for case in load_golden_cases(EVAL_PATH)}
     case = cases["audio_feedback_panel_debug"]
@@ -907,6 +1651,16 @@ async def test_trace_replay_passes_when_saved_trace_matches_current_plan():
         "case_count": 1,
         "drift_count": 0,
         "drifts": [],
+        "validation_issue_memory": {
+            "schema_version": 1,
+            "ok": True,
+            "issue_count": 0,
+            "unique_issue_count": 0,
+            "repeated_issue_count": 0,
+            "repeated_issues": [],
+            "promotion_demotion_candidate_count": 0,
+            "promotion_demotion_candidates": [],
+        },
     }
 
 
@@ -1009,9 +1763,7 @@ async def test_evaluate_case_scores_expected_candidate_profiles():
     )
 
     assert result["checks"]["expected_profiles"]["ok"] is True
-    assert {"audio_reactive", "render_pipeline", "glsl_material"}.issubset(
-        set(result["candidate_profiles"])
-    )
+    assert {"audio_reactive", "render_pipeline", "glsl_material"}.issubset(set(result["candidate_profiles"]))
 
 
 @pytest.mark.asyncio
@@ -1047,7 +1799,9 @@ async def test_evaluate_case_reports_decomposition_plan_validation_and_time_metr
 
     assert result["decomposition_metrics"]["compiled_domain_count"] == 5
     assert result["decomposition_metrics"]["candidate_profile_count"] == 3
-    assert result["decomposition_metrics"]["candidate_pattern_count"] == len(set(result["candidate_patterns"]))
+    assert result["decomposition_metrics"]["candidate_pattern_count"] == len(
+        set(result["candidate_patterns"])
+    )
     assert result["decomposition_metrics"]["candidate_pattern_count"] >= 3
     assert result["plan_metrics"]["operation_count"] == result["operation_count"]
     assert result["plan_metrics"]["operator_count"] == len(result["operators"])
@@ -1198,6 +1952,44 @@ async def test_evaluate_case_scores_required_patterns_future_field():
     assert {"audio_analysis_chop_chain", "glsl_material_render_pipeline"}.issubset(
         set(result["candidate_patterns"])
     )
+
+
+@pytest.mark.asyncio
+async def test_evaluate_case_scores_required_grounding_evidence():
+    result = await evaluate_case(
+        {
+            "id": "required_grounding_evidence_probe",
+            "intent": "Build an audio-reactive 3D render with material modulation",
+            "target_root": "/project1",
+            "expected_profile": "concept_compiled",
+            "expected_compiled_domains": ["CHOP", "TOP", "COMP", "DAT", "MAT"],
+            "required_grounding_evidence": [
+                "pattern:audio_file_to_analysis_chop",
+                "pattern:glsl_material_render_pipeline",
+            ],
+            "expected_ops": [
+                "audiofileinCHOP",
+                "analyzeCHOP",
+                "mathCHOP",
+                "nullCHOP",
+                "geometryCOMP",
+                "cameraCOMP",
+                "glslMAT",
+                "renderTOP",
+                "nullTOP",
+                "textDAT",
+                "baseCOMP",
+                "annotateCOMP",
+                "infoCHOP",
+                "errorDAT",
+            ],
+            "validation_profile": "structural_visual_safe",
+            "scoring": {"required_grounding_evidence": 1},
+        }
+    )
+
+    assert result["checks"]["required_grounding_evidence"]["ok"] is True
+    assert result["missing_required_grounding_evidence"] == []
 
 
 @pytest.mark.asyncio

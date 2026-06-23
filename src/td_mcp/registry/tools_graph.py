@@ -22,13 +22,14 @@ Tools in this module (11):
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from mcp.server.fastmcp import Context
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
 from td_mcp import tool_registry as _tr  # noqa: E402
+from td_mcp.brain.param_semantics import canonical_op_type
 from td_mcp.errors import format_tool_error
 from td_mcp.models import (
     ConnectNodesInput,
@@ -305,20 +306,64 @@ async def td_set_params(
             ),
         ),
     ] = False,
+    param_semantics_policy: Annotated[
+        Literal["warn", "block"],
+        Field(
+            default="warn",
+            description=(
+                "Docs-grounded parameter safety policy for direct writes. "
+                "'warn' preserves normal direct-tool behavior with attached findings; "
+                "'block' refuses the write before mutation when parameter semantics "
+                "find invalid, unknown, or high-risk bindings."
+            ),
+        ),
+    ] = "warn",
 ) -> str:
     """Set node parameters (static values or live expressions)."""
     finish = _tr._start_tool(ctx, "td_set_params")
     try:
-        adjusted, warnings = _tr._apply_safety_to_set_params(
-            _tr._get_safety_manager(ctx),
-            path,
-            dict(params),
+        client = _tr._get_client(ctx)
+        op_type = await _resolve_existing_node_op_type(client, path)
+        preflight = _tr._preflight_direct_param_write(
+            safety_manager=_tr._get_safety_manager(ctx),
+            path=path,
+            params=dict(params),
+            op_type=op_type,
+            param_semantics_policy=param_semantics_policy,
         )
+        adjusted = preflight.adjusted_params
         body = {"path": path, "params": adjusted}
+        if preflight.blocked:
+            data = {
+                "success": False,
+                "blocked": True,
+                "param_semantics_status": "blocked",
+                "param_semantics_warnings": [
+                    issue.model_dump(mode="json") for issue in preflight.param_semantics_warnings
+                ],
+            }
+            _tr._audit_log(
+                ctx,
+                "td_set_params",
+                {
+                    "path": path,
+                    "param_count": len(adjusted),
+                    "warnings": preflight.safety_warnings,
+                    "param_semantics_warning_count": len(preflight.param_semantics_warnings),
+                    "param_semantics_policy": param_semantics_policy,
+                    "blocked": True,
+                },
+            )
+            return _tr._as_json_output(data)
 
-        data = await _tr._get_client(ctx).request("node/params/set", body)
-        if warnings:
-            data["safety_warnings"] = warnings
+        data = await client.request("node/params/set", body)
+        if preflight.safety_warnings:
+            data["safety_warnings"] = preflight.safety_warnings
+        if preflight.param_semantics_warnings:
+            data["param_semantics_warnings"] = [
+                issue.model_dump(mode="json") for issue in preflight.param_semantics_warnings
+            ]
+            data["param_semantics_status"] = "warnings"
 
         _tr._audit_log(
             ctx,
@@ -326,7 +371,9 @@ async def td_set_params(
             {
                 "path": path,
                 "param_count": len(adjusted),
-                "warnings": warnings,
+                "warnings": preflight.safety_warnings,
+                "param_semantics_warning_count": len(preflight.param_semantics_warnings),
+                "param_semantics_policy": param_semantics_policy,
             },
         )
         return _tr._attach_hints(
@@ -340,6 +387,20 @@ async def td_set_params(
         return format_tool_error(exc)
     finally:
         finish()
+
+
+async def _resolve_existing_node_op_type(client: Any, path: str) -> str | None:
+    try:
+        detail = await client.request("node/detail", {"path": path, "param_limit": 1})
+    except Exception:
+        return None
+    if not isinstance(detail, dict):
+        return None
+    raw_type = detail.get("op_type") or detail.get("type") or detail.get("node_type")
+    if not raw_type:
+        return None
+    family = detail.get("family")
+    return canonical_op_type(str(raw_type), str(family) if family else None)
 
 
 @mcp.tool(name="td_create_node")

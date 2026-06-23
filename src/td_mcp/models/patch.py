@@ -102,6 +102,8 @@ class PatchResult(BaseModel):
     connections_made: list[tuple[str, str]] = Field(default_factory=list)
     validation: ValidationReport | None = None
     risk_flags: list[str] = Field(default_factory=list)
+    safety_warnings: list[str] = Field(default_factory=list)
+    param_semantics_warnings: list[Any] = Field(default_factory=list)
     before_snapshot_id: str | None = None
     after_snapshot_id: str | None = None
     undo_label: str

@@ -15,7 +15,10 @@ from td_mcp import tool_registry as _tr
 from td_mcp.brain.cockpit import COCKPIT_RESOURCE_URI, build_cockpit_payload
 from td_mcp.brain.patterns import load_pattern_registry
 from td_mcp.brain.planner import build_brain_plan
-from td_mcp.brain.trace_promotion import promote_trace_to_pattern
+from td_mcp.brain.trace_promotion import (
+    promote_trace_to_pattern,
+    trace_promotion_rejection_evidence,
+)
 from td_mcp.brain.traces import append_brain_trace
 from td_mcp.brain.transaction import apply_transaction
 from td_mcp.errors import format_tool_error
@@ -23,6 +26,10 @@ from td_mcp.models.brain import BrainPlan, BrainTrace, TransactionOptions
 from td_mcp.models.patch import PatchPlan
 from td_mcp.registry.resources import set_cached_resource
 from td_mcp.tool_registry import mcp
+
+
+def _direct_param_preflight(ctx: Context):
+    return _tr._direct_param_preflight_callback(ctx)
 
 
 @mcp.tool(
@@ -426,6 +433,7 @@ async def _run_transaction(
         macro_engine=macro_engine,
         create_snapshot=create_snapshot,
         restore_snapshot=restore_snapshot,
+        param_preflight=_direct_param_preflight(ctx),
     )
 
 
@@ -528,6 +536,13 @@ def _export_trace_safely(
             trace,
             validation_report=tx_result.get("validation_report"),
         )
+        promotion_rejection = None
+        if promoted_pattern is None:
+            promotion_rejection = _trace_promotion_rejection_for_export(
+                brain_plan,
+                trace,
+                validation_report=tx_result.get("validation_report"),
+            )
         return append_brain_trace(
             {
                 "type": "brain_execution",
@@ -555,6 +570,7 @@ def _export_trace_safely(
                 },
                 "learned_memory_id": learned_id,
                 "promoted_pattern_candidate": promoted_pattern,
+                "trace_promotion_rejection": promotion_rejection,
                 "trace": trace,
             }
         )
@@ -579,3 +595,21 @@ def _promoted_pattern_candidate_for_export(
     except Exception:
         return None
     return pattern.model_dump(mode="json")
+
+
+def _trace_promotion_rejection_for_export(
+    brain_plan: BrainPlan,
+    trace: dict[str, Any],
+    *,
+    validation_report: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    try:
+        brain_trace = BrainTrace.model_validate(trace)
+        return trace_promotion_rejection_evidence(
+            brain_plan,
+            brain_trace,
+            pattern_registry=load_pattern_registry(),
+            validation_report=validation_report,
+        )
+    except Exception:
+        return None

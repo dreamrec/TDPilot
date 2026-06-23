@@ -25,6 +25,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -104,7 +105,17 @@ def _legacy_plan_dict(
     return dict_out
 
 
-@mcp.tool(name="td_plan_patch")
+@mcp.tool(
+    name="td_plan_patch",
+    title="Plan Legacy TD Patch Dict",
+    description=(
+        "Legacy compatibility planner returning the pre-v1.5 patch dict shape. For new "
+        "concept-to-network TouchDesigner work, prefer td_brain_plan followed by td_brain_execute."
+    ),
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_plan_patch(
     ctx: Context,
     intent: Annotated[
@@ -194,7 +205,17 @@ async def td_plan_patch(
         finish()
 
 
-@mcp.tool(name="td_preflight_patch")
+@mcp.tool(
+    name="td_preflight_patch",
+    title="Preflight Legacy TD Patch",
+    description=(
+        "Read-only validation for legacy td_plan_patch dicts. For new TDPilot-authored builds, "
+        "use the BrainPlan path: td_brain_plan then td_brain_execute."
+    ),
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_preflight_patch(
     ctx: Context,
     plan: Annotated[
@@ -282,7 +303,17 @@ async def td_preflight_patch(
         finish()
 
 
-@mcp.tool(name="td_validate_recipe")
+@mcp.tool(
+    name="td_validate_recipe",
+    title="Validate TD Recipe",
+    description=(
+        "Read-only recipe compatibility check. Use td_brain_plan for new grounded visual-programming "
+        "requests that should become a BrainPlan."
+    ),
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_validate_recipe(
     ctx: Context,
     recipe_id: Annotated[
@@ -611,7 +642,17 @@ _STOCK_OP_TYPES: frozenset[str] = frozenset(
 )
 
 
-@mcp.tool(name="td_audit_project")
+@mcp.tool(
+    name="td_audit_project",
+    title="Audit TD Project",
+    description=(
+        "Read-only project audit. Pair with td_brain_plan for new build/debug requests that need "
+        "plan-aware changes afterward."
+    ),
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_audit_project(
     ctx: Context,
     root_path: Annotated[

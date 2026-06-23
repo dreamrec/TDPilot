@@ -95,8 +95,7 @@ class _TransactionalGeneratedCodeLiveClient(_SparseLiveClient):
         if endpoint == "nodes":
             return {
                 "nodes": [
-                    {"path": path, "name": path.rsplit("/", 1)[-1]}
-                    for path in sorted(self.created_paths)
+                    {"path": path, "name": path.rsplit("/", 1)[-1]} for path in sorted(self.created_paths)
                 ]
             }
         if endpoint == "node/create":
@@ -265,9 +264,7 @@ async def test_live_smoke_exercises_expensive_validation_only_when_explicitly_op
         item for item in expensive["profile_probes"] if item["probe_id"] == "render_top_output"
     )
     render_result = next(
-        item
-        for item in expensive["profile_probe_results"]
-        if item["probe_id"] == "render_top_output"
+        item for item in expensive["profile_probe_results"] if item["probe_id"] == "render_top_output"
     )
     assert render_probe["cost_level"] == "expensive"
     assert render_probe["readback_strategy"] == "top_sample_optional"
@@ -282,9 +279,7 @@ async def test_live_smoke_reports_static_profile_probe_results():
     scenarios = {item["id"]: item for item in report["scenarios"]}
 
     feedback = scenarios["feedback_loop"]
-    results = {
-        (item["profile"], item["probe_id"]): item for item in feedback["profile_probe_results"]
-    }
+    results = {(item["profile"], item["probe_id"]): item for item in feedback["profile_probe_results"]}
 
     assert results[("feedback", "feedback_cycle")]["status"] == "static_pass"
     assert results[("feedback", "feedback_cycle")]["present_required_inputs"] == [
@@ -294,9 +289,7 @@ async def test_live_smoke_reports_static_profile_probe_results():
     assert results[("feedback", "feedback_cycle")]["missing_required_inputs"] == []
 
     audio = scenarios["audio_reactive_top"]
-    audio_results = {
-        (item["profile"], item["probe_id"]): item for item in audio["profile_probe_results"]
-    }
+    audio_results = {(item["profile"], item["probe_id"]): item for item in audio["profile_probe_results"]}
     activity = audio_results[("audio_reactive", "audio_signal_activity")]
     assert activity["status"] == "runtime_contract_present"
     assert activity["runtime_required"] is True
@@ -333,16 +326,14 @@ async def test_compiler_backed_live_smoke_reports_assembly_probe_results():
 
     showpiece = scenarios["audio_terrain_glass_controls"]
     probe_pairs = {(item["profile"], item["probe_id"]) for item in showpiece["profile_probes"]}
-    result_pairs = {
-        (item["profile"], item["probe_id"]): item for item in showpiece["profile_probe_results"]
-    }
+    result_pairs = {(item["profile"], item["probe_id"]): item for item in showpiece["profile_probe_results"]}
 
     assert ("concept_compiled", "component_shell_present") in probe_pairs
     assert ("concept_compiled", "output_node_present") in probe_pairs
     assert result_pairs[("concept_compiled", "component_shell_present")]["status"] == "static_pass"
-    assert result_pairs[("concept_compiled", "component_shell_present")][
-        "present_required_inputs"
-    ] == ["baseCOMP"]
+    assert result_pairs[("concept_compiled", "component_shell_present")]["present_required_inputs"] == [
+        "baseCOMP"
+    ]
     assert result_pairs[("concept_compiled", "output_node_present")]["status"] == "static_pass"
     assert "component_shell_present" in showpiece["checks"]
     assert "output_node_present" in showpiece["checks"]
@@ -514,9 +505,7 @@ async def test_live_smoke_reports_dat_table_render_switch_probes():
 
     switch = scenarios["dat_table_render_switch"]
     probe_pairs = {(item["profile"], item["probe_id"]) for item in switch["profile_probes"]}
-    result_pairs = {
-        (item["profile"], item["probe_id"]): item for item in switch["profile_probe_results"]
-    }
+    result_pairs = {(item["profile"], item["probe_id"]): item for item in switch["profile_probe_results"]}
 
     assert switch["profile"] == "concept_compiled"
     assert {"tableDAT", "switchTOP", "nullTOP"}.issubset(set(switch["operators"]))
@@ -580,9 +569,7 @@ async def test_live_smoke_reports_generated_code_runtime_contracts_without_sourc
     scenarios = {item["id"]: item for item in report["scenarios"]}
 
     glsl_contracts = scenarios["glsl_shader_top"]["generated_code_runtime_contracts"]
-    callback_contracts = scenarios["dat_execute_table_change_callback"][
-        "generated_code_runtime_contracts"
-    ]
+    callback_contracts = scenarios["dat_execute_table_change_callback"]["generated_code_runtime_contracts"]
 
     assert glsl_contracts == [
         {
@@ -615,9 +602,7 @@ async def test_live_smoke_reports_generated_code_coverage_summary():
 
     assert summary["block_count"] >= 2
     assert {"glsl", "python"}.issubset(set(summary["languages"]))
-    assert {"glsl_shader_top", "dat_execute_table_change_callback"}.issubset(
-        set(summary["scenario_ids"])
-    )
+    assert {"glsl_shader_top", "dat_execute_table_change_callback"}.issubset(set(summary["scenario_ids"]))
     assert {"compile_state", "callback_guard_present", "topology_capacity"}.issubset(
         set(summary["runtime_checks"])
     )
@@ -707,9 +692,7 @@ async def test_live_smoke_transactional_generated_code_smoke_is_opt_in_and_clean
     )
 
     smoke = report["transactional_generated_code_smoke"]
-    runtime_checks = {
-        item["check_id"]: item for item in smoke["runtime_evidence"] if isinstance(item, dict)
-    }
+    runtime_checks = {item["check_id"]: item for item in smoke["runtime_evidence"] if isinstance(item, dict)}
 
     assert report["ok"] is True
     assert report["mutated_td"] is True
@@ -740,9 +723,7 @@ async def test_live_smoke_transactional_generated_code_smoke_reports_compile_fai
     )
 
     smoke = report["transactional_generated_code_smoke"]
-    runtime_checks = {
-        item["check_id"]: item for item in smoke["runtime_evidence"] if isinstance(item, dict)
-    }
+    runtime_checks = {item["check_id"]: item for item in smoke["runtime_evidence"] if isinstance(item, dict)}
 
     assert report["ok"] is False
     assert report["mutated_td"] is True

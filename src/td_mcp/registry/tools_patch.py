@@ -16,13 +16,15 @@ See docs/superpowers/specs/2026-04-24-v1.5.0-phase-3-patch-session-design.md
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field, ValidationError
 
 from td_mcp import patch
 from td_mcp import tool_registry as _tr  # intentional cycle — see registry/__init__.py
+from td_mcp.brain.param_semantics import validate_patch_plan_parameter_contract
 from td_mcp.brain.transaction import apply_transaction
 from td_mcp.errors import format_tool_error
 from td_mcp.models.brain import TransactionOptions
@@ -30,7 +32,21 @@ from td_mcp.models.patch import PatchPlan, PatchPreview, ValidationPlan
 from td_mcp.tool_registry import mcp
 
 
-@mcp.tool(name="td_patch_plan")
+def _direct_param_preflight(ctx: Context):
+    return _tr._direct_param_preflight_callback(ctx)
+
+
+@mcp.tool(
+    name="td_patch_plan",
+    title="Plan Legacy TD Patch",
+    description=(
+        "Compatibility/expert surface for typed PatchPlan construction. For new concept-to-network "
+        "TouchDesigner builds, prefer td_brain_plan followed by td_brain_execute."
+    ),
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_patch_plan(
     ctx: Context,
     target_root: Annotated[
@@ -83,7 +99,17 @@ async def td_patch_plan(
         finish()
 
 
-@mcp.tool(name="td_patch_preview")
+@mcp.tool(
+    name="td_patch_preview",
+    title="Preview Legacy TD Patch",
+    description=(
+        "Read-only PatchPlan preview for compatibility/expert workflows. For new visual builds, "
+        "prefer td_brain_plan because it carries concept, corpus, and validation context."
+    ),
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_patch_preview(
     ctx: Context,
     plan: Annotated[
@@ -127,7 +153,17 @@ async def td_patch_preview(
         finish()
 
 
-@mcp.tool(name="td_patch_apply")
+@mcp.tool(
+    name="td_patch_apply",
+    title="Apply Legacy TD Patch",
+    description=(
+        "Destructive compatibility/expert PatchPlan executor. Prefer td_brain_execute for BrainPlans "
+        "because it is the default validated transaction path for TDPilot-authored builds."
+    ),
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_patch_apply(
     ctx: Context,
     plan: Annotated[
@@ -152,6 +188,17 @@ async def td_patch_apply(
             ),
         ),
     ] = None,
+    param_semantics_policy: Annotated[
+        Literal["warn", "block"],
+        Field(
+            default="warn",
+            description=(
+                "Docs-grounded parameter safety policy for legacy patch applies. "
+                "'warn' preserves legacy behavior and attaches findings; 'block' refuses "
+                "invalid or high-risk set_params operations before mutation."
+            ),
+        ),
+    ] = "warn",
 ) -> dict[str, Any]:
     """Apply a PatchPlan in one undo block, optionally through the transaction executor."""
     finish = _tr._start_tool(ctx, "td_patch_apply")
@@ -162,6 +209,27 @@ async def td_patch_apply(
             return {"success": False, "error": f"invalid plan: {exc}"}
         if label:
             parsed = parsed.model_copy(update={"undo_label": label})
+        param_semantics_issues = validate_patch_plan_parameter_contract(parsed)
+        if param_semantics_policy == "block" and param_semantics_issues:
+            _tr._audit_log(
+                ctx,
+                "td_patch_apply",
+                {
+                    "plan_id": parsed.id,
+                    "ops": len(parsed.operations),
+                    "param_semantics_warning_count": len(param_semantics_issues),
+                    "param_semantics_policy": param_semantics_policy,
+                    "blocked": True,
+                },
+            )
+            return {
+                "success": False,
+                "blocked": True,
+                "param_semantics_status": "blocked",
+                "param_semantics_warnings": [
+                    issue.model_dump(mode="json") for issue in param_semantics_issues
+                ],
+            }
         client = _tr._get_client(ctx)
         # Inject the macro engine so kind=macro ops can route through the
         # server-side composition path (TD has no /api/macro/create endpoint).
@@ -175,7 +243,14 @@ async def td_patch_apply(
                 tx_options = TransactionOptions.model_validate(transaction_options)
             except ValidationError as exc:
                 return {"success": False, "error": f"invalid transaction_options: {exc}"}
-            result = await _apply_patch_transaction(ctx, parsed, tx_options, macro_engine=macro_engine)
+            result = await _apply_patch_transaction(
+                ctx,
+                parsed,
+                tx_options,
+                macro_engine=macro_engine,
+                param_preflight=_direct_param_preflight(ctx),
+                param_semantics_policy=param_semantics_policy,
+            )
             _tr._audit_log(
                 ctx,
                 "td_patch_apply",
@@ -198,15 +273,36 @@ async def td_patch_apply(
                 label=label,
                 auto_validate=auto_validate,
                 macro_engine=macro_engine,
+                param_preflight=_direct_param_preflight(ctx),
+                param_semantics_policy=param_semantics_policy,
             )
         except patch.NestedBlockError as exc:
             return {"success": False, "error": str(exc)}
         _tr._audit_log(
             ctx,
             "td_patch_apply",
-            {"plan_id": parsed.id, "status": result.status, "ops": len(result.applied_ops)},
+            {
+                "plan_id": parsed.id,
+                "status": result.status,
+                "ops": len(result.applied_ops),
+                "param_semantics_warning_count": len(param_semantics_issues),
+                "param_semantics_policy": param_semantics_policy,
+            },
         )
-        return {"success": True, "result": result.model_dump(mode="json")}
+        payload = {
+            "success": result.status in {"clean", "warnings"},
+            "result": result.model_dump(mode="json"),
+        }
+        if result.status == "broken" and result.param_semantics_warnings:
+            payload["blocked"] = True
+            payload["param_semantics_status"] = "blocked"
+            payload["param_semantics_warnings"] = result.param_semantics_warnings
+        if param_semantics_issues:
+            payload["param_semantics_status"] = "warnings"
+            payload["param_semantics_warnings"] = [
+                issue.model_dump(mode="json") for issue in param_semantics_issues
+            ]
+        return payload
     except Exception as exc:  # noqa: BLE001
         _tr._record_tool_error(ctx, "td_patch_apply")
         return format_tool_error(exc)
@@ -215,7 +311,13 @@ async def td_patch_apply(
 
 
 async def _apply_patch_transaction(
-    ctx: Context, plan: PatchPlan, options: TransactionOptions, *, macro_engine=None
+    ctx: Context,
+    plan: PatchPlan,
+    options: TransactionOptions,
+    *,
+    macro_engine=None,
+    param_preflight=None,
+    param_semantics_policy: str = "warn",
 ):
     client = _tr._get_client(ctx)
 
@@ -246,15 +348,34 @@ async def _apply_patch_transaction(
     return await apply_transaction(
         client,
         plan,
-        options=options,
+        options=options.model_copy(
+            update={
+                "param_semantics_policy": (
+                    param_semantics_policy
+                    if param_semantics_policy != "warn"
+                    else options.param_semantics_policy
+                )
+            }
+        ),
         sentinel=_tr._PATCH_SENTINEL,
         macro_engine=macro_engine,
         create_snapshot=create_snapshot,
         restore_snapshot=restore_snapshot,
+        param_preflight=param_preflight,
     )
 
 
-@mcp.tool(name="td_patch_validate")
+@mcp.tool(
+    name="td_patch_validate",
+    title="Validate TD Patch Target",
+    description=(
+        "Read-only validation for patch compatibility workflows. BrainPlan workflows should use "
+        "td_brain_plan and td_brain_execute so validation is tied to the authored plan."
+    ),
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_patch_validate(
     ctx: Context,
     target_root: Annotated[
@@ -288,7 +409,17 @@ async def td_patch_validate(
         finish()
 
 
-@mcp.tool(name="td_patch_variations")
+@mcp.tool(
+    name="td_patch_variations",
+    title="Vary Legacy TD Patch",
+    description=(
+        "Generate PatchPlan variants for compatibility/expert workflows. For new creative builds, "
+        "start with td_brain_plan so variants remain grounded in a BrainPlan."
+    ),
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=False
+    ),
+)
 async def td_patch_variations(
     ctx: Context,
     plan: Annotated[

@@ -1,6 +1,9 @@
 {
   "tox_source_hash": "bc8806f37617dbd1377785a5792300cd00408f673644083f98880a66ee856d35",
   "built_at": "2026-06-20T21:42:22.984083+00:00",
+  "tox_artifact_path": "td_component/tdpilot.tox",
+  "tox_artifact_sha256": "36f962ac97e320dbbe8b48c7020b67b6a49c5497cf38d9212310375dbb28c357",
+  "tox_artifact_size_bytes": 53366,
   "source_files": [
     "td_component/mcp_webserver_callbacks.py",
     "td_component/event_emitter.py",

@@ -9,7 +9,6 @@ import math
 from pathlib import Path
 from typing import Any
 
-
 REQUIRED_PARAM_SEMANTICS_PRIORITY_GROUPS = {
     "audio_control",
     "dat_callbacks_protocols",
@@ -69,6 +68,8 @@ def evaluate(
     brain_live_smoke: dict[str, Any] | None = None,
     operator_availability: dict[str, Any] | None = None,
     plugin_surface: dict[str, Any] | None = None,
+    direct_param_preflight: dict[str, Any] | None = None,
+    param_semantics_risk: dict[str, Any] | None = None,
     required_reports: set[str] | None = None,
 ) -> dict[str, Any]:
     checks: list[dict[str, Any]] = []
@@ -82,6 +83,8 @@ def evaluate(
         and brain_live_smoke is None
         and operator_availability is None
         and plugin_surface is None
+        and direct_param_preflight is None
+        and param_semantics_risk is None
     ):
         checks.append(
             {
@@ -134,6 +137,24 @@ def evaluate(
                 "status": "missing",
                 "value": "none",
                 "target": "--operator-availability-report required",
+            }
+        )
+    if "direct_param_preflight" in required_reports and direct_param_preflight is None:
+        checks.append(
+            {
+                "label": "direct param preflight report provided",
+                "status": "missing",
+                "value": "none",
+                "target": "--direct-param-preflight-report required",
+            }
+        )
+    if "param_semantics_risk" in required_reports and param_semantics_risk is None:
+        checks.append(
+            {
+                "label": "param semantics risk report provided",
+                "status": "missing",
+                "value": "none",
+                "target": "--param-semantics-risk-report required",
             }
         )
 
@@ -933,9 +954,7 @@ def evaluate(
         )
         rollback_frequency = brain_eval.get("rollback_frequency_metrics", {}) or {}
         rollback_case_count = float(rollback_frequency.get("case_count", math.nan))
-        rollback_enabled_count = float(
-            rollback_frequency.get("rollback_enabled_case_count", math.nan)
-        )
+        rollback_enabled_count = float(rollback_frequency.get("rollback_enabled_case_count", math.nan))
         checks.append(
             check_threshold(
                 "brain rollback frequency enabled case count",
@@ -1035,9 +1054,7 @@ def evaluate(
         )
 
     if brain_smoke:
-        checks.append(
-            check_threshold("brain smoke report ok", _bool_value(brain_smoke.get("ok")), ">=", 1.0)
-        )
+        checks.append(check_threshold("brain smoke report ok", _bool_value(brain_smoke.get("ok")), ">=", 1.0))
 
         scenario_count = float(brain_smoke.get("scenario_count", math.nan))
         checks.append(check_threshold("brain smoke scenario count", scenario_count, ">=", 1.0))
@@ -1389,11 +1406,92 @@ def evaluate(
     if operator_availability is not None:
         checks.extend(_operator_availability_checks(operator_availability))
 
-    if plugin_surface is not None:
+    if direct_param_preflight is not None:
+        write_count = float(direct_param_preflight.get("write_count", math.nan))
+        guarded_count = float(direct_param_preflight.get("guarded_count", math.nan))
+        wrapper_call_count = float(direct_param_preflight.get("wrapper_call_count", 0.0))
+        wrapper_guarded_count = float(direct_param_preflight.get("wrapper_guarded_count", 0.0))
         checks.append(
             check_threshold(
-                "plugin surface report ok", _bool_value(plugin_surface.get("ok")), ">=", 1.0
+                "direct param preflight report ok",
+                _bool_value(direct_param_preflight.get("ok")),
+                ">=",
+                1.0,
             )
+        )
+        checks.append(
+            check_threshold(
+                "direct param preflight unguarded write count",
+                float(direct_param_preflight.get("unguarded_count", math.nan)),
+                "<=",
+                0.0,
+            )
+        )
+        checks.append(
+            check_threshold(
+                "direct param preflight guarded coverage",
+                guarded_count - write_count,
+                ">=",
+                0.0,
+            )
+        )
+        checks.append(
+            check_threshold(
+                "direct param preflight unguarded wrapper count",
+                float(direct_param_preflight.get("wrapper_unguarded_count", 0.0)),
+                "<=",
+                0.0,
+            )
+        )
+        checks.append(
+            check_threshold(
+                "direct param preflight wrapper coverage",
+                wrapper_guarded_count - wrapper_call_count,
+                ">=",
+                0.0,
+            )
+        )
+
+    if param_semantics_risk is not None:
+        high_count = float(param_semantics_risk.get("high_cook_risk_count", math.nan))
+        direct_count = float(param_semantics_risk.get("direct_risk_count", math.nan))
+        validation_only_count = float(param_semantics_risk.get("validation_only_count", math.nan))
+        checks.append(
+            check_threshold(
+                "param semantics high cook risk report ok",
+                _bool_value(param_semantics_risk.get("ok")),
+                ">=",
+                1.0,
+            )
+        )
+        checks.append(
+            check_threshold(
+                "param semantics high cook risk unclassified count",
+                float(param_semantics_risk.get("unclassified_count", math.nan)),
+                "<=",
+                0.0,
+            )
+        )
+        checks.append(
+            check_threshold(
+                "param semantics high cook risk classified coverage",
+                direct_count + validation_only_count - high_count,
+                ">=",
+                0.0,
+            )
+        )
+        checks.append(
+            check_threshold(
+                "param semantics direct risk parameter count",
+                direct_count,
+                ">=",
+                1.0,
+            )
+        )
+
+    if plugin_surface is not None:
+        checks.append(
+            check_threshold("plugin surface report ok", _bool_value(plugin_surface.get("ok")), ">=", 1.0)
         )
         checks.append(
             check_threshold(
@@ -1507,6 +1605,8 @@ def evaluate(
         brain_live_smoke=brain_live_smoke,
         operator_availability=operator_availability,
         plugin_surface=plugin_surface,
+        direct_param_preflight=direct_param_preflight,
+        param_semantics_risk=param_semantics_risk,
         required_reports=required_reports,
         failed_check_count=len(failed),
         missing_check_count=len(missing),
@@ -1534,6 +1634,8 @@ def _release_readiness_report(
     brain_live_smoke: dict[str, Any] | None,
     operator_availability: dict[str, Any] | None,
     plugin_surface: dict[str, Any] | None,
+    direct_param_preflight: dict[str, Any] | None,
+    param_semantics_risk: dict[str, Any] | None,
     required_reports: set[str],
     failed_check_count: int,
     missing_check_count: int,
@@ -1569,9 +1671,9 @@ def _release_readiness_report(
             evidence={
                 "mode": (brain_smoke or {}).get("mode"),
                 "scenario_count": (brain_smoke or {}).get("scenario_count"),
-                "generated_code_block_count": (
-                    (brain_smoke or {}).get("generated_code_summary") or {}
-                ).get("block_count"),
+                "generated_code_block_count": ((brain_smoke or {}).get("generated_code_summary") or {}).get(
+                    "block_count"
+                ),
             }
             if brain_smoke
             else {},
@@ -1600,15 +1702,9 @@ def _release_readiness_report(
             ok=_operator_availability_report_core_ok(operator_availability),
             evidence={
                 "target_count": (operator_availability or {}).get("target_count"),
-                "td_build": ((operator_availability or {}).get("availability_matrix") or {}).get(
-                    "td_build"
-                ),
-                "platform": ((operator_availability or {}).get("availability_matrix") or {}).get(
-                    "platform"
-                ),
-                "stored_availability_report": (operator_availability or {}).get(
-                    "stored_availability_report"
-                ),
+                "td_build": ((operator_availability or {}).get("availability_matrix") or {}).get("td_build"),
+                "platform": ((operator_availability or {}).get("availability_matrix") or {}).get("platform"),
+                "stored_availability_report": (operator_availability or {}).get("stored_availability_report"),
             }
             if operator_availability
             else {},
@@ -1626,13 +1722,46 @@ def _release_readiness_report(
             if plugin_surface
             else {},
         ),
+        _readiness_category(
+            category_id="direct_param_preflight",
+            required="direct_param_preflight" in required_reports,
+            report=direct_param_preflight,
+            ok=bool(direct_param_preflight)
+            and bool(direct_param_preflight.get("ok"))
+            and int(direct_param_preflight.get("unguarded_count") or 0) == 0
+            and int(direct_param_preflight.get("wrapper_unguarded_count") or 0) == 0,
+            evidence={
+                "write_count": (direct_param_preflight or {}).get("write_count"),
+                "guarded_count": (direct_param_preflight or {}).get("guarded_count"),
+                "unguarded_count": (direct_param_preflight or {}).get("unguarded_count"),
+                "wrapper_call_count": (direct_param_preflight or {}).get("wrapper_call_count"),
+                "wrapper_guarded_count": (direct_param_preflight or {}).get("wrapper_guarded_count"),
+                "wrapper_unguarded_count": (direct_param_preflight or {}).get("wrapper_unguarded_count"),
+            }
+            if direct_param_preflight
+            else {},
+        ),
+        _readiness_category(
+            category_id="param_semantics_risk",
+            required="param_semantics_risk" in required_reports,
+            report=param_semantics_risk,
+            ok=bool(param_semantics_risk)
+            and bool(param_semantics_risk.get("ok"))
+            and int(param_semantics_risk.get("unclassified_count") or 0) == 0,
+            evidence={
+                "high_cook_risk_count": (param_semantics_risk or {}).get("high_cook_risk_count"),
+                "direct_risk_count": (param_semantics_risk or {}).get("direct_risk_count"),
+                "validation_only_count": (param_semantics_risk or {}).get("validation_only_count"),
+                "unclassified_count": (param_semantics_risk or {}).get("unclassified_count"),
+            }
+            if param_semantics_risk
+            else {},
+        ),
     ]
     missing_required = [
         category for category in categories if category["required"] and not category["present"]
     ]
-    failed_categories = [
-        category for category in categories if category["present"] and not category["ok"]
-    ]
+    failed_categories = [category for category in categories if category["present"] and not category["ok"]]
     return {
         "schema_version": 1,
         "ok": not missing_required
@@ -1827,9 +1956,7 @@ def _expensive_probe_opt_in_metrics(scenarios: Any) -> dict[str, float]:
         if not isinstance(probes, list):
             continue
         expensive_probe_count = sum(
-            1
-            for probe in probes
-            if isinstance(probe, dict) and probe.get("cost_level") == "expensive"
+            1 for probe in probes if isinstance(probe, dict) and probe.get("cost_level") == "expensive"
         )
         if expensive_probe_count == 0:
             continue
@@ -1859,6 +1986,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--brain-live-smoke-report", default="")
     parser.add_argument("--operator-availability-report", default="")
     parser.add_argument("--plugin-surface-report", default="")
+    parser.add_argument("--direct-param-preflight-report", default="")
+    parser.add_argument("--param-semantics-risk-report", default="")
     parser.add_argument(
         "--require-plugin-surface",
         action="store_true",
@@ -1868,6 +1997,16 @@ def parse_args() -> argparse.Namespace:
         "--require-live-smoke",
         action="store_true",
         help="Require a live TouchDesigner brain smoke report for complete release gates.",
+    )
+    parser.add_argument(
+        "--require-direct-param-preflight",
+        action="store_true",
+        help="Require a direct parameter preflight coverage audit report.",
+    )
+    parser.add_argument(
+        "--require-param-semantics-risk",
+        action="store_true",
+        help="Require a high cook-risk parameter semantics audit report.",
     )
     parser.add_argument("--out", default="")
     parser.add_argument(
@@ -1885,18 +2024,26 @@ def main() -> int:
     soak = load_json(args.soak_report) if args.soak_report else None
     brain_eval = load_json(args.brain_eval_report) if args.brain_eval_report else None
     brain_smoke = load_json(args.brain_smoke_report) if args.brain_smoke_report else None
-    brain_live_smoke = (
-        load_json(args.brain_live_smoke_report) if args.brain_live_smoke_report else None
-    )
+    brain_live_smoke = load_json(args.brain_live_smoke_report) if args.brain_live_smoke_report else None
     operator_availability = (
         load_json(args.operator_availability_report) if args.operator_availability_report else None
     )
     plugin_surface = load_json(args.plugin_surface_report) if args.plugin_surface_report else None
+    direct_param_preflight = (
+        load_json(args.direct_param_preflight_report) if args.direct_param_preflight_report else None
+    )
+    param_semantics_risk = (
+        load_json(args.param_semantics_risk_report) if args.param_semantics_risk_report else None
+    )
     required_reports = set()
     if args.require_plugin_surface:
         required_reports.add("plugin_surface")
     if args.require_live_smoke:
         required_reports.add("brain_live_smoke")
+    if args.require_direct_param_preflight:
+        required_reports.add("direct_param_preflight")
+    if args.require_param_semantics_risk:
+        required_reports.add("param_semantics_risk")
     if args.require_complete:
         required_reports.update(
             {
@@ -1905,6 +2052,7 @@ def main() -> int:
                 "brain_live_smoke",
                 "operator_availability",
                 "plugin_surface",
+                "param_semantics_risk",
             }
         )
 
@@ -1916,6 +2064,8 @@ def main() -> int:
         brain_live_smoke=brain_live_smoke,
         operator_availability=operator_availability,
         plugin_surface=plugin_surface,
+        direct_param_preflight=direct_param_preflight,
+        param_semantics_risk=param_semantics_risk,
         required_reports=required_reports,
     )
     output = json.dumps(report, indent=2)

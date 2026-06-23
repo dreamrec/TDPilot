@@ -19,7 +19,6 @@ from td_mcp.models.brain import (
     OperatorAvailabilityMatrix,
 )
 
-
 _FILE_AUDIO_ROUTE = (
     "audio_file_to_analysis_chop",
     "feedback_decay_top_loop",
@@ -102,6 +101,19 @@ _PATTERN_REQUIRED_DEVICE_SOURCES = {
     "udp_in_dat_protocol_bridge": "udp_source",
     "ndi_in_to_post_fx_output": "ndi_source",
 }
+_RUNTIME_PROBE_WEIGHTS = {
+    "output_node_present": 0.75,
+    "audio_signal_activity": 1.1,
+    "feedback_output_readback": 1.4,
+    "cheap_visual_metrics": 1.15,
+    "compile_state": 1.3,
+    "sampler_uniforms": 1.1,
+    "pop_output_attached": 1.2,
+    "finite_pop_bounds": 1.35,
+    "protocol_table_output": 1.05,
+    "render_switch_table_present": 1.15,
+}
+_GENERATED_CODE_CONTRACT_WEIGHT = 1.35
 
 
 def resolve_candidate_graphs(
@@ -146,7 +158,10 @@ def resolve_candidate_graphs(
     if _supports_phase_one_audio_glsl_material(compiled):
         if _supports_phase_one_audio_glsl_material_terrain(compiled):
             routes = (
-                (_FILE_AUDIO_TERRAIN_GLSL_MATERIAL_PANEL_ROUTE, _DEVICE_AUDIO_TERRAIN_GLSL_MATERIAL_PANEL_ROUTE)
+                (
+                    _FILE_AUDIO_TERRAIN_GLSL_MATERIAL_PANEL_ROUTE,
+                    _DEVICE_AUDIO_TERRAIN_GLSL_MATERIAL_PANEL_ROUTE,
+                )
                 if _supports_phase_one_audio_glsl_material_panel(compiled)
                 else (_FILE_AUDIO_TERRAIN_GLSL_MATERIAL_ROUTE, _DEVICE_AUDIO_TERRAIN_GLSL_MATERIAL_ROUTE)
             )
@@ -182,7 +197,9 @@ def resolve_candidate_graphs(
                 )
             )
     if _supports_phase_one_serial_dat_protocol(compiled):
-        selected = [registry[pattern_id] for pattern_id in _SERIAL_DAT_PROTOCOL_ROUTE if pattern_id in registry]
+        selected = [
+            registry[pattern_id] for pattern_id in _SERIAL_DAT_PROTOCOL_ROUTE if pattern_id in registry
+        ]
         if len(selected) == len(_SERIAL_DAT_PROTOCOL_ROUTE):
             candidates.append(
                 _candidate_from_serial_dat_protocol_patterns(
@@ -206,7 +223,9 @@ def resolve_candidate_graphs(
                 )
             )
     if _supports_phase_one_websocket_dat_protocol(compiled):
-        selected = [registry[pattern_id] for pattern_id in _WEBSOCKET_DAT_PROTOCOL_ROUTE if pattern_id in registry]
+        selected = [
+            registry[pattern_id] for pattern_id in _WEBSOCKET_DAT_PROTOCOL_ROUTE if pattern_id in registry
+        ]
         if len(selected) == len(_WEBSOCKET_DAT_PROTOCOL_ROUTE):
             candidates.append(
                 _candidate_from_websocket_dat_protocol_patterns(
@@ -242,7 +261,9 @@ def resolve_candidate_graphs(
                 )
             )
     if _supports_phase_one_dat_table_render_switch(compiled):
-        selected = [registry[pattern_id] for pattern_id in _DAT_TABLE_RENDER_SWITCH_ROUTE if pattern_id in registry]
+        selected = [
+            registry[pattern_id] for pattern_id in _DAT_TABLE_RENDER_SWITCH_ROUTE if pattern_id in registry
+        ]
         if len(selected) == len(_DAT_TABLE_RENDER_SWITCH_ROUTE):
             candidates.append(
                 _candidate_from_dat_table_render_switch_patterns(
@@ -254,7 +275,9 @@ def resolve_candidate_graphs(
                 )
             )
     if _supports_phase_one_dat_execute_callback(compiled):
-        selected = [registry[pattern_id] for pattern_id in _DAT_EXECUTE_CALLBACK_ROUTE if pattern_id in registry]
+        selected = [
+            registry[pattern_id] for pattern_id in _DAT_EXECUTE_CALLBACK_ROUTE if pattern_id in registry
+        ]
         if len(selected) == len(_DAT_EXECUTE_CALLBACK_ROUTE):
             candidates.append(
                 _candidate_from_dat_execute_callback_patterns(
@@ -290,7 +313,9 @@ def resolve_candidate_graphs(
                 )
             )
     if _supports_phase_one_glsl_advanced_pop_topology(compiled):
-        selected = [registry[pattern_id] for pattern_id in _GLSL_ADVANCED_POP_TOPOLOGY_ROUTE if pattern_id in registry]
+        selected = [
+            registry[pattern_id] for pattern_id in _GLSL_ADVANCED_POP_TOPOLOGY_ROUTE if pattern_id in registry
+        ]
         if len(selected) == len(_GLSL_ADVANCED_POP_TOPOLOGY_ROUTE):
             candidates.append(
                 _candidate_from_glsl_advanced_pop_topology_patterns(
@@ -302,7 +327,9 @@ def resolve_candidate_graphs(
                 )
             )
     if _supports_phase_one_pop_particle_preview(compiled):
-        selected = [registry[pattern_id] for pattern_id in _POP_PARTICLE_PREVIEW_ROUTE if pattern_id in registry]
+        selected = [
+            registry[pattern_id] for pattern_id in _POP_PARTICLE_PREVIEW_ROUTE if pattern_id in registry
+        ]
         if len(selected) == len(_POP_PARTICLE_PREVIEW_ROUTE):
             candidates.append(
                 _candidate_from_pop_particle_preview_patterns(
@@ -314,6 +341,7 @@ def resolve_candidate_graphs(
                 )
             )
     candidates = _with_unsubstituted_operator_alternatives(candidates, availability_matrix)
+    candidates = _with_runtime_validation_explanations(candidates, registry)
     candidates.sort(key=lambda candidate: candidate.score, reverse=True)
     return candidates
 
@@ -463,6 +491,7 @@ def _candidate_from_promoted_trace_pattern(
         device_sources=device_sources,
     )
     support_count = _trace_support_count(pattern)
+    runtime_validation_count = _trace_runtime_validation_count(pattern)
     trace_fingerprint = _trace_fingerprint(pattern)
     return CandidateConceptGraph(
         id=f"candidate:{compiled.id}:{pattern.pattern_id}",
@@ -483,6 +512,7 @@ def _candidate_from_promoted_trace_pattern(
                     *compiled.grounding_evidence,
                     *docs_evidence_for_patterns([pattern]),
                     *_availability_evidence(availability_matrix, [pattern]),
+                    *_runtime_validation_evidence([pattern]),
                 ]
             )
         ),
@@ -491,6 +521,7 @@ def _candidate_from_promoted_trace_pattern(
             f"profiles:{'+'.join(pattern.profiles)}; "
             f"promoted_trace:{pattern.promoted_from_trace}; "
             f"trace_support:{support_count}; "
+            f"runtime_validation:{runtime_validation_count}; "
             f"trace_fingerprint:{trace_fingerprint}; "
             f"required_ops:{','.join(required_ops)}"
         ),
@@ -690,8 +721,7 @@ def _candidate_from_audio_glsl_material_patterns(
         ),
         score=score,
         explanation=(
-            f"profiles:{'+'.join(profiles)}; "
-            f"patterns:{route_label}; required_ops:{','.join(required_ops)}"
+            f"profiles:{'+'.join(profiles)}; patterns:{route_label}; required_ops:{','.join(required_ops)}"
         ),
     )
 
@@ -1185,7 +1215,12 @@ def _candidate_from_dat_table_render_switch_patterns(
         risk_flags=list(dict.fromkeys(risk_flags)),
         grounding_evidence=list(
             dict.fromkeys(
-                [*compiled.grounding_evidence, *pattern_evidence, *availability_evidence, *operator_substitution_evidence]
+                [
+                    *compiled.grounding_evidence,
+                    *pattern_evidence,
+                    *availability_evidence,
+                    *operator_substitution_evidence,
+                ]
             )
         ),
         score=score,
@@ -1251,7 +1286,12 @@ def _candidate_from_dat_execute_callback_patterns(
         risk_flags=list(dict.fromkeys(risk_flags)),
         grounding_evidence=list(
             dict.fromkeys(
-                [*compiled.grounding_evidence, *pattern_evidence, *availability_evidence, *operator_substitution_evidence]
+                [
+                    *compiled.grounding_evidence,
+                    *pattern_evidence,
+                    *availability_evidence,
+                    *operator_substitution_evidence,
+                ]
             )
         ),
         score=score,
@@ -1395,7 +1435,12 @@ def _candidate_from_pop_particle_preview_patterns(
         risk_flags=list(dict.fromkeys(risk_flags)),
         grounding_evidence=list(
             dict.fromkeys(
-                [*compiled.grounding_evidence, *pattern_evidence, *availability_evidence, *operator_substitution_evidence]
+                [
+                    *compiled.grounding_evidence,
+                    *pattern_evidence,
+                    *availability_evidence,
+                    *operator_substitution_evidence,
+                ]
             )
         ),
         score=score,
@@ -1467,7 +1512,12 @@ def _candidate_from_glsl_top_shader_patterns(
         risk_flags=list(dict.fromkeys(risk_flags)),
         grounding_evidence=list(
             dict.fromkeys(
-                [*compiled.grounding_evidence, *pattern_evidence, *availability_evidence, *operator_substitution_evidence]
+                [
+                    *compiled.grounding_evidence,
+                    *pattern_evidence,
+                    *availability_evidence,
+                    *operator_substitution_evidence,
+                ]
             )
         ),
         score=score,
@@ -1629,7 +1679,10 @@ def _available_direct_substitution_rule(
             continue
         if availability_matrix.operators.get(rule.missing_op, {}).get("available") is not False:
             continue
-        if not all(availability_matrix.operators.get(op_type, {}).get("available") is True for op_type in rule.replacement_ops):
+        if not all(
+            availability_matrix.operators.get(op_type, {}).get("available") is True
+            for op_type in rule.replacement_ops
+        ):
             continue
         return rule
     return None
@@ -1651,11 +1704,12 @@ def _with_unsubstituted_operator_alternatives(
 
         original_required_ops = _restore_required_ops(candidate.required_ops, substitutions)
         original_concepts = [
-            _restore_substituted_concept(concept, substitutions)
-            for concept in candidate.concepts
+            _restore_substituted_concept(concept, substitutions) for concept in candidate.concepts
         ]
         original_risk_flags = list(
-            dict.fromkeys([*candidate.risk_flags, *[f"missing-op:{missing}" for missing, _replacement in substitutions]])
+            dict.fromkeys(
+                [*candidate.risk_flags, *[f"missing-op:{missing}" for missing, _replacement in substitutions]]
+            )
         )
         original_evidence = _without_direct_substitution_evidence(candidate.grounding_evidence, substitutions)
         original_score = max(0.0, round(candidate.score - min(0.5, 0.12 * len(substitutions)), 3))
@@ -1760,10 +1814,44 @@ def _score_candidate(
             risk_flags.append(f"missing-addon:{addon}")
         score -= min(0.3, 0.15 * len(missing_addons))
     promoted_trace_count = sum(1 for pattern in patterns if pattern.promoted_from_trace)
+    runtime_validation_penalty = 0.0
     if promoted_trace_count:
-        support_count = sum(max(1, _trace_support_count(pattern)) for pattern in patterns if pattern.promoted_from_trace)
-        score += min(0.18, 0.06 * promoted_trace_count + 0.02 * max(0, support_count - promoted_trace_count))
-    return risk_flags, min(1.0, max(0.0, round(score, 3)))
+        support_count = sum(
+            max(1, _trace_support_count(pattern)) for pattern in patterns if pattern.promoted_from_trace
+        )
+        runtime_validation_count = sum(_trace_runtime_validation_count(pattern) for pattern in patterns)
+        runtime_validation_score = sum(_trace_runtime_validation_score(pattern) for pattern in patterns)
+        missing_runtime_probe_count = sum(
+            len(_trace_runtime_validation_missing_probe_ids(pattern)) for pattern in patterns
+        )
+        failed_runtime_probe_count = sum(
+            len(_trace_runtime_validation_failed_probe_ids(pattern)) for pattern in patterns
+        )
+        failed_required_runtime_probe_count = sum(
+            len(_trace_runtime_validation_failed_required_probe_ids(pattern)) for pattern in patterns
+        )
+        if missing_runtime_probe_count:
+            risk_flags.append("runtime-validation-missing")
+        if failed_runtime_probe_count:
+            risk_flags.append("runtime-validation-failed")
+        if failed_required_runtime_probe_count:
+            risk_flags.append("runtime-validation-failed-required")
+        score += min(
+            0.24,
+            0.06 * promoted_trace_count
+            + 0.02 * max(0, support_count - promoted_trace_count)
+            + 0.012 * runtime_validation_count
+            + 0.018 * runtime_validation_score,
+        )
+        if missing_runtime_probe_count:
+            runtime_validation_penalty += min(0.24, 0.06 * missing_runtime_probe_count)
+        if failed_runtime_probe_count:
+            runtime_validation_penalty += min(
+                0.45,
+                0.16 * failed_runtime_probe_count + 0.08 * failed_required_runtime_probe_count,
+            )
+    score = min(1.0, score) - runtime_validation_penalty
+    return list(dict.fromkeys(risk_flags)), max(0.0, round(score, 3))
 
 
 def _trace_support_count(pattern: BrainPattern) -> int:
@@ -1775,6 +1863,252 @@ def _trace_support_count(pattern: BrainPattern) -> int:
     if isinstance(support_trace_ids, list):
         return len([item for item in support_trace_ids if str(item).strip()])
     return 1 if pattern.promoted_from_trace else 0
+
+
+def _trace_runtime_validation_count(pattern: BrainPattern) -> int:
+    layout = pattern.layout if isinstance(pattern.layout, dict) else {}
+    runtime = layout.get("runtime_validation")
+    if not isinstance(runtime, dict):
+        return 0
+    passed_probe_ids = runtime.get("passed_probe_ids")
+    passed_contract_ids = runtime.get("generated_code_passed_contract_ids")
+    count = 0
+    if isinstance(passed_probe_ids, list):
+        count += len([item for item in passed_probe_ids if str(item).strip()])
+    if isinstance(passed_contract_ids, list):
+        count += len([item for item in passed_contract_ids if str(item).strip()])
+    return count
+
+
+def _trace_runtime_validation_score(pattern: BrainPattern) -> float:
+    runtime = _runtime_validation_payload(pattern)
+    if not runtime:
+        return 0.0
+    raw_score = 0.0
+    for _probe_id, weight in _runtime_validation_probe_weights(runtime):
+        raw_score += weight
+    passed_contract_ids = runtime.get("generated_code_passed_contract_ids")
+    if isinstance(passed_contract_ids, list):
+        raw_score += _GENERATED_CODE_CONTRACT_WEIGHT * len(
+            [item for item in passed_contract_ids if str(item).strip()]
+        )
+    return round(raw_score * _runtime_validation_decay(runtime), 4)
+
+
+def _trace_runtime_validation_missing_probe_ids(pattern: BrainPattern) -> list[str]:
+    runtime = _runtime_validation_payload(pattern)
+    if not runtime:
+        return []
+    explicit_missing = _runtime_string_list(runtime.get("missing_probe_ids"))
+    required = _runtime_string_list(runtime.get("required_probe_ids"))
+    passed = set(_runtime_string_list(runtime.get("passed_probe_ids")))
+    derived_missing = [probe_id for probe_id in required if probe_id not in passed]
+    return list(dict.fromkeys([*explicit_missing, *derived_missing]))
+
+
+def _trace_runtime_validation_failed_probe_ids(pattern: BrainPattern) -> list[str]:
+    runtime = _runtime_validation_payload(pattern)
+    if not runtime:
+        return []
+    return _runtime_string_list(runtime.get("failed_probe_ids"))
+
+
+def _trace_runtime_validation_failed_required_probe_ids(pattern: BrainPattern) -> list[str]:
+    runtime = _runtime_validation_payload(pattern)
+    if not runtime:
+        return []
+    required = set(_runtime_string_list(runtime.get("required_probe_ids")))
+    if not required:
+        return []
+    return [
+        probe_id for probe_id in _trace_runtime_validation_failed_probe_ids(pattern) if probe_id in required
+    ]
+
+
+def _trace_runtime_validation_failed_probe_status(runtime: dict, probe_id: str) -> str:
+    statuses = runtime.get("failed_probe_statuses")
+    if isinstance(statuses, dict):
+        status = str(statuses.get(probe_id) or "").strip()
+        if status:
+            return status
+    return "runtime_fail"
+
+
+def _trace_runtime_validation_failed_probe_detail(runtime: dict, probe_id: str) -> dict[str, object]:
+    details = runtime.get("failed_probe_details")
+    if not isinstance(details, dict):
+        return {}
+    detail = details.get(probe_id)
+    return detail if isinstance(detail, dict) else {}
+
+
+def _trace_runtime_validation_missing_probe_detail(runtime: dict, probe_id: str) -> dict[str, object]:
+    details = runtime.get("missing_probe_details")
+    if not isinstance(details, dict):
+        return {}
+    detail = details.get(probe_id)
+    return detail if isinstance(detail, dict) else {}
+
+
+def _runtime_string_list(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [text for item in value if (text := str(item).strip())]
+
+
+def _with_runtime_validation_explanations(
+    candidates: list[CandidateConceptGraph],
+    registry: dict[str, BrainPattern],
+) -> list[CandidateConceptGraph]:
+    updated: list[CandidateConceptGraph] = []
+    for candidate in candidates:
+        runtime_patterns = [
+            registry[pattern_id] for pattern_id in candidate.pattern_ids if pattern_id in registry
+        ]
+        runtime_count = sum(_trace_runtime_validation_count(pattern) for pattern in runtime_patterns)
+        runtime_score = sum(_trace_runtime_validation_score(pattern) for pattern in runtime_patterns)
+        missing_count = sum(
+            len(_trace_runtime_validation_missing_probe_ids(pattern)) for pattern in runtime_patterns
+        )
+        failed_count = sum(
+            len(_trace_runtime_validation_failed_probe_ids(pattern)) for pattern in runtime_patterns
+        )
+        failed_required_count = sum(
+            len(_trace_runtime_validation_failed_required_probe_ids(pattern)) for pattern in runtime_patterns
+        )
+        marker = f"runtime_validation:{runtime_count}"
+        score_marker = f"runtime_validation_score:{runtime_score:.4f}"
+        missing_marker = f"runtime_validation_missing:{missing_count}"
+        failed_marker = f"runtime_validation_failed:{failed_count}"
+        failed_required_marker = f"runtime_validation_failed_required:{failed_required_count}"
+        grounding_evidence = list(
+            dict.fromkeys([*candidate.grounding_evidence, *_runtime_validation_evidence(runtime_patterns)])
+        )
+        updates = {}
+        if grounding_evidence != candidate.grounding_evidence:
+            updates["grounding_evidence"] = grounding_evidence
+        if runtime_count and marker not in candidate.explanation:
+            updates["explanation"] = f"{candidate.explanation}; {marker}"
+        if runtime_score and score_marker not in updates.get("explanation", candidate.explanation):
+            explanation = updates.get("explanation", candidate.explanation)
+            updates["explanation"] = f"{explanation}; {score_marker}"
+        if missing_count and missing_marker not in updates.get("explanation", candidate.explanation):
+            explanation = updates.get("explanation", candidate.explanation)
+            updates["explanation"] = f"{explanation}; {missing_marker}"
+        if failed_count and failed_marker not in updates.get("explanation", candidate.explanation):
+            explanation = updates.get("explanation", candidate.explanation)
+            updates["explanation"] = f"{explanation}; {failed_marker}"
+        if failed_required_count and failed_required_marker not in updates.get(
+            "explanation", candidate.explanation
+        ):
+            explanation = updates.get("explanation", candidate.explanation)
+            updates["explanation"] = f"{explanation}; {failed_required_marker}"
+        if updates:
+            updated.append(candidate.model_copy(update=updates))
+        else:
+            updated.append(candidate)
+    return updated
+
+
+def _runtime_validation_evidence(patterns: list[BrainPattern]) -> list[str]:
+    evidence: list[str] = []
+    for pattern in patterns:
+        count = _trace_runtime_validation_count(pattern)
+        missing_probe_ids = _trace_runtime_validation_missing_probe_ids(pattern)
+        failed_probe_ids = _trace_runtime_validation_failed_probe_ids(pattern)
+        failed_required_probe_ids = _trace_runtime_validation_failed_required_probe_ids(pattern)
+        if count <= 0 and not missing_probe_ids and not failed_probe_ids:
+            continue
+        runtime = _runtime_validation_payload(pattern)
+        if count > 0:
+            evidence.append(f"runtime-validation:{pattern.pattern_id}:{count}")
+        for probe_id, weight in _runtime_validation_probe_weights(runtime):
+            evidence.append(f"runtime-validation-probe:{pattern.pattern_id}:{probe_id}:{weight:.4f}")
+        for probe_id in missing_probe_ids:
+            evidence.append(f"runtime-validation-missing:{pattern.pattern_id}:{probe_id}")
+            detail = _trace_runtime_validation_missing_probe_detail(runtime, probe_id)
+            readback_strategy = str(detail.get("readback_strategy") or "").strip()
+            if readback_strategy:
+                evidence.append(
+                    f"runtime-validation-missing-detail:{pattern.pattern_id}:{probe_id}:{readback_strategy}"
+                )
+            status = str(detail.get("status") or "").strip()
+            if status:
+                evidence.append(f"runtime-validation-missing-status:{pattern.pattern_id}:{probe_id}:{status}")
+            issue_code = str(detail.get("issue_code") or "").strip()
+            if issue_code:
+                evidence.append(
+                    f"runtime-validation-missing-issue:{pattern.pattern_id}:{probe_id}:{issue_code}"
+                )
+        for probe_id in failed_probe_ids:
+            status = _trace_runtime_validation_failed_probe_status(runtime, probe_id)
+            evidence.append(f"runtime-validation-failed:{pattern.pattern_id}:{probe_id}:{status}")
+            detail = _trace_runtime_validation_failed_probe_detail(runtime, probe_id)
+            issue_code = str(detail.get("issue_code") or "").strip()
+            if issue_code:
+                evidence.append(
+                    f"runtime-validation-failed-detail:{pattern.pattern_id}:{probe_id}:{issue_code}"
+                )
+        for probe_id in failed_required_probe_ids:
+            evidence.append(f"runtime-validation-failed-required:{pattern.pattern_id}:{probe_id}")
+        decay = _runtime_validation_decay(runtime)
+        if decay != 1.0:
+            evidence.append(f"runtime-validation-decay:{pattern.pattern_id}:{decay:.4f}")
+        score = _trace_runtime_validation_score(pattern)
+        if score:
+            evidence.append(f"runtime-validation-score:{pattern.pattern_id}:{score:.4f}")
+        replay = runtime.get("aggregated_replay_validation")
+        if isinstance(replay, dict):
+            for field, label in (
+                ("missing_probe_counts", "missing"),
+                ("failed_probe_counts", "failed"),
+                ("failed_required_probe_counts", "failed-required"),
+                ("failed_optional_probe_counts", "failed-optional"),
+            ):
+                counts = replay.get(field)
+                if not isinstance(counts, dict):
+                    continue
+                for probe_id, count in counts.items():
+                    if isinstance(count, bool) or not isinstance(count, int | float):
+                        continue
+                    evidence.append(
+                        "runtime-validation-replay-aggregate:"
+                        f"{pattern.pattern_id}:{label}:{probe_id}:{int(count)}"
+                    )
+        fingerprint = _trace_fingerprint(pattern)
+        if fingerprint:
+            evidence.append(f"trace-fingerprint:{pattern.pattern_id}:{fingerprint}")
+    return evidence
+
+
+def _runtime_validation_payload(pattern: BrainPattern) -> dict:
+    layout = pattern.layout if isinstance(pattern.layout, dict) else {}
+    runtime = layout.get("runtime_validation")
+    return runtime if isinstance(runtime, dict) else {}
+
+
+def _runtime_validation_probe_weights(runtime: dict) -> list[tuple[str, float]]:
+    passed_probe_ids = runtime.get("passed_probe_ids")
+    if not isinstance(passed_probe_ids, list):
+        return []
+    explicit_weights = runtime.get("passed_probe_weights")
+    explicit = explicit_weights if isinstance(explicit_weights, dict) else {}
+    weighted: list[tuple[str, float]] = []
+    for raw_probe_id in passed_probe_ids:
+        probe_id = str(raw_probe_id).strip()
+        if not probe_id:
+            continue
+        raw_weight = explicit.get(probe_id, _RUNTIME_PROBE_WEIGHTS.get(probe_id, 1.0))
+        weight = raw_weight if isinstance(raw_weight, int | float) else 1.0
+        weighted.append((probe_id, max(0.0, min(4.0, float(weight)))))
+    return weighted
+
+
+def _runtime_validation_decay(runtime: dict) -> float:
+    raw = runtime.get("confidence_decay", runtime.get("validation_decay", 1.0))
+    if not isinstance(raw, int | float):
+        return 1.0
+    return max(0.0, min(1.0, float(raw)))
 
 
 def _trace_fingerprint(pattern: BrainPattern) -> str:
@@ -1832,7 +2166,9 @@ def _substitution_evidence_and_score(
         evidence = ["substitution:glslcreatePOP->glsladvancedPOP+topologyPOP"]
         rule = _substitution_rule_for(missing_op="glslcreatePOP", replacement_pattern=None)
         if rule is not None:
-            evidence.append(f"substitution-rule:{rule.missing_op}->{'+'.join(rule.replacement_ops)}:{rule.confidence}")
+            evidence.append(
+                f"substitution-rule:{rule.missing_op}->{'+'.join(rule.replacement_ops)}:{rule.confidence}"
+            )
         return evidence, score
 
     if "audio_device_to_analysis_chop" not in pattern_ids:
@@ -1840,9 +2176,13 @@ def _substitution_evidence_and_score(
     if availability_matrix is None:
         return [], score
     missing_file_audio = availability_matrix.operators.get("audiofileinCHOP", {}).get("available") is False
-    device_audio_available = availability_matrix.operators.get("audiodeviceinCHOP", {}).get("available") is True
+    device_audio_available = (
+        availability_matrix.operators.get("audiodeviceinCHOP", {}).get("available") is True
+    )
     if missing_file_audio and device_audio_available:
-        rule = _substitution_rule_for(missing_op="audiofileinCHOP", replacement_pattern="audio_device_to_analysis_chop")
+        rule = _substitution_rule_for(
+            missing_op="audiofileinCHOP", replacement_pattern="audio_device_to_analysis_chop"
+        )
         approved = not _missing_required_device_sources(patterns, device_sources)
         if approved:
             evidence = ["substitution:audiofileinCHOP->audio_device_to_analysis_chop"]

@@ -45,8 +45,25 @@ def test_optimize_visual_input_defaults():
     assert model.max_iterations == 10
     assert model.convergence_threshold == 0.8
     assert model.safety_profile == "balanced"
+    assert model.param_semantics_policy == "warn"
     assert model.root_path == "/project1"
     assert model.snapshot_before is True
+
+    with pytest.raises(ValueError):
+        OptimizeVisualInput(
+            goal="reduce feedback oscillation",
+            output_top="/project1/out1",
+            adjustable_params=[
+                AdjustableParamInput(
+                    path="/project1/level1",
+                    param="opacity",
+                    min_val=0.0,
+                    max_val=1.0,
+                    step=0.02,
+                )
+            ],
+            param_semantics_policy="ignore",
+        )
 
 
 def test_optimizer_direction_deterministic():

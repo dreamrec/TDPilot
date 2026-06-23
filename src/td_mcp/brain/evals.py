@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
 import time
 from pathlib import Path
@@ -25,7 +26,6 @@ from td_mcp.brain.validation_probes import validation_probe_coverage_report
 from td_mcp.brain.validators import checks_for_profiles
 from td_mcp.models.brain import BrainTrace
 
-
 MIN_VALIDATION_CHECKS_PER_CASE = 6
 
 
@@ -44,6 +44,40 @@ class StaticEvalTDClient:
         if endpoint == "nodes":
             return {"nodes": self.nodes}
         return {}
+
+
+class StaticEvalCardIndex:
+    """Small CardIndex stand-in backed by per-case local corpus cards."""
+
+    def __init__(self, cards: list[dict[str, Any]]) -> None:
+        self.cards = [card for card in cards if isinstance(card, dict)]
+        self.by_op = {
+            str(card.get("op_type")): card
+            for card in self.cards
+            if isinstance(card.get("op_type"), str) and card.get("op_type")
+        }
+
+    def get_operator(self, op_type: str):
+        return self.by_op.get(op_type)
+
+    def search(self, query: str, card_types: list[str] | None = None, limit: int = 8):
+        query_terms = set(_case_tokens(query))
+        ranked = []
+        for card in self.cards:
+            card_text = " ".join(
+                str(card.get(key) or "") for key in ("op_type", "display_name", "summary", "content")
+            )
+            card_text += " " + " ".join(str(item) for item in card.get("key_concepts") or [])
+            card_text += " " + " ".join(
+                str(item.get("name") or item)
+                for item in card.get("key_params") or []
+                if isinstance(item, (dict, str))
+            )
+            overlap = len(query_terms.intersection(_case_tokens(card_text)))
+            if overlap:
+                ranked.append((overlap, str(card.get("op_type") or ""), card))
+        ranked.sort(key=lambda item: (-item[0], item[1]))
+        return [card for _, _, card in ranked[:limit]]
 
 
 def load_golden_cases(path: str | Path) -> list[dict[str, Any]]:
@@ -242,9 +276,7 @@ def _delivery_phase_coverage_report(
                 "source_checked_pattern_count": int(
                     pattern_coverage.get("source_checked_pattern_count") or 0
                 ),
-                "invalid_pattern_source_count": int(
-                    pattern_coverage.get("invalid_source_count") or 0
-                ),
+                "invalid_pattern_source_count": int(pattern_coverage.get("invalid_source_count") or 0),
                 "compiled_case_count": int(compiler_stability.get("compiled_case_count") or 0),
                 "compiled_domain_failure_count": int(
                     compiler_stability.get("compiled_domain_failure_count") or 0
@@ -256,13 +288,19 @@ def _delivery_phase_coverage_report(
             [
                 ("at least 20 concept-to-node eval cases", case_count >= 20),
                 ("all golden eval cases pass", failed_count == 0),
-                ("at least 8 registered BrainPattern records", int(pattern_coverage.get("pattern_count") or 0) >= 8),
+                (
+                    "at least 8 registered BrainPattern records",
+                    int(pattern_coverage.get("pattern_count") or 0) >= 8,
+                ),
                 ("pattern registry is fully covered by evals", bool(pattern_coverage.get("ok"))),
                 (
                     "pattern registry uses only official Derivative docs sources",
                     int(pattern_coverage.get("invalid_source_count") or 0) == 0,
                 ),
-                ("compiler-backed cases are present", int(compiler_stability.get("compiled_case_count") or 0) >= 1),
+                (
+                    "compiler-backed cases are present",
+                    int(compiler_stability.get("compiled_case_count") or 0) >= 1,
+                ),
             ],
         ),
         _phase_record(
@@ -327,7 +365,10 @@ def _delivery_phase_coverage_report(
                 ),
             },
             [
-                ("profile validation probes cover required profiles", bool(validation_probe_coverage.get("ok"))),
+                (
+                    "profile validation probes cover required profiles",
+                    bool(validation_probe_coverage.get("ok")),
+                ),
                 ("validation reports include strong per-case checks", bool(validation_metrics.get("ok"))),
                 ("generated code harness coverage passes", bool(generated_code_harness_coverage.get("ok"))),
                 (
@@ -404,9 +445,7 @@ def _phase_record(
 async def trace_memory_reuse_coverage_report(cases: list[dict[str, Any]]) -> dict[str, Any]:
     """Prove promoted trace candidates can be reloaded and reused by planning."""
     fixtures = [
-        case
-        for case in cases
-        if _case_id(case) in {"audio_feedback_panel_debug", "glsl_top_shader_compiled"}
+        case for case in cases if _case_id(case) in {"audio_feedback_panel_debug", "glsl_top_shader_compiled"}
     ]
     reused: list[dict[str, Any]] = []
     missed: list[dict[str, Any]] = []
@@ -506,9 +545,7 @@ async def trace_promotion_coverage_report(cases: list[dict[str, Any]]) -> dict[s
     """Prove at least one successful golden trace promotes into a pattern candidate."""
     registry = load_pattern_registry()
     fixtures = [
-        case
-        for case in cases
-        if _case_id(case) in {"audio_feedback_panel_debug", "glsl_top_shader_compiled"}
+        case for case in cases if _case_id(case) in {"audio_feedback_panel_debug", "glsl_top_shader_compiled"}
     ]
     promoted: list[dict[str, Any]] = []
     blocked: list[dict[str, Any]] = []
@@ -590,6 +627,7 @@ async def _plan_for_trace_promotion_fixture(case: dict[str, Any]):
         target_root=str(case.get("target_root") or "/project1"),
         constraints=case.get("constraints") if isinstance(case.get("constraints"), dict) else None,
         validation_profile=str(case.get("validation_profile") or "auto"),
+        card_index=_case_card_index(case),
     )
 
 
@@ -700,28 +738,49 @@ async def trace_replay_drift_report(
                 }
             )
             continue
+        trace_id = _expected_trace_id(expected)
+        trace_fingerprints = _expected_trace_fingerprints(expected)
         profile_drift = _trace_profile_drift(expected.get("profile"), result["profile"])
         operator_drift = _trace_operator_drift(expected.get("operators") or [], result["operators"])
         promoted_pattern_drift = _trace_promoted_pattern_operator_drift(
             expected.get("promoted_pattern_candidate"),
             result["operators"],
         )
-        if profile_drift or operator_drift or promoted_pattern_drift:
-            drifts.append(
-                {
-                    "case_id": case_id,
-                    "profile_drift": profile_drift,
-                    "operator_drift": operator_drift,
-                    "promoted_pattern_operator_drift": promoted_pattern_drift,
-                    "missing_trace": False,
-                }
-            )
+        promoted_runtime_issues = _trace_promoted_pattern_runtime_validation_issues(
+            expected.get("promoted_pattern_candidate")
+        )
+        trace_promotion_rejection_issues = _trace_promotion_rejection_issues(
+            expected.get("trace_promotion_rejection")
+        )
+        if (
+            profile_drift
+            or operator_drift
+            or promoted_pattern_drift
+            or promoted_runtime_issues
+            or trace_promotion_rejection_issues
+        ):
+            drift = {
+                "case_id": case_id,
+                "profile_drift": profile_drift,
+                "operator_drift": operator_drift,
+                "promoted_pattern_operator_drift": promoted_pattern_drift,
+                "promoted_pattern_runtime_validation_issues": promoted_runtime_issues,
+                "trace_promotion_rejection_issues": trace_promotion_rejection_issues,
+                "missing_trace": False,
+            }
+            if trace_id:
+                drift["trace_id"] = trace_id
+            if trace_fingerprints:
+                drift["trace_fingerprints"] = trace_fingerprints
+            drifts.append(drift)
+    validation_issue_memory = _trace_validation_issue_memory(drifts)
     return {
         "schema_version": 1,
         "ok": not drifts,
         "case_count": len(replayed),
         "drift_count": len(drifts),
         "drifts": drifts,
+        "validation_issue_memory": validation_issue_memory,
     }
 
 
@@ -751,6 +810,7 @@ async def trace_replay_baseline_report(
 
     replay_report = await trace_replay_drift_report(replay_cases, expected_traces)
     drifts = [*missing_case_drifts, *replay_report["drifts"]]
+    validation_issue_memory = _trace_validation_issue_memory(drifts)
     return {
         "schema_version": 1,
         "ok": not drifts,
@@ -759,6 +819,7 @@ async def trace_replay_baseline_report(
         "skipped_case_count": max(len(cases) - len(replay_cases), 0),
         "drift_count": len(drifts),
         "drifts": drifts,
+        "validation_issue_memory": validation_issue_memory,
     }
 
 
@@ -844,7 +905,12 @@ def assembly_control_binding_report() -> dict[str, Any]:
     }
 
 
-def _expected_blocked_safety_check(plan, operation_count: int) -> dict[str, Any]:
+def _expected_blocked_safety_check(
+    plan,
+    operation_count: int,
+    *,
+    allow_open_prompt_grounding: bool = False,
+) -> dict[str, Any]:
     evidence_text = " ".join(
         str(item)
         for item in [
@@ -863,13 +929,24 @@ def _expected_blocked_safety_check(plan, operation_count: int) -> dict[str, Any]
             "block-under-specified",
         )
     )
+    has_open_prompt_evidence = any(
+        marker in normalized_evidence
+        for marker in (
+            "open-prompt-atlas-grounding",
+            "open-prompt-atlas-grounded",
+            "open-prompt",
+            "atlas-grounded-planner-required",
+        )
+    ) and bool(plan.corpus_evidence)
     return {
         "ok": bool(plan.blocked_questions)
         and operation_count == 0
-        and has_under_specified_evidence,
+        and (has_under_specified_evidence or (allow_open_prompt_grounding and has_open_prompt_evidence)),
         "blocked_question_count": len(plan.blocked_questions),
         "operation_count": operation_count,
         "has_under_specified_evidence": has_under_specified_evidence,
+        "has_open_prompt_evidence": has_open_prompt_evidence,
+        "corpus_evidence_count": len(plan.corpus_evidence),
     }
 
 
@@ -887,6 +964,7 @@ async def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
         target_root=str(case.get("target_root") or "/project1"),
         constraints=case.get("constraints") if isinstance(case.get("constraints"), dict) else None,
         validation_profile=str(case.get("validation_profile") or "auto"),
+        card_index=_case_card_index(case),
     )
     planning_ms = _elapsed_ms(planning_start)
     scoring_start = time.perf_counter()
@@ -964,6 +1042,15 @@ async def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
             "ok": set(required_patterns).issubset(set(actual_patterns)),
             "weight": _weight(case, "required_patterns"),
         }
+    required_grounding_evidence = list(case.get("required_grounding_evidence") or [])
+    missing_required_grounding_evidence = [
+        item for item in required_grounding_evidence if item not in plan.grounding_evidence
+    ]
+    if required_grounding_evidence:
+        checks["required_grounding_evidence"] = {
+            "ok": not missing_required_grounding_evidence,
+            "weight": _weight(case, "required_grounding_evidence"),
+        }
     candidate_profiles = _candidate_profiles(plan)
     validation_checks = checks_for_profiles(plan.validation_profile, candidate_profiles)
     expected_profiles = case.get("expected_profiles") or []
@@ -1004,16 +1091,20 @@ async def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
         }
     expected_blocked = bool(case.get("expected_blocked"))
     if expected_blocked:
-        expected_blocked_safety = _expected_blocked_safety_check(plan, operation_count)
+        expected_blocked_safety = _expected_blocked_safety_check(
+            plan,
+            operation_count,
+            allow_open_prompt_grounding=bool(case.get("expected_open_prompt_grounding")),
+        )
         checks = {
             "expected_blocked_safety": {
                 "ok": expected_blocked_safety["ok"],
                 "weight": 1,
                 "blocked_question_count": expected_blocked_safety["blocked_question_count"],
                 "operation_count": expected_blocked_safety["operation_count"],
-                "has_under_specified_evidence": expected_blocked_safety[
-                    "has_under_specified_evidence"
-                ],
+                "has_under_specified_evidence": expected_blocked_safety["has_under_specified_evidence"],
+                "has_open_prompt_evidence": expected_blocked_safety["has_open_prompt_evidence"],
+                "corpus_evidence_count": expected_blocked_safety["corpus_evidence_count"],
             }
         }
     max_score = sum(item["weight"] for item in checks.values())
@@ -1045,11 +1136,13 @@ async def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
         "candidate_profiles": candidate_profiles,
         "validation_checks": validation_checks,
         "missing_validation_expectations": missing_validation_expectations,
+        "missing_required_grounding_evidence": missing_required_grounding_evidence,
         "candidate_patterns": actual_patterns,
         "assembly_macros": assembly_macros,
         "blocked_questions": plan.blocked_questions,
         "missing_facts": plan.missing_facts,
         "grounding_evidence": plan.grounding_evidence,
+        "corpus_evidence": [item.model_dump(mode="json") for item in plan.corpus_evidence],
         "availability_matrix": _availability_matrix_metrics(plan.availability_matrix),
         "decomposition_metrics": {
             "compiled_domain_count": len(plan.compiled_task.domains) if plan.compiled_task else 0,
@@ -1081,6 +1174,17 @@ async def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
             "time_to_first_green_cycles": 1 if passed else None,
         },
     }
+
+
+def _case_card_index(case: dict[str, Any]) -> StaticEvalCardIndex | None:
+    cards = case.get("corpus_cards")
+    if not isinstance(cards, list) or not cards:
+        return None
+    return StaticEvalCardIndex([card for card in cards if isinstance(card, dict)])
+
+
+def _case_tokens(text: str) -> list[str]:
+    return [token for token in re.findall(r"[a-z0-9]+", text.lower()) if len(token) > 2]
 
 
 def _elapsed_ms(start: float) -> float:
@@ -1136,13 +1240,9 @@ def _aggregate_messy_project_metrics(results: list[dict[str, Any]]) -> dict[str,
     ]
     availability_pressure_cases = _messy_scenario_results(results, "availability_pressure")
     unsupported_operator_cases = [
-        result
-        for result in results
-        if result.get("checks", {}).get("forbidden_ops") is not None
+        result for result in results if result.get("checks", {}).get("forbidden_ops") is not None
     ]
-    ambiguous_blocked_cases = [
-        result for result in results if result.get("expected_blocked") is True
-    ]
+    ambiguous_blocked_cases = [result for result in results if result.get("expected_blocked") is True]
     return {
         "schema_version": 1,
         "ok": bool(existing_state_cases)
@@ -1171,10 +1271,7 @@ def _messy_scenario_results(results: list[dict[str, Any]], scenario: str) -> lis
 
 
 def _aggregate_time_metrics(results: list[dict[str, Any]], report_start: float) -> dict[str, Any]:
-    case_totals = [
-        float(result.get("time_metrics", {}).get("total_ms", 0))
-        for result in results
-    ]
+    case_totals = [float(result.get("time_metrics", {}).get("total_ms", 0)) for result in results]
     cycles = [
         int(cycle)
         for result in results
@@ -1213,12 +1310,12 @@ def _readability_metrics(plan, assembly_macros: list[str]) -> dict[str, Any]:
             and operation.args.get("domain")
             for operation in operations
         ),
-        "named_outputs": "add_named_outputs" in macro_ids and any(name.startswith("out") for name in create_names),
+        "named_outputs": "add_named_outputs" in macro_ids
+        and any(name.startswith("out") for name in create_names),
         "debug_surface": "add_debug_panel" in macro_ids
         and bool({"debug_notes", "debug_info", "error_log"}.intersection(create_names)),
         "annotation_notes": any(
-            "notes:" in str(operation.args.get("text") or "")
-            and bool(operation.args.get("macro_notes"))
+            "notes:" in str(operation.args.get("text") or "") and bool(operation.args.get("macro_notes"))
             for operation in annotations
         ),
     }
@@ -1266,21 +1363,11 @@ def _aggregate_validation_metrics(results: list[dict[str, Any]]) -> dict[str, An
     missing_expectation_cases = [
         result
         for result in results
-        if int(
-            (result.get("validation_metrics", {}) or {}).get(
-                "missing_validation_expectation_count"
-            )
-            or 0
-        )
+        if int((result.get("validation_metrics", {}) or {}).get("missing_validation_expectation_count") or 0)
         > 0
     ]
     missing_expectation_count = sum(
-        int(
-            (result.get("validation_metrics", {}) or {}).get(
-                "missing_validation_expectation_count"
-            )
-            or 0
-        )
+        int((result.get("validation_metrics", {}) or {}).get("missing_validation_expectation_count") or 0)
         for result in results
     )
     return {
@@ -1302,17 +1389,12 @@ def _aggregate_operator_coverage_metrics(results: list[dict[str, Any]]) -> dict[
     checked = [
         result
         for result in results
-        if int((result.get("operator_coverage", {}) or {}).get("expected_operator_count") or 0)
-        > 0
+        if int((result.get("operator_coverage", {}) or {}).get("expected_operator_count") or 0) > 0
     ]
     missing_cases = [
-        result
-        for result in checked
-        if result.get("operator_coverage", {}).get("missing_required_operators")
+        result for result in checked if result.get("operator_coverage", {}).get("missing_required_operators")
     ]
-    operator_set_failures = [
-        result for result in checked if _case_check_failed(result, "operator_set")
-    ]
+    operator_set_failures = [result for result in checked if _case_check_failed(result, "operator_set")]
     missing_count = sum(
         len(result.get("operator_coverage", {}).get("missing_required_operators") or [])
         for result in missing_cases
@@ -1333,15 +1415,11 @@ def _aggregate_operator_coverage_metrics(results: list[dict[str, Any]]) -> dict[
 def _generated_code_metrics_for_plan(patch_plan) -> dict[str, Any]:
     blocks = extract_generated_code_blocks(patch_plan)
     issues = [
-        issue
-        for issue in validate_generated_code_blocks(blocks)
-        if issue.severity in {"error", "critical"}
+        issue for issue in validate_generated_code_blocks(blocks) if issue.severity in {"error", "critical"}
     ]
     runtime_contracts = generated_code_runtime_contracts(blocks)
     runtime_contract_missing = [
-        block.block_id
-        for block in blocks
-        if not block.runtime_checks or not block.expected_outputs
+        block.block_id for block in blocks if not block.runtime_checks or not block.expected_outputs
     ]
     invalid_source_blocks = sorted(
         {
@@ -1402,19 +1480,13 @@ def _aggregate_generated_code_success_metrics(results: list[dict[str, Any]]) -> 
     missing_runtime_contract_cases = [
         result
         for result in generated_cases
-        if int(
-            (result.get("generated_code_metrics", {}) or {}).get(
-                "runtime_contract_missing_count"
-            )
-            or 0
-        )
+        if int((result.get("generated_code_metrics", {}) or {}).get("runtime_contract_missing_count") or 0)
         > 0
     ]
     invalid_source_cases = [
         result
         for result in generated_cases
-        if int((result.get("generated_code_metrics", {}) or {}).get("invalid_source_count") or 0)
-        > 0
+        if int((result.get("generated_code_metrics", {}) or {}).get("invalid_source_count") or 0) > 0
     ]
     generated_code_block_count = sum(
         int((result.get("generated_code_metrics", {}) or {}).get("block_count") or 0)
@@ -1429,12 +1501,7 @@ def _aggregate_generated_code_success_metrics(results: list[dict[str, Any]]) -> 
         for result in generated_cases
     )
     runtime_contract_missing_count = sum(
-        int(
-            (result.get("generated_code_metrics", {}) or {}).get(
-                "runtime_contract_missing_count"
-            )
-            or 0
-        )
+        int((result.get("generated_code_metrics", {}) or {}).get("runtime_contract_missing_count") or 0)
         for result in generated_cases
     )
     invalid_source_count = sum(
@@ -1470,11 +1537,7 @@ def _aggregate_unsupported_operator_avoidance_metrics(results: list[dict[str, An
     checked = [result for result in results if "forbidden_ops" in result.get("checks", {})]
     forbidden_cases = [result for result in checked if result.get("forbidden_ops_present")]
     forbidden_present = sorted(
-        {
-            str(operator)
-            for result in forbidden_cases
-            for operator in result.get("forbidden_ops_present", [])
-        }
+        {str(operator) for result in forbidden_cases for operator in result.get("forbidden_ops_present", [])}
     )
     return {
         "schema_version": 1,
@@ -1492,25 +1555,19 @@ def _aggregate_decomposition_accuracy_metrics(results: list[dict[str, Any]]) -> 
     multi_domain = [
         result
         for result in compiled
-        if int((result.get("decomposition_metrics", {}) or {}).get("compiled_domain_count") or 0)
-        >= 2
+        if int((result.get("decomposition_metrics", {}) or {}).get("compiled_domain_count") or 0) >= 2
     ]
     three_plus_domain = [
         result
         for result in compiled
-        if int((result.get("decomposition_metrics", {}) or {}).get("compiled_domain_count") or 0)
-        >= 3
+        if int((result.get("decomposition_metrics", {}) or {}).get("compiled_domain_count") or 0) >= 3
     ]
     domain_failures = [result for result in compiled if _case_check_failed(result, "compiled_domains")]
-    time_behavior_checked = [
-        result for result in compiled if "time_behavior" in result.get("checks", {})
-    ]
+    time_behavior_checked = [result for result in compiled if "time_behavior" in result.get("checks", {})]
     time_behavior_failures = [
         result for result in time_behavior_checked if _case_check_failed(result, "time_behavior")
     ]
-    pattern_failures = [
-        result for result in compiled if _case_check_failed(result, "pattern_composition")
-    ]
+    pattern_failures = [result for result in compiled if _case_check_failed(result, "pattern_composition")]
     failed_case_ids = sorted(
         set(_case_ids(domain_failures) + _case_ids(time_behavior_failures) + _case_ids(pattern_failures))
     )
@@ -1541,9 +1598,7 @@ def _aggregate_showpiece_assembly_metrics(results: list[dict[str, Any]]) -> dict
         if result["readability_metrics"]["score"] == result["readability_metrics"]["max_score"]
     ]
     unassembled_ids = [
-        str(result.get("id") or "")
-        for result in showpieces
-        if not result.get("assembly_macros")
+        str(result.get("id") or "") for result in showpieces if not result.get("assembly_macros")
     ]
     unreadable_ids = [
         str(result.get("id") or "")
@@ -1572,9 +1627,7 @@ def _is_showpiece_result(result: dict[str, Any]) -> bool:
 
 
 def _aggregate_prompt_safety_metrics(results: list[dict[str, Any]]) -> dict[str, Any]:
-    expected_blocked_cases = [
-        result for result in results if result.get("expected_blocked") is True
-    ]
+    expected_blocked_cases = [result for result in results if result.get("expected_blocked") is True]
     passed_expected_blocked = [
         result
         for result in expected_blocked_cases
@@ -1608,21 +1661,15 @@ def _aggregate_runtime_safety_metrics(results: list[dict[str, Any]]) -> dict[str
     ]
     blocked_cases = [result for result in results if result.get("blocked_questions")]
     missing_fact_cases = [result for result in results if result.get("missing_facts")]
-    forbidden_operator_cases = [
-        result for result in results if result.get("forbidden_ops_present")
-    ]
+    forbidden_operator_cases = [result for result in results if result.get("forbidden_ops_present")]
     rollback_behavior_failures = [
         result for result in results if _case_check_failed(result, "rollback_behavior")
     ]
     final_state_quality_failures = [
         result for result in results if _case_check_failed(result, "final_state_quality")
     ]
-    operator_set_failures = [
-        result for result in results if _case_check_failed(result, "operator_set")
-    ]
-    max_plan_ops_failures = [
-        result for result in results if _case_check_failed(result, "max_plan_ops")
-    ]
+    operator_set_failures = [result for result in results if _case_check_failed(result, "operator_set")]
+    max_plan_ops_failures = [result for result in results if _case_check_failed(result, "max_plan_ops")]
     return {
         "ok": bool(results)
         and bool(checked_forbidden_operator_cases)
@@ -1673,11 +1720,7 @@ def _aggregate_rollback_frequency_metrics(results: list[dict[str, Any]]) -> dict
         for result in results
         if bool((result.get("rollback_metrics", {}) or {}).get("rollback_performed"))
     ]
-    rollback_frequency = (
-        round(len(rollback_performed) / len(results), 6)
-        if results
-        else 0.0
-    )
+    rollback_frequency = round(len(rollback_performed) / len(results), 6) if results else 0.0
     return {
         "schema_version": 1,
         "ok": bool(results)
@@ -1917,9 +1960,7 @@ def _aggregate_compiler_stability(results: list[dict[str, Any]]) -> dict[str, An
     results = _normal_case_results(results)
     compiled = [result for result in results if result.get("profile") == "concept_compiled"]
     blocked = [
-        result
-        for result in compiled
-        if result.get("blocked_questions") or result.get("missing_facts")
+        result for result in compiled if result.get("blocked_questions") or result.get("missing_facts")
     ]
     domain_failures = [
         result
@@ -1957,7 +1998,9 @@ def _trace_profile_drift(expected_profile: Any, actual_profile: str) -> dict[str
     return {"expected": str(expected_profile), "actual": actual_profile}
 
 
-def _trace_operator_drift(expected_operators: list[Any], actual_operators: list[str]) -> dict[str, list[str]] | None:
+def _trace_operator_drift(
+    expected_operators: list[Any], actual_operators: list[str]
+) -> dict[str, list[str]] | None:
     expected = {str(operator) for operator in expected_operators}
     actual = set(actual_operators)
     missing = sorted(expected - actual)
@@ -1984,6 +2027,556 @@ def _trace_promoted_pattern_operator_drift(
         "pattern_id": str(promoted_pattern.get("pattern_id") or ""),
         "missing": missing,
     }
+
+
+_TRACE_FINGERPRINT_KEYS = (
+    "trace_fingerprint",
+    "intent_fingerprint",
+    "operator_fingerprint",
+    "validation_fingerprint",
+)
+
+
+def _expected_trace_id(expected: dict[str, Any]) -> str | None:
+    trace = expected.get("trace")
+    if isinstance(trace, dict):
+        trace_id = str(trace.get("id") or "").strip()
+        if trace_id:
+            return trace_id
+    for key in ("trace_id", "id"):
+        trace_id = str(expected.get(key) or "").strip()
+        if trace_id:
+            return trace_id
+    return None
+
+
+def _expected_trace_fingerprints(expected: dict[str, Any]) -> dict[str, str]:
+    fingerprints: dict[str, str] = {}
+    for value in (
+        expected,
+        expected.get("trace"),
+        expected.get("trace_promotion_rejection"),
+        expected.get("promoted_pattern_candidate"),
+    ):
+        fingerprints.update(_trace_fingerprint_mapping(value))
+    promoted_pattern = expected.get("promoted_pattern_candidate")
+    layout = promoted_pattern.get("layout") if isinstance(promoted_pattern, dict) else None
+    fingerprints.update(_trace_fingerprint_mapping(layout))
+    return fingerprints
+
+
+def _trace_fingerprint_mapping(value: Any) -> dict[str, str]:
+    if not isinstance(value, dict):
+        return {}
+    fingerprints: dict[str, str] = {}
+    nested = value.get("trace_fingerprints")
+    if isinstance(nested, dict):
+        fingerprints.update(_trace_fingerprint_mapping(nested))
+    for key in _TRACE_FINGERPRINT_KEYS:
+        raw = str(value.get(key) or "").strip()
+        if raw:
+            fingerprints[key] = raw
+    return fingerprints
+
+
+def _merge_trace_fingerprint_mappings(*mappings: dict[str, str]) -> dict[str, str]:
+    merged: dict[str, str] = {}
+    for mapping in mappings:
+        for key in _TRACE_FINGERPRINT_KEYS:
+            value = str(mapping.get(key) or "").strip()
+            if value:
+                merged[key] = value
+    return merged
+
+
+def _trace_validation_issue_memory(drifts: list[dict[str, Any]]) -> dict[str, Any]:
+    """Aggregate replay validation failures so repeated probes can demote learning."""
+
+    issues: dict[tuple[str, str], dict[str, Any]] = {}
+    for drift in drifts:
+        case_id = str(drift.get("case_id") or "")
+        trace_id = str(drift.get("trace_id") or "").strip() or None
+        trace_fingerprints = _trace_fingerprint_mapping(drift.get("trace_fingerprints"))
+        promoted_runtime = drift.get("promoted_pattern_runtime_validation_issues")
+        if isinstance(promoted_runtime, dict):
+            _collect_runtime_validation_issue_memory(
+                issues,
+                case_id=case_id,
+                source="promoted_pattern",
+                payload=promoted_runtime,
+                trace_id=trace_id,
+                trace_fingerprints=_merge_trace_fingerprint_mappings(
+                    trace_fingerprints,
+                    _trace_fingerprint_mapping(promoted_runtime),
+                ),
+            )
+        rejection = drift.get("trace_promotion_rejection_issues")
+        if isinstance(rejection, dict):
+            runtime = rejection.get("runtime_validation_issues")
+            if isinstance(runtime, dict):
+                _collect_runtime_validation_issue_memory(
+                    issues,
+                    case_id=case_id,
+                    source="trace_promotion_rejection",
+                    payload=runtime,
+                    trace_id=trace_id,
+                    trace_fingerprints=_merge_trace_fingerprint_mappings(
+                        trace_fingerprints,
+                        _trace_fingerprint_mapping(runtime),
+                    ),
+                )
+            generated_code = rejection.get("generated_code_runtime_issues")
+            if isinstance(generated_code, dict):
+                _collect_generated_code_validation_issue_memory(
+                    issues,
+                    case_id=case_id,
+                    payload=generated_code,
+                    trace_id=trace_id,
+                    trace_fingerprints=_merge_trace_fingerprint_mappings(
+                        trace_fingerprints,
+                        _trace_fingerprint_mapping(generated_code),
+                    ),
+                )
+
+    records = [_finalize_trace_validation_issue_record(record) for record in issues.values()]
+    records.sort(key=lambda item: (-int(item["count"]), str(item["kind"]), str(item["id"])))
+    repeated = [record for record in records if int(record["count"]) >= 2]
+    candidates = [
+        record
+        for record in repeated
+        if record.get("promotion_audit_action") in {"block_promotion", "demote_promoted_pattern"}
+    ]
+    return {
+        "schema_version": 1,
+        "ok": not repeated,
+        "issue_count": sum(int(record["count"]) for record in records),
+        "unique_issue_count": len(records),
+        "repeated_issue_count": len(repeated),
+        "repeated_issues": repeated,
+        "promotion_demotion_candidate_count": len(candidates),
+        "promotion_demotion_candidates": candidates,
+    }
+
+
+def _collect_runtime_validation_issue_memory(
+    issues: dict[tuple[str, str], dict[str, Any]],
+    *,
+    case_id: str,
+    source: str,
+    payload: dict[str, Any],
+    trace_id: str | None = None,
+    trace_fingerprints: dict[str, str] | None = None,
+) -> None:
+    for probe_id in _string_list(payload.get("missing_probe_ids")):
+        _record_trace_validation_issue(
+            issues,
+            kind="runtime_missing_probe",
+            item_id=probe_id,
+            case_id=case_id,
+            source=source,
+            payload=payload,
+            trace_id=trace_id,
+            trace_fingerprints=trace_fingerprints,
+        )
+
+    required = set(_string_list(payload.get("failed_required_probe_ids")))
+    optional = set(_string_list(payload.get("failed_optional_probe_ids")))
+    statuses = _status_mapping(payload.get("failed_probe_statuses"))
+    for probe_id in required:
+        _record_trace_validation_issue(
+            issues,
+            kind="runtime_failed_required_probe",
+            item_id=probe_id,
+            case_id=case_id,
+            source=source,
+            payload=payload,
+            status=statuses.get(probe_id),
+            trace_id=trace_id,
+            trace_fingerprints=trace_fingerprints,
+        )
+    for probe_id in optional:
+        _record_trace_validation_issue(
+            issues,
+            kind="runtime_failed_optional_probe",
+            item_id=probe_id,
+            case_id=case_id,
+            source=source,
+            payload=payload,
+            status=statuses.get(probe_id),
+            trace_id=trace_id,
+            trace_fingerprints=trace_fingerprints,
+        )
+    for probe_id in _string_list(payload.get("failed_probe_ids")):
+        if probe_id in required or probe_id in optional:
+            continue
+        _record_trace_validation_issue(
+            issues,
+            kind="runtime_failed_probe",
+            item_id=probe_id,
+            case_id=case_id,
+            source=source,
+            payload=payload,
+            status=statuses.get(probe_id),
+            trace_id=trace_id,
+            trace_fingerprints=trace_fingerprints,
+        )
+
+
+def _collect_generated_code_validation_issue_memory(
+    issues: dict[tuple[str, str], dict[str, Any]],
+    *,
+    case_id: str,
+    payload: dict[str, Any],
+    trace_id: str | None = None,
+    trace_fingerprints: dict[str, str] | None = None,
+) -> None:
+    statuses = _status_mapping(payload.get("failed_contract_statuses"))
+    for contract_id in _string_list(payload.get("missing_contract_ids")):
+        _record_trace_validation_issue(
+            issues,
+            kind="generated_code_missing_contract",
+            item_id=contract_id,
+            case_id=case_id,
+            source="generated_code_runtime",
+            payload=payload,
+            trace_id=trace_id,
+            trace_fingerprints=trace_fingerprints,
+        )
+    for contract_id in _string_list(payload.get("failed_contract_ids")):
+        _record_trace_validation_issue(
+            issues,
+            kind="generated_code_failed_contract",
+            item_id=contract_id,
+            case_id=case_id,
+            source="generated_code_runtime",
+            payload=payload,
+            status=statuses.get(contract_id),
+            trace_id=trace_id,
+            trace_fingerprints=trace_fingerprints,
+        )
+
+
+def _record_trace_validation_issue(
+    issues: dict[tuple[str, str], dict[str, Any]],
+    *,
+    kind: str,
+    item_id: str,
+    case_id: str,
+    source: str,
+    payload: dict[str, Any],
+    status: str | None = None,
+    trace_id: str | None = None,
+    trace_fingerprints: dict[str, str] | None = None,
+) -> None:
+    key = (kind, item_id)
+    record = issues.setdefault(
+        key,
+        {
+            "kind": kind,
+            "id": item_id,
+            "count": 0,
+            "case_ids": [],
+            "sources": [],
+            "statuses": [],
+            "confidence_penalty_reasons": [],
+            "min_confidence_decay": None,
+            "trace_ids": [],
+            "trace_fingerprints": {},
+        },
+    )
+    record["count"] = int(record["count"]) + 1
+    if case_id and case_id not in record["case_ids"]:
+        record["case_ids"].append(case_id)
+    if source and source not in record["sources"]:
+        record["sources"].append(source)
+    if status and status not in record["statuses"]:
+        record["statuses"].append(status)
+    for reason in _string_list(payload.get("confidence_penalty_reasons")):
+        if reason not in record["confidence_penalty_reasons"]:
+            record["confidence_penalty_reasons"].append(reason)
+    decay = _confidence_decay(payload)
+    if decay is not None:
+        current = record.get("min_confidence_decay")
+        record["min_confidence_decay"] = decay if current is None else min(float(current), decay)
+    if trace_id and trace_id not in record["trace_ids"]:
+        record["trace_ids"].append(trace_id)
+    merged_fingerprints = _merge_trace_fingerprint_mappings(
+        trace_fingerprints or {},
+        _trace_fingerprint_mapping(payload),
+    )
+    fingerprint_values = record["trace_fingerprints"]
+    for key, value in merged_fingerprints.items():
+        values = fingerprint_values.setdefault(key, [])
+        if value not in values:
+            values.append(value)
+
+
+def _finalize_trace_validation_issue_record(record: dict[str, Any]) -> dict[str, Any]:
+    action = _trace_validation_issue_action(
+        str(record["kind"]),
+        set(record["sources"]),
+    )
+    finalized = {
+        "kind": record["kind"],
+        "id": record["id"],
+        "count": int(record["count"]),
+        "case_ids": sorted(record["case_ids"]),
+        "sources": sorted(record["sources"]),
+        "promotion_audit_action": action,
+    }
+    statuses = sorted(record["statuses"])
+    if statuses:
+        finalized["statuses"] = statuses
+    reasons = sorted(record["confidence_penalty_reasons"])
+    if reasons:
+        finalized["confidence_penalty_reasons"] = reasons
+    decay = record.get("min_confidence_decay")
+    if decay is not None:
+        finalized["min_confidence_decay"] = round(float(decay), 4)
+    trace_ids = sorted(record.get("trace_ids") or [])
+    if trace_ids:
+        finalized["trace_ids"] = trace_ids
+    trace_fingerprints = {
+        key: sorted(str(item) for item in values if str(item).strip())
+        for key, values in (record.get("trace_fingerprints") or {}).items()
+        if values
+    }
+    if trace_fingerprints:
+        finalized["trace_fingerprints"] = trace_fingerprints
+        trace_clusters = trace_fingerprints.get("trace_fingerprint") or []
+        if trace_clusters:
+            finalized["trace_fingerprint_count"] = len(trace_clusters)
+            finalized["promotion_audit_cluster_ids"] = trace_clusters
+            if action == "demote_promoted_pattern":
+                finalized["demotion_cluster_ids"] = trace_clusters
+    return finalized
+
+
+def _trace_validation_issue_action(kind: str, sources: set[str]) -> str:
+    if kind in {
+        "runtime_missing_probe",
+        "runtime_failed_probe",
+        "runtime_failed_required_probe",
+        "generated_code_missing_contract",
+        "generated_code_failed_contract",
+    }:
+        return "block_promotion"
+    if "promoted_pattern" in sources:
+        return "demote_promoted_pattern"
+    return "review"
+
+
+def _trace_promoted_pattern_runtime_validation_issues(
+    promoted_pattern: Any,
+) -> dict[str, Any] | None:
+    if not isinstance(promoted_pattern, dict):
+        return None
+    layout = promoted_pattern.get("layout")
+    runtime = layout.get("runtime_validation") if isinstance(layout, dict) else None
+    if not isinstance(runtime, dict):
+        return None
+    required = _string_list(runtime.get("required_probe_ids"))
+    passed = set(_string_list(runtime.get("passed_probe_ids")))
+    explicit_missing = _string_list(runtime.get("missing_probe_ids"))
+    derived_missing = [probe_id for probe_id in required if probe_id not in passed]
+    missing_probe_ids = list(dict.fromkeys([*explicit_missing, *derived_missing]))
+    failed_probe_ids = _string_list(runtime.get("failed_probe_ids"))
+    if not missing_probe_ids and not failed_probe_ids:
+        return None
+    statuses = runtime.get("failed_probe_statuses")
+    failed_statuses = (
+        {probe_id: str(statuses.get(probe_id) or "runtime_fail") for probe_id in failed_probe_ids}
+        if isinstance(statuses, dict)
+        else {probe_id: "runtime_fail" for probe_id in failed_probe_ids}
+    )
+    issues = {
+        "pattern_id": str(promoted_pattern.get("pattern_id") or ""),
+        "missing_probe_ids": missing_probe_ids,
+        "failed_probe_ids": failed_probe_ids,
+        "failed_probe_statuses": failed_statuses,
+    }
+    failed_required_ids = _string_list(runtime.get("failed_required_probe_ids"))
+    if failed_required_ids:
+        issues["failed_required_probe_ids"] = failed_required_ids
+    failed_optional_ids = _string_list(runtime.get("failed_optional_probe_ids"))
+    if failed_optional_ids:
+        issues["failed_optional_probe_ids"] = failed_optional_ids
+    missing_details = _probe_detail_mapping(runtime.get("missing_probe_details"))
+    if missing_details:
+        issues["missing_probe_details"] = missing_details
+    failed_details = _probe_detail_mapping(runtime.get("failed_probe_details"))
+    if failed_details:
+        issues["failed_probe_details"] = failed_details
+    issues.update(_confidence_issue_fields(runtime))
+    return issues
+
+
+def _trace_promotion_rejection_issues(rejection: Any) -> dict[str, Any] | None:
+    if not isinstance(rejection, dict):
+        return None
+    blockers = _string_list(rejection.get("blockers"))
+    runtime = rejection.get("runtime_validation_issues")
+    generated_code = rejection.get("generated_code_runtime_issues")
+    issues: dict[str, Any] = {}
+    if blockers:
+        issues["blockers"] = blockers
+    if isinstance(runtime, dict):
+        runtime_issues = {
+            "missing_probe_ids": _string_list(runtime.get("missing_probe_ids")),
+            "failed_probe_ids": _string_list(runtime.get("failed_probe_ids")),
+            "failed_probe_statuses": _status_mapping(runtime.get("failed_probe_statuses")),
+        }
+        missing_details = _probe_detail_mapping(runtime.get("missing_probe_details"))
+        if missing_details:
+            runtime_issues["missing_probe_details"] = missing_details
+        failed_required_ids = _string_list(runtime.get("failed_required_probe_ids"))
+        if failed_required_ids:
+            runtime_issues["failed_required_probe_ids"] = failed_required_ids
+        failed_optional_ids = _string_list(runtime.get("failed_optional_probe_ids"))
+        if failed_optional_ids:
+            runtime_issues["failed_optional_probe_ids"] = failed_optional_ids
+        failed_required_details = _probe_detail_mapping(runtime.get("failed_required_probe_details"))
+        if failed_required_details:
+            runtime_issues["failed_required_probe_details"] = failed_required_details
+        failed_details = _probe_detail_mapping(runtime.get("failed_probe_details"))
+        if failed_details:
+            runtime_issues["failed_probe_details"] = failed_details
+        runtime_issues.update(_confidence_issue_fields(runtime))
+        issues["runtime_validation_issues"] = runtime_issues
+    if isinstance(generated_code, dict):
+        generated_code_issues = {
+            "missing_contract_ids": _string_list(generated_code.get("missing_contract_ids")),
+        }
+        missing_details = _generated_code_contract_detail_mapping(
+            generated_code.get("missing_contract_details")
+        )
+        if missing_details:
+            generated_code_issues["missing_contract_details"] = missing_details
+        failed_ids = _string_list(generated_code.get("failed_contract_ids"))
+        if failed_ids:
+            generated_code_issues["failed_contract_ids"] = failed_ids
+        failed_statuses = _status_mapping(generated_code.get("failed_contract_statuses"))
+        if failed_statuses:
+            generated_code_issues["failed_contract_statuses"] = failed_statuses
+        failed_details = _generated_code_contract_detail_mapping(
+            generated_code.get("failed_contract_details")
+        )
+        if failed_details:
+            generated_code_issues["failed_contract_details"] = failed_details
+        generated_code_issues.update(_confidence_issue_fields(generated_code))
+        issues["generated_code_runtime_issues"] = generated_code_issues
+    return issues or None
+
+
+def _confidence_issue_fields(value: dict[str, Any]) -> dict[str, Any]:
+    fields: dict[str, Any] = {}
+    decay = _confidence_decay(value)
+    if decay is not None and decay != 1.0:
+        fields["confidence_decay"] = decay
+    reasons = _string_list(value.get("confidence_penalty_reasons"))
+    if reasons:
+        fields["confidence_penalty_reasons"] = reasons
+    return fields
+
+
+def _confidence_decay(value: dict[str, Any]) -> float | None:
+    raw = value.get("confidence_decay", value.get("validation_decay"))
+    if isinstance(raw, bool):
+        return None
+    if not isinstance(raw, int | float | str):
+        return None
+    try:
+        return round(float(raw), 4)
+    except (TypeError, ValueError):
+        return None
+
+
+def _status_mapping(value: Any) -> dict[str, str]:
+    if not isinstance(value, dict):
+        return {}
+    return {str(key): str(status) for key, status in value.items() if str(key).strip()}
+
+
+def _probe_detail_mapping(value: Any) -> dict[str, dict[str, Any]]:
+    if not isinstance(value, dict):
+        return {}
+    details: dict[str, dict[str, Any]] = {}
+    for probe_id, raw_detail in value.items():
+        probe_key = str(probe_id).strip()
+        if not probe_key or not isinstance(raw_detail, dict):
+            continue
+        detail: dict[str, Any] = {}
+        for key in (
+            "profile",
+            "status",
+            "issue_code",
+            "issue_message",
+            "failure_message",
+            "readback_strategy",
+            "readback_path",
+        ):
+            raw_value = raw_detail.get(key)
+            if raw_value is not None and str(raw_value).strip():
+                detail[key] = str(raw_value)
+        runtime_required = raw_detail.get("runtime_required")
+        if isinstance(runtime_required, bool):
+            detail["runtime_required"] = runtime_required
+        for key in (
+            "missing_required_inputs",
+            "present_required_inputs",
+            "pending_metric_names",
+            "metric_names",
+            "pass_conditions",
+        ):
+            raw_value = raw_detail.get(key)
+            if isinstance(raw_value, list):
+                detail[key] = [str(item) for item in raw_value]
+        metrics = raw_detail.get("runtime_metric_values")
+        if isinstance(metrics, dict):
+            detail["runtime_metric_values"] = dict(metrics)
+        if detail:
+            details[probe_key] = detail
+    return details
+
+
+def _generated_code_contract_detail_mapping(value: Any) -> dict[str, dict[str, Any]]:
+    if not isinstance(value, dict):
+        return {}
+    details: dict[str, dict[str, Any]] = {}
+    for contract_id, raw_detail in value.items():
+        contract_key = str(contract_id).strip()
+        if not contract_key or not isinstance(raw_detail, dict):
+            continue
+        detail: dict[str, Any] = {}
+        for key in (
+            "block_id",
+            "check_id",
+            "language",
+            "target_op",
+            "target_param",
+            "endpoint",
+            "status",
+            "issue_code",
+            "issue_message",
+        ):
+            raw_value = raw_detail.get(key)
+            if raw_value is not None and str(raw_value).strip():
+                detail[key] = str(raw_value)
+        issue_count = raw_detail.get("issue_count")
+        if isinstance(issue_count, int):
+            detail["issue_count"] = issue_count
+        for key in ("expected_outputs", "risk_flags", "official_sources"):
+            raw_list = raw_detail.get(key)
+            if isinstance(raw_list, list):
+                detail[key] = [str(item) for item in raw_list]
+        details[contract_key] = detail
+    return details
+
+
+def _string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item).strip() for item in value if str(item).strip()]
 
 
 def _weight(case: dict[str, Any], name: str) -> int:

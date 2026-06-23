@@ -83,6 +83,50 @@ async def test_transaction_rolls_back_when_validation_fails():
 
 
 @pytest.mark.asyncio
+async def test_transaction_preflights_set_params_before_apply():
+    ops = [
+        PatchOperation(kind="create_node", target="/p", args={"op_type": "levelTOP", "name": "level"}),
+        PatchOperation(kind="set_params", target="/p/level", args={"params": {"opacity": 0.5}}),
+    ]
+    client = FakeTDClient(
+        scripted={
+            "nodes": {"nodes": []},
+            "node/create": {"path": "/p/level"},
+            "node/params/set": {"ok": True},
+            "node/errors": {"issues": []},
+            "cooking": {"stuck": []},
+        }
+    )
+    preflight_calls = []
+
+    def fake_preflight(**kwargs):
+        preflight_calls.append(kwargs)
+        return type(
+            "PreflightResult",
+            (),
+            {
+                "adjusted_params": {"opacity": 0.75},
+                "safety_warnings": ["opacity clamped"],
+                "param_semantics_warnings": [],
+                "blocked": False,
+            },
+        )()
+
+    result = await apply_transaction(
+        client,
+        _plan(ops),
+        sentinel=UndoBlockSentinel(),
+        param_preflight=fake_preflight,
+    )
+
+    assert result.status == "clean"
+    assert preflight_calls
+    assert preflight_calls[0]["path"] == "/p/level"
+    assert preflight_calls[0]["op_type"] == "levelTOP"
+    assert ("node/params/set", {"path": "/p/level", "params": {"opacity": 0.75}}) in client.calls
+
+
+@pytest.mark.asyncio
 async def test_transaction_rolls_back_when_generated_code_runtime_contract_fails():
     ops = [
         PatchOperation(kind="create_node", target="/p", args={"op_type": "glslTOP", "name": "glsl1"}),

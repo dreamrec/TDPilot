@@ -273,3 +273,145 @@ async def test_memory_replay_uses_live_endpoint_contract(tmp_path, monkeypatch):
     assert "target_path" in connect_payloads[0]
     assert "from" not in connect_payloads[0]
     assert "to" not in connect_payloads[0]
+
+
+@pytest.mark.asyncio
+async def test_memory_replay_can_block_param_semantics_before_live_mutation(tmp_path, monkeypatch):
+    store = TechniqueStore(base_dir=str(tmp_path), project_name="runtime")
+    pref = PreferenceStore(base_dir=str(tmp_path), project_name="runtime")
+    ctx = _make_ctx(store=store, pref=pref)
+
+    technique_id = store.add(
+        {
+            "complexity": "small",
+            "recipe": {
+                "nodes": {
+                    "/fb1": {
+                        "name": "fb1",
+                        "type": "feedbackTOP",
+                        "family": "TOP",
+                        "params": {"reset": "yes please"},
+                    },
+                },
+                "connections": [],
+            },
+        },
+        scope="project",
+        name="unsafe-replay-contract",
+    )
+
+    recording_client = _RecordingClient()
+    monkeypatch.setattr(registry, "_get_client", lambda _ctx: recording_client)
+
+    replayed = await registry.td_memory_replay(
+        ctx,
+        technique_id=technique_id,
+        parent_path="/project1/replay",
+        scope="project",
+        param_semantics_policy="block",
+    )
+
+    assert replayed["status"] == "blocked"
+    assert replayed["param_semantics_status"] == "blocked"
+    assert replayed["param_semantics_warnings"]
+    assert recording_client.calls == []
+
+
+@pytest.mark.asyncio
+async def test_memory_replay_can_block_expression_semantics_before_live_mutation(tmp_path, monkeypatch):
+    store = TechniqueStore(base_dir=str(tmp_path), project_name="runtime")
+    pref = PreferenceStore(base_dir=str(tmp_path), project_name="runtime")
+    ctx = _make_ctx(store=store, pref=pref)
+
+    technique_id = store.add(
+        {
+            "complexity": "small",
+            "recipe": {
+                "nodes": {
+                    "/fb1": {
+                        "name": "fb1",
+                        "type": "feedbackTOP",
+                        "family": "TOP",
+                        "expressions": {"reset": "absTime.frame"},
+                    },
+                },
+                "connections": [],
+            },
+        },
+        scope="project",
+        name="unsafe-expression-replay-contract",
+    )
+
+    recording_client = _RecordingClient()
+    monkeypatch.setattr(registry, "_get_client", lambda _ctx: recording_client)
+
+    replayed = await registry.td_memory_replay(
+        ctx,
+        technique_id=technique_id,
+        parent_path="/project1/replay",
+        scope="project",
+        param_semantics_policy="block",
+    )
+
+    assert replayed["status"] == "blocked"
+    assert replayed["param_semantics_status"] == "blocked"
+    assert replayed["param_semantics_warnings"]
+    assert recording_client.calls == []
+
+
+@pytest.mark.asyncio
+async def test_memory_replay_routes_live_param_writes_through_shared_preflight(tmp_path, monkeypatch):
+    store = TechniqueStore(base_dir=str(tmp_path), project_name="runtime")
+    pref = PreferenceStore(base_dir=str(tmp_path), project_name="runtime")
+    ctx = _make_ctx(store=store, pref=pref)
+
+    technique_id = store.add(
+        {
+            "complexity": "small",
+            "recipe": {
+                "nodes": {
+                    "/level1": {
+                        "name": "level1",
+                        "type": "levelTOP",
+                        "family": "TOP",
+                        "params": {"opacity": 0.95},
+                    },
+                },
+                "connections": [],
+            },
+        },
+        scope="project",
+        name="preflight-adjusted-replay",
+    )
+
+    class Result:
+        adjusted_params = {"opacity": 0.5}
+        safety_warnings = ["clamped replay opacity"]
+        param_semantics_warnings = []
+        blocked = False
+
+    preflight_calls = []
+
+    def preflight(**kwargs):
+        preflight_calls.append(kwargs)
+        return Result()
+
+    recording_client = _RecordingClient()
+    monkeypatch.setattr(registry, "_get_client", lambda _ctx: recording_client)
+    monkeypatch.setattr(registry, "_preflight_direct_param_write", preflight)
+
+    replayed = await registry.td_memory_replay(
+        ctx,
+        technique_id=technique_id,
+        parent_path="/project1/replay",
+        scope="project",
+        param_semantics_policy="block",
+    )
+
+    set_payloads = [body for endpoint, body in recording_client.calls if endpoint == "node/params/set"]
+    assert replayed["status"] == "ok"
+    assert set_payloads == [{"path": "/project1/replay/n1", "params": {"opacity": 0.5}}]
+    assert preflight_calls
+    assert preflight_calls[-1]["path"] == "/project1/replay/n1"
+    assert preflight_calls[-1]["op_type"] == "levelTOP"
+    assert preflight_calls[-1]["param_semantics_policy"] == "block"

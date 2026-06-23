@@ -42,6 +42,7 @@ def test_td_patch_apply_registered():
     assert "plan" in props
     assert "auto_validate" in props
     assert "transaction_options" in props
+    assert "param_semantics_policy" in props
 
 
 def test_td_patch_validate_registered():
@@ -144,6 +145,121 @@ async def test_td_patch_apply_transaction_options_dry_run(mcp_ctx, td_client, mo
     assert result["success"] is True
     assert result["result"]["status"] == "dry_run"
     assert not any(call[0] == "node/create" for call in td_client.calls)
+
+
+@pytest.mark.asyncio
+async def test_td_patch_apply_can_block_invalid_param_semantics_before_legacy_apply(
+    mcp_ctx, td_client, monkeypatch
+):
+    _patch_services(monkeypatch, td_client)
+    plan_result = await tools_patch.td_patch_plan(
+        mcp_ctx,
+        target_root="/p",
+        operations=[
+            {"kind": "create_node", "target": "/p", "args": {"op_type": "feedbackTOP", "name": "fb"}},
+            {"kind": "set_params", "target": "/p/fb", "args": {"params": {"reset": "yes please"}}},
+        ],
+    )
+    plan_dict = plan_result["plan"]
+
+    result = await tools_patch.td_patch_apply(
+        mcp_ctx,
+        plan=plan_dict,
+        param_semantics_policy="block",
+    )
+
+    assert result["success"] is False
+    assert result["blocked"] is True
+    assert result["param_semantics_status"] == "blocked"
+    assert {item["code"] for item in result["param_semantics_warnings"]} == {"invalid_bool_param"}
+    assert not any(call[0] in {"node/create", "node/params/set"} for call in td_client.calls)
+
+
+@pytest.mark.asyncio
+async def test_td_patch_apply_uses_shared_direct_param_preflight_for_legacy_apply(
+    mcp_ctx, td_client, monkeypatch
+):
+    _patch_services(monkeypatch, td_client)
+    td_client.responses = {
+        "node/create": {"path": "/p/level", "name": "level"},
+        "node/params/set": {"success": True, "results": {}},
+        "node/errors": {"issues": []},
+        "cooking_info": {"total_cook_ms": 0.5, "stuck": []},
+        "project/lifecycle": {"ok": True},
+    }
+    calls = []
+
+    def fake_preflight(**kwargs):
+        calls.append(kwargs)
+        return _registry.DirectParamPreflightResult(
+            adjusted_params={"opacity": 0.75},
+            safety_warnings=["opacity clamped"],
+            param_semantics_warnings=[],
+            blocked=False,
+        )
+
+    monkeypatch.setattr(_registry, "_preflight_direct_param_write", fake_preflight)
+    plan_result = await tools_patch.td_patch_plan(
+        mcp_ctx,
+        target_root="/p",
+        operations=[
+            {"kind": "create_node", "target": "/p", "args": {"op_type": "levelTOP", "name": "level"}},
+            {"kind": "set_params", "target": "/p/level", "args": {"params": {"opacity": 2.0}}},
+        ],
+    )
+
+    result = await tools_patch.td_patch_apply(mcp_ctx, plan=plan_result["plan"])
+
+    assert result["success"] is True
+    assert calls
+    assert calls[0]["path"] == "/p/level"
+    assert calls[0]["op_type"] == "levelTOP"
+    assert any(
+        endpoint == "node/params/set" and body["params"] == {"opacity": 0.75}
+        for endpoint, body in td_client.calls
+    )
+
+
+@pytest.mark.asyncio
+async def test_td_patch_apply_block_mode_reads_existing_node_type_before_set_params(
+    mcp_ctx, td_client, monkeypatch
+):
+    _patch_services(monkeypatch, td_client)
+
+    def handler(endpoint, body):
+        if endpoint == "node/detail":
+            return {"path": body["path"], "type": "feedback", "family": "TOP"}
+        if endpoint == "project/lifecycle":
+            return {"ok": True}
+        if endpoint == "node/params/set":
+            raise AssertionError("block policy should not mutate existing node params")
+        raise AssertionError(f"unexpected endpoint {endpoint}")
+
+    td_client.handler = handler
+    plan_result = await tools_patch.td_patch_plan(
+        mcp_ctx,
+        target_root="/p",
+        operations=[
+            {
+                "kind": "set_params",
+                "target": "/p/existing_feedback",
+                "args": {"params": {"reset": "yes please"}},
+            },
+        ],
+    )
+
+    result = await tools_patch.td_patch_apply(
+        mcp_ctx,
+        plan=plan_result["plan"],
+        param_semantics_policy="block",
+        auto_validate=False,
+    )
+
+    assert result["success"] is False
+    assert result["blocked"] is True
+    assert result["param_semantics_status"] == "blocked"
+    assert {item["code"] for item in result["param_semantics_warnings"]} == {"invalid_bool_param"}
+    assert td_client.calls == [("node/detail", {"path": "/p/existing_feedback"})]
 
 
 @pytest.mark.asyncio
