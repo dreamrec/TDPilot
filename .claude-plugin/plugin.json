@@ -11,9 +11,12 @@
   "repository": "https://github.com/dreamrec/TDPilot",
   "license": "MIT",
   "skills": "./skills/",
-  "agents": "./agents/",
-  "hooks": "./hooks/hooks.json",
-  "mcpServers": "./.mcp.json",
+  "agents": [
+    "./agents/td-brain-builder.md",
+    "./agents/td-brain-explorer.md",
+    "./agents/td-brain-validator.md",
+    "./agents/td-release-auditor.md"
+  ],
   "keywords": [
     "touchdesigner",
     "td",
