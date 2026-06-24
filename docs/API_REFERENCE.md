@@ -1,6 +1,6 @@
 # TDPilot API Reference
 
-> Auto-generated from TDPilot v2.0.2 | 110 tools | Source: `src/td_mcp/tool_registry.py`
+> Auto-generated from TDPilot v2.0.2 | 111 tools | Source: `src/td_mcp/tool_registry.py`
 
 ---
 
@@ -241,6 +241,7 @@ All tools in this section execute Python inside TouchDesigner. Most require `ful
 | `td_tool_batch` | Dispatch up to 8 tool calls in a single model roundtrip. Sequential execution; per-call failures don't abort siblings. Backport from deepseek-v4. | `calls` (list[dict], **required**, max 8): Each entry is `{tool: str, args: dict}`. | JSON with `ok: true`, `count` (int), `results` array of `{tool, ok, result, error, elapsed_ms}`. |
 | `td_get_activity_log` *(new in v1.6.16)* | Return recent tool-call activity from a 200-entry server-side ring buffer (mirrored to in-TD Table DAT `/local/mcp_server/activity_log`). | `limit` (int, default 20, 1-200), `tool_filter` (str, optional, exact tool name match). | JSON with `schema_version`, `count`, `max_buffer`, `entries[]` (newest first; each entry has `ts`, `tool`, `args_summary`, `result_summary`, `duration_ms`, `ok`). |
 | `td_self_update` *(new in v1.6.16)* | Check (and optionally install) the latest TDPilot release from GitHub. Pure-stdlib so it also runs from TD Textport via `python -m td_mcp.self_updater`. | `check_only` (bool, default `True`). When `False`, downloads the asset and writes it to the three install paths (repo working-tree, Claude Code plugin cache, `~/.tdpilot/`). | JSON with `installed`, `latest`, `newer_available`, `release_url`, `follow_up` (re-run-setup_mcp_in_td.py reminder). When `check_only=False` and an update happened: `installed_to[]`, `md5{path: hash}`, `bytes_written`. |
+| `td_sync_status` *(new in v2.0.2)* | Report whether the server, live TD component, `.tox`, plugin caches, npm/GitHub releases, and public GitHub description are in sync. | `check_remote` (bool, default `True`): include GitHub/npm/repository checks. | JSON with `server`, `touchdesigner`, `tox`, `plugin_caches`, `remote`, `github_repo`, `overall`, and actionable `recommendations[]`. |
 
 ### Response envelope: `_read_journal` *(new in v1.6.16)*
 

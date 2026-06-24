@@ -1875,13 +1875,18 @@ def handle_exec_python(body):
 
 
 def handle_screenshot(body):
-    """Capture a TOP as a JPEG image and return base64.
+    """Capture a TOP as a JPEG image and return base64 or metadata.
 
     Uses JPEG with configurable quality (0.0–1.0 scale, TD 2025+) to keep
     captures well under the 1 MB MCP response-size limit after base64 encoding.
     """
     path = body.get('path', None)
     quality = float(body.get('quality', 0.5))  # TD 2025 uses 0.0–1.0 scale
+    include_data = body.get('include_data', True)
+    if isinstance(include_data, str):
+        include_data = include_data.strip().lower() not in ('0', 'false', 'no', 'off')
+    else:
+        include_data = bool(include_data)
 
     try:
         if path:
@@ -1892,6 +1897,17 @@ def handle_screenshot(body):
                 return {'error': f'Node is not a TOP: {path} (type: {target.type})'}
         else:
             return {'error': 'Provide path to a TOP node to screenshot'}
+
+        if not include_data:
+            return {
+                'success': True,
+                'path': target.path,
+                'width': target.width,
+                'height': target.height,
+                'format': 'jpeg',
+                'data_omitted': True,
+                'size_bytes': 0,
+            }
 
         # Use saveByteArray for in-memory JPEG capture
         img_bytes = target.saveByteArray('.jpg', quality=quality)

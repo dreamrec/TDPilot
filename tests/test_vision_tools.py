@@ -13,7 +13,14 @@ keep working whether tools live in the root or in a submodule.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+
+import td_mcp.tool_registry as _registry
+from td_mcp.registry import tools_vision
 
 _SRC_ROOT = Path(__file__).resolve().parents[1] / "src" / "td_mcp"
 REGISTRY_PATH = _SRC_ROOT / "tool_registry.py"
@@ -115,3 +122,56 @@ def test_analyze_frame_input_has_required_fields():
     class_body = source[start:end]
     for field in ("path", "modes", "roi", "reference_path"):
         assert field in class_body, f"AnalyzeFrameInput missing field: {field}"
+
+
+class _RecordingClient:
+    def __init__(self):
+        self.calls: list[tuple[str, dict]] = []
+
+    async def request(self, endpoint, body):
+        self.calls.append((endpoint, body))
+        if endpoint == "screenshot":
+            payload = {
+                "success": True,
+                "path": body["path"],
+                "width": 320,
+                "height": 180,
+                "format": "jpeg",
+                "size_bytes": 0 if body.get("include_data") is False else 4,
+            }
+            if body.get("include_data") is not False:
+                payload["data_base64"] = "ZmFrZQ=="
+            else:
+                payload["data_omitted"] = True
+            return payload
+        if endpoint == "analyze_frame":
+            return {"success": True, "path": body["path"], "modes": body["modes"]}
+        raise AssertionError(endpoint)
+
+
+@pytest.mark.asyncio
+async def test_capture_frame_omits_image_data_at_td_endpoint_by_default(monkeypatch):
+    client = _RecordingClient()
+    monkeypatch.setattr(_registry, "_get_client", lambda _ctx: client)
+    ctx = SimpleNamespace(request_context=SimpleNamespace(lifespan_context={}))
+
+    out = await tools_vision.td_capture_frame(ctx, path="/project1/out1")
+    payload = json.loads(out)
+
+    assert client.calls == [("screenshot", {"path": "/project1/out1", "quality": 0.8, "include_data": False})]
+    assert payload["success"] is True
+    assert payload["data_omitted"] is True
+    assert "data_base64" not in payload
+
+
+@pytest.mark.asyncio
+async def test_capture_frame_confirm_requests_image_data(monkeypatch):
+    client = _RecordingClient()
+    monkeypatch.setattr(_registry, "_get_client", lambda _ctx: client)
+    ctx = SimpleNamespace(request_context=SimpleNamespace(lifespan_context={}))
+
+    out = await tools_vision.td_capture_frame(ctx, path="/project1/out1", quality=0.6, confirm=True)
+    payload = json.loads(out)
+
+    assert client.calls == [("screenshot", {"path": "/project1/out1", "quality": 0.6, "include_data": True})]
+    assert payload["data_base64"] == "ZmFrZQ=="

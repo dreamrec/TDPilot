@@ -15,7 +15,18 @@ from types import SimpleNamespace
 import pytest
 
 import td_mcp.tool_registry as _registry
-from td_mcp.registry import tools_data, tools_notes, tools_optimizer, tools_safety, tools_state
+from td_mcp.memory import KnowledgeStore
+from td_mcp.registry import (
+    tools_data,
+    tools_events,
+    tools_info,
+    tools_knowledge_store,
+    tools_notes,
+    tools_optimizer,
+    tools_safety,
+    tools_state,
+    tools_system,
+)
 from td_mcp.safety.manager import SafetyManager
 from td_mcp.services import ServiceContainer
 
@@ -68,6 +79,33 @@ class _JobManager:
 class _Events:
     def get_recent_events(self, limit=200):
         return [{"timestamp": 10.0}, {"timestamp": 11.0}]
+
+
+class _EventManager:
+    def __init__(self):
+        self.subscriptions: list[tuple[str, str, dict]] = []
+        self.events = [
+            {"event_type": "node_error", "path": "/project1/bad", "message": "boom"},
+            {"event_type": "cook_complete", "path": "/project1/out1"},
+        ]
+
+    def register_subscription(self, path, event_type, body):
+        self.subscriptions.append((path, event_type, body))
+
+    def unregister_all_for_path(self, path):
+        before = len(self.subscriptions)
+        self.subscriptions = [row for row in self.subscriptions if row[0] != path]
+        return before - len(self.subscriptions)
+
+    def list_subscriptions(self):
+        return list(self.subscriptions)
+
+    def get_recent_events(self, event_type=None, limit=50):
+        rows = [row for row in self.events if event_type is None or row["event_type"] == event_type]
+        return rows[:limit]
+
+    def stats(self):
+        return {"subscriptions": len(self.subscriptions), "events": len(self.events)}
 
 
 # ── tools_data: thin _forward wrappers ───────────────────────────────
@@ -154,6 +192,108 @@ async def test_td_search_nodes_merges_legacy_and_exec_scopes(monkeypatch):
     assert [row["path"] for row in payload["results"]] == ["/p/name", "/p/dat", "/p/expr"]
     assert payload["scopes_searched"] == ["name", "dat_text", "param_exprs"]
     assert payload["scopes_with_errors"] == {}
+
+
+# ── tools_events/info/system/knowledge_store: remaining thin wrappers ──
+
+
+@pytest.mark.asyncio
+async def test_event_wrappers_provision_and_read_recent_events(monkeypatch):
+    client = _RecClient(
+        {
+            "monitor/subscribe": {"success": True, "td_subscription_id": "sub-1"},
+            "monitor/unsubscribe": {"success": True},
+        }
+    )
+    manager = _EventManager()
+    _use_client(monkeypatch, client)
+    monkeypatch.setattr(_registry, "_get_event_manager", lambda _ctx: manager)
+    ctx = _ctx()
+
+    subscribed = json.loads(
+        await tools_events.td_subscribe(
+            ctx, path="/project1/out1", event_types=["node_error"], rate_limit=0.05
+        )
+    )
+    recent = json.loads(await tools_events.td_get_events(ctx, event_type="node_error", limit=5))
+    unsubscribed = json.loads(await tools_events.td_unsubscribe(ctx, path="/project1/out1"))
+
+    assert subscribed["success"] is True
+    assert subscribed["active_subscriptions"] == 1
+    assert client.calls[0] == (
+        "monitor/subscribe",
+        {"path": "/project1/out1", "event_types": ["node_error"], "rate_limit": 0.05},
+    )
+    assert recent["count"] == 1
+    assert recent["events"][0]["message"] == "boom"
+    assert unsubscribed["success"] is True
+    assert client.calls[-1] == ("monitor/unsubscribe", {"path": "/project1/out1"})
+
+
+@pytest.mark.asyncio
+async def test_get_capabilities_reports_live_component_mismatch(monkeypatch):
+    client = _RecClient({"info": {"mcp_component_version": "2.0.1"}})
+    _use_client(monkeypatch, client)
+    monkeypatch.setattr(
+        tools_info,
+        "detect_capabilities",
+        lambda _ctx, td_build="": SimpleNamespace(
+            to_dict=lambda: {"supports_sampling": False, "td_build": td_build}
+        ),
+    )
+
+    out = await tools_info.td_get_capabilities(_ctx())
+    payload = json.loads(out)
+
+    assert payload["version"]["component_version"] == "2.0.1"
+    assert payload["version"]["mismatch"] is True
+    assert payload["client_capabilities"]["supports_sampling"] is False
+
+
+@pytest.mark.asyncio
+async def test_system_exec_wrapper_parses_json_result(monkeypatch):
+    client = _RecClient({"exec": {"success": True, "result": '{"python_version": "3.12", "paths": []}'}})
+    _use_client(monkeypatch, client)
+    monkeypatch.setattr(_registry, "_check_exec_not_off", lambda: None)
+    monkeypatch.setattr(_registry, "_check_exec_mode_at_least", lambda _mode, _tool: None)
+
+    payload = await tools_system.td_python_env_status(_ctx())
+
+    assert payload["python_version"] == "3.12"
+    assert client.calls[0][0] == "exec"
+    assert client.calls[0][1]["exec_mode"] == "full"
+
+
+@pytest.mark.asyncio
+async def test_knowledge_store_wrappers_round_trip(monkeypatch, tmp_path):
+    store = KnowledgeStore(base_dir=str(tmp_path), project_name="show")
+    monkeypatch.setattr(_registry, "_get_knowledge_store", lambda _ctx: store)
+    ctx = _ctx()
+
+    saved = json.loads(
+        await tools_knowledge_store.td_knowledge_save(
+            ctx,
+            body="# Feedback\nUse a level TOP.",
+            name="Feedback note",
+            description="feedback recipe",
+            tags=["Feedback"],
+            scope="project",
+        )
+    )
+    recalled = json.loads(
+        await tools_knowledge_store.td_knowledge_recall(ctx, query="feedback", scope="project")
+    )
+    fetched = json.loads(
+        await tools_knowledge_store.td_knowledge_get(ctx, entry_id=saved["id"], scope="project")
+    )
+    listed = json.loads(
+        await tools_knowledge_store.td_knowledge_list(ctx, scope="project", tags=["feedback"])
+    )
+
+    assert saved["success"] is True
+    assert recalled["count"] == 1
+    assert fetched["entry"]["body"].startswith("# Feedback")
+    assert listed["results"][0]["name"] == "Feedback note"
 
 
 # ── tools_state: timescale + locations ───────────────────────────────

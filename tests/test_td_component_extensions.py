@@ -242,9 +242,14 @@ class _FakeTOP:
         self.height = h
         self._channels = channels
         self._fill = fill
+        self.save_byte_array_calls = 0
 
     def numpyArray(self):
         return _np.full((self.height, self.width, self._channels), self._fill, dtype=_np.float32)
+
+    def saveByteArray(self, suffix, quality=0.5):
+        self.save_byte_array_calls += 1
+        return bytearray(b"fake-jpeg")
 
 
 class _FakeNotTOP:
@@ -270,6 +275,36 @@ def test_handle_analyze_frame_registered_in_route_table():
         "'/api/analyze_frame' not found in route table"
     )
     assert "handle_analyze_frame" in source
+
+
+def test_handle_screenshot_can_return_metadata_without_image_data():
+    module = _load_callbacks_module()
+    top = _FakeTOP(w=8, h=4)
+    module.op = lambda path: top if path == top.path else None
+
+    result = module.handle_screenshot({"path": top.path, "quality": 0.4, "include_data": False})
+
+    assert result["success"] is True
+    assert result["path"] == top.path
+    assert result["width"] == 8
+    assert result["height"] == 4
+    assert result["format"] == "jpeg"
+    assert result["data_omitted"] is True
+    assert "data_base64" not in result
+    assert top.save_byte_array_calls == 0
+
+
+def test_handle_screenshot_includes_image_data_by_default():
+    module = _load_callbacks_module()
+    top = _FakeTOP(w=8, h=4)
+    module.op = lambda path: top if path == top.path else None
+
+    result = module.handle_screenshot({"path": top.path, "quality": 0.4})
+
+    assert result["success"] is True
+    assert result["data_base64"]
+    assert result["size_bytes"] == len(b"fake-jpeg")
+    assert top.save_byte_array_calls == 1
 
 
 def test_handle_analyze_frame_missing_path():

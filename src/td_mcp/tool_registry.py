@@ -2302,6 +2302,7 @@ from td_mcp.registry.tools_memory import (  # noqa: E402
 from td_mcp.registry.tools_meta import (  # noqa: E402
     td_get_activity_log,
     td_self_update,
+    td_sync_status,
 )
 from td_mcp.registry.tools_notes import (  # noqa: E402
     td_component_notes,

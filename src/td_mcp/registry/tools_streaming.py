@@ -23,7 +23,6 @@ from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
 from td_mcp import tool_registry as _tr  # noqa: E402
-from td_mcp.capabilities import detect_capabilities
 from td_mcp.errors import format_tool_error
 from td_mcp.events.uri import top_frame_uri
 from td_mcp.tool_registry import TD_STREAM_MAX_FPS, mcp  # noqa: E402
@@ -76,28 +75,42 @@ async def td_capture_and_analyze(
         if not confirm_image_capture:
             return _tr._capture_confirmation_required_response()
 
-        screenshot = await _tr._get_client(ctx).request(
+        client = _tr._get_client(ctx)
+        screenshot = await client.request(
             "screenshot",
             {
                 "path": path,
                 "quality": quality,
+                "include_data": True,
             },
         )
 
-        capabilities = detect_capabilities(ctx)
         analysis = None
 
         if analyze:
-            if capabilities.supports_sampling:
+            modes = ["histogram", "luminance", "alpha_coverage"]
+            try:
+                result = await client.request(
+                    "analyze_frame",
+                    {
+                        "path": path,
+                        "modes": modes,
+                    },
+                )
                 analysis = {
-                    "status": "not_implemented",
-                    "message": "Sampling capability detected but this runtime does not expose a sampling API.",
+                    "status": "ok",
+                    "endpoint": "analyze_frame",
+                    "modes": modes,
                     "prompt": analysis_prompt,
+                    "result": result,
                 }
-            else:
+            except Exception as exc:
                 analysis = {
-                    "status": "unsupported",
-                    "message": "Client sampling capability not available.",
+                    "status": "error",
+                    "endpoint": "analyze_frame",
+                    "modes": modes,
+                    "prompt": analysis_prompt,
+                    "error": str(exc),
                 }
 
         payload = {

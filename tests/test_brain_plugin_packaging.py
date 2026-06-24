@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from td_mcp.brain.plugin_surface import audit_plugin_surface
+from td_mcp.release_gates import EXPECTED_MIN_TOOL_COUNT
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -62,8 +63,8 @@ def test_plugin_surface_audit_proves_codex_claude_and_package_mirrors():
     assert report["brain_skill_count"] == 5
     assert report["agent_count"] == 4
     assert report["hook_count"] >= 1
-    assert report["tool_count"] == 110
-    assert report["registry_tool_count"] == 110
+    assert report["tool_count"] == EXPECTED_MIN_TOOL_COUNT
+    assert report["registry_tool_count"] == EXPECTED_MIN_TOOL_COUNT
     assert report["registry_tool_count"] == report["tool_count"]
     assert report["local_first"]["ok"] is True
     assert report["local_first"]["hosted_llm_dependency_leaks"] == []
@@ -155,7 +156,7 @@ def test_audit_plugin_surface_cli_outputs_json_report():
 
     payload = json.loads(proc.stdout)
     assert payload["ok"] is True
-    assert payload["tool_count"] == 110
+    assert payload["tool_count"] == EXPECTED_MIN_TOOL_COUNT
 
 
 def test_mcpb_manifest_uses_current_brain_tool_count_and_positioning():

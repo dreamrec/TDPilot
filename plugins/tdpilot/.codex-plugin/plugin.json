@@ -1,7 +1,7 @@
 {
   "name": "tdpilot",
   "version": "2.0.2",
-  "description": "TDPilot for Codex: TouchDesigner MCP control with 110 tools, a 656-card reviewed operator atlas with zero-concept backlog, Official Derivative grounded BrainPlans, transactions, diagnostics, and optional cockpit UI.",
+  "description": "TDPilot for Codex: TouchDesigner MCP control with 111 tools, a 656-card reviewed operator atlas with zero-concept backlog, Official Derivative grounded BrainPlans, transactions, diagnostics, optional cockpit UI, and sync-status checks.",
   "author": {
     "name": "dreamrec",
     "email": "dreamrec@users.noreply.github.com",

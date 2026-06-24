@@ -571,7 +571,7 @@ def _complete_brain_live_smoke_payload() -> dict:
 def _complete_plugin_surface_payload() -> dict:
     return {
         "ok": True,
-        "tool_count": 110,
+        "tool_count": 111,
         "brain_skill_count": 5,
         "agent_count": 4,
         "hook_count": 2,
@@ -2297,7 +2297,7 @@ def test_evaluate_fails_when_brain_live_smoke_has_uncontrolled_expensive_probe()
 def test_evaluate_passes_with_valid_plugin_surface_payload():
     plugin_surface = {
         "ok": True,
-        "tool_count": 110,
+        "tool_count": 111,
         "brain_skill_count": 5,
         "agent_count": 4,
         "hook_count": 2,
@@ -2351,7 +2351,7 @@ def test_evaluate_fails_when_plugin_surface_has_hosted_llm_dependency_leaks():
 def test_evaluate_fails_when_plugin_surface_packaging_is_incomplete():
     plugin_surface = {
         "ok": False,
-        "tool_count": 110,
+        "tool_count": 111,
         "brain_skill_count": 5,
         "agent_count": 4,
         "hook_count": 2,

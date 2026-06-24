@@ -2882,6 +2882,18 @@
       "path"
     ]
   },
+  "td_sync_status": {
+    "description_present": true,
+    "properties": {
+      "check_remote": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
   "td_tdresources_inspect": {
     "description_present": true,
     "properties": {

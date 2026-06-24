@@ -3,7 +3,7 @@
   "name": "tdpilot",
   "displayName": "TDPilot",
   "version": "2.0.2",
-  "description": "TDPilot - AI copilot for TouchDesigner. 110 MCP tools, a 656-card reviewed operator atlas with zero-concept backlog, Official Derivative grounded BrainPlans, transactional validation, and optional cockpit UI.",
+  "description": "TDPilot - AI copilot for TouchDesigner. 111 MCP tools, a 656-card reviewed operator atlas with zero-concept backlog, Official Derivative grounded BrainPlans, transactional validation, optional cockpit UI, and sync-status checks.",
   "author": {
     "name": "silviu"
   },

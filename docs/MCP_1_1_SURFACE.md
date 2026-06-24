@@ -1,7 +1,7 @@
 # TDPilot 1.1 Surface Guide
 
 > **Historical (v1.1).** This guide describes the tool surface as of v1.1 (the
-> 60 → 63 tool growth below). The current release is v2.0.1 with **110 tools** —
+> 60 → 63 tool growth below). The current release is v2.0.2 with **111 tools** —
 > see `README.md` and `docs/API_REFERENCE.md` for the up-to-date surface. Kept
 > for historical reference.
 

@@ -18,6 +18,10 @@ Part of the v1.6.16 surface (tool count 104 → 106).
 
 from __future__ import annotations
 
+import importlib.util
+import json
+import urllib.request
+from pathlib import Path
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
@@ -27,6 +31,146 @@ from pydantic import Field
 from td_mcp import tool_registry as _tr  # noqa: E402
 from td_mcp.errors import format_tool_error
 from td_mcp.tool_registry import mcp  # noqa: E402
+
+
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[3]
+
+
+def _expected_github_description(*, version: str, tool_count: int) -> str:
+    return (
+        f"TDPilot v{version} — TouchDesigner AI assistant ({tool_count} MCP tools, "
+        "correctness-first brain: plan -> execute -> validate -> rollback, "
+        "656 operator cards, read-only cockpit UI)"
+    )
+
+
+def _fetch_json(url: str) -> dict[str, Any]:
+    req = urllib.request.Request(url, headers={"User-Agent": "tdpilot-sync-status"})
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        payload = resp.read()
+    data = json.loads(payload)
+    return data if isinstance(data, dict) else {}
+
+
+def _tox_freshness_status() -> dict[str, Any]:
+    script = _repo_root() / "scripts" / "check_tox_freshness.py"
+    try:
+        spec = importlib.util.spec_from_file_location("tdpilot_check_tox_freshness", script)
+        if spec is None or spec.loader is None:
+            raise RuntimeError(f"could not load {script}")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        ok, messages = module.check_freshness(_repo_root())
+        return {"fresh": bool(ok), "messages": list(messages)}
+    except Exception as exc:
+        return {"fresh": False, "error": str(exc), "messages": []}
+
+
+def _plugin_cache_versions() -> list[dict[str, Any]]:
+    from td_mcp import __version__ as server_version
+
+    home = Path.home()
+    roots = [
+        ("claude", home / ".claude" / "plugins" / "cache" / "dreamrec-TDPilot" / "tdpilot"),
+        ("codex", home / ".codex" / "plugins" / "cache" / "tdpilot-local" / "tdpilot"),
+    ]
+    rows: list[dict[str, Any]] = []
+    for name, root in roots:
+        versions: list[str] = []
+        if root.is_dir():
+            versions = sorted(path.name for path in root.iterdir() if path.is_dir())
+        rows.append(
+            {
+                "name": name,
+                "path": str(root),
+                "versions": versions,
+                "contains_server_version": server_version in versions,
+            }
+        )
+    return rows
+
+
+def _remote_release_status() -> dict[str, Any]:
+    from td_mcp import __version__ as server_version
+    from td_mcp import self_updater
+
+    status: dict[str, Any] = {"installed": server_version}
+    github = self_updater.run(check_only=True)
+    if "error" in github:
+        status["github_error"] = github["error"]
+    else:
+        status["github_latest"] = github.get("latest")
+        status["github_release_url"] = github.get("release_url")
+        status["newer_available"] = github.get("newer_available", False)
+
+    try:
+        npm = _fetch_json("https://registry.npmjs.org/tdpilot/latest")
+        status["npm_latest"] = npm.get("version")
+    except Exception as exc:
+        status["npm_error"] = str(exc)
+
+    return status
+
+
+def _github_repo_description_status() -> dict[str, Any]:
+    from td_mcp import __version__ as server_version
+    from td_mcp.release_gates import EXPECTED_MIN_TOOL_COUNT
+
+    expected = _expected_github_description(version=server_version, tool_count=EXPECTED_MIN_TOOL_COUNT)
+    try:
+        repo = _fetch_json("https://api.github.com/repos/dreamrec/TDPilot")
+    except Exception as exc:
+        return {"expected": expected, "error": str(exc), "matches": None}
+
+    description = str(repo.get("description") or "")
+    return {
+        "description": description,
+        "expected": expected,
+        "matches": description == expected,
+        "html_url": repo.get("html_url"),
+    }
+
+
+async def _live_component_status(ctx: Context) -> dict[str, Any]:
+    from td_mcp import __version__ as server_version
+
+    status: dict[str, Any] = {
+        "reachable": False,
+        "component_version": None,
+        "matches_server": None,
+    }
+    try:
+        client = _tr._get_client(ctx)
+    except Exception as exc:
+        status["error"] = str(exc)
+        return status
+
+    last_error = ""
+    for endpoint in ("health", "info"):
+        try:
+            payload = await client.request(endpoint)
+        except Exception as exc:
+            last_error = str(exc)
+            continue
+        if not isinstance(payload, dict):
+            continue
+        status["reachable"] = True
+        status["source_endpoint"] = endpoint
+        status["raw_status"] = payload.get("status")
+        component_version = (
+            payload.get("mcp_component_version")
+            or payload.get("api_version")
+            or payload.get("component_version")
+        )
+        if component_version:
+            status["component_version"] = str(component_version)
+            status["matches_server"] = str(component_version) == server_version
+            return status
+
+    if last_error:
+        status["error"] = last_error
+    return status
 
 
 @mcp.tool(name="td_get_activity_log")
@@ -111,6 +255,71 @@ async def td_self_update(
         return _tr._as_json_output(result)
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_self_update")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_sync_status")
+async def td_sync_status(
+    ctx: Context,
+    check_remote: Annotated[
+        bool,
+        Field(
+            default=True,
+            description="If true, also check GitHub release, npm latest, and GitHub repository description.",
+        ),
+    ] = True,
+) -> str:
+    """Report whether the local server, TD component, packages, and public surfaces are in sync."""
+    finish = _tr._start_tool(ctx, "td_sync_status")
+    try:
+        from td_mcp import __version__ as server_version
+        from td_mcp.release_gates import EXPECTED_MIN_TOOL_COUNT
+
+        touchdesigner = await _live_component_status(ctx)
+        tox = _tox_freshness_status()
+        plugin_caches = _plugin_cache_versions()
+        remote = _remote_release_status() if check_remote else {"skipped": True}
+        github_repo = _github_repo_description_status() if check_remote else {"skipped": True}
+
+        recommendations: list[str] = []
+        if touchdesigner.get("matches_server") is False:
+            recommendations.append("Reload/export the bundled td_component/tdpilot.tox in TouchDesigner.")
+        if not tox.get("fresh"):
+            recommendations.append("Rebuild td_component/tdpilot.tox before publishing this source change.")
+        if any(row.get("versions") and not row.get("contains_server_version") for row in plugin_caches):
+            recommendations.append(
+                "Refresh local Claude/Codex plugin caches so they include the server version."
+            )
+        if remote.get("github_latest") and remote.get("github_latest") != server_version:
+            recommendations.append("Install or release-sync to the latest GitHub version.")
+        if remote.get("npm_latest") and remote.get("npm_latest") != server_version:
+            recommendations.append("Publish or install the matching npm package version.")
+        if github_repo.get("matches") is False:
+            recommendations.append(
+                "Update the GitHub repository description to match the current public version/tool count."
+            )
+
+        overall = "ok" if not recommendations else "warning"
+        payload = {
+            "schema_version": 1,
+            "success": True,
+            "overall": overall,
+            "server": {
+                "version": server_version,
+                "expected_min_tool_count": EXPECTED_MIN_TOOL_COUNT,
+            },
+            "touchdesigner": touchdesigner,
+            "tox": tox,
+            "plugin_caches": plugin_caches,
+            "remote": remote,
+            "github_repo": github_repo,
+            "recommendations": recommendations,
+        }
+        return _tr._as_json_output(payload)
+    except Exception as exc:
+        _tr._record_tool_error(ctx, "td_sync_status")
         return format_tool_error(exc)
     finally:
         finish()

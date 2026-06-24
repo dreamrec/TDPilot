@@ -87,7 +87,7 @@ class TopStreamer:
             try:
                 screenshot = await self._td_client.request(
                     "screenshot",
-                    {"path": path, "quality": quality},
+                    {"path": path, "quality": quality, "include_data": include_image},
                 )
                 frame_hash = self._frame_hash(screenshot)
 

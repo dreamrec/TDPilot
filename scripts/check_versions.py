@@ -31,11 +31,11 @@ def pyproject_version() -> str:
     return match.group(1)
 
 
-def check_line(path: Path, pattern: str, expected: str, label: str) -> str | None:
+def check_line(path: Path, pattern: str, expected: str, label: str, *, flags: int = 0) -> str | None:
     if not path.exists():
         return f"{label}: missing file {path}"
     text = path.read_text()
-    match = re.search(pattern, text)
+    match = re.search(pattern, text, flags)
     if not match:
         return f"{label}: pattern not found in {path.relative_to(ROOT)}"
     actual = match.group(1)
@@ -91,6 +91,18 @@ def main() -> int:
         # from the package version, introduce a separate TD_PROTOCOL_VERSION
         # constant rather than re-decoupling this one.
         check_line(
+            ROOT / "README.md",
+            r"# TDPilot Runtime v([0-9]+\.[0-9]+\.[0-9]+)",
+            expected,
+            "README.md title",
+        ),
+        check_line(
+            ROOT / "README.md",
+            r"## What's New In ([0-9]+\.[0-9]+\.[0-9]+)",
+            expected,
+            "README.md What's New",
+        ),
+        check_line(
             ROOT / "td_component" / "mcp_webserver_callbacks.py",
             r'API_VERSION\s*=\s*"([^"]+)"',
             expected,
@@ -131,6 +143,34 @@ def main() -> int:
             r"TDPilot Production v([0-9]+\.[0-9]+\.[0-9]+)",
             expected,
             "skills/tdpilot-production/SKILL.md",
+        ),
+        check_line(
+            ROOT / "skills" / "tdpilot-core" / "SKILL.md",
+            r"description:\s*>\s*.*?TDPilot v([0-9]+\.[0-9]+\.[0-9]+)",
+            expected,
+            "skills/tdpilot-core/SKILL.md frontmatter",
+            flags=re.DOTALL,
+        ),
+        check_line(
+            ROOT / "skills" / "tdpilot-production" / "SKILL.md",
+            r"description:\s*>\s*.*?TDPilot v([0-9]+\.[0-9]+\.[0-9]+)",
+            expected,
+            "skills/tdpilot-production/SKILL.md frontmatter",
+            flags=re.DOTALL,
+        ),
+        check_line(
+            ROOT / "plugins" / "tdpilot" / "skills" / "tdpilot-core" / "SKILL.md",
+            r"description:\s*>\s*.*?TDPilot v([0-9]+\.[0-9]+\.[0-9]+)",
+            expected,
+            "plugins/tdpilot/skills/tdpilot-core/SKILL.md frontmatter",
+            flags=re.DOTALL,
+        ),
+        check_line(
+            ROOT / "plugins" / "tdpilot" / "skills" / "tdpilot-production" / "SKILL.md",
+            r"description:\s*>\s*.*?TDPilot v([0-9]+\.[0-9]+\.[0-9]+)",
+            expected,
+            "plugins/tdpilot/skills/tdpilot-production/SKILL.md frontmatter",
+            flags=re.DOTALL,
         ),
     ]
 

@@ -63,7 +63,7 @@ class VisualMonitor:
             try:
                 screenshot = await self._td_client.request(
                     "screenshot",
-                    {"path": path, "quality": quality},
+                    {"path": path, "quality": quality, "include_data": include_image},
                 )
                 payload = {
                     "frame_schema_version": 1,

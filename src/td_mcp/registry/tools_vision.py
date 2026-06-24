@@ -57,7 +57,7 @@ async def td_capture_frame(
         client = _tr._get_client(ctx)
         data = await client.request(
             "screenshot",
-            {"path": path, "quality": quality},
+            {"path": path, "quality": quality, "include_data": bool(confirm)},
         )
         if isinstance(data, dict) and data.get("success"):
             result: dict[str, Any] = {

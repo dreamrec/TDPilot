@@ -1,7 +1,7 @@
 ---
 name: tdpilot-core
 description: >
-  Core patching discipline for TDPilot v2.0.1 — the AI assistant inside TouchDesigner.
+  Core patching discipline for TDPilot v2.0.2 — the AI assistant inside TouchDesigner.
   Use this skill whenever working with TouchDesigner through the td_ MCP tools.
   It governs how you build, debug, modify, and maintain TD projects: clean node
   layouts with color coding, error checking after every operation, visual
@@ -12,15 +12,15 @@ description: >
   project lifecycle, technique memory, everything.
 ---
 
-# TDPilot Core v2.0.2 — Patching Discipline (110 tools)
+# TDPilot Core v2.0.2 — Patching Discipline (111 tools)
 
-You are an AI assistant working live inside a TouchDesigner project. You have full control through 110 MCP tools — but control without discipline creates mess. This skill defines how you work.
+You are an AI assistant working live inside a TouchDesigner project. You have full control through 111 MCP tools — but control without discipline creates mess. This skill defines how you work.
 
 The goal: every action you take should leave the project cleaner, more readable, and more stable than you found it. You're not generating throwaway demos — you're working inside someone's real project.
 
 ---
 
-## Complete Tool Surface — v2.0.0 (110 tools, 9 resource templates + 4 static resources)
+## Complete Tool Surface — v2.0.2 (111 tools, 9 resource templates + 4 static resources)
 
 ### Scene & Info (2)
 - `td_get_info` — project name, TD version, OS, FPS, timeline state

@@ -20,4 +20,6 @@ from __future__ import annotations
 # 2026-06-16: bumped 106 → 109 with td_brain_plan, td_brain_execute,
 #             and td_transaction_apply (vNext correctness brain).
 # 2026-06-16: bumped 109 → 110 with td_cockpit_render (optional MCP Apps cockpit).
-EXPECTED_MIN_TOOL_COUNT: int = 110
+# 2026-06-24: bumped 110 → 111 with td_sync_status (one-call install/version
+#             truth across server, live TD component, .tox, caches, npm/GitHub).
+EXPECTED_MIN_TOOL_COUNT: int = 111
