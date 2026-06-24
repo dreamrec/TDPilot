@@ -23,6 +23,8 @@ if a future shipping brain re-uses that mode.
 
 from __future__ import annotations
 
+import hashlib
+import importlib.util
 import json
 import subprocess
 import sys
@@ -103,3 +105,37 @@ def test_list_command_shows_install_mode(tmp_path):
     # Either "download" appears near derivative
     assert "derivative" in combined
     assert "download" in combined.lower()
+
+
+def _load_downloader():
+    spec = importlib.util.spec_from_file_location("_download_brains_under_test", DOWNLOADER)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_verify_integrity_accepts_matching_sha256(tmp_path):
+    dl = _load_downloader()
+    dest = tmp_path / "brain.db"
+    dest.write_bytes(b"brain-payload")
+    digest = hashlib.sha256(b"brain-payload").hexdigest()
+    assert dl._verify_integrity(dest, {"name": "brain.db", "sha256": digest}) is True
+    assert dest.exists()
+
+
+def test_verify_integrity_rejects_and_deletes_on_mismatch(tmp_path):
+    dl = _load_downloader()
+    dest = tmp_path / "brain.db"
+    dest.write_bytes(b"tampered")
+    assert dl._verify_integrity(dest, {"name": "brain.db", "sha256": "0" * 64}) is False
+    # A file that fails integrity must be removed so it can't be trusted/reused.
+    assert not dest.exists()
+
+
+def test_verify_integrity_warns_but_allows_when_no_hash(tmp_path):
+    dl = _load_downloader()
+    dest = tmp_path / "brain.db"
+    dest.write_bytes(b"unverified")
+    # No sha256 in the manifest: allowed (back-compat) but the file remains.
+    assert dl._verify_integrity(dest, {"name": "brain.db"}) is True
+    assert dest.exists()

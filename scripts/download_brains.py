@@ -17,6 +17,7 @@ Manifest mode (used by installers):
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import logging
 import sys
@@ -185,6 +186,47 @@ def _download_file(file_id: str, dest: Path, size_mb: float) -> bool:
         return False
 
 
+def _sha256_of(path: Path) -> str:
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _verify_integrity(dest: Path, file_info: dict) -> bool:
+    """Enforce a manifest sha256 when present; warn loudly when it is absent.
+
+    Brain files are fetched from a Google Drive folder and their content is fed
+    to the model as doc text, so an unverified download is a supply-chain risk.
+    Returns False (and deletes the file) on hash mismatch.
+    """
+    expected = str(file_info.get("sha256") or "").strip().lower()
+    if not expected:
+        logger.warning(
+            "  %s downloaded WITHOUT integrity verification — no sha256 in the "
+            "manifest. Add a sha256 for this file so tampered/corrupt downloads "
+            "are rejected before the content reaches the model.",
+            dest.name,
+        )
+        return True
+    actual = _sha256_of(dest)
+    if actual != expected:
+        logger.error(
+            "  INTEGRITY FAILURE: %s sha256 %s != expected %s — deleting.",
+            dest.name,
+            actual,
+            expected,
+        )
+        try:
+            dest.unlink()
+        except OSError:
+            pass
+        return False
+    logger.info("  %s sha256 verified", dest.name)
+    return True
+
+
 def download_brain(brain_name: str, project_root: Path, brains_registry: dict | None = None) -> bool:
     """Download all files for a brain."""
     registry = brains_registry or BRAINS
@@ -203,16 +245,22 @@ def download_brain(brain_name: str, project_root: Path, brains_registry: dict | 
     for file_info in brain["files"]:
         dest = output_dir / file_info["name"]
 
-        # Skip if already exists and has reasonable size
+        # Skip if already exists and has reasonable size — but still verify its
+        # integrity so a tampered cached file isn't silently trusted.
         if dest.exists():
             existing_mb = dest.stat().st_size / 1024 / 1024
             expected_mb = file_info["size_mb"]
             if existing_mb >= expected_mb * 0.9:
                 logger.info("  %s already exists (%.1fMB), skipping", dest.name, existing_mb)
+                if not _verify_integrity(dest, file_info):
+                    all_ok = False
                 continue
 
         ok = _download_file(file_info["drive_id"], dest, file_info["size_mb"])
         if not ok:
+            all_ok = False
+            continue
+        if not _verify_integrity(dest, file_info):
             all_ok = False
 
     return all_ok

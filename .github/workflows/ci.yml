@@ -78,7 +78,16 @@ jobs:
         run: uv sync --extra dev --frozen
 
       - name: Run tests with coverage
-        run: uv run pytest tests/ -q --cov=src/td_mcp --cov-report=term --cov-report=xml
+        # -rs surfaces skip reasons so the ~36 atlas operator-coverage tests that
+        # skip when the DocsBrain corpus is absent are visible, not silent.
+        run: uv run pytest tests/ -q -rs --cov=src/td_mcp --cov-report=term --cov-report=xml
+
+      - name: Warn if DocsBrain corpus absent (atlas coverage not verified)
+        if: always()
+        run: |
+          if [ ! -f data/normalized/derivative/docsbrain.db ]; then
+            echo "::warning title=Atlas coverage not run::DocsBrain corpus absent (data/normalized/derivative/docsbrain.db) so the atlas operator-coverage tests SKIPPED; those assertions are NOT verified in this run. See tests/brain/test_atlas_coverage.py."
+          fi
 
       - name: Upload coverage report
         if: matrix.python-version == '3.12'
@@ -94,6 +103,12 @@ jobs:
         run: uv run tdpilot doctor --json --skip-td-check
 
       - name: Validate release-gate checker
+        # Smoke-tests that the checker parses + evaluates a bench report without
+        # crashing. NOT the real release gate: --require-complete demands the
+        # brain_eval / brain_smoke / brain_live_smoke / operator_availability /
+        # plugin_surface / param_semantics_risk reports, which only exist at
+        # release time against a live TouchDesigner (supplying only the synthetic
+        # bench fixture here would exit 2). The real gate runs at tag/release time.
         run: |
           cat > /tmp/bench.json <<'JSON'
           {
@@ -105,7 +120,7 @@ jobs:
             }
           }
           JSON
-          uv run python scripts/check_release_gates.py --bench-report /tmp/bench.json --require-complete
+          uv run python scripts/check_release_gates.py --bench-report /tmp/bench.json
 
       - name: Validate bundle integrity
         run: |
