@@ -44,6 +44,7 @@ from td_mcp.tool_registry import (
     TD_WS_PORT,
     _apply_safety_to_set_params,
     _enforce_exec_mode,
+    _heavy_cook_threshold_ms,
     _restricted_exec_violation,
     mcp,
 )
@@ -165,15 +166,40 @@ def _check_tcp_port(host: str, port: int, timeout: float) -> bool:
         return sock.connect_ex((host, port)) == 0
 
 
-async def _check_td_health(host: str, port: int, timeout: float) -> tuple[bool, str]:
+def _live_component_version(payload: dict[str, Any]) -> str:
+    raw = (
+        payload.get("mcp_component_version") or payload.get("api_version") or payload.get("component_version")
+    )
+    return str(raw or "").strip()
+
+
+def _component_version_mismatch_detail(live_version: str, status: str) -> str:
+    return (
+        f"health endpoint responded ({status}); live TDPilot API/component version "
+        f"{live_version} != server {__version__}. Reload the bundled "
+        f"td_component/{TOX_FILENAME} in TouchDesigner or re-export the component."
+    )
+
+
+async def _check_td_health(host: str, port: int, timeout: float) -> tuple[str, str]:
     client = TDClient(host=host, port=port, timeout=timeout, max_retries=0)
     try:
         payload = await client.health_check()
-        return True, f"health endpoint responded ({payload.get('status', 'ok')})"
+        status = str(payload.get("status", "ok") if isinstance(payload, dict) else "ok")
+        live_version = _live_component_version(payload) if isinstance(payload, dict) else ""
+        if not live_version:
+            try:
+                info = await client.request("info")
+            except Exception:
+                info = {}
+            live_version = _live_component_version(info) if isinstance(info, dict) else ""
+        if live_version and live_version != __version__:
+            return "warn", _component_version_mismatch_detail(live_version, status)
+        return "pass", f"health endpoint responded ({status})"
     except TouchDesignerConnectionError as exc:
-        return False, str(exc)
+        return "warn", str(exc)
     except Exception as exc:  # pragma: no cover - defensive
-        return False, str(exc)
+        return "warn", str(exc)
     finally:
         await client.close()
 
@@ -276,11 +302,11 @@ def _collect_doctor_report(*, timeout: float, skip_td_check: bool, strict: bool)
             }
         )
     else:
-        ok, detail = asyncio.run(_check_td_health(TD_HOST, int(TD_PORT), timeout))
+        health_status, detail = asyncio.run(_check_td_health(TD_HOST, int(TD_PORT), timeout))
         checks.append(
             {
                 "name": "td_health",
-                "status": "pass" if ok else "warn",
+                "status": health_status,
                 "detail": detail,
             }
         )
@@ -350,16 +376,20 @@ def _runtime_health_from_payloads(
     errors: dict[str, Any],
 ) -> dict[str, Any]:
     fps = float(cooking.get("fps", 0.0) or 0.0) if isinstance(cooking, dict) else 0.0
+    target_fps = float(cooking.get("target_fps", fps) or fps or 60.0) if isinstance(cooking, dict) else 60.0
     issues = errors.get("issues", []) if isinstance(errors, dict) else []
+    heavy_threshold_ms = _heavy_cook_threshold_ms(fps, target_fps=target_fps)
     heavy_nodes = [
         node
         for node in (cooking.get("nodes", []) if isinstance(cooking, dict) else [])
-        if isinstance(node, dict) and float(node.get("cookTime", 0.0) or 0.0) >= 0.01
+        if isinstance(node, dict) and float(node.get("cookTime", 0.0) or 0.0) >= heavy_threshold_ms
     ]
     return {
         "fps": fps,
+        "target_fps": target_fps,
+        "heavy_threshold_ms": round(heavy_threshold_ms, 3),
         "issues_count": len(issues),
-        "unstable": fps < 30.0 or bool(issues) or len(heavy_nodes) >= 5,
+        "unstable": (target_fps > 0 and fps < target_fps * 0.8) or bool(issues) or len(heavy_nodes) >= 5,
         "heavy_nodes_count": len(heavy_nodes),
         "heavy_nodes": heavy_nodes[:10],
     }

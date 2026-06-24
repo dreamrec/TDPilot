@@ -12,6 +12,7 @@ and ``td_get_node_detail(include_notes=True)``.
 
 from __future__ import annotations
 
+import json
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
@@ -24,21 +25,25 @@ from td_mcp.tool_registry import mcp  # noqa: E402
 
 
 def _embed_code(comp_path: str, body: str, tags: list[str]) -> str:
-    safe_path = comp_path.replace('"', '\\"')
-    safe_body = body.replace("\\", "\\\\").replace('"""', '\\"\\"\\"')
-    safe_tags = ", ".join(f'"{t}"' for t in tags)
-    return f'''
+    path_literal = json.dumps(comp_path)
+    body_literal = json.dumps(body)
+    tags_literal = json.dumps(list(tags or []))
+    return f"""
 def _safe(fn, d=None):
     try:
         return fn()
     except Exception:
         return d
 
-target = _safe(lambda: op("{safe_path}"))
+target_path = {path_literal}
+note_body = {body_literal}
+note_tags = {tags_literal}
+
+target = _safe(lambda: op(target_path))
 if target is None or not _safe(lambda: target.valid, False):
-    __result__ = {{"success": False, "error": "comp not found", "path": "{safe_path}"}}
+    __result__ = {{"success": False, "error": "comp not found", "path": target_path}}
 elif not _safe(lambda: target.isCOMP, False):
-    __result__ = {{"success": False, "error": "target is not a COMP", "path": "{safe_path}"}}
+    __result__ = {{"success": False, "error": "target is not a COMP", "path": target_path}}
 else:
     existing = _safe(lambda: target.op("tdpilot_notes"))
     if existing is None:
@@ -52,22 +57,21 @@ else:
         else:
             try:
                 dat.viewer = False
-                dat.text = """{safe_body}"""
-                __result__ = {{"success": True, "embedded_at": dat.path, "tags": [{safe_tags}]}}
+                dat.text = note_body
+                __result__ = {{"success": True, "embedded_at": dat.path, "tags": note_tags}}
             except Exception as e:
                 __result__ = {{"success": False, "error": "write failed: " + str(e)}}
     else:
         try:
-            existing.text = """{safe_body}"""
-            __result__ = {{"success": True, "embedded_at": existing.path, "tags": [{safe_tags}], "overwrote_existing": True}}
+            existing.text = note_body
+            __result__ = {{"success": True, "embedded_at": existing.path, "tags": note_tags, "overwrote_existing": True}}
         except Exception as e:
             __result__ = {{"success": False, "error": "overwrite failed: " + str(e)}}
-'''
+"""
 
 
 async def _embed_to_dat(ctx: Context, comp_path: str, body: str, tags: list[str]) -> dict[str, Any]:
-    body_escaped = body.replace("\\", "\\\\").replace('"""', "")
-    code = _embed_code(comp_path, body_escaped, tags or [])
+    code = _embed_code(comp_path, body, tags or [])
     payload = {"code": code, "exec_mode": _tr._current_exec_mode()}
     data = await _tr._get_client(ctx).request("exec", payload)
     if not isinstance(data, dict) or not data.get("success"):

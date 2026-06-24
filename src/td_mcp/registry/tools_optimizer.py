@@ -315,10 +315,23 @@ async def td_describe_dynamics(
                     ),
                 )
 
+                if isinstance(cooking, dict):
+                    fps_value = float(cooking.get("fps", 0.0) or 0.0)
+                    target_fps = float(cooking.get("target_fps", fps_value) or fps_value or 60.0)
+                    heavy_threshold_ms = _tr._heavy_cook_threshold_ms(
+                        fps_value,
+                        target_fps=target_fps,
+                    )
+                    cooking_nodes = cooking.get("nodes", [])
+                else:
+                    fps_value = 0.0
+                    heavy_threshold_ms = _tr._heavy_cook_threshold_ms(0.0)
+                    cooking_nodes = []
                 heavy_nodes = [
                     node
-                    for node in (cooking.get("nodes", []) if isinstance(cooking, dict) else [])
-                    if isinstance(node, dict) and float(node.get("cookTime", 0.0) or 0.0) >= 0.01
+                    for node in cooking_nodes
+                    if isinstance(node, dict)
+                    and float(node.get("cookTime", 0.0) or 0.0) >= heavy_threshold_ms
                 ]
                 issues = errors.get("issues", []) if isinstance(errors, dict) else []
                 recent_events = event_manager.get_recent_events(limit=200)
@@ -331,9 +344,10 @@ async def td_describe_dynamics(
                     if isinstance(timeline, dict)
                     else 0.0,
                     "playing": bool(timeline.get("playing", False)) if isinstance(timeline, dict) else False,
-                    "fps": float(cooking.get("fps", 0.0) or 0.0) if isinstance(cooking, dict) else 0.0,
+                    "fps": fps_value,
                     "issues_count": len(issues),
                     "heavy_nodes_count": len(heavy_nodes),
+                    "heavy_threshold_ms": round(heavy_threshold_ms, 3),
                     "event_rate": _tr._event_rate_per_sec(recent_events),
                 }
                 samples.append(sample)

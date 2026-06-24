@@ -2,6 +2,7 @@ import pytest
 
 from td_mcp.models import AdjustableParamInput, OptimizeVisualInput
 from td_mcp.tool_registry import (
+    _compute_instability_snapshot,
     _optimizer_direction_for_param,
     _optimizer_score,
 )
@@ -106,3 +107,23 @@ def test_optimize_visual_input_accepts_objective_weights():
         objective_weights={"stability": 0.8, "complexity": 0.2},
     )
     assert model.objective_weights == {"stability": 0.8, "complexity": 0.2}
+
+
+@pytest.mark.asyncio
+async def test_optimizer_instability_uses_millisecond_frame_budget_for_heavy_nodes():
+    class _Client:
+        async def request(self, endpoint, body=None):
+            if endpoint == "cooking":
+                return {
+                    "fps": 60.0,
+                    "target_fps": 60.0,
+                    "nodes": [{"path": f"/project1/op{i}", "cookTime": 0.02} for i in range(5)],
+                }
+            if endpoint == "node/errors":
+                return {"issues": []}
+            raise AssertionError(endpoint)
+
+    snapshot = await _compute_instability_snapshot(_Client(), "/project1")
+
+    assert snapshot["heavy_nodes_count"] == 0
+    assert snapshot["unstable"] is False

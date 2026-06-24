@@ -59,6 +59,33 @@ def test_collect_doctor_report_skip_td_check():
     assert checks["transport_config"]["status"] in {"pass", "fail"}
 
 
+def test_doctor_warns_on_live_component_version_mismatch(monkeypatch):
+    class _FakeTDClient:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        async def health_check(self):
+            return {"status": "ok", "api_version": "2.0.1"}
+
+        async def close(self):
+            pass
+
+    monkeypatch.setattr(server, "TDClient", _FakeTDClient)
+    monkeypatch.setattr(server, "_check_tcp_port", lambda *_args, **_kwargs: True)
+
+    report = server._collect_doctor_report(timeout=0.2, skip_td_check=False, strict=False)
+    checks = {item["name"]: item for item in report["checks"]}
+
+    assert checks["td_health"]["status"] == "warn"
+    assert "2.0.1" in checks["td_health"]["detail"]
+    assert server.__version__ in checks["td_health"]["detail"]
+    assert "td_component/tdpilot.tox" in checks["td_health"]["detail"]
+    assert report["summary"]["ok"] is True
+
+    strict = server._collect_doctor_report(timeout=0.2, skip_td_check=False, strict=True)
+    assert strict["summary"]["ok"] is False
+
+
 # ---------------------------------------------------------------------------
 # Doctor auth-config gate — regression for v1.4.3 plugin-install auth path.
 #
@@ -368,3 +395,17 @@ def test_runtime_health_from_payloads():
     assert health["fps"] == 25.0
     assert health["issues_count"] == 1
     assert health["unstable"] is True
+
+
+def test_runtime_health_uses_millisecond_frame_budget_for_heavy_nodes():
+    health = server._runtime_health_from_payloads(
+        cooking={
+            "fps": 60.0,
+            "target_fps": 60.0,
+            "nodes": [{"path": f"/project1/op{i}", "cookTime": 0.02} for i in range(5)],
+        },
+        errors={"issues": []},
+    )
+
+    assert health["heavy_nodes_count"] == 0
+    assert health["unstable"] is False

@@ -1370,6 +1370,12 @@ def _build_health_section(
     }
 
 
+def _heavy_cook_threshold_ms(fps: float, *, target_fps: float | None = None) -> float:
+    effective_target = float(target_fps or fps or 60.0) or 60.0
+    frame_budget_ms = 1000.0 / effective_target if effective_target > 0 else 16.67
+    return max(frame_budget_ms * 0.25, 1.0)
+
+
 def _compute_unstable_signal(
     fps: float,
     cooking_nodes: list,
@@ -1767,17 +1773,21 @@ async def _compute_instability_snapshot(client: TDClient, path: str) -> dict[str
     )
 
     fps = float(cooking.get("fps", 0.0) or 0.0) if isinstance(cooking, dict) else 0.0
+    target_fps = float(cooking.get("target_fps", fps) or fps or 60.0) if isinstance(cooking, dict) else 60.0
+    heavy_threshold_ms = _heavy_cook_threshold_ms(fps, target_fps=target_fps)
     issues = errors.get("issues", []) if isinstance(errors, dict) else []
     heavy_nodes = [
         node
         for node in (cooking.get("nodes", []) if isinstance(cooking, dict) else [])
-        if isinstance(node, dict) and float(node.get("cookTime", 0.0) or 0.0) >= 0.01
+        if isinstance(node, dict) and float(node.get("cookTime", 0.0) or 0.0) >= heavy_threshold_ms
     ]
-    unstable = fps < 30.0 or bool(issues) or len(heavy_nodes) >= 5
+    unstable = (target_fps > 0 and fps < target_fps * 0.8) or bool(issues) or len(heavy_nodes) >= 5
 
     return {
         "unstable": unstable,
         "fps": fps,
+        "target_fps": target_fps,
+        "heavy_threshold_ms": round(heavy_threshold_ms, 3),
         "issues_count": len(issues),
         "heavy_nodes_count": len(heavy_nodes),
         "heavy_nodes": heavy_nodes[:10],

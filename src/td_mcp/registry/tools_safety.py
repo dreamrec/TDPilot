@@ -178,7 +178,7 @@ async def td_detect_instability(
         critical_issues = [
             item for item in issues if isinstance(item, dict) and (item.get("errors") or "").strip()
         ]
-        heavy_threshold_ms = max(frame_budget_ms * 0.25, 1.0)
+        heavy_threshold_ms = _tr._heavy_cook_threshold_ms(fps, target_fps=target_fps)
         heavy_nodes = [
             node
             for node in all_cook_nodes
@@ -229,35 +229,50 @@ async def td_emergency_stabilize(
     finish = _tr._start_tool(ctx, "td_emergency_stabilize")
     try:
         client = _tr._get_client(ctx)
-        snapshots = _tr._get_snapshot_manager(ctx)
 
-        snapshot_payload = await _tr._capture_snapshot_payload(
-            ctx,
-            path=path,
-            include_visual=False,
-        )
-        saved = snapshots.add_snapshot(snapshot_payload, name="emergency_pre_stabilize")
-
-        actions = []
-        timeline = await client.request("timeline")
-        if timeline.get("playing"):
-            await client.request("timeline/set", {"action": "pause"})
-            actions.append("timeline_paused")
-
-        safety = _tr._get_safety_manager(ctx)
-        if safety.get_mode() != "clamp":
-            safety.set_mode("clamp")
-            actions.append("safety_mode_clamp")
-
-        payload = {
-            "success": True,
-            "path": path,
-            "actions": actions,
-            "snapshot": {
+        snapshot: dict[str, Any] | None = None
+        snapshot_warning: str | None = None
+        stabilization_errors: list[str] = []
+        try:
+            snapshots = _tr._get_snapshot_manager(ctx)
+            snapshot_payload = await _tr._capture_snapshot_payload(
+                ctx,
+                path=path,
+                include_visual=False,
+            )
+            saved = snapshots.add_snapshot(snapshot_payload, name="emergency_pre_stabilize")
+            snapshot = {
                 "snapshot_id": saved["snapshot_id"],
                 "name": saved["name"],
                 "timestamp": saved["timestamp"],
-            },
+            }
+        except Exception as exc:
+            snapshot_warning = str(exc)
+
+        actions = []
+        try:
+            timeline = await client.request("timeline")
+            if isinstance(timeline, dict) and timeline.get("playing"):
+                await client.request("timeline/set", {"action": "pause"})
+                actions.append("timeline_paused")
+        except Exception as exc:
+            stabilization_errors.append(f"timeline_pause_failed: {exc}")
+
+        try:
+            safety = _tr._get_safety_manager(ctx)
+            if safety.get_mode() != "clamp":
+                safety.set_mode("clamp")
+                actions.append("safety_mode_clamp")
+        except Exception as exc:
+            stabilization_errors.append(f"safety_mode_failed: {exc}")
+
+        payload = {
+            "success": (not stabilization_errors) or bool(actions) or snapshot is not None,
+            "path": path,
+            "actions": actions,
+            "snapshot": snapshot,
+            "snapshot_warning": snapshot_warning,
+            "stabilization_errors": stabilization_errors,
             "next": [
                 "Inspect td_detect_instability for current bottlenecks.",
                 "Restore from snapshot if needed with td_restore_snapshot.",
@@ -270,7 +285,9 @@ async def td_emergency_stabilize(
             {
                 "path": path,
                 "actions": actions,
-                "snapshot_id": saved["snapshot_id"],
+                "snapshot_id": snapshot["snapshot_id"] if snapshot else None,
+                "snapshot_warning": snapshot_warning,
+                "stabilization_errors": stabilization_errors,
             },
         )
         return _tr._as_json_output(payload)
