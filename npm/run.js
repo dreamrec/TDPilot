@@ -40,8 +40,9 @@ function pinToLatestTag(dir) {
   // of main. Without this, `npx tdpilot@1.5.1` would happily run whatever
   // bleeding-edge code is on main at fetch time — package.json's `version`
   // field would be decorative. With this, users get the latest published
-  // release. Falls back silently if no tags exist (offline / private fork
-  // / pre-release) since stay-on-main is a reasonable degraded mode.
+  // release. Falls back to main HEAD if no tags exist (offline / private fork
+  // / pre-release) — a degraded mode, so warn LOUDLY that the user is running
+  // unpinned, possibly-unreleased code rather than a tagged version.
   try {
     const latestTag = run("git describe --tags --abbrev=0", { cwd: dir });
     if (latestTag) {
@@ -50,7 +51,10 @@ function pinToLatestTag(dir) {
       return latestTag;
     }
   } catch {
-    console.warn("[TDPilot] No release tag found upstream; staying on main.");
+    console.error(
+      "[TDPilot] WARNING: no release tag found upstream — running UNPINNED main HEAD, " +
+        "which may be unreleased/in-flux code, not a tagged version."
+    );
   }
   return null;
 }
