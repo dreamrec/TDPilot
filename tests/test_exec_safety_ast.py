@@ -152,3 +152,37 @@ def test_enforce_standard_still_blocks_os_with_dangerous_module_label(monkeypatc
     # "import of: os" standard_violation message - both accurately convey
     # that os specifically isn't allowed in standard mode.
     assert "os" in msg
+
+
+def test_ast_blocks_injected_module_builtins_reflection():
+    # standard mode injects real stdlib modules; module.__builtins__ is the real
+    # builtins dict, so json.__builtins__["__import__"] reaches a shell. Block the
+    # __builtins__ attribute access (string-concat in the subscript can't help).
+    violations = exec_safety.ast_violations("real = json.__buil" + 'tins__["__import__"]')
+    assert any("__builtins__" in v for v in violations)
+
+
+def test_ast_blocks_function_globals_reflection():
+    violations = exec_safety.ast_violations("g = json.loads.__glob" + "als__")
+    assert any("__globals__" in v for v in violations)
+
+
+def test_ast_blocks_getattr_of_reflection_dunder_string():
+    # getattr is allowed in standard mode, so getattr(x, "__builtins__") must be
+    # caught even though "__builtins__" never appears as an attribute access.
+    violations = exec_safety.ast_violations(
+        'b = getattr(json, "__buil" + "tins__")'
+    ) or exec_safety.ast_violations('b = getattr(json, "__builtins__")')
+    assert any("__builtins__" in v for v in violations)
+
+
+def test_enforce_standard_blocks_module_builtins_escape(monkeypatch):
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "standard")
+    with pytest.raises(PermissionError):
+        exec_safety.enforce("x = json.__buil" + 'tins__["__import__"]("os")')
+
+
+def test_enforce_standard_allows_legit_allowlisted_stdlib(monkeypatch):
+    # The hardening must NOT break ordinary allowlisted-stdlib usage.
+    monkeypatch.setenv("TD_MCP_EXEC_MODE", "standard")
+    exec_safety.enforce('data = json.loads("{}")\n__result__ = math.sqrt(4)')

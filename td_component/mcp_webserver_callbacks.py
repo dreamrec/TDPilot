@@ -15,6 +15,7 @@ Compatible with TouchDesigner 2025.30000+
 """
 
 import base64
+import hmac
 import json
 import os
 import re
@@ -136,6 +137,10 @@ RESTRICTED_TOKENS = (
     '__bases__',
     '__mro__',
     '__class__',
+    '__builtins__',
+    '__globals__',
+    '__loader__',
+    '__spec__',
 )
 STANDARD_ALLOWED_IMPORTS = frozenset({
     'json', 'math', 're', 'datetime', 'collections',
@@ -167,6 +172,10 @@ STANDARD_BLOCKED_TOKENS = (
     '__mro__',
     'os.system',
     'os.popen',
+    '__builtins__',
+    '__globals__',
+    '__loader__',
+    '__spec__',
     _GLOBALS_PAREN,
     _LOCALS_PAREN,
 )
@@ -450,17 +459,17 @@ def _check_auth_error(request):
 
 
 def _constant_time_equals(a, b):
-    """Compare two strings without early-exit timing leaks."""
+    """Compare two secrets via the vetted constant-time primitive (hmac.compare_digest).
+
+    Prefer the stdlib primitive over a hand-rolled loop. Compare the UTF-8 bytes
+    so non-ASCII secrets don't raise (compare_digest rejects non-ASCII str).
+    """
     if not isinstance(a, str) or not isinstance(b, str):
         return False
-    if len(a) != len(b):
-        # Still do a dummy compare to avoid length-timing signal
-        _ = sum(ord(x) for x in a) ^ sum(ord(y) for y in b)
+    try:
+        return hmac.compare_digest(a.encode('utf-8'), b.encode('utf-8'))
+    except Exception:
         return False
-    result = 0
-    for x, y in zip(a, b):
-        result |= ord(x) ^ ord(y)
-    return result == 0
 
 
 def _send_json(response, data):
@@ -836,6 +845,15 @@ def handle_set_params(body):
 
             # Expression mode: {"param": {"expr": "absTime.seconds * 10"}}
             if isinstance(value, dict) and 'expr' in value:
+                _mode = _current_exec_mode()
+                _viol = _exec_policy_violation(_mode, value['expr'])
+                if _viol:
+                    results[name] = {
+                        'success': False,
+                        'mode': 'expression',
+                        'error': 'expression blocked by exec_mode=%s: %s' % (_mode, _viol),
+                    }
+                    continue
                 p.expr = value['expr']
                 results[name] = {
                     'success': True,
@@ -1140,6 +1158,14 @@ def handle_set_content(body):
 
     try:
         if text is not None:
+            _mode = _current_exec_mode()
+            _viol = _dat_content_violation(_mode, text)
+            if _viol:
+                return {
+                    'error': 'DAT content blocked by exec_mode=%s: %s' % (_mode, _viol),
+                    'type': 'PermissionError',
+                    'exec_mode': _mode,
+                }
             node.text = text
             return {'success': True, 'path': path, 'format': 'text', 'length': len(text)}
         elif table is not None:
@@ -1271,8 +1297,16 @@ def handle_custom_parameters(body):
 
 
 def _normalize_for_check(code):
-    """Lowercase and collapse whitespace before '(' to defeat bypass via 'open (' etc."""
-    return re.sub(r'\s+\(', '(', code.lower())
+    """Lowercase and collapse whitespace before '(' and '=' to defeat bypasses.
+
+    Collapsing before '(' defeats 'open (' / 'exec ('. Collapsing before '=' (any
+    run of spaces/tabs) defeats DAT-escape obfuscation like '.text  =' or
+    '.text\\t=' that would otherwise slip the '.text=' / '.text =' token check.
+    """
+    normalized = code.lower()
+    normalized = re.sub(r'\s+\(', '(', normalized)
+    normalized = re.sub(r'\s*=', '=', normalized)
+    return normalized
 
 
 def _restricted_exec_violation(code):
@@ -1320,8 +1354,49 @@ def _standard_exec_violation(code):
     return None
 
 
+def _exec_policy_violation(exec_mode, code):
+    """Policy check for code TD will EVALUATE (param expressions).
+
+    A parameter ``expr`` is arbitrary Python that TD runs every cook, so it must
+    honour the same exec-mode policy as handle_exec_python — otherwise
+    TD_MCP_EXEC_MODE=off/restricted is a false promise (you could install a live
+    expression that bypasses the sandbox). ``off`` blocks ALL expressions.
+    Returns a violation message, or None when allowed.
+    """
+    code = str(code or '')
+    if exec_mode == 'off':
+        return 'Python execution is disabled by TD_MCP_EXEC_MODE=off'
+    if exec_mode == 'restricted':
+        return _restricted_exec_violation(code)
+    if exec_mode == 'standard':
+        return _standard_exec_violation(code)
+    return None
+
+
+def _dat_content_violation(exec_mode, text):
+    """Policy check for DAT text writes.
+
+    DAT text can be imported as a module (``mod.<dat>``) or auto-run by an
+    execute-DAT, so a restricted/off session must refuse code-like content while
+    still allowing plain data (CSV/JSON/notes). We therefore apply the *content*
+    policy (block imports / dangerous tokens) rather than a blanket reject, so a
+    data table still writes but ``import os; os.system(...)`` does not.
+    Returns a violation message, or None when allowed.
+    """
+    text = str(text or '')
+    if exec_mode in ('off', 'restricted'):
+        return _restricted_exec_violation(text)
+    if exec_mode == 'standard':
+        return _standard_exec_violation(text)
+    return None
+
+
 def _build_exec_globals(exec_mode):
     import importlib as _importlib
+    # NOTE: `mod` is intentionally NOT in the base namespace. `mod.<dat>` imports
+    # a DAT's text as a Python module and runs it in the FULL interpreter, which
+    # is a sandbox escape in restricted/standard mode (write code into a DAT, then
+    # mod-import it). It is re-added only for full mode below.
     context = {
         'op': op,
         'ops': ops,
@@ -1330,7 +1405,6 @@ def _build_exec_globals(exec_mode):
         'absTime': absTime,
         'me': me,
         'parent': parent,
-        'mod': mod,
         'ui': ui,
         'tdu': tdu,
     }
@@ -1377,6 +1451,8 @@ def _build_exec_globals(exec_mode):
         context['__builtins__'] = safe_builtins
         return context
     if exec_mode != 'restricted':
+        # Full mode — no containment; restore DAT-module import for power users.
+        context['mod'] = mod
         return context
 
     # Restricted mode — even fewer builtins (no getattr/hasattr/type/isinstance)

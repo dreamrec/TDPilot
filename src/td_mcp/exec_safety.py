@@ -43,6 +43,10 @@ RESTRICTED_TOKENS: tuple[str, ...] = (
     "shutil",
     "os.system",
     "os.popen",
+    "__builtins__",
+    "__globals__",
+    "__loader__",
+    "__spec__",
 )
 
 STANDARD_ALLOWED_IMPORTS: frozenset[str] = frozenset(
@@ -91,6 +95,10 @@ STANDARD_BLOCKED_TOKENS: tuple[str, ...] = (
     "os.popen",
     "globals(",
     "locals(",
+    "__builtins__",
+    "__globals__",
+    "__loader__",
+    "__spec__",
 )
 
 
@@ -151,6 +159,15 @@ _DANGEROUS_MODULES = frozenset(
     {"os", "subprocess", "socket", "requests", "httpx", "urllib", "pathlib", "shutil", "ctypes"}
 )
 
+# Dunder attributes whose access is a sandbox-escape vector. ``__builtins__`` is
+# the one that defeats standard mode: an injected stdlib module object carries
+# the real builtins dict (``json.__builtins__["__import__"]``), and a function's
+# ``__globals__`` reaches the same. Any attribute access ending in one of these
+# is blocked regardless of the object it is read from.
+_BLOCKED_DUNDER_ATTRS = frozenset(
+    {"__subclasses__", "__bases__", "__mro__", "__globals__", "__builtins__", "__loader__", "__spec__"}
+)
+
 
 def _attr_chain(node):
     """Return the full dotted chain for an Attribute node, or None if not pure."""
@@ -204,6 +221,13 @@ def ast_violations(code: str):
                     # sandbox escape because it can resolve eval/exec dynamically.
                     if node.args and _refs_builtins(node.args[0]):
                         violations.append("call to getattr(__builtins__, ...) blocked")
+                    # Block getattr(x, "__builtins__") / getattr(x, "__globals__")
+                    # etc. — resolves a reflection dunder from any object as a
+                    # string, dodging the attribute-access rule below.
+                    elif len(node.args) >= 2 and isinstance(node.args[1], ast.Constant):
+                        attr_name = node.args[1].value
+                        if isinstance(attr_name, str) and attr_name in _BLOCKED_DUNDER_ATTRS:
+                            violations.append(f"getattr of reflection dunder blocked: {attr_name}")
             elif isinstance(node.func, ast.Attribute):
                 chain = _attr_chain(node.func)
                 if chain:
@@ -213,9 +237,9 @@ def ast_violations(code: str):
                             break
 
         elif isinstance(node, ast.Attribute):
-            # Detect attribute access like `thing.__class__.__subclasses__` that
-            # is the standard path to escape a restricted sandbox.
-            if node.attr in ("__subclasses__", "__bases__", "__mro__", "__globals__"):
+            # Detect attribute access like `thing.__class__.__subclasses__` or
+            # `json.__builtins__` that is the standard path to escape a sandbox.
+            if node.attr in _BLOCKED_DUNDER_ATTRS:
                 violations.append(f"dunder-reflection attr access blocked: {node.attr}")
 
         elif isinstance(node, ast.Subscript) and _refs_builtins(node.value):

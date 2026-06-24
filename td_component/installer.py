@@ -603,10 +603,20 @@ def _write_env_file_if_missing():
     ef = env_file()
     if os.path.isfile(ef):
         return False
+    import secrets
+
+    # Secure-by-default: auth REQUIRED with a freshly generated shared secret.
+    # Both the TD-side WebServer and the MCP client read this same file
+    # (~/.tdpilot/.tdpilot.env), so the one secret is shared with no drift —
+    # this is also what prevents the recurring 401s (one source of truth).
+    secret = secrets.token_urlsafe(32)
     os.makedirs(os.path.dirname(ef), exist_ok=True)
     with open(ef, "w", encoding="utf-8") as f:
         f.write("# TDPilot env file written by .tox installer\n")
-        f.write("TD_MCP_REQUIRE_AUTH=0\n")
+        f.write("# Shared by the TD WebServer AND the MCP client (single source).\n")
+        f.write("# To disable auth for trusted single-user local dev, set =0.\n")
+        f.write("TD_MCP_REQUIRE_AUTH=1\n")
+        f.write("TD_MCP_SHARED_SECRET=" + secret + "\n")
         f.write("TD_MCP_EXEC_MODE=restricted\n")
     os.chmod(ef, 0o600)
     return True

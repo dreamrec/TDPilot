@@ -1,13 +1,14 @@
-"""TDPilot autostart — disable auth, refresh installer state, tick panel.
+"""TDPilot autostart — ensure auth env, refresh installer state, tick panel.
 
 Self-sufficient: this runs from inside the dragged-in / loaded tdpilot
 COMP, so it does NOT depend on the launcher .toe's tdpilot_startup.py
 having executed. Drop the .tox into any project and you get a working
 panel without textport gymnastics.
 
-onStart()       fires once on project load. Permanently disables MCP
-                shared-secret auth (single-user local dev — see comment
-                in _disable_auth). Then refreshes installer state and
+onStart()       fires once on project load. Loads the shared auth env
+                file and provisions a secret when auth is required, so the
+                WebServer enforces the same secret the MCP client uses
+                (see _ensure_auth_env). Then refreshes installer state and
                 renders the panel's first frame.
 onFrameStart()  refreshes the panel once per second, polls the
                 installer's job state every frame to surface live
@@ -22,10 +23,65 @@ INSTALLER_REFRESH_EVERY_N_FRAMES = 60 * 60  # 1×/min — installer state change
 INSTALLER_PROGRESS_EVERY_N_FRAMES = 6  # 10Hz — show live progress during a job
 
 
-def _disable_auth():
-    """See comment in plan §8 risk #1 — bypass auth for single-user local mode."""
-    os.environ.pop("TD_MCP_SHARED_SECRET", None)
-    os.environ["TD_MCP_REQUIRE_AUTH"] = "0"
+def _ensure_auth_env():
+    """Make the WebServer enforce the SAME auth the MCP client uses — securely.
+
+    Self-sufficient (does NOT depend on the launcher .toe's tdpilot_startup):
+    loads ``~/.tdpilot/.tdpilot.env`` into os.environ without clobbering process
+    env, so REQUIRE_AUTH + SHARED_SECRET come from the one file both the TD-side
+    and the MCP client read. If auth is required (the secure default) and no
+    secret is resolvable, generate one and persist it to that same file so the
+    client picks up the identical value — this is what prevents 401 drift.
+
+    Replaces the old ``_disable_auth`` (v2.x and earlier forced
+    TD_MCP_REQUIRE_AUTH=0 on every load, leaving a default install accepting
+    unauthenticated requests on a LAN-reachable port). An explicit
+    ``TD_MCP_REQUIRE_AUTH=0`` in the env file is still honoured for trusted
+    single-user local dev, so existing opted-out setups are unaffected.
+    """
+    home = os.path.expanduser("~")
+    env_path = os.environ.get("TDPILOT_ENV_FILE") or os.path.join(home, ".tdpilot", ".tdpilot.env")
+    try:
+        with open(env_path, encoding="utf-8") as f:
+            lines = f.read().splitlines()
+    except OSError:
+        lines = []
+    for raw in lines:
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+            value = value[1:-1]
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+    require = os.environ.get("TD_MCP_REQUIRE_AUTH", "1").strip().lower()
+    if require in ("0", "false", "no", ""):
+        return  # legacy permissive mode, explicitly chosen — honour it
+    if (os.environ.get("TD_MCP_SHARED_SECRET") or "").strip():
+        return  # a shared secret is already resolvable
+
+    try:
+        import secrets
+
+        secret = secrets.token_urlsafe(32)
+        os.makedirs(os.path.dirname(env_path), exist_ok=True)
+        kept = [ln for ln in lines if not ln.strip().startswith("TD_MCP_SHARED_SECRET=")]
+        kept.append("TD_MCP_SHARED_SECRET=" + secret)
+        tmp = env_path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write("\n".join(kept) + "\n")
+        try:
+            os.chmod(tmp, 0o600)
+        except OSError:
+            pass
+        os.replace(tmp, env_path)
+        os.environ["TD_MCP_SHARED_SECRET"] = secret
+    except Exception as exc:
+        print("[TDPilot autostart] could not provision auth secret:", exc)
 
 
 def _tick():
@@ -244,7 +300,7 @@ def _save_toe_with_externaltox(installer, target):
 
 
 def onStart():
-    _disable_auth()
+    _ensure_auth_env()
     _bootstrap()
     _refresh_installer()
     _tick()
@@ -256,7 +312,7 @@ def onCreate():
     # user drags the .tox into an existing project (the canonical install
     # flow!), onStart never fires for this COMP — so _bootstrap() never
     # populates the state_cache and the panel reads None for version/build/
-    # tools/ws. Hooking _disable_auth + _bootstrap here makes the panel
+    # tools/ws. Hooking _ensure_auth_env + _bootstrap here makes the panel
     # populate correctly on drag-drop too. onCreate fires exactly once per
     # COMP instantiation regardless of trigger (loadTox, drag, scripted
     # create). Pre-existing v1.6.7+ regression — the panel-bug saga left
@@ -268,7 +324,7 @@ def onCreate():
     # first minute after drag, the panel honestly shows the stale default,
     # which users misread as "the panel is broken." Probe is cheap (file
     # existence + which() lookups), safe to run synchronously on COMP init.
-    _disable_auth()
+    _ensure_auth_env()
     _bootstrap()
     _refresh_installer()
 
