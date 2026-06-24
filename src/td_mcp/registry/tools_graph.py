@@ -333,14 +333,25 @@ async def td_set_params(
             default="warn",
             description=(
                 "Docs-grounded parameter safety policy for direct writes. "
-                "'warn' preserves normal direct-tool behavior with attached findings; "
-                "'block' refuses the write before mutation when parameter semantics "
-                "find invalid, unknown, or high-risk bindings."
+                "'warn' (default) preserves normal direct-tool behavior with attached "
+                "findings — the write PROCEEDS even on invalid enum / out-of-range / "
+                "bad op-reference; 'block' refuses the write before mutation when "
+                "parameter semantics find invalid, unknown, or high-risk bindings. "
+                "NOTE: this direct path is advisory by default. The brain/transaction "
+                "path (td_brain_plan → td_brain_execute) HARD-FAILS the same contract "
+                "violations. Pass 'block' here for equivalent strictness on direct writes."
             ),
         ),
     ] = "warn",
 ) -> str:
-    """Set node parameters (static values or live expressions)."""
+    """Set node parameters (static values or live expressions).
+
+    Parameter-semantics checks are advisory here by default (param_semantics_policy=
+    'warn'): findings are attached but the write proceeds, since some out-of-range
+    values are legitimate in TD (e.g. extending a soft UI range). Use
+    param_semantics_policy='block', or the brain/transaction path which gates
+    automatically, when you want invalid bindings to stop the write.
+    """
     finish = _tr._start_tool(ctx, "td_set_params")
     try:
         client = _tr._get_client(ctx)
