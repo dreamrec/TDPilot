@@ -1281,7 +1281,9 @@ def evaluate(
         checks.append(
             check_threshold(
                 "brain live smoke warmup spike recorded",
-                _strict_bool_value(performance.get("warmup_spike_recorded") if isinstance(performance, dict) else None),
+                _strict_bool_value(
+                    performance.get("warmup_spike_recorded") if isinstance(performance, dict) else None
+                ),
                 ">=",
                 1.0,
             )

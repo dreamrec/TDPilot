@@ -43,9 +43,9 @@ def test_sync_diagnose_process_parser_ignores_claude_plugin_manifest_json():
 
     command = (
         "/Applications/Claude.app/Contents/MacOS/claude "
-        "--mcp-config '{\"mcpServers\":{\"tdpilot\":{\"command\":\"uv\","
-        "\"args\":[\"run\",\"--directory\",\"${CODEX_PLUGIN_ROOT}\",\"tdpilot\"]}}}' "
-        "--plugin-dir /Users/me/.claude/plugins/cache/dreamrec-TDPilot/tdpilot/2.0.1"
+        '--mcp-config \'{"mcpServers":{"tdpilot":{"command":"uv",'
+        '"args":["run","--directory","${CODEX_PLUGIN_ROOT}","tdpilot"]}}}\' '
+        "--plugin-dir <USER_HOME>/.claude/plugins/cache/dreamrec-TDPilot/tdpilot/2.0.1"
     )
 
     assert _process_root_from_command(command) is None
@@ -55,9 +55,9 @@ def test_sync_diagnose_process_parser_ignores_non_tdpilot_python_process_with_pl
     from td_mcp.sync_diagnostics import _process_root_from_command
 
     command = (
-        "/Users/me/Tools/ghidra-mcp/.venv/bin/python "
-        "/Users/me/Tools/ghidra-mcp/bridge_mcp_ghidra.py "
-        "--plugin-dir /Users/me/.claude/plugins/cache/dreamrec-TDPilot/tdpilot/2.0.2"
+        "<USER_HOME>/Tools/ghidra-mcp/.venv/bin/python "
+        "<USER_HOME>/Tools/ghidra-mcp/bridge_mcp_ghidra.py "
+        "--plugin-dir <USER_HOME>/.claude/plugins/cache/dreamrec-TDPilot/tdpilot/2.0.2"
     )
 
     assert _process_root_from_command(command) is None

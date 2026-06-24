@@ -580,7 +580,9 @@ async def build_brain_plan(
     )
     if _intent_is_complex_multi_output_library(intent):
         graph = _empty_graph(task, profile="generic")
-        patch_plan = _empty_patch(task, reason="complex multi-output library brief requires explicit compiler")
+        patch_plan = _empty_patch(
+            task, reason="complex multi-output library brief requires explicit compiler"
+        )
         return BrainPlan(
             task=task,
             concept_graph=graph,

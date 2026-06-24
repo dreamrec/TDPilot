@@ -7,7 +7,7 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v2.0.2
+# TDPilot Runtime v2.0.3
 
 [![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
@@ -103,7 +103,7 @@ You don't need all 112 tools. Start with these and expand as needed:
 
 Everything else (vision, streaming, optimization, planning, TD2025 inspection) builds on top of this core.
 
-## What's New In 2.0.2
+## What's New In 2.0.3
 
 TDPilot v2.0.2 keeps the correctness-first visual programming brain and tightens the practical edges around installation truth, wrapper behavior, and token-efficient vision capture:
 

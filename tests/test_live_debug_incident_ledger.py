@@ -5,7 +5,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = ROOT / "tests" / "fixtures" / "td_live_debug_incident_2026_06_24.json"
 
@@ -19,11 +18,7 @@ def test_live_debug_incident_ledger_covers_all_recorded_bugs() -> None:
     assert payload["schema_version"] == 1
     assert payload["source_report"] == "reports/td_live_deep_test_2026-06-24.md"
     assert ids == [f"BUG-{index:03d}" for index in range(1, 46)]
-    unresolved = [
-        item["id"]
-        for item in bugs
-        if item.get("resolution") in {"untriaged", "documented_open"}
-    ]
+    unresolved = [item["id"] for item in bugs if item.get("resolution") in {"untriaged", "documented_open"}]
     assert unresolved == []
     assert not [item for item in bugs if not item.get("evidence_kind")]
 

@@ -486,6 +486,19 @@ def test_restricted_exec_policy_allows_text_top_parameter_assignment():
     assert module._restricted_exec_violation("op('/project1/title').par.text = 'QA OK'") is None
 
 
+def test_restricted_exec_policy_blocks_raw_dat_text_write_alongside_par_text():
+    # A benign `.par.text=` parameter write must NOT disable raw `.text=` DAT-
+    # stash detection for the rest of the payload — the exception is matched per
+    # occurrence, not payload-wide.
+    module = _load_callbacks_module()
+
+    benign = "op('/project1/title').par.text = 'ok'"
+    evil = "op('/project1/stash').text = 'payload'"
+    assert module._restricted_exec_violation(benign) is None
+    assert module._restricted_exec_violation(evil) is not None
+    assert module._restricted_exec_violation(benign + "\n" + evil) is not None
+
+
 def test_restricted_exec_globals_include_safe_inspection_helpers():
     module = _load_callbacks_module()
     for name in ("op", "ops", "project", "app", "absTime", "me", "parent", "ui", "tdu"):
@@ -493,8 +506,25 @@ def test_restricted_exec_globals_include_safe_inspection_helpers():
 
     builtins = module._build_exec_globals("restricted")["__builtins__"]
 
-    for name in ("Exception", "dir", "getattr", "hasattr", "isinstance", "type"):
+    # Safe, value-free inspection helpers stay available for live debugging.
+    for name in ("Exception", "dir", "hasattr", "isinstance"):
         assert name in builtins
+
+
+def test_restricted_exec_globals_exclude_reflection_primitives():
+    """getattr/type are reflection primitives that let a concat-obfuscated
+    dunder walk (().__class__.__bases__[0].__subclasses__() -> __import__)
+    escape the token-only TD-side policy. They must NOT be in the default
+    restricted sandbox, or the strongest tier becomes RCE-able. With getattr
+    absent the reflection payload raises NameError at runtime instead."""
+    module = _load_callbacks_module()
+    for name in ("op", "ops", "project", "app", "absTime", "me", "parent", "ui", "tdu"):
+        setattr(module, name, object())
+
+    builtins = module._build_exec_globals("restricted")["__builtins__"]
+
+    for name in ("getattr", "type", "issubclass", "map", "filter", "repr"):
+        assert name not in builtins
 
 
 def test_restricted_dat_content_still_blocks_python_imports():

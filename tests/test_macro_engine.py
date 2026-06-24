@@ -62,7 +62,9 @@ def test_feedback_displacement_macro_uses_feedback_top_reference_not_invalid_inp
     engine = MacroEngine(td_client=FakeTDClient())
     template = engine._templates["feedback_displacement"]
 
-    connections = {(item.source, item.target, item.source_index, item.target_index) for item in template.connections}
+    connections = {
+        (item.source, item.target, item.source_index, item.target_index) for item in template.connections
+    }
     refs = {(item.node, item.param, item.target_node) for item in template.node_references}
 
     assert ("feedback", "decay", 0, 0) in connections

@@ -27,7 +27,7 @@ import traceback
 # Configuration
 # ─────────────────────────────────────────────────────────────
 
-API_VERSION = "2.0.2"
+API_VERSION = "2.0.3"
 SCREENSHOT_TEMP_PATH = os.path.join(os.environ.get('TEMP', os.environ.get('TMP', '/tmp')), 'td_mcp_screenshot.jpg')
 
 # Auth + policy env is read at CALL TIME, not import time — otherwise TD's
@@ -1347,7 +1347,14 @@ def _restricted_exec_violation(code):
     for token in dat_escape_tokens:
         if token in normalized:
             return f'restricted mode blocks DAT-exec pattern: {token}'
-    if '.text=' in normalized and '.par.text=' not in normalized:
+    # Strip the legitimate `.par.text=` parameter writes (e.g. a Text TOP/COMP
+    # label) per-occurrence FIRST, then look for any residual raw `.text=` DAT
+    # content write. A global `'.par.text=' not in normalized` test would let a
+    # single benign `.par.text=` anywhere in the payload disable detection for
+    # the whole payload (e.g. `op('/t').par.text='ok'` on one line plus a raw
+    # `op('/d').text='<python>'` DAT stash on the next slipped through).
+    residual = normalized.replace('.par.text=', '')
+    if '.text=' in residual:
         return 'restricted mode blocks DAT-exec pattern: .text='
     return None
 
@@ -1475,10 +1482,16 @@ def _build_exec_globals(exec_mode):
         context['mod'] = mod
         return context
 
-    # Restricted mode keeps safe inspection helpers for live debugging while
-    # still excluding import/open/eval/exec and dunder reflection via policy.
+    # Restricted mode keeps SAFE inspection helpers (hasattr/isinstance/dir) for
+    # live debugging but EXCLUDES the reflection primitives getattr/type. The
+    # TD-side policy is token/substring-only (no AST), so a concat-obfuscated
+    # dunder name like getattr(x, '__cla'+'ss__') would otherwise slip past it
+    # and walk ().__class__.__bases__[0].__subclasses__() to reach __import__.
+    # With getattr/type absent from __builtins__ that reflection walk raises
+    # NameError at runtime, so the DEFAULT sandbox tier stays un-escapable.
+    # issubclass/map/filter/repr stay excluded too (no inspection value).
     restricted_builtins = {k: v for k, v in safe_builtins.items()
-                           if k not in ('issubclass', 'map', 'filter', 'repr')}
+                           if k not in ('getattr', 'type', 'issubclass', 'map', 'filter', 'repr')}
     safe = {'__builtins__': restricted_builtins}
     safe.update(context)
     return safe

@@ -272,12 +272,8 @@ async def _build_ten_output_library(client, target: str) -> dict[str, Any]:
         shader_dat = await _create_node(
             client, parent=root, op_type="textDAT", name=f"{prefix}_shader", x=0, y=y
         )
-        glsl = await _create_node(
-            client, parent=root, op_type="glslTOP", name=f"{prefix}_glsl", x=200, y=y
-        )
-        out = await _create_node(
-            client, parent=root, op_type="nullTOP", name=f"{prefix}_out", x=420, y=y
-        )
+        glsl = await _create_node(client, parent=root, op_type="glslTOP", name=f"{prefix}_glsl", x=200, y=y)
+        out = await _create_node(client, parent=root, op_type="nullTOP", name=f"{prefix}_out", x=420, y=y)
         await _set_text(client, shader_dat, _project_shader_source(index))
         await _set_params(
             client,
@@ -380,8 +376,16 @@ async def _visual_quality_checks(client, paths: list[str]) -> dict[str, Any]:
                 "missing": True,
                 "fail_reasons": [str(exc)],
             }
-    failed = [path for path, quality in by_path.items() if not isinstance(quality, dict) or quality.get("pass") is not True]
-    missing = [path for path, quality in by_path.items() if isinstance(quality, dict) and quality.get("missing") is True]
+    failed = [
+        path
+        for path, quality in by_path.items()
+        if not isinstance(quality, dict) or quality.get("pass") is not True
+    ]
+    missing = [
+        path
+        for path, quality in by_path.items()
+        if isinstance(quality, dict) and quality.get("missing") is True
+    ]
     return {
         "ok": not failed,
         "checked_count": len(by_path),
@@ -420,7 +424,9 @@ async def _panel_interaction_checks(client, built: dict[str, Any]) -> dict[str, 
         "    'display_index': int(display.par.index.eval()),\n"
         "}\n"
     )
-    payload = await _checked_request(client, "exec", {"code": code, "exec_mode": "restricted", "timeout_ms": 5000})
+    payload = await _checked_request(
+        client, "exec", {"code": code, "exec_mode": "restricted", "timeout_ms": 5000}
+    )
     result = payload.get("result")
     if not isinstance(result, dict):
         return {
@@ -432,7 +438,9 @@ async def _panel_interaction_checks(client, built: dict[str, Any]) -> dict[str, 
             "raw": payload,
         }
     present = result.get("present") if isinstance(result, dict) else {}
-    all_present = isinstance(present, dict) and all(present.get(name) is True for name in ["reset", "thumb", "next", "prev", "back"])
+    all_present = isinstance(present, dict) and all(
+        present.get(name) is True for name in ["reset", "thumb", "next", "prev", "back"]
+    )
     detail_index = result.get("detail_index")
     display_index = result.get("display_index")
     final_state_ok = detail_index == 4 and display_index == 0
@@ -484,19 +492,13 @@ async def _run_live_scratch_replay(client, target: str) -> dict[str, Any]:
         "detail_mode": detail_quality,
         "project_outputs": project_quality,
         "checked_count": (
-            grid_quality["checked_count"]
-            + detail_quality["checked_count"]
-            + project_quality["checked_count"]
+            grid_quality["checked_count"] + detail_quality["checked_count"] + project_quality["checked_count"]
         ),
         "failed_count": (
-            grid_quality["failed_count"]
-            + detail_quality["failed_count"]
-            + project_quality["failed_count"]
+            grid_quality["failed_count"] + detail_quality["failed_count"] + project_quality["failed_count"]
         ),
         "missing_count": (
-            grid_quality["missing_count"]
-            + detail_quality["missing_count"]
-            + project_quality["missing_count"]
+            grid_quality["missing_count"] + detail_quality["missing_count"] + project_quality["missing_count"]
         ),
     }
     performance = await _performance_check(client, built["root"])
@@ -517,11 +519,7 @@ async def _run_live_scratch_replay(client, target: str) -> dict[str, Any]:
 async def _build_report(args: argparse.Namespace) -> dict[str, Any]:
     ledger = _load_ledger()
     bugs = list(ledger["bugs"])
-    unresolved = [
-        bug["id"]
-        for bug in bugs
-        if bug.get("resolution") in {"untriaged", "documented_open"}
-    ]
+    unresolved = [bug["id"] for bug in bugs if bug.get("resolution") in {"untriaged", "documented_open"}]
     report: dict[str, Any] = {
         "schema_version": 1,
         "mode": "live" if args.live else "dry_run",
@@ -568,7 +566,9 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--dry-run", action="store_true", help="Use ledger-only deterministic replay.")
-    mode.add_argument("--live", action="store_true", help="Probe live TD/MCP sync in addition to ledger checks.")
+    mode.add_argument(
+        "--live", action="store_true", help="Probe live TD/MCP sync in addition to ledger checks."
+    )
     parser.add_argument("--target", default="/project1/tdpilot_incident_replay")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=9981)

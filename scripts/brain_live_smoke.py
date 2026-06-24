@@ -86,8 +86,12 @@ def _merge_incident_replay(report: dict[str, Any], incident_report: dict[str, An
     performance = _incident_nested(incident_report, "performance_summary")
     unresolved = incident_report.get("unresolved")
     if not isinstance(unresolved, list):
-        unresolved = incident_report.get("untriaged") if isinstance(incident_report.get("untriaged"), list) else []
-    live_replay = incident_report.get("live_replay") if isinstance(incident_report.get("live_replay"), dict) else {}
+        unresolved = (
+            incident_report.get("untriaged") if isinstance(incident_report.get("untriaged"), list) else []
+        )
+    live_replay = (
+        incident_report.get("live_replay") if isinstance(incident_report.get("live_replay"), dict) else {}
+    )
     live_sync = incident_report.get("live_sync") if isinstance(incident_report.get("live_sync"), dict) else {}
     panel_ok = bool(panel and panel.get("ok"))
     visual_ok = bool(visual and visual.get("ok"))

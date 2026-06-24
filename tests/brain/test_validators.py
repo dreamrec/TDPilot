@@ -331,8 +331,7 @@ async def test_transaction_runs_default_visual_output_sample_for_any_null_top_pl
     }
     assert result.validation_report.cheap_metrics["visual_quality"]["/project1/out1"]["pass"] is True
     assert (
-        result.validation_report.cheap_metrics["visual_quality"]["/project1/out1"]["active_coverage"]
-        == 0.72
+        result.validation_report.cheap_metrics["visual_quality"]["/project1/out1"]["active_coverage"] == 0.72
     )
     assert (
         "analyze_frame",

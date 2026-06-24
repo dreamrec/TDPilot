@@ -439,8 +439,14 @@ async def build_live_smoke_report(
     ok_statuses = {"planned", "skipped_unavailable"} if mode == "live" else {"planned"}
     scenarios_ok = all(item["status"] in ok_statuses for item in scenario_reports)
     transactional_ok = transactional_smoke["status"] == "not_run" or bool(transactional_smoke.get("ok"))
-    sync_ok = mode != "live" or bool(sync_diagnostic.get("ok"))
-    ok = scenarios_ok and transactional_ok and sync_ok
+    # `ok` reflects whether the planned scenarios + transactional smoke succeeded
+    # — a pure function of the (possibly injected) TD client. The install-sync
+    # diagnostic reads ambient machine state (installed version, plugin caches,
+    # running processes) the smoke client cannot inject, so folding it into `ok`
+    # made the result non-deterministic across machines/runs. It is reported
+    # under `sync_diagnostic` and enforced separately by the release gate
+    # (check_release_gates.py "brain live smoke sync diagnostic ok").
+    ok = scenarios_ok and transactional_ok
     return {
         "schema_version": 1,
         "mode": mode,
@@ -1203,7 +1209,9 @@ async def _collect_performance_summary(td_client, *, target_root: str) -> dict[s
     samples: list[dict[str, Any]] = []
     for index in range(3):
         try:
-            payload = await td_client.request("cooking", {"path": target_root, "recurse": True, "max_depth": 10})
+            payload = await td_client.request(
+                "cooking", {"path": target_root, "recurse": True, "max_depth": 10}
+            )
         except Exception as exc:  # noqa: BLE001
             return {
                 **_performance_not_run(),

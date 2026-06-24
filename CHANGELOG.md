@@ -1,6 +1,53 @@
 # Changelog
 
 
+## 2.0.3 - 2026-06-25 — Live-debug validation hardening + sandbox-escape fix
+
+Follow-up to the 2.0.2 ultrareview pass. Adds two sync-truth tools and a
+live-debug validation harness, and closes a restricted-mode sandbox escape that
+the in-progress hardening work had inadvertently opened. Tool surface 110 → 112.
+
+### Security
+
+- **Restricted-mode sandbox escape closed (critical).** `td_exec_python`'s
+  default `restricted` tier had `getattr`/`type` reintroduced into its sandbox
+  builtins; combined with the TD-side policy being token/substring-only, a
+  concat-obfuscated dunder walk
+  (`getattr(x, "__cla"+"ss__") … __subclasses__() … __import__("os")`) could
+  reach arbitrary code execution inside TouchDesigner. The reflection primitives
+  are removed from the default sandbox (the safe inspection helpers
+  `hasattr`/`isinstance`/`dir` stay), and the MCP-side AST check now folds
+  concatenated attribute names and rejects non-literal `getattr` names.
+- **DAT-exec `.text=` gate hardened.** The raw-`.text=` stash detector is now
+  matched per occurrence, so a benign `.par.text=` write no longer disables it
+  for the whole payload.
+
+### Added
+
+- **`td_sync_status`** — one-call install/version truth across server, live TD
+  component, `.tox`, caches, and npm/GitHub.
+- **`td_sync_diagnose`** — strict live sync, version-skew, endpoint, and
+  auth-fingerprint diagnostics (the secret is never returned or logged, only a
+  truncated fingerprint).
+- Live-debug incident-replay harness, a sync-diagnostics module, and stricter
+  release gates (`scripts/check_release_gates.py`).
+
+### Fixed
+
+- **Rollback verification** no longer reports a table-shaped `set_dat_content`
+  DAT as cleanly rolled back when its content is still live (the readback string
+  was compared against the raw row list and could never match).
+- **Live-smoke `ok`** is deterministic again — it reflects the planned scenarios
+  + transactional smoke (a pure function of the injected client) rather than
+  ambient machine state (installed version, plugin caches, running processes),
+  which is reported under `sync_diagnostic` and gated separately at release time.
+
+### Changed
+
+- Tool-count copy synced to 112 across all user-facing surfaces; plugin-mirror
+  skills re-synced; lint + format clean; new test fixtures use portable path
+  placeholders instead of personal paths.
+
 
 ## 2.0.2 - 2026-06-24 — Ultrareview hardening + release-process truthfulness
 

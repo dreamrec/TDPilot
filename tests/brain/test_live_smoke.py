@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import json
 import importlib.util
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -865,7 +865,12 @@ def test_brain_live_smoke_cli_merges_incident_replay_evidence():
     report = {
         "ok": True,
         "visual_quality_summary": {"ok": True, "checked_count": 1, "failed_count": 0, "missing_count": 0},
-        "panel_interaction_results": {"ok": False, "checked_count": 0, "failed_count": 0, "status": "not_run"},
+        "panel_interaction_results": {
+            "ok": False,
+            "checked_count": 0,
+            "failed_count": 0,
+            "status": "not_run",
+        },
     }
     incident = {
         "ok": True,

@@ -171,6 +171,26 @@ _BLOCKED_DUNDER_ATTRS = frozenset(
 )
 
 
+def _fold_str(node):
+    """Statically fold a string expression to its value, or None if it is not a
+    compile-time-constant string.
+
+    Handles plain string constants and ``+`` concatenation of constant strings —
+    the obfuscation used to smuggle a reflection dunder past a literal-token
+    check (e.g. ``"__cla" + "ss__"``). Anything that depends on a runtime value
+    (a Name, a Call, an f-string, ``.join`` …) folds to ``None`` so the caller
+    can treat it as an unprovable / dynamic attribute name.
+    """
+    if isinstance(node, ast.Constant):
+        return node.value if isinstance(node.value, str) else None
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        left = _fold_str(node.left)
+        right = _fold_str(node.right)
+        if left is not None and right is not None:
+            return left + right
+    return None
+
+
 def _attr_chain(node):
     """Return the full dotted chain for an Attribute node, or None if not pure."""
     parts = []
@@ -223,12 +243,21 @@ def ast_violations(code: str):
                     # sandbox escape because it can resolve eval/exec dynamically.
                     if node.args and _refs_builtins(node.args[0]):
                         violations.append("call to getattr(__builtins__, ...) blocked")
-                    # Block getattr(x, "__builtins__") / getattr(x, "__globals__")
+                    # Block getattr(x, "__globals__") / getattr(x, "__cla"+"ss__")
                     # etc. — resolves a reflection dunder from any object as a
-                    # string, dodging the attribute-access rule below.
-                    elif len(node.args) >= 2 and isinstance(node.args[1], ast.Constant):
-                        attr_name = node.args[1].value
-                        if isinstance(attr_name, str) and attr_name in _BLOCKED_DUNDER_ATTRS:
+                    # string, dodging the attribute-access rule below. The
+                    # attribute name is statically folded so a literal split
+                    # across `+` operands cannot smuggle the dunder past this
+                    # check; a name that is not a compile-time constant string is
+                    # rejected outright because dynamic attribute resolution is
+                    # itself the escape primitive and cannot be proven safe.
+                    elif len(node.args) >= 2:
+                        attr_name = _fold_str(node.args[1])
+                        if attr_name is None:
+                            violations.append("getattr with non-literal attribute name blocked")
+                        elif attr_name in _BLOCKED_DUNDER_ATTRS or (
+                            attr_name.startswith("__") and attr_name.endswith("__")
+                        ):
                             violations.append(f"getattr of reflection dunder blocked: {attr_name}")
             elif isinstance(node.func, ast.Attribute):
                 chain = _attr_chain(node.func)

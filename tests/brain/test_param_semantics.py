@@ -836,8 +836,12 @@ def test_edge_and_blur_top_params_have_docs_grounded_semantics_and_preflight_che
 
     plan = _plan_with_ops(
         [
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "edgeTOP", "name": "edge"}),
-            PatchOperation(kind="create_node", target="/project1", args={"op_type": "blurTOP", "name": "blur"}),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "edgeTOP", "name": "edge"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "blurTOP", "name": "blur"}
+            ),
             PatchOperation(
                 kind="set_params",
                 target="/project1/edge",

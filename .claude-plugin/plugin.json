@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "tdpilot",
   "displayName": "TDPilot",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "TDPilot - AI copilot for TouchDesigner. 112 MCP tools, a 656-card reviewed operator atlas with zero-concept backlog, Official Derivative grounded BrainPlans, transactional validation, optional cockpit UI, sync-status checks, and sync diagnosis.",
   "author": {
     "name": "silviu"

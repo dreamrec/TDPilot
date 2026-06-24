@@ -39,6 +39,29 @@ def test_ast_catches_dunder_reflection():
     assert any("__mro__" in v or "dunder" in v for v in violations)
 
 
+def test_ast_catches_getattr_concat_dunder_reflection():
+    # The concat-obfuscated getattr reflection walk that escapes a token-only
+    # check: getattr(x, "__cla" + "ss__") is statically folded and blocked.
+    code = "getattr((), '__cla' + 'ss__')"
+    violations = exec_safety.ast_violations(code)
+    assert any("reflection dunder" in v or "__class__" in v for v in violations)
+
+
+def test_ast_catches_getattr_non_literal_attribute_name():
+    # A runtime-computed attribute name can't be proven safe; dynamic getattr is
+    # itself the escape primitive, so it is rejected outright.
+    code = "nm = '__sub' + tail\ngetattr(obj, nm)"
+    violations = exec_safety.ast_violations(code)
+    assert any("non-literal attribute name" in v for v in violations)
+
+
+def test_ast_allows_getattr_safe_literal_attribute():
+    # A normal, non-dunder attribute name via getattr stays allowed.
+    code = "getattr(op('/x').par, 'tx')"
+    violations = exec_safety.ast_violations(code)
+    assert not any("getattr" in v for v in violations)
+
+
 def test_ast_allows_safe_code():
     code = "x = op('/project1').par.amp." + "eval()"
     violations = exec_safety.ast_violations(code)

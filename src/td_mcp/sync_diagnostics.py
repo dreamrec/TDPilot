@@ -153,22 +153,10 @@ def _default_source_install_roots(local_version: str) -> dict[str, Path]:
         "user": home / ".tdpilot",
         "codex_vendor_import": home / ".codex" / "vendor_imports" / "TDPilot",
         "claude_plugin_current": (
-            home
-            / ".claude"
-            / "plugins"
-            / "cache"
-            / "dreamrec-TDPilot"
-            / "tdpilot"
-            / local_version
+            home / ".claude" / "plugins" / "cache" / "dreamrec-TDPilot" / "tdpilot" / local_version
         ),
         "codex_plugin_current": (
-            home
-            / ".codex"
-            / "plugins"
-            / "cache"
-            / "tdpilot-local"
-            / "tdpilot"
-            / local_version
+            home / ".codex" / "plugins" / "cache" / "tdpilot-local" / "tdpilot" / local_version
         ),
     }
     return roots
@@ -265,9 +253,7 @@ def _running_mcp_process_rows() -> list[dict[str, Any]]:
                 "started_at_epoch": started_at,
                 "source_latest_mtime_epoch": latest_mtime,
                 "stale_source": bool(
-                    started_at is not None
-                    and latest_mtime is not None
-                    and latest_mtime > started_at
+                    started_at is not None and latest_mtime is not None and latest_mtime > started_at
                 ),
             }
         )
@@ -330,9 +316,7 @@ def _source_hash_report(
         comparable = bool(local_hash and row.get("hash"))
         same_version = row_version in (None, local_version)
         row["compared_to_local"] = bool(comparable and same_version)
-        row["matches_local"] = (
-            bool(row.get("hash") == local_hash) if row["compared_to_local"] else None
-        )
+        row["matches_local"] = bool(row.get("hash") == local_hash) if row["compared_to_local"] else None
         rows[name] = row
         if row["compared_to_local"] and row["matches_local"] is False:
             mismatches.append(name)

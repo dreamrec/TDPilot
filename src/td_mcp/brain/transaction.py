@@ -1147,6 +1147,12 @@ def _first_runtime_issue_message(issues: Any) -> str:
     return str(first)
 
 
+def _rows_to_text(rows: list) -> str:
+    return "\n".join(
+        "\t".join(str(cell) for cell in row) if isinstance(row, list | tuple) else str(row) for row in rows
+    )
+
+
 def _content_text(payload: Any) -> str:
     if isinstance(payload, str):
         return payload
@@ -1157,10 +1163,13 @@ def _content_text(payload: Any) -> str:
                 return value
         rows = payload.get("rows")
         if isinstance(rows, list):
-            return "\n".join(
-                "\t".join(str(cell) for cell in row) if isinstance(row, list | tuple) else str(row)
-                for row in rows
-            )
+            return _rows_to_text(rows)
+    # A table-shaped `set_dat_content` op stores its value as a bare list-of-rows
+    # (applier records op.args["table"] directly). Render it the same tab/newline
+    # form as the readback so rollback verification compares string-to-string
+    # instead of str == list (which is always False and silently fails open).
+    if isinstance(payload, list):
+        return _rows_to_text(payload)
     return ""
 
 
@@ -1262,14 +1271,21 @@ async def _verify_changed_params_reverted(
             if name == "content":
                 payload = await td_client.request("node/content", {"path": path})
                 value = _content_text(payload)
+                # Normalize the expected content (str OR table list-of-rows) to
+                # the same string form as the readback so a still-live table-DAT
+                # mutation is detected instead of silently passing (str != list).
+                expected = _content_text(entry.get("new"))
             else:
                 payload = await td_client.request("node/params", {"path": path, "names": [name]})
-                value = _rollback_param_readback_value(payload if isinstance(payload, dict) else {}, name, entry.get("new"))
+                value = _rollback_param_readback_value(
+                    payload if isinstance(payload, dict) else {}, name, entry.get("new")
+                )
+                expected = entry.get("new")
         except Exception as exc:  # noqa: BLE001
             verification["changed_params"]["unverified"].append({**checked, "error": str(exc)})
             continue
-        if _rollback_values_equal(value, entry.get("new")):
-            value_key = "expr" if isinstance(entry.get("new"), dict) and "expr" in entry.get("new", {}) else "value"
+        if _rollback_values_equal(value, expected):
+            value_key = "expr" if isinstance(expected, dict) and "expr" in expected else "value"
             verification["changed_params"]["still_changed"].append({**checked, value_key: value})
 
 

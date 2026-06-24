@@ -248,15 +248,38 @@ async def test_rollback_readback_detects_stale_param_expression_after_undo():
         result,
         restore_snapshot=None,
         undo_block_count=1,
-        changed_params=(
-            {"path": "/p/level", "name": "brightness1", "new": {"expr": "op('/p/chop')[0]"}},
-        ),
+        changed_params=({"path": "/p/level", "name": "brightness1", "new": {"expr": "op('/p/chop')[0]"}},),
     )
 
     assert result.rollback_performed is False
     assert result.needs_manual_recovery is True
     assert result.rollback_verification["changed_params"]["still_changed"] == [
         {"path": "/p/level", "name": "brightness1", "expr": "op('/p/chop')[0]"}
+    ]
+
+
+@pytest.mark.asyncio
+async def test_rollback_readback_detects_table_dat_content_still_live_after_undo():
+    # A table-shaped set_dat_content op records `new` as a bare list-of-rows. If
+    # TD's undo silently fails, the readback must still flag it — regression: the
+    # readback string was compared against the raw list and could never match, so
+    # a still-live table-DAT mutation passed as a clean rollback.
+    table = [["a", "b"], ["c", "d"]]
+    client = FakeTDClient(scripted={"node/content": {"path": "/p/table", "rows": table}})
+    result = _txn_result(undo_blocks_opened=1)
+
+    await _rollback(
+        client,
+        result,
+        restore_snapshot=None,
+        undo_block_count=1,
+        changed_params=({"path": "/p/table", "name": "content", "new": table},),
+    )
+
+    assert result.rollback_performed is False
+    assert result.needs_manual_recovery is True
+    assert result.rollback_verification["changed_params"]["still_changed"] == [
+        {"path": "/p/table", "name": "content", "value": "a\tb\nc\td"}
     ]
 
 
