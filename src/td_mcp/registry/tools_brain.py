@@ -21,7 +21,7 @@ from td_mcp.brain.trace_promotion import (
 )
 from td_mcp.brain.traces import append_brain_trace
 from td_mcp.brain.transaction import apply_transaction
-from td_mcp.errors import format_tool_error
+from td_mcp.errors import format_tool_error_dict
 from td_mcp.models.brain import BrainPlan, BrainTrace, TransactionOptions
 from td_mcp.models.patch import PatchPlan
 from td_mcp.registry.resources import set_cached_resource
@@ -120,7 +120,7 @@ async def td_brain_plan(
         return {"success": True, "plan": plan.model_dump(mode="json")}
     except Exception as exc:  # noqa: BLE001
         _tr._record_tool_error(ctx, "td_brain_plan")
-        return format_tool_error(exc)
+        return format_tool_error_dict(exc)
     finally:
         finish()
 
@@ -230,7 +230,7 @@ async def td_brain_execute(
         }
     except Exception as exc:  # noqa: BLE001
         _tr._record_tool_error(ctx, "td_brain_execute")
-        return format_tool_error(exc)
+        return format_tool_error_dict(exc)
     finally:
         finish()
 
@@ -290,7 +290,7 @@ async def td_transaction_apply(
         return {"success": False, "error": str(exc)}
     except Exception as exc:  # noqa: BLE001
         _tr._record_tool_error(ctx, "td_transaction_apply")
-        return format_tool_error(exc)
+        return format_tool_error_dict(exc)
     finally:
         finish()
 
@@ -353,7 +353,7 @@ async def td_cockpit_render(
         return {"success": True, "cockpit": payload}
     except Exception as exc:  # noqa: BLE001
         _tr._record_tool_error(ctx, "td_cockpit_render")
-        return format_tool_error(exc)
+        return format_tool_error_dict(exc)
     finally:
         finish()
 

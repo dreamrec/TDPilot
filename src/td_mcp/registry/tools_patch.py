@@ -26,7 +26,7 @@ from td_mcp import patch
 from td_mcp import tool_registry as _tr  # intentional cycle — see registry/__init__.py
 from td_mcp.brain.param_semantics import validate_patch_plan_parameter_contract
 from td_mcp.brain.transaction import apply_transaction
-from td_mcp.errors import format_tool_error
+from td_mcp.errors import format_tool_error_dict
 from td_mcp.models.brain import TransactionOptions
 from td_mcp.models.patch import PatchPlan, PatchPreview, ValidationPlan
 from td_mcp.tool_registry import mcp
@@ -94,7 +94,7 @@ async def td_patch_plan(
         return {"success": False, "error": str(exc)}
     except Exception as exc:  # noqa: BLE001
         _tr._record_tool_error(ctx, "td_patch_plan")
-        return format_tool_error(exc)
+        return format_tool_error_dict(exc)
     finally:
         finish()
 
@@ -148,7 +148,7 @@ async def td_patch_preview(
         )
     except Exception as exc:  # noqa: BLE001
         _tr._record_tool_error(ctx, "td_patch_preview")
-        return format_tool_error(exc)
+        return format_tool_error_dict(exc)
     finally:
         finish()
 
@@ -305,7 +305,7 @@ async def td_patch_apply(
         return payload
     except Exception as exc:  # noqa: BLE001
         _tr._record_tool_error(ctx, "td_patch_apply")
-        return format_tool_error(exc)
+        return format_tool_error_dict(exc)
     finally:
         finish()
 
@@ -404,7 +404,7 @@ async def td_patch_validate(
         return {"success": True, "report": report.model_dump(mode="json")}
     except Exception as exc:  # noqa: BLE001
         _tr._record_tool_error(ctx, "td_patch_validate")
-        return format_tool_error(exc)
+        return format_tool_error_dict(exc)
     finally:
         finish()
 
@@ -463,6 +463,6 @@ async def td_patch_variations(
         }
     except Exception as exc:  # noqa: BLE001
         _tr._record_tool_error(ctx, "td_patch_variations")
-        return format_tool_error(exc)
+        return format_tool_error_dict(exc)
     finally:
         finish()

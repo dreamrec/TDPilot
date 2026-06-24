@@ -121,6 +121,8 @@ async def apply_transaction(
     result.apply_result = apply_result
     result.failed_op = apply_result.failed_op
     result.failed_reason = apply_result.failed_reason
+    if apply_result.undo_block_opened:
+        result.undo_blocks_opened += 1
 
     profile_layers = _transaction_concept_profiles(
         concept_profile=concept_profile,
@@ -160,7 +162,14 @@ async def apply_transaction(
         and opts.rollback_on_validation_failure
     )
     if should_rollback:
-        await _rollback(td_client, result, restore_snapshot=restore_snapshot)
+        created_paths = tuple(op.target for op in plan.operations if op.kind == "create_node" and op.target)
+        await _rollback(
+            td_client,
+            result,
+            restore_snapshot=restore_snapshot,
+            undo_block_count=result.undo_blocks_opened,
+            created_node_paths=created_paths,
+        )
         result.status = "rolled_back" if result.rollback_performed else "broken"
         return result
 
@@ -249,6 +258,11 @@ async def _attempt_validation_repair(
         attempt["status"] = "failed"
         attempt["error"] = str(exc)
         return None
+    # A repair apply that got past NestedBlockError opened (and sealed) its own
+    # TD undo block — even when it then fails per-op. Count it so rollback
+    # reverts the repair block AND the original, not just the most recent one.
+    if repair_apply_result.undo_block_opened:
+        result.undo_blocks_opened += 1
     attempt["apply_result"] = repair_apply_result.model_dump(mode="json")
     if repair_apply_result.status == "broken":
         attempt["status"] = "failed"
@@ -1140,13 +1154,40 @@ async def _rollback(
     result: TransactionResult,
     *,
     restore_snapshot: RestoreCallback | None,
+    undo_block_count: int = 1,
+    created_node_paths: tuple[str, ...] = (),
 ) -> None:
-    try:
-        await td_client.request("project/lifecycle", {"action": "undo"})
+    """Revert a transaction's mutations.
+
+    A transaction may seal more than one TD undo block (the original apply plus
+    one per applied auto-repair). TD's ``undo`` reverts only the most recent
+    block, so we must issue exactly ``undo_block_count`` undo actions; issuing
+    one would leave the original mutation live while still reporting success.
+
+    When undo cannot revert every block we fall back to snapshot restore — but
+    that restore only re-applies parameter values, so it cannot delete nodes the
+    transaction created. We therefore refuse to claim a clean rollback whenever
+    the transaction created nodes, escalating to manual recovery instead.
+    """
+    if undo_block_count <= 0:
+        # No undo block was sealed (e.g. a preflight-blocked apply that returned
+        # before any mutation). Nothing was changed, so rollback is a no-op
+        # success — and crucially we must NOT issue a stray undo that would
+        # revert some unrelated prior action.
         result.rollback_performed = True
         return
+
+    undone = 0
+    try:
+        for _ in range(undo_block_count):
+            await td_client.request("project/lifecycle", {"action": "undo"})
+            undone += 1
     except Exception as exc:  # noqa: BLE001
         result.rollback_error = str(exc)
+
+    if undone == undo_block_count and not result.rollback_error:
+        result.rollback_performed = True
+        return
 
     if result.before_snapshot_id and restore_snapshot is not None:
         try:
@@ -1154,7 +1195,9 @@ async def _rollback(
             failures = []
             if isinstance(restored, dict):
                 failures = restored.get("failures", [])
-            if not failures:
+            # Param-only restore cannot remove created nodes — only claim a
+            # clean rollback when the transaction created none.
+            if not failures and not created_node_paths:
                 result.rollback_performed = True
                 result.rollback_error = None
                 return

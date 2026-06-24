@@ -288,3 +288,31 @@ async def test_td_patch_variations_default_strategy(mcp_ctx, td_client, monkeypa
     assert result["success"] is True
     assert len(result["variants"]) > 0
     assert result["skipped_strategies"] == []
+
+
+@pytest.mark.asyncio
+async def test_td_patch_apply_returns_dict_envelope_on_td_connection_error(mcp_ctx, td_client, monkeypatch):
+    """Structured-output tools (-> dict) must return a DICT error envelope, not a
+    JSON string — a string raises a FastMCP ValidationError and destroys the
+    troubleshooting payload exactly on the TD-not-running path. Regression for the
+    format_tool_error (str) -> format_tool_error_dict swap."""
+    from td_mcp.td_client import TouchDesignerConnectionError
+
+    _patch_services(monkeypatch, td_client)
+    plan_result = await tools_patch.td_patch_plan(
+        mcp_ctx,
+        target_root="/p",
+        operations=[{"kind": "create_node", "target": "/p", "args": {"op_type": "noise", "name": "n1"}}],
+    )
+    plan_dict = plan_result["plan"]
+
+    def _raise_conn(_endpoint, _body):
+        raise TouchDesignerConnectionError("TD not running")
+
+    td_client.handler = _raise_conn
+
+    result = await tools_patch.td_patch_apply(mcp_ctx, plan=plan_dict, auto_validate=True)
+    assert isinstance(result, dict)  # NOT a str — a str breaks structured_output conversion
+    assert result["success"] is False
+    assert result["error"]["code"] == "TD_CONNECTION_ERROR"
+    assert "troubleshooting" in result["error"]["details"]

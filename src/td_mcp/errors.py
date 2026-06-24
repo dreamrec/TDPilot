@@ -37,7 +37,7 @@ def _recovery_hints_for(message: str) -> list[dict]:
     return out
 
 
-def _error_payload(code: str, message: str, details: dict | None = None) -> str:
+def _error_body(code: str, message: str, details: dict | None = None) -> dict:
     body: dict = {
         "success": False,
         "error": {
@@ -49,13 +49,25 @@ def _error_payload(code: str, message: str, details: dict | None = None) -> str:
     hints = _recovery_hints_for(message)
     if hints:
         body["error"]["recovery_hints"] = hints
-    return json.dumps(body, indent=2)
+    return body
 
 
-def format_tool_error(exc: Exception) -> str:
-    """Return a consistent machine-readable error envelope as JSON string."""
+def _error_payload(code: str, message: str, details: dict | None = None) -> str:
+    return json.dumps(_error_body(code, message, details), indent=2)
+
+
+def format_tool_error_dict(exc: Exception) -> dict:
+    """Return the machine-readable error envelope as a dict.
+
+    Use this in tools annotated ``-> dict`` that run under FastMCP
+    structured_output: those wrap the return value in a DictModel and call
+    model_validate, so returning the JSON *string* form (``format_tool_error``)
+    raises a pydantic ValidationError on every exception path and destroys the
+    error/troubleshooting/recovery-hints payload exactly when the caller needs
+    it (e.g. TouchDesigner not running).
+    """
     if isinstance(exc, TouchDesignerConnectionError):
-        return _error_payload(
+        return _error_body(
             "TD_CONNECTION_ERROR",
             "Cannot connect to TouchDesigner.",
             {
@@ -70,7 +82,7 @@ def format_tool_error(exc: Exception) -> str:
         )
 
     if isinstance(exc, TouchDesignerAPIError):
-        return _error_payload(
+        return _error_body(
             "TD_API_ERROR",
             str(exc),
             {
@@ -80,12 +92,21 @@ def format_tool_error(exc: Exception) -> str:
         )
 
     if isinstance(exc, PermissionError):
-        return _error_payload("PERMISSION_DENIED", str(exc))
+        return _error_body("PERMISSION_DENIED", str(exc))
 
     if isinstance(exc, ValueError):
-        return _error_payload("INVALID_INPUT", str(exc))
+        return _error_body("INVALID_INPUT", str(exc))
 
-    return _error_payload(
+    return _error_body(
         "INTERNAL_ERROR",
         f"{type(exc).__name__}: {str(exc)}",
     )
+
+
+def format_tool_error(exc: Exception) -> str:
+    """Return a consistent machine-readable error envelope as a JSON string.
+
+    For tools annotated ``-> str``. Tools annotated ``-> dict`` (structured
+    output) must use :func:`format_tool_error_dict` instead.
+    """
+    return json.dumps(format_tool_error_dict(exc), indent=2)

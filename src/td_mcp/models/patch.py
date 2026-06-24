@@ -108,6 +108,11 @@ class PatchResult(BaseModel):
     after_snapshot_id: str | None = None
     undo_label: str
     rollback_hint: str | None = None
+    # True once start_undo_block has succeeded for this apply, so the caller
+    # knows a TD undo block was sealed and must be reverted on rollback. A
+    # preflight-blocked apply returns before opening any block and leaves this
+    # False, so rollback must NOT issue a stray undo for it.
+    undo_block_opened: bool = False
 
 
 class PatchVariant(PatchPlan):

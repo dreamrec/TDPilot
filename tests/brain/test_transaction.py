@@ -3,8 +3,8 @@ from __future__ import annotations
 import pytest
 from patch.conftest import FakeTDClient
 
-from td_mcp.brain.transaction import apply_transaction
-from td_mcp.models.brain import TransactionOptions
+from td_mcp.brain.transaction import _rollback, apply_transaction
+from td_mcp.models.brain import TransactionOptions, TransactionResult
 from td_mcp.models.patch import PatchOperation, PatchPlan, ValidationPlan
 from td_mcp.patch.undo_sentinel import UndoBlockSentinel
 
@@ -80,6 +80,99 @@ async def test_transaction_rolls_back_when_validation_fails():
     assert result.validation_report is not None
     assert result.validation_report.ok is False
     assert ("project/lifecycle", {"action": "undo"}) in client.calls
+
+
+def _txn_result(**kwargs) -> TransactionResult:
+    base = {"plan_id": "p1", "status": "broken"}
+    base.update(kwargs)
+    return TransactionResult(**base)
+
+
+def _undo_count(client: FakeTDClient) -> int:
+    return len([c for c in client.calls if c == ("project/lifecycle", {"action": "undo"})])
+
+
+@pytest.mark.asyncio
+async def test_rollback_issues_one_undo_per_sealed_block():
+    client = FakeTDClient()
+    result = _txn_result(undo_blocks_opened=2)
+    await _rollback(client, result, restore_snapshot=None, undo_block_count=2)
+    assert _undo_count(client) == 2
+    assert result.rollback_performed is True
+    assert result.needs_manual_recovery is False
+
+
+@pytest.mark.asyncio
+async def test_rollback_no_block_opened_is_noop_success_without_stray_undo():
+    # A preflight-blocked apply seals no undo block; rollback must not fire a
+    # stray undo that would revert an unrelated prior action.
+    client = FakeTDClient()
+    result = _txn_result(undo_blocks_opened=0)
+    await _rollback(client, result, restore_snapshot=None, undo_block_count=0)
+    assert _undo_count(client) == 0
+    assert result.rollback_performed is True
+
+
+@pytest.mark.asyncio
+async def test_rollback_partial_undo_failure_without_snapshot_needs_manual_recovery():
+    state = {"n": 0}
+
+    def lifecycle(params):
+        if params.get("action") == "undo":
+            state["n"] += 1
+            if state["n"] >= 2:  # second block (the original) cannot be undone
+                raise RuntimeError("nothing to undo")
+        return {}
+
+    client = FakeTDClient(scripted={"project/lifecycle": lifecycle})
+    result = _txn_result(undo_blocks_opened=2)
+    await _rollback(client, result, restore_snapshot=None, undo_block_count=2)
+    assert result.rollback_performed is False
+    assert result.needs_manual_recovery is True
+    assert result.rollback_error is not None
+
+
+@pytest.mark.asyncio
+async def test_rollback_undo_failure_falls_back_to_snapshot_when_no_created_nodes():
+    async def restore(_snapshot_id):
+        return {"failures": []}
+
+    def undo_fails(params):
+        if params.get("action") == "undo":
+            raise RuntimeError("nothing to undo")
+        return {}
+
+    client = FakeTDClient(scripted={"project/lifecycle": undo_fails})
+    result = _txn_result(undo_blocks_opened=1, before_snapshot_id="snap1")
+    await _rollback(client, result, restore_snapshot=restore, undo_block_count=1, created_node_paths=())
+    assert result.rollback_performed is True
+    assert result.rollback_error is None
+    assert result.needs_manual_recovery is False
+
+
+@pytest.mark.asyncio
+async def test_rollback_undo_failure_with_created_nodes_refuses_param_only_restore():
+    # A param-only snapshot restore cannot delete nodes the transaction created,
+    # so it must NOT report a clean rollback — escalate to manual recovery.
+    async def restore(_snapshot_id):
+        return {"failures": []}
+
+    def undo_fails(params):
+        if params.get("action") == "undo":
+            raise RuntimeError("nothing to undo")
+        return {}
+
+    client = FakeTDClient(scripted={"project/lifecycle": undo_fails})
+    result = _txn_result(undo_blocks_opened=1, before_snapshot_id="snap1")
+    await _rollback(
+        client,
+        result,
+        restore_snapshot=restore,
+        undo_block_count=1,
+        created_node_paths=("/p/new",),
+    )
+    assert result.rollback_performed is False
+    assert result.needs_manual_recovery is True
 
 
 @pytest.mark.asyncio

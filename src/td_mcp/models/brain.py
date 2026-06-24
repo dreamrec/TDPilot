@@ -734,6 +734,11 @@ class TransactionResult(BaseModel):
     rollback_performed: bool = False
     rollback_error: str | None = None
     needs_manual_recovery: bool = False
+    # Number of TD undo blocks this transaction sealed (the original apply plus
+    # one per applied auto-repair). Rollback must issue this many undo actions —
+    # a single undo would revert only the most recent (repair) block and leave
+    # the original mutation live while still reporting rolled_back.
+    undo_blocks_opened: int = 0
     failed_op: int | None = None
     failed_reason: str | None = None
     repair_attempts: list[dict[str, Any]] = Field(default_factory=list)

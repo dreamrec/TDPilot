@@ -103,6 +103,7 @@ async def apply_plan(
             "project/lifecycle",
             {"action": "start_undo_block", "name": block_label},
         )
+        result.undo_block_opened = True
         try:
             for i, op in enumerate(effective_plan.operations):
                 try:

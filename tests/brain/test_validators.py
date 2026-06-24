@@ -299,6 +299,52 @@ async def test_transaction_auto_repair_revalidates_empty_visual_output_when_enab
     assert result.repair_attempts[0]["status"] == "applied"
     assert result.repair_attempts[0]["repair_plan"]["risk_flags"] == ["auto-repair:visual-output-sample"]
     assert len([call for call in client.calls if call[0] == "analyze_frame"]) == 2
+
+
+@pytest.mark.asyncio
+async def test_transaction_auto_repair_then_validation_fails_reverts_both_undo_blocks():
+    """An applied auto-repair opens a SECOND undo block. If re-validation still
+    fails, rollback must undo BOTH blocks — a single undo would revert only the
+    repair and leave the original mutation live while reporting rolled_back."""
+    plan = _patch_plan(
+        [PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"})],
+        required_ops=["nullTOP"],
+    )
+    # Every visual sample is empty, so the repair is applied but re-validation
+    # still fails, forcing a rollback after two undo blocks were sealed.
+    empty_sample = {
+        "path": "/project1/out1",
+        "resolution": [64, 64],
+        "channels": 4,
+        "modes": {
+            "luminance": {"mean": 0.0, "min": 0.0, "max": 0.0, "std": 0.0},
+            "alpha_coverage": {"opaque_fraction": 0.0},
+        },
+    }
+    client = FakeTDClient(
+        scripted={
+            "analyze_frame": lambda _params: empty_sample,
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
+            "node/params/set": {"ok": True},
+            "node/connect": {"ok": True},
+            "node/errors": {"issues": []},
+            "cooking": {"stuck": []},
+        }
+    )
+
+    result = await apply_transaction(
+        client,
+        plan,
+        sentinel=UndoBlockSentinel(),
+        options=TransactionOptions(auto_repair=True, max_repair_attempts=1),
+    )
+
+    assert result.repair_attempts and result.repair_attempts[0]["status"] == "validation_failed"
+    assert result.undo_blocks_opened == 2
+    undo_calls = [call for call in client.calls if call == ("project/lifecycle", {"action": "undo"})]
+    assert len(undo_calls) == 2
+    assert result.status == "rolled_back"
+    assert result.rollback_performed is True
     assert any(call[0] == "node/connect" for call in client.calls)
 
 
