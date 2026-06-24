@@ -404,6 +404,12 @@ def _has_serial_protocol(text: str) -> bool:
     return bool(re.search(r"\bserial\b|\brs-?232\b", text))
 
 
+# The non-serial protocol detectors anchor the protocol keyword to a second token
+# from {dat, protocol, bridge}. This is deliberate: the secondary token is matched
+# anywhere in the text, so broadening it to generic words (broker/port/connect/…)
+# makes a DISTRACTOR protocol match via a token that belongs to the requested one
+# (e.g. "mqtt broker … udp source cards" would wrongly fire udp). Keep it narrow;
+# off-route phrasings are picked up by the atlas routes in operator_intents.py.
 def _has_osc_protocol(text: str) -> bool:
     return bool(re.search(r"\bosc\b", text)) and bool(re.search(r"\bdat\b|\bprotocol\b|\bbridge\b", text))
 

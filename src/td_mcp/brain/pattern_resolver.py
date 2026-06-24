@@ -1850,6 +1850,11 @@ def _score_candidate(
                 0.45,
                 0.16 * failed_runtime_probe_count + 0.08 * failed_required_runtime_probe_count,
             )
+    # Clamp to 1.0 BEFORE subtracting the runtime penalty — this is deliberate.
+    # It guarantees a missing/failed-probe penalty is always visible in the final
+    # score (subtracted from a capped 1.0) rather than being absorbed by a large
+    # trace-support bonus, so a high-support-but-failed candidate ranks below a
+    # clean one. See test_pattern_resolver_does_not_let_support_hide_failed_runtime_probes.
     score = min(1.0, score) - runtime_validation_penalty
     return list(dict.fromkeys(risk_flags)), max(0.0, round(score, 3))
 
