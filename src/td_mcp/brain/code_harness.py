@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import inspect
 import math
 import re
 from typing import Any
@@ -80,14 +81,66 @@ _GENERATED_CODE_HARNESS_SOURCES = {
 }
 
 
+def _validator_source(*funcs: Any) -> str:
+    """Concatenate the source of the given validator functions.
+
+    Used to derive what the harness *actually* checks independently of the
+    declared-required constants — so the coverage report can detect a required
+    check that was declared but never wired into a validator body.
+    """
+    parts: list[str] = []
+    for fn in funcs:
+        try:
+            parts.append(inspect.getsource(fn))
+        except (OSError, TypeError):  # pragma: no cover - source is present in-repo
+            continue
+    return "\n".join(parts)
+
+
+def _discovered_static_check_coverage() -> list[str]:
+    # Source of the static validators ONLY (never the _SUPPORTED_* tuple or the
+    # _SOURCES dict, which list every id) — a check is "covered" only if its id
+    # is dispatched on inside a validator body.
+    source = _validator_source(
+        validate_generated_code_blocks,
+        _validate_python_block,
+        _validate_glsl_block,
+        _validate_plan_attachments,
+    )
+    # A check is wired if its id is dispatched on (``"<id>" in checks``) or if it
+    # is an always-on validator emitting the ``"<id>_error"`` issue code
+    # (e.g. python_syntax -> python_syntax_error via ast.parse).
+    return sorted(
+        c for c in _SUPPORTED_GENERATED_CODE_STATIC_CHECKS if f'"{c}"' in source or f'"{c}_error"' in source
+    )
+
+
+def _discovered_runtime_check_coverage() -> list[str]:
+    source = _validator_source(validate_generated_code_runtime_contracts)
+    return sorted(c for c in _SUPPORTED_GENERATED_CODE_RUNTIME_CHECKS if f'"{c}"' in source)
+
+
+def _discovered_language_coverage() -> list[str]:
+    # A language is covered only if validate_generated_code_blocks routes it to a
+    # validator (block.language == "<lang>").
+    source = _validator_source(validate_generated_code_blocks)
+    return sorted(c for c in _REQUIRED_GENERATED_CODE_LANGUAGES if f'== "{c}"' in source)
+
+
 def generated_code_harness_coverage_report() -> dict[str, Any]:
-    """Report the currently supported generated-code harness surface."""
+    """Report the generated-code harness surface.
+
+    ``covered_*`` is DISCOVERED from the validator function bodies (not copied
+    from the declared-required constants), so the report fails if a required
+    language/check is declared but never wired into a validator — i.e. it is a
+    real wiring check, not a tautology.
+    """
     required_languages = sorted(_REQUIRED_GENERATED_CODE_LANGUAGES)
-    covered_languages = sorted(_REQUIRED_GENERATED_CODE_LANGUAGES)
+    covered_languages = _discovered_language_coverage()
     required_static_checks = sorted(_SUPPORTED_GENERATED_CODE_STATIC_CHECKS)
-    covered_static_checks = sorted(_SUPPORTED_GENERATED_CODE_STATIC_CHECKS)
+    covered_static_checks = _discovered_static_check_coverage()
     required_runtime_checks = sorted(_SUPPORTED_GENERATED_CODE_RUNTIME_CHECKS)
-    covered_runtime_checks = sorted(_SUPPORTED_GENERATED_CODE_RUNTIME_CHECKS)
+    covered_runtime_checks = _discovered_runtime_check_coverage()
     missing_languages = sorted(set(required_languages) - set(covered_languages))
     missing_static_checks = sorted(set(required_static_checks) - set(covered_static_checks))
     missing_runtime_checks = sorted(set(required_runtime_checks) - set(covered_runtime_checks))

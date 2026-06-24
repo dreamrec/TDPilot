@@ -92,6 +92,21 @@ def test_generated_code_harness_coverage_report_covers_supported_surface():
     }.issubset(set(report["covered_runtime_checks"]))
 
 
+def test_generated_code_harness_coverage_report_is_not_tautological(monkeypatch):
+    """Coverage must be DISCOVERED from validator bodies, not copied from the
+    required-constant. A declared-but-unwired check must surface as missing and
+    fail the report — otherwise the gate proves nothing."""
+    monkeypatch.setattr(
+        code_harness,
+        "_SUPPORTED_GENERATED_CODE_STATIC_CHECKS",
+        code_harness._SUPPORTED_GENERATED_CODE_STATIC_CHECKS + ("totally_unwired_check",),
+    )
+    report = code_harness.generated_code_harness_coverage_report()
+    assert report["ok"] is False
+    assert "totally_unwired_check" in report["missing_static_checks"]
+    assert "totally_unwired_check" not in report["covered_static_checks"]
+
+
 def test_generated_code_runtime_contracts_are_explicit_and_source_free():
     contracts = code_harness.generated_code_runtime_contracts(
         [

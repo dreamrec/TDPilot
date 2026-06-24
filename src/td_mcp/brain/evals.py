@@ -542,7 +542,19 @@ async def _promoted_pattern_for_trace_memory_fixture(case: dict[str, Any]):
 
 
 async def trace_promotion_coverage_report(cases: list[dict[str, Any]]) -> dict[str, Any]:
-    """Prove at least one successful golden trace promotes into a pattern candidate."""
+    """Prove the trace->pattern promotion PLUMBING accepts a well-formed golden trace.
+
+    IMPORTANT — this is a PLUMBING test, not a runtime-success test. The runtime
+    evidence fed to the promotion gate is SYNTHETIC (see
+    ``_synthetic_trace_promotion_*`` — the BrainTrace, validation report, and
+    profile/generated-code probe results are authored constants, not readbacks
+    from a live TouchDesigner). A green result proves the planner builds a plan
+    and the promotion gate promotes it given passing evidence; it does NOT prove
+    any patch TDPilot generates actually cooks/compiles correctly in TD. That
+    claim needs a live-TD eval tier. The ``runtime_evidence_source`` field below
+    is set to ``synthetic_fixture`` so the release gate and other consumers can
+    distinguish this from live evidence.
+    """
     registry = load_pattern_registry()
     fixtures = [
         case for case in cases if _case_id(case) in {"audio_feedback_panel_debug", "glsl_top_shader_compiled"}
@@ -604,6 +616,10 @@ async def trace_promotion_coverage_report(cases: list[dict[str, Any]]) -> dict[s
     return {
         "schema_version": 1,
         "ok": bool(fixtures) and len(promoted) == len(fixtures) and not blocked and not invalid_sources,
+        # Marks the runtime evidence behind this report as authored fixtures, not
+        # live-TD readbacks — green here is promotion-plumbing proof, not runtime
+        # proof. Do NOT treat this report as evidence a patch worked in TD.
+        "runtime_evidence_source": "synthetic_fixture",
         "eligible_trace_fixture_count": len(fixtures),
         "promoted_fixture_count": len(promoted),
         "blocked_fixture_count": len(blocked),
@@ -639,7 +655,7 @@ def _trace_promotion_fixture_validation_report(plan) -> dict[str, Any]:
     )
     cheap_metrics: dict[str, Any] = {
         "profile_probe_results": [
-            _trace_promotion_runtime_probe_result(probe_id)
+            _synthetic_trace_promotion_runtime_probe_result(probe_id)
             for probe_id in validation_needs
             if probe_id
             in {
@@ -654,7 +670,7 @@ def _trace_promotion_fixture_validation_report(plan) -> dict[str, Any]:
             "contract_count": len(generated_code_contracts),
             "checked_contract_count": len(generated_code_contracts),
             "evidence": [
-                _trace_promotion_generated_code_runtime_result(contract)
+                _synthetic_trace_promotion_generated_code_runtime_result(contract)
                 for contract in generated_code_contracts
             ],
         }
@@ -664,7 +680,14 @@ def _trace_promotion_fixture_validation_report(plan) -> dict[str, Any]:
     }
 
 
-def _trace_promotion_generated_code_runtime_result(contract: dict[str, Any]) -> dict[str, Any]:
+def _synthetic_trace_promotion_generated_code_runtime_result(contract: dict[str, Any]) -> dict[str, Any]:
+    """SYNTHETIC fixture — no TouchDesigner is contacted.
+
+    The status/issue_count below are authored constants, not observations from a
+    live cook. ``evidence_source: synthetic_fixture`` marks this so consumers (and
+    the release gate) never read a green trace_promotion_coverage as proof that a
+    generated-code block actually compiled in TD. See trace_promotion_coverage_report.
+    """
     return {
         "block_id": str(contract.get("block_id") or ""),
         "check_id": str(contract.get("check_id") or ""),
@@ -677,10 +700,17 @@ def _trace_promotion_generated_code_runtime_result(contract: dict[str, Any]) -> 
         "endpoint": "node/errors" if contract.get("check_id") == "compile_state" else None,
         "status": "runtime_pass",
         "issue_count": 0,
+        "evidence_source": "synthetic_fixture",
     }
 
 
-def _trace_promotion_runtime_probe_result(probe_id: str) -> dict[str, Any]:
+def _synthetic_trace_promotion_runtime_probe_result(probe_id: str) -> dict[str, Any]:
+    """SYNTHETIC fixture — the metric values and runtime_pass status are authored
+    constants, not readbacks from a live TouchDesigner. Tagged
+    ``evidence_source: synthetic_fixture`` so green here proves the promotion
+    plumbing accepts well-formed evidence, NOT that any patch produced correct
+    runtime output. A live-TD eval tier is required for that claim.
+    """
     if probe_id == "audio_signal_activity":
         return {
             "profile": "audio_reactive",
@@ -692,6 +722,7 @@ def _trace_promotion_runtime_probe_result(probe_id: str) -> dict[str, Any]:
                 "audio_analysis_channel_delta": 0.8,
                 "audio_analysis_channel_samples": 4,
             },
+            "evidence_source": "synthetic_fixture",
         }
     if probe_id == "feedback_output_readback":
         return {
@@ -704,6 +735,7 @@ def _trace_promotion_runtime_probe_result(probe_id: str) -> dict[str, Any]:
                 "feedback_output_luminance_mean": 0.25,
                 "feedback_output_luminance_max": 0.75,
             },
+            "evidence_source": "synthetic_fixture",
         }
     return {
         "profile": "panel_ui",
@@ -715,6 +747,7 @@ def _trace_promotion_runtime_probe_result(probe_id: str) -> dict[str, Any]:
             "panel_state_channel_count": 2,
             "panel_state_sample_count": 2,
         },
+        "evidence_source": "synthetic_fixture",
     }
 
 

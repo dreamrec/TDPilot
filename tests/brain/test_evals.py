@@ -292,6 +292,9 @@ async def test_evaluate_golden_cases_scores_all_current_profiles():
     assert report["trace_promotion_coverage"]["blocked_fixture_count"] == 0
     assert "audio_feedback_panel_debug" in report["trace_promotion_coverage"]["promoted_case_ids"]
     assert "glsl_top_shader_compiled" in report["trace_promotion_coverage"]["promoted_case_ids"]
+    # Honesty marker: the runtime evidence behind this report is synthetic, not a
+    # live-TD readback, so a green trace_promotion_coverage is plumbing proof only.
+    assert report["trace_promotion_coverage"]["runtime_evidence_source"] == "synthetic_fixture"
     assert report["trace_memory_reuse_coverage"]["ok"] is True
     assert report["trace_memory_reuse_coverage"]["fixture_count"] >= 2
     assert report["trace_memory_reuse_coverage"]["loaded_pattern_count"] >= 2
