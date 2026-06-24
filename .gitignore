@@ -126,3 +126,13 @@ docs/TD_INTRICACIES_AND_PATTERNS.md
 # carries session-specific paths, cross-links to gitignored docs, and
 # personal notes. Public glossary lives in CONTEXT.md.
 CONTEXT-local.md
+
+# Transient tooling/build caches that must NEVER be committed. The video
+# skills (remotion/hyperframes) drop .remotion/ + .cache/ into the repo root,
+# and a `git add -A` swept them in once (2026-06-25) — never again.
+# .pytest_cache/ and .ruff_cache/ are standard test/lint caches. All of these
+# regenerate on demand and carry no project content.
+.remotion/
+.cache/
+.pytest_cache/
+.ruff_cache/
