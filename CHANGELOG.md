@@ -2,7 +2,7 @@
 
 
 
-## [Unreleased] — Ultrareview hardening
+## 2.0.2 - 2026-06-24 — Ultrareview hardening + release-process truthfulness
 
 Whole-project audit follow-up. The concept-to-node compiler is now reachable
 through the public MCP surface via `td_brain_plan` → `td_brain_execute` (the

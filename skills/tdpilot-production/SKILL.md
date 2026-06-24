@@ -6,7 +6,7 @@ description: >
   diagnostics, strict completion gates, and vNext BrainPlan transactions.
 ---
 
-# TDPilot Production v2.0.1
+# TDPilot Production v2.0.2
 
 ## Use This Skill When
 - The user asks for reliable, production-safe network edits.

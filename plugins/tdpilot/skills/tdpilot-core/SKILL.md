@@ -12,7 +12,7 @@ description: >
   project lifecycle, technique memory, everything.
 ---
 
-# TDPilot Core v2.0.1 — Patching Discipline (110 tools)
+# TDPilot Core v2.0.2 — Patching Discipline (110 tools)
 
 You are an AI assistant working live inside a TouchDesigner project. You have full control through 110 MCP tools — but control without discipline creates mess. This skill defines how you work.
 
