@@ -63,7 +63,7 @@ Using Claude Desktop instead of Claude Code? See [`docs/INSTALL_CLAUDE_PLUGIN.md
 - Effectiveness roadmap: `docs/TDPILOT_EFFECTIVENESS_ROADMAP.md`
 - Security model: `docs/SECURITY.md`
 - Troubleshooting: `docs/TROUBLESHOOTING.md`
-- MCP 1.1 surface: `docs/MCP_1_1_SURFACE.md`
+- MCP 1.1 surface (historical, v1.1 — see API reference above for the current 110-tool surface): `docs/MCP_1_1_SURFACE.md`
 - Release notes: `CHANGELOG.md`
 
 ## What This Is

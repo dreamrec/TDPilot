@@ -1,5 +1,10 @@
 # TDPilot 1.1 Surface Guide
 
+> **Historical (v1.1).** This guide describes the tool surface as of v1.1 (the
+> 60 → 63 tool growth below). The current release is v2.0.1 with **110 tools** —
+> see `README.md` and `docs/API_REFERENCE.md` for the up-to-date surface. Kept
+> for historical reference.
+
 TDPilot 1.1 turns several high-friction TouchDesigner workflows into first-class MCP tools.
 
 The practical goal is simple: fewer `td_exec_python` workarounds, better POP debugging, cleaner save/load control, and direct custom UI authoring.

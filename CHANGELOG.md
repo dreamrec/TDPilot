@@ -2,6 +2,56 @@
 
 
 
+## [Unreleased] — Ultrareview hardening
+
+Whole-project audit follow-up. The concept-to-node compiler is now reachable
+through the public MCP surface via `td_brain_plan` → `td_brain_execute` (the
+2.0.1 note that it was "not yet wired" no longer holds at HEAD).
+
+### Security
+
+- **Exec-mode bypasses closed.** `td_set_params {expr}` and `td_set_content`
+  now honour `TD_MCP_EXEC_MODE` — previously a parameter expression or DAT-text
+  write installed arbitrary Python even under `off`. `standard` mode no longer
+  leaks the real builtins via injected-module reflection
+  (`json.__builtins__[...]`); `mod` is removed from the restricted/standard exec
+  namespace; the DAT-escape whitespace bypass is normalised; secret comparison
+  uses `hmac.compare_digest`.
+- **Secure auth default.** The in-TD installer writes `TD_MCP_REQUIRE_AUTH=1`
+  with a generated secret, and autostart no longer force-disables auth — both
+  funnel through `~/.tdpilot/.tdpilot.env` so client and server share one secret
+  (no 401 drift). Explicit `TD_MCP_REQUIRE_AUTH=0` is still honoured.
+
+### Fixed
+
+- **Transaction rollback** no longer reports `rolled_back` while leaving the
+  original mutation live when an auto-repair opened a second undo block; the
+  param-only snapshot fallback no longer claims success when nodes were created.
+- **Plan/apply tools** return a dict error envelope under structured output
+  (a string raised a FastMCP ValidationError on every exception path).
+- **CI** "Validate release-gate checker" dropped `--require-complete` (latent
+  exit-2 break); skipped atlas-coverage tests are now surfaced (`-rs` + a
+  corpus-absent warning) instead of silently green.
+
+### Integrity / supply chain
+
+- Trace-promotion eval and the generated-code harness coverage report are no
+  longer self-proving: synthetic runtime evidence is tagged `synthetic_fixture`,
+  and harness coverage is discovered from the validator bodies, not copied from
+  the required-set.
+- Brain DB downloads verify a manifest `sha256` when present (warn when absent).
+- npm `run.js` pins `uv` to 0.6.10 (matching the other installers);
+  `install.sh` passes paths via env instead of interpolating into Python.
+
+### Surface
+
+- Destructive daily-driver tools (`td_create_node`, `td_delete_node`,
+  `td_set_params`, `td_set_content`, `td_exec_python`, `td_restore_snapshot`,
+  `td_project_lifecycle`, …) now carry `destructiveHint`; read-only getters
+  carry `readOnlyHint`. The `td_set_params` param-semantics warn-vs-block
+  asymmetry vs the brain path is now documented.
+
+
 ## 2.0.1 - 2026-06-20 — Concept-to-node compiler (Phase 1) + green CI
 
 ### Added

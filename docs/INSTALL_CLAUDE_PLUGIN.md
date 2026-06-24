@@ -139,6 +139,7 @@ The plugin's bundled `.mcp.json` defaults to:
 | `TD_MCP_WS_PORT`         | `9982`         | TD WebSocket port (events, streaming) |
 | `TD_MCP_EXEC_MODE`       | `restricted`   | Python exec sandbox tier — see `docs/SECURITY.md` |
 | `TD_MCP_REQUIRE_AUTH`    | `1`            | Require `TD_MCP_SHARED_SECRET` for HTTP auth |
+| `TD_MCP_AUTOGENERATE_SECRET` | `1`        | When auth is required and no secret is set, generate one and persist it to `~/.tdpilot/.tdpilot.env` (the same file the TD-side reads), so client and server share one secret |
 
 Override any of them in your Claude Code `settings.json` under
 `"mcpServers": { "touchdesigner": { "env": {...} } }` if needed. The default
