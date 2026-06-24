@@ -82,6 +82,35 @@ async def test_transaction_rolls_back_when_validation_fails():
     assert ("project/lifecycle", {"action": "undo"}) in client.calls
 
 
+@pytest.mark.asyncio
+async def test_transaction_rollback_verifies_created_node_paths_are_absent_after_undo():
+    ops = [PatchOperation(kind="create_node", target="/p", args={"op_type": "nullTOP", "name": "out1"})]
+
+    def detail(params):
+        if params.get("path") == "/p/out1":
+            return {"path": "/p/out1", "type": "nullTOP", "family": "TOP"}
+        return {"error": "not found"}
+
+    client = FakeTDClient(
+        scripted={
+            "nodes": {"nodes": []},
+            "node/create": {"path": "/p/out1"},
+            "node/errors": {"issues": [{"path": "/p/out1", "message": "broken"}]},
+            "node/detail": detail,
+            "cooking": {"stuck": []},
+        }
+    )
+
+    result = await apply_transaction(client, _plan(ops), sentinel=UndoBlockSentinel())
+
+    assert ("node/detail", {"path": "/p/out1"}) in client.calls
+    assert result.status == "broken"
+    assert result.rollback_performed is False
+    assert result.needs_manual_recovery is True
+    assert result.rollback_verification["created_paths"]["remaining"] == ["/p/out1"]
+    assert "created paths still exist" in (result.rollback_error or "")
+
+
 def _txn_result(**kwargs) -> TransactionResult:
     base = {"plan_id": "p1", "status": "broken"}
     base.update(kwargs)
@@ -173,6 +202,87 @@ async def test_rollback_undo_failure_with_created_nodes_refuses_param_only_resto
     )
     assert result.rollback_performed is False
     assert result.needs_manual_recovery is True
+
+
+@pytest.mark.asyncio
+async def test_rollback_readback_detects_changed_param_still_holding_transaction_value():
+    client = FakeTDClient(
+        scripted={
+            "node/params": {
+                "path": "/p/level",
+                "parameters": {"opacity": {"value": 0.5}},
+            }
+        }
+    )
+    result = _txn_result(undo_blocks_opened=1)
+
+    await _rollback(
+        client,
+        result,
+        restore_snapshot=None,
+        undo_block_count=1,
+        changed_params=({"path": "/p/level", "name": "opacity", "new": 0.5},),
+    )
+
+    assert result.rollback_performed is False
+    assert result.needs_manual_recovery is True
+    assert result.rollback_verification["changed_params"]["still_changed"] == [
+        {"path": "/p/level", "name": "opacity", "value": 0.5}
+    ]
+
+
+@pytest.mark.asyncio
+async def test_rollback_readback_detects_stale_param_expression_after_undo():
+    client = FakeTDClient(
+        scripted={
+            "node/params": {
+                "path": "/p/level",
+                "parameters": {"brightness1": {"value": 0.2, "expr": "op('/p/chop')[0]"}},
+            }
+        }
+    )
+    result = _txn_result(undo_blocks_opened=1)
+
+    await _rollback(
+        client,
+        result,
+        restore_snapshot=None,
+        undo_block_count=1,
+        changed_params=(
+            {"path": "/p/level", "name": "brightness1", "new": {"expr": "op('/p/chop')[0]"}},
+        ),
+    )
+
+    assert result.rollback_performed is False
+    assert result.needs_manual_recovery is True
+    assert result.rollback_verification["changed_params"]["still_changed"] == [
+        {"path": "/p/level", "name": "brightness1", "expr": "op('/p/chop')[0]"}
+    ]
+
+
+@pytest.mark.asyncio
+async def test_rollback_readback_detects_created_connection_still_present_after_undo():
+    def connections(params):
+        if params.get("path") == "/p/src":
+            return {"path": "/p/src", "outputs": [{"to_path": "/p/out", "from_index": 0, "to_index": 0}]}
+        if params.get("path") == "/p/out":
+            return {"path": "/p/out", "inputs": [{"from_path": "/p/src", "from_index": 0, "to_index": 0}]}
+        return {"path": params.get("path"), "inputs": [], "outputs": []}
+
+    client = FakeTDClient(scripted={"node/connections": connections})
+    result = _txn_result(undo_blocks_opened=1)
+
+    await _rollback(
+        client,
+        result,
+        restore_snapshot=None,
+        undo_block_count=1,
+        connections_made=(("/p/src", "/p/out"),),
+    )
+
+    assert result.rollback_performed is False
+    assert result.needs_manual_recovery is True
+    assert result.rollback_verification["connections"]["remaining"] == [{"from": "/p/src", "to": "/p/out"}]
 
 
 @pytest.mark.asyncio

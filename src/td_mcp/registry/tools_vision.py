@@ -120,6 +120,29 @@ async def td_analyze_frame(
             description="Reference TOP path for roi_diff mode",
         ),
     ] = None,
+    sample_grid: Annotated[
+        int,
+        Field(
+            default=20,
+            ge=2,
+            le=128,
+            description="Grid size used by TD-side sample() fallback and normalized quality metrics.",
+        ),
+    ] = 20,
+    thresholds: Annotated[
+        dict[str, Any] | None,
+        Field(
+            default=None,
+            description="Optional visual-quality threshold overrides.",
+        ),
+    ] = None,
+    quality_mode: Annotated[
+        bool,
+        Field(
+            default=True,
+            description="If True, include normalized visual-quality metrics in the TD response.",
+        ),
+    ] = True,
 ) -> str:
     """Analyze pixel data of a TOP node without transferring full image data.
 
@@ -139,6 +162,9 @@ async def td_analyze_frame(
         body: dict[str, Any] = {
             "path": path,
             "modes": modes or ["histogram", "luminance"],
+            "sample_grid": sample_grid,
+            "thresholds": thresholds,
+            "quality_mode": quality_mode,
         }
         if roi is not None:
             body["roi"] = roi

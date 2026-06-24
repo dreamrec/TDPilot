@@ -795,6 +795,70 @@ def test_noise_top_source_params_have_docs_grounded_semantics_and_preflight_chec
     assert "param-semantics:high-resolution:noiseTOP.resolution" in risk_flags
 
 
+def test_noise_top_common_aliases_are_rejected_with_canonical_param_guidance():
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "noiseTOP", "name": "noise"}
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/noise",
+                args={"params": {"harmonics": 4, "roughness": 0.45, "amplitude": 1.0}},
+            ),
+        ]
+    )
+
+    issues = validate_patch_plan_parameter_contract(plan, require_semantics_for_set_params=True)
+    messages = "\n".join(issue.message for issue in issues)
+
+    assert {issue.code for issue in issues} == {"unknown_param_alias"}
+    assert "noiseTOP.harmonics" in messages and "use noiseTOP.harmon" in messages
+    assert "noiseTOP.roughness" in messages and "use noiseTOP.rough" in messages
+    assert "noiseTOP.amplitude" in messages and "use noiseTOP.amp" in messages
+
+
+def test_edge_and_blur_top_params_have_docs_grounded_semantics_and_preflight_checks():
+    registry = load_param_semantics_registry()
+    by_key = {(item.op_type, item.name): item for item in registry}
+    expected = {
+        ("edgeTOP", "edgecolor"),
+        ("edgeTOP", "edgecolorr"),
+        ("edgeTOP", "edgecolorg"),
+        ("edgeTOP", "edgecolorb"),
+        ("edgeTOP", "edgecolora"),
+        ("blurTOP", "size"),
+    }
+
+    assert expected - set(by_key) == set()
+    assert by_key[("edgeTOP", "edgecolor")].official_source == "https://docs.derivative.ca/Edge_TOP"
+    assert by_key[("blurTOP", "size")].official_source == "https://docs.derivative.ca/Blur_TOP"
+
+    plan = _plan_with_ops(
+        [
+            PatchOperation(kind="create_node", target="/project1", args={"op_type": "edgeTOP", "name": "edge"}),
+            PatchOperation(kind="create_node", target="/project1", args={"op_type": "blurTOP", "name": "blur"}),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/edge",
+                args={"params": {"edgecolor": (1.0, 0.5), "edgecolorr": "red", "edgecolora": 1.5}},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/blur",
+                args={"params": {"size": -2.0}},
+            ),
+        ]
+    )
+
+    issues = validate_patch_plan_parameter_contract(plan, require_semantics_for_set_params=True)
+    assert "missing_param_semantics" not in {issue.code for issue in issues}
+    assert any(issue.code == "param_tuple_size_mismatch" and "edgecolor" in issue.message for issue in issues)
+    assert any(issue.code == "invalid_float_param" and "edgecolorr" in issue.message for issue in issues)
+    assert any(issue.code == "param_out_of_range" and "edgecolora" in issue.message for issue in issues)
+    assert any(issue.code == "param_out_of_range" and "size" in issue.message for issue in issues)
+
+
 def test_level_top_accepts_narrow_chop_reference_expression_for_control_binding():
     plan = _plan_with_ops(
         [

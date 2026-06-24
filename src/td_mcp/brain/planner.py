@@ -578,6 +578,27 @@ async def build_brain_plan(
         validation_profile=validation_profile,
         card_index=card_index if include_docs else None,
     )
+    if _intent_is_complex_multi_output_library(intent):
+        graph = _empty_graph(task, profile="generic")
+        patch_plan = _empty_patch(task, reason="complex multi-output library brief requires explicit compiler")
+        return BrainPlan(
+            task=task,
+            concept_graph=graph,
+            patch_plan=patch_plan,
+            validation_profile=_resolve_validation_profile(validation_profile),
+            blocked_questions=[
+                "This request asks for multiple distinct visual systems plus an interactive review library. The current safe compiler cannot guarantee concept diversity, panel navigation, visual QA, and 60 fps performance in one BrainPlan yet."
+            ],
+            missing_facts=["complex_multi_output_library"],
+            grounding_evidence=[
+                "profile:generic",
+                "planner:blocked_complex_multi_output",
+                "requires:multi_output_diversity",
+                "requires:panel_interaction_validation",
+                "requires:visual_quality_gate",
+            ],
+            risk_flags=["multi-output-brief", "needs-diversity-compiler", "needs-panel-validator"],
+        )
     supported_compiler_route = is_supported_compiler_route(compiled_task)
     if supported_compiler_route:
         available_ops = await _read_available_ops(td_client)
@@ -830,6 +851,16 @@ def _intent_is_under_specified(intent: str, preferred_domains: list[str] | None)
             "custom parameter",
         )
     )
+
+
+def _intent_is_complex_multi_output_library(intent: str) -> bool:
+    text = (intent or "").lower()
+    asks_many = any(token in text for token in ("10 ", "ten ", "ten-", "ten_"))
+    asks_projects = any(token in text for token in ("projects", "outputs", "comps", "patches"))
+    asks_library = any(token in text for token in ("thumbnail", "library", "gallery", "review wall"))
+    asks_navigation = any(token in text for token in ("back", "next", "previous", "prev", "detail"))
+    asks_qa = any(token in text for token in ("visual qa", "pixel", "bug ledger", "metrics", "60 fps"))
+    return asks_many and asks_projects and asks_library and (asks_navigation or asks_qa)
 
 
 def _device_sources_from_constraints(constraints: dict[str, Any]) -> set[str]:

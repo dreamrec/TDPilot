@@ -46,6 +46,7 @@ def test_transaction_options_defaults_are_safe():
     assert opts.dry_run is False
     assert opts.max_ops == 80
     assert opts.validation_profile == "structural_visual_safe"
+    assert opts.visual_quality_policy == "block"
 
 
 def test_brain_plan_wraps_existing_patch_plan_without_changing_patch_contract():

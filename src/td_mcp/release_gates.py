@@ -22,4 +22,6 @@ from __future__ import annotations
 # 2026-06-16: bumped 109 → 110 with td_cockpit_render (optional MCP Apps cockpit).
 # 2026-06-24: bumped 110 → 111 with td_sync_status (one-call install/version
 #             truth across server, live TD component, .tox, caches, npm/GitHub).
-EXPECTED_MIN_TOOL_COUNT: int = 111
+# 2026-06-24: bumped 111 → 112 with td_sync_diagnose (strict live sync,
+#             version-skew, endpoint, and auth fingerprint diagnostics).
+EXPECTED_MIN_TOOL_COUNT: int = 112

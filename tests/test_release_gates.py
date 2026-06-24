@@ -525,6 +525,24 @@ def _complete_brain_live_smoke_payload() -> dict:
             "mutated_td": True,
             "connection_error": None,
             "td_health": {"status": "ok", "api_version": "2.0.0"},
+            "sync_diagnostic": {"overall": {"status": "pass"}, "auth": {"matches": True}},
+            "visual_quality_summary": {"checked_count": 2, "failed_count": 0, "missing_count": 0},
+            "panel_interaction_results": {
+                "ok": True,
+                "checked_count": 5,
+                "failed_count": 0,
+                "actions": ["reset", "thumb", "next", "prev", "back"],
+            },
+            "performance_summary": {
+                "ok": True,
+                "steady_state_max_ms": 11.5,
+                "frame_budget_ms": 16.667,
+                "safety_target_ms": 12.0,
+                "warmup_spike_recorded": True,
+                "target_root_spike_count": 0,
+                "sys_ui_spike_count": 1,
+            },
+            "incident_replay": {"ok": True, "bug_count": 45, "untriaged": []},
             "transactional_generated_code_smoke": {
                 "status": "cleaned_up",
                 "ok": True,
@@ -571,7 +589,7 @@ def _complete_brain_live_smoke_payload() -> dict:
 def _complete_plugin_surface_payload() -> dict:
     return {
         "ok": True,
-        "tool_count": 111,
+        "tool_count": 112,
         "brain_skill_count": 5,
         "agent_count": 4,
         "hook_count": 2,
@@ -2039,6 +2057,14 @@ def test_evaluate_passes_with_valid_brain_live_smoke_payload():
     labels = {check["label"]: check for check in report["checks"]}
     assert labels["brain live smoke report ok"]["status"] == "pass"
     assert labels["brain live smoke td health ok"]["status"] == "pass"
+    assert labels["brain live smoke sync diagnostic ok"]["status"] == "pass"
+    assert labels["brain live smoke visual quality checked"]["status"] == "pass"
+    assert labels["brain live smoke visual quality failures"]["status"] == "pass"
+    assert labels["brain live smoke panel interactions ok"]["status"] == "pass"
+    assert labels["brain live smoke performance ok"]["status"] == "pass"
+    assert labels["brain live smoke steady-state frame budget"]["status"] == "pass"
+    assert labels["brain live smoke incident replay ok"]["status"] == "pass"
+    assert labels["brain live smoke incident replay bug count"]["status"] == "pass"
     assert labels["brain live smoke unexpected scenario count"]["status"] == "pass"
     assert labels["brain live smoke missing profile probe evidence"]["status"] == "pass"
     assert labels["brain live smoke invalid profile probe results"]["status"] == "pass"
@@ -2053,6 +2079,59 @@ def test_evaluate_passes_with_valid_brain_live_smoke_payload():
     assert labels["brain live smoke generated code source payload leak"]["status"] == "pass"
     assert labels["brain live smoke transactional generated code ok"]["status"] == "pass"
     assert labels["brain live smoke transactional generated code cleanup ok"]["status"] == "pass"
+
+
+def test_evaluate_fails_when_brain_live_smoke_lacks_real_world_evidence():
+    brain_live_smoke = _complete_brain_live_smoke_payload()
+    brain_live_smoke.pop("sync_diagnostic")
+    brain_live_smoke.pop("visual_quality_summary")
+    brain_live_smoke.pop("panel_interaction_results")
+    brain_live_smoke.pop("performance_summary")
+    brain_live_smoke.pop("incident_replay")
+
+    report = check_release_gates.evaluate(
+        None,
+        None,
+        None,
+        brain_live_smoke=brain_live_smoke,
+    )
+
+    labels = {check["label"]: check for check in report["checks"]}
+    assert report["summary"]["ok"] is False
+    assert labels["brain live smoke sync diagnostic ok"]["status"] == "fail"
+    assert labels["brain live smoke visual quality checked"]["status"] == "missing"
+    assert labels["brain live smoke panel interactions ok"]["status"] == "fail"
+    assert labels["brain live smoke performance ok"]["status"] == "fail"
+    assert labels["brain live smoke incident replay ok"]["status"] == "fail"
+
+
+def test_evaluate_fails_when_brain_live_smoke_visual_or_panel_evidence_fails():
+    brain_live_smoke = _complete_brain_live_smoke_payload()
+    brain_live_smoke["visual_quality_summary"] = {"checked_count": 2, "failed_count": 1, "missing_count": 0}
+    brain_live_smoke["panel_interaction_results"] = {"ok": False, "checked_count": 5, "failed_count": 1}
+    brain_live_smoke["performance_summary"] = {
+        "ok": False,
+        "steady_state_max_ms": 20.0,
+        "frame_budget_ms": 16.667,
+        "safety_target_ms": 12.0,
+        "warmup_spike_recorded": True,
+    }
+    brain_live_smoke["incident_replay"] = {"ok": False, "bug_count": 45, "untriaged": ["BUG-040"]}
+
+    report = check_release_gates.evaluate(
+        None,
+        None,
+        None,
+        brain_live_smoke=brain_live_smoke,
+    )
+
+    labels = {check["label"]: check for check in report["checks"]}
+    assert report["summary"]["ok"] is False
+    assert labels["brain live smoke visual quality failures"]["status"] == "fail"
+    assert labels["brain live smoke panel interactions ok"]["status"] == "fail"
+    assert labels["brain live smoke performance ok"]["status"] == "fail"
+    assert labels["brain live smoke steady-state frame budget"]["status"] == "fail"
+    assert labels["brain live smoke incident replay ok"]["status"] == "fail"
 
 
 def test_evaluate_fails_when_brain_live_smoke_cannot_reach_td():
@@ -2297,7 +2376,7 @@ def test_evaluate_fails_when_brain_live_smoke_has_uncontrolled_expensive_probe()
 def test_evaluate_passes_with_valid_plugin_surface_payload():
     plugin_surface = {
         "ok": True,
-        "tool_count": 111,
+        "tool_count": 112,
         "brain_skill_count": 5,
         "agent_count": 4,
         "hook_count": 2,
@@ -2351,7 +2430,7 @@ def test_evaluate_fails_when_plugin_surface_has_hosted_llm_dependency_leaks():
 def test_evaluate_fails_when_plugin_surface_packaging_is_incomplete():
     plugin_surface = {
         "ok": False,
-        "tool_count": 111,
+        "tool_count": 112,
         "brain_skill_count": 5,
         "agent_count": 4,
         "hook_count": 2,

@@ -33,7 +33,6 @@ RESTRICTED_TOKENS: tuple[str, ...] = (
     "__import__(",
     "open(",
     "compile(",
-    "input(",
     "subprocess",
     "socket",
     "requests",
@@ -77,7 +76,6 @@ STANDARD_BLOCKED_TOKENS: tuple[str, ...] = (
     "__import__(",
     "open(",
     "compile(",
-    "input(",
     "exec(",
     "eval(",
     "subprocess",
@@ -119,6 +117,8 @@ def restricted_violation(code: str):
     if RESTRICTED_IMPORT_RE.search(code):
         return "restricted mode blocks import statements"
     lowered = code.lower()
+    if re.search(r"(?<![\w.])input\s*\(", lowered):
+        return "restricted mode blocks token: input("
     for token in RESTRICTED_TOKENS:
         if token in lowered:
             return f"restricted mode blocks token: {token}"
@@ -128,6 +128,8 @@ def restricted_violation(code: str):
 def standard_violation(code: str):
     """Return the first policy violation for standard mode, or None."""
     lowered = code.lower()
+    if re.search(r"(?<![\w.])input\s*\(", lowered):
+        return "standard mode blocks token: input("
     for token in STANDARD_BLOCKED_TOKENS:
         if token in lowered:
             return f"standard mode blocks token: {token}"

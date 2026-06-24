@@ -432,6 +432,35 @@ async def test_macro_dispatches_through_macro_engine():
 
 
 @pytest.mark.asyncio
+async def test_macro_apply_records_recursive_created_child_paths():
+    class FakeMacroEngine:
+        async def create_macro(self, **_kwargs):
+            return {
+                "success": True,
+                "created_nodes": [
+                    {"path": "/p/fb_noise", "type": "noiseTOP"},
+                    {"path": "/p/fb_feedback", "type": "feedbackTOP"},
+                    {"path": "/p/fb_out", "type": "nullTOP"},
+                ],
+                "entry_node": "/p/fb_noise",
+                "exit_node": "/p/fb_out",
+            }
+
+    ops = [PatchOperation(kind="macro", target="/p", args={"macro_type": "feedback_loop"})]
+    client = FakeTDClient(scripted={"node/errors": {"issues": []}, "cooking": {}})
+
+    result = await apply_plan(
+        client,
+        _plan(ops),
+        sentinel=UndoBlockSentinel(),
+        macro_engine=FakeMacroEngine(),
+    )
+
+    assert result.status == "clean"
+    assert result.created_paths == ["/p/fb_noise", "/p/fb_feedback", "/p/fb_out"]
+
+
+@pytest.mark.asyncio
 async def test_macro_block_policy_preflights_before_undo_or_mutation():
     client = FakeTDClient()
     preflight_calls = []

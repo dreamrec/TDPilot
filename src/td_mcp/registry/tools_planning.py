@@ -624,7 +624,6 @@ _STOCK_OP_TYPES: frozenset[str] = frozenset(
         "datexec",
         "parexec",
         "opexec",
-        "panelexec",
         "eval",
         "examine",
         "fifo",

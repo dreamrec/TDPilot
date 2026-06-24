@@ -23,6 +23,11 @@ _CREATE_TYPE_ALIASES: dict[str, str] = {
     "render": "renderTOP",
     "rendertop": "renderTOP",
 }
+_PARAM_NAME_ALIASES: dict[tuple[str, str], str] = {
+    ("noiseTOP", "harmonics"): "harmon",
+    ("noiseTOP", "roughness"): "rough",
+    ("noiseTOP", "amplitude"): "amp",
+}
 _GLSL_ADVANCED_POP_DOCS = "https://docs.derivative.ca/GLSL_Advanced_POP"
 _DAT_EXECUTE_DOCS = "https://docs.derivative.ca/DAT_Execute_DAT"
 _CHOP_EXECUTE_DOCS = "https://docs.derivative.ca/CHOP_Execute_DAT"
@@ -70,6 +75,8 @@ _TRANSFORM_TOP_DOCS = "https://docs.derivative.ca/Transform_TOP"
 _CACHE_TOP_DOCS = "https://docs.derivative.ca/Cache_TOP"
 _FEEDBACK_TOP_DOCS = "https://docs.derivative.ca/Feedback_TOP"
 _LEVEL_TOP_DOCS = "https://docs.derivative.ca/Level_TOP"
+_EDGE_TOP_DOCS = "https://docs.derivative.ca/Edge_TOP"
+_BLUR_TOP_DOCS = "https://docs.derivative.ca/Blur_TOP"
 _COMPOSITE_TOP_DOCS = "https://docs.derivative.ca/Composite_TOP"
 _SWITCH_TOP_DOCS = "https://docs.derivative.ca/Switch_TOP"
 _BASE_COMP_DOCS = "https://docs.derivative.ca/Base_COMP"
@@ -1678,6 +1685,8 @@ def load_param_semantics_registry() -> list[ParamSemantics]:
         *_level_top_semantics(),
         *_feedback_top_semantics(),
         *_composite_top_semantics(),
+        *_edge_top_semantics(),
+        *_blur_top_semantics(),
         *_switch_top_semantics(),
         *_table_dat_semantics(),
         *_select_dat_semantics(),
@@ -5570,6 +5579,58 @@ def _level_top_semantics() -> list[ParamSemantics]:
             cook_risk="medium",
             validation_rule="bool_toggle",
             official_source=_LEVEL_TOP_DOCS,
+        ),
+    ]
+
+
+def _edge_top_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="edgeTOP",
+            name="edgecolor",
+            label="Edge Color",
+            value_kind="tuple",
+            tuple_size=4,
+            valid_range=(0.0, 1.0),
+            default_strategy="opaque_white_edges_for_clear_detection",
+            cook_risk="low",
+            validation_rule="rgba_tuple",
+            official_source=_EDGE_TOP_DOCS,
+        ),
+        *[
+            ParamSemantics(
+                op_type="edgeTOP",
+                name=name,
+                label=label,
+                value_kind="float",
+                valid_range=(0.0, 1.0),
+                default_strategy="normalized_edge_color_channel",
+                cook_risk="low",
+                validation_rule="normalized_color_channel",
+                official_source=_EDGE_TOP_DOCS,
+            )
+            for name, label in (
+                ("edgecolorr", "Edge Color Red"),
+                ("edgecolorg", "Edge Color Green"),
+                ("edgecolorb", "Edge Color Blue"),
+                ("edgecolora", "Edge Color Alpha"),
+            )
+        ],
+    ]
+
+
+def _blur_top_semantics() -> list[ParamSemantics]:
+    return [
+        ParamSemantics(
+            op_type="blurTOP",
+            name="size",
+            label="Filter Size",
+            value_kind="float",
+            valid_range=(0.0, 100000.0),
+            default_strategy="small_positive_filter_size_for_realtime_blur",
+            cook_risk="medium",
+            validation_rule="non_negative_blur_size",
+            official_source=_BLUR_TOP_DOCS,
         ),
     ]
 
@@ -11401,6 +11462,19 @@ def validate_patch_plan_parameter_contract(
         for name, value in params.items():
             semantic = semantics.get((op_type, str(name)))
             if semantic is None:
+                alias_target = _PARAM_NAME_ALIASES.get((op_type, str(name)))
+                if alias_target:
+                    issues.append(
+                        _issue(
+                            code="unknown_param_alias",
+                            message=(
+                                f"{op_type}.{name} is not a live TouchDesigner parameter; "
+                                f"use {op_type}.{alias_target}."
+                            ),
+                            path=target,
+                        )
+                    )
+                    continue
                 if require_semantics_for_set_params:
                     issues.append(
                         _issue(
@@ -11469,6 +11543,19 @@ def direct_param_semantics_warnings(
             continue
         semantic = semantics.get((canonical, str(name)))
         if semantic is None:
+            alias_target = _PARAM_NAME_ALIASES.get((canonical, str(name)))
+            if alias_target:
+                issues.append(
+                    _warning_issue(
+                        code="unknown_param_alias",
+                        message=(
+                            f"{canonical}.{name} is not a live TouchDesigner parameter; "
+                            f"use {canonical}.{alias_target}. Direct tool write executed warn-only."
+                        ),
+                        path=path,
+                    )
+                )
+                continue
             if warn_on_missing_semantics and known_for_operator:
                 issues.append(
                     _warning_issue(

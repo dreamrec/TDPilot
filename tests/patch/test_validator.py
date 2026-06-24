@@ -79,3 +79,21 @@ async def test_validate_with_capture_frames():
     assert len(screenshot_calls) == 2
     legacy_calls = [c for c in client.calls if c[0] == "frame/capture"]
     assert legacy_calls == []
+
+
+@pytest.mark.asyncio
+async def test_validate_fails_when_requested_capture_frame_is_missing():
+    client = FakeTDClient(
+        scripted={
+            "node/errors": {"issues": []},
+            "cooking": {"total_cook_ms": 1.0, "stuck": []},
+            "screenshot": lambda params: {"error": f"Node not found: {params['path']}"},
+        }
+    )
+    plan = ValidationPlan(target_root="/p", capture_frames=["/p/out_missing"])
+
+    report = await validate_target(client, plan)
+
+    assert report.ok is False
+    assert report.frames["/p/out_missing"].startswith("ERROR:")
+    assert any("capture frame failed" in item["message"] for item in report.errors)

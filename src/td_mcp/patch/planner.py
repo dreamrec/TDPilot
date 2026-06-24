@@ -240,9 +240,12 @@ def _summarize(plan: PatchPlan) -> str:
     n_create = sum(1 for o in plan.operations if o.kind == "create_node")
     n_params = sum(1 for o in plan.operations if o.kind == "set_params")
     n_connect = sum(1 for o in plan.operations if o.kind == "connect")
+    n_macro = sum(1 for o in plan.operations if o.kind == "macro")
     parts = []
     if n_create:
         parts.append(f"create {n_create} node(s)")
+    if n_macro:
+        parts.append(f"create {n_macro} macro(s)")
     if n_params:
         parts.append(f"set params on {n_params} node(s)")
     if n_connect:

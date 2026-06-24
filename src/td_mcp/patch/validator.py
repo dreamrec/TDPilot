@@ -42,6 +42,7 @@ async def validate_target(td_client, plan: ValidationPlan) -> ValidationReport:
     # mcp_webserver_callbacks.py:1612). Pre-v1.5.1 the validator silently
     # 404'd on every capture_frames entry and reported "ERROR: …" strings.
     frames: dict[str, str] = {}
+    capture_errors: list[dict[str, Any]] = []
     for top_path in plan.capture_frames:
         try:
             frame = await td_client.request("screenshot", {"path": top_path, "quality": 0.5})
@@ -50,9 +51,18 @@ async def validate_target(td_client, plan: ValidationPlan) -> ValidationReport:
                 if b64:
                     frames[top_path] = b64
                 elif frame.get("error"):
+                    message = f"capture frame failed for {top_path}: {frame['error']}"
                     frames[top_path] = f"ERROR: {frame['error']}"
+                    capture_errors.append({"source": "validator", "path": top_path, "message": message})
+                else:
+                    message = f"capture frame failed for {top_path}: no image payload returned"
+                    frames[top_path] = "ERROR: no image payload returned"
+                    capture_errors.append({"source": "validator", "path": top_path, "message": message})
         except Exception as exc:  # noqa: BLE001
+            message = f"capture frame failed for {top_path}: {exc}"
             frames[top_path] = f"ERROR: {exc}"
+            capture_errors.append({"source": "validator", "path": top_path, "message": message})
+    errors.extend(capture_errors)
 
     # A failed cooking probe (cook_stats={"probe_error": ...}) means we could NOT
     # determine whether nodes are stuck — treat that as not-ok (fail closed)

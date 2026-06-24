@@ -386,6 +386,32 @@ async def test_audit_project_palette_components_excludes_stock_ops(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_audit_project_does_not_treat_internal_panelexec_alias_as_stock_creatable(monkeypatch):
+    idx = _FakeCardIndex({"panelexecuteDAT": {}})
+    client = _AuditClient(
+        {
+            "/project1": [
+                {"name": "panel_exec", "type": "panelexec", "family": "DAT", "path": "/project1/panel_exec"},
+                {
+                    "name": "panel_execute",
+                    "type": "panelexecuteDAT",
+                    "family": "DAT",
+                    "path": "/project1/panel_execute",
+                },
+            ],
+        }
+    )
+    ctx = _make_ctx(client=client, card_index=idx)
+    monkeypatch.setattr(registry, "_get_client", lambda _ctx: client)
+
+    result = await registry.td_audit_project(ctx, root_path="/project1")
+
+    assert result["success"] is True
+    assert "panelexec" in result["unknown_op_types"]
+    assert "panelexecuteDAT" not in result["unknown_op_types"]
+
+
+@pytest.mark.asyncio
 async def test_audit_project_unknown_ops_detected(monkeypatch):
     """Audit reports unknown op types when card_index is available."""
     idx = _FakeCardIndex({"noiseTOP": {}})  # only knows noiseTOP

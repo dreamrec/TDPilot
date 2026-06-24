@@ -247,6 +247,77 @@ def test_string_to_non_reference_param_not_falsely_flagged():
     assert result["results"]["mode"]["new_value"] == "quality"
 
 
+def test_menu_param_reports_requested_and_accepted_value_when_td_coerces():
+    module = _load_callbacks_module()
+
+    class _CoercingMenuPar(_FakePar):
+        @property
+        def val(self):
+            return self._val
+
+        @val.setter
+        def val(self, v):
+            self._val = "quality" if v == "fast" else v
+
+    mode_par = _CoercingMenuPar("mode", style="Menu", default="performance")
+    node = _FakeNode("/project1/glsl_test", {"mode": mode_par})
+    _install_fake_op(module, {"/project1/glsl_test": node})
+
+    result = module.handle_set_params({"path": "/project1/glsl_test", "params": {"mode": "fast"}})
+    per_param = result["results"]["mode"]
+
+    assert per_param["success"] is True
+    assert per_param["requested_value"] == "fast"
+    assert per_param["new_value"] == "quality"
+    assert per_param["accepted_value"] == "quality"
+    assert "coerced" in per_param["coercion_warning"].lower()
+
+
+def test_get_params_continues_after_one_parameter_eval_raises():
+    module = _load_callbacks_module()
+
+    class _Page:
+        name = "Test"
+
+    class _ReadablePar:
+        name = "good"
+        default = 1
+        label = "Good"
+        page = _Page()
+        style = "Float"
+        readOnly = False
+        isPulse = False
+        isMenu = False
+        menuNames = []
+        expr = ""
+        mode = "CONSTANT"
+
+        def eval(self):
+            return 7
+
+    class _BrokenPar:
+        name = "broken"
+
+        def eval(self):
+            raise RuntimeError("expression exploded")
+
+    class _ParamsNode:
+        path = "/project1/bulk"
+        type = "baseCOMP"
+        isCOMP = False
+
+        def pars(self):
+            return [_BrokenPar(), _ReadablePar()]
+
+    _install_fake_op(module, {"/project1/bulk": _ParamsNode()})
+
+    result = module.handle_get_params({"path": "/project1/bulk"})
+
+    assert result["parameters"]["broken"]["error"] == "Could not serialize"
+    assert result["parameters"]["good"]["value"] == 7
+    assert result["parameters"]["good"]["mode"] == "CONSTANT"
+
+
 def test_read_only_param_still_rejected_before_validation():
     """readOnly params short-circuit BEFORE the val/resolve validation path."""
     module = _load_callbacks_module()

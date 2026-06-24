@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import importlib.util
 import subprocess
 import sys
 from pathlib import Path
@@ -10,6 +11,13 @@ import pytest
 from td_mcp.brain.live_smoke import build_live_smoke_report, live_smoke_scenarios
 
 ROOT = Path(__file__).resolve().parent.parent.parent
+_CLI_SPEC = importlib.util.spec_from_file_location(
+    "brain_live_smoke_cli",
+    ROOT / "scripts" / "brain_live_smoke.py",
+)
+assert _CLI_SPEC and _CLI_SPEC.loader
+brain_live_smoke_cli = importlib.util.module_from_spec(_CLI_SPEC)
+_CLI_SPEC.loader.exec_module(brain_live_smoke_cli)
 
 
 class _SparseLiveClient:
@@ -117,9 +125,30 @@ class _TransactionalGeneratedCodeLiveClient(_SparseLiveClient):
         if endpoint == "node/errors":
             return {"issues": []}
         if endpoint == "cooking":
-            return {"stuck": []}
+            return {
+                "stuck": [],
+                "nodes": [
+                    {"path": "/project1/tdpilot_gc_smoke_out", "cookTime": 4.5},
+                    {"path": "/sys/internal", "cookTime": 18.0},
+                ],
+            }
         if endpoint == "analyze_frame":
-            return {"resolution": [16, 16], "channels": 4, "luminance": {"mean": 0.5, "max": 0.8, "std": 0.1}}
+            return {
+                "resolution": [16, 16],
+                "channels": 4,
+                "luminance": {"mean": 0.5, "max": 0.8, "std": 0.1},
+                "quality": {
+                    "pass": True,
+                    "mean_luminance": 0.5,
+                    "max_luminance": 0.8,
+                    "std_luminance": 0.1,
+                    "active_coverage": 1.0,
+                    "alpha_coverage": 1.0,
+                    "is_black": False,
+                    "is_flat": False,
+                    "fail_reasons": [],
+                },
+            }
         if endpoint == "project/lifecycle":
             if payload.get("action") == "undo":
                 self.created_paths.clear()
@@ -172,6 +201,14 @@ class _CleanupReadbackFailGeneratedCodeLiveClient(_UndoNoopGeneratedCodeLiveClie
             self.failed_cleanup_readback = True
             raise RuntimeError("transient cleanup nodes readback failed")
         return await super().request(endpoint, params)
+
+
+class _UnauthorizedLiveClient:
+    async def health_check(self):
+        raise RuntimeError("HTTP 401 Unauthorized: missing or invalid TD_MCP_SHARED_SECRET")
+
+    async def request(self, endpoint: str, params: dict | None = None):
+        raise RuntimeError("HTTP 401 Unauthorized: missing or invalid TD_MCP_SHARED_SECRET")
 
 
 @pytest.mark.asyncio
@@ -247,6 +284,21 @@ async def test_live_smoke_reports_profile_probe_summaries_without_expensive_defa
     assert any(item["probe_id"] == "compile_state" for item in glsl["profile_probes"])
     assert all(item["cost_level"] != "expensive" for item in glsl["profile_probes"])
     assert all(item["metric_names"] for item in glsl["profile_probes"])
+
+
+@pytest.mark.asyncio
+async def test_live_smoke_connection_failure_includes_sync_diagnostics(tmp_path, monkeypatch):
+    env_file = tmp_path / ".tdpilot.env"
+    env_file.write_text("TD_MCP_SHARED_SECRET=file-secret\n", encoding="utf-8")
+    monkeypatch.setenv("TDPILOT_ENV_FILE", str(env_file))
+    monkeypatch.setenv("TD_MCP_SHARED_SECRET", "process-secret")
+
+    report = await build_live_smoke_report(mode="live", td_client=_UnauthorizedLiveClient())
+
+    assert report["ok"] is False
+    assert "401" in report["connection_error"]
+    assert report["sync_diagnostic"]["auth"]["fingerprints_match"] is False
+    assert "TD_MCP_SHARED_SECRET" in report["remediation"]
 
 
 @pytest.mark.asyncio
@@ -682,6 +734,8 @@ async def test_live_smoke_transactional_generated_code_smoke_is_opt_in_and_clean
 
     assert planning_only["mutated_td"] is False
     assert planning_only["transactional_generated_code_smoke"]["status"] == "not_run"
+    assert planning_only["visual_quality_summary"]["status"] == "not_run"
+    assert planning_only["performance_summary"]["status"] == "not_run"
 
     client = _TransactionalGeneratedCodeLiveClient()
     report = await build_live_smoke_report(
@@ -696,6 +750,17 @@ async def test_live_smoke_transactional_generated_code_smoke_is_opt_in_and_clean
 
     assert report["ok"] is True
     assert report["mutated_td"] is True
+    assert isinstance(report["sync_diagnostic"]["ok"], bool)
+    assert "auth" in report["sync_diagnostic"]
+    assert "versions" in report["sync_diagnostic"]
+    assert report["visual_quality_summary"]["ok"] is True
+    assert report["visual_quality_summary"]["checked_count"] >= 1
+    assert report["performance_summary"]["ok"] is True
+    assert report["performance_summary"]["warmup_spike_recorded"] is True
+    assert report["performance_summary"]["target_root_spike_count"] == 0
+    assert report["performance_summary"]["sys_ui_spike_count"] >= 1
+    assert report["panel_interaction_results"]["status"] == "not_run"
+    assert report["incident_replay"]["status"] == "not_run"
     assert smoke["ok"] is True
     assert smoke["status"] == "cleaned_up"
     assert smoke["transaction_status"] == "clean"
@@ -794,6 +859,52 @@ def test_brain_live_smoke_cli_outputs_json_report():
     assert payload["ok"] is True
     assert payload["mode"] == "dry_run"
     assert payload["scenario_count"] >= 8
+
+
+def test_brain_live_smoke_cli_merges_incident_replay_evidence():
+    report = {
+        "ok": True,
+        "visual_quality_summary": {"ok": True, "checked_count": 1, "failed_count": 0, "missing_count": 0},
+        "panel_interaction_results": {"ok": False, "checked_count": 0, "failed_count": 0, "status": "not_run"},
+    }
+    incident = {
+        "ok": True,
+        "mode": "live",
+        "bug_count": 45,
+        "unresolved": [],
+        "group_counts": {"panel_ui": 3},
+        "live_sync": {"ok": True},
+        "live_replay": {
+            "target_root": "/project1/tdpilot_incident_replay",
+            "project_count": 10,
+            "grid_output": "/project1/tdpilot_incident_replay/library_grid",
+            "detail_output": "/project1/tdpilot_incident_replay/library_display",
+            "visual_quality_summary": {
+                "ok": True,
+                "checked_count": 12,
+                "failed_count": 0,
+                "missing_count": 0,
+            },
+            "panel_interaction_results": {
+                "ok": True,
+                "checked_count": 5,
+                "failed_count": 0,
+                "status": "checked",
+            },
+            "performance_summary": {"ok": True, "steady_state_max_ms": 0.0},
+        },
+    }
+
+    brain_live_smoke_cli._merge_incident_replay(report, incident)
+
+    assert report["ok"] is True
+    assert report["panel_interaction_results"]["status"] == "checked"
+    assert report["panel_interaction_results"]["checked_count"] == 5
+    assert report["visual_quality_summary"]["checked_count"] == 13
+    assert report["visual_quality_summary"]["incident_replay"]["checked_count"] == 12
+    assert report["incident_replay"]["ok"] is True
+    assert report["incident_replay"]["bug_count"] == 45
+    assert report["incident_replay"]["untriaged"] == []
 
 
 def test_release_skills_include_live_smoke_gate_commands():

@@ -670,6 +670,7 @@ class TransactionOptions(BaseModel):
     auto_repair: bool = False
     max_repair_attempts: int = Field(default=0, ge=0, le=3)
     param_semantics_policy: Literal["warn", "block"] = "warn"
+    visual_quality_policy: Literal["off", "warn", "block"] = "block"
 
 
 CorpusEvidenceSource = Literal["exact_operator", "docs_search"]
@@ -733,6 +734,7 @@ class TransactionResult(BaseModel):
     validation_failed: bool = False
     rollback_performed: bool = False
     rollback_error: str | None = None
+    rollback_verification: dict[str, Any] = Field(default_factory=dict)
     needs_manual_recovery: bool = False
     # Number of TD undo blocks this transaction sealed (the original apply plus
     # one per applied auto-repair). Rollback must issue this many undo actions —

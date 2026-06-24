@@ -1,6 +1,6 @@
 """Info/metadata tools — TD build, capabilities, runtime metrics.
 
-Part of the themed registry split. The public v2.0 surface is 111 tools,
+Part of the themed registry split. The public v2.0 surface is 112 tools,
 9 resource templates, and 4 static resources, including the BrainPlan
 transaction layer and optional cockpit UI.
 

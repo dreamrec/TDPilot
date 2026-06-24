@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from patch.conftest import FakeTDClient
-from td_mcp.models.patch import PatchOperation, PatchPlan
+from td_mcp.models.patch import PatchOperation, PatchPlan, ValidationPlan
 from td_mcp.patch.planner import build_plan, preview_plan
 
 
@@ -76,6 +76,23 @@ async def test_intent_path_matches_macro():
     assert plan.source == "intent_heuristic"
     assert len(plan.operations) == 1
     assert plan.operations[0].kind == "macro"
+
+
+@pytest.mark.asyncio
+async def test_preview_summarizes_macro_ops_honestly():
+    plan = PatchPlan(
+        target_root="/p",
+        source="operations",
+        operations=[PatchOperation(kind="macro", target="/p", args={"macro_type": "feedback_loop"})],
+        undo_label="macro preview",
+        validation_plan=ValidationPlan(target_root="/p", capture_frames=[]),
+    )
+
+    preview = await preview_plan(FakeTDClient(scripted={"nodes": {"nodes": []}}), plan)
+
+    assert preview["op_count"] == 1
+    assert "create 1 macro(s)" in preview["summary"]
+    assert "empty plan" not in preview["summary"]
 
 
 @pytest.mark.asyncio

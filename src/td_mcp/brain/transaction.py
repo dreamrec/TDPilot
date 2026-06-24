@@ -162,13 +162,15 @@ async def apply_transaction(
         and opts.rollback_on_validation_failure
     )
     if should_rollback:
-        created_paths = tuple(op.target for op in plan.operations if op.kind == "create_node" and op.target)
+        created_paths = tuple(apply_result.created_paths or _predicted_created_node_paths(plan))
         await _rollback(
             td_client,
             result,
             restore_snapshot=restore_snapshot,
             undo_block_count=result.undo_blocks_opened,
             created_node_paths=created_paths,
+            changed_params=tuple(apply_result.changed_params),
+            connections_made=tuple(apply_result.connections_made),
         )
         result.status = "rolled_back" if result.rollback_performed else "broken"
         return result
@@ -209,6 +211,7 @@ async def _build_transaction_validation_report(
             "evidence": runtime_report["evidence"],
         }
     await _validate_runtime_profile_probes(td_client, plan, cheap_metrics)
+    _collect_visual_quality_metrics(cheap_metrics)
     validation_report = build_validation_report_v2(
         target_root=plan.target_root,
         profile=options.validation_profile,
@@ -216,6 +219,7 @@ async def _build_transaction_validation_report(
         concept_profiles=profile_layers,
         patch_result=apply_result,
         cheap_metrics=cheap_metrics,
+        visual_quality_policy=options.visual_quality_policy,
     )
     if runtime_report is not None:
         _merge_generated_code_runtime_report(validation_report, runtime_report)
@@ -456,6 +460,8 @@ async def _validate_feedback_output_readback(
         "resolution": payload.get("resolution"),
         "channels": payload.get("channels"),
     }
+    if isinstance(payload.get("quality"), dict):
+        result["visual_quality"] = payload["quality"]
     if max_value > 1e-6 and mean > 1e-6:
         result["status"] = "runtime_pass"
         result.pop("pending_metric_names", None)
@@ -506,6 +512,8 @@ async def _validate_optional_top_sample_readback(
         "channels": payload.get("channels"),
         "modes": ["luminance", "alpha_coverage"],
     }
+    if isinstance(payload.get("quality"), dict):
+        result["visual_quality"] = payload["quality"]
     if probe_id == "render_top_output":
         _record_render_top_output_result(result, mean=mean, max_value=max_value, coverage=coverage)
         return
@@ -559,6 +567,8 @@ async def _validate_visual_output_sample_readback(
         "channels": payload.get("channels"),
         "modes": ["luminance", "alpha_coverage"],
     }
+    if isinstance(payload.get("quality"), dict):
+        result["visual_quality"] = payload["quality"]
     if mean > 1e-6 and max_value > 1e-6 and coverage > 1e-6:
         result["status"] = "runtime_pass"
         result.pop("pending_metric_names", None)
@@ -652,6 +662,25 @@ def _record_render_top_output_result(
         "render_top_output: Optional render runtime validation sampled "
         f"{result.get('readback_path')} but observed invisible or empty output."
     )
+
+
+def _collect_visual_quality_metrics(metrics: dict[str, Any]) -> None:
+    visual_quality: dict[str, Any] = {}
+    for result in metrics.get("profile_probe_results", []):
+        if not isinstance(result, dict):
+            continue
+        quality = result.get("visual_quality")
+        if not isinstance(quality, dict):
+            continue
+        path = result.get("readback_path")
+        if not path:
+            evidence = result.get("runtime_evidence")
+            if isinstance(evidence, dict):
+                path = evidence.get("path")
+        if path:
+            visual_quality[str(path)] = quality
+    if visual_quality:
+        metrics["visual_quality"] = visual_quality
 
 
 def _record_nonblack_top_output_result(
@@ -964,6 +993,19 @@ def _created_paths_for_op_types(plan: PatchPlan, op_types: tuple[str, ...]) -> l
     return paths
 
 
+def _predicted_created_node_paths(plan: PatchPlan) -> list[str]:
+    paths: list[str] = []
+    for operation in plan.operations:
+        if operation.kind != "create_node":
+            continue
+        name = str(operation.args.get("name") or "").strip()
+        if not name:
+            continue
+        parent = operation.target or plan.target_root
+        paths.append(f"{parent.rstrip('/')}/{name}".replace("//", "/"))
+    return paths
+
+
 def _chop_payload_delta(payload: dict[str, Any]) -> tuple[float, int]:
     values: list[float] = []
     channels = payload.get("channels")
@@ -1149,6 +1191,146 @@ def _mark_runtime_probe_unavailable(result: dict[str, Any], message: str) -> Non
     result["issue_message"] = f"{result.get('probe_id', 'runtime_probe')}: {message}"
 
 
+async def _verify_rollback_readback(
+    td_client,
+    *,
+    created_node_paths: tuple[str, ...],
+    changed_params: tuple[dict[str, Any], ...],
+    connections_made: tuple[tuple[str, str], ...],
+) -> dict[str, Any]:
+    verification: dict[str, Any] = {
+        "ok": True,
+        "created_paths": {"checked": [], "remaining": [], "unverified": []},
+        "changed_params": {"checked": [], "still_changed": [], "unverified": []},
+        "connections": {"checked": [], "remaining": [], "unverified": []},
+    }
+    await _verify_created_paths_removed(td_client, verification, created_node_paths)
+    await _verify_changed_params_reverted(
+        td_client,
+        verification,
+        changed_params,
+        created_node_paths=created_node_paths,
+    )
+    await _verify_connections_removed(td_client, verification, connections_made)
+    verification["ok"] = not (
+        verification["created_paths"]["remaining"]
+        or verification["created_paths"]["unverified"]
+        or verification["changed_params"]["still_changed"]
+        or verification["changed_params"]["unverified"]
+        or verification["connections"]["remaining"]
+        or verification["connections"]["unverified"]
+    )
+    return verification
+
+
+async def _verify_created_paths_removed(
+    td_client,
+    verification: dict[str, Any],
+    created_node_paths: tuple[str, ...],
+) -> None:
+    for path in dict.fromkeys(created_node_paths):
+        verification["created_paths"]["checked"].append(path)
+        try:
+            payload = await td_client.request("node/detail", {"path": path})
+        except Exception as exc:  # noqa: BLE001
+            verification["created_paths"]["unverified"].append({"path": path, "error": str(exc)})
+            continue
+        if _node_detail_exists(payload):
+            verification["created_paths"]["remaining"].append(path)
+
+
+async def _verify_changed_params_reverted(
+    td_client,
+    verification: dict[str, Any],
+    changed_params: tuple[dict[str, Any], ...],
+    *,
+    created_node_paths: tuple[str, ...] = (),
+) -> None:
+    created_path_set = set(created_node_paths)
+    verification["changed_params"].setdefault("skipped_created_paths", [])
+    for entry in changed_params:
+        path = str(entry.get("path") or "")
+        name = str(entry.get("name") or "")
+        if not path or not name:
+            continue
+        checked = {"path": path, "name": name}
+        verification["changed_params"]["checked"].append(checked)
+        if path in created_path_set:
+            verification["changed_params"]["skipped_created_paths"].append(checked)
+            continue
+        try:
+            if name == "content":
+                payload = await td_client.request("node/content", {"path": path})
+                value = _content_text(payload)
+            else:
+                payload = await td_client.request("node/params", {"path": path, "names": [name]})
+                value = _rollback_param_readback_value(payload if isinstance(payload, dict) else {}, name, entry.get("new"))
+        except Exception as exc:  # noqa: BLE001
+            verification["changed_params"]["unverified"].append({**checked, "error": str(exc)})
+            continue
+        if _rollback_values_equal(value, entry.get("new")):
+            value_key = "expr" if isinstance(entry.get("new"), dict) and "expr" in entry.get("new", {}) else "value"
+            verification["changed_params"]["still_changed"].append({**checked, value_key: value})
+
+
+async def _verify_connections_removed(
+    td_client,
+    verification: dict[str, Any],
+    connections_made: tuple[tuple[str, str], ...],
+) -> None:
+    for source, target in dict.fromkeys(connections_made):
+        checked = {"from": source, "to": target}
+        verification["connections"]["checked"].append(checked)
+        try:
+            source_payload = await td_client.request("node/connections", {"path": source})
+            target_payload = await td_client.request("node/connections", {"path": target})
+        except Exception as exc:  # noqa: BLE001
+            verification["connections"]["unverified"].append({**checked, "error": str(exc)})
+            continue
+        if _connection_still_present(source_payload, source, target) or _connection_still_present(
+            target_payload, source, target
+        ):
+            verification["connections"]["remaining"].append(checked)
+
+
+def _node_detail_exists(payload: Any) -> bool:
+    if not isinstance(payload, dict) or payload.get("error"):
+        return False
+    return any(payload.get(key) for key in ("path", "name", "type", "op_type", "node_type", "family"))
+
+
+def _rollback_values_equal(left: Any, right: Any) -> bool:
+    if isinstance(right, dict) and "expr" in right:
+        return left == right.get("expr")
+    return left == right
+
+
+def _rollback_param_readback_value(payload: dict[str, Any], name: str, expected_new: Any) -> Any:
+    if isinstance(expected_new, dict) and "expr" in expected_new:
+        params = payload.get("parameters")
+        if isinstance(params, dict):
+            entry = params.get(name)
+            if isinstance(entry, dict):
+                return entry.get("expr")
+    return _param_readback_value(payload, name)
+
+
+def _connection_still_present(payload: Any, source: str, target: str) -> bool:
+    if not isinstance(payload, dict) or payload.get("error"):
+        return False
+    outputs = payload.get("outputs")
+    if isinstance(outputs, list):
+        for item in outputs:
+            if isinstance(item, dict) and item.get("to_path") == target:
+                return True
+    inputs = payload.get("inputs")
+    if isinstance(inputs, list):
+        for item in inputs:
+            if isinstance(item, dict) and item.get("from_path") == source:
+                return True
+    return False
+
+
 async def _rollback(
     td_client,
     result: TransactionResult,
@@ -1156,6 +1338,8 @@ async def _rollback(
     restore_snapshot: RestoreCallback | None,
     undo_block_count: int = 1,
     created_node_paths: tuple[str, ...] = (),
+    changed_params: tuple[dict[str, Any], ...] = (),
+    connections_made: tuple[tuple[str, str], ...] = (),
 ) -> None:
     """Revert a transaction's mutations.
 
@@ -1174,6 +1358,13 @@ async def _rollback(
         # before any mutation). Nothing was changed, so rollback is a no-op
         # success — and crucially we must NOT issue a stray undo that would
         # revert some unrelated prior action.
+        result.rollback_verification = {
+            "ok": True,
+            "method": "noop_no_undo_block",
+            "created_paths": {"checked": [], "remaining": [], "unverified": []},
+            "changed_params": {"checked": [], "still_changed": [], "unverified": []},
+            "connections": {"checked": [], "remaining": [], "unverified": []},
+        }
         result.rollback_performed = True
         return
 
@@ -1186,7 +1377,17 @@ async def _rollback(
         result.rollback_error = str(exc)
 
     if undone == undo_block_count and not result.rollback_error:
-        result.rollback_performed = True
+        result.rollback_verification = await _verify_rollback_readback(
+            td_client,
+            created_node_paths=created_node_paths,
+            changed_params=changed_params,
+            connections_made=connections_made,
+        )
+        if result.rollback_verification.get("ok"):
+            result.rollback_performed = True
+            return
+        result.rollback_error = _rollback_verification_error(result.rollback_verification)
+        result.needs_manual_recovery = True
         return
 
     if result.before_snapshot_id and restore_snapshot is not None:
@@ -1198,13 +1399,46 @@ async def _rollback(
             # Param-only restore cannot remove created nodes — only claim a
             # clean rollback when the transaction created none.
             if not failures and not created_node_paths:
-                result.rollback_performed = True
-                result.rollback_error = None
+                result.rollback_verification = await _verify_rollback_readback(
+                    td_client,
+                    created_node_paths=created_node_paths,
+                    changed_params=changed_params,
+                    connections_made=connections_made,
+                )
+                if result.rollback_verification.get("ok"):
+                    result.rollback_performed = True
+                    result.rollback_error = None
+                    return
+                result.rollback_error = _rollback_verification_error(result.rollback_verification)
+                result.needs_manual_recovery = True
                 return
         except Exception as exc:  # noqa: BLE001
             result.rollback_error = str(exc)
 
     result.needs_manual_recovery = True
+
+
+def _rollback_verification_error(verification: dict[str, Any]) -> str:
+    reasons: list[str] = []
+    created = verification.get("created_paths") if isinstance(verification, dict) else None
+    if isinstance(created, dict):
+        if created.get("remaining"):
+            reasons.append("created paths still exist")
+        if created.get("unverified"):
+            reasons.append("created paths could not be verified")
+    params = verification.get("changed_params") if isinstance(verification, dict) else None
+    if isinstance(params, dict):
+        if params.get("still_changed"):
+            reasons.append("changed params still hold transaction values")
+        if params.get("unverified"):
+            reasons.append("changed params could not be verified")
+    connections = verification.get("connections") if isinstance(verification, dict) else None
+    if isinstance(connections, dict):
+        if connections.get("remaining"):
+            reasons.append("created connections still exist")
+        if connections.get("unverified"):
+            reasons.append("created connections could not be verified")
+    return "rollback readback verification failed: " + "; ".join(reasons or ["unknown reason"])
 
 
 def _reference_param_report(

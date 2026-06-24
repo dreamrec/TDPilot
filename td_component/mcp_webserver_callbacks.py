@@ -123,7 +123,6 @@ RESTRICTED_TOKENS = (
     '__import__',
     'open\x28',
     'compile\x28',
-    'input\x28',
     'subprocess',
     'socket',
     'requests',
@@ -829,8 +828,23 @@ def handle_set_params(body):
             'mode': 'constant',
             'error': err,
             'style': style,
+            'requested_value': requested_value,
             'new_value': None,
         }
+
+    def _build_constant_success_result(requested_value, resolved_value):
+        result = {
+            'success': True,
+            'mode': 'constant',
+            'requested_value': requested_value,
+            'new_value': resolved_value,
+        }
+        if requested_value != resolved_value:
+            result['accepted_value'] = resolved_value
+            result['coercion_warning'] = (
+                'TD accepted/coerced parameter value: requested {0!r}, accepted {1!r}.'
+            ).format(requested_value, resolved_value)
+        return result
 
     results = {}
     for name, value in params.items():
@@ -875,6 +889,8 @@ def handle_set_params(body):
                     if _is_silent_null(p, value['val'], resolved):
                         results[name] = _build_silent_null_result(name, p, value['val'], node)
                         continue
+                    results[name] = _build_constant_success_result(value['val'], resolved)
+                    continue
                 results[name] = {'success': True, 'mode': 'constant', 'new_value': p.eval()}
             # Explicit val mode: {"param": {"val": 42}}
             elif isinstance(value, dict) and 'val' in value:
@@ -883,7 +899,7 @@ def handle_set_params(body):
                 if _is_silent_null(p, value['val'], resolved):
                     results[name] = _build_silent_null_result(name, p, value['val'], node)
                     continue
-                results[name] = {'success': True, 'mode': 'constant', 'new_value': resolved}
+                results[name] = _build_constant_success_result(value['val'], resolved)
             # Plain value (backwards compatible)
             else:
                 p.val = value
@@ -891,7 +907,7 @@ def handle_set_params(body):
                 if _is_silent_null(p, value, resolved):
                     results[name] = _build_silent_null_result(name, p, value, node)
                     continue
-                results[name] = {'success': True, 'mode': 'constant', 'new_value': resolved}
+                results[name] = _build_constant_success_result(value, resolved)
         except Exception as e:
             results[name] = {'success': False, 'error': str(e)}
 
@@ -1313,6 +1329,8 @@ def _restricted_exec_violation(code):
     if RESTRICTED_IMPORT_RE.search(code):
         return 'restricted mode blocks import statements'
     normalized = _normalize_for_check(code)
+    if re.search(r'(?<![\w.])input\(', normalized):
+        return 'restricted mode blocks token: input('
     for token in RESTRICTED_TOKENS:
         if token in normalized:
             return f'restricted mode blocks token: {token}'
@@ -1323,14 +1341,14 @@ def _restricted_exec_violation(code):
     dat_escape_tokens = (
         'create(textdat',
         'create(textDAT'.lower(),
-        '.text=',
-        '.text =',
         '.par.file=',
         '.par.file =',
     )
     for token in dat_escape_tokens:
         if token in normalized:
             return f'restricted mode blocks DAT-exec pattern: {token}'
+    if '.text=' in normalized and '.par.text=' not in normalized:
+        return 'restricted mode blocks DAT-exec pattern: .text='
     return None
 
 
@@ -1415,7 +1433,9 @@ def _build_exec_globals(exec_mode):
         'any': any,
         'bool': bool,
         'dict': dict,
+        'dir': dir,
         'enumerate': enumerate,
+        'Exception': Exception,
         'float': float,
         'getattr': getattr,
         'hasattr': hasattr,
@@ -1455,9 +1475,10 @@ def _build_exec_globals(exec_mode):
         context['mod'] = mod
         return context
 
-    # Restricted mode — even fewer builtins (no getattr/hasattr/type/isinstance)
+    # Restricted mode keeps safe inspection helpers for live debugging while
+    # still excluding import/open/eval/exec and dunder reflection via policy.
     restricted_builtins = {k: v for k, v in safe_builtins.items()
-                           if k not in ('getattr', 'hasattr', 'isinstance', 'issubclass', 'type', 'map', 'filter', 'repr')}
+                           if k not in ('issubclass', 'map', 'filter', 'repr')}
     safe = {'__builtins__': restricted_builtins}
     safe.update(context)
     return safe
@@ -3208,6 +3229,127 @@ def handle_monitor_unsubscribe(body):
     }
 
 
+_DEFAULT_VISUAL_QUALITY_THRESHOLDS = {
+    'min_resolution': [320, 320],
+    'max_luminance': 0.18,
+    'std_luminance': 0.025,
+    'active_coverage': 0.05,
+    'alpha_coverage': 0.05,
+}
+
+
+def _bool_request_value(value, default=False):
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value.strip().lower() not in ('0', 'false', 'no', 'off')
+    return bool(value)
+
+
+def _visual_quality_thresholds(overrides):
+    thresholds = dict(_DEFAULT_VISUAL_QUALITY_THRESHOLDS)
+    if isinstance(overrides, dict):
+        for key, value in overrides.items():
+            if key in thresholds:
+                thresholds[key] = value
+    min_res = thresholds.get('min_resolution')
+    if not isinstance(min_res, (list, tuple)) or len(min_res) != 2:
+        thresholds['min_resolution'] = [320, 320]
+    else:
+        thresholds['min_resolution'] = [int(min_res[0]), int(min_res[1])]
+    for key in ('max_luminance', 'std_luminance', 'active_coverage', 'alpha_coverage'):
+        try:
+            thresholds[key] = float(thresholds.get(key))
+        except Exception:
+            thresholds[key] = float(_DEFAULT_VISUAL_QUALITY_THRESHOLDS[key])
+    return thresholds
+
+
+def _sample_value_to_rgba(value):
+    if isinstance(value, (list, tuple)):
+        vals = list(value)
+    else:
+        vals = []
+        for attr in ('r', 'g', 'b', 'a'):
+            if hasattr(value, attr):
+                vals.append(getattr(value, attr))
+    if len(vals) == 0:
+        vals = [0.0]
+    while len(vals) < 4:
+        vals.append(1.0 if len(vals) == 3 else vals[-1])
+    return [float(vals[0]), float(vals[1]), float(vals[2]), float(vals[3])]
+
+
+def _sample_top_pixels(top, np, sample_grid):
+    sample_grid = max(2, min(int(sample_grid or 20), 128))
+    rows = []
+    for y_index in range(sample_grid):
+        row = []
+        y = (y_index + 0.5) / float(sample_grid)
+        for x_index in range(sample_grid):
+            x = (x_index + 0.5) / float(sample_grid)
+            row.append(_sample_value_to_rgba(top.sample(x, y)))
+        rows.append(row)
+    return np.array(rows, dtype=np.float32), 'sample'
+
+
+def _top_pixel_array(top, np, sample_grid):
+    try:
+        arr = top.numpyArray()
+        if arr is not None:
+            return arr, 'numpyArray'
+    except Exception:
+        pass
+    return _sample_top_pixels(top, np, sample_grid)
+
+
+def _quality_from_pixels(arr, width, height, num_channels, np, thresholds):
+    if num_channels >= 3:
+        lum = (0.2126 * arr[:, :, 0]
+               + 0.7152 * arr[:, :, 1]
+               + 0.0722 * arr[:, :, 2])
+    else:
+        lum = arr[:, :, 0]
+    if num_channels >= 4:
+        alpha = arr[:, :, 3]
+        alpha_coverage = float(np.mean(alpha > 0.01))
+    else:
+        alpha = None
+        alpha_coverage = 1.0
+    active = lum > 0.02
+    if alpha is not None:
+        active = active & (alpha > 0.01)
+
+    mean_luminance = float(np.mean(lum))
+    max_luminance = float(np.max(lum))
+    std_luminance = float(np.std(lum))
+    active_coverage = float(np.mean(active))
+    min_width, min_height = thresholds['min_resolution']
+    fail_reasons = []
+    if width < min_width or height < min_height:
+        fail_reasons.append('resolution_below_threshold')
+    if max_luminance < thresholds['max_luminance']:
+        fail_reasons.append('max_luminance_below_threshold')
+    if std_luminance < thresholds['std_luminance']:
+        fail_reasons.append('std_luminance_below_threshold')
+    if active_coverage < thresholds['active_coverage']:
+        fail_reasons.append('active_coverage_below_threshold')
+    if alpha_coverage < thresholds['alpha_coverage']:
+        fail_reasons.append('alpha_coverage_below_threshold')
+    return {
+        'mean_luminance': mean_luminance,
+        'max_luminance': max_luminance,
+        'std_luminance': std_luminance,
+        'active_coverage': active_coverage,
+        'alpha_coverage': alpha_coverage,
+        'is_black': max_luminance < thresholds['max_luminance'],
+        'is_flat': std_luminance < thresholds['std_luminance'],
+        'pass': len(fail_reasons) == 0,
+        'fail_reasons': fail_reasons,
+        'thresholds': thresholds,
+    }
+
+
 def handle_analyze_frame(body):
     """Analyze pixel data of a TOP node using numpy.
 
@@ -3221,6 +3363,9 @@ def handle_analyze_frame(body):
     modes = body.get('modes', ['histogram', 'luminance'])
     if not isinstance(modes, list) or len(modes) == 0:
         modes = ['histogram', 'luminance']
+    quality_mode = _bool_request_value(body.get('quality_mode'), True)
+    sample_grid = int(body.get('sample_grid', 20) or 20)
+    thresholds = _visual_quality_thresholds(body.get('thresholds'))
 
     top = op(path)
     if top is None:
@@ -3237,12 +3382,9 @@ def handle_analyze_frame(body):
         return {'error': f'numpy not available: {str(exc)}'}
 
     try:
-        arr = top.numpyArray()
+        arr, source = _top_pixel_array(top, np, sample_grid)
     except Exception as exc:
         return {'error': f'Could not get pixel data: {str(exc)}'}
-
-    if arr is None:
-        return {'error': f'numpyArray() returned None for: {path}'}
 
     # Ensure 3D array — grayscale TOPs may return 2D (H, W) without channel axis
     if arr.ndim == 2:
@@ -3250,6 +3392,8 @@ def handle_analyze_frame(body):
 
     h, w = arr.shape[:2]
     num_channels = arr.shape[2]
+    output_width = int(getattr(top, 'width', w) or w)
+    output_height = int(getattr(top, 'height', h) or h)
 
     if h == 0 or w == 0:
         return {'error': f'Image has zero pixels ({w}x{h})', 'path': path}
@@ -3376,9 +3520,20 @@ def handle_analyze_frame(body):
         except Exception as exc:
             mode_results[mode] = {'error': f'Mode {mode} failed: {str(exc)}'}
 
-    return {
+    result = {
         'path': path,
-        'resolution': [w, h],
+        'resolution': [output_width, output_height],
         'channels': num_channels,
+        'source': source,
         'modes': mode_results,
     }
+    if quality_mode:
+        result['quality'] = _quality_from_pixels(
+            arr,
+            output_width,
+            output_height,
+            num_channels,
+            np,
+            thresholds,
+        )
+    return result

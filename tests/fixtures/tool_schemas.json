@@ -17,6 +17,12 @@
         "enum": null,
         "type": "string"
       },
+      "quality_mode": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
       "reference_path": {
         "any_of_types": [
           "null",
@@ -30,6 +36,21 @@
         "any_of_types": [
           "array",
           "null"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
+      },
+      "sample_grid": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "integer"
+      },
+      "thresholds": {
+        "any_of_types": [
+          "null",
+          "object"
         ],
         "default_present": true,
         "enum": null,
@@ -2881,6 +2902,24 @@
     "required": [
       "path"
     ]
+  },
+  "td_sync_diagnose": {
+    "description_present": true,
+    "properties": {
+      "check_remote": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      },
+      "include_live": {
+        "any_of_types": [],
+        "default_present": true,
+        "enum": null,
+        "type": "boolean"
+      }
+    },
+    "required": []
   },
   "td_sync_status": {
     "description_present": true,

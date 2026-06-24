@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -373,10 +374,14 @@ async def build_live_smoke_report(
     client_to_close = None
     health: dict[str, Any] | None = None
     connection_error: str | None = None
+    sync_diagnostic: dict[str, Any] = _sync_diagnostic_not_run(mode)
 
     if mode == "live":
         client = td_client
         card_index = card_index or _load_default_card_index()
+        from td_mcp.auth_bootstrap import bootstrap_auth, default_env_file
+
+        bootstrap_auth(default_env_file())
         if client is None:
             from td_mcp.td_client import TDClient  # Imported lazily for deterministic dry-run startup.
 
@@ -384,8 +389,20 @@ async def build_live_smoke_report(
             client_to_close = client
         try:
             health = await client.health_check()
+            sync_diagnostic = await _connection_sync_diagnostic(
+                client,
+                host=host,
+                port=port,
+                check_running_processes=client_to_close is not None,
+            )
         except Exception as exc:  # noqa: BLE001
             connection_error = str(exc)
+            sync_diagnostic = await _connection_sync_diagnostic(
+                client,
+                host=host,
+                port=port,
+                check_running_processes=client_to_close is not None,
+            )
             if client_to_close is not None:
                 await client_to_close.close()
             return _connection_failed_report(
@@ -393,11 +410,13 @@ async def build_live_smoke_report(
                 scenarios=scenarios,
                 connection_error=connection_error,
                 duration_ms=_elapsed_ms(started),
+                sync_diagnostic=sync_diagnostic,
             )
     else:
         client = None
 
     transactional_smoke = _transactional_generated_code_not_run()
+    performance_summary = _performance_not_run()
     try:
         scenario_reports = []
         for scenario in scenarios:
@@ -412,6 +431,7 @@ async def build_live_smoke_report(
             )
         if mode == "live" and run_transactional_generated_code:
             transactional_smoke = await _run_transactional_generated_code_smoke(client)
+            performance_summary = await _collect_performance_summary(client, target_root="/project1")
     finally:
         if client_to_close is not None:
             await client_to_close.close()
@@ -419,7 +439,8 @@ async def build_live_smoke_report(
     ok_statuses = {"planned", "skipped_unavailable"} if mode == "live" else {"planned"}
     scenarios_ok = all(item["status"] in ok_statuses for item in scenario_reports)
     transactional_ok = transactional_smoke["status"] == "not_run" or bool(transactional_smoke.get("ok"))
-    ok = scenarios_ok and transactional_ok
+    sync_ok = mode != "live" or bool(sync_diagnostic.get("ok"))
+    ok = scenarios_ok and transactional_ok and sync_ok
     return {
         "schema_version": 1,
         "mode": mode,
@@ -429,6 +450,11 @@ async def build_live_smoke_report(
         "duration_ms": _elapsed_ms(started),
         "td_health": health,
         "connection_error": connection_error,
+        "sync_diagnostic": sync_diagnostic,
+        "visual_quality_summary": _visual_quality_summary(transactional_smoke),
+        "panel_interaction_results": _panel_interactions_not_run(),
+        "performance_summary": performance_summary,
+        "incident_replay": _incident_replay_not_run(),
         "generated_code_summary": _generated_code_summary(scenario_reports),
         "transactional_generated_code_smoke": transactional_smoke,
         "scenarios": scenario_reports,
@@ -724,6 +750,7 @@ async def _run_transactional_generated_code_smoke(td_client) -> dict[str, Any]:
         "validation_ok": validation_ok,
         "validation_failed": result.validation_failed,
         "validation_checks": list(validation_report.checks) if validation_report else [],
+        "validation_cheap_metrics": validation_report.cheap_metrics if validation_report else {},
         "validation_issues": [
             issue.model_dump(mode="json") for issue in (validation_report.issues if validation_report else [])
         ],
@@ -744,9 +771,21 @@ def _transactional_generated_code_patch_plan() -> PatchPlan:
     out_path = f"{target_root}/tdpilot_gc_smoke_out"
     shader_source = (
         "layout(location = 0) out vec4 fragColor;\n"
+        "float hash21(vec2 p)\n"
+        "{\n"
+        "    p = fract(p * vec2(123.34, 456.21));\n"
+        "    p += dot(p, p + 45.32);\n"
+        "    return fract(p.x * p.y);\n"
+        "}\n"
         "void main()\n"
         "{\n"
-        "    fragColor = TDOutputSwizzle(vec4(0.25, 0.5, 0.75, 1.0));\n"
+        "    vec2 uv = vUV.st;\n"
+        "    float cells = hash21(floor(uv * 24.0));\n"
+        "    float wave = 0.5 + 0.5 * sin((uv.x * 17.0 + uv.y * 11.0) * 6.2831853);\n"
+        "    float lattice = 1.0 - smoothstep(0.0, 0.035, min(abs(fract(uv.x * 12.0) - 0.5), abs(fract(uv.y * 12.0) - 0.5)));\n"
+        "    vec3 color = mix(vec3(0.05, 0.16, 0.31), vec3(0.86, 0.94, 0.48), wave);\n"
+        "    color = mix(color, vec3(0.95, 0.28, 0.22), cells * 0.45 + lattice * 0.35);\n"
+        "    fragColor = TDOutputSwizzle(vec4(color, 1.0));\n"
         "}\n"
     )
     callback_source = (
@@ -822,7 +861,14 @@ def _transactional_generated_code_patch_plan() -> PatchPlan:
         PatchOperation(
             kind="set_params",
             target=glsl_path,
-            args={"params": {"pixeldat": shader_path}},
+            args={
+                "params": {
+                    "pixeldat": shader_path,
+                    "outputresolution": "custom",
+                    "resolutionw": 512,
+                    "resolutionh": 512,
+                }
+            },
         ),
         PatchOperation(
             kind="connect", args={"from": f"{target_root}/tdpilot_gc_smoke_const", "to": glsl_path}
@@ -1009,7 +1055,12 @@ def _connection_failed_report(
     scenarios: tuple[LiveSmokeScenario, ...],
     connection_error: str,
     duration_ms: float,
+    sync_diagnostic: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    remediation = (
+        "Verify TD_MCP_SHARED_SECRET in the MCP process and canonical .tdpilot env file, "
+        "then restart the MCP server and TouchDesigner WebServer component."
+    )
     return {
         "schema_version": 1,
         "mode": mode,
@@ -1019,6 +1070,12 @@ def _connection_failed_report(
         "duration_ms": duration_ms,
         "td_health": None,
         "connection_error": connection_error,
+        "sync_diagnostic": sync_diagnostic or {},
+        "visual_quality_summary": _visual_quality_summary(_transactional_generated_code_not_run()),
+        "panel_interaction_results": _panel_interactions_not_run(),
+        "performance_summary": _performance_not_run(),
+        "incident_replay": _incident_replay_not_run(),
+        "remediation": remediation,
         "generated_code_summary": _generated_code_summary([]),
         "transactional_generated_code_smoke": _transactional_generated_code_not_run(),
         "scenarios": [
@@ -1044,6 +1101,223 @@ def _connection_failed_report(
             }
             for scenario in scenarios
         ],
+    }
+
+
+async def _connection_sync_diagnostic(
+    client,
+    *,
+    host: str,
+    port: int,
+    check_running_processes: bool = True,
+) -> dict[str, Any]:
+    try:
+        from td_mcp.sync_diagnostics import diagnose_sync
+
+        return await diagnose_sync(
+            client=client,
+            host=host,
+            port=port,
+            include_live=True,
+            install_roots=None if check_running_processes else {},
+            running_processes=None if check_running_processes else [],
+        )
+    except Exception as exc:  # noqa: BLE001
+        return {"schema_version": 1, "ok": False, "error": str(exc)}
+
+
+def _sync_diagnostic_not_run(mode: SmokeMode) -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "ok": None,
+        "skipped": True,
+        "reason": f"sync diagnosis is not run in {mode} mode before live connection",
+    }
+
+
+def _visual_quality_summary(transactional_smoke: dict[str, Any]) -> dict[str, Any]:
+    metrics = transactional_smoke.get("validation_cheap_metrics")
+    visual_quality = metrics.get("visual_quality") if isinstance(metrics, dict) else None
+    if not isinstance(visual_quality, dict):
+        return {
+            "ok": False,
+            "checked_count": 0,
+            "failed_count": 0,
+            "missing_count": 0,
+            "status": "not_run",
+        }
+    checked = 0
+    failed = 0
+    missing = 0
+    paths: list[str] = []
+    failed_paths: list[str] = []
+    for path, quality in visual_quality.items():
+        checked += 1
+        paths.append(str(path))
+        if not isinstance(quality, dict):
+            failed += 1
+            failed_paths.append(str(path))
+            continue
+        if quality.get("missing") is True:
+            missing += 1
+            failed_paths.append(str(path))
+            continue
+        if quality.get("pass") is not True:
+            failed += 1
+            failed_paths.append(str(path))
+    return {
+        "ok": checked > 0 and failed == 0 and missing == 0,
+        "checked_count": checked,
+        "failed_count": failed,
+        "missing_count": missing,
+        "paths": sorted(paths),
+        "failed_paths": sorted(set(failed_paths)),
+        "status": "checked" if checked else "not_run",
+    }
+
+
+def _panel_interactions_not_run() -> dict[str, Any]:
+    return {
+        "ok": False,
+        "checked_count": 0,
+        "failed_count": 0,
+        "status": "not_run",
+        "reason": "panel reset/thumb/next/prev/back interaction validator was not run",
+    }
+
+
+def _performance_not_run() -> dict[str, Any]:
+    return {
+        "ok": False,
+        "status": "not_run",
+        "steady_state_max_ms": None,
+        "frame_budget_ms": 16.667,
+        "safety_target_ms": 12.0,
+        "warmup_spike_recorded": False,
+        "target_root_spike_count": None,
+        "sys_ui_spike_count": None,
+    }
+
+
+async def _collect_performance_summary(td_client, *, target_root: str) -> dict[str, Any]:
+    samples: list[dict[str, Any]] = []
+    for index in range(3):
+        try:
+            payload = await td_client.request("cooking", {"path": target_root, "recurse": True, "max_depth": 10})
+        except Exception as exc:  # noqa: BLE001
+            return {
+                **_performance_not_run(),
+                "status": "failed",
+                "error": str(exc),
+            }
+        samples.append(_cook_sample_summary(payload, sample_index=index))
+        await asyncio.sleep(0)
+
+    warmup_max = _max_cook_for_prefixes(samples[0], (target_root,)) if samples else None
+    global_steady_values = [sample["max_ms"] for sample in samples[1:] if sample["max_ms"] is not None]
+    steady_values = [
+        value
+        for sample in samples[1:]
+        for value in [_max_cook_for_prefixes(sample, (target_root,))]
+        if value is not None
+    ]
+    frame_budget_ms = 16.667
+    global_steady_max = max(global_steady_values) if global_steady_values else None
+    steady_max = max(steady_values) if steady_values else None
+    target_root_spike_count = sum(
+        1
+        for sample in samples[1:]
+        for node in sample.get("nodes", [])
+        if str(node.get("path") or "").startswith(target_root)
+        and float(node.get("cook_ms") or 0.0) > frame_budget_ms
+    )
+    sys_ui_spike_count = sum(
+        1
+        for sample in samples[1:]
+        for node in sample.get("nodes", [])
+        if str(node.get("path") or "").startswith(("/sys", "/ui"))
+        and float(node.get("cook_ms") or 0.0) > frame_budget_ms
+    )
+    return {
+        "ok": steady_max is not None and steady_max <= frame_budget_ms,
+        "status": "checked" if steady_max is not None else "missing_metrics",
+        "sample_count": len(samples),
+        "warmup_max_ms": warmup_max,
+        "steady_state_max_ms": steady_max,
+        "global_steady_state_max_ms": global_steady_max,
+        "frame_budget_ms": frame_budget_ms,
+        "safety_target_ms": 12.0,
+        "warmup_spike_recorded": warmup_max is not None,
+        "target_root_spike_count": target_root_spike_count,
+        "sys_ui_spike_count": sys_ui_spike_count,
+        "samples": samples,
+    }
+
+
+def _cook_sample_summary(payload: Any, *, sample_index: int) -> dict[str, Any]:
+    nodes = _cook_nodes(payload)
+    normalized_nodes: list[dict[str, Any]] = []
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        cook_ms = _node_cook_ms(node)
+        if cook_ms is None:
+            continue
+        normalized_nodes.append(
+            {
+                "path": str(node.get("path") or node.get("node") or ""),
+                "cook_ms": cook_ms,
+            }
+        )
+    max_ms = max((node["cook_ms"] for node in normalized_nodes), default=None)
+    return {
+        "sample_index": sample_index,
+        "max_ms": max_ms,
+        "node_count": len(normalized_nodes),
+        "nodes": normalized_nodes,
+    }
+
+
+def _max_cook_for_prefixes(sample: dict[str, Any], prefixes: tuple[str, ...]) -> float | None:
+    values = [
+        float(node.get("cook_ms") or 0.0)
+        for node in sample.get("nodes", [])
+        if isinstance(node, dict) and str(node.get("path") or "").startswith(prefixes)
+    ]
+    return max(values) if values else None
+
+
+def _cook_nodes(payload: Any) -> list[Any]:
+    if isinstance(payload, list):
+        return payload
+    if not isinstance(payload, dict):
+        return []
+    for key in ("nodes", "cooks", "cooking", "top_cooks", "items"):
+        value = payload.get(key)
+        if isinstance(value, list):
+            return value
+    return []
+
+
+def _node_cook_ms(node: dict[str, Any]) -> float | None:
+    for key in ("cookTime", "cook_time", "cook_ms", "cpuCookTime", "cpu_cook_time"):
+        value = node.get(key)
+        if value is None:
+            continue
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+def _incident_replay_not_run() -> dict[str, Any]:
+    return {
+        "ok": False,
+        "status": "not_run",
+        "bug_count": 0,
+        "untriaged": [],
+        "reason": "scripts/replay_live_debug_incident.py was not run inside this live-smoke report",
     }
 
 

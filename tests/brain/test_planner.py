@@ -69,6 +69,29 @@ PHASE_ONE_SEED_OPS = {
 }
 
 
+@pytest.mark.asyncio
+async def test_planner_blocks_complex_ten_project_library_instead_of_generic_collapse():
+    client = FakeTDClient()
+
+    plan = await build_brain_plan(
+        client,
+        intent=(
+            "Using TD live, build 10 different complex artistic projects and a final "
+            "thumbnail library panel with click to detail, back, next, previous, "
+            "visual QA metrics, bug ledger, and 60 fps performance."
+        ),
+        target_root="/project1/tdpilot_deep_test_suite",
+        output_top="/project1/tdpilot_deep_test_suite/final_gallery/out_gallery",
+        constraints={"avoid": ["feedbackTOP"]},
+    )
+
+    assert plan.blocked_questions
+    assert plan.patch_plan.operations == []
+    assert "planner:blocked_complex_multi_output" in plan.grounding_evidence
+    assert "complex_multi_output_library" in plan.missing_facts
+    assert "multi-output-brief" in plan.risk_flags
+
+
 def _first_created_target(plan, op_type: str) -> str:
     for operation in plan.patch_plan.operations:
         if operation.kind != "create_node" or operation.args.get("op_type") != op_type:

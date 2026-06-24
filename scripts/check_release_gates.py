@@ -1216,6 +1216,102 @@ def evaluate(
                 1.0,
             )
         )
+        sync_diagnostic = brain_live_smoke.get("sync_diagnostic")
+        checks.append(
+            check_threshold(
+                "brain live smoke sync diagnostic ok",
+                _sync_diagnostic_ok_value(sync_diagnostic),
+                ">=",
+                1.0,
+            )
+        )
+        visual_quality = brain_live_smoke.get("visual_quality_summary")
+        checks.append(
+            check_threshold(
+                "brain live smoke visual quality checked",
+                _metric_float(visual_quality, "checked_count"),
+                ">=",
+                1.0,
+            )
+        )
+        checks.append(
+            check_threshold(
+                "brain live smoke visual quality failures",
+                _metric_float(visual_quality, "failed_count")
+                + _metric_float(visual_quality, "missing_count", default=0.0),
+                "<=",
+                0.0,
+            )
+        )
+        panel_results = brain_live_smoke.get("panel_interaction_results")
+        checks.append(
+            check_threshold(
+                "brain live smoke panel interactions ok",
+                _strict_bool_value(panel_results.get("ok") if isinstance(panel_results, dict) else None),
+                ">=",
+                1.0,
+            )
+        )
+        checks.append(
+            check_threshold(
+                "brain live smoke panel interaction checked count",
+                _metric_float(panel_results, "checked_count"),
+                ">=",
+                5.0,
+            )
+        )
+        performance = brain_live_smoke.get("performance_summary")
+        checks.append(
+            check_threshold(
+                "brain live smoke performance ok",
+                _strict_bool_value(performance.get("ok") if isinstance(performance, dict) else None),
+                ">=",
+                1.0,
+            )
+        )
+        frame_budget_ms = _metric_float(performance, "frame_budget_ms", default=16.667)
+        checks.append(
+            check_threshold(
+                "brain live smoke steady-state frame budget",
+                _metric_float(performance, "steady_state_max_ms"),
+                "<=",
+                frame_budget_ms,
+            )
+        )
+        checks.append(
+            check_threshold(
+                "brain live smoke warmup spike recorded",
+                _strict_bool_value(performance.get("warmup_spike_recorded") if isinstance(performance, dict) else None),
+                ">=",
+                1.0,
+            )
+        )
+        incident_replay = brain_live_smoke.get("incident_replay")
+        checks.append(
+            check_threshold(
+                "brain live smoke incident replay ok",
+                _strict_bool_value(incident_replay.get("ok") if isinstance(incident_replay, dict) else None),
+                ">=",
+                1.0,
+            )
+        )
+        checks.append(
+            check_threshold(
+                "brain live smoke incident replay bug count",
+                _metric_float(incident_replay, "bug_count"),
+                ">=",
+                45.0,
+            )
+        )
+        untriaged = incident_replay.get("untriaged") if isinstance(incident_replay, dict) else None
+        checks.append(
+            check_threshold(
+                "brain live smoke incident replay untriaged count",
+                _list_count(untriaged),
+                "<=",
+                0.0,
+            )
+        )
 
         scenarios = brain_live_smoke.get("scenarios", [])
         planned_scenarios = math.nan
@@ -1819,6 +1915,29 @@ def _td_health_ok_value(value: Any) -> float:
     if not isinstance(value, dict):
         return math.nan
     return 1.0 if value.get("status") == "ok" else 0.0
+
+
+def _sync_diagnostic_ok_value(value: Any) -> float:
+    if not isinstance(value, dict):
+        return 0.0
+    if value.get("ok") is True:
+        return 1.0
+    overall = value.get("overall")
+    if isinstance(overall, dict) and str(overall.get("status") or "").lower() in {"pass", "ok", "synced"}:
+        return 1.0
+    if str(value.get("status") or "").lower() in {"pass", "ok", "synced"}:
+        return 1.0
+    return 0.0
+
+
+def _metric_float(value: Any, key: str, *, default: float = math.nan) -> float:
+    if not isinstance(value, dict):
+        return default
+    raw = value.get(key, default)
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return default
 
 
 def _known_text_value(value: Any) -> float:

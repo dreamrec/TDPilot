@@ -383,6 +383,7 @@ def build_validation_report_v2(
     concept_profiles: Iterable[str | None] | None = None,
     patch_result: PatchResult | None,
     cheap_metrics: dict[str, Any] | None = None,
+    visual_quality_policy: str = "block",
 ) -> ValidationReportV2:
     """Build a profile-aware report from a PatchResult's validation payload."""
     raw_errors: list[dict[str, Any]] = []
@@ -405,6 +406,13 @@ def build_validation_report_v2(
     else:
         metrics.setdefault("profile_probes", probe_summaries_for_profile(profile, concept_profile))
     issues.extend(_profile_probe_issues(metrics, target_root=target_root))
+    issues.extend(
+        _visual_quality_issues(
+            metrics,
+            target_root=target_root,
+            visual_quality_policy=visual_quality_policy,
+        )
+    )
     severity_counts: dict[str, int] = {}
     for issue in issues:
         severity_counts[issue.severity] = severity_counts.get(issue.severity, 0) + 1
@@ -608,6 +616,40 @@ def _profile_probe_issues(metrics: dict[str, Any], *, target_root: str) -> list[
                 code=code,
                 message=message,
                 path=target_root,
+                source="tdpilot-brain",
+            )
+        )
+    return issues
+
+
+def _visual_quality_issues(
+    metrics: dict[str, Any],
+    *,
+    target_root: str,
+    visual_quality_policy: str,
+) -> list[ValidationIssue]:
+    if visual_quality_policy == "off":
+        return []
+    severity = "warning" if visual_quality_policy == "warn" else "error"
+    visual_quality = metrics.get("visual_quality")
+    if not isinstance(visual_quality, dict):
+        return []
+    issues: list[ValidationIssue] = []
+    for path, quality in visual_quality.items():
+        if not isinstance(quality, dict) or quality.get("pass") is not False:
+            continue
+        fail_reasons = quality.get("fail_reasons")
+        if isinstance(fail_reasons, list):
+            reasons = [str(item) for item in fail_reasons if item]
+        else:
+            reasons = []
+        reason_text = ", ".join(reasons) if reasons else "normalized visual quality did not pass"
+        issues.append(
+            ValidationIssue(
+                severity=severity,
+                code="visual_quality_failed",
+                message=f"visual_quality: {path} failed normalized pixel quality: {reason_text}.",
+                path=str(path) if path else target_root,
                 source="tdpilot-brain",
             )
         )

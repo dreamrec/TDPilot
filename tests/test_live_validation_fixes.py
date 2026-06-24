@@ -200,6 +200,13 @@ def test_create_node_still_accepts_existing_families():
     CreateNodeInput(parent_path="/project1", node_type="boxSOP")
 
 
+def test_create_node_accepts_canonical_panel_execute_dat_but_not_internal_alias():
+    CreateNodeInput(parent_path="/project1", node_type="panelexecuteDAT")
+
+    with pytest.raises(ValidationError):
+        CreateNodeInput(parent_path="/project1", node_type="panelexec")
+
+
 # ---------------------------------------------------------------------------
 # Bug B — td_get_operator_doc short-form fallback
 # ---------------------------------------------------------------------------

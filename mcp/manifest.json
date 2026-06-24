@@ -32,7 +32,7 @@
     "transport": "stdio"
   },
   "surface": {
-    "tool_count": 111,
+    "tool_count": 112,
     "resource_template_count": 9,
     "static_resource_count": 4
   },

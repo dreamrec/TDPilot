@@ -175,3 +175,34 @@ async def test_capture_frame_confirm_requests_image_data(monkeypatch):
 
     assert client.calls == [("screenshot", {"path": "/project1/out1", "quality": 0.6, "include_data": True})]
     assert payload["data_base64"] == "ZmFrZQ=="
+
+
+@pytest.mark.asyncio
+async def test_analyze_frame_forwards_quality_options(monkeypatch):
+    client = _RecordingClient()
+    monkeypatch.setattr(_registry, "_get_client", lambda _ctx: client)
+    ctx = SimpleNamespace(request_context=SimpleNamespace(lifespan_context={}))
+
+    out = await tools_vision.td_analyze_frame(
+        ctx,
+        path="/project1/out1",
+        modes=["luminance"],
+        sample_grid=12,
+        thresholds={"max_luminance": 0.25},
+        quality_mode=True,
+    )
+    payload = json.loads(out)
+
+    assert client.calls == [
+        (
+            "analyze_frame",
+            {
+                "path": "/project1/out1",
+                "modes": ["luminance"],
+                "sample_grid": 12,
+                "thresholds": {"max_luminance": 0.25},
+                "quality_mode": True,
+            },
+        )
+    ]
+    assert payload["success"] is True

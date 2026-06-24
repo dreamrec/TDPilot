@@ -446,6 +446,13 @@ def _record_outcome(
 ) -> None:
     result.applied_ops.append(index)
     if op.kind in ("create_node", "annotate", "macro"):
+        if op.kind == "macro" and isinstance(outcome, dict):
+            before_count = len(result.created_paths)
+            for created in outcome.get("created_nodes", []) or []:
+                if isinstance(created, dict) and created.get("path"):
+                    result.created_paths.append(str(created["path"]))
+            if len(result.created_paths) > before_count:
+                return
         # TD's /api/node/create returns {"success": True, "node": {"path": ..., ...}}
         # — the path lives under the "node" key. Older spec versions of this
         # function looked for top-level "path" and silently lost the readback.

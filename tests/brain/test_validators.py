@@ -98,6 +98,62 @@ def test_validation_report_promotes_cook_health_stuck_entries_to_stable_issues()
     assert "999" in issue.message
 
 
+def test_validation_report_blocks_failed_normalized_visual_quality_by_default():
+    metrics = {
+        "visual_quality": {
+            "/project1/out1": {
+                "pass": False,
+                "mean_luminance": 0.46,
+                "max_luminance": 0.46,
+                "std_luminance": 0.000001,
+                "active_coverage": 1.0,
+                "alpha_coverage": 1.0,
+                "fail_reasons": ["resolution_below_threshold", "std_luminance_below_threshold"],
+            }
+        }
+    }
+
+    report = build_validation_report_v2(
+        target_root="/project1",
+        profile="structural_visual_safe",
+        concept_profile=None,
+        patch_result=None,
+        cheap_metrics=metrics,
+    )
+
+    assert report.ok is False
+    assert report.severity_counts["error"] == 1
+    issue = report.issues[0]
+    assert issue.code == "visual_quality_failed"
+    assert issue.path == "/project1/out1"
+    assert "resolution_below_threshold" in issue.message
+    assert "std_luminance_below_threshold" in issue.message
+
+
+def test_validation_report_can_warn_on_failed_normalized_visual_quality():
+    metrics = {
+        "visual_quality": {
+            "/project1/out1": {
+                "pass": False,
+                "fail_reasons": ["std_luminance_below_threshold"],
+            }
+        }
+    }
+
+    report = build_validation_report_v2(
+        target_root="/project1",
+        profile="structural_visual_safe",
+        concept_profile=None,
+        patch_result=None,
+        cheap_metrics=metrics,
+        visual_quality_policy="warn",
+    )
+
+    assert report.ok is True
+    assert report.severity_counts["warning"] == 1
+    assert report.issues[0].code == "visual_quality_failed"
+
+
 @pytest.mark.asyncio
 async def test_transaction_rolls_back_when_cook_health_reports_stuck_nodes():
     plan = _patch_plan(
@@ -128,6 +184,52 @@ async def test_transaction_rolls_back_when_cook_health_reports_stuck_nodes():
     assert result.validation_report is not None
     assert result.validation_report.issues[0].code == "cook_health_stuck"
     assert result.validation_report.issues[0].path == "/project1/out1"
+
+
+@pytest.mark.asyncio
+async def test_transaction_rolls_back_when_normalized_visual_quality_fails():
+    plan = _patch_plan(
+        [
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
+        ],
+        required_ops=["nullTOP"],
+    )
+    client = FakeTDClient(
+        scripted={
+            "node/create": lambda params: f"{params['parent_path'].rstrip('/')}/{params['name']}",
+            "node/errors": {"issues": []},
+            "cooking": {"stuck": []},
+            "analyze_frame": {
+                "path": "/project1/out1",
+                "resolution": [256, 256],
+                "channels": 4,
+                "modes": {
+                    "luminance": {"mean": 0.46, "min": 0.46, "max": 0.46, "std": 0.000001},
+                    "alpha_coverage": {"opaque_fraction": 1.0},
+                },
+                "quality": {
+                    "pass": False,
+                    "mean_luminance": 0.46,
+                    "max_luminance": 0.46,
+                    "std_luminance": 0.000001,
+                    "active_coverage": 1.0,
+                    "alpha_coverage": 1.0,
+                    "fail_reasons": ["resolution_below_threshold", "std_luminance_below_threshold"],
+                },
+            },
+        }
+    )
+
+    result = await apply_transaction(client, plan, sentinel=UndoBlockSentinel())
+
+    assert result.status == "rolled_back"
+    assert result.validation_failed is True
+    assert result.validation_report is not None
+    assert result.validation_report.ok is False
+    assert any(issue.code == "visual_quality_failed" for issue in result.validation_report.issues)
+    assert ("project/lifecycle", {"action": "undo"}) in client.calls
     assert ("project/lifecycle", {"action": "undo"}) in client.calls
 
 
@@ -201,6 +303,15 @@ async def test_transaction_runs_default_visual_output_sample_for_any_null_top_pl
                     "luminance": {"mean": 0.23, "min": 0.0, "max": 0.62, "std": 0.08},
                     "alpha_coverage": {"opaque_fraction": 0.91},
                 },
+                "quality": {
+                    "pass": True,
+                    "mean_luminance": 0.23,
+                    "max_luminance": 0.62,
+                    "std_luminance": 0.08,
+                    "active_coverage": 0.72,
+                    "alpha_coverage": 0.91,
+                    "fail_reasons": [],
+                },
             }
         }
     )
@@ -218,6 +329,11 @@ async def test_transaction_runs_default_visual_output_sample_for_any_null_top_pl
         "output_alpha_coverage": 0.91,
         "output_entropy": 0.08,
     }
+    assert result.validation_report.cheap_metrics["visual_quality"]["/project1/out1"]["pass"] is True
+    assert (
+        result.validation_report.cheap_metrics["visual_quality"]["/project1/out1"]["active_coverage"]
+        == 0.72
+    )
     assert (
         "analyze_frame",
         {"path": "/project1/out1", "modes": ["luminance", "alpha_coverage"]},

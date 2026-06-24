@@ -139,6 +139,10 @@ def test_enforce_restricted_import_error_hints_at_mode_escalation(monkeypatch):
     )
 
 
+def test_restricted_violation_allows_td_setinput_method_name():
+    assert exec_safety.restricted_violation("op('/a').setInput(0, op('/b'))") is None
+
+
 def test_enforce_standard_still_blocks_os_with_dangerous_module_label(monkeypatch):
     """Regression guard: the standard-mode behavior is unchanged. `os` is
     not in STANDARD_ALLOWED_IMPORTS and remains in _DANGEROUS_MODULES, so

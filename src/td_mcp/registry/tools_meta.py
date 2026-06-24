@@ -11,12 +11,14 @@ Server-local tools that don't talk to TouchDesigner over MCP:
 * ``td_sync_status`` — one-call drift report for server version,
   TouchDesigner component version, package releases, plugin caches, and
   source-checkout ``.tox`` freshness when that check is applicable.
+* ``td_sync_diagnose`` — stricter local/live version + auth fingerprint
+  diagnostic that never exposes secret material.
 
 Neither tool requires a live TD connection or an exec-mode privilege —
 they introspect or mutate server-local state only. That's why they live
 in a dedicated module instead of ``tools_info.py`` or ``tools_system.py``.
 
-Part of the v2.0.2 surface (tool count 110 -> 111).
+Part of the v2.0.2 surface (tool count 110 -> 112).
 """
 
 from __future__ import annotations
@@ -332,6 +334,39 @@ async def td_sync_status(
         return _tr._as_json_output(payload)
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_sync_status")
+        return format_tool_error(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(name="td_sync_diagnose")
+async def td_sync_diagnose(
+    ctx: Context,
+    include_live: Annotated[
+        bool,
+        Field(default=True, description="If true, probe the live TouchDesigner WebServer."),
+    ] = True,
+    check_remote: Annotated[
+        bool,
+        Field(default=False, description="Reserved for compatibility; remote checks are not required."),
+    ] = False,
+) -> str:
+    """Strict version/auth sync diagnostic without exposing secret material."""
+    finish = _tr._start_tool(ctx, "td_sync_diagnose")
+    try:
+        from td_mcp.sync_diagnostics import diagnose_sync
+
+        client = _tr._get_client(ctx) if include_live else None
+        diagnostic = await diagnose_sync(client=client, include_live=include_live)
+        payload = {
+            "schema_version": 1,
+            "success": True,
+            "check_remote": bool(check_remote),
+            "diagnostic": diagnostic,
+        }
+        return _tr._as_json_output(payload)
+    except Exception as exc:
+        _tr._record_tool_error(ctx, "td_sync_diagnose")
         return format_tool_error(exc)
     finally:
         finish()

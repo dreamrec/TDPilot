@@ -12,6 +12,8 @@ defaults to calling the GitHub API via stdlib urllib.
 
 from __future__ import annotations
 
+import urllib.error
+
 import pytest
 
 from td_mcp import self_updater
@@ -130,6 +132,32 @@ def test_network_failure_returns_structured_error():
     assert result["installed"] == "1.6.15"
 
 
+def test_github_rate_limit_returns_actionable_structured_diagnostics():
+    def rate_limited():
+        raise urllib.error.HTTPError(
+            url="https://api.github.com/repos/dreamrec/TDPilot/releases/latest",
+            code=403,
+            msg="API rate limit exceeded",
+            hdrs={"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "1782345600"},
+            fp=None,
+        )
+
+    result = self_updater.run(
+        check_only=True,
+        installed_version="2.0.2",
+        fetch_releases=rate_limited,
+    )
+
+    assert result["ok"] is False
+    assert result["error_code"] == "github_rate_limited"
+    assert result["diagnostic"]["http_status"] == 403
+    assert result["diagnostic"]["rate_limit_remaining"] == "0"
+    assert result["diagnostic"]["rate_limit_reset"] == "1782345600"
+    assert any("GH_TOKEN" in item for item in result["diagnostic"]["remediation"])
+    assert "secret" not in " ".join(result["diagnostic"]["remediation"]).lower()
+    assert result["installed"] == "2.0.2"
+
+
 def test_empty_release_list_handled():
     """If the GitHub API returns a malformed/empty payload, surface it cleanly."""
     fake = lambda: {}  # noqa: E731
@@ -226,6 +254,32 @@ def test_install_missing_asset_reports_error(tmp_path):
     )
     assert "error" in result
     assert "asset" in result["error"].lower()
+
+
+def test_install_missing_asset_reports_available_assets_and_packaging_gap(tmp_path):
+    fake = lambda: _fake_release(  # noqa: E731
+        "v2.0.3",
+        assets=[
+            {"name": "tdpilot.zip", "browser_download_url": "https://example.invalid/zip"},
+            {"name": "TDPilot.plugin", "browser_download_url": "https://example.invalid/plugin"},
+        ],
+    )
+
+    result = self_updater.run(
+        check_only=False,
+        installed_version="2.0.2",
+        fetch_releases=fake,
+        download_asset=lambda _u: pytest.fail("must not download when tox asset is absent"),
+        install_paths=[tmp_path / "td_component" / "tdpilot.tox"],
+        asset_name="tdpilot.tox",
+    )
+
+    assert result["ok"] is False
+    assert result["error_code"] == "release_asset_missing"
+    assert result["diagnostic"]["requested_asset"] == "tdpilot.tox"
+    assert result["diagnostic"]["available_assets"] == ["tdpilot.zip", "TDPilot.plugin"]
+    assert result["diagnostic"]["release_packaging_incomplete"] is True
+    assert any(".tox" in item for item in result["diagnostic"]["remediation"])
 
 
 def test_install_creates_parent_directories(tmp_path):

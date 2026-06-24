@@ -199,6 +199,95 @@ def _install_to_paths(
     return installed, md5_map
 
 
+def _http_fetch_error_result(exc: Exception, *, installed_version: str) -> dict[str, Any]:
+    if isinstance(exc, urllib.error.HTTPError):
+        remaining = exc.headers.get("X-RateLimit-Remaining") if exc.headers else None
+        reset = exc.headers.get("X-RateLimit-Reset") if exc.headers else None
+        message = str(exc.reason or exc.msg or exc)
+        rate_limited = exc.code == 403 and (remaining == "0" or "rate limit" in message.lower())
+        if rate_limited:
+            return {
+                "ok": False,
+                "error": f"failed to fetch releases: GitHub API rate limited ({message})",
+                "error_code": "github_rate_limited",
+                "installed": installed_version,
+                "diagnostic": {
+                    "kind": "github_http_error",
+                    "http_status": exc.code,
+                    "rate_limit_remaining": remaining,
+                    "rate_limit_reset": reset,
+                    "remediation": [
+                        "Retry after the GitHub rate-limit reset time.",
+                        "Set GH_TOKEN or GITHUB_TOKEN for authenticated GitHub API requests.",
+                        "If local source is already current, continue with local install and rerun live sync diagnostics.",
+                    ],
+                },
+            }
+        return {
+            "ok": False,
+            "error": f"failed to fetch releases: HTTP {exc.code} ({message})",
+            "error_code": "github_http_error",
+            "installed": installed_version,
+            "diagnostic": {
+                "kind": "github_http_error",
+                "http_status": exc.code,
+                "rate_limit_remaining": remaining,
+                "rate_limit_reset": reset,
+                "remediation": [
+                    "Check GitHub connectivity and credentials.",
+                    "If the local source install is current, rerun sync diagnostics before touching live TD.",
+                ],
+            },
+        }
+    return {
+        "ok": False,
+        "error": f"failed to fetch releases: {exc}",
+        "error_code": "release_fetch_failed",
+        "installed": installed_version,
+        "diagnostic": {
+            "kind": "network_error",
+            "message": str(exc),
+            "remediation": [
+                "Check network connectivity and retry.",
+                "If local source is already current, continue with local install and rerun live sync diagnostics.",
+            ],
+        },
+    }
+
+
+def _asset_name_matches(candidate: str, requested: str) -> bool:
+    return candidate.strip().lower() == requested.strip().lower()
+
+
+def _missing_asset_result(
+    result: dict[str, Any],
+    *,
+    latest_tag: str,
+    asset_name: str,
+    assets: list[Any],
+) -> dict[str, Any]:
+    available = [str(asset.get("name")) for asset in assets if isinstance(asset, dict) and asset.get("name")]
+    tox_assets = [name for name in available if name.lower().endswith(".tox")]
+    return {
+        **result,
+        "ok": False,
+        "error": f"release {latest_tag!r} does not contain asset {asset_name!r}",
+        "error_code": "release_asset_missing",
+        "diagnostic": {
+            "kind": "release_packaging",
+            "requested_asset": asset_name,
+            "available_assets": available,
+            "tox_assets": tox_assets,
+            "release_packaging_incomplete": not tox_assets,
+            "remediation": [
+                f"Publish a canonical .tox release asset named {asset_name!r}.",
+                "If local source install is current, the release package is incomplete rather than the local install being stale.",
+                "Rerun setup_mcp_in_td.py after a valid .tox is installed.",
+            ],
+        },
+    }
+
+
 # ──────────────────────────────────────────────────────────
 # Public entrypoint
 # ──────────────────────────────────────────────────────────
@@ -239,14 +328,13 @@ def run(
     try:
         release = fetch()
     except Exception as exc:
-        return {
-            "error": f"failed to fetch releases: {exc}",
-            "installed": installed_version,
-        }
+        return _http_fetch_error_result(exc, installed_version=installed_version)
 
     if not isinstance(release, dict) or "tag_name" not in release:
         return {
+            "ok": False,
             "error": "malformed release payload (missing tag_name)",
+            "error_code": "malformed_release_payload",
             "installed": installed_version,
         }
 
@@ -256,6 +344,7 @@ def run(
     newer = is_newer(latest=latest_tag, installed=installed_version)
 
     result: dict[str, Any] = {
+        "ok": True,
         "installed": installed_version,
         "latest": latest_version,
         "newer_available": newer,
@@ -271,34 +360,42 @@ def run(
 
     # Find the requested asset.
     asset_url: str | None = None
-    for asset in release.get("assets") or []:
+    assets = list(release.get("assets") or [])
+    for asset in assets:
         if not isinstance(asset, dict):
             continue
-        if asset.get("name") == asset_name:
+        if _asset_name_matches(str(asset.get("name") or ""), asset_name):
             asset_url = asset.get("browser_download_url")
             break
 
     if not asset_url:
-        return {
-            **result,
-            "error": f"release {latest_tag!r} does not contain asset {asset_name!r}",
-        }
+        return _missing_asset_result(result, latest_tag=latest_tag, asset_name=asset_name, assets=assets)
 
     try:
         payload = download(asset_url)
     except Exception as exc:
-        return {**result, "error": f"failed to download asset: {exc}"}
+        return {
+            **result,
+            "ok": False,
+            "error": f"failed to download asset: {exc}",
+            "error_code": "asset_download_failed",
+        }
 
     if not isinstance(payload, (bytes, bytearray)) or len(payload) == 0:
-        return {**result, "error": "downloaded asset is empty"}
+        return {**result, "ok": False, "error": "downloaded asset is empty", "error_code": "asset_empty"}
 
     paths = install_paths if install_paths is not None else _resolve_default_install_paths(asset_name)
     if not paths:
-        return {**result, "error": "no install paths resolved"}
+        return {**result, "ok": False, "error": "no install paths resolved", "error_code": "no_install_paths"}
 
     installed_to, md5_map = _install_to_paths(bytes(payload), [Path(p) for p in paths])
     if not installed_to:
-        return {**result, "error": "no install paths were writable"}
+        return {
+            **result,
+            "ok": False,
+            "error": "no install paths were writable",
+            "error_code": "install_paths_unwritable",
+        }
 
     result["installed_to"] = installed_to
     result["md5"] = md5_map

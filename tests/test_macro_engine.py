@@ -58,6 +58,19 @@ def test_list_macros_has_defaults():
     assert "post_processing" in names
 
 
+def test_feedback_displacement_macro_uses_feedback_top_reference_not_invalid_input_wiring():
+    engine = MacroEngine(td_client=FakeTDClient())
+    template = engine._templates["feedback_displacement"]
+
+    connections = {(item.source, item.target, item.source_index, item.target_index) for item in template.connections}
+    refs = {(item.node, item.param, item.target_node) for item in template.node_references}
+
+    assert ("feedback", "decay", 0, 0) in connections
+    assert ("source", "feedback", 0, 0) not in connections
+    assert ("feedback", "top", "out") in refs
+    assert template.exit_node == "out"
+
+
 @pytest.mark.asyncio
 async def test_macro_engine_routes_param_writes_through_shared_preflight():
     client = FakeTDClient()

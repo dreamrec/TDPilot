@@ -252,6 +252,26 @@ class _FakeTOP:
         return bytearray(b"fake-jpeg")
 
 
+class _SampleOnlyTOP(_FakeTOP):
+    def numpyArray(self):
+        raise RuntimeError("GPU readback unavailable")
+
+    def sample(self, x, y):
+        if x < 0.5 and y < 0.5:
+            return (0.0, 0.0, 0.0, 0.0)
+        return (0.8, 0.2, 0.1, 1.0)
+
+
+class _PatternTOP(_FakeTOP):
+    def numpyArray(self):
+        arr = _np.zeros((self.height, self.width, self._channels), dtype=_np.float32)
+        arr[:, : self.width // 2, :3] = 0.15
+        arr[:, self.width // 2 :, :3] = 0.85
+        if self._channels >= 4:
+            arr[:, :, 3] = 1.0
+        return arr
+
+
 class _FakeNotTOP:
     isTOP = False
     isCHOP = True
@@ -404,3 +424,83 @@ def test_handle_analyze_frame_unknown_mode_returns_error_in_modes():
     result = module.handle_analyze_frame({"path": top.path, "modes": ["totally_unknown_mode"]})
     assert "error" not in result
     assert "error" in result["modes"]["totally_unknown_mode"]
+
+
+def test_handle_analyze_frame_returns_quality_metrics_for_valid_pixels():
+    module = _load_callbacks_module()
+    module.sys = _sys
+    top = _PatternTOP(w=384, h=384, channels=4, fill=0.7)
+    module.op = lambda path: top if path == top.path else None
+
+    result = module.handle_analyze_frame({"path": top.path, "modes": ["luminance"], "quality_mode": True})
+
+    assert "error" not in result
+    quality = result["quality"]
+    assert quality["pass"] is True
+    assert quality["mean_luminance"] > 0.45
+    assert quality["max_luminance"] > 0.6
+    assert quality["alpha_coverage"] == 1.0
+    assert quality["thresholds"]["min_resolution"] == [320, 320]
+    assert quality["fail_reasons"] == []
+
+
+def test_handle_analyze_frame_quality_fails_black_output():
+    module = _load_callbacks_module()
+    module.sys = _sys
+    top = _FakeTOP(w=384, h=384, channels=4, fill=0.0)
+    module.op = lambda path: top if path == top.path else None
+
+    result = module.handle_analyze_frame({"path": top.path, "modes": ["luminance"], "quality_mode": True})
+
+    quality = result["quality"]
+    assert quality["pass"] is False
+    assert quality["is_black"] is True
+    assert "max_luminance_below_threshold" in quality["fail_reasons"]
+
+
+def test_handle_analyze_frame_falls_back_to_top_sample_for_quality():
+    module = _load_callbacks_module()
+    module.sys = _sys
+    top = _SampleOnlyTOP(w=640, h=360, channels=4, fill=0.0)
+    module.op = lambda path: top if path == top.path else None
+
+    result = module.handle_analyze_frame(
+        {"path": top.path, "modes": ["luminance", "alpha_coverage"], "quality_mode": True, "sample_grid": 4}
+    )
+
+    assert "error" not in result
+    assert result["source"] == "sample"
+    assert result["quality"]["pass"] is True
+    assert result["quality"]["active_coverage"] > 0.5
+
+
+def test_restricted_exec_policy_allows_td_setinput_method_name():
+    module = _load_callbacks_module()
+
+    assert module._restricted_exec_violation("op('/project1/a').setInput(0, op('/project1/b'))") is None
+
+
+def test_restricted_exec_policy_allows_text_top_parameter_assignment():
+    module = _load_callbacks_module()
+
+    assert module._restricted_exec_violation("op('/project1/title').par.text = 'QA OK'") is None
+
+
+def test_restricted_exec_globals_include_safe_inspection_helpers():
+    module = _load_callbacks_module()
+    for name in ("op", "ops", "project", "app", "absTime", "me", "parent", "ui", "tdu"):
+        setattr(module, name, object())
+
+    builtins = module._build_exec_globals("restricted")["__builtins__"]
+
+    for name in ("Exception", "dir", "getattr", "hasattr", "isinstance", "type"):
+        assert name in builtins
+
+
+def test_restricted_dat_content_still_blocks_python_imports():
+    module = _load_callbacks_module()
+
+    violation = module._dat_content_violation("restricted", "import os\nos.system('echo unsafe')")
+
+    assert violation is not None
+    assert "import" in violation

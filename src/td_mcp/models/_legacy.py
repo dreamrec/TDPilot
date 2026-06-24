@@ -1309,6 +1309,9 @@ class AnalyzeFrameInput(BaseModel):
         default=None, description="Region of interest [x, y, w, h] for roi_diff mode"
     )
     reference_path: str | None = Field(default=None, description="Reference TOP path for roi_diff mode")
+    sample_grid: int = Field(default=20, ge=2, le=128, description="Grid size for fallback sampling")
+    thresholds: dict[str, Any] | None = Field(default=None, description="Visual-quality threshold overrides")
+    quality_mode: bool = Field(default=True, description="Include normalized visual-quality metrics")
 
 
 # ─────────────────────────────────────────────────────────────
