@@ -54,7 +54,10 @@ async def validate_target(td_client, plan: ValidationPlan) -> ValidationReport:
         except Exception as exc:  # noqa: BLE001
             frames[top_path] = f"ERROR: {exc}"
 
-    ok = not errors and not cook_stats.get("stuck")
+    # A failed cooking probe (cook_stats={"probe_error": ...}) means we could NOT
+    # determine whether nodes are stuck — treat that as not-ok (fail closed)
+    # rather than silently reporting clean.
+    ok = not errors and not cook_stats.get("stuck") and not cook_stats.get("probe_error")
     summary = (
         f"clean: {plan.target_root}"
         if ok

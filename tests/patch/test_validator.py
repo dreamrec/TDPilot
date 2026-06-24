@@ -39,6 +39,21 @@ async def test_validate_with_errors():
 
 
 @pytest.mark.asyncio
+async def test_validate_fails_closed_when_cooking_probe_errors():
+    """A failed cooking probe means we can't tell if nodes are stuck — the
+    report must NOT claim ok (fail closed), even with no errors."""
+    client = FakeTDClient(
+        scripted={
+            "node/errors": {"issues": []},
+            "cooking": RuntimeError("cooking probe unavailable"),
+        }
+    )
+    report = await validate_target(client, ValidationPlan(target_root="/p"))
+    assert report.ok is False
+    assert report.cook_stats.get("probe_error")
+
+
+@pytest.mark.asyncio
 async def test_validate_with_capture_frames():
     """v1.5.1: validator now uses TD's /api/screenshot endpoint
     (returns ``data_base64``), not the fictional /api/frame/capture
