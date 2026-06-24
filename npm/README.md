@@ -4,7 +4,7 @@
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
 [![downloads](https://img.shields.io/npm/dm/tdpilot?label=downloads)](https://www.npmjs.com/package/tdpilot)
 [![license](https://img.shields.io/badge/license-MIT-blue)](https://github.com/dreamrec/TDPilot/blob/main/LICENSE)
-[![MCP tools](https://img.shields.io/badge/MCP%20tools-110-blueviolet)](https://github.com/dreamrec/TDPilot/blob/main/docs/API_REFERENCE.md)
+[![MCP tools](https://img.shields.io/badge/MCP%20tools-111-blueviolet)](https://github.com/dreamrec/TDPilot/blob/main/docs/API_REFERENCE.md)
 
 AI copilot for TouchDesigner — 111 tools for full live control via MCP, with correctness-first BrainPlan transactions, optional cockpit UI, technique memory, knowledge corpus, POPx inspection, project lifecycle control, focus + locations, hint injection, component notes, custom parameter authoring, agent activity log, one-tool self-update, and sync-status checks.
 

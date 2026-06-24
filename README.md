@@ -238,7 +238,7 @@ Use this loop for every non-trivial task:
 
 6. **Control token cost** — Prefer metadata checks over continuous image payloads. Ask the user before enabling high-token frame streaming.
 
-## Tool Map (110 Tools)
+## Tool Map (111 Tools)
 
 ### 0) Brain Planning + Transactions
 Use for non-trivial visual programming tasks where correctness, rollback, and validation matter.

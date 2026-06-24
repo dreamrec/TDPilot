@@ -10,7 +10,7 @@ For the deep implementation blueprint, see
 
 ## Current Leverage
 
-- 110 local MCP tools for live TD inspection, mutation, validation, memory,
+- 111 local MCP tools for live TD inspection, mutation, validation, memory,
   search, recommendations, safety, snapshots, and transactions.
 - 656-card reviewed operator atlas across CHOP, COMP, DAT, MAT, POP, SOP, and
   TOP, with Official Derivative docs URLs, `key_concepts`, `key_params`, and

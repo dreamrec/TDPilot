@@ -31,6 +31,14 @@ def pyproject_version() -> str:
     return match.group(1)
 
 
+def canonical_tool_count() -> str:
+    text = (ROOT / "src" / "td_mcp" / "release_gates.py").read_text()
+    match = re.search(r"EXPECTED_MIN_TOOL_COUNT\s*:\s*int\s*=\s*(\d+)", text)
+    if not match:
+        raise SystemExit("Could not find EXPECTED_MIN_TOOL_COUNT in src/td_mcp/release_gates.py")
+    return match.group(1)
+
+
 def check_line(path: Path, pattern: str, expected: str, label: str, *, flags: int = 0) -> str | None:
     if not path.exists():
         return f"{label}: missing file {path}"
@@ -54,8 +62,28 @@ def check_json_version(path: Path, expected: str, label: str) -> str | None:
     return None
 
 
+def _json_path_value(data: object, key_path: str) -> object:
+    current = data
+    for key in key_path.split("."):
+        if not isinstance(current, dict):
+            return None
+        current = current.get(key)
+    return current
+
+
+def check_json_value(path: Path, key_path: str, expected: object, label: str) -> str | None:
+    if not path.exists():
+        return f"{label}: missing file {path}"
+    data = json.loads(path.read_text())
+    actual = _json_path_value(data, key_path)
+    if actual != expected:
+        return f"{label}: {path.relative_to(ROOT)} says {actual}, expected {expected}"
+    return None
+
+
 def main() -> int:
     expected = canonical_version()
+    expected_tool_count = canonical_tool_count()
     errors: list[str] = []
 
     py_version = pyproject_version()
@@ -65,6 +93,12 @@ def main() -> int:
     errors += [
         check_json_version(ROOT / "npm" / "package.json", expected, "npm/package.json"),
         check_json_version(ROOT / "mcp" / "manifest.json", expected, "mcp/manifest.json"),
+        check_json_value(
+            ROOT / "mcp" / "manifest.json",
+            "surface.tool_count",
+            int(expected_tool_count),
+            "mcp/manifest.json tool_count",
+        ),
         check_json_version(ROOT / ".claude-plugin" / "plugin.json", expected, ".claude-plugin/plugin.json"),
         check_json_version(
             ROOT / "plugins" / "tdpilot" / ".codex-plugin" / "plugin.json",
@@ -103,6 +137,30 @@ def main() -> int:
             "README.md What's New",
         ),
         check_line(
+            ROOT / "README.md",
+            r"MCP%20tools-(\d+)-blueviolet",
+            expected_tool_count,
+            "README.md MCP tools badge",
+        ),
+        check_line(
+            ROOT / "README.md",
+            r"## Tool Map \((\d+) Tools\)",
+            expected_tool_count,
+            "README.md Tool Map",
+        ),
+        check_line(
+            ROOT / "README.md",
+            r"\*\*(\d+) MCP tools\*\*",
+            expected_tool_count,
+            "README.md install tool count",
+        ),
+        check_line(
+            ROOT / "README.md",
+            r"- (\d+)-tool runtime surface",
+            expected_tool_count,
+            "README.md runtime surface count",
+        ),
+        check_line(
             ROOT / "td_component" / "mcp_webserver_callbacks.py",
             r'API_VERSION\s*=\s*"([^"]+)"',
             expected,
@@ -113,6 +171,18 @@ def main() -> int:
             r"TDPilot v([0-9]+\.[0-9]+\.[0-9]+)",
             expected,
             "plugin_README.md header",
+        ),
+        check_line(
+            ROOT / "plugin_README.md",
+            r"provides (\d+) MCP tools",
+            expected_tool_count,
+            "plugin_README.md tool count",
+        ),
+        check_line(
+            ROOT / "plugin_README.md",
+            r"(\d+)-tool reference",
+            expected_tool_count,
+            "plugin_README.md core skill tool count",
         ),
         check_line(
             ROOT / "docs" / "API_REFERENCE.md",
@@ -131,6 +201,24 @@ def main() -> int:
             r"# TDPilot v([0-9]+\.[0-9]+\.[0-9]+)",
             expected,
             "npm/README.md title",
+        ),
+        check_line(
+            ROOT / "npm" / "README.md",
+            r"MCP%20tools-(\d+)-blueviolet",
+            expected_tool_count,
+            "npm/README.md MCP tools badge",
+        ),
+        check_line(
+            ROOT / "npm" / "README.md",
+            r"— (\d+) tools for full live control",
+            expected_tool_count,
+            "npm/README.md prose tool count",
+        ),
+        check_line(
+            ROOT / "docs" / "TDPILOT_EFFECTIVENESS_ROADMAP.md",
+            r"- (\d+) local MCP tools",
+            expected_tool_count,
+            "docs/TDPILOT_EFFECTIVENESS_ROADMAP.md tool count",
         ),
         check_line(
             ROOT / "skills" / "tdpilot-core" / "SKILL.md",

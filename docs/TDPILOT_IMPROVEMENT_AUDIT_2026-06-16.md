@@ -1,5 +1,10 @@
 # TDPilot Improvement Audit - 2026-06-16
 
+> Archive note: this is a dated audit snapshot. Tool counts and verification
+> output in this file reflect the repository state on 2026-06-16; use
+> `README.md`, `docs/API_REFERENCE.md`, and `mcp/manifest.json` for the current
+> release surface.
+
 This audit combines local repo inspection with current public guidance from OpenAI,
 Anthropic, and the MCP specification. The goal is not to chase parity. The goal is
 to deepen TDPilot's moat: local-first TouchDesigner rigor, auditability, recovery,

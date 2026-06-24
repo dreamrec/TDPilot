@@ -19,6 +19,25 @@ class _FakeClient:
         raise AssertionError(endpoint)
 
 
+class _MatchingClient:
+    async def request(self, endpoint, body=None):
+        if endpoint == "health":
+            return {"status": "ok", "api_version": __version__}
+        if endpoint == "info":
+            return {"mcp_component_version": __version__}
+        raise AssertionError(endpoint)
+
+
+def test_tox_freshness_is_not_applicable_outside_source_checkout(tmp_path, monkeypatch):
+    monkeypatch.setattr(tools_meta, "_repo_root", lambda: tmp_path)
+
+    payload = tools_meta._tox_freshness_status()
+
+    assert payload["fresh"] is None
+    assert payload["status"] == "not_applicable"
+    assert "source checkout" in payload["message"]
+
+
 @pytest.mark.asyncio
 async def test_td_sync_status_reports_public_drift_and_live_mismatch(monkeypatch):
     monkeypatch.setattr(_registry, "_get_client", lambda _ctx: _FakeClient())
@@ -70,3 +89,38 @@ async def test_td_sync_status_reports_public_drift_and_live_mismatch(monkeypatch
     assert any(
         "Reload/export the bundled td_component/tdpilot.tox" in item for item in payload["recommendations"]
     )
+
+
+@pytest.mark.asyncio
+async def test_td_sync_status_does_not_warn_for_package_only_tox_status(monkeypatch):
+    monkeypatch.setattr(_registry, "_get_client", lambda _ctx: _MatchingClient())
+    monkeypatch.setattr(
+        tools_meta,
+        "_tox_freshness_status",
+        lambda: {
+            "fresh": None,
+            "status": "not_applicable",
+            "message": "tox freshness is only available from a source checkout",
+            "messages": [],
+        },
+    )
+    monkeypatch.setattr(
+        tools_meta,
+        "_plugin_cache_versions",
+        lambda: [
+            {
+                "name": "codex",
+                "path": "/tmp/cache",
+                "versions": [__version__],
+                "contains_server_version": True,
+            }
+        ],
+    )
+    ctx = SimpleNamespace(request_context=SimpleNamespace(lifespan_context={}))
+
+    out = await tools_meta.td_sync_status(ctx, check_remote=False)
+    payload = json.loads(out)
+
+    assert payload["overall"] == "ok"
+    assert payload["tox"]["fresh"] is None
+    assert not any("Rebuild td_component/tdpilot.tox" in item for item in payload["recommendations"])

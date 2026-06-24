@@ -10,7 +10,7 @@ The 1.6 observability layer remains: `_read_journal` hints, a 200-entry `activit
 - **touchdesigner** — Connects to TDPilot MCP server via `npx tdpilot` (stdio transport)
 
 ### Skills
-- **tdpilot-core** — Core patching discipline: 110-tool reference, node layout, color coding, expressions, error verification, visual checks, technique memory, knowledge corpus, custom parameters, project lifecycle, POP inspection, agent activity log, self-update, and the brain transaction loop
+- **tdpilot-core** — Core patching discipline: 111-tool reference, node layout, color coding, expressions, error verification, visual checks, technique memory, knowledge corpus, custom parameters, project lifecycle, POP inspection, agent activity log, self-update, and the brain transaction loop
 - **tdpilot-production** — Production-safe workflow: staged edits, undo blocks, snapshots, completion gates, failure protocol
 - **tdpilot-brain-explorer / builder / validator / recovery / release** — Specialized v2 brain skills for inspect-before-mutate work, BrainPlan construction, validation, recovery, and release auditing
 - **popx-touchdesigner** — POPX workflow skill for 59 GPU-accelerated operators. References must be built locally from your own licensed POPx copy (see `references/BUILD.md`)

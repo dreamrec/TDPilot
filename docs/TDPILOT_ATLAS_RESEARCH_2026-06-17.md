@@ -1,5 +1,10 @@
 # TDPilot Atlas Research - 2026-06-17
 
+> Archive note: this is a dated research log. Tool counts and verification
+> output in this file reflect the repository state on 2026-06-17; use
+> `README.md`, `docs/API_REFERENCE.md`, and `mcp/manifest.json` for the current
+> release surface.
+
 ## Local Inventory
 
 - `data/normalized/derivative/docsbrain.db` contains 25,887 chunks, including 5,532 operator chunks and 103 distinct POP operators.

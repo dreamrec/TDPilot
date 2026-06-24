@@ -1,6 +1,6 @@
 """Meta tools — agent observability + server self-management.
 
-Two server-local tools that don't talk to TouchDesigner over MCP:
+Server-local tools that don't talk to TouchDesigner over MCP:
 
 * ``td_get_activity_log`` — recent tool-call history (server-side ring
   buffer). Useful for Claude to inspect what it's done in this session
@@ -8,12 +8,15 @@ Two server-local tools that don't talk to TouchDesigner over MCP:
 * ``td_self_update`` — check for and install a newer TDPilot release
   from GitHub. Closes the long-running staleness problem documented in
   ``CLAUDE.md`` (seven artifact layers go stale silently).
+* ``td_sync_status`` — one-call drift report for server version,
+  TouchDesigner component version, package releases, plugin caches, and
+  source-checkout ``.tox`` freshness when that check is applicable.
 
 Neither tool requires a live TD connection or an exec-mode privilege —
 they introspect or mutate server-local state only. That's why they live
 in a dedicated module instead of ``tools_info.py`` or ``tools_system.py``.
 
-Part of the v1.6.16 surface (tool count 104 → 106).
+Part of the v2.0.2 surface (tool count 110 -> 111).
 """
 
 from __future__ import annotations
@@ -54,17 +57,26 @@ def _fetch_json(url: str) -> dict[str, Any]:
 
 
 def _tox_freshness_status() -> dict[str, Any]:
-    script = _repo_root() / "scripts" / "check_tox_freshness.py"
+    root = _repo_root()
+    script = root / "scripts" / "check_tox_freshness.py"
+    tox = root / "td_component" / "tdpilot.tox"
+    if not script.exists() or not tox.exists():
+        return {
+            "fresh": None,
+            "status": "not_applicable",
+            "message": "tox freshness is only available from a source checkout with td_component/tdpilot.tox.",
+            "messages": [],
+        }
     try:
         spec = importlib.util.spec_from_file_location("tdpilot_check_tox_freshness", script)
         if spec is None or spec.loader is None:
             raise RuntimeError(f"could not load {script}")
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        ok, messages = module.check_freshness(_repo_root())
-        return {"fresh": bool(ok), "messages": list(messages)}
+        ok, messages = module.check_freshness(root)
+        return {"fresh": bool(ok), "status": "fresh" if ok else "stale", "messages": list(messages)}
     except Exception as exc:
-        return {"fresh": False, "error": str(exc), "messages": []}
+        return {"fresh": False, "status": "error", "error": str(exc), "messages": []}
 
 
 def _plugin_cache_versions() -> list[dict[str, Any]]:
@@ -286,7 +298,7 @@ async def td_sync_status(
         recommendations: list[str] = []
         if touchdesigner.get("matches_server") is False:
             recommendations.append("Reload/export the bundled td_component/tdpilot.tox in TouchDesigner.")
-        if not tox.get("fresh"):
+        if tox.get("fresh") is False:
             recommendations.append("Rebuild td_component/tdpilot.tox before publishing this source change.")
         if any(row.get("versions") and not row.get("contains_server_version") for row in plugin_caches):
             recommendations.append(
