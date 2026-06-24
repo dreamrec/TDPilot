@@ -14,6 +14,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -23,7 +24,12 @@ from td_mcp.models import CustomParametersInput, CustomParameterSpec
 from td_mcp.tool_registry import mcp  # noqa: E402
 
 
-@mcp.tool(name="td_get_content")
+@mcp.tool(
+    name="td_get_content",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_get_content(
     ctx: Context,
     path: Annotated[
@@ -35,7 +41,12 @@ async def td_get_content(
     return await _tr._forward(ctx, "td_get_content", "node/content", {"path": path})
 
 
-@mcp.tool(name="td_set_content")
+@mcp.tool(
+    name="td_set_content",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_set_content(
     ctx: Context,
     path: Annotated[
@@ -72,7 +83,12 @@ async def td_set_content(
     )
 
 
-@mcp.tool(name="td_custom_parameters")
+@mcp.tool(
+    name="td_custom_parameters",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_custom_parameters(
     ctx: Context,
     path: Annotated[
@@ -108,7 +124,12 @@ async def td_custom_parameters(
     )
 
 
-@mcp.tool(name="td_exec_python")
+@mcp.tool(
+    name="td_exec_python",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_exec_python(
     ctx: Context,
     code: Annotated[

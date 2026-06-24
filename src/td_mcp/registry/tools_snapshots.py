@@ -18,6 +18,7 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -163,7 +164,12 @@ async def td_diff_snapshots(
         finish()
 
 
-@mcp.tool(name="td_restore_snapshot")
+@mcp.tool(
+    name="td_restore_snapshot",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_restore_snapshot(
     ctx: Context,
     snapshot_id: Annotated[

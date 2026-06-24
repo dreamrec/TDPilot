@@ -19,6 +19,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -72,7 +73,12 @@ async def td_timeline_set(
     )
 
 
-@mcp.tool(name="td_project_lifecycle")
+@mcp.tool(
+    name="td_project_lifecycle",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_project_lifecycle(
     ctx: Context,
     action: Annotated[

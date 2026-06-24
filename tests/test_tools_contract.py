@@ -170,3 +170,50 @@ def test_manifest_tool_count_matches_registry():
         f"but source has {len(tool_decorators)} @mcp.tool decorators "
         f"across tool_registry.py + registry/tools_*.py"
     )
+
+
+# Destructive daily-driver tools an MCP client must be able to recognise as
+# mutating (so it can confirm before running them) — previously these carried no
+# annotations while only the legacy/expert pipeline did.
+_DESTRUCTIVE_DAILY_DRIVERS = {
+    "td_set_params",
+    "td_create_node",
+    "td_delete_node",
+    "td_copy_node",
+    "td_rename_node",
+    "td_connect_nodes",
+    "td_disconnect",
+    "td_set_content",
+    "td_custom_parameters",
+    "td_exec_python",
+    "td_restore_snapshot",
+    "td_project_lifecycle",
+}
+
+_READONLY_DAILY_DRIVERS = {
+    "td_get_nodes",
+    "td_get_node_detail",
+    "td_get_params",
+    "td_get_connections",
+    "td_get_content",
+}
+
+
+def test_destructive_daily_driver_tools_carry_destructive_hint():
+    by_name = {tool.name: tool for tool in asyncio.run(server.mcp.list_tools())}
+    for name in _DESTRUCTIVE_DAILY_DRIVERS:
+        tool = by_name.get(name)
+        assert tool is not None, f"missing tool: {name}"
+        assert tool.annotations is not None, f"{name} has no ToolAnnotations"
+        assert tool.annotations.destructiveHint is True, f"{name} must be destructiveHint=True"
+        assert tool.annotations.readOnlyHint is False, f"{name} must be readOnlyHint=False"
+
+
+def test_readonly_daily_driver_tools_carry_read_only_hint():
+    by_name = {tool.name: tool for tool in asyncio.run(server.mcp.list_tools())}
+    for name in _READONLY_DAILY_DRIVERS:
+        tool = by_name.get(name)
+        assert tool is not None, f"missing tool: {name}"
+        assert tool.annotations is not None, f"{name} has no ToolAnnotations"
+        assert tool.annotations.readOnlyHint is True, f"{name} must be readOnlyHint=True"
+        assert tool.annotations.destructiveHint is False, f"{name} must be destructiveHint=False"

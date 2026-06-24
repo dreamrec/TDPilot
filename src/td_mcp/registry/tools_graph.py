@@ -25,6 +25,7 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -40,7 +41,12 @@ from td_mcp.models import (
 from td_mcp.tool_registry import mcp  # noqa: E402
 
 
-@mcp.tool(name="td_get_nodes")
+@mcp.tool(
+    name="td_get_nodes",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_get_nodes(
     ctx: Context,
     path: Annotated[
@@ -111,7 +117,12 @@ async def td_get_nodes(
         finish()
 
 
-@mcp.tool(name="td_get_node_detail")
+@mcp.tool(
+    name="td_get_node_detail",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_get_node_detail(
     ctx: Context,
     path: Annotated[
@@ -228,7 +239,12 @@ async def td_get_node_detail(
         finish()
 
 
-@mcp.tool(name="td_get_params")
+@mcp.tool(
+    name="td_get_params",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_get_params(
     ctx: Context,
     path: Annotated[
@@ -267,7 +283,12 @@ async def td_get_params(
         finish()
 
 
-@mcp.tool(name="td_set_params")
+@mcp.tool(
+    name="td_set_params",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_set_params(
     ctx: Context,
     path: Annotated[
@@ -403,7 +424,12 @@ async def _resolve_existing_node_op_type(client: Any, path: str) -> str | None:
     return canonical_op_type(str(raw_type), str(family) if family else None)
 
 
-@mcp.tool(name="td_create_node")
+@mcp.tool(
+    name="td_create_node",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_create_node(
     ctx: Context,
     node_type: Annotated[
@@ -501,7 +527,12 @@ async def td_create_node(
     )
 
 
-@mcp.tool(name="td_delete_node")
+@mcp.tool(
+    name="td_delete_node",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_delete_node(
     ctx: Context,
     path: Annotated[
@@ -532,7 +563,12 @@ async def td_delete_node(
     )
 
 
-@mcp.tool(name="td_copy_node")
+@mcp.tool(
+    name="td_copy_node",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_copy_node(
     ctx: Context,
     source_path: Annotated[
@@ -566,7 +602,12 @@ async def td_copy_node(
     )
 
 
-@mcp.tool(name="td_rename_node")
+@mcp.tool(
+    name="td_rename_node",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_rename_node(
     ctx: Context,
     path: Annotated[
@@ -588,7 +629,12 @@ async def td_rename_node(
     )
 
 
-@mcp.tool(name="td_connect_nodes")
+@mcp.tool(
+    name="td_connect_nodes",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_connect_nodes(
     ctx: Context,
     source_path: Annotated[
@@ -631,7 +677,12 @@ async def td_connect_nodes(
     )
 
 
-@mcp.tool(name="td_disconnect")
+@mcp.tool(
+    name="td_disconnect",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_disconnect(
     ctx: Context,
     path: Annotated[
@@ -663,7 +714,12 @@ async def td_disconnect(
     )
 
 
-@mcp.tool(name="td_get_connections")
+@mcp.tool(
+    name="td_get_connections",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_get_connections(
     ctx: Context,
     path: Annotated[

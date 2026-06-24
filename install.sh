@@ -116,12 +116,18 @@ if [ -f "$CONFIG_PATH" ]; then
 fi
 
 # Use Python to safely merge JSON (always available on macOS) and generate a secret.
+# Paths are passed via the environment (NOT interpolated into the Python source),
+# so a path containing a quote/newline can't break out of the string literal or
+# inject code. install.ps1 keeps these as data the same way.
+TDPILOT_CONFIG_PATH="$CONFIG_PATH" \
+TDPILOT_REPO_PATH="$REPO_PATH" \
+TDPILOT_UV_PATH="$UV_PATH" \
 python3 -c "
 import json, os, secrets, sys
 
-config_path = '$CONFIG_PATH'
-repo_path = '$REPO_PATH'
-uv_path = '$UV_PATH'
+config_path = os.environ['TDPILOT_CONFIG_PATH']
+repo_path = os.environ['TDPILOT_REPO_PATH']
+uv_path = os.environ['TDPILOT_UV_PATH']
 
 # Load or create
 if os.path.exists(config_path):

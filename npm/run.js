@@ -65,14 +65,20 @@ function hasCommand(cmd) {
 }
 
 function installUv() {
-  console.error("[TDPilot] Installing uv..."); // stderr — see top-of-file note
+  // Pin uv to a known-good version (override via TDPILOT_UV_VERSION=latest).
+  // install.sh / install.ps1 / npm/plugin.js all pin 0.6.10 — run.js was the
+  // only path fetching an UNPINNED uv, a supply-chain drift risk where a future
+  // uv release could break or alter the install non-deterministically.
+  const pinned = process.env.TDPILOT_UV_VERSION || "0.6.10";
+  const urlPath = pinned === "latest" ? "" : `${pinned}/`;
+  console.error(`[TDPilot] Installing uv (pinned ${pinned})...`); // stderr — see top-of-file note
   if (os.platform() === "win32") {
     execSync(
-      'powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"',
+      `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/${urlPath}install.ps1 | iex"`,
       { stdio: "inherit" }
     );
   } else {
-    execSync("curl -LsSf https://astral.sh/uv/install.sh | sh", {
+    execSync(`curl -LsSf https://astral.sh/uv/${urlPath}install.sh | sh`, {
       stdio: "inherit",
       shell: "/bin/bash",
     });
