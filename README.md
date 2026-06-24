@@ -105,7 +105,7 @@ Everything else (vision, streaming, optimization, planning, TD2025 inspection) b
 
 ## What's New In 2.0.3
 
-TDPilot v2.0.2 keeps the correctness-first visual programming brain and tightens the practical edges around installation truth, wrapper behavior, and token-efficient vision capture:
+TDPilot v2.0.3 keeps the correctness-first visual programming brain and tightens the practical edges around installation truth, wrapper behavior, and token-efficient vision capture:
 
 - **`td_sync_status`** — one-call truth for server version, live TD component version, `.tox` freshness, plugin cache versions, npm/GitHub latest, and public GitHub description drift.
 - **`td_sync_diagnose`** — strict local/live drift report for package versions, plugin cache versions, running endpoint, live component version, and shared-secret fingerprints without printing secrets.
