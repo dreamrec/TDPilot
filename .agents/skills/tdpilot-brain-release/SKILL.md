@@ -63,25 +63,47 @@ uv run python scripts/audit_plugin_surface.py
 uv run python scripts/smoke_mcp_registry.py
 ```
 
-For a plugin or public surface release, capture the brain and plugin reports
-and run the complete gate:
+For a plugin or public-surface release, capture the brain and plugin reports.
+`--require-complete` demands SIX reports — brain eval, brain smoke (dry), brain
+LIVE smoke, operator availability, plugin surface, and param-semantics risk —
+and the live-smoke report must show a real mutation (`mutated_td=true` plus a
+passing `transactional_generated_code_smoke`). Two of those (brain LIVE smoke
+and operator availability) can ONLY be produced against a running TouchDesigner,
+so the complete gate CANNOT pass without a live TD.
+
+Local reports (no TD needed):
 
 ```bash
 uv run python scripts/eval_brain_golden.py > /tmp/tdpilot_brain_eval.json
 uv run python scripts/brain_live_smoke.py --dry-run > /tmp/tdpilot_brain_smoke.json
 uv run python scripts/audit_plugin_surface.py --root . > /tmp/tdpilot_plugin_surface.json
-uv run python scripts/check_release_gates.py --brain-eval-report /tmp/tdpilot_brain_eval.json --brain-smoke-report /tmp/tdpilot_brain_smoke.json --plugin-surface-report /tmp/tdpilot_plugin_surface.json --require-plugin-surface --require-complete
+uv run python scripts/audit_param_semantics_risks.py > /tmp/tdpilot_param_semantics_risk.json
 ```
 
-If TouchDesigner is running, also capture live smoke and require it in the
-complete gate:
+Live reports (TouchDesigner MUST be running — these mutate the live project and clean up):
 
 ```bash
-uv run python scripts/brain_live_smoke.py --live > /tmp/tdpilot_brain_live_smoke.json
-uv run python scripts/check_release_gates.py --brain-eval-report /tmp/tdpilot_brain_eval.json --brain-smoke-report /tmp/tdpilot_brain_smoke.json --brain-live-smoke-report /tmp/tdpilot_brain_live_smoke.json --plugin-surface-report /tmp/tdpilot_plugin_surface.json --require-plugin-surface --require-live-smoke --require-complete
+uv run python scripts/brain_live_smoke.py --live --transactional-generated-code > /tmp/tdpilot_brain_live_smoke.json
+uv run python scripts/sample_operator_availability.py --out /tmp/tdpilot_operator_availability.json
 ```
 
-If TouchDesigner is not running, state that live smoke validation was not run.
+Complete gate (needs all six reports above):
+
+```bash
+uv run python scripts/check_release_gates.py \
+  --brain-eval-report /tmp/tdpilot_brain_eval.json \
+  --brain-smoke-report /tmp/tdpilot_brain_smoke.json \
+  --brain-live-smoke-report /tmp/tdpilot_brain_live_smoke.json \
+  --operator-availability-report /tmp/tdpilot_operator_availability.json \
+  --plugin-surface-report /tmp/tdpilot_plugin_surface.json \
+  --param-semantics-risk-report /tmp/tdpilot_param_semantics_risk.json \
+  --require-complete
+```
+
+If TouchDesigner is not running you CANNOT run the complete gate: run the local
+reports plus the non-complete checks above, and state explicitly that live
+smoke, operator availability, and therefore strict release-completeness were
+NOT verified.
 
 ## Pressure Scenarios
 
