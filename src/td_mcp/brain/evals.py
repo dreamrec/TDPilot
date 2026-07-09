@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 import tempfile
@@ -18,7 +19,7 @@ from td_mcp.brain.code_harness import (
     validate_generated_code_blocks,
 )
 from td_mcp.brain.operator_availability import operator_availability_coverage_report
-from td_mcp.brain.param_semantics import param_semantics_coverage_report
+from td_mcp.brain.param_semantics import canonical_op_type, param_semantics_coverage_report
 from td_mcp.brain.patterns import load_pattern_registry
 from td_mcp.brain.planner import build_brain_plan
 from td_mcp.brain.trace_promotion import promote_trace_to_pattern, trace_promotion_blockers
@@ -27,6 +28,13 @@ from td_mcp.brain.validators import checks_for_profiles
 from td_mcp.models.brain import BrainTrace
 
 MIN_VALIDATION_CHECKS_PER_CASE = 6
+# Fraction of non-blocked golden cases whose plans must carry ANY non-default
+# param values (set_params operations). Set to what the corpus achieves today
+# (72/101 ~= 0.7129) so the gate is green but binding against regressions to
+# default-gray, zero-param plans.
+MIN_PARAM_VALUE_COVERAGE = 0.70
+# Golden cases that must assert concrete expected_param_values on their plans.
+MIN_EXPECTED_PARAM_VALUE_CASES = 10
 
 
 class StaticEvalTDClient:
@@ -137,6 +145,7 @@ async def evaluate_golden_cases(path: str | Path) -> dict[str, Any]:
     substitution_quality_metrics = _aggregate_substitution_quality_metrics(results)
     availability_matrix_metrics = _aggregate_availability_matrix_metrics(results)
     messy_project_metrics = _aggregate_messy_project_metrics(results)
+    param_value_coverage = _aggregate_param_value_coverage(results)
     compiler_stability = _aggregate_compiler_stability(results)
     delivery_phase_coverage = _delivery_phase_coverage_report(
         case_count=len(results),
@@ -181,6 +190,7 @@ async def evaluate_golden_cases(path: str | Path) -> dict[str, Any]:
         and substitution_quality_metrics["ok"]
         and availability_matrix_metrics["ok"]
         and messy_project_metrics["ok"]
+        and param_value_coverage["ok"]
         and delivery_phase_coverage["ok"],
         "case_count": len(results),
         "passed": passed,
@@ -209,6 +219,7 @@ async def evaluate_golden_cases(path: str | Path) -> dict[str, Any]:
         "substitution_quality_metrics": substitution_quality_metrics,
         "availability_matrix_metrics": availability_matrix_metrics,
         "messy_project_metrics": messy_project_metrics,
+        "param_value_coverage": param_value_coverage,
         "time_metrics": _aggregate_time_metrics(results, report_start),
         "cases": results,
     }
@@ -1122,6 +1133,13 @@ async def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
             "ok": set(expected_assembly_macros).issubset(set(assembly_macros)),
             "weight": _weight(case, "assembly_macros"),
         }
+    param_value_triples = _param_value_triples(plan.patch_plan)
+    missing_expected_param_values = _missing_expected_param_values(case, param_value_triples)
+    if case.get("expected_param_values"):
+        checks["expected_param_values"] = {
+            "ok": not missing_expected_param_values,
+            "weight": _weight(case, "expected_param_values"),
+        }
     expected_blocked = bool(case.get("expected_blocked"))
     if expected_blocked:
         expected_blocked_safety = _expected_blocked_safety_check(
@@ -1192,6 +1210,12 @@ async def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
         },
         "generated_code_metrics": generated_code_metrics,
         "rollback_metrics": rollback_metrics,
+        "param_value_metrics": {
+            "carries_param_values": bool(param_value_triples),
+            "param_value_count": len(param_value_triples),
+            "expected_param_value_count": len(case.get("expected_param_values") or []),
+            "missing_expected_param_values": missing_expected_param_values,
+        },
         "validation_metrics": {
             "validation_check_count": len(validation_checks),
             "missing_validation_expectation_count": len(missing_validation_expectations),
@@ -1301,6 +1325,111 @@ def _aggregate_messy_project_metrics(results: list[dict[str, Any]]) -> dict[str,
 
 def _messy_scenario_results(results: list[dict[str, Any]], scenario: str) -> list[dict[str, Any]]:
     return [result for result in results if scenario in set(result.get("messy_scenarios") or [])]
+
+
+def _param_value_triples(patch_plan) -> list[dict[str, Any]]:
+    """Collect (op_type, param, value) triples the plan actually sets."""
+    created_types: dict[str, str] = {}
+    for operation in patch_plan.operations:
+        if operation.kind != "create_node" or not isinstance(operation.args, dict):
+            continue
+        name = str(operation.args.get("name") or "")
+        op_type = str(operation.args.get("op_type") or "")
+        if name and op_type:
+            created_types[f"{operation.target.rstrip('/')}/{name}"] = op_type
+    triples: list[dict[str, Any]] = []
+    for operation in patch_plan.operations:
+        if operation.kind != "set_params" or not isinstance(operation.args, dict):
+            continue
+        params = operation.args.get("params")
+        if not isinstance(params, dict):
+            continue
+        raw_type = created_types.get(operation.target, "")
+        op_type = canonical_op_type(raw_type) if raw_type else ""
+        for name, value in params.items():
+            triples.append({"op_type": op_type, "param": str(name), "value": value})
+    return triples
+
+
+def _missing_expected_param_values(
+    case: dict[str, Any],
+    triples: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Expected concrete param values the plan failed to carry."""
+    expected = case.get("expected_param_values") or []
+    missing: list[dict[str, Any]] = []
+    for item in expected:
+        if not isinstance(item, dict):
+            continue
+        op_type = canonical_op_type(str(item.get("op_type") or ""))
+        param = str(item.get("param") or "")
+        value = item.get("value")
+        found = any(
+            triple["op_type"] == op_type
+            and triple["param"] == param
+            and _param_values_match(triple["value"], value)
+            for triple in triples
+        )
+        if not found:
+            missing.append(dict(item))
+    return missing
+
+
+def _param_values_match(actual: Any, expected: Any) -> bool:
+    if isinstance(expected, bool) or isinstance(actual, bool):
+        return isinstance(actual, bool) and isinstance(expected, bool) and actual == expected
+    if isinstance(expected, int | float) and isinstance(actual, int | float):
+        return math.isclose(float(actual), float(expected), rel_tol=1e-9, abs_tol=1e-9)
+    if isinstance(expected, list) and isinstance(actual, list | tuple):
+        return len(actual) == len(expected) and all(
+            _param_values_match(actual_item, expected_item)
+            for actual_item, expected_item in zip(actual, expected, strict=True)
+        )
+    return actual == expected
+
+
+def _aggregate_param_value_coverage(results: list[dict[str, Any]]) -> dict[str, Any]:
+    """Fraction of non-blocked golden cases whose plans carry ANY param values.
+
+    Acceptance harness for the param-gating polarity flip: if the strip gate or
+    plan compiler regresses to dropping host/pattern-authored values (plans
+    creating default-gray networks), coverage falls below
+    ``MIN_PARAM_VALUE_COVERAGE`` and the gate fails. ``expected_param_values``
+    cases additionally pin CONCRETE values that must survive into the plan.
+    """
+    eligible = _normal_case_results(results)
+    carrying = [
+        result
+        for result in eligible
+        if bool((result.get("param_value_metrics", {}) or {}).get("carries_param_values"))
+    ]
+    expected_cases = [
+        result
+        for result in eligible
+        if int((result.get("param_value_metrics", {}) or {}).get("expected_param_value_count") or 0) > 0
+    ]
+    expected_failures = [
+        result
+        for result in expected_cases
+        if (result.get("param_value_metrics", {}) or {}).get("missing_expected_param_values")
+    ]
+    coverage = round(len(carrying) / len(eligible), 4) if eligible else 0.0
+    return {
+        "schema_version": 1,
+        "ok": bool(eligible)
+        and coverage >= MIN_PARAM_VALUE_COVERAGE
+        and len(expected_cases) >= MIN_EXPECTED_PARAM_VALUE_CASES
+        and not expected_failures,
+        "eligible_case_count": len(eligible),
+        "carrying_case_count": len(carrying),
+        "coverage": coverage,
+        "min_coverage": MIN_PARAM_VALUE_COVERAGE,
+        "expected_param_value_case_count": len(expected_cases),
+        "min_expected_param_value_case_count": MIN_EXPECTED_PARAM_VALUE_CASES,
+        "expected_param_value_failure_count": len(expected_failures),
+        "expected_param_value_failure_case_ids": _case_ids(expected_failures),
+        "zero_param_case_ids": _case_ids([result for result in eligible if result not in carrying]),
+    }
 
 
 def _aggregate_time_metrics(results: list[dict[str, Any]], report_start: float) -> dict[str, Any]:

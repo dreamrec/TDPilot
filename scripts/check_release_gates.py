@@ -35,6 +35,11 @@ MIN_DECOMPOSITION_TIME_BEHAVIOR_CASES = 1
 MIN_AVAILABILITY_MATRIX_CASES = 1
 MIN_AVAILABILITY_MATRIX_KNOWN_BUILD_CASES = 1
 MIN_EXPECTED_BLOCKED_PROMPT_SAFETY_CASES = 1
+# Param-gating polarity flip acceptance harness: fraction of non-blocked golden
+# cases whose plans carry ANY non-default param values. Set to what the corpus
+# achieves today (72/101 ~= 0.7129) so the gate is green but binding.
+MIN_PARAM_VALUE_COVERAGE = 0.70
+MIN_EXPECTED_PARAM_VALUE_CASES = 10
 
 
 def load_json(path: str) -> dict[str, Any]:
@@ -382,6 +387,31 @@ def evaluate(
             check_threshold(
                 "brain validation metrics missing expectation count",
                 float(validation_metrics.get("missing_validation_expectation_count", math.nan)),
+                "<=",
+                0.0,
+            )
+        )
+        param_value_coverage = brain_eval.get("param_value_coverage", {}) or {}
+        checks.append(
+            check_threshold(
+                "brain param value coverage fraction",
+                float(param_value_coverage.get("coverage", math.nan)),
+                ">=",
+                MIN_PARAM_VALUE_COVERAGE,
+            )
+        )
+        checks.append(
+            check_threshold(
+                "brain param value expected case count",
+                float(param_value_coverage.get("expected_param_value_case_count", math.nan)),
+                ">=",
+                float(MIN_EXPECTED_PARAM_VALUE_CASES),
+            )
+        )
+        checks.append(
+            check_threshold(
+                "brain param value expected failure count",
+                float(param_value_coverage.get("expected_param_value_failure_count", math.nan)),
                 "<=",
                 0.0,
             )

@@ -86,6 +86,15 @@ def main() -> int:
 
     report = asyncio.run(_run_eval_report(args.cases, args.trace_baseline, args.write_trace_baseline))
     print(json.dumps(report, indent=2 if args.pretty else None, sort_keys=True))
+    coverage = report.get("param_value_coverage", {}) or {}
+    print(
+        "param_value_coverage: "
+        f"{coverage.get('carrying_case_count')}/{coverage.get('eligible_case_count')} "
+        f"= {coverage.get('coverage')} (min {coverage.get('min_coverage')}; "
+        f"expected-value cases {coverage.get('expected_param_value_case_count')}, "
+        f"failures {coverage.get('expected_param_value_failure_count')})",
+        file=sys.stderr,
+    )
     return 0 if report["ok"] else 1
 
 

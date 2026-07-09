@@ -18,6 +18,7 @@ from td_mcp.brain.corpus_bridge import build_corpus_evidence
 from td_mcp.brain.llm_contract import review_draft_candidate_graph
 from td_mcp.brain.operator_availability import build_operator_availability_matrix
 from td_mcp.brain.param_semantics import semantics_by_op_and_param
+from td_mcp.brain.param_semantics_drafts import official_card_param_names
 from td_mcp.brain.patterns import load_pattern_registry
 from td_mcp.brain.planner import (
     build_brain_plan,
@@ -201,7 +202,8 @@ async def td_brain_ground(
             "task_features": compiled_task.model_dump(mode="json"),
             "corpus_evidence": [record.model_dump(mode="json") for record in corpus_records],
             "candidate_operators": _candidate_operator_cards(card_index, candidate_ops, corpus_records),
-            "param_semantics": _param_semantics_for_ops(candidate_ops),
+            "param_semantics": _param_semantics_for_ops(candidate_ops, card_index),
+            "param_semantics_tiers": dict(PARAM_SEMANTICS_TIERS),
             "operator_availability": _operator_availability_pack(available_ops, candidate_ops),
             "live_state": live_state,
             "exemplars": _pattern_exemplars(compiled_task, limit=2),
@@ -368,9 +370,12 @@ async def td_brain_propose(
             "validation_profile": plan.validation_profile,
             "review_status": review.status,
             "review_score": review.score,
-            # Loud strip surface: param values outside the known-semantics
-            # registry were REMOVED by the review gate, not rejected. The host
-            # must re-check this list and re-author if a stripped value mattered.
+            # Loud strip surface: param values whose names neither the
+            # semantics registry nor the operator's official docs card
+            # key_params verify were REMOVED by the review gate, not rejected.
+            # The host must re-check this list and re-author if a stripped
+            # value mattered. With TD/atlas reachable this list SHRINKS versus
+            # the old registry-only polarity.
             "stripped_params": list(review.rewrites),
         }
         _tr._audit_log(
@@ -974,7 +979,10 @@ DRAFT_AUTHORING_CONTRACT: dict[str, Any] = {
         ),
         (
             "Keep param values inside the param_semantics contracts (enum values, "
-            "valid ranges, op_ref families). Params with no known semantics contract "
+            "valid ranges, op_ref families). A param value survives when its name is "
+            "verified by a registry contract (tier registry_contract) OR by the "
+            "operator card's official key_params (tier atlas_name_verified — value "
+            "checked by post-apply live validation). Params neither tier can verify "
             "are STRIPPED (not rejected) and surfaced in plan_summary.stripped_params."
         ),
         (
@@ -1097,8 +1105,37 @@ def _candidate_operator_cards(
     return cards
 
 
-def _param_semantics_for_ops(candidate_ops: list[str]) -> dict[str, list[dict[str, Any]]]:
-    """Serialize the known parameter contracts for the candidate operators, compactly."""
+# How param values survive td_brain_propose (see td_mcp.brain.llm_contract):
+# shipped inside every grounding pack so the host knows which values persist.
+PARAM_SEMANTICS_TIERS: dict[str, str] = {
+    "registry_contract": (
+        "Hand-verified ParamSemantics entry: name AND static value contract "
+        "(enum values, valid ranges, op_ref families, cook_risk) are enforced "
+        "before mutation. Values outside the contract block the plan."
+    ),
+    "atlas_name_verified": (
+        "Parameter name is listed in the operator's official docs card "
+        "key_params: the value SURVIVES td_brain_propose (name proven, no "
+        "static value contract) and is checked by post-apply live validation."
+    ),
+    "unverified": (
+        "Neither tier knows the name: the value is STRIPPED (not rejected) "
+        "and surfaced in plan_summary.stripped_params."
+    ),
+}
+
+
+def _param_semantics_for_ops(
+    candidate_ops: list[str],
+    card_index=None,
+) -> dict[str, list[dict[str, Any]]]:
+    """Serialize the parameter contracts for the candidate operators, compactly.
+
+    Registry entries carry their full static value contract and
+    ``tier: registry_contract``. Names known only from the operator's official
+    docs card are appended as ``tier: atlas_name_verified`` rows so the host
+    knows those values survive td_brain_propose without a static contract.
+    """
     wanted = set(candidate_ops)
     by_op: dict[str, list[dict[str, Any]]] = {}
     for (op_type, name), semantic in sorted(semantics_by_op_and_param().items()):
@@ -1106,6 +1143,7 @@ def _param_semantics_for_ops(candidate_ops: list[str]) -> dict[str, list[dict[st
             continue
         entry: dict[str, Any] = {
             "name": name,
+            "tier": "registry_contract",
             "value_kind": semantic.value_kind,
             "default_strategy": semantic.default_strategy,
             "cook_risk": semantic.cook_risk,
@@ -1121,6 +1159,11 @@ def _param_semantics_for_ops(candidate_ops: list[str]) -> dict[str, list[dict[st
         if semantic.expected_op_type is not None:
             entry["expected_op_type"] = semantic.expected_op_type
         by_op.setdefault(op_type, []).append(entry)
+    for op_type in candidate_ops:
+        registry_names = {entry["name"] for entry in by_op.get(op_type, [])}
+        atlas_names = sorted(official_card_param_names(card_index, op_type) - registry_names)
+        for name in atlas_names:
+            by_op.setdefault(op_type, []).append({"name": name, "tier": "atlas_name_verified"})
     return by_op
 
 

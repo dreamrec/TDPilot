@@ -179,6 +179,7 @@ def test_ground_returns_full_pack_when_td_is_unreachable(quiet_tr, service_conta
         "corpus_evidence",
         "candidate_operators",
         "param_semantics",
+        "param_semantics_tiers",
         "operator_availability",
         "live_state",
         "exemplars",
@@ -204,10 +205,23 @@ def test_ground_returns_full_pack_when_td_is_unreachable(quiet_tr, service_conta
     assert cards_by_op["feedbackTOP"]["summary"]
     assert len(pack["candidate_operators"]) <= 12
 
-    # Param contracts are serialized per candidate operator.
+    # Param contracts are serialized per candidate operator, tiered so the
+    # host knows which values survive td_brain_propose (polarity flip).
     assert "feedbackTOP" in pack["param_semantics"]
     top_contract = next(entry for entry in pack["param_semantics"]["feedbackTOP"] if entry["name"] == "top")
     assert top_contract["value_kind"] == "op_ref"
+    assert top_contract["tier"] == "registry_contract"
+    # "opacity" is in the stub card's key_params but not the hand registry:
+    # exposed as an atlas-name-verified row (no static value contract).
+    opacity_row = next(
+        entry for entry in pack["param_semantics"]["feedbackTOP"] if entry["name"] == "opacity"
+    )
+    assert opacity_row["tier"] == "atlas_name_verified"
+    assert set(pack["param_semantics_tiers"]) == {
+        "registry_contract",
+        "atlas_name_verified",
+        "unverified",
+    }
 
     # The contract teaches the exact next-tool loop.
     contract = pack["authoring_contract"]
@@ -314,9 +328,13 @@ def test_propose_rejects_operators_without_docs_or_availability(quiet_tr, servic
 
 
 def test_propose_surfaces_stripped_params_loudly(quiet_tr, service_container, mcp_ctx):
-    """Out-of-registry param values are STRIPPED by the review gate (test-encoded
+    """UNVERIFIABLE param values are STRIPPED by the review gate (test-encoded
     contract in tests/brain/test_llm_contract.py) — propose must surface them in
-    plan_summary.stripped_params instead of changing that polarity."""
+    plan_summary.stripped_params instead of changing that polarity.
+
+    Post polarity-flip: "hallucinateddecay" is verifiable by NEITHER tier (not
+    in the hand registry, not in the stub card's key_params [top, opacity]),
+    so it still strips."""
     quiet_tr.responses = _feedback_families_client().responses
     service_container.card_index = _feedback_card_index()
     draft = _valid_feedback_draft()
@@ -331,6 +349,36 @@ def test_propose_surfaces_stripped_params_loudly(quiet_tr, service_container, mc
     assert (
         "removed_unverified_param:feedbackTOP.hallucinateddecay" in result["plan_summary"]["stripped_params"]
     )
+
+
+def test_propose_keeps_atlas_name_verified_params_in_the_plan(quiet_tr, service_container, mcp_ctx):
+    """Param-gating polarity flip: a value whose name misses the hand registry
+    but is listed in the operator's official docs card key_params SURVIVES
+    td_brain_propose (stripped_params shrinks) and lands in the compiled plan."""
+    quiet_tr.responses = _feedback_families_client().responses
+    cards = {op_type: _operator_card(op_type) for op_type in _FEEDBACK_OPS}
+    # "trailfade" is not a hand-registry entry for feedbackTOP; the official
+    # card key_params verify the NAME so the value must ride through.
+    cards["feedbackTOP"]["key_params"] = [{"name": "top"}, {"name": "trailfade"}]
+    service_container.card_index = SearchableCardIndex(cards)
+    draft = _valid_feedback_draft()
+    draft["concepts"][1]["params"] = {
+        "top": "${path:composite}",
+        "trailfade": 0.85,
+    }
+
+    result = asyncio.run(tools_brain.td_brain_propose(mcp_ctx, draft))
+
+    assert result["success"] is True
+    assert result["plan_summary"]["stripped_params"] == []
+    assert "param-verified:atlas:feedbackTOP.trailfade" in result["plan"]["grounding_evidence"]
+    set_params_ops = [
+        operation
+        for operation in result["plan"]["patch_plan"]["operations"]
+        if operation["kind"] == "set_params" and "trailfade" in (operation["args"].get("params") or {})
+    ]
+    assert set_params_ops, "atlas-name-verified param value must survive into the plan"
+    assert set_params_ops[0]["args"]["params"]["trailfade"] == 0.85
 
 
 def test_blocked_open_prompt_plan_points_to_the_ground_propose_loop():

@@ -823,7 +823,54 @@ def _complete_brain_eval_payload(*, case_count: int = 50, passed: int = 50) -> d
             "drift_count": 0,
             "drifts": [],
         },
+        "param_value_coverage": _complete_param_value_coverage(case_count=case_count),
     }
+
+
+def _complete_param_value_coverage(*, case_count: int = 50) -> dict:
+    return {
+        "ok": True,
+        "eligible_case_count": case_count,
+        "carrying_case_count": case_count,
+        "coverage": 1.0,
+        "min_coverage": 0.70,
+        "expected_param_value_case_count": 12,
+        "min_expected_param_value_case_count": 10,
+        "expected_param_value_failure_count": 0,
+        "expected_param_value_failure_case_ids": [],
+    }
+
+
+def test_evaluate_gates_param_value_coverage():
+    """Param-gating polarity flip acceptance gate: plans must keep carrying
+    non-default param values, and the expected_param_values corpus must stay
+    populated and green."""
+    brain_eval = _complete_brain_eval_payload()
+
+    report = check_release_gates.evaluate(None, None, brain_eval)
+    labels = {check["label"]: check for check in report["checks"]}
+    assert labels["brain param value coverage fraction"]["status"] == "pass"
+    assert labels["brain param value expected case count"]["status"] == "pass"
+    assert labels["brain param value expected failure count"]["status"] == "pass"
+
+    regressed = _complete_brain_eval_payload()
+    regressed["param_value_coverage"] = {
+        "ok": False,
+        "eligible_case_count": 101,
+        "carrying_case_count": 30,
+        "coverage": 0.297,
+        "min_coverage": 0.70,
+        "expected_param_value_case_count": 3,
+        "min_expected_param_value_case_count": 10,
+        "expected_param_value_failure_count": 2,
+        "expected_param_value_failure_case_ids": ["glsl_top_shader", "midi_control_bridge"],
+    }
+    failed = check_release_gates.evaluate(None, None, regressed)
+    failed_labels = {check["label"]: check for check in failed["checks"]}
+    assert failed_labels["brain param value coverage fraction"]["status"] == "fail"
+    assert failed_labels["brain param value expected case count"]["status"] == "fail"
+    assert failed_labels["brain param value expected failure count"]["status"] == "fail"
+    assert failed["summary"]["ok"] is False
 
 
 def test_evaluate_passes_with_valid_brain_eval_payload():

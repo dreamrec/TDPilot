@@ -1,4 +1,34 @@
-"""Deterministic review gate for LLM-proposed concept graph drafts."""
+"""Deterministic review gate for LLM-proposed concept graph drafts.
+
+Parameter verification tiers (the "param-gating polarity flip")
+---------------------------------------------------------------
+A draft param value survives the review gate when its NAME is verified by
+either of two static tiers; everything else is stripped (never rejected) and
+surfaced through ``DraftGraphReview.rewrites`` / ``plan_summary.stripped_params``:
+
+1. ``registry_contract`` — the hand-built ParamSemantics registry knows
+   ``(op_type, name)``. The registry stays the sole authority for static VALUE
+   contracts (enum values, valid ranges, tuple shapes, op_ref families,
+   cook_risk): those are enforced later by
+   ``validate_patch_plan_parameter_contract`` inside plan compilation.
+2. ``atlas_name_verified`` — the operator's official docs card (the 656-card
+   atlas) lists the name in ``key_params`` and cites an official Derivative
+   docs URL (``official_card_param_names``). This tier verifies the name only;
+   no static value contract exists, so values ride through to the post-apply
+   live validation layer (validation probes + live parameter readback — the
+   same machinery as ``confirm_param_semantics_drafts_with_live_readback``).
+3. ``unverified_stripped`` — neither tier can prove the parameter exists, so
+   the value is stripped. Absence of a hand-registry entry alone is no longer
+   sufficient reason to strip.
+
+Why no live per-op-type schema tier at review time: the TD component API
+(``mcp_webserver_callbacks``) only exposes ``node/params`` for EXISTING node
+paths — there is no par-schema-by-optype endpoint, and drafts reference
+operators that do not exist as nodes yet. Probing would require creating
+scratch nodes, which would violate this gate's read-only contract
+(``td_brain_propose`` never mutates TouchDesigner). Live readback therefore
+remains the post-apply validation layer it already is.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +37,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from td_mcp.brain.param_semantics import semantics_by_op_and_param
+from td_mcp.brain.param_semantics_drafts import official_card_param_names
 from td_mcp.models.brain import (
     BrainProfile,
     CandidateConceptGraph,
@@ -22,6 +53,10 @@ LLM_CORPUS_CONTRACT: dict[str, Any] = {
     "required_grounding": ["official_docs", "operator_availability", "parameter_semantics"],
     "proof_layers": ["schema", "official_docs", "availability", "param_semantics", "live_td"],
     "mutation_rule": "drafts_never_mutate_touchdesigner_directly",
+    # Param-name verification tiers (see module docstring): registry entries
+    # keep value-contract authority; official card key_params verify names;
+    # anything else is stripped and surfaced via stripped_params.
+    "param_verification_tiers": ["registry_contract", "atlas_name_verified", "unverified_stripped"],
 }
 
 
@@ -115,8 +150,9 @@ def review_draft_candidate_graph(
 
     concepts = list(draft_model.concepts)
     rewrites: list[str] = []
+    param_tier_evidence: list[str] = []
     if require_param_semantics:
-        concepts, rewrites = _rewrite_unverified_params(concepts)
+        concepts, rewrites, param_tier_evidence = _rewrite_unverified_params(concepts, card_index)
 
     grounding = _dedupe(
         [
@@ -125,6 +161,7 @@ def review_draft_candidate_graph(
             *compiled_task.grounding_evidence,
             *draft_model.grounding_evidence,
             *docs_evidence,
+            *param_tier_evidence,
         ]
     )
     score = _review_score(required_ops, docs_evidence=docs_evidence, rewrites=rewrites)
@@ -210,23 +247,41 @@ def _unavailable_ops(required_ops: list[str], available_ops: set[str] | None) ->
     return sorted(op_type for op_type in required_ops if op_type not in available_ops)
 
 
-def _rewrite_unverified_params(concepts: list[ConceptNode]) -> tuple[list[ConceptNode], list[str]]:
+def _rewrite_unverified_params(
+    concepts: list[ConceptNode],
+    card_index,
+) -> tuple[list[ConceptNode], list[str], list[str]]:
+    """Strip param values whose NAMES no verification tier can prove.
+
+    Tier 1 (``registry_contract``): the hand ParamSemantics registry knows the
+    (op_type, name) pair — value contracts are enforced downstream by
+    ``validate_patch_plan_parameter_contract``. Tier 2 (``atlas_name_verified``):
+    the operator's official docs card lists the name in ``key_params`` — the
+    value survives to the post-apply live validation layer. Truly unknown
+    names are still stripped (test-encoded contract: strip, never reject).
+    """
     semantics = semantics_by_op_and_param()
     rewrites: list[str] = []
+    tier_evidence: list[str] = []
     rewritten: list[ConceptNode] = []
     for concept in concepts:
         op_type = concept.create_type or concept.op_type
         if not op_type or not concept.params:
             rewritten.append(concept)
             continue
+        card_param_names = official_card_param_names(card_index, op_type)
         cleaned: dict[str, Any] = {}
         for name, value in concept.params.items():
             if (op_type, name) in semantics:
                 cleaned[name] = value
+                tier_evidence.append(f"param-verified:registry:{op_type}.{name}")
+            elif name in card_param_names:
+                cleaned[name] = value
+                tier_evidence.append(f"param-verified:atlas:{op_type}.{name}")
             else:
                 rewrites.append(f"removed_unverified_param:{op_type}.{name}")
         rewritten.append(concept.model_copy(update={"params": cleaned}))
-    return rewritten, rewrites
+    return rewritten, rewrites, tier_evidence
 
 
 def _review_score(required_ops: list[str], *, docs_evidence: list[str], rewrites: list[str]) -> float:

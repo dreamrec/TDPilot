@@ -72,6 +72,26 @@ class ParamSemanticsLiveConfirmationReport(BaseModel):
     cleanup_error: str = ""
 
 
+def official_card_param_names(card_index, op_type: str) -> set[str]:
+    """Parameter names verified by the operator's official docs card.
+
+    This is the "atlas name tier" used by the draft review gate
+    (``td_mcp.brain.llm_contract``): a parameter NAME counts as docs-verified
+    when the 656-card atlas has an operator card whose ``key_params`` list it,
+    and the card cites an official Derivative docs URL. It verifies names
+    only — value contracts stay with the hand ParamSemantics registry and the
+    post-apply live-readback layer (see
+    ``confirm_param_semantics_drafts_with_live_readback``).
+
+    Returns an empty set when the card is missing or not officially sourced,
+    so callers fall back to treating the parameter as unverifiable.
+    """
+    card = _safe_get_operator(card_index, op_type)
+    if not _official_docs_url(card):
+        return set()
+    return {name for raw_param in _key_params(card) if (name := _param_name(raw_param))}
+
+
 def draft_param_semantics_from_docs(
     card_index,
     op_types: Iterable[str],
@@ -553,4 +573,5 @@ __all__ = [
     "ParamSemanticsDraftReport",
     "confirm_param_semantics_drafts_with_live_readback",
     "draft_param_semantics_from_docs",
+    "official_card_param_names",
 ]

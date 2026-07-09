@@ -2170,3 +2170,114 @@ def test_eval_brain_golden_cli_writes_trace_baseline_that_replays_cleanly(tmp_pa
     assert replay_payload["trace_replay"]["ok"] is True
     assert replay_payload["trace_replay"]["baseline_case_count"] == baseline["case_count"]
     assert replay_payload["trace_replay"]["drift_count"] == 0
+
+
+# ---------------------------------------------------------------------------
+# Param-gating polarity flip acceptance harness (param_value_coverage)
+# ---------------------------------------------------------------------------
+
+
+def test_param_values_match_handles_bools_numbers_lists_and_exprs():
+    assert evals._param_values_match(True, True) is True
+    # Guard against the Python `1 == True` pitfall: bools only match bools.
+    assert evals._param_values_match(1, True) is False
+    assert evals._param_values_match(True, 1) is False
+    assert evals._param_values_match(0.92, 0.92) is True
+    assert evals._param_values_match(80, 80.0) is True
+    assert evals._param_values_match(0.92, 0.93) is False
+    assert evals._param_values_match([0.0, 127.0], [0.0, 127.0]) is True
+    assert evals._param_values_match([0.0, 127.0], [0.0, 1.0]) is False
+    expr = {"expr": "op('/project1/out_chop')[0]"}
+    assert evals._param_values_match(dict(expr), dict(expr)) is True
+    assert evals._param_values_match({"expr": "absTime.seconds"}, dict(expr)) is False
+
+
+@pytest.mark.asyncio
+async def test_evaluate_case_scores_expected_param_values():
+    cases = {case["id"]: case for case in load_golden_cases(EVAL_PATH)}
+    case = cases["serial_dat_protocol_bridge"]
+
+    result = await evaluate_case(case)
+
+    assert result["checks"]["expected_param_values"]["ok"] is True
+    assert result["param_value_metrics"]["carries_param_values"] is True
+    assert result["param_value_metrics"]["expected_param_value_count"] == 2
+    assert result["param_value_metrics"]["missing_expected_param_values"] == []
+
+
+@pytest.mark.asyncio
+async def test_evaluate_case_fails_when_expected_param_value_is_missing():
+    cases = {case["id"]: case for case in load_golden_cases(EVAL_PATH)}
+    case = dict(cases["serial_dat_protocol_bridge"])
+    case["expected_param_values"] = [
+        {"op_type": "serialDAT", "param": "format", "value": "not-the-planned-value"}
+    ]
+
+    result = await evaluate_case(case)
+
+    assert result["checks"]["expected_param_values"]["ok"] is False
+    assert result["passed"] is False
+    assert result["param_value_metrics"]["missing_expected_param_values"] == [
+        {"op_type": "serialDAT", "param": "format", "value": "not-the-planned-value"}
+    ]
+
+
+@pytest.mark.asyncio
+async def test_evaluate_golden_cases_reports_param_value_coverage():
+    report = await evaluate_golden_cases(EVAL_PATH)
+
+    metrics = report["param_value_coverage"]
+
+    assert metrics["ok"] is True
+    assert metrics["eligible_case_count"] == report["case_count"] - 1  # one expected_blocked case
+    assert metrics["coverage"] >= evals.MIN_PARAM_VALUE_COVERAGE
+    assert metrics["carrying_case_count"] >= 70
+    assert metrics["expected_param_value_case_count"] >= evals.MIN_EXPECTED_PARAM_VALUE_CASES
+    assert metrics["expected_param_value_failure_count"] == 0
+    assert metrics["expected_param_value_failure_case_ids"] == []
+
+
+def test_aggregate_param_value_coverage_flags_regressions():
+    def _result(case_id: str, *, carries: bool, expected: int = 0, missing: int = 0) -> dict:
+        return {
+            "id": case_id,
+            "expected_blocked": False,
+            "param_value_metrics": {
+                "carries_param_values": carries,
+                "param_value_count": 3 if carries else 0,
+                "expected_param_value_count": expected,
+                "missing_expected_param_values": [{"param": "x"}] * missing,
+            },
+        }
+
+    healthy = evals._aggregate_param_value_coverage(
+        [
+            *[_result(f"carrying_{index}", carries=True, expected=1) for index in range(10)],
+            _result("zero_param", carries=False),
+            {"id": "blocked", "expected_blocked": True, "param_value_metrics": {}},
+        ]
+    )
+    assert healthy["ok"] is True
+    assert healthy["eligible_case_count"] == 11
+    assert healthy["carrying_case_count"] == 10
+    assert healthy["coverage"] == round(10 / 11, 4)
+    assert healthy["zero_param_case_ids"] == ["zero_param"]
+
+    # Regression to default-gray plans: coverage collapses below the floor.
+    stripped = evals._aggregate_param_value_coverage(
+        [
+            *[_result(f"carrying_{index}", carries=True, expected=1) for index in range(10)],
+            *[_result(f"zero_{index}", carries=False) for index in range(10)],
+        ]
+    )
+    assert stripped["ok"] is False
+
+    # A pinned expected value going missing fails the gate even at coverage 1.0.
+    value_drift = evals._aggregate_param_value_coverage(
+        [
+            *[_result(f"carrying_{index}", carries=True, expected=1) for index in range(10)],
+            _result("drifted", carries=True, expected=1, missing=1),
+        ]
+    )
+    assert value_drift["ok"] is False
+    assert value_drift["expected_param_value_failure_case_ids"] == ["drifted"]
