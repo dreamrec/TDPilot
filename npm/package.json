@@ -1,13 +1,20 @@
 {
   "name": "tdpilot",
   "version": "2.0.3",
-  "description": "AI copilot for TouchDesigner with live MCP control \u2014 112 tools, correctness-first BrainPlan transactions, optional cockpit UI, focus + locations, hints, POPx inspection, knowledge corpus, technique memory, typed patches, activity log, self-update, sync-status checks, and Claude/Codex plugin surfaces.",
+  "description": "Build, debug, and verify TouchDesigner networks by talking to your AI. Live MCP control of a running TD session: create and wire operators, set real parameter values, screenshot-verify the render, roll back transactionally. No signup, no API key \u2014 npx tdpilot and you're connected.",
   "keywords": [
     "touchdesigner",
+    "touchdesigner-mcp",
     "mcp",
+    "mcp-server",
     "ai",
     "model-context-protocol",
     "creative-coding",
+    "generative-art",
+    "live-visuals",
+    "vj",
+    "audio-reactive",
+    "claude",
     "claude-code-plugin"
   ],
   "author": "dreamrec",

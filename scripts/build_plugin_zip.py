@@ -56,6 +56,9 @@ PLUGIN_FILES: list[tuple[str, str, bool]] = [
     # Slash commands.
     ("commands/td-check.md", "commands/td-check.md", True),
     ("commands/td-snapshot.md", "commands/td-snapshot.md", True),
+    ("commands/td-first-wow.md", "commands/td-first-wow.md", True),
+    ("commands/td-audio-reactive.md", "commands/td-audio-reactive.md", True),
+    ("commands/td-explain-patch.md", "commands/td-explain-patch.md", True),
 ]
 
 # Directories bundled recursively (source code + lockfile so ``uv run``

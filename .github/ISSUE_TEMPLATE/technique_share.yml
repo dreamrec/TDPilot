@@ -1,0 +1,58 @@
+name: Technique share
+description: Share a working TouchDesigner technique so it can ship as TDPilot knowledge (hint pack or recipe)
+labels: ["technique"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Working techniques with real parameter values are the most valuable
+        contribution TDPilot can receive — they become grounding knowledge
+        that makes every user's results better. Export yours with
+        `td_memory_export` (ask your agent: "export my <name> technique
+        memory") or describe it manually below.
+  - type: input
+    id: name
+    attributes:
+      label: Technique name
+      placeholder: "Feedback displacement bloom (paketa12-style)"
+    validations:
+      required: true
+  - type: textarea
+    id: chain
+    attributes:
+      label: The chain
+      description: Operators in order, with the parameter values that matter (real names + values, not "tweak to taste").
+      placeholder: |
+        noiseTOP (period=4, harmonics=3) → displaceTOP (weight 0.15) →
+        feedbackTOP → levelTOP (opacity 0.96) → ... loop back to displace
+    validations:
+      required: true
+  - type: textarea
+    id: export
+    attributes:
+      label: td_memory_export JSON (preferred)
+      description: Paste the export blob if you have it — it imports losslessly via td_memory_import.
+      render: json
+  - type: textarea
+    id: proof
+    attributes:
+      label: Screenshot / clip of the result
+      description: Drag an image or link a clip. Verified visuals are what separate a recipe from a rumor.
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: TD build it was verified on
+      placeholder: "2025.32820"
+  - type: dropdown
+    id: license
+    attributes:
+      label: Sharing permission
+      description: Can this ship inside TDPilot's bundled knowledge (with credit)?
+      options:
+        - "Yes — include it in TDPilot with credit"
+        - "Yes — include it, no credit needed"
+        - "Discussion only — do not bundle"
+    validations:
+      required: true

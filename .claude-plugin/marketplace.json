@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "dreamrec-TDPilot",
-  "description": "AI copilot for TouchDesigner \u2014 112 MCP tools for live graph control, diagnostics, safety, streaming, technique memory, typed patch sessions, sync-status checks, sync diagnosis, a correctness-first visual programming brain, and optional cockpit UI.",
+  "description": "Build, debug, and verify TouchDesigner networks by talking to your AI. TDPilot gives the agent live control of a running TD session \u2014 it creates and wires operators, sets parameters, screenshots the result to check its own work, and can roll back anything it did.",
   "owner": {
     "name": "dreamrec",
     "email": "dreamrec@users.noreply.github.com"
@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "tdpilot",
-      "description": "AI copilot for TouchDesigner with live MCP control \u2014 112 tools, focus + locations, hints, POPx inspection, knowledge, snapshots, undo-block safety, typed patch sessions, agent activity log, self-update, sync-status checks, sync diagnosis, the vNext BrainPlan/transaction workflow, and optional cockpit UI. Works with Claude Desktop, Claude Code, and any MCP-compatible client.",
+      "description": "Build, debug, and verify TouchDesigner networks by talking to your AI. TDPilot gives the agent live control of a running TD session: it creates and wires operators, sets real parameter values, screenshots the render to verify its own work, and can transactionally roll back anything it did. Grounded in a full operator-knowledge atlas, guarded by snapshots, undo, and an activity log. Run /td-first-wow after install for a moving visual in under two minutes. Works with Claude Desktop, Claude Code, Cursor, Codex, and any MCP client \u2014 no signup, no API key.",
       "version": "2.0.3",
       "author": {
         "name": "silviu"
@@ -23,6 +23,10 @@
         "mcp",
         "creative-coding",
         "visual-programming",
+        "generative-art",
+        "live-visuals",
+        "vj",
+        "audio-reactive",
         "popx",
         "particles",
         "simulations"

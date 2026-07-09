@@ -114,19 +114,27 @@ for MCP requests from Claude.
 
 ## Verifying
 
-In a Claude Code session, type:
+With TouchDesigner open, run this in a Claude Code session:
+
+```
+/td-first-wow
+```
+
+In about two minutes Claude will auto-start the `touchdesigner` MCP server,
+build a moving feedback visual in your project, verify it error-free, and
+show you a screenshot of the result. That single command proves the entire
+loop: connection, node creation, parameter control, error checking, and
+visual verification. (It also tells you how to undo everything it made.)
+
+Prefer something read-only first? Type:
 
 ```
 What's in my TouchDesigner project?
 ```
 
-Claude will:
-1. Auto-start the `touchdesigner` MCP server from the plugin cache.
-2. Call `td_get_info` against the running TD.
-3. Report the project name, TD build, FPS, and framecount.
-
-If that works, every other `td_*` tool works too. Run `/td-check` for a full
-health dump.
+Claude will call `td_get_info` and report the project name, TD build, FPS,
+and framecount. Run `/td-check` for a full health dump, or `/td-explain-patch`
+for an annotated tour of an existing project.
 
 ## Environment variables the plugin sets
 

@@ -1,6 +1,6 @@
-# TDPilot Manual For A Mediocre TouchDesigner User
+# Working with TDPilot — the everyday guide
 
-This manual is for someone who:
+This guide is for the working TD artist (not the Python power user) — someone who:
 
 - knows basic TouchDesigner navigation
 - can build small TOP / CHOP / COMP chains

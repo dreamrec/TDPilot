@@ -1,0 +1,47 @@
+name: Bug report
+description: Something in TDPilot misbehaves — a tool call fails, the install breaks, TD does the wrong thing
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. The doctor output below answers 90% of the
+        questions we'd otherwise have to ask you — please include it.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you ask for, what did TDPilot do, what did you expect?
+      placeholder: |
+        Prompt / tool call: ...
+        What happened: ...
+        Expected: ...
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: tdpilot doctor output
+      description: |
+        Run `npx tdpilot doctor --json` in a terminal (works even when
+        TouchDesigner is closed) and paste the output. If the command itself
+        fails, paste the failure.
+      render: json
+    validations:
+      required: true
+  - type: input
+    id: td-build
+    attributes:
+      label: TouchDesigner build
+      placeholder: "2025.32820"
+  - type: input
+    id: host
+    attributes:
+      label: MCP host + OS
+      placeholder: "Claude Code 2.x / macOS 15 (or Claude Desktop, Cursor, Codex / Windows 11)"
+  - type: textarea
+    id: error
+    attributes:
+      label: Exact error output (if any)
+      description: The full error envelope from the tool call, or the Textport traceback.
+      render: text

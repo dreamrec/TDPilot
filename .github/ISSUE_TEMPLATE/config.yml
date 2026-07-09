@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions, ideas, show-and-tell
+    url: https://github.com/dreamrec/TDPilot/discussions
+    about: For anything that isn't a bug — ask, propose, or show what you built.
+  - name: Security vulnerability (private)
+    url: https://github.com/dreamrec/TDPilot/security/advisories/new
+    about: Exploitable issues go here, never in a public issue. See docs/SECURITY.md.
