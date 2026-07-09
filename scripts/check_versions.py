@@ -132,9 +132,12 @@ def main() -> int:
         ),
         check_line(
             ROOT / "README.md",
-            r"## What's New In ([0-9]+\.[0-9]+\.[0-9]+)",
+            # v2.1.0 README restructure: inline "What's New In X" sections
+            # moved to CHANGELOG.md; the "## Latest Release" pointer carries
+            # the current version instead.
+            r"\*\*v([0-9]+\.[0-9]+\.[0-9]+)\*\* —",
             expected,
-            "README.md What's New",
+            "README.md Latest Release",
         ),
         check_line(
             ROOT / "README.md",
@@ -148,18 +151,10 @@ def main() -> int:
             expected_tool_count,
             "README.md Tool Map",
         ),
-        check_line(
-            ROOT / "README.md",
-            r"\*\*(\d+) MCP tools\*\*",
-            expected_tool_count,
-            "README.md install tool count",
-        ),
-        check_line(
-            ROOT / "README.md",
-            r"- (\d+)-tool runtime surface",
-            expected_tool_count,
-            "README.md runtime surface count",
-        ),
+        # The former "**N MCP tools**" install line and "- N-tool runtime
+        # surface" bullet were deliberately made count-free in the v2.1.0
+        # README restructure (counts live in the badge and Tool Map heading,
+        # both checked above) — do not re-add prose count checks.
         check_line(
             ROOT / "td_component" / "mcp_webserver_callbacks.py",
             r'API_VERSION\s*=\s*"([^"]+)"',
@@ -186,9 +181,16 @@ def main() -> int:
         ),
         check_line(
             ROOT / "docs" / "API_REFERENCE.md",
-            r"Auto-generated from TDPilot v([0-9]+\.[0-9]+\.[0-9]+)",
+            # Header dropped the false "Auto-generated" claim in v2.1.0.
+            r"> TDPilot v([0-9]+\.[0-9]+\.[0-9]+) \| \d+ tools",
             expected,
             "docs/API_REFERENCE.md header",
+        ),
+        check_line(
+            ROOT / "docs" / "API_REFERENCE.md",
+            r"> TDPilot v[0-9]+\.[0-9]+\.[0-9]+ \| (\d+) tools",
+            expected_tool_count,
+            "docs/API_REFERENCE.md header tool count",
         ),
         check_line(
             ROOT / "docs" / "MANUAL.md",

@@ -1,6 +1,6 @@
 """Info/metadata tools — TD build, capabilities, runtime metrics.
 
-Part of the themed registry split. The public v2.0 surface is 112 tools,
+Part of the themed registry split. The public v2.0 surface is 114 tools,
 9 resource templates, and 4 static resources, including the BrainPlan
 transaction layer and optional cockpit UI.
 
@@ -124,6 +124,7 @@ async def td_get_server_metrics(ctx: Context) -> str:
             "safety": safety_manager.stats(),
             "snapshots": snapshot_manager.stats(),
             "jobs": job_manager.stats(),
+            "brain_adoption": _brain_adoption_stats(),
             "audit_enabled": bool(_tr._get_audit(ctx) and _tr._get_audit(ctx).enabled()),
         }
         return _tr._as_json_output(payload)
@@ -132,3 +133,37 @@ async def td_get_server_metrics(ctx: Context) -> str:
         return format_tool_error(exc)
     finally:
         finish()
+
+
+def _brain_adoption_stats() -> dict:
+    """Cheap local brain-adoption telemetry: trace file rows + cached-plan presence.
+
+    Requires no TouchDesigner connection — it reads the local JSONL trace file
+    written by ``append_brain_trace`` and the process-local plan cache populated
+    by ``td_brain_plan`` / ``td_brain_propose``. Every sub-read degrades
+    independently so telemetry can never break the metrics tool.
+    """
+    stats: dict = {
+        "trace_file_exists": False,
+        "trace_count": 0,
+        "cached_plan": False,
+    }
+    try:
+        from td_mcp.brain.traces import brain_trace_path
+
+        path = brain_trace_path()
+        stats["trace_path"] = str(path)
+        if path.exists():
+            stats["trace_file_exists"] = True
+            with path.open("r", encoding="utf-8") as handle:
+                stats["trace_count"] = sum(1 for line in handle if line.strip())
+    except Exception:  # noqa: BLE001 — telemetry must never fail the tool
+        pass
+    try:
+        from td_mcp.registry.resources import get_cached_resource
+
+        cached = get_cached_resource("td://project/state") or {}
+        stats["cached_plan"] = bool(cached.get("latest_brain_plan"))
+    except Exception:  # noqa: BLE001
+        pass
+    return stats

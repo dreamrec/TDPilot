@@ -54,16 +54,15 @@ def _write_minimal_version_tree(root: Path, *, version: str = "2.0.1", tool_coun
         (
             f"# TDPilot Runtime v{version}\n"
             f"[![MCP tools](https://img.shields.io/badge/MCP%20tools-{tool_count}-blueviolet)]\n"
-            f"That installs all **{tool_count} MCP tools**.\n"
-            f"- {tool_count}-tool runtime surface\n"
-            f"\n## What's New In {version}\n"
+            f"\n## Latest Release\n"
+            f"\n**v{version}** — release highlights here.\n"
             f"\n## Tool Map ({tool_count} Tools)\n"
         ),
         encoding="utf-8",
     )
     (root / "docs").mkdir(parents=True, exist_ok=True)
     (root / "docs" / "API_REFERENCE.md").write_text(
-        f"Auto-generated from TDPilot v{version}\n",
+        f"> TDPilot v{version} | {tool_count} tools | Hand-maintained reference\n",
         encoding="utf-8",
     )
     (root / "docs" / "MANUAL.md").write_text(f"# TDPilot v{version}\n", encoding="utf-8")
@@ -141,7 +140,7 @@ def test_check_versions_fails_when_readme_runtime_title_drifts(tmp_path, monkeyp
     module = _load_check_versions_module()
     _write_minimal_version_tree(tmp_path)
     (tmp_path / "README.md").write_text(
-        "# TDPilot Runtime v2.0.0\n\n## What's New In 2.0.1\n",
+        "# TDPilot Runtime v2.0.0\n\n## Latest Release\n\n**v2.0.1** — highlights.\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(module, "ROOT", tmp_path)
@@ -174,9 +173,8 @@ def test_check_versions_fails_when_readme_tool_count_drifts(tmp_path, monkeypatc
         (
             "# TDPilot Runtime v2.0.1\n"
             "[![MCP tools](https://img.shields.io/badge/MCP%20tools-110-blueviolet)]\n"
-            "That installs all **111 MCP tools**.\n"
-            "- 111-tool runtime surface\n"
-            "\n## What's New In 2.0.1\n"
+            "\n## Latest Release\n"
+            "\n**v2.0.1** — highlights.\n"
             "\n## Tool Map (111 Tools)\n"
         ),
         encoding="utf-8",

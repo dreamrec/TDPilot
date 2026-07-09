@@ -1,7 +1,7 @@
 ---
 name: tdpilot-production
 description: >
-  Production-grade TouchDesigner MCP workflow for TDPilot v2.0.3 (112 tools):
+  Production-grade TouchDesigner MCP workflow for TDPilot v2.0.3 (114 tools):
   staged edits with undo blocks, rollback safety via snapshots, token-efficient
   diagnostics, strict completion gates, and vNext BrainPlan transactions.
 ---

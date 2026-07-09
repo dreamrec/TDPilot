@@ -18,7 +18,7 @@ Neither tool requires a live TD connection or an exec-mode privilege —
 they introspect or mutate server-local state only. That's why they live
 in a dedicated module instead of ``tools_info.py`` or ``tools_system.py``.
 
-Part of the v2.0.3 surface (tool count 110 -> 112).
+Part of the v2.0.3 surface (tool count 110 -> 112; 114 total since td_brain_ground/td_brain_propose).
 """
 
 from __future__ import annotations

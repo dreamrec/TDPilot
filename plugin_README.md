@@ -1,6 +1,6 @@
 # TDPilot — TouchDesigner AI Assistant Plugin
 
-TDPilot v2.0.3 provides 112 MCP tools for live control of TouchDesigner projects from Claude, Codex, and other MCP clients. The headline is the vNext visual programming brain: `td_brain_plan` grounds intent in real TD operators, hints, docs, memory, live state, and a 656-card reviewed operator atlas with zero-concept backlog; `td_brain_execute` mutates only from a valid BrainPlan; `td_transaction_apply` adds transactional rollback and validation to typed patch plans; `td_cockpit_render` exposes an optional read-only cockpit UI for plan, validation, rollback, and trace summaries; `td_sync_status` reports server/live-component/package drift in one call; and `td_sync_diagnose` gives strict live endpoint/version/auth fingerprint diagnostics.
+TDPilot v2.0.3 provides 114 MCP tools for live control of TouchDesigner projects from Claude, Codex, and other MCP clients. The headline is the vNext visual programming brain: `td_brain_plan` grounds intent in real TD operators, hints, docs, memory, live state, and a 656-card reviewed operator atlas with zero-concept backlog; `td_brain_execute` mutates only from a valid BrainPlan; `td_transaction_apply` adds transactional rollback and validation to typed patch plans; `td_cockpit_render` exposes an optional read-only cockpit UI for plan, validation, rollback, and trace summaries; `td_sync_status` reports server/live-component/package drift in one call; and `td_sync_diagnose` gives strict live endpoint/version/auth fingerprint diagnostics.
 
 The 1.6 observability layer remains: `_read_journal` hints, a 200-entry `activity_log` ring buffer mirrored into `/local/mcp_server/activity_log`, and `td_self_update` for syncing the `.tox` across repo, plugin cache, and `~/.tdpilot/`.
 
@@ -10,7 +10,7 @@ The 1.6 observability layer remains: `_read_journal` hints, a 200-entry `activit
 - **touchdesigner** — Connects to TDPilot MCP server via `npx tdpilot` (stdio transport)
 
 ### Skills
-- **tdpilot-core** — Core patching discipline: 112-tool reference, node layout, color coding, expressions, error verification, visual checks, technique memory, knowledge corpus, custom parameters, project lifecycle, POP inspection, agent activity log, self-update, sync diagnostics, and the brain transaction loop
+- **tdpilot-core** — Core patching discipline: 114-tool reference, node layout, color coding, expressions, error verification, visual checks, technique memory, knowledge corpus, custom parameters, project lifecycle, POP inspection, agent activity log, self-update, sync diagnostics, and the brain transaction loop
 - **tdpilot-production** — Production-safe workflow: staged edits, undo blocks, snapshots, completion gates, failure protocol
 - **tdpilot-brain-explorer / builder / validator / recovery / release** — Specialized v2 brain skills for inspect-before-mutate work, BrainPlan construction, validation, recovery, and release auditing
 - **popx-touchdesigner** — POPX workflow skill for 59 GPU-accelerated operators. References must be built locally from your own licensed POPx copy (see `references/BUILD.md`)

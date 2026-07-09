@@ -24,4 +24,7 @@ from __future__ import annotations
 #             truth across server, live TD component, .tox, caches, npm/GitHub).
 # 2026-06-24: bumped 111 → 112 with td_sync_diagnose (strict live sync,
 #             version-skew, endpoint, and auth fingerprint diagnostics).
-EXPECTED_MIN_TOOL_COUNT: int = 112
+# 2026-07-09: bumped 112 → 114 with td_brain_ground + td_brain_propose
+#             (host-authored BrainPlan drafting loop: grounding pack + review
+#             gate — the LLM-as-planner flip).
+EXPECTED_MIN_TOOL_COUNT: int = 114

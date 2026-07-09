@@ -14,7 +14,7 @@
 [![downloads](https://img.shields.io/npm/dm/tdpilot?label=downloads)](https://www.npmjs.com/package/tdpilot)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![python](https://img.shields.io/badge/python-3.10%2B-blue)](./pyproject.toml)
-[![MCP tools](https://img.shields.io/badge/MCP%20tools-112-blueviolet)](./docs/API_REFERENCE.md)
+[![MCP tools](https://img.shields.io/badge/MCP%20tools-114-blueviolet)](./docs/API_REFERENCE.md)
 [![TouchDesigner](https://img.shields.io/badge/TouchDesigner-2025.30000%2B-ff6200)](https://derivative.ca)
 
 **Build, debug, and verify TouchDesigner networks by talking to your AI.**
@@ -117,7 +117,7 @@ Using Claude Desktop, Cursor, Codex, or another MCP client? See [`docs/INSTALL_O
 
 ## Start Here: Core Workflow
 
-You don't need all 112 tools. Start with these and expand as needed:
+You don't need all 114 tools. Start with these and expand as needed:
 
 | Step | Tools | What You're Doing |
 |------|-------|-------------------|
@@ -154,7 +154,7 @@ Use this loop for every non-trivial task:
 
 6. **Control token cost** — Prefer metadata checks over continuous image payloads. Ask the user before enabling high-token frame streaming.
 
-## Tool Map (112 Tools)
+## Tool Map (114 Tools)
 
 ### 0) Brain Planning + Transactions
 Use for non-trivial visual programming tasks where correctness, rollback, and validation matter.

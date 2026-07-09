@@ -312,7 +312,7 @@ def compile_visual_task(
     blocked_questions: list[str] = []
     if not capabilities and _intent_is_under_specified(normalized, preferred_domains):
         blocked_questions.append(
-            "What visual system should TDPilot build: feedback, audio-reactive, POP, GLSL, render pipeline, panel UI, or a specific operator chain?"
+            "What visual system should TDPilot build: feedback, audio-reactive, POP, GLSL, render pipeline, panel UI, or a specific operator chain? If the intent is already clear to you, call td_brain_ground with a sharper intent, author a draft candidate graph, and validate it with td_brain_propose instead of stopping here."
         )
 
     if text and not blocked_questions and not _is_supported_phase_one_route(profiles, capabilities):

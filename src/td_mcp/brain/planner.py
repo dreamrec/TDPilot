@@ -589,7 +589,7 @@ async def build_brain_plan(
             patch_plan=patch_plan,
             validation_profile=_resolve_validation_profile(validation_profile),
             blocked_questions=[
-                "This request asks for multiple distinct visual systems plus an interactive review library. The current safe compiler cannot guarantee concept diversity, panel navigation, visual QA, and 60 fps performance in one BrainPlan yet."
+                "This request asks for multiple distinct visual systems plus an interactive review library. The current safe compiler cannot guarantee concept diversity, panel navigation, visual QA, and 60 fps performance in one BrainPlan yet. Split the brief into smaller systems: for each one, call td_brain_ground, author a draft candidate graph, validate it with td_brain_propose, then run td_brain_execute(plan_id=...)."
             ],
             missing_facts=["complex_multi_output_library"],
             grounding_evidence=[
@@ -665,7 +665,7 @@ async def build_brain_plan(
             concept_graph=graph,
             patch_plan=patch_plan,
             blocked_questions=[
-                "What visual system should TDPilot build: feedback, audio-reactive, POP, GLSL, render pipeline, panel UI, or a specific operator chain?"
+                "What visual system should TDPilot build: feedback, audio-reactive, POP, GLSL, render pipeline, panel UI, or a specific operator chain? If the intent is already clear to you, call td_brain_ground with a sharper intent, author a draft candidate graph, and validate it with td_brain_propose instead of stopping here."
             ],
             missing_facts=["under-specified intent: no supported visual concept matched"],
             grounding_evidence=grounding,
@@ -716,7 +716,7 @@ async def build_brain_plan(
             patch_plan=patch_plan,
             validation_profile=_resolve_validation_profile(validation_profile),
             blocked_questions=[
-                "The operator atlas returned grounding evidence, but no safe topology compiler route exists yet. Use the cited corpus evidence to draft a BrainPlan before mutation."
+                "The operator atlas returned grounding evidence, but no safe topology compiler route exists yet. Do not stop here: call td_brain_ground with this intent to get a grounding pack, author a draft candidate graph from its candidate_operators and param_semantics, validate it with td_brain_propose, then run td_brain_execute(plan_id=...)."
             ],
             missing_facts=[
                 "unsupported_open_prompt:atlas_grounded_planner_required",
@@ -1436,6 +1436,58 @@ def _plan_from_atlas_candidate_graph(
         corpus_evidence=corpus_evidence,
         risk_flags=list(graph.risk_flags),
     )
+
+
+async def read_available_operator_types(td_client) -> set[str]:
+    """Read the live TD operator family list as canonical op-type names.
+
+    Public bridge for the host-authored draft loop (td_brain_ground /
+    td_brain_propose). Returns an empty set when TouchDesigner is not
+    reachable — callers must treat an empty set as "availability unknown",
+    the same degradation contract ``build_brain_plan`` uses.
+    """
+    return await _read_available_ops(td_client)
+
+
+async def build_brain_plan_from_reviewed_candidate(
+    td_client,
+    *,
+    task: VisualTaskSpec,
+    compiled_task,
+    candidate: CandidateConceptGraph,
+    card_index=None,
+    validation_profile: str = "auto",
+    available_ops: set[str] | None = None,
+) -> BrainPlan:
+    """Compile a review-gated, host-authored candidate graph into a full BrainPlan.
+
+    Public bridge for ``td_brain_propose``: the candidate MUST come from
+    ``review_draft_candidate_graph`` (schema, official docs, availability, and
+    param-semantics strip already proven). It reuses the atlas candidate-graph
+    compiler so host-authored drafts get the exact same patch compilation,
+    output capture, param-semantics gating, and blocked-question behavior as
+    planner-authored atlas drafts.
+    """
+    ops = available_ops if available_ops is not None else await _read_available_ops(td_client)
+    existing_names = await _read_existing_names(td_client, task.target_root)
+    atlas_draft = AtlasDraftResult(
+        accepted=True,
+        candidate_graph=candidate,
+        candidate_graphs=[candidate],
+        grounding_evidence=list(candidate.grounding_evidence),
+    )
+    plan = _plan_from_atlas_candidate_graph(
+        task=task,
+        compiled_task=compiled_task,
+        atlas_draft=atlas_draft,
+        available_ops=ops,
+        existing_names=existing_names,
+        card_index=card_index,
+        validation_profile=validation_profile,
+    )
+    plan.grounding_evidence = _dedupe(["planner:host_authored_draft", *plan.grounding_evidence])
+    plan.concept_graph.evidence = _dedupe(["planner:host_authored_draft", *plan.concept_graph.evidence])
+    return plan
 
 
 _DEVICE_SOURCE_REQUIREMENTS: dict[str, str] = {

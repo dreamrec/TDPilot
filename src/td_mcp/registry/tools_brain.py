@@ -13,8 +13,17 @@ from pydantic import Field, ValidationError
 
 from td_mcp import tool_registry as _tr
 from td_mcp.brain.cockpit import COCKPIT_RESOURCE_URI, build_cockpit_payload
+from td_mcp.brain.concept_compiler import compile_visual_task
+from td_mcp.brain.corpus_bridge import build_corpus_evidence
+from td_mcp.brain.llm_contract import review_draft_candidate_graph
+from td_mcp.brain.operator_availability import build_operator_availability_matrix
+from td_mcp.brain.param_semantics import semantics_by_op_and_param
 from td_mcp.brain.patterns import load_pattern_registry
-from td_mcp.brain.planner import build_brain_plan
+from td_mcp.brain.planner import (
+    build_brain_plan,
+    build_brain_plan_from_reviewed_candidate,
+    read_available_operator_types,
+)
 from td_mcp.brain.trace_promotion import (
     promote_trace_to_pattern,
     trace_promotion_rejection_evidence,
@@ -22,7 +31,7 @@ from td_mcp.brain.trace_promotion import (
 from td_mcp.brain.traces import append_brain_trace
 from td_mcp.brain.transaction import apply_transaction
 from td_mcp.errors import format_tool_error_dict
-from td_mcp.models.brain import BrainPlan, BrainTrace, TransactionOptions
+from td_mcp.models.brain import BrainPlan, BrainTrace, TransactionOptions, VisualTaskSpec
 from td_mcp.models.patch import PatchPlan
 from td_mcp.registry.resources import get_cached_resource, set_cached_resource
 from td_mcp.tool_registry import mcp
@@ -126,6 +135,268 @@ async def td_brain_plan(
 
 
 @mcp.tool(
+    name="td_brain_ground",
+    title="Ground Host-Authored TD Brain Draft",
+    description=(
+        "Use this when td_brain_plan returns blocked or unsupported, or when you want to "
+        "author a creative BrainPlan draft yourself: it returns a read-only grounding pack "
+        "(task features, corpus evidence, candidate operators, parameter contracts, operator "
+        "availability, live state, exemplars, and the draft authoring contract) so you can "
+        "write a draft for td_brain_propose. Do not use it for trivial single-node edits."
+    ),
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+    meta={"anthropic/alwaysLoad": True},
+    structured_output=True,
+)
+async def td_brain_ground(
+    ctx: Context,
+    intent: Annotated[
+        str,
+        Field(description="Natural-language visual programming task to ground.", min_length=1),
+    ],
+    target_root: Annotated[
+        str,
+        Field(default="/project1", description="Absolute TD parent/root path the draft will build inside."),
+    ] = "/project1",
+    preferred_domains: Annotated[
+        list[str] | None,
+        Field(default=None, description="Preferred TD data domains: TOP, CHOP, SOP, POP, DAT, COMP, MAT."),
+    ] = None,
+    include_live_state: Annotated[
+        bool,
+        Field(
+            default=True, description="Include existing node names/types at target_root when TD is reachable."
+        ),
+    ] = True,
+) -> dict[str, Any]:
+    """Return the grounding pack the host LLM uses to author a draft candidate graph."""
+    finish = _tr._start_tool(ctx, "td_brain_ground")
+    try:
+        client = _tr._get_client(ctx)
+        services = _tr._get_services(ctx)
+        card_index = getattr(services, "card_index", None)
+        compiled_task = compile_visual_task(
+            intent,
+            target_root=target_root,
+            preferred_domains=preferred_domains or [],
+            card_index=card_index,
+        )
+        corpus_records = build_corpus_evidence(
+            intent=intent,
+            operators=_docs_ops_from_markers(compiled_task.grounding_evidence),
+            card_index=card_index,
+            limit_per_query=16,
+            max_records=24,
+        )
+        candidate_ops = _candidate_op_types(compiled_task, corpus_records, limit=12)
+        available_ops = await read_available_operator_types(client)
+        live_state: dict[str, Any]
+        if include_live_state:
+            live_state = await _live_state_pack(client, target_root)
+        else:
+            live_state = {"available": False, "reason": "include_live_state=false"}
+        pack: dict[str, Any] = {
+            "task_features": compiled_task.model_dump(mode="json"),
+            "corpus_evidence": [record.model_dump(mode="json") for record in corpus_records],
+            "candidate_operators": _candidate_operator_cards(card_index, candidate_ops, corpus_records),
+            "param_semantics": _param_semantics_for_ops(candidate_ops),
+            "operator_availability": _operator_availability_pack(available_ops, candidate_ops),
+            "live_state": live_state,
+            "exemplars": _pattern_exemplars(compiled_task, limit=2),
+            "authoring_contract": dict(DRAFT_AUTHORING_CONTRACT),
+        }
+        _tr._audit_log(
+            ctx,
+            "td_brain_ground",
+            {
+                "compiled_task_id": compiled_task.id,
+                "candidate_profiles": compiled_task.candidate_profiles,
+                "candidate_op_count": len(candidate_ops),
+                "corpus_record_count": len(corpus_records),
+                "td_reachable": bool(available_ops),
+            },
+        )
+        return {"success": True, "grounding_pack": pack}
+    except Exception as exc:  # noqa: BLE001
+        _tr._record_tool_error(ctx, "td_brain_ground")
+        return format_tool_error_dict(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(
+    name="td_brain_propose",
+    title="Propose Host-Authored TD Brain Draft",
+    description=(
+        "Use this when you have authored a draft candidate graph from a td_brain_ground "
+        "grounding pack and need TDPilot to validate it into an executable BrainPlan. It is "
+        "read-only and never mutates TouchDesigner: accepted drafts are compiled, gated by "
+        "parameter semantics, and cached server-side so td_brain_execute(plan_id=...) can run "
+        "them immediately; rejected drafts return machine-readable rejections to fix and retry."
+    ),
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+    meta={"anthropic/alwaysLoad": True},
+    structured_output=True,
+)
+async def td_brain_propose(
+    ctx: Context,
+    draft: Annotated[
+        dict[str, Any],
+        Field(
+            description=(
+                "Host-authored draft candidate graph matching the td_brain_ground "
+                "authoring_contract draft_schema (label, concepts, edges, required_ops, ...)."
+            ),
+        ),
+    ],
+    target_root: Annotated[
+        str,
+        Field(default="/project1", description="Absolute TD parent/root path the plan will build inside."),
+    ] = "/project1",
+    validation_profile: Annotated[
+        str,
+        Field(default="auto", description="Validation profile. 'auto' resolves to structural_visual_safe."),
+    ] = "auto",
+    intent: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description=(
+                "Original natural-language intent behind the draft. Defaults to the "
+                "draft label so the same intent used for td_brain_ground can be carried through."
+            ),
+        ),
+    ] = None,
+) -> dict[str, Any]:
+    """Validate a host-authored draft through the review gate and cache the resulting plan."""
+    finish = _tr._start_tool(ctx, "td_brain_propose")
+    try:
+        if not isinstance(draft, dict) or not draft:
+            return format_tool_error_dict(
+                ValueError(
+                    "draft must be a non-empty object shaped by the td_brain_ground "
+                    "authoring_contract (call td_brain_ground first)"
+                )
+            )
+        client = _tr._get_client(ctx)
+        services = _tr._get_services(ctx)
+        card_index = getattr(services, "card_index", None)
+        resolved_intent = (
+            (intent or "").strip()
+            or str(draft.get("label") or "").strip()
+            or str(draft.get("explanation") or "").strip()
+            or "host-authored draft candidate graph"
+        )
+        compiled_task = compile_visual_task(
+            resolved_intent,
+            target_root=target_root,
+            validation_profile=validation_profile,
+            card_index=card_index,
+        )
+        available_ops = await read_available_operator_types(client)
+        review = review_draft_candidate_graph(
+            draft,
+            compiled_task=compiled_task,
+            # Empty set means TD is unreachable: availability is unknown, so the
+            # availability gate is skipped (same degradation as build_brain_plan).
+            available_ops=available_ops or None,
+            card_index=card_index,
+        )
+        if not review.accepted or review.candidate_graph is None:
+            rejections = _draft_rejections(review.rejection_reasons)
+            _tr._audit_log(
+                ctx,
+                "td_brain_propose",
+                {"accepted": False, "rejection_count": len(rejections)},
+            )
+            return {
+                "success": False,
+                "rejections": rejections,
+                "review": review.model_dump(mode="json"),
+            }
+        task = VisualTaskSpec(
+            intent=resolved_intent,
+            target_root=target_root,
+            validation_profile=validation_profile,
+        )
+        plan = await build_brain_plan_from_reviewed_candidate(
+            client,
+            task=task,
+            compiled_task=compiled_task,
+            candidate=review.candidate_graph,
+            card_index=card_index,
+            validation_profile=validation_profile,
+            available_ops=available_ops,
+        )
+        if plan.blocked_questions:
+            # The deeper patch-level gate (availability re-check, param-semantics
+            # value contracts, device sources) blocked the compiled plan.
+            rejections = [
+                {
+                    "code": "plan_blocked",
+                    "subject": "; ".join(plan.missing_facts[:6]),
+                    "message": question,
+                    "fix": (
+                        "Adjust the draft (operators, param values, or declared device "
+                        "sources) per the td_brain_ground param_semantics and "
+                        "operator_availability sections, then re-run td_brain_propose."
+                    ),
+                }
+                for question in plan.blocked_questions
+            ]
+            _tr._audit_log(
+                ctx,
+                "td_brain_propose",
+                {"accepted": False, "plan_blocked": True, "rejection_count": len(rejections)},
+            )
+            return {
+                "success": False,
+                "rejections": rejections,
+                "review": review.model_dump(mode="json"),
+                "plan": plan.model_dump(mode="json"),
+            }
+        _cache_brain_plan(plan)
+        plan_summary = {
+            "plan_id": plan.id,
+            "profile": plan.concept_graph.profile,
+            "operators": list(plan.concept_graph.operators),
+            "operation_count": len(plan.patch_plan.operations),
+            "validation_profile": plan.validation_profile,
+            "review_status": review.status,
+            "review_score": review.score,
+            # Loud strip surface: param values outside the known-semantics
+            # registry were REMOVED by the review gate, not rejected. The host
+            # must re-check this list and re-author if a stripped value mattered.
+            "stripped_params": list(review.rewrites),
+        }
+        _tr._audit_log(
+            ctx,
+            "td_brain_propose",
+            {
+                "accepted": True,
+                "brain_plan_id": plan.id,
+                "ops": len(plan.patch_plan.operations),
+                "stripped_param_count": len(review.rewrites),
+            },
+        )
+        return {
+            "success": True,
+            "plan_id": plan.id,
+            "plan_summary": plan_summary,
+            "plan": plan.model_dump(mode="json"),
+        }
+    except Exception as exc:  # noqa: BLE001
+        _tr._record_tool_error(ctx, "td_brain_propose")
+        return format_tool_error_dict(exc)
+    finally:
+        finish()
+
+
+@mcp.tool(
     name="td_brain_execute",
     title="Execute TD Brain Plan",
     description=(
@@ -211,7 +482,13 @@ async def td_brain_execute(
         if brain_plan.blocked_questions:
             return {
                 "success": False,
-                "error": "BrainPlan is blocked and must not be executed.",
+                "error": (
+                    "BrainPlan is blocked and must not be executed. Resolve the "
+                    "blocked_questions, or author the plan yourself: call "
+                    "td_brain_ground for a grounding pack, write a draft candidate "
+                    "graph, validate it with td_brain_propose, then re-run "
+                    "td_brain_execute(plan_id=...)."
+                ),
                 "blocked_questions": brain_plan.blocked_questions,
                 "missing_facts": brain_plan.missing_facts,
             }
@@ -651,3 +928,292 @@ def _trace_promotion_rejection_for_export(
         )
     except Exception:
         return None
+
+
+# --------------------------------------------------------------------------
+# Host-authored draft loop (td_brain_ground / td_brain_propose)
+# --------------------------------------------------------------------------
+
+# How the host LLM must author a draft the review gate accepts. Shipped inside
+# every td_brain_ground grounding pack so the contract travels with the facts.
+DRAFT_AUTHORING_CONTRACT: dict[str, Any] = {
+    "accepted_by": "td_brain_propose",
+    "draft_schema": {
+        "label": "str, required, non-empty — short name for the draft graph",
+        "profiles": (
+            "list[str], optional — BrainProfile values such as 'audio_reactive', "
+            "'feedback', 'pop', 'glsl', 'render_pipeline', 'panel_ui', 'generic'"
+        ),
+        "concepts": (
+            "list of concept nodes, each: {id: str, label: str, role: one of "
+            "source|process|feedback|control|render|output|material|ui|validator, "
+            "domain: one of TOP|CHOP|SOP|POP|DAT|COMP|MAT|ANY, op_type: exact TD "
+            "operator type (e.g. 'noiseTOP'), params: {param_name: value}} — "
+            "optional create_type/content/generated_code as in ConceptNode"
+        ),
+        "edges": (
+            "list of {source: concept id, target: concept id, kind: one of "
+            "data|control|reference|feedback, source_index: int>=0, "
+            "target_index: int>=0}; source/target must reference declared concept ids"
+        ),
+        "required_ops": "list[str] — every op_type the draft depends on",
+        "optional_ops": "list[str], optional",
+        "validation_needs": "list[str], optional — validation probe names to run after apply",
+        "risk_flags": "list[str], optional",
+        "grounding_evidence": "list[str], optional — cite the docs/corpus markers you used",
+        "explanation": "str, optional — why this topology serves the intent",
+    },
+    "rules": [
+        (
+            "Use only operators from candidate_operators (or otherwise backed by an "
+            "official docs card); unknown operators are rejected with missing_docs."
+        ),
+        (
+            "When operator_availability.available is true, avoid operators it marks "
+            "unavailable — they are rejected with unavailable_op."
+        ),
+        (
+            "Keep param values inside the param_semantics contracts (enum values, "
+            "valid ranges, op_ref families). Params with no known semantics contract "
+            "are STRIPPED (not rejected) and surfaced in plan_summary.stripped_params."
+        ),
+        (
+            "Connections must be type-compatible: 'data' edges wire same-family "
+            "operator inputs; use 'reference' edges plus an op-path param binding "
+            "(e.g. params {'top': '${path:concept_id}'}) for cross-family links."
+        ),
+        (
+            "End every chain in a stable output null (nullTOP/nullCHOP/...) with "
+            "role 'output'. The draft schema is closed — unknown fields are rejected."
+        ),
+    ],
+    "loop": (
+        "td_brain_ground -> author draft JSON -> td_brain_propose(draft) -> fix any "
+        "rejections and re-propose -> td_brain_execute(plan_id=<returned plan_id>)"
+    ),
+}
+
+_DRAFT_REJECTION_FIXES: dict[str, str] = {
+    "invalid_schema": (
+        "Fix the draft shape to match the td_brain_ground authoring_contract "
+        "draft_schema: the schema is closed (remove unknown fields) and every edge "
+        "must reference declared concept ids."
+    ),
+    "missing_required_ops": (
+        "Declare at least one concept with an op_type (or list required_ops) so the "
+        "review gate can prove the operators exist."
+    ),
+    "missing_docs": (
+        "This op_type has no official docs card. Pick an operator from the "
+        "td_brain_ground candidate_operators list instead."
+    ),
+    "unavailable_op": (
+        "This operator is not available in the connected TouchDesigner build. Pick "
+        "an available alternative from the operator_availability section."
+    ),
+}
+
+
+def _draft_rejections(reasons: list[str]) -> list[dict[str, Any]]:
+    """Turn review rejection markers into machine-readable fix instructions."""
+    rejections: list[dict[str, Any]] = []
+    for reason in reasons:
+        code, _, subject = str(reason).partition(":")
+        rejections.append(
+            {
+                "code": code,
+                "subject": subject,
+                "message": reason,
+                "fix": _DRAFT_REJECTION_FIXES.get(
+                    code, "Adjust the draft per the authoring_contract and re-run td_brain_propose."
+                ),
+            }
+        )
+    return rejections
+
+
+def _docs_ops_from_markers(grounding_evidence: list[str]) -> list[str]:
+    """Extract docs-proven op types from ``docs:<op_type>`` grounding markers."""
+    ops: list[str] = []
+    for marker in grounding_evidence:
+        text = str(marker)
+        if text.startswith("docs:"):
+            op_type = text.split(":", 1)[1].strip()
+            if op_type and op_type not in ops:
+                ops.append(op_type)
+    return ops
+
+
+def _candidate_op_types(compiled_task, corpus_records, *, limit: int = 12) -> list[str]:
+    """Rank candidate operator types: compiled-task seed ops first, then corpus hits."""
+    ordered: list[str] = []
+    for op_type in _docs_ops_from_markers(compiled_task.grounding_evidence):
+        if op_type not in ordered:
+            ordered.append(op_type)
+    for record in corpus_records:
+        op_type = record.op_type
+        if op_type and op_type not in ordered:
+            ordered.append(op_type)
+    return ordered[:limit]
+
+
+def _candidate_operator_cards(
+    card_index,
+    candidate_ops: list[str],
+    corpus_records,
+) -> list[dict[str, Any]]:
+    """Compact per-operator authoring cards: op_type, family, summary, key_params, gotchas."""
+    records_by_op = {record.op_type: record for record in corpus_records if record.op_type}
+    cards: list[dict[str, Any]] = []
+    for op_type in candidate_ops:
+        raw_card = None
+        if card_index is not None:
+            try:
+                raw_card = card_index.get_operator(op_type)
+            except Exception:
+                raw_card = None
+        raw_card = raw_card if isinstance(raw_card, dict) else {}
+        record = records_by_op.get(op_type)
+        summary = str(raw_card.get("summary") or (record.summary if record else "") or "")
+        key_params = raw_card.get("key_params") or raw_card.get("parameters") or []
+        key_param_names = [
+            str(item.get("name")) if isinstance(item, dict) else str(item)
+            for item in key_params
+            if (item.get("name") if isinstance(item, dict) else item)
+        ][:12]
+        if not key_param_names and record is not None:
+            key_param_names = list(record.key_params)[:12]
+        gotchas = [str(item) for item in (raw_card.get("common_gotchas") or []) if str(item).strip()][:6]
+        cards.append(
+            {
+                "op_type": op_type,
+                "family": raw_card.get("family") or (record.family if record else None),
+                "summary": " ".join(summary.split())[:360],
+                "key_params": key_param_names,
+                "gotchas": gotchas,
+                "docs_url": raw_card.get("docs_url") or (record.docs_url if record else None),
+            }
+        )
+    return cards
+
+
+def _param_semantics_for_ops(candidate_ops: list[str]) -> dict[str, list[dict[str, Any]]]:
+    """Serialize the known parameter contracts for the candidate operators, compactly."""
+    wanted = set(candidate_ops)
+    by_op: dict[str, list[dict[str, Any]]] = {}
+    for (op_type, name), semantic in sorted(semantics_by_op_and_param().items()):
+        if op_type not in wanted:
+            continue
+        entry: dict[str, Any] = {
+            "name": name,
+            "value_kind": semantic.value_kind,
+            "default_strategy": semantic.default_strategy,
+            "cook_risk": semantic.cook_risk,
+        }
+        if semantic.valid_range is not None:
+            entry["valid_range"] = list(semantic.valid_range)
+        if semantic.enum_values:
+            entry["enum_values"] = list(semantic.enum_values)
+        if semantic.tuple_size is not None:
+            entry["tuple_size"] = semantic.tuple_size
+        if semantic.expected_family is not None:
+            entry["expected_family"] = semantic.expected_family
+        if semantic.expected_op_type is not None:
+            entry["expected_op_type"] = semantic.expected_op_type
+        by_op.setdefault(op_type, []).append(entry)
+    return by_op
+
+
+def _operator_availability_pack(available_ops: set[str], candidate_ops: list[str]) -> dict[str, Any]:
+    """Availability rows for the candidate operators; degraded when TD is unreachable."""
+    if not available_ops:
+        return {
+            "available": False,
+            "reason": (
+                "TouchDesigner not reachable (or empty family list); operator "
+                "availability unknown. Drafts are still reviewable — availability "
+                "is re-checked at td_brain_propose/td_brain_execute time."
+            ),
+        }
+    matrix = build_operator_availability_matrix(available_ops, required_ops=candidate_ops)
+    return {
+        "available": True,
+        "td_build": matrix.td_build,
+        "platform": matrix.platform,
+        "available_op_count": len(available_ops),
+        "operators": {op_type: matrix.operators.get(op_type, {}) for op_type in candidate_ops},
+        "unavailable_reasons": {
+            op_type: reason
+            for op_type, reason in matrix.unavailable_reasons.items()
+            if op_type in set(candidate_ops)
+        },
+    }
+
+
+async def _live_state_pack(client, target_root: str) -> dict[str, Any]:
+    """Existing node names/types at target_root; degraded instead of failing the tool."""
+    try:
+        response = await client.request("nodes", {"path": target_root, "limit": 200})
+    except Exception as exc:  # noqa: BLE001 — degrade, never fail the grounding pack
+        return {"available": False, "reason": str(exc) or type(exc).__name__}
+    nodes = (
+        response
+        if isinstance(response, list)
+        else response.get("nodes", [])
+        if isinstance(response, dict)
+        else []
+    )
+    compact = [
+        {"name": str(node.get("name")), "type": str(node.get("type") or node.get("op_type") or "")}
+        for node in nodes
+        if isinstance(node, dict) and node.get("name")
+    ][:200]
+    return {
+        "available": True,
+        "target_root": target_root,
+        "node_count": len(compact),
+        "nodes": compact,
+    }
+
+
+def _pattern_exemplars(compiled_task, *, limit: int = 2) -> list[dict[str, Any]]:
+    """1-2 registry patterns closest to the detected profile, as structural examples."""
+    try:
+        patterns = load_pattern_registry()
+    except Exception:
+        return []
+    wanted_profiles = set(compiled_task.candidate_profiles)
+    wanted_tags = set(compiled_task.motifs)
+    scored: list[tuple[int, str, Any]] = []
+    for pattern in patterns:
+        profile_overlap = len(wanted_profiles.intersection(pattern.profiles))
+        tag_overlap = len(wanted_tags.intersection(pattern.intent_tags))
+        score = (profile_overlap * 2) + tag_overlap
+        if score > 0:
+            scored.append((score, pattern.pattern_id, pattern))
+    scored.sort(key=lambda item: (-item[0], item[1]))
+    return [_exemplar_from_pattern(pattern) for _, _, pattern in scored[:limit]]
+
+
+def _exemplar_from_pattern(pattern) -> dict[str, Any]:
+    return {
+        "pattern_id": pattern.pattern_id,
+        "title": pattern.title,
+        "profiles": list(pattern.profiles),
+        "required_ops": list(pattern.required_ops),
+        "concepts": [
+            {
+                "id": node.id,
+                "role": node.role,
+                "domain": node.domain,
+                "op_type": node.op_type,
+                "params": dict(node.params),
+            }
+            for node in pattern.concept_nodes
+        ],
+        "edges": [
+            {"source": edge.source, "target": edge.target, "kind": edge.kind}
+            for edge in pattern.concept_edges
+        ],
+        "validation_probes": list(pattern.validation_probes),
+    }

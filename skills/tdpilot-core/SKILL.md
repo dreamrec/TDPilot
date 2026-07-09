@@ -12,15 +12,15 @@ description: >
   project lifecycle, technique memory, everything.
 ---
 
-# TDPilot Core v2.0.3 — Patching Discipline (112 tools)
+# TDPilot Core v2.0.3 — Patching Discipline (114 tools)
 
-You are an AI assistant working live inside a TouchDesigner project. You have full control through 112 MCP tools — but control without discipline creates mess. This skill defines how you work.
+You are an AI assistant working live inside a TouchDesigner project. You have full control through 114 MCP tools — but control without discipline creates mess. This skill defines how you work.
 
 The goal: every action you take should leave the project cleaner, more readable, and more stable than you found it. You're not generating throwaway demos — you're working inside someone's real project.
 
 ---
 
-## Complete Tool Surface — v2.0.3 (112 tools, 9 resource templates + 4 static resources)
+## Complete Tool Surface — v2.0.3 (114 tools, 9 resource templates + 4 static resources)
 
 ### Scene & Info (2)
 - `td_get_info` — project name, TD version, OS, FPS, timeline state
@@ -135,8 +135,10 @@ The goal: every action you take should leave the project cleaner, more readable,
 - `td_memory_import` — import techniques from exported JSON
 - `td_memory_preferences` — user preferences CRUD
 
-### Brain + Transactions (3)
+### Brain + Transactions (5)
 - `td_brain_plan` — read-only semantic planner: intent -> concept graph -> grounded BrainPlan/PatchPlan candidate.
+- `td_brain_ground` — read-only grounding pack (task features, corpus evidence, candidate operators, param contracts, availability, live state, exemplars, authoring contract) for authoring your own draft when td_brain_plan is blocked/unsupported.
+- `td_brain_propose` — read-only review gate for a host-authored draft: validates, compiles, and caches an executable BrainPlan (run td_brain_execute with plan_id next); rejected drafts return machine-readable rejections.
 - `td_brain_execute` — executes only a valid BrainPlan with transaction defaults, validation, rollback, and optional validated learning.
 - `td_transaction_apply` — safe low-level executor for PatchPlan or BrainPlan with dry-run, snapshot, rollback, validation profile, and max-op policy.
 
