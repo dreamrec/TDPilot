@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -1318,6 +1320,21 @@ def evaluate(
                 1.0,
             )
         )
+        # Frame-advance evidence: the steady-state window must span real frames,
+        # otherwise a paused/frozen timeline would report a cached cook reading as
+        # a passing frame budget. Tolerant of components that don't emit a frame
+        # (frame_advance_ok is None) so it never fails an older live component; it
+        # only trips when the report explicitly proves the timeline did NOT move.
+        frame_advance_ok = performance.get("frame_advance_ok") if isinstance(performance, dict) else None
+        if frame_advance_ok is not None:
+            checks.append(
+                check_threshold(
+                    "brain live smoke timeline advanced during sampling",
+                    _strict_bool_value(frame_advance_ok),
+                    ">=",
+                    1.0,
+                )
+            )
         incident_replay = brain_live_smoke.get("incident_replay")
         checks.append(
             check_threshold(
@@ -2128,8 +2145,108 @@ def _list_count(values: Any) -> float:
     return float(len(values))
 
 
+def _git(*args: str) -> str | None:
+    """Run a git command and return stripped stdout, or None if git is unavailable."""
+    try:
+        out = subprocess.run(
+            ["git", *args],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except (OSError, ValueError):
+        return None
+    if out.returncode != 0:
+        return None
+    return out.stdout.strip()
+
+
+def build_provenance(now: datetime | None = None) -> dict[str, Any]:
+    """Provenance stamp so a committed gate report is verifiably tied to a commit.
+
+    The eval-truth audit flagged that gate reports were forgeable/replayable:
+    nothing bound a report to the commit it was produced against, so a stale or
+    hand-edited ``gates.json`` could be presented as proof for any tag. Stamping
+    the HEAD sha + dirty flag + UTC timestamp lets ``verify_report`` (and a
+    tag-time CI check) confirm the report is fresh for the tag being released and
+    was produced from a clean tree.
+    """
+    now = now or datetime.now(timezone.utc)
+    sha = _git("rev-parse", "HEAD")
+    status = _git("status", "--porcelain")
+    return {
+        "commit_sha": sha,
+        "commit_short": sha[:12] if sha else None,
+        "git_dirty": bool(status) if status is not None else None,
+        "generated_at": now.astimezone(timezone.utc).isoformat(),
+    }
+
+
+def _live_smoke_readiness_ok(report: dict[str, Any]) -> bool:
+    """True if the report proves a LIVE, mutated brain-live-smoke category passed."""
+    readiness = report.get("release_readiness")
+    if not isinstance(readiness, dict):
+        return False
+    for category in readiness.get("categories") or []:
+        if isinstance(category, dict) and category.get("id") == "brain_live_smoke":
+            return bool(category.get("present")) and bool(category.get("ok"))
+    return False
+
+
+def verify_report(report: dict[str, Any], *, expected_sha: str | None = None) -> dict[str, Any]:
+    """Verify a produced gate report is trustworthy proof for a release.
+
+    Returns a result dict with ``ok`` and a per-condition breakdown. Conditions:
+
+      - ``gates_ok``       — the gate run itself passed (report.ok is True).
+      - ``provenance``     — a provenance stamp with a commit sha is present.
+      - ``fresh``          — the stamped sha matches ``expected_sha`` (defaults to
+                             the current git HEAD), so the report describes the
+                             commit being released, not an older run.
+      - ``clean_tree``     — the report was produced from a clean working tree.
+      - ``live_mutated``   — release-readiness proves a live, mutated TD smoke ran
+                             (mode=live + mutated_td=true, encoded in the
+                             brain_live_smoke readiness category's ``ok``).
+
+    This is the tamper-evidence a tag-time CI step needs before trusting a
+    committed ``releases/<tag>/gates.json``.
+    """
+    expected = expected_sha or _git("rev-parse", "HEAD")
+    provenance = report.get("provenance") if isinstance(report, dict) else None
+    stamped_sha = provenance.get("commit_sha") if isinstance(provenance, dict) else None
+    git_dirty = provenance.get("git_dirty") if isinstance(provenance, dict) else None
+
+    conditions = {
+        "gates_ok": bool(report.get("ok")) if isinstance(report, dict) else False,
+        "provenance": bool(stamped_sha),
+        "fresh": bool(stamped_sha) and bool(expected) and stamped_sha == expected,
+        "clean_tree": git_dirty is False,
+        "live_mutated": _live_smoke_readiness_ok(report) if isinstance(report, dict) else False,
+    }
+    return {
+        "ok": all(conditions.values()),
+        "expected_sha": expected,
+        "stamped_sha": stamped_sha,
+        "conditions": conditions,
+    }
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Check release gates")
+    parser.add_argument(
+        "--verify-report",
+        default="",
+        help=(
+            "Verify a previously produced gate report is tamper-evident proof for "
+            "the current commit (fresh sha, clean tree, live+mutated smoke, ok). "
+            "Exits non-zero if the report does not stand up."
+        ),
+    )
+    parser.add_argument(
+        "--expect-sha",
+        default="",
+        help="Commit sha the --verify-report must match (default: current git HEAD).",
+    )
     parser.add_argument("--bench-report", default="")
     parser.add_argument("--soak-report", default="")
     parser.add_argument("--brain-eval-report", default="")
@@ -2170,6 +2287,15 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+
+    if args.verify_report:
+        existing = load_json(args.verify_report)
+        if not isinstance(existing, dict):
+            print(json.dumps({"ok": False, "error": "report not found or not an object"}, indent=2))
+            return 1
+        result = verify_report(existing, expected_sha=args.expect_sha or None)
+        print(json.dumps(result, indent=2))
+        return 0 if result["ok"] else 1
 
     bench = load_json(args.bench_report) if args.bench_report else None
     soak = load_json(args.soak_report) if args.soak_report else None
@@ -2219,6 +2345,9 @@ def main() -> int:
         param_semantics_risk=param_semantics_risk,
         required_reports=required_reports,
     )
+    # Stamp provenance so a committed releases/<tag>/gates.json is verifiable
+    # (see build_provenance / verify_report). Non-fatal if git is unavailable.
+    report["provenance"] = build_provenance()
     output = json.dumps(report, indent=2)
     print(output)
 

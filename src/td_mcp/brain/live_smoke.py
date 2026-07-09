@@ -365,6 +365,19 @@ async def build_live_smoke_report(
     connects to TD and plans against real operator/state data. Live mutation is
     still opt-in via ``run_transactional_generated_code`` and is cleaned up
     through the transaction undo block.
+
+    Two-layer contract — ``panel_interaction_results`` and ``incident_replay``:
+        This function ALWAYS emits these two fields as ``_panel_interactions_not_run()``
+        / ``_incident_replay_not_run()`` placeholders (``ok: False``, ``status:
+        "not_run"``). It does NOT run the panel-callback exercise or the
+        incident-replay scratch build itself. Those are executed only by the CLI
+        wrapper ``scripts/brain_live_smoke.py`` under ``--live
+        --transactional-generated-code``, which splices the real results in over
+        these placeholders. A direct caller of ``build_live_smoke_report`` (e.g.
+        a future ``td_`` tool) therefore sees permanently-``not_run`` fields by
+        design — treat ``status == "not_run"`` as "this layer was not exercised
+        here", not as a failure to fix, and route through the CLI wrapper (or
+        replicate its merge) if you need those tiers populated.
     """
     if mode not in {"dry_run", "live"}:
         raise ValueError("mode must be 'dry_run' or 'live'")
@@ -1183,12 +1196,21 @@ def _visual_quality_summary(transactional_smoke: dict[str, Any]) -> dict[str, An
 
 
 def _panel_interactions_not_run() -> dict[str, Any]:
+    # Two-layer contract: build_live_smoke_report always returns THIS placeholder;
+    # the real panel-callback exercise runs only in scripts/brain_live_smoke.py
+    # under --live --transactional-generated-code, which splices its result in
+    # over this. status == "not_run" here means "not exercised at this layer", not
+    # a failure to fix. See build_live_smoke_report's docstring.
     return {
         "ok": False,
         "checked_count": 0,
         "failed_count": 0,
         "status": "not_run",
-        "reason": "panel reset/thumb/next/prev/back interaction validator was not run",
+        "reason": (
+            "panel reset/thumb/next/prev/back interaction validator was not run "
+            "(populated only by scripts/brain_live_smoke.py --live "
+            "--transactional-generated-code)"
+        ),
     }
 
 
@@ -1202,12 +1224,40 @@ def _performance_not_run() -> dict[str, Any]:
         "warmup_spike_recorded": False,
         "target_root_spike_count": None,
         "sys_ui_spike_count": None,
+        "sample_interval_s": None,
+        "frames_advanced": None,
+        "frame_advance_ok": None,
     }
 
 
-async def _collect_performance_summary(td_client, *, target_root: str) -> dict[str, Any]:
+# Steady-state sampling is measured over a real wall-clock window, not
+# back-to-back. The old loop fired 3 "cooking" requests separated only by
+# ``asyncio.sleep(0)`` (all resolved within milliseconds), so "steady state"
+# was indistinguishable from warmup and could report a cached cook reading as a
+# passing frame budget. We now take one warmup sample plus several steady
+# samples spaced by a real interval, and record the ``absTime.frame`` delta
+# across the window so a frozen/cached graph (frames_advanced == 0) is visible
+# rather than silently passing. See eval-truth audit finding
+# "Live-smoke performance summary measures back-to-back samples".
+_PERF_STEADY_SAMPLES = 5
+_PERF_SAMPLE_INTERVAL_S = 0.5
+
+
+async def _collect_performance_summary(
+    td_client,
+    *,
+    target_root: str,
+    sample_interval_s: float = _PERF_SAMPLE_INTERVAL_S,
+    steady_samples: int = _PERF_STEADY_SAMPLES,
+) -> dict[str, Any]:
     samples: list[dict[str, Any]] = []
-    for index in range(3):
+    frames: list[int] = []
+    total_samples = 1 + max(1, steady_samples)  # warmup + steady window
+    for index in range(total_samples):
+        if index > 0 and sample_interval_s > 0:
+            # Real gap so successive samples reflect steady-state cook, not a
+            # burst of back-to-back reads of the same cached frame.
+            await asyncio.sleep(sample_interval_s)
         try:
             payload = await td_client.request(
                 "cooking", {"path": target_root, "recurse": True, "max_depth": 10}
@@ -1219,7 +1269,15 @@ async def _collect_performance_summary(td_client, *, target_root: str) -> dict[s
                 "error": str(exc),
             }
         samples.append(_cook_sample_summary(payload, sample_index=index))
-        await asyncio.sleep(0)
+        frame_value = _sample_frame(payload)
+        if frame_value is not None:
+            frames.append(frame_value)
+
+    # Frame-advance evidence: absTime.frame must move across the sampling window,
+    # otherwise the timeline is paused/frozen and the "steady state" numbers are
+    # not describing a live-cooking graph.
+    frames_advanced = (frames[-1] - frames[0]) if len(frames) >= 2 else None
+    frame_advance_ok = (frames_advanced is not None and frames_advanced > 0) if frames else None
 
     warmup_max = _max_cook_for_prefixes(samples[0], (target_root,)) if samples else None
     global_steady_values = [sample["max_ms"] for sample in samples[1:] if sample["max_ms"] is not None]
@@ -1258,8 +1316,27 @@ async def _collect_performance_summary(td_client, *, target_root: str) -> dict[s
         "warmup_spike_recorded": warmup_max is not None,
         "target_root_spike_count": target_root_spike_count,
         "sys_ui_spike_count": sys_ui_spike_count,
+        "sample_interval_s": sample_interval_s,
+        "frames_advanced": frames_advanced,
+        "frame_advance_ok": frame_advance_ok,
         "samples": samples,
     }
+
+
+def _sample_frame(payload: Any) -> int | None:
+    """Extract the ``absTime.frame`` reported by a cooking payload, or None.
+
+    The TD ``cooking`` endpoint returns a top-level ``frame`` (handle_cooking_info
+    in mcp_webserver_callbacks.py). Used to prove the timeline advanced across the
+    steady-state window rather than reading a paused/cached frame repeatedly.
+    """
+    if isinstance(payload, dict):
+        raw = payload.get("frame")
+        if isinstance(raw, bool):
+            return None
+        if isinstance(raw, (int, float)):
+            return int(raw)
+    return None
 
 
 def _cook_sample_summary(payload: Any, *, sample_index: int) -> dict[str, Any]:
@@ -1320,12 +1397,21 @@ def _node_cook_ms(node: dict[str, Any]) -> float | None:
 
 
 def _incident_replay_not_run() -> dict[str, Any]:
+    # Two-layer contract: build_live_smoke_report always returns THIS placeholder;
+    # the incident replay runs only in scripts/brain_live_smoke.py under --live
+    # --transactional-generated-code, which merges its result in. status ==
+    # "not_run" here means "not exercised at this layer", not a failure to fix.
+    # See build_live_smoke_report's docstring.
     return {
         "ok": False,
         "status": "not_run",
         "bug_count": 0,
         "untriaged": [],
-        "reason": "scripts/replay_live_debug_incident.py was not run inside this live-smoke report",
+        "reason": (
+            "scripts/replay_live_debug_incident.py was not run inside this "
+            "live-smoke report (populated only by scripts/brain_live_smoke.py "
+            "--live --transactional-generated-code)"
+        ),
     }
 
 

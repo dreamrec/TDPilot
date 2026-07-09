@@ -2826,3 +2826,85 @@ def test_evaluate_fails_when_benchmark_error_rate_is_high():
     report = check_release_gates.evaluate(bench, None)
     assert report["summary"]["ok"] is False
     assert report["summary"]["failed"] >= 1
+
+
+# --- tamper-evident release-gate provenance + verification (eval-truth P1) ---
+
+
+def _live_ok_report(sha: str) -> dict:
+    """A minimal gate report shaped like a passing, live+mutated release run."""
+    return {
+        "schema_version": 1,
+        "ok": True,
+        "summary": {"total": 1, "passed": 1, "failed": 0, "missing": 0, "ok": True},
+        "release_readiness": {
+            "ok": True,
+            "categories": [
+                {"id": "brain_live_smoke", "present": True, "ok": True, "evidence": {"mode": "live"}},
+            ],
+        },
+        "checks": [],
+        "provenance": {
+            "commit_sha": sha,
+            "commit_short": sha[:12],
+            "git_dirty": False,
+            "generated_at": "2026-07-09T00:00:00+00:00",
+        },
+    }
+
+
+def test_build_provenance_stamps_commit_sha():
+    prov = check_release_gates.build_provenance()
+    # In a git checkout the sha and dirty flag resolve; shape is always present.
+    assert set(prov) == {"commit_sha", "commit_short", "git_dirty", "generated_at"}
+    if prov["commit_sha"] is not None:
+        assert len(prov["commit_sha"]) >= 12
+        assert prov["commit_short"] == prov["commit_sha"][:12]
+
+
+def test_verify_report_accepts_fresh_live_clean_report():
+    result = check_release_gates.verify_report(_live_ok_report("a" * 40), expected_sha="a" * 40)
+    assert result["ok"] is True
+    assert all(result["conditions"].values())
+
+
+def test_verify_report_rejects_stale_sha():
+    result = check_release_gates.verify_report(_live_ok_report("a" * 40), expected_sha="b" * 40)
+    assert result["ok"] is False
+    assert result["conditions"]["fresh"] is False
+    # The gate itself passed and it was live — only freshness failed.
+    assert result["conditions"]["gates_ok"] is True
+    assert result["conditions"]["live_mutated"] is True
+
+
+def test_verify_report_rejects_dirty_tree():
+    report = _live_ok_report("a" * 40)
+    report["provenance"]["git_dirty"] = True
+    result = check_release_gates.verify_report(report, expected_sha="a" * 40)
+    assert result["ok"] is False
+    assert result["conditions"]["clean_tree"] is False
+
+
+def test_verify_report_rejects_non_live_smoke():
+    report = _live_ok_report("a" * 40)
+    report["release_readiness"]["categories"][0]["ok"] = False  # dry-run / not mutated
+    result = check_release_gates.verify_report(report, expected_sha="a" * 40)
+    assert result["ok"] is False
+    assert result["conditions"]["live_mutated"] is False
+
+
+def test_verify_report_rejects_failed_gate():
+    report = _live_ok_report("a" * 40)
+    report["ok"] = False
+    result = check_release_gates.verify_report(report, expected_sha="a" * 40)
+    assert result["ok"] is False
+    assert result["conditions"]["gates_ok"] is False
+
+
+def test_verify_report_rejects_missing_provenance():
+    report = _live_ok_report("a" * 40)
+    del report["provenance"]
+    result = check_release_gates.verify_report(report, expected_sha="a" * 40)
+    assert result["ok"] is False
+    assert result["conditions"]["provenance"] is False
+    assert result["conditions"]["fresh"] is False

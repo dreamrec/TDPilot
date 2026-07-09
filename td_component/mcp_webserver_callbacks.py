@@ -1325,6 +1325,115 @@ def _normalize_for_check(code):
     return normalized
 
 
+def _ast_reflection_violation(code):
+    """AST-level check that defeats string-concat obfuscation the token scan misses.
+
+    The token/substring lists in this file cannot see through Python string
+    concatenation: ``getattr(x, '__cl' + 'ass__')`` never contains the literal
+    ``__class__`` as a contiguous substring, so a token scan passes it — yet at
+    runtime it resolves the reflection dunder and walks
+    ``().__class__.__bases__[0].__subclasses__()`` to reach ``__import__``.
+
+    ``restricted`` mode is protected at runtime because ``_build_exec_globals``
+    strips ``getattr``/``type`` from its ``__builtins__`` — but ``standard`` mode
+    keeps them (line ~1447/1469), and param-expression / DAT-content writes are
+    evaluated later in TD's FULL Python where the sandboxed builtins never apply.
+    So the ONLY authoritative barrier for those paths is a static check that
+    folds constant strings before matching. This mirrors the MCP-side
+    ``src/td_mcp/exec_safety.py::ast_violations`` so the TD side stays the
+    authoritative enforcement point (SECURITY.md invariant), not a weaker
+    duplicate. Returns the first violation message, or None.
+
+    Self-contained (local ``import ast`` + nested helpers) so the behavioural
+    test harness can AST-extract and execute it without a live TouchDesigner.
+    """
+    import ast as _ast
+
+    # Mirrors src/td_mcp/exec_safety.py::_BLOCKED_DUNDER_ATTRS exactly. Plain
+    # `.__class__` access is NOT here (legit type inspection; a lone `.__class__`
+    # reaches nothing) — the reflection WALK is caught at `.__bases__` /
+    # `.__subclasses__`, and `getattr(x, '__class__')` is caught by the generic
+    # startswith/endswith dunder rule in the getattr branch below.
+    blocked_dunders = frozenset({
+        '__subclasses__', '__bases__', '__mro__',
+        '__globals__', '__builtins__', '__loader__', '__spec__',
+    })
+    blocked_call_names = frozenset({'eval', 'exec', 'compile', 'open', 'input', '__import__'})
+    dangerous_modules = frozenset({
+        'os', 'subprocess', 'socket', 'requests', 'httpx', 'urllib', 'pathlib', 'shutil', 'ctypes',
+    })
+
+    def _fold_str(node):
+        if isinstance(node, _ast.Constant):
+            return node.value if isinstance(node.value, str) else None
+        if isinstance(node, _ast.BinOp) and isinstance(node.op, _ast.Add):
+            left = _fold_str(node.left)
+            right = _fold_str(node.right)
+            if left is not None and right is not None:
+                return left + right
+        return None
+
+    def _attr_chain(node):
+        parts = []
+        current = node
+        while isinstance(current, _ast.Attribute):
+            parts.append(current.attr)
+            current = current.value
+        if isinstance(current, _ast.Name):
+            parts.append(current.id)
+            return tuple(reversed(parts))
+        return None
+
+    def _refs_builtins(node):
+        if isinstance(node, _ast.Name) and node.id == '__builtins__':
+            return True
+        if isinstance(node, _ast.Attribute):
+            chain = _attr_chain(node)
+            return bool(chain) and chain[0] == '__builtins__'
+        return False
+
+    try:
+        tree = _ast.parse(code, mode='exec')
+    except SyntaxError:
+        # Malformed code can't execute; let TD raise its native SyntaxError
+        # rather than converting a typo into a spurious PermissionError.
+        return None
+
+    for node in _ast.walk(tree):
+        if isinstance(node, (_ast.Import, _ast.ImportFrom)):
+            mods = (
+                [alias.name for alias in node.names]
+                if isinstance(node, _ast.Import)
+                else [node.module or '']
+            )
+            for mod_name in mods:
+                if mod_name.split('.')[0] in dangerous_modules:
+                    return 'import of dangerous module blocked: ' + mod_name.split('.')[0]
+        elif isinstance(node, _ast.Call):
+            if isinstance(node.func, _ast.Name):
+                name = node.func.id
+                if name in blocked_call_names:
+                    return 'call to blocked builtin: ' + name
+                if name == 'getattr':
+                    if node.args and _refs_builtins(node.args[0]):
+                        return 'call to getattr(__builtins__, ...) blocked'
+                    if len(node.args) >= 2:
+                        attr_name = _fold_str(node.args[1])
+                        if attr_name is None:
+                            return 'getattr with non-literal attribute name blocked'
+                        if attr_name in blocked_dunders or (
+                            attr_name.startswith('__') and attr_name.endswith('__')
+                        ):
+                            return 'getattr of reflection dunder blocked: ' + attr_name
+        elif isinstance(node, _ast.Attribute):
+            if node.attr in blocked_dunders:
+                return 'dunder-reflection attr access blocked: ' + node.attr
+        elif isinstance(node, _ast.Subscript) and _refs_builtins(node.value):
+            return 'subscript of __builtins__ blocked'
+
+    return None
+
+
 def _restricted_exec_violation(code):
     if RESTRICTED_IMPORT_RE.search(code):
         return 'restricted mode blocks import statements'
@@ -1356,10 +1465,24 @@ def _restricted_exec_violation(code):
     residual = normalized.replace('.par.text=', '')
     if '.text=' in residual:
         return 'restricted mode blocks DAT-exec pattern: .text='
+    # Param expressions and DAT content written in restricted mode are evaluated
+    # LATER in TD's full Python (not the sandboxed globals), so the concat-getattr
+    # reflection escape would slip past the token scan there. Catch it statically.
+    ast_violation = _ast_reflection_violation(code)
+    if ast_violation:
+        return f'restricted mode blocks: {ast_violation}'
     return None
 
 
 def _standard_exec_violation(code):
+    # AST first: standard-mode __builtins__ KEEP getattr/type, so the only
+    # barrier to a concat-obfuscated `getattr(x, '__cl'+'ass__')` reflection walk
+    # is a static fold-then-match. Token scan alone (below) is bypassable and was
+    # strictly weaker than the MCP-side check — this restores parity so a
+    # malicious/buggy MCP server cannot reach __import__ via the standard tier.
+    ast_violation = _ast_reflection_violation(code)
+    if ast_violation:
+        return f'standard mode blocks: {ast_violation}'
     normalized = _normalize_for_check(code)
     for token in STANDARD_BLOCKED_TOKENS:
         if token in normalized:
