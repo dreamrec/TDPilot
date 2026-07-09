@@ -1,9 +1,32 @@
-# TDPilot For Someone Who Has Never Used MCP Before
+# Getting Started — install to first visual
 
 This is the manual I would give a real TouchDesigner user, not a hype video.
 
-I am skipping installation on purpose.
-This guide starts after TDPilot is already connected and working.
+## Step 0: Install (about 2 minutes)
+
+- **Claude Code** (recommended): two slash commands — see
+  [INSTALL_CLAUDE_PLUGIN.md](INSTALL_CLAUDE_PLUGIN.md).
+- **Claude Desktop, Cursor, Codex, anything else MCP**: see
+  [INSTALL_OTHER_CLIENTS.md](INSTALL_OTHER_CLIENTS.md).
+- Then the once-per-machine TouchDesigner side: drag the bundled
+  `tdpilot.tox` into `/local`, or paste the Textport setup block from the
+  install doc.
+
+## Step 1: Your first session
+
+With TouchDesigner open, run:
+
+```
+/td-first-wow
+```
+
+Claude builds a moving feedback visual in your project, checks it for
+errors, screenshots it, and shows you the result — about two minutes, fully
+undoable. If you'd rather start read-only on an existing project, run
+`/td-explain-patch` for an annotated tour instead.
+
+Everything below is the mental model that makes the rest of your hours with
+TDPilot productive.
 
 If you have never used MCP before, the most important thing to understand is this:
 

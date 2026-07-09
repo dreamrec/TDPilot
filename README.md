@@ -78,7 +78,7 @@ npx tdpilot plugin-install
 
 Drag `~/.claude/plugins/cache/dreamrec-TDPilot/tdpilot/<version>/td_component/tdpilot.tox` into your TD `/local` container. Or paste the auto-setup Python block from [`docs/INSTALL_CLAUDE_PLUGIN.md`](docs/INSTALL_CLAUDE_PLUGIN.md) into the Textport (auto-detects the latest installed version).
 
-Using Claude Desktop instead of Claude Code? See [`docs/INSTALL_CLAUDE_PLUGIN.md`](docs/INSTALL_CLAUDE_PLUGIN.md) — the two flows shouldn't be mixed on one machine.
+Using Claude Desktop, Cursor, Codex, or another MCP client? See [`docs/INSTALL_OTHER_CLIENTS.md`](docs/INSTALL_OTHER_CLIENTS.md) — one page per client, including the one-click `.mcpb` bundle for Claude Desktop. (Don't mix the Desktop and Claude Code flows on one machine.)
 
 ## Documentation
 
@@ -88,6 +88,7 @@ Using Claude Desktop instead of Claude Code? See [`docs/INSTALL_CLAUDE_PLUGIN.md
 `TROUBLESHOOTING.md`.
 
 - Install (Claude Code plugin): `docs/INSTALL_CLAUDE_PLUGIN.md`
+- Install (Claude Desktop / Cursor / Codex / generic MCP): `docs/INSTALL_OTHER_CLIENTS.md`
 - Getting started: `docs/GETTING_STARTED.md`
 - User guide: `docs/USER_GUIDE.md`
 - Memory guide: `docs/MEMORY_GUIDE.md`
