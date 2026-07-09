@@ -69,6 +69,9 @@ PLUGIN_DIRS: tuple[tuple[str, str], ...] = (
     ("agents", "agents"),
     ("hooks", "hooks"),
     ("src", "src"),
+    # Starter technique recipes (td_memory_import format) — the out-of-box
+    # value-grounding seed; see data/techniques_starter/ + README §Starter.
+    ("data/techniques_starter", "data/techniques_starter"),
 )
 PLUGIN_EXTRA_FILES: tuple[tuple[str, str, bool], ...] = (
     ("pyproject.toml", "pyproject.toml", True),
