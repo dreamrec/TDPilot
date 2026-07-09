@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import math
 from collections.abc import Awaitable, Callable, Iterable
 from typing import Any
@@ -321,6 +322,8 @@ async def _validate_runtime_profile_probes(td_client, plan: PatchPlan, metrics: 
             await _validate_optional_top_sample_readback(td_client, plan, result)
         elif result.get("probe_id") == "feedback_output_readback":
             await _validate_feedback_output_readback(td_client, plan, result)
+        elif result.get("probe_id") == "motion_delta":
+            await _validate_motion_delta_readback(td_client, plan, result)
         elif result.get("probe_id") == "visual_output_sample":
             await _validate_visual_output_sample_readback(td_client, plan, result)
 
@@ -472,6 +475,94 @@ async def _validate_feedback_output_readback(
     result["issue_message"] = (
         "feedback_output_readback: Feedback runtime validation sampled "
         f"{readback_path} but observed black or empty luminance."
+    )
+
+
+# Two analyze_frame samples this many ms apart; frames must differ above the
+# epsilon or the output is considered frozen. Module-level so tests can
+# monkeypatch the interval to 0.
+_MOTION_PROBE_INTERVAL_MS = 120.0
+_MOTION_DELTA_EPSILON = 1e-6
+
+
+async def _validate_motion_delta_readback(
+    td_client,
+    plan: PatchPlan,
+    result: dict[str, Any],
+) -> None:
+    """Runtime motion probe — proves the visual output is animating.
+
+    Samples luminance statistics from the stable TOP output twice, N ms apart.
+    A frozen animation passes every single-frame visual check; this closes that
+    gap for feedback / audio-reactive live validation.
+    """
+    readback_path = _runtime_probe_top_path(plan)
+    result["runtime_required"] = True
+    if not readback_path:
+        # Audio-reactive plans may be CHOP-only. No TOP output means motion
+        # sampling is not applicable — skip with a reason (deferred, not an
+        # error), matching the visual_output_sample skip convention.
+        result["status"] = "runtime_deferred"
+        result["deferred_reason"] = (
+            "No created TOP output was available for motion-delta sampling (CHOP-only plan)."
+        )
+        return
+
+    result["readback_path"] = readback_path
+    request = {"path": readback_path, "modes": ["luminance"]}
+    try:
+        first = await td_client.request("analyze_frame", request)
+        if _MOTION_PROBE_INTERVAL_MS > 0:
+            await asyncio.sleep(_MOTION_PROBE_INTERVAL_MS / 1000.0)
+        second = await td_client.request("analyze_frame", request)
+    except Exception as exc:  # noqa: BLE001
+        _mark_runtime_probe_unavailable(result, f"Motion-delta readback failed: {exc}")
+        return
+
+    if first == {} or second == {}:
+        # Component lacks the analyze_frame endpoint — degrade gracefully.
+        result["status"] = "runtime_deferred"
+        result["deferred_reason"] = "analyze_frame returned no visual metrics for motion-delta sampling."
+        return
+
+    for payload in (first, second):
+        if not isinstance(payload, dict) or payload.get("error"):
+            message = str(
+                payload.get("error") if isinstance(payload, dict) else "invalid motion-delta readback"
+            )
+            _mark_runtime_probe_unavailable(result, message)
+            return
+
+    first_mean, first_max, first_std = _top_luminance_stats(first)
+    second_mean, second_max, second_std = _top_luminance_stats(second)
+    delta = max(
+        abs(second_mean - first_mean),
+        abs(second_max - first_max),
+        abs(second_std - first_std),
+    )
+    result["runtime_metric_values"] = {
+        "motion_luminance_delta": delta,
+        "motion_sample_interval_ms": _MOTION_PROBE_INTERVAL_MS,
+    }
+    result["runtime_evidence"] = {
+        "endpoint": "analyze_frame",
+        "path": readback_path,
+        "samples": 2,
+        "sample_interval_ms": _MOTION_PROBE_INTERVAL_MS,
+        "first_luminance": {"mean": first_mean, "max": first_max, "std": first_std},
+        "second_luminance": {"mean": second_mean, "max": second_max, "std": second_std},
+    }
+    if delta > _MOTION_DELTA_EPSILON:
+        result["status"] = "runtime_pass"
+        result.pop("pending_metric_names", None)
+        return
+
+    result["status"] = "runtime_failed"
+    result["issue_code"] = "profile_probe_runtime_frozen_output"
+    result["issue_message"] = (
+        f"motion_delta: Motion validation sampled {readback_path} twice "
+        f"{_MOTION_PROBE_INTERVAL_MS:g} ms apart but observed identical frames — "
+        "the output appears frozen, not animating."
     )
 
 

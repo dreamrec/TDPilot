@@ -320,6 +320,15 @@
         "default_present": true,
         "enum": null,
         "type": "number"
+      },
+      "save_path": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
       }
     },
     "required": [
@@ -2620,6 +2629,15 @@
         "default_present": true,
         "enum": null,
         "type": "number"
+      },
+      "save_path": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
       }
     },
     "required": [

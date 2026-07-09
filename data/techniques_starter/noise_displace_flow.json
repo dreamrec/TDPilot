@@ -1,0 +1,131 @@
+{
+  "count": 1,
+  "scope": "global",
+  "techniques": {
+    "starter-noise-displace-flow": {
+      "compatibility": {
+        "required_ops": [
+          "displaceTOP",
+          "noiseTOP",
+          "nullTOP"
+        ],
+        "verified_on": null
+      },
+      "created_at": "2026-07-09T00:00:00+00:00",
+      "description": "A drifting mono noise field warps a color noise base through a Displace TOP — organic flowing distortion without feedback.",
+      "favorite": false,
+      "id": "starter-noise-displace-flow",
+      "last_replayed_at": null,
+      "name": "Noise-displace flow",
+      "notes": "Both noise fields drift on different axes so the warp never settles. uvweight controls warp strength; extend the chain with a Bloom TOP for glow.",
+      "rating": 0,
+      "replay_count": 0,
+      "state": "candidate",
+      "tags": [
+        "displace",
+        "flow",
+        "noise",
+        "starter",
+        "warp"
+      ],
+      "technique": {
+        "complexity": "small",
+        "connection_count": 3,
+        "description": "A drifting mono noise field warps a color noise base through a Displace TOP — organic flowing distortion without feedback.",
+        "families": {
+          "TOP": 4
+        },
+        "key_params": null,
+        "name": "Noise-displace flow",
+        "node_count": 4,
+        "op_types": {
+          "displaceTOP": 1,
+          "noiseTOP": 2,
+          "nullTOP": 1
+        },
+        "recipe": {
+          "connections": [
+            {
+              "from": "/base",
+              "from_index": 0,
+              "to": "/displace",
+              "to_index": 0
+            },
+            {
+              "from": "/flow",
+              "from_index": 0,
+              "to": "/displace",
+              "to_index": 1
+            },
+            {
+              "from": "/displace",
+              "from_index": 0,
+              "to": "/out",
+              "to_index": 0
+            }
+          ],
+          "external_assets": [],
+          "layout": {},
+          "nodes": {
+            "/base": {
+              "expressions": {
+                "tz": "absTime.seconds*0.05"
+              },
+              "family": "TOP",
+              "name": "base",
+              "params": {
+                "mono": 0,
+                "period": 3
+              },
+              "type": "noiseTOP"
+            },
+            "/displace": {
+              "family": "TOP",
+              "name": "displace",
+              "params": {
+                "uvweight": 0.15
+              },
+              "type": "displaceTOP"
+            },
+            "/flow": {
+              "expressions": {
+                "ty": "absTime.seconds*0.02"
+              },
+              "family": "TOP",
+              "name": "flow",
+              "params": {
+                "mono": 1,
+                "period": 10
+              },
+              "type": "noiseTOP"
+            },
+            "/out": {
+              "family": "TOP",
+              "name": "out",
+              "params": {},
+              "type": "nullTOP"
+            }
+          }
+        },
+        "required_op_types": [
+          "displaceTOP",
+          "noiseTOP",
+          "nullTOP"
+        ],
+        "source_path": null,
+        "tags": [
+          "displace",
+          "flow",
+          "noise",
+          "starter",
+          "warp"
+        ],
+        "td_build": "",
+        "verified_on": null
+      },
+      "updated_at": "2026-07-09T00:00:00+00:00",
+      "validation_result": null
+    }
+  },
+  "version": 1
+}

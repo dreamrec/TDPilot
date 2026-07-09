@@ -263,6 +263,24 @@ _PROBE_RECORDS: list[dict[str, Any]] = [
         ],
     ),
     _probe(
+        "motion_delta",
+        "feedback",
+        required_inputs=["feedbackTOP", "nullTOP"],
+        readback_strategy="top_motion_delta_runtime",
+        metric_names=["motion_luminance_delta", "motion_sample_interval_ms"],
+        pass_conditions=[
+            "two runtime frame samples taken moments apart differ above epsilon (output is animating)"
+        ],
+        failure_message=(
+            "Feedback plans require runtime evidence that the stable TOP output is animating, "
+            "not frozen — a static frame passes luminance checks but is not a working feedback loop."
+        ),
+        official_sources=[
+            "https://docs.derivative.ca/Feedback_TOP",
+            "https://docs.derivative.ca/TOP_Class",
+        ],
+    ),
+    _probe(
         "audio_source_present",
         "audio_reactive",
         required_inputs=["audiofileinCHOP"],
@@ -307,6 +325,24 @@ _PROBE_RECORDS: list[dict[str, Any]] = [
             "https://docs.derivative.ca/Audio_Device_In_CHOP",
             "https://docs.derivative.ca/Analyze_CHOP",
             "https://docs.derivative.ca/Null_CHOP",
+        ],
+    ),
+    _probe(
+        "motion_delta",
+        "audio_reactive",
+        required_inputs=["nullTOP", "nullCHOP"],
+        readback_strategy="top_motion_delta_runtime",
+        metric_names=["motion_luminance_delta", "motion_sample_interval_ms"],
+        pass_conditions=[
+            "two runtime frame samples taken moments apart differ above epsilon (visual output is animating)"
+        ],
+        failure_message=(
+            "Audio-reactive plans with a visual output require runtime evidence that the output is "
+            "animating, not frozen. CHOP-only plans skip this probe at runtime with a reason."
+        ),
+        official_sources=[
+            "https://docs.derivative.ca/Null_TOP",
+            "https://docs.derivative.ca/TOP_Class",
         ],
     ),
     _probe(

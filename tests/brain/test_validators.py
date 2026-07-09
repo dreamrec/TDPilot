@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 from patch.conftest import FakeTDClient
 
+import td_mcp.brain.transaction as _transaction
 from td_mcp.brain.transaction import apply_transaction
 from td_mcp.brain.validators import (
     build_validation_report_v2,
@@ -14,6 +15,40 @@ from td_mcp.brain.validators import (
 from td_mcp.models.brain import TransactionOptions
 from td_mcp.models.patch import PatchOperation, PatchPlan, PatchResult, ValidationPlan, ValidationReport
 from td_mcp.patch.undo_sentinel import UndoBlockSentinel
+
+
+@pytest.fixture(autouse=True)
+def _fast_motion_probe(monkeypatch: pytest.MonkeyPatch):
+    """Zero out the motion-delta sampling interval so tests don't sleep."""
+    monkeypatch.setattr(_transaction, "_MOTION_PROBE_INTERVAL_MS", 0.0)
+
+
+def _animated_analyze_frame(base_mean: float = 0.2, *, max_value: float = 0.6, std: float = 0.05):
+    """Scripted analyze_frame whose FIRST call returns the baseline stats and
+    whose later calls drift slightly — a moving (non-frozen) output. Keeps the
+    first-call assertions of pre-motion-probe tests intact while satisfying the
+    motion_delta runtime probe."""
+    calls = {"n": 0}
+
+    def _respond(params: dict) -> dict:
+        drift = 0.001 * calls["n"]
+        calls["n"] += 1
+        return {
+            "path": params.get("path", "/project1/out1"),
+            "resolution": [128, 128],
+            "channels": 4,
+            "modes": {
+                "luminance": {
+                    "mean": base_mean + drift,
+                    "min": 0.0,
+                    "max": max_value + drift,
+                    "std": std,
+                },
+                "alpha_coverage": {"opaque_fraction": 1.0},
+            },
+        }
+
+    return _respond
 
 
 def _patch_plan(operations: list[PatchOperation], *, required_ops: list[str] | None = None) -> PatchPlan:
@@ -255,16 +290,7 @@ async def test_transaction_report_includes_static_profile_probe_results():
         ],
         required_ops=["noiseTOP", "feedbackTOP", "levelTOP", "compositeTOP", "nullTOP"],
     )
-    client = FakeTDClient(
-        scripted={
-            "analyze_frame": {
-                "path": "/project1/out1",
-                "resolution": [128, 128],
-                "channels": 4,
-                "modes": {"luminance": {"mean": 0.2, "min": 0.0, "max": 0.6, "std": 0.05}},
-            }
-        }
-    )
+    client = FakeTDClient(scripted={"analyze_frame": _animated_analyze_frame(0.2)})
 
     result = await apply_transaction(
         client,
@@ -279,12 +305,15 @@ async def test_transaction_report_includes_static_profile_probe_results():
     feedback_cycle = next(item for item in probe_results if item["probe_id"] == "feedback_cycle")
     decay_control = next(item for item in probe_results if item["probe_id"] == "decay_control")
     output_readback = next(item for item in probe_results if item["probe_id"] == "feedback_output_readback")
+    motion = next(item for item in probe_results if item["probe_id"] == "motion_delta")
 
     assert feedback_cycle["present_required_inputs"] == ["feedbackTOP", "compositeTOP"]
     assert feedback_cycle["missing_required_inputs"] == []
     assert decay_control["present_required_inputs"] == ["levelTOP"]
     assert decay_control["missing_required_inputs"] == []
     assert output_readback["status"] == "runtime_pass"
+    assert motion["status"] == "runtime_pass"
+    assert motion["runtime_metric_values"]["motion_luminance_delta"] > 0
 
 
 @pytest.mark.asyncio
@@ -560,19 +589,7 @@ async def test_transaction_report_aggregates_compiler_candidate_profile_probe_re
             "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/errors": {"issues": []},
             "cooking": {"stuck": []},
-            "analyze_frame": {
-                "path": "/project1/tdpilot_concept/out1",
-                "resolution": [128, 128],
-                "channels": 4,
-                "modes": {
-                    "luminance": {
-                        "mean": 0.31,
-                        "min": 0.02,
-                        "max": 0.88,
-                        "std": 0.11,
-                    }
-                },
-            },
+            "analyze_frame": _animated_analyze_frame(0.31, max_value=0.88, std=0.11),
             "chop/data": {
                 "path": "/project1/tdpilot_concept/out_chop",
                 "numChans": 1,
@@ -954,19 +971,7 @@ async def test_transaction_feedback_output_probe_records_runtime_pass_from_top_l
             "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
             "node/errors": {"issues": []},
             "cooking": {"stuck": []},
-            "analyze_frame": {
-                "path": "/project1/out1",
-                "resolution": [128, 128],
-                "channels": 4,
-                "modes": {
-                    "luminance": {
-                        "mean": 0.25,
-                        "min": 0.0,
-                        "max": 0.75,
-                        "std": 0.08,
-                    }
-                },
-            },
+            "analyze_frame": _animated_analyze_frame(0.25, max_value=0.75, std=0.08),
         }
     )
 
@@ -2540,3 +2545,239 @@ async def test_transaction_preflight_blocks_invalid_reference_params_before_appl
     assert result.validation_report is not None
     assert result.validation_report.ok is False
     assert result.validation_report.checks == ["reference_params"]
+
+
+# ── motion_delta runtime probe (frozen-output detection) ─────────────────
+
+
+def _feedback_plan() -> PatchPlan:
+    return _patch_plan(
+        [
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "noiseTOP", "name": "noise"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "feedbackTOP", "name": "feedback"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "levelTOP", "name": "level"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "compositeTOP", "name": "composite"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"}
+            ),
+        ],
+        required_ops=["noiseTOP", "feedbackTOP", "levelTOP", "compositeTOP", "nullTOP"],
+    )
+
+
+def test_motion_delta_probe_registered_for_feedback_and_audio_reactive():
+    feedback_metrics = static_profile_probe_metrics_for_plan(
+        _feedback_plan(),
+        validation_profile="structural_visual_safe",
+        concept_profile="feedback",
+    )
+    motion = next(
+        item for item in feedback_metrics["profile_probe_results"] if item["probe_id"] == "motion_delta"
+    )
+
+    assert motion["readback_strategy"] == "top_motion_delta_runtime"
+    assert motion["status"] == "runtime_contract_present"
+    assert motion["runtime_required"] is True
+    assert motion["pending_metric_names"] == ["motion_luminance_delta", "motion_sample_interval_ms"]
+
+
+def test_motion_delta_static_gate_accepts_chop_only_audio_reactive_plan():
+    plan = _patch_plan(
+        [
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "audiofileinCHOP", "name": "audio"},
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "analyzeCHOP", "name": "analyze"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "mathCHOP", "name": "range"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}
+            ),
+        ],
+        required_ops=["audiofileinCHOP", "analyzeCHOP", "mathCHOP", "nullCHOP"],
+    )
+
+    metrics = static_profile_probe_metrics_for_plan(
+        plan,
+        validation_profile="structural_visual_safe",
+        concept_profile="audio_reactive",
+    )
+    motion = next(item for item in metrics["profile_probe_results"] if item["probe_id"] == "motion_delta")
+
+    assert motion["missing_required_inputs"] == []
+    assert motion["status"] == "runtime_contract_present"
+
+
+@pytest.mark.asyncio
+async def test_transaction_motion_delta_rolls_back_frozen_feedback_output():
+    frozen_frame = {
+        "path": "/project1/out1",
+        "resolution": [128, 128],
+        "channels": 4,
+        "modes": {
+            "luminance": {"mean": 0.25, "min": 0.0, "max": 0.75, "std": 0.08},
+            "alpha_coverage": {"opaque_fraction": 1.0},
+        },
+    }
+    client = FakeTDClient(
+        scripted={
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
+            "node/errors": {"issues": []},
+            "cooking": {"stuck": []},
+            "analyze_frame": lambda _params: dict(frozen_frame),
+        }
+    )
+
+    result = await apply_transaction(
+        client,
+        _feedback_plan(),
+        sentinel=UndoBlockSentinel(),
+        concept_profile="feedback",
+    )
+
+    assert result.status == "rolled_back"
+    assert result.validation_failed is True
+    assert result.validation_report is not None
+    motion = next(
+        item
+        for item in result.validation_report.cheap_metrics["profile_probe_results"]
+        if item["probe_id"] == "motion_delta"
+    )
+    assert motion["status"] == "runtime_failed"
+    assert motion["issue_code"] == "profile_probe_runtime_frozen_output"
+    assert motion["runtime_metric_values"]["motion_luminance_delta"] == 0.0
+    assert any(
+        issue.code == "profile_probe_runtime_frozen_output" for issue in result.validation_report.issues
+    )
+    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+
+
+@pytest.mark.asyncio
+async def test_transaction_motion_delta_passes_when_frames_differ():
+    client = FakeTDClient(
+        scripted={
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
+            "node/errors": {"issues": []},
+            "cooking": {"stuck": []},
+            "analyze_frame": _animated_analyze_frame(0.25, max_value=0.75, std=0.08),
+        }
+    )
+
+    result = await apply_transaction(
+        client,
+        _feedback_plan(),
+        sentinel=UndoBlockSentinel(),
+        concept_profile="feedback",
+    )
+
+    assert result.status == "clean"
+    motion = next(
+        item
+        for item in result.validation_report.cheap_metrics["profile_probe_results"]
+        if item["probe_id"] == "motion_delta"
+    )
+    assert motion["status"] == "runtime_pass"
+    assert motion["readback_path"] == "/project1/out1"
+    assert motion["runtime_metric_values"]["motion_luminance_delta"] > 0
+    assert motion["runtime_evidence"]["samples"] == 2
+    motion_calls = [
+        call
+        for call in client.calls
+        if call == ("analyze_frame", {"path": "/project1/out1", "modes": ["luminance"]})
+    ]
+    # feedback_output_readback takes one luminance sample; motion takes two more.
+    assert len(motion_calls) == 3
+
+
+@pytest.mark.asyncio
+async def test_transaction_motion_delta_defers_for_chop_only_audio_reactive_plan():
+    plan = _patch_plan(
+        [
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "audiofileinCHOP", "name": "audio"},
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "analyzeCHOP", "name": "analyze"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "mathCHOP", "name": "range"}
+            ),
+            PatchOperation(
+                kind="create_node", target="/project1", args={"op_type": "nullCHOP", "name": "out_chop"}
+            ),
+        ],
+        required_ops=["audiofileinCHOP", "analyzeCHOP", "mathCHOP", "nullCHOP"],
+    )
+    client = FakeTDClient(
+        scripted={
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
+            "node/errors": {"issues": []},
+            "cooking": {"stuck": []},
+            "chop/data": {
+                "path": "/project1/out_chop",
+                "numChans": 1,
+                "numSamples": 4,
+                "channels": {"chan1": {"values": [0.0, 0.1, 0.35, 0.8]}},
+            },
+        }
+    )
+
+    result = await apply_transaction(
+        client,
+        plan,
+        sentinel=UndoBlockSentinel(),
+        concept_profile="audio_reactive",
+    )
+
+    assert result.status == "clean"
+    motion = next(
+        item
+        for item in result.validation_report.cheap_metrics["profile_probe_results"]
+        if item["probe_id"] == "motion_delta"
+    )
+    assert motion["status"] == "runtime_deferred"
+    assert "No created TOP output" in motion["deferred_reason"]
+    assert result.validation_report.ok is True
+
+
+@pytest.mark.asyncio
+async def test_transaction_motion_delta_defers_when_analyze_frame_endpoint_absent():
+    # FakeTDClient returns {} for unscripted endpoints — the "component lacks
+    # analyze_frame" degradation path.
+    client = FakeTDClient(
+        scripted={
+            "node/create": lambda params: {"path": f"{params['parent_path'].rstrip('/')}/{params['name']}"},
+            "node/errors": {"issues": []},
+            "cooking": {"stuck": []},
+        }
+    )
+
+    result = await apply_transaction(
+        client,
+        _feedback_plan(),
+        sentinel=UndoBlockSentinel(),
+        concept_profile="feedback",
+    )
+
+    motion = next(
+        item
+        for item in result.validation_report.cheap_metrics["profile_probe_results"]
+        if item["probe_id"] == "motion_delta"
+    )
+    assert motion["status"] == "runtime_deferred"
+    assert "analyze_frame" in motion["deferred_reason"]

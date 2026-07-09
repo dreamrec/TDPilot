@@ -1,0 +1,180 @@
+{
+  "count": 1,
+  "scope": "global",
+  "techniques": {
+    "starter-camera-post-chain": {
+      "compatibility": {
+        "required_ops": [
+          "bloomTOP",
+          "compositeTOP",
+          "moviefileinTOP",
+          "noiseTOP",
+          "nullTOP",
+          "rampTOP"
+        ],
+        "verified_on": null
+      },
+      "created_at": "2026-07-09T00:00:00+00:00",
+      "description": "Standard finishing chain for any rendered or camera source: Bloom, animated film grain, radial-ramp vignette.",
+      "favorite": false,
+      "id": "starter-camera-post-chain",
+      "last_replayed_at": null,
+      "name": "Camera post chain (bloom+grain+vignette)",
+      "notes": "Swap /src for your render output. Grain reseeds per frame via the seed expression; the radial ramp multiplies as a vignette. Order matters: bloom before grain so grain stays crisp.",
+      "rating": 0,
+      "replay_count": 0,
+      "state": "candidate",
+      "tags": [
+        "bloom",
+        "camera",
+        "grain",
+        "post",
+        "starter",
+        "vignette"
+      ],
+      "technique": {
+        "complexity": "small",
+        "connection_count": 6,
+        "description": "Standard finishing chain for any rendered or camera source: Bloom, animated film grain, radial-ramp vignette.",
+        "families": {
+          "TOP": 7
+        },
+        "key_params": null,
+        "name": "Camera post chain (bloom+grain+vignette)",
+        "node_count": 7,
+        "op_types": {
+          "bloomTOP": 1,
+          "compositeTOP": 2,
+          "moviefileinTOP": 1,
+          "noiseTOP": 1,
+          "nullTOP": 1,
+          "rampTOP": 1
+        },
+        "recipe": {
+          "connections": [
+            {
+              "from": "/src",
+              "from_index": 0,
+              "to": "/bloom",
+              "to_index": 0
+            },
+            {
+              "from": "/bloom",
+              "from_index": 0,
+              "to": "/grain_mix",
+              "to_index": 0
+            },
+            {
+              "from": "/grain",
+              "from_index": 0,
+              "to": "/grain_mix",
+              "to_index": 1
+            },
+            {
+              "from": "/grain_mix",
+              "from_index": 0,
+              "to": "/vignette_mix",
+              "to_index": 0
+            },
+            {
+              "from": "/vignette",
+              "from_index": 0,
+              "to": "/vignette_mix",
+              "to_index": 1
+            },
+            {
+              "from": "/vignette_mix",
+              "from_index": 0,
+              "to": "/out",
+              "to_index": 0
+            }
+          ],
+          "external_assets": [],
+          "layout": {},
+          "nodes": {
+            "/bloom": {
+              "family": "TOP",
+              "name": "bloom",
+              "params": {
+                "bloomintensity": 1.0,
+                "bloomthreshold": 0.6
+              },
+              "type": "bloomTOP"
+            },
+            "/grain": {
+              "expressions": {
+                "seed": "absTime.frame"
+              },
+              "family": "TOP",
+              "name": "grain",
+              "params": {
+                "amp": 0.12,
+                "mono": 1,
+                "period": 0.02
+              },
+              "type": "noiseTOP"
+            },
+            "/grain_mix": {
+              "family": "TOP",
+              "name": "grain_mix",
+              "params": {
+                "operand": "add"
+              },
+              "type": "compositeTOP"
+            },
+            "/out": {
+              "family": "TOP",
+              "name": "out",
+              "params": {},
+              "type": "nullTOP"
+            },
+            "/src": {
+              "family": "TOP",
+              "name": "src",
+              "params": {},
+              "type": "moviefileinTOP"
+            },
+            "/vignette": {
+              "family": "TOP",
+              "name": "vignette",
+              "params": {
+                "type": "radial"
+              },
+              "type": "rampTOP"
+            },
+            "/vignette_mix": {
+              "family": "TOP",
+              "name": "vignette_mix",
+              "params": {
+                "operand": "multiply"
+              },
+              "type": "compositeTOP"
+            }
+          }
+        },
+        "required_op_types": [
+          "bloomTOP",
+          "compositeTOP",
+          "moviefileinTOP",
+          "noiseTOP",
+          "nullTOP",
+          "rampTOP"
+        ],
+        "source_path": null,
+        "tags": [
+          "bloom",
+          "camera",
+          "grain",
+          "post",
+          "starter",
+          "vignette"
+        ],
+        "td_build": "",
+        "verified_on": null
+      },
+      "updated_at": "2026-07-09T00:00:00+00:00",
+      "validation_result": null
+    }
+  },
+  "version": 1
+}

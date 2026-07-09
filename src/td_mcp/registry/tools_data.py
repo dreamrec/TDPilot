@@ -29,6 +29,7 @@ from td_mcp import tool_registry as _tr  # noqa: E402
 from td_mcp.errors import format_tool_error
 from td_mcp.models import SearchNodesInput
 from td_mcp.tool_registry import mcp  # noqa: E402
+from td_mcp.vision.save_path import SavePathError, validate_save_path
 
 
 @mcp.tool(name="td_screenshot")
@@ -55,17 +56,41 @@ async def td_screenshot(
             ),
         ),
     ] = 0.5,
+    save_path: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description=(
+                "Optional disk destination. When set, TouchDesigner writes the "
+                "image to this path and the tool returns metadata + the saved "
+                "path with NO base64 payload (near-zero token cost — the cheap "
+                "visual-verify loop). Accepts an absolute path under your home "
+                "directory or a bare filename (saved under ~/.tdpilot/captures/). "
+                "Extension must be .png/.jpg/.jpeg."
+            ),
+        ),
+    ] = None,
 ) -> str:
     """Capture a TOP frame.
 
-    Ask the user before repeated screenshots because each base64 image can
-    consume significant tokens in model context.
+    With ``save_path`` set the image is written to disk TD-side and only
+    metadata + the path come back — use this for repeated visual verification.
+    Without it the response embeds base64 image data; ask the user before
+    repeated base64 screenshots because each image can consume significant
+    tokens in model context.
     """
+    body: dict[str, Any] = {"path": path, "quality": quality}
+    if save_path is not None:
+        try:
+            body["save_path"] = validate_save_path(save_path)
+        except SavePathError as exc:
+            return format_tool_error(exc)
+        body["include_data"] = False
     return await _tr._forward(
         ctx,
         "td_screenshot",
         "screenshot",
-        {"path": path, "quality": quality},
+        body,
     )
 
 

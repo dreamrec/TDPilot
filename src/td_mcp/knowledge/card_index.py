@@ -1,10 +1,21 @@
-"""CardIndex — loads, indexes, and searches structured JSON knowledge cards."""
+"""CardIndex — loads, indexes, and searches structured JSON knowledge cards.
+
+This is the compact default retrieval path (no downloads). When the optional
+FTS5 DocsBrain database is present locally, ``tool_registry`` loads DocsBrain
+instead and this index is only its fallback — see the brain-selection logic in
+``td_mcp.tool_registry`` (DocsBrain if ``docsbrain.db`` exists, else
+CardIndex). Multi-token queries here use OR-matching with an AND boost, with
+query-side synonym expansion (``td_mcp.knowledge.synonyms``) in front of
+tokenization.
+"""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
 from typing import Any
+
+from td_mcp.knowledge.synonyms import expand_query_tokens
 
 # Map card subdirectory names to the key field used for exact lookup.
 _KEY_FIELDS = {
@@ -109,38 +120,51 @@ class CardIndex:
 
     @staticmethod
     def _score_card(card: dict, query_lower: str, key_field: str) -> float:
+        """Field-boosted relevance score.
+
+        Ranking (per field): exact phrase > all token groups (AND boost) >
+        per-group OR hits. A token group is the query token plus its synonym
+        aliases — any variant appearing in the text counts as a hit for that
+        group, so "glow" retrieves bloom cards and "sound" retrieves audio
+        cards without the FTS5 download.
+        """
         score = 0.0
         query_tokens = [token for token in query_lower.replace("_", " ").split() if token]
+        token_groups = expand_query_tokens(query_tokens)
+
+        def _field_score(text: str, phrase_pts: float, and_pts: float, or_pts: float) -> float:
+            if query_lower in text:
+                return phrase_pts
+            if not token_groups:
+                return 0.0
+            hits = sum(1 for group in token_groups if any(variant in text for variant in group))
+            if hits == len(token_groups):
+                return and_pts
+            return or_pts * hits
+
         # Primary key field (highest boost)
         key_val = str(card.get(key_field, "")).lower()
-        if query_lower in key_val:
-            score += 10.0
-        elif query_tokens and all(token in key_val for token in query_tokens):
-            score += 8.0
+        score += _field_score(key_val, 10.0, 8.0, 1.5)
 
         # display_name (medium boost)
         display = str(card.get("display_name", "")).lower()
-        if query_lower in display:
-            score += 5.0
-        elif query_tokens and all(token in display for token in query_tokens):
-            score += 4.0
+        score += _field_score(display, 5.0, 4.0, 0.75)
 
         # summary (low boost)
         summary = str(card.get("summary", "")).lower()
-        if query_lower in summary:
-            score += 1.0
-        elif query_tokens and all(token in summary for token in query_tokens):
-            score += 0.75
+        score += _field_score(summary, 1.0, 0.75, 0.15)
 
         nested_text = CardIndex._nested_search_text(card)
         if query_lower in nested_text:
             score += 0.75
-        elif query_tokens:
-            matched_tokens = sum(1 for token in query_tokens if token in nested_text)
-            if matched_tokens == len(query_tokens):
-                score += 0.5 + (0.05 * matched_tokens)
-            elif matched_tokens:
-                score += 0.03 * matched_tokens
+        elif token_groups:
+            matched_groups = sum(
+                1 for group in token_groups if any(variant in nested_text for variant in group)
+            )
+            if matched_groups == len(token_groups):
+                score += 0.5 + (0.05 * matched_groups)
+            elif matched_groups:
+                score += 0.03 * matched_groups
 
         return score
 

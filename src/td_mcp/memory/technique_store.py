@@ -1,9 +1,26 @@
-"""Technique library with per-project and global scope, JSON persistence."""
+"""Technique library with per-project and global scope, JSON persistence.
+
+Starter recipes
+---------------
+The repo ships canonical live-visual recipes under ``data/techniques_starter/``
+(one td_memory_import-format JSON file per technique, ``scope: "global"``).
+Load one into the library with a single tool call — pass the file's parsed
+JSON as the ``data`` argument::
+
+    td_memory_import(data=json.load(open("data/techniques_starter/plain_feedback_loop.json")),
+                     scope="global")
+
+Every starter ships with ``state: "candidate"`` and
+``compatibility.verified_on: null`` — parameter names are verified against the
+operator atlas cards, but the recipes have not yet been replayed against a
+live TouchDesigner build.
+"""
 
 from __future__ import annotations
 
 import json
 import logging
+import re
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -13,6 +30,13 @@ logger = logging.getLogger(__name__)
 
 
 DEFAULT_BASE_DIR = "~/.tdpilot/memory"
+
+_TOKEN_RE = re.compile(r"[a-z0-9]+")
+
+
+def _tokenize(text: str) -> list[str]:
+    """Lowercase alphanumeric tokens, deduplicated, in first-seen order."""
+    return list(dict.fromkeys(_TOKEN_RE.findall(text.lower())))
 
 
 class TechniqueStore:
@@ -100,10 +124,17 @@ class TechniqueStore:
         scope: str = "all",
         limit: int = 20,
     ) -> list[dict[str, Any]]:
-        """Search techniques by text query and/or tags. Returns summaries (no full recipe)."""
-        results: list[dict[str, Any]] = []
+        """Search techniques by text query and/or tags. Returns summaries (no full recipe).
+
+        Multi-word queries use tokenized OR-matching ranked by hit count: an
+        entry matching ANY query token is returned; entries containing the
+        exact phrase rank highest, then all-token (AND) matches, then by how
+        many tokens hit. Ties fall back to favorites/rating/replays/newest.
+        """
+        scored: list[tuple[float, dict[str, Any]]] = []
         stores = self._stores_for_scope(scope)
-        query_lower = query.lower()
+        query_lower = query.lower().strip()
+        query_tokens = _tokenize(query_lower)
         tag_set = set(tags or [])
 
         for store_scope, store in stores:
@@ -111,30 +142,52 @@ class TechniqueStore:
                 # Tag filter
                 if tag_set and not tag_set.intersection(entry.get("tags", [])):
                     continue
-                # Text search across name, description, tags, notes
+                score = 0.0
                 if query_lower:
-                    haystack = " ".join(
-                        [
-                            entry.get("name", ""),
-                            entry.get("description", ""),
-                            " ".join(entry.get("tags", [])),
-                            entry.get("notes", ""),
-                        ]
-                    ).lower()
-                    if query_lower not in haystack:
+                    score = self._score_entry(entry, query_lower, query_tokens)
+                    if score <= 0:
                         continue
-                results.append(self._summary(entry, store_scope))
+                scored.append((score, self._summary(entry, store_scope)))
 
-        # Sort: favorites first, then by rating desc, then most replayed, then newest
-        results.sort(
-            key=lambda r: (
-                not r.get("favorite", False),
-                -(r.get("rating", 0)),
-                -(r.get("replay_count", 0)),
-                r.get("created_at", ""),
+        # Sort: relevance first, then favorites, rating desc, most replayed, newest
+        scored.sort(
+            key=lambda item: (
+                -item[0],
+                not item[1].get("favorite", False),
+                -(item[1].get("rating", 0)),
+                -(item[1].get("replay_count", 0)),
+                item[1].get("created_at", ""),
             )
         )
-        return results[:limit]
+        return [summary for _, summary in scored[:limit]]
+
+    @staticmethod
+    def _score_entry(entry: dict[str, Any], query_lower: str, query_tokens: list[str]) -> float:
+        """Relevance score for one entry: exact phrase > AND > per-token hits."""
+        name = str(entry.get("name", "")).lower()
+        tag_text = " ".join(entry.get("tags", [])).lower()
+        haystack = " ".join(
+            [
+                name,
+                str(entry.get("description", "")).lower(),
+                tag_text,
+                str(entry.get("notes", "")).lower(),
+            ]
+        )
+        score = 0.0
+        if query_lower in haystack:
+            score += 10.0  # exact-phrase match keeps the legacy top rank
+        if query_tokens:
+            hits = sum(1 for token in query_tokens if token in haystack)
+            if hits == 0:
+                return score
+            score += float(hits)
+            if hits == len(query_tokens):
+                score += 2.0  # all tokens present (AND boost)
+            # Name/tag hits are stronger relevance signals than notes hits.
+            score += sum(0.5 for token in query_tokens if token in name)
+            score += sum(0.5 for token in query_tokens if token in tag_text)
+        return score
 
     def list_techniques(
         self,

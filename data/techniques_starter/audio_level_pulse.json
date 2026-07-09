@@ -1,0 +1,192 @@
+{
+  "count": 1,
+  "scope": "global",
+  "techniques": {
+    "starter-audio-level-pulse": {
+      "compatibility": {
+        "required_ops": [
+          "analyzeCHOP",
+          "audiofileinCHOP",
+          "constantTOP",
+          "filterCHOP",
+          "levelTOP",
+          "mathCHOP",
+          "nullCHOP",
+          "nullTOP"
+        ],
+        "verified_on": null
+      },
+      "created_at": "2026-07-09T00:00:00+00:00",
+      "description": "Audio file RMS drives a Level TOP brightness pulse over a constant color field: the minimal audio-reactive visual chain.",
+      "favorite": false,
+      "id": "starter-audio-level-pulse",
+      "last_replayed_at": null,
+      "name": "Audio-reactive level pulse",
+      "notes": "Set /audio 'file' to your track. Chain: audiofilein -> analyze(rms) -> filter (smoothing) -> math (range) -> null 'audio_level'. The TOP side reads op('./audio_level')['chan1'] in an expression — the stable null is the contract, never reference the analyze CHOP directly.",
+      "rating": 0,
+      "replay_count": 0,
+      "state": "candidate",
+      "tags": [
+        "audio",
+        "audio-reactive",
+        "pulse",
+        "rms",
+        "starter"
+      ],
+      "technique": {
+        "complexity": "small",
+        "connection_count": 6,
+        "description": "Audio file RMS drives a Level TOP brightness pulse over a constant color field: the minimal audio-reactive visual chain.",
+        "families": {
+          "CHOP": 5,
+          "TOP": 3
+        },
+        "key_params": null,
+        "name": "Audio-reactive level pulse",
+        "node_count": 8,
+        "op_types": {
+          "analyzeCHOP": 1,
+          "audiofileinCHOP": 1,
+          "constantTOP": 1,
+          "filterCHOP": 1,
+          "levelTOP": 1,
+          "mathCHOP": 1,
+          "nullCHOP": 1,
+          "nullTOP": 1
+        },
+        "recipe": {
+          "connections": [
+            {
+              "from": "/audio",
+              "from_index": 0,
+              "to": "/analyze",
+              "to_index": 0
+            },
+            {
+              "from": "/analyze",
+              "from_index": 0,
+              "to": "/smooth",
+              "to_index": 0
+            },
+            {
+              "from": "/smooth",
+              "from_index": 0,
+              "to": "/range",
+              "to_index": 0
+            },
+            {
+              "from": "/range",
+              "from_index": 0,
+              "to": "/audio_level",
+              "to_index": 0
+            },
+            {
+              "from": "/visual",
+              "from_index": 0,
+              "to": "/pulse",
+              "to_index": 0
+            },
+            {
+              "from": "/pulse",
+              "from_index": 0,
+              "to": "/out",
+              "to_index": 0
+            }
+          ],
+          "external_assets": [],
+          "layout": {},
+          "nodes": {
+            "/analyze": {
+              "family": "CHOP",
+              "name": "analyze",
+              "params": {
+                "function": "rms"
+              },
+              "type": "analyzeCHOP"
+            },
+            "/audio": {
+              "family": "CHOP",
+              "name": "audio",
+              "params": {
+                "play": 1,
+                "repeat": 1
+              },
+              "type": "audiofileinCHOP"
+            },
+            "/audio_level": {
+              "family": "CHOP",
+              "name": "audio_level",
+              "params": {},
+              "type": "nullCHOP"
+            },
+            "/out": {
+              "family": "TOP",
+              "name": "out",
+              "params": {},
+              "type": "nullTOP"
+            },
+            "/pulse": {
+              "expressions": {
+                "brightness1": "1.0 + op('./audio_level')['chan1'] * 0.8"
+              },
+              "family": "TOP",
+              "name": "pulse",
+              "params": {},
+              "type": "levelTOP"
+            },
+            "/range": {
+              "family": "CHOP",
+              "name": "range",
+              "params": {
+                "torange1": 0.0,
+                "torange2": 1.0
+              },
+              "type": "mathCHOP"
+            },
+            "/smooth": {
+              "family": "CHOP",
+              "name": "smooth",
+              "params": {
+                "width": 0.15
+              },
+              "type": "filterCHOP"
+            },
+            "/visual": {
+              "family": "TOP",
+              "name": "visual",
+              "params": {
+                "colorb": 0.9,
+                "colorg": 0.4,
+                "colorr": 0.1
+              },
+              "type": "constantTOP"
+            }
+          }
+        },
+        "required_op_types": [
+          "analyzeCHOP",
+          "audiofileinCHOP",
+          "constantTOP",
+          "filterCHOP",
+          "levelTOP",
+          "mathCHOP",
+          "nullCHOP",
+          "nullTOP"
+        ],
+        "source_path": null,
+        "tags": [
+          "audio",
+          "audio-reactive",
+          "pulse",
+          "rms",
+          "starter"
+        ],
+        "td_build": "",
+        "verified_on": null
+      },
+      "updated_at": "2026-07-09T00:00:00+00:00",
+      "validation_result": null
+    }
+  },
+  "version": 1
+}

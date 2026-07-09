@@ -254,6 +254,14 @@ Storage lives at `~/.tdpilot/{memory,knowledge}/` with per-project and global sc
       entries/<uuid>.md
 ```
 
+**Starter technique recipes** — the repo ships canonical live-visual recipes under `data/techniques_starter/` (one `td_memory_import`-format JSON file per technique: plain feedback loop, feedback displacement bloom, audio-reactive level pulse, beat-detected flash, kaleidoscope mirror, noise-displace flow, particle GPU sprite trail, camera post chain, LFO param wobble, edge-glow composite). Load one with a single call — pass the file's parsed JSON as the `data` argument:
+
+```
+td_memory_import(data=<contents of data/techniques_starter/plain_feedback_loop.json>, scope="global")
+```
+
+Parameter names are verified against the operator atlas cards (a test enforces this), but every entry ships `state: "candidate"` with `verified_on: null` — they have not yet been replayed against a live TD build. Replay one with `td_memory_replay`, and promote it once it validates.
+
 ### 9. Macros & Planning (7)
 | Tool | Purpose |
 |------|---------|

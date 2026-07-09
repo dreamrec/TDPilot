@@ -1,0 +1,143 @@
+{
+  "count": 1,
+  "scope": "global",
+  "techniques": {
+    "starter-kaleidoscope-mirror": {
+      "compatibility": {
+        "required_ops": [
+          "mirrorTOP",
+          "noiseTOP",
+          "nullTOP",
+          "transformTOP"
+        ],
+        "verified_on": null
+      },
+      "created_at": "2026-07-09T00:00:00+00:00",
+      "description": "Rotating noise folded through two Mirror TOPs (x then y) — a four-way kaleidoscope from three cheap TOPs.",
+      "favorite": false,
+      "id": "starter-kaleidoscope-mirror",
+      "last_replayed_at": null,
+      "name": "Kaleidoscope mirror",
+      "notes": "transformTOP rotate is expression-driven (.expr). Writing sx/sy/tx/ty/rotate as plain values through a generic param-set can silently flip the param into BIND mode — see the live_param_safety hint pack.",
+      "rating": 0,
+      "replay_count": 0,
+      "state": "candidate",
+      "tags": [
+        "kaleidoscope",
+        "mirror",
+        "starter",
+        "symmetry"
+      ],
+      "technique": {
+        "complexity": "small",
+        "connection_count": 4,
+        "description": "Rotating noise folded through two Mirror TOPs (x then y) — a four-way kaleidoscope from three cheap TOPs.",
+        "families": {
+          "TOP": 5
+        },
+        "key_params": null,
+        "name": "Kaleidoscope mirror",
+        "node_count": 5,
+        "op_types": {
+          "mirrorTOP": 2,
+          "noiseTOP": 1,
+          "nullTOP": 1,
+          "transformTOP": 1
+        },
+        "recipe": {
+          "connections": [
+            {
+              "from": "/src",
+              "from_index": 0,
+              "to": "/spin",
+              "to_index": 0
+            },
+            {
+              "from": "/spin",
+              "from_index": 0,
+              "to": "/mirror_x",
+              "to_index": 0
+            },
+            {
+              "from": "/mirror_x",
+              "from_index": 0,
+              "to": "/mirror_y",
+              "to_index": 0
+            },
+            {
+              "from": "/mirror_y",
+              "from_index": 0,
+              "to": "/out",
+              "to_index": 0
+            }
+          ],
+          "external_assets": [],
+          "layout": {},
+          "nodes": {
+            "/mirror_x": {
+              "family": "TOP",
+              "name": "mirror_x",
+              "params": {
+                "flipx": 1
+              },
+              "type": "mirrorTOP"
+            },
+            "/mirror_y": {
+              "family": "TOP",
+              "name": "mirror_y",
+              "params": {
+                "flipy": 1
+              },
+              "type": "mirrorTOP"
+            },
+            "/out": {
+              "family": "TOP",
+              "name": "out",
+              "params": {},
+              "type": "nullTOP"
+            },
+            "/spin": {
+              "expressions": {
+                "rotate": "absTime.seconds*12.0"
+              },
+              "family": "TOP",
+              "name": "spin",
+              "params": {},
+              "type": "transformTOP"
+            },
+            "/src": {
+              "expressions": {
+                "tx": "absTime.seconds*0.05"
+              },
+              "family": "TOP",
+              "name": "src",
+              "params": {
+                "mono": 0,
+                "period": 6
+              },
+              "type": "noiseTOP"
+            }
+          }
+        },
+        "required_op_types": [
+          "mirrorTOP",
+          "noiseTOP",
+          "nullTOP",
+          "transformTOP"
+        ],
+        "source_path": null,
+        "tags": [
+          "kaleidoscope",
+          "mirror",
+          "starter",
+          "symmetry"
+        ],
+        "td_build": "",
+        "verified_on": null
+      },
+      "updated_at": "2026-07-09T00:00:00+00:00",
+      "validation_result": null
+    }
+  },
+  "version": 1
+}

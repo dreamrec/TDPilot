@@ -1,0 +1,49 @@
+schema_version: 2
+topic: live_param_safety
+hints:
+  - id: transform_generic_write_bind_corruption
+    priority: critical
+    rule: |
+      Writing transformTOP sx/sy/tx/ty/rotate as plain values through a
+      generic param-set can silently corrupt the param into BIND mode --
+      the value sticks but the param stops responding. For expression-
+      driven transforms set .par.X.expr (e.g. via td_exec_python:
+      op('...').par.rotate.expr = "absTime.seconds*10"); TD auto-switches
+      the param to EXPRESSION mode cleanly.
+    source: field session 2026-05-03 (transformtop_td_set_params memory)
+    source_kind: user_essay
+    when:
+      op_type: transformTOP
+      intent_match: "transform|rotate|scale|translate"
+      surface: ["set_params", "exec", "query"]
+    next_tools: [td_exec_python, td_get_params]
+
+  - id: repoll_params_before_regression_hypothesis
+    priority: critical
+    rule: |
+      Param drift is hypothesis #0 for any visual regression in a LIVE
+      session: re-poll ALL custom params against your session-start
+      snapshot BEFORE forming a fix hypothesis -- the user may be
+      live-scrubbing sliders while you debug. Four false hypotheses have
+      been burned on this exact trap.
+    source: field session 2026-06-09 (feedback_live_param_drift memory)
+    source_kind: user_essay
+    when:
+      intent_match: "regress|broke|broken|stopped working|looks wrong|changed|different than before"
+      surface: ["errors", "screenshot", "inspect", "query"]
+    next_tools: [td_get_params, td_diff_snapshots, td_get_state_vector]
+
+  - id: feedback_reset_pulse_after_retime
+    priority: useful
+    rule: |
+      After retiming a network (timeline rate, speed changes, timeline
+      jumps), pulse feedbackTOP 'resetpulse' -- stale accumulation from
+      the old timing otherwise persists in the loop and reads as a broken
+      or smeared image.
+    source: field session 2026-06-09 (feedback_live_param_drift memory)
+    source_kind: user_essay
+    when:
+      op_type: feedbackTOP
+      intent_match: "retim|speed|timeline|rate|slow|fast"
+      surface: ["set_params", "exec", "query"]
+    next_tools: [td_pulse_param]

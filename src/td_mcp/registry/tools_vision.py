@@ -20,6 +20,7 @@ from pydantic import Field
 from td_mcp import tool_registry as _tr  # noqa: E402
 from td_mcp.errors import format_tool_error
 from td_mcp.tool_registry import mcp  # noqa: E402
+from td_mcp.vision.save_path import SavePathError, validate_save_path
 
 
 @mcp.tool(name="td_capture_frame")
@@ -45,20 +46,43 @@ async def td_capture_frame(
             description="If True, include base64 image in response",
         ),
     ] = False,
+    save_path: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description=(
+                "Optional disk destination. When set, TouchDesigner writes the "
+                "frame to this path and the tool returns metadata + the saved "
+                "path with NO base64 payload (overrides confirm). Accepts an "
+                "absolute path under your home directory or a bare filename "
+                "(saved under ~/.tdpilot/captures/). Extension must be "
+                ".png/.jpg/.jpeg."
+            ),
+        ),
+    ] = None,
 ) -> str:
     """Capture a single frame from a TOP node and return metadata.
 
-    Returns resolution, format, and byte size. If confirm=True, also includes
-    the base64-encoded JPEG image data. Ask the user before setting confirm=True
-    because image payloads consume significant model context tokens.
+    Returns resolution, format, and byte size. If save_path is set the frame
+    is written to disk TD-side and only metadata + the saved path come back —
+    the cheap visual-verify loop. Otherwise, if confirm=True, the response
+    includes the base64-encoded JPEG image data. Ask the user before setting
+    confirm=True because image payloads consume significant model context
+    tokens.
     """
     finish = _tr._start_tool(ctx, "td_capture_frame")
     try:
+        body: dict[str, Any] = {"path": path, "quality": quality}
+        if save_path is not None:
+            try:
+                body["save_path"] = validate_save_path(save_path)
+            except SavePathError as exc:
+                return format_tool_error(exc)
+            body["include_data"] = False
+        else:
+            body["include_data"] = bool(confirm)
         client = _tr._get_client(ctx)
-        data = await client.request(
-            "screenshot",
-            {"path": path, "quality": quality, "include_data": bool(confirm)},
-        )
+        data = await client.request("screenshot", body)
         if isinstance(data, dict) and data.get("success"):
             result: dict[str, Any] = {
                 "success": True,
@@ -71,12 +95,16 @@ async def td_capture_frame(
                 "size_bytes": data.get("size_bytes", 0),
                 "quality": quality,
             }
-            if confirm:
+            if save_path is not None:
+                result["data_omitted"] = True
+                result["saved_to"] = data.get("saved_to", body["save_path"])
+            elif confirm:
                 result["data_base64"] = data.get("data_base64", "")
             else:
                 result["data_omitted"] = True
                 result["note"] = (
-                    "Set confirm=True to include base64 image data. "
+                    "Set confirm=True to include base64 image data (or pass "
+                    "save_path to write to disk with no token cost). "
                     "Each JPEG frame adds significant token cost."
                 )
             return _tr._as_json_output(result)

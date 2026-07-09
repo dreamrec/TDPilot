@@ -1,0 +1,206 @@
+{
+  "count": 1,
+  "scope": "global",
+  "techniques": {
+    "starter-feedback-displace-bloom": {
+      "compatibility": {
+        "required_ops": [
+          "bloomTOP",
+          "compositeTOP",
+          "displaceTOP",
+          "feedbackTOP",
+          "levelTOP",
+          "noiseTOP",
+          "nullTOP"
+        ],
+        "verified_on": null
+      },
+      "created_at": "2026-07-09T00:00:00+00:00",
+      "description": "Feedback loop pushed through a noise-driven Displace TOP and a Bloom TOP — glowing liquid smear.",
+      "favorite": false,
+      "id": "starter-feedback-displace-bloom",
+      "last_replayed_at": null,
+      "name": "Feedback displacement bloom",
+      "notes": "The displacement map (/flow) drifts over time so the smear direction keeps evolving. Keep uvweight small (<0.2) or the loop blows out.",
+      "rating": 0,
+      "replay_count": 0,
+      "state": "candidate",
+      "tags": [
+        "bloom",
+        "displace",
+        "feedback",
+        "glow",
+        "starter"
+      ],
+      "technique": {
+        "complexity": "small",
+        "connection_count": 8,
+        "description": "Feedback loop pushed through a noise-driven Displace TOP and a Bloom TOP — glowing liquid smear.",
+        "families": {
+          "TOP": 8
+        },
+        "key_params": null,
+        "name": "Feedback displacement bloom",
+        "node_count": 8,
+        "op_types": {
+          "bloomTOP": 1,
+          "compositeTOP": 1,
+          "displaceTOP": 1,
+          "feedbackTOP": 1,
+          "levelTOP": 1,
+          "noiseTOP": 2,
+          "nullTOP": 1
+        },
+        "recipe": {
+          "connections": [
+            {
+              "from": "/src",
+              "from_index": 0,
+              "to": "/comp",
+              "to_index": 0
+            },
+            {
+              "from": "/src",
+              "from_index": 0,
+              "to": "/feedback",
+              "to_index": 0
+            },
+            {
+              "from": "/feedback",
+              "from_index": 0,
+              "to": "/displace",
+              "to_index": 0
+            },
+            {
+              "from": "/flow",
+              "from_index": 0,
+              "to": "/displace",
+              "to_index": 1
+            },
+            {
+              "from": "/displace",
+              "from_index": 0,
+              "to": "/fade",
+              "to_index": 0
+            },
+            {
+              "from": "/fade",
+              "from_index": 0,
+              "to": "/comp",
+              "to_index": 1
+            },
+            {
+              "from": "/comp",
+              "from_index": 0,
+              "to": "/bloom",
+              "to_index": 0
+            },
+            {
+              "from": "/bloom",
+              "from_index": 0,
+              "to": "/out",
+              "to_index": 0
+            }
+          ],
+          "external_assets": [],
+          "layout": {},
+          "nodes": {
+            "/bloom": {
+              "family": "TOP",
+              "name": "bloom",
+              "params": {
+                "bloomintensity": 1.2,
+                "bloomthreshold": 0.5
+              },
+              "type": "bloomTOP"
+            },
+            "/comp": {
+              "family": "TOP",
+              "name": "comp",
+              "params": {
+                "operand": "add"
+              },
+              "type": "compositeTOP"
+            },
+            "/displace": {
+              "family": "TOP",
+              "name": "displace",
+              "params": {
+                "uvweight": 0.12
+              },
+              "type": "displaceTOP"
+            },
+            "/fade": {
+              "family": "TOP",
+              "name": "fade",
+              "params": {
+                "opacity": 0.93
+              },
+              "type": "levelTOP"
+            },
+            "/feedback": {
+              "family": "TOP",
+              "name": "feedback",
+              "params": {
+                "top": "./comp"
+              },
+              "type": "feedbackTOP"
+            },
+            "/flow": {
+              "expressions": {
+                "ty": "absTime.seconds*0.03"
+              },
+              "family": "TOP",
+              "name": "flow",
+              "params": {
+                "mono": 1,
+                "period": 10
+              },
+              "type": "noiseTOP"
+            },
+            "/out": {
+              "family": "TOP",
+              "name": "out",
+              "params": {},
+              "type": "nullTOP"
+            },
+            "/src": {
+              "expressions": {
+                "tz": "absTime.seconds*0.08"
+              },
+              "family": "TOP",
+              "name": "src",
+              "params": {
+                "mono": 0,
+                "period": 4
+              },
+              "type": "noiseTOP"
+            }
+          }
+        },
+        "required_op_types": [
+          "bloomTOP",
+          "compositeTOP",
+          "displaceTOP",
+          "feedbackTOP",
+          "levelTOP",
+          "noiseTOP",
+          "nullTOP"
+        ],
+        "source_path": null,
+        "tags": [
+          "bloom",
+          "displace",
+          "feedback",
+          "glow",
+          "starter"
+        ],
+        "td_build": "",
+        "verified_on": null
+      },
+      "updated_at": "2026-07-09T00:00:00+00:00",
+      "validation_result": null
+    }
+  },
+  "version": 1
+}
