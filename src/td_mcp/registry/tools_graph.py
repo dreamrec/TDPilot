@@ -93,7 +93,7 @@ async def td_get_nodes(
         Field(default=ResponseFormat.JSON, description="Output format"),
     ] = ResponseFormat.JSON,
 ) -> str:
-    """List child nodes at a path."""
+    """List the child operators (nodes) directly under a network path."""
     finish = _tr._start_tool(ctx, "td_get_nodes")
     try:
         body: dict[str, Any] = {
@@ -286,7 +286,7 @@ async def td_get_params(
 @mcp.tool(
     name="td_set_params",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+        readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=True
     ),
 )
 async def td_set_params(
@@ -510,7 +510,7 @@ async def td_create_node(
         ),
     ] = False,
 ) -> str:
-    """Create a new TouchDesigner operator."""
+    """Create a new TouchDesigner operator of a given type under a parent path."""
     # Re-instantiate so the CreateNodeInput custom @field_validator on
     # ``node_type`` (family-suffix check: TOP/CHOP/SOP/DAT/COMP/MAT/POPX/POP)
     # still runs. ``Annotated[str, Field(...)]`` captures min_length/description
@@ -598,7 +598,7 @@ async def td_copy_node(
         Field(default=None, description="Name for the copy"),
     ] = None,
 ) -> str:
-    """Copy/duplicate a node."""
+    """Copy/duplicate an existing node (with its parameters) to a new node."""
     body: dict[str, Any] = {"source_path": source_path}
     if dest_parent is not None:
         body["dest_parent"] = dest_parent
@@ -616,7 +616,7 @@ async def td_copy_node(
 @mcp.tool(
     name="td_rename_node",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+        readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=True
     ),
 )
 async def td_rename_node(
@@ -630,7 +630,7 @@ async def td_rename_node(
         Field(description="New name for the node", min_length=1, max_length=100),
     ],
 ) -> str:
-    """Rename a node."""
+    """Rename a node to a new name within its parent network."""
     return await _tr._forward(
         ctx,
         "td_rename_node",
@@ -643,7 +643,7 @@ async def td_rename_node(
 @mcp.tool(
     name="td_connect_nodes",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+        readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=True
     ),
 )
 async def td_connect_nodes(

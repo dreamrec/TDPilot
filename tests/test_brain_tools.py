@@ -16,7 +16,11 @@ def test_brain_tools_are_registered_with_mcp_metadata():
     for name in ("td_brain_plan", "td_brain_execute", "td_transaction_apply", "td_cockpit_render"):
         assert name in by_name
         assert by_name[name].title
-        assert by_name[name].description.startswith("Use this when")
+        # Batch F2 disambiguation prefixed some of these descriptions with a
+        # role tag ("DEFAULT planning entry point:", "Low-level executor:", …),
+        # so they no longer *start* with "Use this when". The house-style
+        # usage-oriented phrasing is preserved mid-sentence — assert on that.
+        assert "use this when" in (by_name[name].description or "").lower()
 
     assert by_name["td_brain_plan"].annotations.readOnlyHint is True
     assert by_name["td_brain_execute"].annotations.destructiveHint is True

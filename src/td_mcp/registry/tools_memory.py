@@ -29,6 +29,7 @@ from datetime import datetime, timezone
 from typing import Annotated, Any, Literal
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional "cycle" import: ``tool_registry.py`` triggers this module at
@@ -51,7 +52,11 @@ from td_mcp.models import MemoryPreferencesInput
 from td_mcp.tool_registry import mcp  # noqa: E402
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_memory_learn(
     ctx: Context,
     path: Annotated[
@@ -100,7 +105,11 @@ async def td_memory_learn(
     return {"status": "ok", "technique": technique}
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False
+    ),
+)
 async def td_memory_save(
     ctx: Context,
     technique: Annotated[
@@ -128,10 +137,11 @@ async def td_memory_save(
         Field(default="", description="Freeform notes about this technique."),
     ] = "",
 ) -> dict:
-    """Save a technique to the project or global library.
+    """Save a structured, replayable technique to the project or global library.
 
-    Use the output of td_memory_learn as the technique input,
-    or construct a technique dict manually.
+    Use the output of td_memory_learn as the technique input, or construct a
+    technique dict manually. Prefer td_knowledge_save when you want to capture
+    free-form markdown prose/notes rather than a replayable network recipe.
     """
     await _tr._ensure_project_scope(ctx)
     store = _tr._get_technique_store(ctx)
@@ -160,7 +170,11 @@ async def td_memory_save(
     return {"status": "ok", "technique_id": technique_id, "scope": scope}
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_memory_recall(
     ctx: Context,
     query: Annotated[
@@ -183,9 +197,11 @@ async def td_memory_recall(
         Field(default=20, ge=1, le=100, description="Max results."),
     ] = 20,
 ) -> dict:
-    """Search the technique library by text query and/or tags.
+    """Search the structured, replayable technique library by text query and/or tags.
 
-    Returns summaries (not full recipes). Use td_memory_replay to rebuild a found technique.
+    Returns summaries (not full recipes). Use td_memory_replay to rebuild a found
+    technique as live nodes. Prefer td_knowledge_recall when you want free-form
+    markdown notes/essays (prose reference content) rather than replayable recipes.
     """
     await _tr._ensure_project_scope(ctx)
     store = _tr._get_technique_store(ctx)
@@ -198,7 +214,11 @@ async def td_memory_recall(
     return {"status": "ok", "count": len(results), "techniques": results}
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_memory_replay(
     ctx: Context,
     technique_id: Annotated[
@@ -848,7 +868,11 @@ def _recipe_op_type(node_info: dict) -> str:
     return raw_type
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_memory_favorite(
     ctx: Context,
     technique_id: Annotated[
@@ -884,7 +908,11 @@ async def td_memory_favorite(
     }
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_memory_promote(
     ctx: Context,
     technique_id: Annotated[
@@ -908,7 +936,11 @@ async def td_memory_promote(
     }
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_memory_export(
     ctx: Context,
     scope: Annotated[
@@ -922,7 +954,11 @@ async def td_memory_export(
     return {"status": "ok", "library": store.export_library(scope=scope)}
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False
+    ),
+)
 async def td_memory_import(
     ctx: Context,
     data: Annotated[
@@ -950,7 +986,11 @@ async def td_memory_import(
     return {"status": "ok", **result}
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_memory_preferences(
     ctx: Context,
     action: Annotated[
@@ -1015,7 +1055,11 @@ async def td_memory_preferences(
         }
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_memory_list(
     ctx: Context,
     scope: Annotated[
@@ -1035,7 +1079,10 @@ async def td_memory_list(
         Field(default=50, ge=1, le=200, description="Max results."),
     ] = 50,
 ) -> dict:
-    """List saved techniques with optional filtering by scope, tags, and favorites."""
+    """List saved (structured, replayable) techniques, filterable by scope, tags, and favorites.
+
+    Prefer td_knowledge_list for the free-form markdown notes/essays store.
+    """
     await _tr._ensure_project_scope(ctx)
     store = _tr._get_technique_store(ctx)
     results = store.list_techniques(

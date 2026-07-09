@@ -32,6 +32,7 @@ import time
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle: tool_registry.py triggers this module at the end of
@@ -316,7 +317,11 @@ async def _dispatch_async(calls: list[dict]) -> list[dict]:
     return results
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_tool_batch(
     ctx: Context,
     calls: Annotated[

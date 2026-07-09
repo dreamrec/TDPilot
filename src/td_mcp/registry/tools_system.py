@@ -24,14 +24,21 @@ import json
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
 from td_mcp import tool_registry as _tr  # noqa: E402
+from td_mcp.errors import format_tool_error_dict
 from td_mcp.tool_registry import mcp  # noqa: E402
 
 
-@mcp.tool(name="td_python_env_status")
+@mcp.tool(
+    name="td_python_env_status",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_python_env_status(ctx: Context) -> dict[str, Any]:
     """Inspect the Python environment inside TouchDesigner: version, installed packages, env manager status.
 
@@ -70,12 +77,17 @@ async def td_python_env_status(ctx: Context) -> dict[str, Any]:
         return data
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_python_env_status")
-        return {"error": str(exc)}
+        return format_tool_error_dict(exc)
     finally:
         finish()
 
 
-@mcp.tool(name="td_threading_status")
+@mcp.tool(
+    name="td_threading_status",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_threading_status(ctx: Context) -> dict[str, Any]:
     """Inspect the threading status inside TouchDesigner: active threads, cook rate.
 
@@ -113,12 +125,17 @@ async def td_threading_status(ctx: Context) -> dict[str, Any]:
         return data
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_threading_status")
-        return {"error": str(exc)}
+        return format_tool_error_dict(exc)
     finally:
         finish()
 
 
-@mcp.tool(name="td_logger_status")
+@mcp.tool(
+    name="td_logger_status",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_logger_status(ctx: Context) -> dict[str, Any]:
     """Inspect the Python logging configuration inside TouchDesigner: log level, handlers, registered loggers.
 
@@ -154,12 +171,17 @@ async def td_logger_status(ctx: Context) -> dict[str, Any]:
         return data
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_logger_status")
-        return {"error": str(exc)}
+        return format_tool_error_dict(exc)
     finally:
         finish()
 
 
-@mcp.tool(name="td_tdresources_inspect")
+@mcp.tool(
+    name="td_tdresources_inspect",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_tdresources_inspect(
     ctx: Context,
     category: Annotated[
@@ -216,12 +238,17 @@ async def td_tdresources_inspect(
         return data
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_tdresources_inspect")
-        return {"error": str(exc)}
+        return format_tool_error_dict(exc)
     finally:
         finish()
 
 
-@mcp.tool(name="td_component_standardize")
+@mcp.tool(
+    name="td_component_standardize",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_component_standardize(
     ctx: Context,
     path: Annotated[
@@ -307,12 +334,17 @@ async def td_component_standardize(
         return data
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_component_standardize")
-        return {"error": str(exc)}
+        return format_tool_error_dict(exc)
     finally:
         finish()
 
 
-@mcp.tool(name="td_color_pipeline")
+@mcp.tool(
+    name="td_color_pipeline",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_color_pipeline(ctx: Context) -> dict[str, Any]:
     """Inspect the color management pipeline in TouchDesigner: color space, gamma, display settings."""
     finish = _tr._start_tool(ctx, "td_color_pipeline")
@@ -346,6 +378,6 @@ async def td_color_pipeline(ctx: Context) -> dict[str, Any]:
         return data
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_color_pipeline")
-        return {"error": str(exc)}
+        return format_tool_error_dict(exc)
     finally:
         finish()

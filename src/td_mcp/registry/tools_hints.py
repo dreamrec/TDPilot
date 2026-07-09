@@ -15,6 +15,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -24,7 +25,12 @@ from td_mcp.hints import query_hints
 from td_mcp.tool_registry import mcp  # noqa: E402
 
 
-@mcp.tool(name="td_get_hints")
+@mcp.tool(
+    name="td_get_hints",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_get_hints(
     ctx: Context,
     topic: Annotated[

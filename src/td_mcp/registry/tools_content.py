@@ -37,14 +37,14 @@ async def td_get_content(
         Field(description="Path to a DAT node", min_length=1),
     ],
 ) -> str:
-    """Read DAT text/table content."""
+    """Read the text or table content of a DAT node."""
     return await _tr._forward(ctx, "td_get_content", "node/content", {"path": path})
 
 
 @mcp.tool(
     name="td_set_content",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+        readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=True
     ),
 )
 async def td_set_content(
@@ -68,7 +68,7 @@ async def td_set_content(
         ),
     ] = None,
 ) -> str:
-    """Write DAT text/table content."""
+    """Write text or table content into a DAT node (overwrites existing)."""
     body: dict[str, Any] = {"path": path}
     if text is not None:
         body["text"] = text

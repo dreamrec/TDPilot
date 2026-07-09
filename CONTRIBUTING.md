@@ -36,6 +36,19 @@ uv run pytest -q
 - **Tool schemas are snapshot-tested.** If you intentionally change a tool
   signature, regenerate the fixture:
   `TDPILOT_UPDATE_SCHEMA=1 uv run pytest tests/test_tools_schema_snapshot.py`.
+- **Every `@mcp.tool` carries `ToolAnnotations` and a real description.**
+  `tests/test_tools_contract.py` enforces it: pass
+  `annotations=ToolAnnotations(readOnlyHint=…, destructiveHint=…,
+  idempotentHint=…, openWorldHint=…)` on the decorator, and give the tool a
+  description/docstring of at least 40 chars. Classify by behaviour:
+  a pure read is `readOnlyHint=True, destructiveHint=False`; anything that can
+  delete/overwrite/reset live state is `readOnlyHint=False, destructiveHint=True`;
+  set `openWorldHint=True` when the tool reads or mutates the live TouchDesigner
+  scene, `False` for server-local data (docs corpus, technique memory, hints,
+  notes, metrics). The contract test additionally requires every
+  `td_get_*`/`td_list_*`/`td_search_*`/`td_describe_*` tool to be `readOnlyHint=True`
+  and every `*delete*`/`*disconnect*`/`*restore*`/`*emergency*`/`*clear*` tool
+  (plus `td_project_lifecycle`) to be `destructiveHint=True`.
 - **`td_component/*.py` files are baked into a binary.** The nine files in
   `_TOX_SOURCE_FILES` (see `td_component/build_tdpilot_tox.py`) are compiled
   into `td_component/tdpilot.tox`, which can only be rebuilt inside a running

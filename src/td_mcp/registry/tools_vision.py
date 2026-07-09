@@ -14,6 +14,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -23,7 +24,12 @@ from td_mcp.tool_registry import mcp  # noqa: E402
 from td_mcp.vision.save_path import SavePathError, validate_save_path
 
 
-@mcp.tool(name="td_capture_frame")
+@mcp.tool(
+    name="td_capture_frame",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_capture_frame(
     ctx: Context,
     path: Annotated[
@@ -61,14 +67,16 @@ async def td_capture_frame(
         ),
     ] = None,
 ) -> str:
-    """Capture a single frame from a TOP node and return metadata.
+    """Capture a single frame from a TOP node, metadata-first.
 
-    Returns resolution, format, and byte size. If save_path is set the frame
-    is written to disk TD-side and only metadata + the saved path come back —
-    the cheap visual-verify loop. Otherwise, if confirm=True, the response
-    includes the base64-encoded JPEG image data. Ask the user before setting
-    confirm=True because image payloads consume significant model context
-    tokens.
+    Returns resolution, format, and byte size; the base64 image comes back only
+    when confirm=True or save_path is set (behind that gate, so token cost stays
+    near-zero by default). If save_path is set the frame is written to disk
+    TD-side and only metadata + the saved path come back — the cheap
+    visual-verify loop. Ask the user before setting confirm=True because image
+    payloads consume significant model context tokens. Prefer td_screenshot for
+    a quick inline thumbnail; prefer td_capture_and_analyze when you also want
+    cooking state and errors folded into the same call.
     """
     finish = _tr._start_tool(ctx, "td_capture_frame")
     try:
@@ -116,7 +124,12 @@ async def td_capture_frame(
         finish()
 
 
-@mcp.tool(name="td_analyze_frame")
+@mcp.tool(
+    name="td_analyze_frame",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_analyze_frame(
     ctx: Context,
     path: Annotated[

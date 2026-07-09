@@ -27,7 +27,12 @@ from td_mcp.errors import format_tool_error
 from td_mcp.tool_registry import mcp  # noqa: E402
 
 
-@mcp.tool(name="td_snapshot_scene")
+@mcp.tool(
+    name="td_snapshot_scene",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_snapshot_scene(
     ctx: Context,
     name: Annotated[
@@ -73,7 +78,12 @@ async def td_snapshot_scene(
         finish()
 
 
-@mcp.tool(name="td_list_snapshots")
+@mcp.tool(
+    name="td_list_snapshots",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_list_snapshots(
     ctx: Context,
     limit: Annotated[
@@ -104,7 +114,12 @@ async def td_list_snapshots(
         finish()
 
 
-@mcp.tool(name="td_diff_snapshots")
+@mcp.tool(
+    name="td_diff_snapshots",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_diff_snapshots(
     ctx: Context,
     snapshot_a: Annotated[

@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -22,7 +23,12 @@ from td_mcp.models import SubscribeInput
 from td_mcp.tool_registry import mcp  # noqa: E402
 
 
-@mcp.tool(name="td_subscribe")
+@mcp.tool(
+    name="td_subscribe",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_subscribe(
     ctx: Context,
     path: Annotated[
@@ -115,7 +121,12 @@ async def td_subscribe(
         finish()
 
 
-@mcp.tool(name="td_unsubscribe")
+@mcp.tool(
+    name="td_unsubscribe",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_unsubscribe(
     ctx: Context,
     path: Annotated[
@@ -123,7 +134,7 @@ async def td_unsubscribe(
         Field(description="TD node path to stop monitoring."),
     ],
 ) -> str:
-    """Remove a node subscription."""
+    """Remove a runtime-event subscription for a node path."""
     finish = _tr._start_tool(ctx, "td_unsubscribe")
     try:
         provisioning = await _tr._get_client(ctx).request(
@@ -149,7 +160,12 @@ async def td_unsubscribe(
         finish()
 
 
-@mcp.tool(name="td_get_events")
+@mcp.tool(
+    name="td_get_events",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_get_events(
     ctx: Context,
     event_type: Annotated[
@@ -166,7 +182,7 @@ async def td_get_events(
         ),
     ] = 50,
 ) -> str:
-    """Read recent event history."""
+    """Read recent runtime event history from the server-side event buffer."""
     finish = _tr._start_tool(ctx, "td_get_events")
     try:
         manager = _tr._get_event_manager(ctx)

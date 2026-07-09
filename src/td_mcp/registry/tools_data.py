@@ -22,6 +22,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -32,7 +33,12 @@ from td_mcp.tool_registry import mcp  # noqa: E402
 from td_mcp.vision.save_path import SavePathError, validate_save_path
 
 
-@mcp.tool(name="td_screenshot")
+@mcp.tool(
+    name="td_screenshot",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_screenshot(
     ctx: Context,
     path: Annotated[
@@ -71,13 +77,16 @@ async def td_screenshot(
         ),
     ] = None,
 ) -> str:
-    """Capture a TOP frame.
+    """Capture a TOP frame as base64 inline, or to disk via ``save_path``.
 
-    With ``save_path`` set the image is written to disk TD-side and only
-    metadata + the path come back — use this for repeated visual verification.
-    Without it the response embeds base64 image data; ask the user before
-    repeated base64 screenshots because each image can consume significant
-    tokens in model context.
+    Use this for a quick single-frame visual: with ``save_path`` set the image is
+    written to disk TD-side and only metadata + the path come back — use this for
+    repeated visual verification. Without it the response embeds base64 image
+    data; ask the user before repeated base64 screenshots because each image can
+    consume significant tokens in model context. Prefer td_capture_frame when you
+    want metadata-first (resolution/format/bytes) with the image behind a
+    confirm/save_path gate; prefer td_capture_and_analyze when you also need
+    cooking state and errors folded into the same call.
     """
     body: dict[str, Any] = {"path": path, "quality": quality}
     if save_path is not None:
@@ -94,7 +103,12 @@ async def td_screenshot(
     )
 
 
-@mcp.tool(name="td_chop_data")
+@mcp.tool(
+    name="td_chop_data",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_chop_data(
     ctx: Context,
     path: Annotated[
@@ -127,7 +141,12 @@ async def td_chop_data(
     return await _tr._forward(ctx, "td_chop_data", "chop/data", body)
 
 
-@mcp.tool(name="td_geometry_data")
+@mcp.tool(
+    name="td_geometry_data",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_geometry_data(
     ctx: Context,
     path: Annotated[
@@ -166,7 +185,12 @@ async def td_geometry_data(
     )
 
 
-@mcp.tool(name="td_pop_inspect")
+@mcp.tool(
+    name="td_pop_inspect",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_pop_inspect(
     ctx: Context,
     path: Annotated[
@@ -262,7 +286,12 @@ async def td_pop_inspect(
     )
 
 
-@mcp.tool(name="td_cooking_info")
+@mcp.tool(
+    name="td_cooking_info",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_cooking_info(
     ctx: Context,
     path: Annotated[
@@ -407,7 +436,12 @@ async def _exec_param_exprs_scope(ctx: Context, query: str, path: str, limit: in
     return data.get("result") or {"results": []}
 
 
-@mcp.tool(name="td_search_nodes")
+@mcp.tool(
+    name="td_search_nodes",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_search_nodes(
     ctx: Context,
     query: Annotated[
@@ -545,7 +579,12 @@ async def td_search_nodes(
         finish()
 
 
-@mcp.tool(name="td_get_errors")
+@mcp.tool(
+    name="td_get_errors",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_get_errors(
     ctx: Context,
     path: Annotated[

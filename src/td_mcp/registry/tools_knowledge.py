@@ -27,6 +27,7 @@ from functools import lru_cache
 from typing import Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 
 # See ``src/td_mcp/registry/__init__.py`` for why this circular-looking
 # import works. ``_tr.X(...)`` calls via module-attribute lookup so test
@@ -102,7 +103,12 @@ def _param_semantics_for_param(op_type: str, family: str, param_name: str) -> di
     return semantics.get(param_name) or semantics.get(param_name.lower())
 
 
-@mcp.tool(name="td_search_official_docs")
+@mcp.tool(
+    name="td_search_official_docs",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_search_official_docs(
     ctx: Context,
     query: str,
@@ -118,7 +124,12 @@ async def td_search_official_docs(
     return {"results": results, "count": len(results), "provenance": provenance.to_dict()}
 
 
-@mcp.tool(name="td_get_operator_doc")
+@mcp.tool(
+    name="td_get_operator_doc",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_get_operator_doc(
     ctx: Context,
     op_type: str | None = None,
@@ -170,7 +181,12 @@ async def td_get_operator_doc(
     return response
 
 
-@mcp.tool(name="td_get_param_help")
+@mcp.tool(
+    name="td_get_param_help",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_get_param_help(
     ctx: Context,
     node_path: str,
@@ -256,7 +272,12 @@ async def td_get_param_help(
     return response
 
 
-@mcp.tool(name="td_lookup_snippets")
+@mcp.tool(
+    name="td_lookup_snippets",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_lookup_snippets(
     ctx: Context,
     query: str,
@@ -270,7 +291,12 @@ async def td_lookup_snippets(
     return {"results": results, "count": len(results), "provenance": provenance.to_dict()}
 
 
-@mcp.tool(name="td_lookup_palette_component")
+@mcp.tool(
+    name="td_lookup_palette_component",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_lookup_palette_component(
     ctx: Context,
     component_name: str | None = None,
@@ -295,7 +321,12 @@ async def td_lookup_palette_component(
     return {"error": "Provide component_name or query"}
 
 
-@mcp.tool(name="td_get_release_delta")
+@mcp.tool(
+    name="td_get_release_delta",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_get_release_delta(
     ctx: Context,
     build: str | None = None,
@@ -316,7 +347,12 @@ async def td_get_release_delta(
     return {"card": card, "provenance": provenance.to_dict()}
 
 
-@mcp.tool(name="td_get_build_compatibility")
+@mcp.tool(
+    name="td_get_build_compatibility",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_get_build_compatibility(
     ctx: Context,
     op_type: str,
@@ -341,7 +377,12 @@ def _get_popx_brain(ctx: Context):
     return getattr(svc, "popx_brain", None)
 
 
-@mcp.tool(name="td_search_popx_docs")
+@mcp.tool(
+    name="td_search_popx_docs",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_search_popx_docs(
     ctx: Context,
     query: str,
@@ -364,7 +405,12 @@ async def td_search_popx_docs(
     return {"results": results, "count": len(results), "provenance": provenance.to_dict()}
 
 
-@mcp.tool(name="td_get_popx_operator")
+@mcp.tool(
+    name="td_get_popx_operator",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_get_popx_operator(
     ctx: Context,
     operator_name: str,
@@ -389,7 +435,12 @@ async def td_get_popx_operator(
     return {"error": f"No POPx operator found for '{operator_name}'", "provenance": provenance.to_dict()}
 
 
-@mcp.tool(name="td_describe_surface")
+@mcp.tool(
+    name="td_describe_surface",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_describe_surface(ctx: Context) -> dict[str, Any]:
     """Describe the MCP server surface: tool count, resource count, capabilities, version."""
     from td_mcp import __version__

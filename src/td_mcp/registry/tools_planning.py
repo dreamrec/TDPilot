@@ -109,6 +109,7 @@ def _legacy_plan_dict(
     name="td_plan_patch",
     title="Plan Legacy TD Patch Dict",
     description=(
+        "(Legacy — prefer td_brain_plan → td_brain_execute; slated for removal in v3.0.) "
         "Legacy compatibility planner returning the pre-v1.5 patch dict shape. For new "
         "concept-to-network TouchDesigner work, prefer td_brain_plan followed by td_brain_execute."
     ),
@@ -209,6 +210,7 @@ async def td_plan_patch(
     name="td_preflight_patch",
     title="Preflight Legacy TD Patch",
     description=(
+        "(Legacy — prefer td_brain_plan → td_brain_execute; slated for removal in v3.0.) "
         "Read-only validation for legacy td_plan_patch dicts. For new TDPilot-authored builds, "
         "use the BrainPlan path: td_brain_plan then td_brain_execute."
     ),
@@ -307,6 +309,7 @@ async def td_preflight_patch(
     name="td_validate_recipe",
     title="Validate TD Recipe",
     description=(
+        "(Legacy — prefer td_brain_plan → td_brain_execute; slated for removal in v3.0.) "
         "Read-only recipe compatibility check. Use td_brain_plan for new grounded visual-programming "
         "requests that should become a BrainPlan."
     ),
@@ -350,13 +353,15 @@ async def td_validate_recipe(
                 if recipe is None and scope != "global":
                     recipe = store.get(recipe_id, scope="global")
             except Exception as exc:
-                return {"error": f"Could not load recipe '{recipe_id}': {exc}"}
+                return format_tool_error_dict(ValueError(f"Could not load recipe '{recipe_id}': {exc}"))
 
         if recipe is not None and "technique" in recipe:
             recipe = recipe.get("technique", {}).get("recipe", recipe)
 
         if recipe is None:
-            return {"error": "No recipe provided (supply recipe_id or inline recipe dict)."}
+            return format_tool_error_dict(
+                ValueError("No recipe provided (supply recipe_id or inline recipe dict).")
+            )
 
         errors = []
         warnings = []
@@ -435,7 +440,7 @@ async def td_validate_recipe(
         }
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_validate_recipe")
-        return {"error": str(exc)}
+        return format_tool_error_dict(exc)
     finally:
         finish()
 
@@ -695,7 +700,7 @@ async def td_audit_project(
                         if child_path and child_path not in visited:
                             queue.append((child_path, depth + 1))
         except Exception as exc:
-            return {"error": f"Could not fetch nodes at '{root_path}': {exc}"}
+            return format_tool_error_dict(RuntimeError(f"Could not fetch nodes at '{root_path}': {exc}"))
 
         # Count by family and op type
         family_counts: dict[str, int] = {}
@@ -790,6 +795,6 @@ async def td_audit_project(
         }
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_audit_project")
-        return {"error": str(exc)}
+        return format_tool_error_dict(exc)
     finally:
         finish()

@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 from typing import Annotated, Any, Literal
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -31,7 +32,12 @@ from td_mcp.models import AdjustableParamInput, OptimizeVisualInput
 from td_mcp.tool_registry import mcp  # noqa: E402
 
 
-@mcp.tool(name="td_optimize_visual")
+@mcp.tool(
+    name="td_optimize_visual",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_optimize_visual(
     ctx: Context,
     goal: Annotated[
@@ -258,7 +264,12 @@ async def td_optimize_visual(
         finish()
 
 
-@mcp.tool(name="td_describe_dynamics")
+@mcp.tool(
+    name="td_describe_dynamics",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_describe_dynamics(
     ctx: Context,
     path: Annotated[

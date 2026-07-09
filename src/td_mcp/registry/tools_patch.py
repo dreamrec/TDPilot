@@ -40,6 +40,7 @@ def _direct_param_preflight(ctx: Context):
     name="td_patch_plan",
     title="Plan Legacy TD Patch",
     description=(
+        "(Legacy — prefer td_brain_plan → td_brain_execute; slated for removal in v3.0.) "
         "Compatibility/expert surface for typed PatchPlan construction. For new concept-to-network "
         "TouchDesigner builds, prefer td_brain_plan followed by td_brain_execute."
     ),
@@ -103,6 +104,7 @@ async def td_patch_plan(
     name="td_patch_preview",
     title="Preview Legacy TD Patch",
     description=(
+        "(Legacy — prefer td_brain_plan → td_brain_execute; slated for removal in v3.0.) "
         "Read-only PatchPlan preview for compatibility/expert workflows. For new visual builds, "
         "prefer td_brain_plan because it carries concept, corpus, and validation context."
     ),
@@ -157,6 +159,7 @@ async def td_patch_preview(
     name="td_patch_apply",
     title="Apply Legacy TD Patch",
     description=(
+        "(Legacy — prefer td_brain_plan → td_brain_execute; slated for removal in v3.0.) "
         "Destructive compatibility/expert PatchPlan executor. Prefer td_brain_execute for BrainPlans "
         "because it is the default validated transaction path for TDPilot-authored builds."
     ),
@@ -369,6 +372,7 @@ async def _apply_patch_transaction(
     name="td_patch_validate",
     title="Validate TD Patch Target",
     description=(
+        "(Legacy — prefer td_brain_plan → td_brain_execute; slated for removal in v3.0.) "
         "Read-only validation for patch compatibility workflows. BrainPlan workflows should use "
         "td_brain_plan and td_brain_execute so validation is tied to the authored plan."
     ),
@@ -413,6 +417,7 @@ async def td_patch_validate(
     name="td_patch_variations",
     title="Vary Legacy TD Patch",
     description=(
+        "(Legacy — prefer td_brain_plan → td_brain_execute; slated for removal in v3.0.) "
         "Generate PatchPlan variants for compatibility/expert workflows. For new creative builds, "
         "start with td_brain_plan so variants remain grounded in a BrainPlan."
     ),

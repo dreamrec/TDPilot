@@ -217,3 +217,92 @@ def test_readonly_daily_driver_tools_carry_read_only_hint():
         assert tool.annotations is not None, f"{name} has no ToolAnnotations"
         assert tool.annotations.readOnlyHint is True, f"{name} must be readOnlyHint=True"
         assert tool.annotations.destructiveHint is False, f"{name} must be destructiveHint=False"
+
+
+# ── Batch F1: full ToolAnnotations coverage + name-derived hint invariants ──
+#
+# The MCP spec treats a tool with no annotations as unsafe/destructive by
+# default, so read-only tools without annotations lose host auto-approve. Every
+# registered tool must therefore carry ToolAnnotations, and the name-derived
+# read/destructive families below must classify correctly so hosts can decide
+# confirm-vs-auto-approve from the annotation alone.
+
+# Read-family name prefixes that must always be readOnlyHint=True.
+_READONLY_NAME_PREFIXES = ("td_get_", "td_list_", "td_search_", "td_describe_")
+
+# Substrings (or the exact td_project_lifecycle) that mark a destructive tool.
+_DESTRUCTIVE_NAME_MARKERS = ("delete", "disconnect", "restore", "emergency", "clear")
+
+
+def test_every_tool_carries_tool_annotations():
+    """114/114 tools must carry ToolAnnotations (Batch F1)."""
+    tools = asyncio.run(server.mcp.list_tools())
+    missing = sorted(t.name for t in tools if t.annotations is None)
+    assert not missing, f"tools missing ToolAnnotations: {missing}"
+    assert len(tools) >= EXPECTED_MIN_TOOL_COUNT
+
+
+def test_read_family_names_are_read_only():
+    """Every td_get_/td_list_/td_search_/td_describe_ tool is readOnlyHint=True."""
+    tools = asyncio.run(server.mcp.list_tools())
+    offenders = [
+        t.name
+        for t in tools
+        if t.name.startswith(_READONLY_NAME_PREFIXES)
+        and not (t.annotations is not None and t.annotations.readOnlyHint is True)
+    ]
+    assert not offenders, f"read-family tools not marked readOnlyHint=True: {offenders}"
+
+
+def test_destructive_family_names_are_destructive():
+    """Every *delete*/*disconnect*/*restore*/*emergency*/*clear* tool (plus
+    td_project_lifecycle) is destructiveHint=True."""
+    tools = asyncio.run(server.mcp.list_tools())
+    offenders = [
+        t.name
+        for t in tools
+        if (any(m in t.name for m in _DESTRUCTIVE_NAME_MARKERS) or t.name == "td_project_lifecycle")
+        and not (t.annotations is not None and t.annotations.destructiveHint is True)
+    ]
+    assert not offenders, f"destructive-family tools not marked destructiveHint=True: {offenders}"
+
+
+# ── Batch F2: description lint ──
+
+
+def test_every_tool_has_a_substantial_description():
+    """Every registered tool exposes a description/docstring of >= 40 chars.
+
+    Guards against terse one-liners that give a host/model too little to
+    disambiguate the tool. FastMCP resolves ``tool.description`` from the
+    decorator ``description=`` when present, else the function docstring.
+    """
+    tools = asyncio.run(server.mcp.list_tools())
+    thin = sorted((t.name, len(t.description or "")) for t in tools if len(t.description or "") < 40)
+    assert not thin, f"tools with description < 40 chars: {thin}"
+
+
+# ── Batch F4: legacy patch/plan pipeline deprecation notice ──
+
+_LEGACY_DEPRECATED_TOOLS = {
+    "td_plan_patch",
+    "td_preflight_patch",
+    "td_validate_recipe",
+    "td_patch_plan",
+    "td_patch_preview",
+    "td_patch_apply",
+    "td_patch_validate",
+    "td_patch_variations",
+}
+
+_LEGACY_PREFIX = "(Legacy — prefer td_brain_plan → td_brain_execute; slated for removal in v3.0.)"
+
+
+def test_legacy_pipeline_tools_carry_deprecation_prefix():
+    by_name = {tool.name: tool for tool in asyncio.run(server.mcp.list_tools())}
+    for name in _LEGACY_DEPRECATED_TOOLS:
+        tool = by_name.get(name)
+        assert tool is not None, f"missing legacy tool: {name}"
+        assert (tool.description or "").startswith(_LEGACY_PREFIX), (
+            f"{name} description must start with the legacy deprecation prefix"
+        )

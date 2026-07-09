@@ -16,6 +16,7 @@ import json
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from td_mcp import component_notes_store, locations_store  # noqa: E402
@@ -105,7 +106,12 @@ async def _resolve_project_id(ctx: Context) -> tuple[str, str]:
     return locations_store.derive_project_id(None)
 
 
-@mcp.tool(name="td_component_notes")
+@mcp.tool(
+    name="td_component_notes",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_component_notes(
     ctx: Context,
     action: Annotated[

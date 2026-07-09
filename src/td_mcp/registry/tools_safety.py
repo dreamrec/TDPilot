@@ -14,6 +14,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -23,7 +24,12 @@ from td_mcp.models import ParamBound, SetBoundsInput
 from td_mcp.tool_registry import mcp  # noqa: E402
 
 
-@mcp.tool(name="td_set_param_bounds")
+@mcp.tool(
+    name="td_set_param_bounds",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_set_param_bounds(
     ctx: Context,
     bounds: Annotated[
@@ -86,7 +92,12 @@ async def td_set_param_bounds(
         finish()
 
 
-@mcp.tool(name="td_clear_param_bounds")
+@mcp.tool(
+    name="td_clear_param_bounds",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False
+    ),
+)
 async def td_clear_param_bounds(
     ctx: Context,
     paths: Annotated[
@@ -131,7 +142,12 @@ async def td_clear_param_bounds(
         finish()
 
 
-@mcp.tool(name="td_detect_instability")
+@mcp.tool(
+    name="td_detect_instability",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_detect_instability(
     ctx: Context,
     path: Annotated[
@@ -217,7 +233,12 @@ async def td_detect_instability(
         finish()
 
 
-@mcp.tool(name="td_emergency_stabilize")
+@mcp.tool(
+    name="td_emergency_stabilize",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_emergency_stabilize(
     ctx: Context,
     path: Annotated[

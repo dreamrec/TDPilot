@@ -28,13 +28,23 @@ from td_mcp.models import ProjectLifecycleInput
 from td_mcp.tool_registry import mcp  # noqa: E402
 
 
-@mcp.tool(name="td_timeline")
+@mcp.tool(
+    name="td_timeline",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_timeline(ctx: Context) -> str:
     """Read current timeline state: frame, seconds, FPS, playing. Returns a JSON envelope."""
     return await _tr._forward(ctx, "td_timeline", "timeline")
 
 
-@mcp.tool(name="td_timeline_set")
+@mcp.tool(
+    name="td_timeline_set",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_timeline_set(
     ctx: Context,
     action: Annotated[
@@ -143,7 +153,12 @@ async def td_project_lifecycle(
     )
 
 
-@mcp.tool(name="td_pulse_param")
+@mcp.tool(
+    name="td_pulse_param",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_pulse_param(
     ctx: Context,
     path: Annotated[
@@ -165,7 +180,12 @@ async def td_pulse_param(
     )
 
 
-@mcp.tool(name="td_python_help")
+@mcp.tool(
+    name="td_python_help",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_python_help(
     ctx: Context,
     target: Annotated[
@@ -180,7 +200,12 @@ async def td_python_help(
     return await _tr._forward(ctx, "td_python_help", "python/help", {"target": target})
 
 
-@mcp.tool(name="td_python_classes")
+@mcp.tool(
+    name="td_python_classes",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_python_classes(ctx: Context) -> str:
     """List available Python classes in the TD runtime. Returns a JSON envelope."""
     return await _tr._forward(ctx, "td_python_classes", "python/classes")

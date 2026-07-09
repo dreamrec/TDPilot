@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -22,7 +23,12 @@ from td_mcp.models import MacroType
 from td_mcp.tool_registry import mcp  # noqa: E402
 
 
-@mcp.tool(name="td_create_macro")
+@mcp.tool(
+    name="td_create_macro",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_create_macro(
     ctx: Context,
     macro_type: Annotated[
@@ -76,7 +82,7 @@ async def td_create_macro(
         ),
     ] = "warn",
 ) -> str:
-    """Create a macro template network."""
+    """Instantiate a macro template network (e.g. feedback) inside a parent COMP."""
     finish = _tr._start_tool(ctx, "td_create_macro")
     try:
         engine = _tr._get_macro_engine(ctx)
@@ -106,7 +112,12 @@ async def td_create_macro(
         finish()
 
 
-@mcp.tool(name="td_list_macros")
+@mcp.tool(
+    name="td_list_macros",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_list_macros(ctx: Context) -> str:
     """List all available macro templates (built-in plus user templates). Returns a JSON envelope."""
     finish = _tr._start_tool(ctx, "td_list_macros")
@@ -120,7 +131,12 @@ async def td_list_macros(ctx: Context) -> str:
         finish()
 
 
-@mcp.tool(name="td_get_macro_params")
+@mcp.tool(
+    name="td_get_macro_params",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_get_macro_params(
     ctx: Context,
     macro_type: Annotated[

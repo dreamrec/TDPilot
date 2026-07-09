@@ -46,8 +46,11 @@ def _direct_param_preflight(ctx: Context):
     name="td_brain_plan",
     title="Plan TD Brain Task",
     description=(
-        "Use this when the user asks TDPilot to build or debug a real TouchDesigner visual "
-        "system and you need a grounded, non-mutating concept graph plus typed patch plan."
+        "DEFAULT planning entry point: use this when the user asks TDPilot to build or debug a "
+        "real TouchDesigner visual system and you need a grounded, non-mutating concept graph "
+        "plus typed patch plan. Pair with td_brain_execute to apply the result; fall back to "
+        "td_brain_ground → td_brain_propose only when this returns blocked/unsupported. The "
+        "legacy td_plan_patch / td_patch_* pipeline is deprecated — do not use it for new builds."
     ),
     annotations=ToolAnnotations(
         readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
@@ -405,8 +408,12 @@ async def td_brain_propose(
     name="td_brain_execute",
     title="Execute TD Brain Plan",
     description=(
-        "Use this when you already have a BrainPlan from td_brain_plan and need TDPilot "
-        "to apply it transactionally with validation, rollback, and optional local learning."
+        "DEFAULT apply path for a BrainPlan: use this when you already have a BrainPlan from "
+        "td_brain_plan (or a draft from td_brain_propose) and need TDPilot to apply it "
+        "transactionally with validation, rollback, and optional local learning. Prefer the "
+        "lower-level td_transaction_apply only when you hold a ready PatchPlan/BrainPlan and "
+        "want to drive raw transaction controls yourself (no grounding, no learning). Do not "
+        "use the legacy td_plan_patch / td_patch_* pipeline for new builds."
     ),
     annotations=ToolAnnotations(
         readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
@@ -559,8 +566,11 @@ async def td_brain_execute(
     name="td_transaction_apply",
     title="Apply TD Transaction",
     description=(
-        "Use this when you need to apply an existing PatchPlan or BrainPlan with preflight, "
-        "snapshot, validation, dry-run, max-op, and rollback controls."
+        "Low-level executor: use this when you already hold a ready PatchPlan or BrainPlan and "
+        "want to drive raw preflight, snapshot, validation, dry-run, max-op, and rollback "
+        "controls yourself. For the normal BrainPlan build flow prefer td_brain_execute, which "
+        "wraps this layer and adds grounding-aware concept profiles and optional local learning. "
+        "Do not use the legacy td_plan_patch / td_patch_* pipeline for new builds."
     ),
     annotations=ToolAnnotations(
         readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True

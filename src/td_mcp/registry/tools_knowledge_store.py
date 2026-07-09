@@ -18,6 +18,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from td_mcp import tool_registry as _tr  # noqa: E402
@@ -25,7 +26,12 @@ from td_mcp.errors import format_tool_error
 from td_mcp.tool_registry import mcp  # noqa: E402
 
 
-@mcp.tool(name="td_knowledge_save")
+@mcp.tool(
+    name="td_knowledge_save",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False
+    ),
+)
 async def td_knowledge_save(
     ctx: Context,
     body: Annotated[
@@ -76,11 +82,13 @@ async def td_knowledge_save(
         ),
     ] = "project",
 ) -> str:
-    """Persist a free-form markdown knowledge entry.
+    """Persist a free-form markdown knowledge entry (prose/notes/essays).
 
     Returns the entry id. The body is stored at
     ~/.tdpilot/knowledge/<scope>/entries/<id>.md and the metadata in
-    index.json. Local-only, never pushed anywhere.
+    index.json. Local-only, never pushed anywhere. Prefer td_memory_save (with
+    td_memory_learn) when you want to capture a structured, replayable technique
+    recipe rather than free-form prose.
     """
     finish = _tr._start_tool(ctx, "td_knowledge_save")
     try:
@@ -120,7 +128,12 @@ async def td_knowledge_save(
         finish()
 
 
-@mcp.tool(name="td_knowledge_recall")
+@mcp.tool(
+    name="td_knowledge_recall",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_knowledge_recall(
     ctx: Context,
     query: Annotated[
@@ -150,9 +163,13 @@ async def td_knowledge_recall(
         ),
     ] = False,
 ) -> str:
-    """Search knowledge entries. Returns summaries (no full bodies).
+    """Search the free-form markdown knowledge store. Returns summaries (no bodies).
 
-    Use ``td_knowledge_get`` afterward to fetch a specific entry's body.
+    Use this for prose reference content — notes, essays, prose-with-math saved
+    via td_knowledge_save. Use ``td_knowledge_get`` afterward to fetch a specific
+    entry's body. Prefer td_memory_recall when you want the structured, replayable
+    technique-recipe library (learned via td_memory_learn, rebuilt with
+    td_memory_replay) rather than free-form notes.
     """
     finish = _tr._start_tool(ctx, "td_knowledge_recall")
     try:
@@ -178,7 +195,12 @@ async def td_knowledge_recall(
         finish()
 
 
-@mcp.tool(name="td_knowledge_get")
+@mcp.tool(
+    name="td_knowledge_get",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_knowledge_get(
     ctx: Context,
     entry_id: Annotated[
@@ -210,7 +232,12 @@ async def td_knowledge_get(
         finish()
 
 
-@mcp.tool(name="td_knowledge_list")
+@mcp.tool(
+    name="td_knowledge_list",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_knowledge_list(
     ctx: Context,
     scope: Annotated[
@@ -230,7 +257,10 @@ async def td_knowledge_list(
         Field(default=50, ge=1, le=200, description="Max results."),
     ] = 50,
 ) -> str:
-    """List knowledge entry summaries, newest first."""
+    """List free-form markdown knowledge-entry summaries, newest first.
+
+    Prefer td_memory_list for the structured, replayable technique library.
+    """
     finish = _tr._start_tool(ctx, "td_knowledge_list")
     try:
         store = _tr._get_knowledge_store(ctx)

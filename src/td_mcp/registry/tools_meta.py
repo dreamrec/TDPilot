@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -187,7 +188,12 @@ async def _live_component_status(ctx: Context) -> dict[str, Any]:
     return status
 
 
-@mcp.tool(name="td_get_activity_log")
+@mcp.tool(
+    name="td_get_activity_log",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_get_activity_log(
     ctx: Context,
     limit: Annotated[
@@ -235,7 +241,12 @@ async def td_get_activity_log(
         finish()
 
 
-@mcp.tool(name="td_self_update")
+@mcp.tool(
+    name="td_self_update",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_self_update(
     ctx: Context,
     check_only: Annotated[
@@ -280,7 +291,12 @@ async def td_self_update(
         finish()
 
 
-@mcp.tool(name="td_sync_status")
+@mcp.tool(
+    name="td_sync_status",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_sync_status(
     ctx: Context,
     check_remote: Annotated[
@@ -345,7 +361,12 @@ async def td_sync_status(
         finish()
 
 
-@mcp.tool(name="td_sync_diagnose")
+@mcp.tool(
+    name="td_sync_diagnose",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_sync_diagnose(
     ctx: Context,
     include_live: Annotated[

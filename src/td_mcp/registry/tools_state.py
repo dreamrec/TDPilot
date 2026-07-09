@@ -26,6 +26,7 @@ from datetime import datetime, timezone
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -35,7 +36,12 @@ from td_mcp.errors import format_tool_error
 from td_mcp.tool_registry import mcp  # noqa: E402
 
 
-@mcp.tool(name="td_get_state_vector")
+@mcp.tool(
+    name="td_get_state_vector",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_get_state_vector(
     ctx: Context,
     path: Annotated[
@@ -91,7 +97,12 @@ async def td_get_state_vector(
         finish()
 
 
-@mcp.tool(name="td_get_timescale_state")
+@mcp.tool(
+    name="td_get_timescale_state",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_get_timescale_state(
     ctx: Context,
     bpm_hint: Annotated[
@@ -113,7 +124,7 @@ async def td_get_timescale_state(
         ),
     ] = 4,
 ) -> str:
-    """Beat/phrase derived timeline state."""
+    """Read beat/phrase-derived timeline state (bars, beats, phrase position)."""
     finish = _tr._start_tool(ctx, "td_get_timescale_state")
     try:
         timeline = await _tr._get_client(ctx).request("timeline")
@@ -190,7 +201,12 @@ async def _exec_focus_probe(ctx: Context) -> dict[str, Any]:
     return result
 
 
-@mcp.tool(name="td_get_focus")
+@mcp.tool(
+    name="td_get_focus",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_get_focus(
     ctx: Context,
     include_pane_history: Annotated[
@@ -259,7 +275,12 @@ async def _navigate_to(ctx: Context, target_path: str) -> dict[str, Any]:
     return result if isinstance(result, dict) else {"success": False, "error": "non-dict result"}
 
 
-@mcp.tool(name="td_locations")
+@mcp.tool(
+    name="td_locations",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_locations(
     ctx: Context,
     action: Annotated[

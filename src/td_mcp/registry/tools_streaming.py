@@ -19,6 +19,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -28,7 +29,12 @@ from td_mcp.events.uri import top_frame_uri
 from td_mcp.tool_registry import TD_STREAM_MAX_FPS, mcp  # noqa: E402
 
 
-@mcp.tool(name="td_capture_and_analyze")
+@mcp.tool(
+    name="td_capture_and_analyze",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+    ),
+)
 async def td_capture_and_analyze(
     ctx: Context,
     path: Annotated[
@@ -69,7 +75,14 @@ async def td_capture_and_analyze(
         ),
     ] = None,
 ) -> str:
-    """Screenshot capture with optional AI analysis."""
+    """Capture a TOP frame together with cooking + error state, plus optional AI analysis.
+
+    Use this when you want one call that folds the screenshot together with
+    cooking info and node errors (and, if sampling is supported, an AI read of
+    the frame). Prefer td_screenshot for a bare inline frame; prefer
+    td_capture_frame for a metadata-first capture without the extra
+    cooking/error probes.
+    """
     finish = _tr._start_tool(ctx, "td_capture_and_analyze")
     try:
         if not confirm_image_capture:
@@ -137,7 +150,12 @@ async def td_capture_and_analyze(
         finish()
 
 
-@mcp.tool(name="td_monitor_visual")
+@mcp.tool(
+    name="td_monitor_visual",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_monitor_visual(
     ctx: Context,
     path: Annotated[
@@ -240,7 +258,12 @@ async def td_monitor_visual(
         finish()
 
 
-@mcp.tool(name="td_stop_monitor_visual")
+@mcp.tool(
+    name="td_stop_monitor_visual",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_stop_monitor_visual(
     ctx: Context,
     path: Annotated[
@@ -248,7 +271,7 @@ async def td_stop_monitor_visual(
         Field(description="TOP path being monitored."),
     ],
 ) -> str:
-    """Stop a running visual monitor."""
+    """Stop a running visual-monitor job by its monitor id."""
     finish = _tr._start_tool(ctx, "td_stop_monitor_visual")
     try:
         monitor = _tr._get_visual_monitor(ctx)
@@ -266,7 +289,12 @@ async def td_stop_monitor_visual(
         finish()
 
 
-@mcp.tool(name="td_stream_top")
+@mcp.tool(
+    name="td_stream_top",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True
+    ),
+)
 async def td_stream_top(
     ctx: Context,
     path: Annotated[
@@ -371,7 +399,12 @@ async def td_stream_top(
         finish()
 
 
-@mcp.tool(name="td_stop_stream_top")
+@mcp.tool(
+    name="td_stop_stream_top",
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_stop_stream_top(
     ctx: Context,
     path: Annotated[
@@ -379,7 +412,7 @@ async def td_stop_stream_top(
         Field(description="TOP path being streamed."),
     ],
 ) -> str:
-    """Stop a running TOP stream."""
+    """Stop a running continuous TOP stream by its stream id."""
     finish = _tr._start_tool(ctx, "td_stop_stream_top")
     try:
         streamer = _tr._get_top_streamer(ctx)

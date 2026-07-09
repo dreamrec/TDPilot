@@ -29,10 +29,12 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import Context
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
 from td_mcp import tool_registry as _tr  # noqa: E402
+from td_mcp.errors import format_tool_error_dict
 from td_mcp.knowledge.freshness import Provenance
 from td_mcp.tool_registry import mcp  # noqa: E402
 
@@ -144,7 +146,12 @@ def _official_snippet_examples(
     return examples
 
 
-@mcp.tool(name="td_recommend_official_component")
+@mcp.tool(
+    name="td_recommend_official_component",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_recommend_official_component(
     ctx: Context,
     goal: Annotated[
@@ -208,12 +215,17 @@ async def td_recommend_official_component(
         return payload
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_recommend_official_component")
-        return {"error": str(exc)}
+        return format_tool_error_dict(exc)
     finally:
         finish()
 
 
-@mcp.tool(name="td_find_official_example")
+@mcp.tool(
+    name="td_find_official_example",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_find_official_example(
     ctx: Context,
     query: Annotated[
@@ -287,12 +299,17 @@ async def td_find_official_example(
         }
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_find_official_example")
-        return {"error": str(exc)}
+        return format_tool_error_dict(exc)
     finally:
         finish()
 
 
-@mcp.tool(name="td_explain_better_way")
+@mcp.tool(
+    name="td_explain_better_way",
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+    ),
+)
 async def td_explain_better_way(
     ctx: Context,
     intent: Annotated[
@@ -374,6 +391,6 @@ async def td_explain_better_way(
         return payload
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_explain_better_way")
-        return {"error": str(exc)}
+        return format_tool_error_dict(exc)
     finally:
         finish()
