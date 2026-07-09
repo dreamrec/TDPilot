@@ -912,6 +912,58 @@ def test_brain_live_smoke_cli_merges_incident_replay_evidence():
     assert report["incident_replay"]["untriaged"] == []
 
 
+class _PerfLiveClient:
+    """Fake cooking endpoint that advances absTime.frame between samples."""
+
+    def __init__(self, *, cook_ms: float, frame_step: int) -> None:
+        self._cook_ms = cook_ms
+        self._frame = 100
+        self._frame_step = frame_step
+
+    async def request(self, endpoint: str, params: dict | None = None):
+        if endpoint == "cooking":
+            frame = self._frame
+            self._frame += self._frame_step
+            return {
+                "frame": frame,
+                "nodes": [
+                    {"path": "/project1/moviefilein1", "cookTime": self._cook_ms},
+                ],
+            }
+        return {}
+
+
+@pytest.mark.asyncio
+async def test_performance_summary_records_frame_advance_over_window():
+    from td_mcp.brain.live_smoke import _collect_performance_summary
+
+    client = _PerfLiveClient(cook_ms=5.0, frame_step=30)
+    summary = await _collect_performance_summary(
+        client, target_root="/project1", sample_interval_s=0, steady_samples=5
+    )
+
+    # 1 warmup + 5 steady samples were taken over the window.
+    assert summary["sample_count"] == 6
+    # Timeline advanced (frame moved forward each sample) → honest steady state.
+    assert summary["frames_advanced"] == 150
+    assert summary["frame_advance_ok"] is True
+    assert summary["ok"] is True
+
+
+@pytest.mark.asyncio
+async def test_performance_summary_flags_frozen_timeline():
+    from td_mcp.brain.live_smoke import _collect_performance_summary
+
+    # frame_step=0 → a paused/frozen graph returning the same cached frame.
+    client = _PerfLiveClient(cook_ms=5.0, frame_step=0)
+    summary = await _collect_performance_summary(
+        client, target_root="/project1", sample_interval_s=0, steady_samples=5
+    )
+
+    assert summary["frames_advanced"] == 0
+    assert summary["frame_advance_ok"] is False
+
+
 def test_release_skills_include_live_smoke_gate_commands():
     skill_paths = [
         ROOT / "skills" / "tdpilot-brain-release" / "SKILL.md",

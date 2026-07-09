@@ -67,6 +67,7 @@ def policy():
         },
         funcs={
             "_normalize_for_check",
+            "_ast_reflection_violation",
             "_restricted_exec_violation",
             "_standard_exec_violation",
             "_exec_policy_violation",
@@ -102,6 +103,69 @@ def test_restricted_allows_benign_op_access(policy):
 
 def test_standard_blocks_globals_reflection(policy):
     assert policy._standard_exec_violation("g = f.__globals__") is not None
+
+
+# --- standard-mode concat-obfuscated reflection escape (P2 security finding) ---
+#
+# The TD-side `standard` builtins KEEP getattr/type, and the token scan is
+# substring-only, so `getattr(x, '__cl' + 'ass__')` used to slip past the
+# authoritative TD-side check even though the MCP-side AST caught it. These
+# assert the ported AST layer closes the gap so the TD side is no longer the
+# weaker link (SECURITY.md "TD-side is authoritative" invariant).
+
+
+def _concat_getattr_reflection_payload():
+    # Split every reflection dunder across a `+` so no contiguous substring of
+    # the banned literal appears in source. Built at runtime so the flagged
+    # literal never appears whole in THIS test file either.
+    cls = "'__cl' + 'ass__'"
+    subs = "'__subc' + 'lasses__'"
+    return "getattr(getattr((), " + cls + "), " + subs + ")()"
+
+
+def test_standard_blocks_concat_getattr_reflection(policy):
+    payload = _concat_getattr_reflection_payload()
+    # sanity: the obfuscation really does defeat the plain token scan
+    assert "__class__" not in payload and "__subclasses__" not in payload
+    assert policy._standard_exec_violation(payload) is not None
+
+
+def test_standard_blocks_getattr_of_globals(policy):
+    # getattr-resolved __globals__ reaches the real builtins dict
+    assert policy._standard_exec_violation("getattr(f, '__glob' + 'als__')") is not None
+
+
+def test_standard_blocks_builtins_subscript(policy):
+    assert policy._standard_exec_violation("__builtins__['ev' + 'al']('1')") is not None
+
+
+def test_standard_blocks_nonliteral_getattr_name(policy):
+    # A runtime-computed attribute name can't be proven safe → rejected outright.
+    assert policy._standard_exec_violation("getattr(f, some_var)") is not None
+
+
+def test_restricted_blocks_concat_getattr_in_param_expr(policy):
+    # Param expressions / DAT content are evaluated later in TD's FULL Python,
+    # where the sandboxed builtins never apply, so restricted must also catch the
+    # concat escape statically. `_exec_policy_violation` routes to the restricted
+    # check for restricted mode.
+    payload = _concat_getattr_reflection_payload()
+    assert policy._exec_policy_violation("restricted", payload) is not None
+    assert policy._dat_content_violation("restricted", payload) is not None
+
+
+def test_standard_allows_benign_getattr_and_type(policy):
+    # The fix must NOT break legitimate standard-mode reflection: a literal,
+    # non-dunder attribute name and plain type() stay allowed.
+    assert policy._standard_exec_violation("v = getattr(op('x'), 'par')") is None
+    assert policy._standard_exec_violation("t = type(op('x'))") is None
+    assert policy._standard_exec_violation("n = op('x').__class__") is None
+
+
+def test_ast_reflection_ignores_syntax_errors(policy):
+    # Malformed code must not become a spurious PermissionError — TD raises the
+    # real SyntaxError at exec time instead.
+    assert policy._ast_reflection_violation("def (:oops") is None
 
 
 # --- expression-write policy (handle_set_params expr) ---
