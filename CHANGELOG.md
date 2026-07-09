@@ -1,6 +1,75 @@
 # Changelog
 
 
+## 2.1.0 - 2026-07-09 — Ultrareview cycle: LLM-as-planner, value grounding, reliability & trust
+
+The largest single release since the v2.0 brain. An 8-dimension product
+audit drove eight fix batches. Tool count 112 → **114**.
+
+**⚠️ Upgrade note:** this release changes the TD-side component (baked
+`.tox` sources), so after updating you must reinstall/rebuild the component
+(`td_self_update` then re-run `setup_mcp_in_td.py` in the Textport, or drag
+the new `tdpilot.tox` into `/local`). The shared-secret handling also
+changed — see "Reliability" below; existing secrets are migrated
+automatically.
+
+### The brain: plan at your full creative range
+- **`td_brain_ground`** (new) — returns a grounding pack for an intent
+  (task features, corpus evidence, candidate operator cards with key params
+  and gotchas, tiered parameter contracts, operator availability, live
+  scene state, exemplars, and an authoring contract) so the host agent can
+  author a plan itself instead of being limited to keyword routes.
+- **`td_brain_propose`** (new) — validates a host-authored draft through the
+  reviewed-draft gate and the existing candidate→BrainPlan bridge, caches
+  the accepted plan, and returns either an executable plan or
+  machine-readable rejections to iterate on.
+- **Parameter-verification polarity flip** — a proposed parameter value now
+  survives if it is verified by the hand registry *or* named in the
+  operator's official-docs atlas card (previously only the ~69-operator
+  registry counted, so the other ~587 operators lost all values). A golden
+  `param_value_coverage` gate keeps plans carrying real values, not defaults.
+- `td_brain_execute` accepts a `plan_id` so hosts don't re-echo multi-KB
+  plans; adoption telemetry (`td_get_server_metrics.brain_adoption`).
+
+### Value grounding & verification
+- **`td_screenshot` / `td_capture_frame` `save_path`** — write the frame to
+  disk and return metadata instead of a token-heavy base64 payload
+  (validated against traversal/symlink escape).
+- **Motion probe** — feedback and audio-reactive plans now fail validation
+  (and roll back) if two sampled frames are identical, so a frozen render no
+  longer passes.
+- ParamSemantics (enum/range/default/cook-risk) surfaced in
+  `td_get_param_help` / `td_get_operator_doc`; 10 starter technique recipes;
+  TD-2025 param-rename and live-param-safety hint packs; synonym-aware
+  operator retrieval.
+
+### Reliability & distribution
+- **Single-secret model** — installers write only `~/.tdpilot/.tdpilot.env`
+  (with `TD_MCP_AUTOGENERATE_SECRET=1` in client configs); read order is
+  reconciled everywhere; `td_sync_diagnose` fingerprints the whole secret
+  chain and names the winner. Kills the recurring 401 drift.
+- **`npx tdpilot update`**, a **Windows CI job**, CI-must-be-green gating on
+  both publish workflows, and a **generated** `API_REFERENCE.md`
+  (`gen_api_reference.py`, `--check` in CI) so the tool doc can't drift.
+- A dedicated **401 recovery envelope** routing to `td_sync_diagnose`; the
+  `tdpilot.tox` asset is attached to releases again (un-breaks
+  `td_self_update`); the `npx tdpilot` Textport snippet now actually runs.
+
+### Security & trust
+- Closed a TD-side `standard`-mode sandbox gap (concat-`getattr` reflection
+  to `__import__`) with an AST reflection check and executed adversarial
+  tests; tamper-evident release-gate provenance; SECURITY.md network-exposure
+  and private-disclosure (GHSA) docs.
+
+### Adoption
+- Outcome-first README with three pasteable prompts; `/td-first-wow`,
+  `/td-audio-reactive`, `/td-explain-patch` guided commands; CONTRIBUTING,
+  issue templates, a multi-host install guide, and 114/114 tool annotations
+  so MCP hosts can auto-approve read-only calls.
+- The 8 legacy plan→apply tools are marked deprecated (see `DEPRECATIONS.md`;
+  removal in v3.0).
+
+
 ## 2.0.3 - 2026-06-25 — Live-debug validation hardening + sandbox-escape fix
 
 Follow-up to the 2.0.2 ultrareview pass. Adds two sync-truth tools and a
