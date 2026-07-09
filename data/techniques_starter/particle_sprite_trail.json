@@ -1,0 +1,192 @@
+{
+  "count": 1,
+  "scope": "global",
+  "techniques": {
+    "starter-particle-sprite-trail": {
+      "compatibility": {
+        "required_ops": [
+          "circlePOP",
+          "compositeTOP",
+          "feedbackTOP",
+          "levelTOP",
+          "nullPOP",
+          "nullTOP",
+          "particlePOP",
+          "rendersimpleTOP"
+        ],
+        "verified_on": null
+      },
+      "created_at": "2026-07-09T00:00:00+00:00",
+      "description": "Circle POP feeding a Particle POP rendered with Render Simple TOP, with a feedback trail on the rendered output.",
+      "favorite": false,
+      "id": "starter-particle-sprite-trail",
+      "last_replayed_at": null,
+      "name": "Particle GPU sprite trail",
+      "notes": "POPs are GPU-resident: keep birthrate bounded. rendersimpleTOP.pop must reference the stable /pop_out null, and the trail loop closes at /comp via feedback.par.top.",
+      "rating": 0,
+      "replay_count": 0,
+      "state": "candidate",
+      "tags": [
+        "gpu",
+        "particles",
+        "pop",
+        "starter",
+        "trails"
+      ],
+      "technique": {
+        "complexity": "small",
+        "connection_count": 7,
+        "description": "Circle POP feeding a Particle POP rendered with Render Simple TOP, with a feedback trail on the rendered output.",
+        "families": {
+          "POP": 3,
+          "TOP": 5
+        },
+        "key_params": null,
+        "name": "Particle GPU sprite trail",
+        "node_count": 8,
+        "op_types": {
+          "circlePOP": 1,
+          "compositeTOP": 1,
+          "feedbackTOP": 1,
+          "levelTOP": 1,
+          "nullPOP": 1,
+          "nullTOP": 1,
+          "particlePOP": 1,
+          "rendersimpleTOP": 1
+        },
+        "recipe": {
+          "connections": [
+            {
+              "from": "/emitter",
+              "from_index": 0,
+              "to": "/particles",
+              "to_index": 0
+            },
+            {
+              "from": "/particles",
+              "from_index": 0,
+              "to": "/pop_out",
+              "to_index": 0
+            },
+            {
+              "from": "/render",
+              "from_index": 0,
+              "to": "/comp",
+              "to_index": 0
+            },
+            {
+              "from": "/render",
+              "from_index": 0,
+              "to": "/feedback",
+              "to_index": 0
+            },
+            {
+              "from": "/feedback",
+              "from_index": 0,
+              "to": "/fade",
+              "to_index": 0
+            },
+            {
+              "from": "/fade",
+              "from_index": 0,
+              "to": "/comp",
+              "to_index": 1
+            },
+            {
+              "from": "/comp",
+              "from_index": 0,
+              "to": "/out",
+              "to_index": 0
+            }
+          ],
+          "external_assets": [],
+          "layout": {},
+          "nodes": {
+            "/comp": {
+              "family": "TOP",
+              "name": "comp",
+              "params": {
+                "operand": "add"
+              },
+              "type": "compositeTOP"
+            },
+            "/emitter": {
+              "family": "POP",
+              "name": "emitter",
+              "params": {},
+              "type": "circlePOP"
+            },
+            "/fade": {
+              "family": "TOP",
+              "name": "fade",
+              "params": {
+                "opacity": 0.9
+              },
+              "type": "levelTOP"
+            },
+            "/feedback": {
+              "family": "TOP",
+              "name": "feedback",
+              "params": {
+                "top": "./comp"
+              },
+              "type": "feedbackTOP"
+            },
+            "/out": {
+              "family": "TOP",
+              "name": "out",
+              "params": {},
+              "type": "nullTOP"
+            },
+            "/particles": {
+              "family": "POP",
+              "name": "particles",
+              "params": {
+                "birthrate": 400,
+                "life": 3.0
+              },
+              "type": "particlePOP"
+            },
+            "/pop_out": {
+              "family": "POP",
+              "name": "pop_out",
+              "params": {},
+              "type": "nullPOP"
+            },
+            "/render": {
+              "family": "TOP",
+              "name": "render",
+              "params": {
+                "pop": "./pop_out"
+              },
+              "type": "rendersimpleTOP"
+            }
+          }
+        },
+        "required_op_types": [
+          "circlePOP",
+          "compositeTOP",
+          "feedbackTOP",
+          "levelTOP",
+          "nullPOP",
+          "nullTOP",
+          "particlePOP",
+          "rendersimpleTOP"
+        ],
+        "source_path": null,
+        "tags": [
+          "gpu",
+          "particles",
+          "pop",
+          "starter",
+          "trails"
+        ],
+        "td_build": "",
+        "verified_on": null
+      },
+      "updated_at": "2026-07-09T00:00:00+00:00",
+      "validation_result": null
+    }
+  },
+  "version": 1
+}

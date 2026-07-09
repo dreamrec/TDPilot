@@ -729,3 +729,59 @@ def test_tool_surfaces_keys_are_all_known_tools():
         )
     assert 1 in SUPPORTED_SCHEMA_VERSIONS
     assert 2 in SUPPORTED_SCHEMA_VERSIONS
+
+
+# ── v2.0.4: field-knowledge topic packs (td2025_param_renames, live_param_safety) ──
+
+
+def test_shipped_td2025_param_renames_pack_loads_and_routes():
+    reg = default_registry()
+
+    assert "td2025_param_renames" in reg.topics()
+    hints = {m.hint.id for m in reg.find(topic="td2025_param_renames", surface="query")}
+    assert {
+        "circle_radius_radx_rady",
+        "constant_color_vs_const_value",
+        "math_chop_no_abs_mod",
+        "audiofilter_not_audiofilt",
+        "param_expressions_python_math",
+        "glsl_top_tdoutputswizzle",
+    }.issubset(hints)
+
+
+def test_shipped_live_param_safety_pack_loads_and_routes():
+    reg = default_registry()
+
+    assert "live_param_safety" in reg.topics()
+    hints = {m.hint.id for m in reg.find(topic="live_param_safety", surface="query")}
+    assert {
+        "transform_generic_write_bind_corruption",
+        "repoll_params_before_regression_hypothesis",
+        "feedback_reset_pulse_after_retime",
+    }.issubset(hints)
+
+
+def test_python_math_hint_fires_on_tscript_trig_error():
+    reg = default_registry()
+
+    matches = reg.find(error_text="NameError: name 'sin' is not defined", surface="errors")
+
+    assert any(m.hint.id == "param_expressions_python_math" for m in matches)
+
+
+def test_transform_bind_hint_fires_on_set_params_surface_only():
+    reg = default_registry()
+
+    on_surface = reg.find(op_type="transformTOP", surface="set_params")
+    assert any(m.hint.id == "transform_generic_write_bind_corruption" for m in on_surface)
+
+    off_surface = reg.find(op_type="transformTOP", surface=None)
+    assert not any(m.hint.id == "transform_generic_write_bind_corruption" for m in off_surface)
+
+
+def test_audiofilt_typo_error_fires_rename_hint():
+    reg = default_registry()
+
+    matches = reg.find(error_text="Unknown operator type: audiofiltCHOP", surface="error_recovery")
+
+    assert any(m.hint.id == "audiofilter_not_audiofilt" for m in matches)

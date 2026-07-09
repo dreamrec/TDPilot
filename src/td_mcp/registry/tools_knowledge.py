@@ -23,6 +23,7 @@ Knowledge-specific helpers also live here:
 
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import Any
 
 from mcp.server.fastmcp import Context
@@ -34,6 +35,71 @@ from td_mcp import tool_registry as _tr  # noqa: E402
 from td_mcp.capabilities import detect_capabilities
 from td_mcp.knowledge.freshness import Provenance
 from td_mcp.tool_registry import mcp  # noqa: E402
+
+# ── ParamSemantics exposure (read-only view over the brain registry) ──
+#
+# td_get_operator_doc / td_get_param_help serialize the docs-grounded
+# ParamSemantics contracts (enum_values, valid_range, default_strategy,
+# cook_risk) so knowledge callers see real parameter-value grounding, not
+# just prose. Read-only use of td_mcp.brain.param_semantics — the registry
+# itself is owned by the brain layer.
+
+
+@lru_cache(maxsize=1)
+def _param_semantics_by_op() -> dict[str, dict[str, Any]]:
+    """Index compact ParamSemantics dicts by canonical op type, lazily."""
+    from td_mcp.brain.param_semantics import semantics_by_op_and_param
+
+    by_op: dict[str, dict[str, Any]] = {}
+    for (op_type, name), semantic in semantics_by_op_and_param().items():
+        fields = _compact_param_semantics(semantic)
+        if fields:
+            by_op.setdefault(op_type, {})[name] = fields
+    return by_op
+
+
+def _compact_param_semantics(semantic: Any) -> dict[str, Any]:
+    """Serialize one ParamSemantics contract, keeping only non-null fields."""
+    fields: dict[str, Any] = {}
+    if getattr(semantic, "value_kind", None):
+        fields["value_kind"] = semantic.value_kind
+    if getattr(semantic, "enum_values", None):
+        fields["enum_values"] = list(semantic.enum_values)
+    if getattr(semantic, "valid_range", None) is not None:
+        fields["valid_range"] = list(semantic.valid_range)
+    if getattr(semantic, "default_strategy", None):
+        fields["default_strategy"] = semantic.default_strategy
+    cook_risk = getattr(semantic, "cook_risk", None)
+    if cook_risk and cook_risk != "unknown":
+        fields["cook_risk"] = cook_risk
+    if getattr(semantic, "expected_family", None):
+        fields["expected_family"] = semantic.expected_family
+    if getattr(semantic, "expected_op_type", None):
+        fields["expected_op_type"] = semantic.expected_op_type
+    if getattr(semantic, "unit", None):
+        fields["unit"] = semantic.unit
+    if getattr(semantic, "official_source", None):
+        fields["official_source"] = semantic.official_source
+    return fields
+
+
+def _param_semantics_for_op(op_type: str, family: str = "") -> dict[str, Any]:
+    """Return all known compact ParamSemantics for an operator type."""
+    if not op_type:
+        return {}
+    try:
+        from td_mcp.brain.param_semantics import canonical_op_type
+
+        canonical = canonical_op_type(op_type, family or None)
+        return dict(sorted(_param_semantics_by_op().get(canonical, {}).items()))
+    except Exception:
+        return {}
+
+
+def _param_semantics_for_param(op_type: str, family: str, param_name: str) -> dict[str, Any] | None:
+    """Return the compact ParamSemantics for one operator parameter, if known."""
+    semantics = _param_semantics_for_op(op_type, family)
+    return semantics.get(param_name) or semantics.get(param_name.lower())
 
 
 @mcp.tool(name="td_search_official_docs")
@@ -95,7 +161,13 @@ async def td_get_operator_doc(
     provenance = Provenance(
         source="local_card", td_build=svc.td_build, last_verified=card.get("last_verified", "")
     )
-    return {"card": card, "provenance": provenance.to_dict()}
+    response: dict[str, Any] = {"card": card, "provenance": provenance.to_dict()}
+    param_semantics = _param_semantics_for_op(
+        str(card.get("op_type") or resolved_type or ""), resolved_family
+    )
+    if param_semantics:
+        response["param_semantics"] = param_semantics
+    return response
 
 
 @mcp.tool(name="td_get_param_help")
@@ -131,10 +203,12 @@ async def td_get_param_help(
     idx = _tr._get_card_index(ctx)
     card_param = None
     card_source = None
+    param_semantics: dict[str, Any] | None = None
     try:
         info = await client.request("node/detail", {"path": node_path})
         op_type = info.get("type", "")
         family = info.get("family", "")
+        param_semantics = _param_semantics_for_param(op_type, family, param_name)
         # v1.4.6 op_type fallback: TD's `node/detail` returns the short
         # op_type (e.g. `"noise"`) and family (`"TOP"`) separately, while
         # DocsBrain keys operators by the canonical `type+family` form
@@ -172,7 +246,14 @@ async def td_get_param_help(
     # Provenance reflects where the card data actually came from so callers
     # can tell CardIndex JSON cards apart from DocsBrain-normalized ones.
     provenance = Provenance(source=card_source or "local_card", td_build=svc.td_build)
-    return {"live": live_param, "card_param": card_param, "provenance": provenance.to_dict()}
+    response: dict[str, Any] = {
+        "live": live_param,
+        "card_param": card_param,
+        "provenance": provenance.to_dict(),
+    }
+    if param_semantics:
+        response["param_semantics"] = param_semantics
+    return response
 
 
 @mcp.tool(name="td_lookup_snippets")

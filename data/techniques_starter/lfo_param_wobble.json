@@ -1,0 +1,156 @@
+{
+  "count": 1,
+  "scope": "global",
+  "techniques": {
+    "starter-lfo-param-wobble": {
+      "compatibility": {
+        "required_ops": [
+          "lfoCHOP",
+          "mathCHOP",
+          "noiseTOP",
+          "nullCHOP",
+          "nullTOP",
+          "transformTOP"
+        ],
+        "verified_on": null
+      },
+      "created_at": "2026-07-09T00:00:00+00:00",
+      "description": "LFO CHOP through a Math CHOP range map drives a transform rotate wobble via a stable null — the canonical CHOP-drives-TOP-param rig.",
+      "favorite": false,
+      "id": "starter-lfo-param-wobble",
+      "last_replayed_at": null,
+      "name": "LFO param wobble",
+      "notes": "Every downstream expression reads the stable /wobble null, so the modulation source can be swapped (LFO -> audio -> MIDI) without touching consumers. Rotate is expression-bound (.expr), never a plain generic param write.",
+      "rating": 0,
+      "replay_count": 0,
+      "state": "candidate",
+      "tags": [
+        "control",
+        "lfo",
+        "modulation",
+        "starter",
+        "wobble"
+      ],
+      "technique": {
+        "complexity": "small",
+        "connection_count": 4,
+        "description": "LFO CHOP through a Math CHOP range map drives a transform rotate wobble via a stable null — the canonical CHOP-drives-TOP-param rig.",
+        "families": {
+          "CHOP": 3,
+          "TOP": 3
+        },
+        "key_params": null,
+        "name": "LFO param wobble",
+        "node_count": 6,
+        "op_types": {
+          "lfoCHOP": 1,
+          "mathCHOP": 1,
+          "noiseTOP": 1,
+          "nullCHOP": 1,
+          "nullTOP": 1,
+          "transformTOP": 1
+        },
+        "recipe": {
+          "connections": [
+            {
+              "from": "/lfo",
+              "from_index": 0,
+              "to": "/range",
+              "to_index": 0
+            },
+            {
+              "from": "/range",
+              "from_index": 0,
+              "to": "/wobble",
+              "to_index": 0
+            },
+            {
+              "from": "/src",
+              "from_index": 0,
+              "to": "/sway",
+              "to_index": 0
+            },
+            {
+              "from": "/sway",
+              "from_index": 0,
+              "to": "/out",
+              "to_index": 0
+            }
+          ],
+          "external_assets": [],
+          "layout": {},
+          "nodes": {
+            "/lfo": {
+              "family": "CHOP",
+              "name": "lfo",
+              "params": {
+                "amp": 0.5,
+                "frequency": 0.25
+              },
+              "type": "lfoCHOP"
+            },
+            "/out": {
+              "family": "TOP",
+              "name": "out",
+              "params": {},
+              "type": "nullTOP"
+            },
+            "/range": {
+              "family": "CHOP",
+              "name": "range",
+              "params": {
+                "torange1": -15.0,
+                "torange2": 15.0
+              },
+              "type": "mathCHOP"
+            },
+            "/src": {
+              "family": "TOP",
+              "name": "src",
+              "params": {
+                "period": 4
+              },
+              "type": "noiseTOP"
+            },
+            "/sway": {
+              "expressions": {
+                "rotate": "op('./wobble')['chan1']"
+              },
+              "family": "TOP",
+              "name": "sway",
+              "params": {},
+              "type": "transformTOP"
+            },
+            "/wobble": {
+              "family": "CHOP",
+              "name": "wobble",
+              "params": {},
+              "type": "nullCHOP"
+            }
+          }
+        },
+        "required_op_types": [
+          "lfoCHOP",
+          "mathCHOP",
+          "noiseTOP",
+          "nullCHOP",
+          "nullTOP",
+          "transformTOP"
+        ],
+        "source_path": null,
+        "tags": [
+          "control",
+          "lfo",
+          "modulation",
+          "starter",
+          "wobble"
+        ],
+        "td_build": "",
+        "verified_on": null
+      },
+      "updated_at": "2026-07-09T00:00:00+00:00",
+      "validation_result": null
+    }
+  },
+  "version": 1
+}

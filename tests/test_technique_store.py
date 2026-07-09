@@ -202,3 +202,65 @@ class TestRebindProjectScope:
         store.rebind_project_scope("Preexisting")
         assert store.get(seed_id, scope="project") is not None
         assert store.get(seed_id, scope="project")["name"] == "seeded"
+
+
+class TestTokenizedSearchRanking:
+    """v2.0.4 search upgrade: tokenized OR-matching ranked by hit count.
+
+    Exact-phrase (legacy substring) matches keep the top rank; entries
+    matching only SOME query tokens are still returned (OR), ranked below
+    all-token matches.
+    """
+
+    def _seed(self, store):
+        store.add({"node_count": 1}, name="feedback displacement bloom", tags=["feedback", "bloom"])
+        store.add({"node_count": 1}, name="plain feedback loop", tags=["feedback", "trails"])
+        store.add({"node_count": 1}, name="edge glow composite", tags=["edge", "glow"])
+        store.add({"node_count": 1}, name="lfo param wobble", tags=["lfo", "modulation"])
+
+    def test_or_matching_returns_partial_token_hits(self, store):
+        self._seed(store)
+
+        results = store.search(query="feedback glow", scope="project")
+        names = [r["name"] for r in results]
+
+        # OR semantics: entries matching either token appear.
+        assert "plain feedback loop" in names
+        assert "edge glow composite" in names
+        assert "lfo param wobble" not in names
+
+    def test_exact_phrase_ranks_highest(self, store):
+        self._seed(store)
+
+        results = store.search(query="feedback displacement bloom", scope="project")
+
+        assert results[0]["name"] == "feedback displacement bloom"
+        # OR-match: the partial-token entry is still returned, ranked lower.
+        assert any(r["name"] == "plain feedback loop" for r in results)
+
+    def test_all_token_match_outranks_single_token_match(self, store):
+        self._seed(store)
+
+        results = store.search(query="feedback bloom", scope="project")
+        names = [r["name"] for r in results]
+
+        assert names[0] == "feedback displacement bloom"  # both tokens
+        assert "plain feedback loop" in names  # one token, ranked below
+
+    def test_no_token_match_returns_nothing(self, store):
+        self._seed(store)
+
+        assert store.search(query="quaternion sdf raymarch", scope="project") == []
+
+    def test_single_word_substring_behavior_preserved(self, store):
+        self._seed(store)
+
+        results = store.search(query="feedback", scope="project")
+        names = {r["name"] for r in results}
+
+        assert names == {"feedback displacement bloom", "plain feedback loop"}
+
+    def test_empty_query_lists_all(self, store):
+        self._seed(store)
+
+        assert len(store.search(query="", scope="project")) == 4

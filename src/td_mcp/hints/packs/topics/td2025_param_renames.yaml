@@ -1,0 +1,103 @@
+schema_version: 2
+topic: td2025_param_renames
+hints:
+  - id: circle_radius_radx_rady
+    priority: useful
+    rule: |
+      TD 2025+ circle radius params are radx/rady (per-axis), not the old
+      rad1 tuple index. If a radius write is silently ignored or errors,
+      set radx and rady individually -- and confirm the live schema with
+      td_get_param_help before guessing legacy names.
+    source: field session 2026-05-03 (td_2025_param_renames memory)
+    source_kind: user_essay
+    when:
+      error_match: "\\brad1\\b|Unknown parameter.*rad"
+      surface: ["create_node", "set_params", "error_recovery", "query"]
+    next_tools: [td_get_param_help, td_get_operator_doc]
+
+  - id: constant_color_vs_const_value
+    priority: useful
+    rule: |
+      constantTOP color channels are colorr/colorg/colorb (+ alpha), but
+      constantCHOP channel values are const0name/const0value pairs -- NOT
+      name0/value0 and NOT colorr. Mixing the two families' param names is
+      a classic silent no-op. td_get_param_help shows the live schema.
+    source: field session 2026-05-03 (td_2025_param_renames memory)
+    source_kind: user_essay
+    when:
+      error_match: "Unknown parameter.*(color|value0|name0)"
+      surface: ["create_node", "set_params", "error_recovery", "query"]
+    next_tools: [td_get_param_help]
+
+  - id: chopto_topto_reference_params
+    priority: useful
+    rule: |
+      The cross-family converters key their source by a lowercase op-path
+      param: choptoTOP/choptoSOP use 'chop', toptoCHOP uses 'top',
+      choptoDAT uses 'chop'. Older tutorial names (chopop, source) do not
+      exist in TD 2025+ -- verify with td_get_param_help instead of
+      guessing renamed params.
+    source: field session 2026-05-03 (td_2025_param_renames memory)
+    source_kind: user_essay
+    when:
+      intent_match: "chopto|topto|convert.*(chop|top)"
+      surface: ["create_node", "set_params", "query"]
+    next_tools: [td_get_param_help, td_get_operator_doc]
+
+  - id: math_chop_no_abs_mod
+    priority: useful
+    rule: |
+      mathCHOP in TD 2025 has NO abs or mod entries in its function menus.
+      Use an expressionCHOP (or a param expression) for abs()/% math, or
+      chain the existing menu ops. Don't burn attempts setting nonexistent
+      menu tokens.
+    source: field session 2026-05-03 (td_2025_param_renames memory)
+    source_kind: user_essay
+    when:
+      op_type: mathCHOP
+      intent_match: "\\babs\\b|\\bmod\\b|modulo|absolute"
+      surface: ["create_node", "set_params", "query"]
+    next_tools: [td_get_param_help]
+
+  - id: audiofilter_not_audiofilt
+    priority: useful
+    rule: |
+      The filter CHOP for audio is audiofilterCHOP -- the abbreviated
+      legacy spelling audiofiltCHOP does not exist in TD 2025+ and node
+      creation fails. Same family, full word: audiofilterCHOP,
+      audiodeviceinCHOP, audiofileinCHOP.
+    source: field session 2026-05-03 (td_2025_param_renames memory)
+    source_kind: user_essay
+    when:
+      error_match: "audiofilt(?!er)"
+      surface: ["create_node", "error_recovery", "query"]
+    next_tools: [td_list_families, td_search_official_docs]
+
+  - id: param_expressions_python_math
+    priority: critical
+    rule: |
+      TD 2025+ parameter expressions are Python: use math.sin(...),
+      math.cos(...), etc. Bare Tscript trig (sin/cos/tan) is GONE and
+      raises "name 'sin' is not defined". absTime.seconds and op('...')
+      references work as before.
+    source: field session 2026-05-03 (td_2025_param_renames memory)
+    source_kind: user_essay
+    when:
+      error_match: "name '(sin|cos|tan|sqrt)' is not defined"
+      surface: ["set_params", "exec", "errors", "error_recovery", "query"]
+    next_tools: [td_get_errors, td_get_param_help]
+
+  - id: glsl_top_tdoutputswizzle
+    priority: critical
+    rule: |
+      GLSL TOP pixel shaders in TD 2025 must write their final color
+      through TDOutputSwizzle(): `fragColor = TDOutputSwizzle(color);`.
+      Without it output channels can appear swapped or black on some
+      GPUs/exports even though the shader compiles clean.
+    source: field session 2026-05-03 (td_2025_param_renames memory)
+    source_kind: user_essay
+    when:
+      op_type: glslTOP
+      intent_match: "glsl|shader|fragment|pixel shader"
+      surface: ["create_node", "exec", "errors", "query"]
+    next_tools: [td_get_operator_doc, td_get_errors]

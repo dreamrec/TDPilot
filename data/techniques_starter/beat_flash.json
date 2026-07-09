@@ -1,0 +1,176 @@
+{
+  "count": 1,
+  "scope": "global",
+  "techniques": {
+    "starter-beat-flash": {
+      "compatibility": {
+        "required_ops": [
+          "analyzeCHOP",
+          "audiofileinCHOP",
+          "constantTOP",
+          "levelTOP",
+          "nullCHOP",
+          "nullTOP",
+          "triggerCHOP"
+        ],
+        "verified_on": null
+      },
+      "created_at": "2026-07-09T00:00:00+00:00",
+      "description": "RMS envelope through a Trigger CHOP gates a white flash — classic beat-synchronized strobe.",
+      "favorite": false,
+      "id": "starter-beat-flash",
+      "last_replayed_at": null,
+      "name": "Beat-detected flash",
+      "notes": "Tune /trigger threshold to your material (0.3-0.6 typical). The attack/release envelope shapes the flash; opacity is expression-bound to the stable /beat_trig null.",
+      "rating": 0,
+      "replay_count": 0,
+      "state": "candidate",
+      "tags": [
+        "audio",
+        "beat",
+        "flash",
+        "starter",
+        "trigger"
+      ],
+      "technique": {
+        "complexity": "small",
+        "connection_count": 5,
+        "description": "RMS envelope through a Trigger CHOP gates a white flash — classic beat-synchronized strobe.",
+        "families": {
+          "CHOP": 4,
+          "TOP": 3
+        },
+        "key_params": null,
+        "name": "Beat-detected flash",
+        "node_count": 7,
+        "op_types": {
+          "analyzeCHOP": 1,
+          "audiofileinCHOP": 1,
+          "constantTOP": 1,
+          "levelTOP": 1,
+          "nullCHOP": 1,
+          "nullTOP": 1,
+          "triggerCHOP": 1
+        },
+        "recipe": {
+          "connections": [
+            {
+              "from": "/audio",
+              "from_index": 0,
+              "to": "/analyze",
+              "to_index": 0
+            },
+            {
+              "from": "/analyze",
+              "from_index": 0,
+              "to": "/trigger",
+              "to_index": 0
+            },
+            {
+              "from": "/trigger",
+              "from_index": 0,
+              "to": "/beat_trig",
+              "to_index": 0
+            },
+            {
+              "from": "/flash",
+              "from_index": 0,
+              "to": "/gate",
+              "to_index": 0
+            },
+            {
+              "from": "/gate",
+              "from_index": 0,
+              "to": "/out",
+              "to_index": 0
+            }
+          ],
+          "external_assets": [],
+          "layout": {},
+          "nodes": {
+            "/analyze": {
+              "family": "CHOP",
+              "name": "analyze",
+              "params": {
+                "function": "rms"
+              },
+              "type": "analyzeCHOP"
+            },
+            "/audio": {
+              "family": "CHOP",
+              "name": "audio",
+              "params": {
+                "play": 1,
+                "repeat": 1
+              },
+              "type": "audiofileinCHOP"
+            },
+            "/beat_trig": {
+              "family": "CHOP",
+              "name": "beat_trig",
+              "params": {},
+              "type": "nullCHOP"
+            },
+            "/flash": {
+              "family": "TOP",
+              "name": "flash",
+              "params": {
+                "colorb": 1.0,
+                "colorg": 1.0,
+                "colorr": 1.0
+              },
+              "type": "constantTOP"
+            },
+            "/gate": {
+              "expressions": {
+                "opacity": "op('./beat_trig')['chan1']"
+              },
+              "family": "TOP",
+              "name": "gate",
+              "params": {},
+              "type": "levelTOP"
+            },
+            "/out": {
+              "family": "TOP",
+              "name": "out",
+              "params": {},
+              "type": "nullTOP"
+            },
+            "/trigger": {
+              "family": "CHOP",
+              "name": "trigger",
+              "params": {
+                "attack": 0.01,
+                "release": 0.25,
+                "threshold": 0.4
+              },
+              "type": "triggerCHOP"
+            }
+          }
+        },
+        "required_op_types": [
+          "analyzeCHOP",
+          "audiofileinCHOP",
+          "constantTOP",
+          "levelTOP",
+          "nullCHOP",
+          "nullTOP",
+          "triggerCHOP"
+        ],
+        "source_path": null,
+        "tags": [
+          "audio",
+          "beat",
+          "flash",
+          "starter",
+          "trigger"
+        ],
+        "td_build": "",
+        "verified_on": null
+      },
+      "updated_at": "2026-07-09T00:00:00+00:00",
+      "validation_result": null
+    }
+  },
+  "version": 1
+}

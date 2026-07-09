@@ -1908,14 +1908,49 @@ def handle_exec_python(body):
     return payload
 
 
+_SCREENSHOT_SAVE_EXTENSIONS = ('.png', '.jpg', '.jpeg')
+
+
+def _validate_screenshot_save_path(raw):
+    """Defense-in-depth mirror of the server-side save_path validator.
+
+    The MCP server (src/td_mcp/vision/save_path.py) is the primary gate and
+    validates before sending; this TD-side copy keeps the endpoint safe for
+    any caller that reaches it directly. Returns an error string or None.
+    """
+    if not isinstance(raw, str) or not raw.strip():
+        return 'save_path must be a non-empty string'
+    candidate = raw.strip()
+    if '\x00' in candidate:
+        return 'save_path must not contain NUL bytes'
+    if '..' in candidate.replace('\\', '/').split('/'):
+        return 'save_path must not contain ".." segments'
+    if not os.path.isabs(candidate):
+        return 'save_path must be an absolute path'
+    if os.path.splitext(candidate)[1].lower() not in _SCREENSHOT_SAVE_EXTENSIONS:
+        return 'save_path extension must be one of .png/.jpg/.jpeg'
+    resolved = os.path.realpath(candidate)
+    if os.path.splitext(resolved)[1].lower() not in _SCREENSHOT_SAVE_EXTENSIONS:
+        return 'resolved save_path extension must be one of .png/.jpg/.jpeg'
+    home = os.path.realpath(os.path.expanduser('~'))
+    if resolved != home and not resolved.startswith(home + os.sep):
+        return 'save_path must resolve under the user home directory'
+    if os.path.isdir(resolved):
+        return 'save_path must name a file, not a directory'
+    return None
+
+
 def handle_screenshot(body):
-    """Capture a TOP as a JPEG image and return base64 or metadata.
+    """Capture a TOP as a JPEG image and return base64, metadata, or a disk save.
 
     Uses JPEG with configurable quality (0.0–1.0 scale, TD 2025+) to keep
     captures well under the 1 MB MCP response-size limit after base64 encoding.
+    When 'save_path' is provided the image is written to disk instead and the
+    response carries metadata + the saved path (no base64).
     """
     path = body.get('path', None)
     quality = float(body.get('quality', 0.5))  # TD 2025 uses 0.0–1.0 scale
+    save_path = body.get('save_path', None)
     include_data = body.get('include_data', True)
     if isinstance(include_data, str):
         include_data = include_data.strip().lower() not in ('0', 'false', 'no', 'off')
@@ -1931,6 +1966,35 @@ def handle_screenshot(body):
                 return {'error': f'Node is not a TOP: {path} (type: {target.type})'}
         else:
             return {'error': 'Provide path to a TOP node to screenshot'}
+
+        if save_path:
+            err = _validate_screenshot_save_path(save_path)
+            if err:
+                return {'error': err}
+            resolved = os.path.realpath(str(save_path).strip())
+            ext = os.path.splitext(resolved)[1].lower()
+            try:
+                parent_dir = os.path.dirname(resolved)
+                if parent_dir:
+                    os.makedirs(parent_dir, exist_ok=True)
+                if ext == '.png':
+                    target.save(resolved)
+                else:
+                    target.save(resolved, quality=quality)
+            except Exception as save_exc:
+                # No base64 fallback in save mode — the caller asked for a
+                # disk write, so a failed write must surface as an error.
+                return {'error': f'Screenshot save failed: {str(save_exc)}'}
+            return {
+                'success': True,
+                'path': target.path,
+                'width': target.width,
+                'height': target.height,
+                'format': 'png' if ext == '.png' else 'jpeg',
+                'saved_to': resolved,
+                'size_bytes': os.path.getsize(resolved),
+                'data_omitted': True,
+            }
 
         if not include_data:
             return {

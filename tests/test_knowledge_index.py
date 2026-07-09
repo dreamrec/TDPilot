@@ -275,3 +275,109 @@ class TestProvenance:
         d = p.to_dict()
         expected_keys = {"source", "fetched_at", "last_verified", "td_build", "confidence"}
         assert set(d.keys()) == expected_keys
+
+
+# ---------------------------------------------------------------------------
+# v2.0.4: OR-with-AND-boost ranking + synonym expansion (compact default path)
+# ---------------------------------------------------------------------------
+
+
+class TestSynonymModule:
+    def test_expand_query_tokens_prepends_original(self) -> None:
+        from td_mcp.knowledge.synonyms import expand_query_tokens
+
+        groups = expand_query_tokens(["glow", "noise"])
+        assert groups[0][0] == "glow"
+        assert "bloom" in groups[0]
+        assert groups[1] == ("noise",)
+
+    def test_synonyms_for_unknown_token_is_empty(self) -> None:
+        from td_mcp.knowledge.synonyms import synonyms_for
+
+        assert synonyms_for("noise") == ()
+        assert "mirror" in synonyms_for("kaleidoscope")
+
+
+class TestOrRankingAndSynonyms:
+    @pytest.fixture
+    def retrieval_cards_dir(self, tmp_path: Path) -> Path:
+        ops_dir = tmp_path / "operators"
+        ops_dir.mkdir()
+        cards = [
+            {
+                "card_type": "operator",
+                "op_type": "bloomTOP",
+                "family": "TOP",
+                "display_name": "Bloom TOP",
+                "summary": "Adds a bloom effect to bright areas of the image.",
+            },
+            {
+                "card_type": "operator",
+                "op_type": "audiodeviceinCHOP",
+                "family": "CHOP",
+                "display_name": "Audio Device In CHOP",
+                "summary": "Receives audio from a microphone or input device.",
+            },
+            {
+                "card_type": "operator",
+                "op_type": "noiseTOP",
+                "family": "TOP",
+                "display_name": "Noise TOP",
+                "summary": "Generates procedural noise patterns.",
+            },
+            {
+                "card_type": "operator",
+                "op_type": "feedbacknoiseTOP",
+                "family": "TOP",
+                "display_name": "Feedback Noise Combo TOP",
+                "summary": "Feedback loops combined with noise patterns.",
+            },
+        ]
+        for card in cards:
+            (ops_dir / f"{card['op_type']}.json").write_text(json.dumps(card))
+        return tmp_path
+
+    def test_synonym_expansion_finds_bloom_for_glow(self, retrieval_cards_dir: Path) -> None:
+        idx = CardIndex(retrieval_cards_dir)
+        results = idx.search("glow")
+        assert results, "synonym expansion should retrieve the bloom card for 'glow'"
+        assert results[0]["op_type"] == "bloomTOP"
+
+    def test_synonym_expansion_finds_audio_for_sound(self, retrieval_cards_dir: Path) -> None:
+        idx = CardIndex(retrieval_cards_dir)
+        results = idx.search("sound input")
+        assert any(card["op_type"] == "audiodeviceinCHOP" for card in results)
+
+    def test_multi_token_or_returns_partial_matches(self, retrieval_cards_dir: Path) -> None:
+        idx = CardIndex(retrieval_cards_dir)
+        results = idx.search("feedback noise")
+        names = [card["op_type"] for card in results]
+        # AND match ranks first; single-token (OR) match still returned.
+        assert names[0] == "feedbacknoiseTOP"
+        assert "noiseTOP" in names
+
+    def test_all_token_match_outranks_partial_match(self, retrieval_cards_dir: Path) -> None:
+        idx = CardIndex(retrieval_cards_dir)
+        results = idx.search("noise patterns procedural")
+        assert results[0]["op_type"] == "noiseTOP"
+
+
+class TestShippedCorpusRetrieval:
+    """End-to-end sanity on the real shipped card corpus."""
+
+    @pytest.fixture(scope="class")
+    def shipped_index(self) -> CardIndex:
+        cards_dir = Path(__file__).resolve().parents[1] / "src" / "td_mcp" / "knowledge" / "cards"
+        return CardIndex(cards_dir)
+
+    def test_glow_query_reaches_bloom_top(self, shipped_index: CardIndex) -> None:
+        results = shipped_index.search("glow", card_types=["operators"], limit=10)
+        assert any(card.get("op_type") == "bloomTOP" for card in results)
+
+    def test_warp_query_reaches_displace_top(self, shipped_index: CardIndex) -> None:
+        results = shipped_index.search("warp image", card_types=["operators"], limit=10)
+        assert any(card.get("op_type") == "displaceTOP" for card in results)
+
+    def test_particles_query_reaches_pop_family(self, shipped_index: CardIndex) -> None:
+        results = shipped_index.search("particles", card_types=["operators"], limit=10)
+        assert any(str(card.get("op_type", "")).endswith("POP") for card in results)

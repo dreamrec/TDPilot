@@ -1,0 +1,170 @@
+{
+  "count": 1,
+  "scope": "global",
+  "techniques": {
+    "starter-plain-feedback-loop": {
+      "compatibility": {
+        "required_ops": [
+          "compositeTOP",
+          "feedbackTOP",
+          "levelTOP",
+          "noiseTOP",
+          "nullTOP",
+          "transformTOP"
+        ],
+        "verified_on": null
+      },
+      "created_at": "2026-07-09T00:00:00+00:00",
+      "description": "Canonical Feedback TOP trail: noise source composited with a decayed, slowly rotating feedback of the final output.",
+      "favorite": false,
+      "id": "starter-plain-feedback-loop",
+      "last_replayed_at": null,
+      "name": "Plain feedback loop",
+      "notes": "feedback.par.top points at the closing composite ('./comp'). Decay via levelTOP opacity 0.95; rotate drives motion so trails smear. Rotate is expression-driven (.expr) — never write transformTOP rotate as a plain value through generic param-set (BIND-mode corruption gotcha).",
+      "rating": 0,
+      "replay_count": 0,
+      "state": "candidate",
+      "tags": [
+        "canonical-recipe",
+        "feedback",
+        "starter",
+        "trails"
+      ],
+      "technique": {
+        "complexity": "small",
+        "connection_count": 6,
+        "description": "Canonical Feedback TOP trail: noise source composited with a decayed, slowly rotating feedback of the final output.",
+        "families": {
+          "TOP": 6
+        },
+        "key_params": null,
+        "name": "Plain feedback loop",
+        "node_count": 6,
+        "op_types": {
+          "compositeTOP": 1,
+          "feedbackTOP": 1,
+          "levelTOP": 1,
+          "noiseTOP": 1,
+          "nullTOP": 1,
+          "transformTOP": 1
+        },
+        "recipe": {
+          "connections": [
+            {
+              "from": "/noise",
+              "from_index": 0,
+              "to": "/comp",
+              "to_index": 0
+            },
+            {
+              "from": "/noise",
+              "from_index": 0,
+              "to": "/feedback",
+              "to_index": 0
+            },
+            {
+              "from": "/feedback",
+              "from_index": 0,
+              "to": "/xform",
+              "to_index": 0
+            },
+            {
+              "from": "/xform",
+              "from_index": 0,
+              "to": "/level",
+              "to_index": 0
+            },
+            {
+              "from": "/level",
+              "from_index": 0,
+              "to": "/comp",
+              "to_index": 1
+            },
+            {
+              "from": "/comp",
+              "from_index": 0,
+              "to": "/out",
+              "to_index": 0
+            }
+          ],
+          "external_assets": [],
+          "layout": {},
+          "nodes": {
+            "/comp": {
+              "family": "TOP",
+              "name": "comp",
+              "params": {
+                "operand": "add"
+              },
+              "type": "compositeTOP"
+            },
+            "/feedback": {
+              "family": "TOP",
+              "name": "feedback",
+              "params": {
+                "top": "./comp"
+              },
+              "type": "feedbackTOP"
+            },
+            "/level": {
+              "family": "TOP",
+              "name": "level",
+              "params": {
+                "opacity": 0.95
+              },
+              "type": "levelTOP"
+            },
+            "/noise": {
+              "expressions": {
+                "tz": "absTime.seconds*0.1"
+              },
+              "family": "TOP",
+              "name": "noise",
+              "params": {
+                "amp": 0.6,
+                "mono": 1,
+                "period": 4
+              },
+              "type": "noiseTOP"
+            },
+            "/out": {
+              "family": "TOP",
+              "name": "out",
+              "params": {},
+              "type": "nullTOP"
+            },
+            "/xform": {
+              "expressions": {
+                "rotate": "absTime.seconds*2.0"
+              },
+              "family": "TOP",
+              "name": "xform",
+              "params": {},
+              "type": "transformTOP"
+            }
+          }
+        },
+        "required_op_types": [
+          "compositeTOP",
+          "feedbackTOP",
+          "levelTOP",
+          "noiseTOP",
+          "nullTOP",
+          "transformTOP"
+        ],
+        "source_path": null,
+        "tags": [
+          "canonical-recipe",
+          "feedback",
+          "starter",
+          "trails"
+        ],
+        "td_build": "",
+        "verified_on": null
+      },
+      "updated_at": "2026-07-09T00:00:00+00:00",
+      "validation_result": null
+    }
+  },
+  "version": 1
+}

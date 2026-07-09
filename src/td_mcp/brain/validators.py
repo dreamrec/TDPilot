@@ -96,6 +96,9 @@ _ALTERNATIVE_PROBE_INPUTS: dict[tuple[str, str], tuple[tuple[str, ...], ...]] = 
     ("concept_compiled", "audio_source_present"): (("audiofileinCHOP", "audiodeviceinCHOP"),),
     ("concept_compiled", "output_node_present"): (("nullTOP", "nullCHOP", "nullDAT", "nullPOP"),),
     ("audio_reactive", "audio_signal_activity"): (("audiofileinCHOP", "audiodeviceinCHOP"),),
+    # CHOP-only audio-reactive plans satisfy the static gate via nullCHOP; the
+    # runtime motion sampler then defers with a reason when no TOP exists.
+    ("audio_reactive", "motion_delta"): (("nullTOP", "nullCHOP"),),
 }
 _STRUCTURAL_VALIDATION_PROFILES = {"auto", "structural_visual_safe", "structural_visual_expensive"}
 _RUNTIME_READBACK_STRATEGIES = {
@@ -108,6 +111,7 @@ _RUNTIME_READBACK_STRATEGIES = {
     "render_camera_frustum_runtime",
     "top_sample_optional",
     "top_luminance_runtime",
+    "top_motion_delta_runtime",
     "top_visual_cheap_runtime",
 }
 _RENDER_SWITCH_INDEX_EXPR = re.compile(

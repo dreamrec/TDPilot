@@ -1,0 +1,147 @@
+{
+  "count": 1,
+  "scope": "global",
+  "techniques": {
+    "starter-edge-glow-composite": {
+      "compatibility": {
+        "required_ops": [
+          "blurTOP",
+          "compositeTOP",
+          "edgeTOP",
+          "moviefileinTOP",
+          "nullTOP"
+        ],
+        "verified_on": null
+      },
+      "created_at": "2026-07-09T00:00:00+00:00",
+      "description": "Edge TOP outlines blurred and added back over the source — the neon-outline look in three ops.",
+      "favorite": false,
+      "id": "starter-edge-glow-composite",
+      "last_replayed_at": null,
+      "name": "Edge-glow composite",
+      "notes": "Raise /edges strength for hotter lines; /soften size sets the glow radius. 'add' compositing keeps the source visible under the glow.",
+      "rating": 0,
+      "replay_count": 0,
+      "state": "candidate",
+      "tags": [
+        "composite",
+        "edge",
+        "glow",
+        "neon",
+        "starter"
+      ],
+      "technique": {
+        "complexity": "small",
+        "connection_count": 5,
+        "description": "Edge TOP outlines blurred and added back over the source — the neon-outline look in three ops.",
+        "families": {
+          "TOP": 5
+        },
+        "key_params": null,
+        "name": "Edge-glow composite",
+        "node_count": 5,
+        "op_types": {
+          "blurTOP": 1,
+          "compositeTOP": 1,
+          "edgeTOP": 1,
+          "moviefileinTOP": 1,
+          "nullTOP": 1
+        },
+        "recipe": {
+          "connections": [
+            {
+              "from": "/src",
+              "from_index": 0,
+              "to": "/edges",
+              "to_index": 0
+            },
+            {
+              "from": "/edges",
+              "from_index": 0,
+              "to": "/soften",
+              "to_index": 0
+            },
+            {
+              "from": "/src",
+              "from_index": 0,
+              "to": "/glow_mix",
+              "to_index": 0
+            },
+            {
+              "from": "/soften",
+              "from_index": 0,
+              "to": "/glow_mix",
+              "to_index": 1
+            },
+            {
+              "from": "/glow_mix",
+              "from_index": 0,
+              "to": "/out",
+              "to_index": 0
+            }
+          ],
+          "external_assets": [],
+          "layout": {},
+          "nodes": {
+            "/edges": {
+              "family": "TOP",
+              "name": "edges",
+              "params": {
+                "strength": 2.0
+              },
+              "type": "edgeTOP"
+            },
+            "/glow_mix": {
+              "family": "TOP",
+              "name": "glow_mix",
+              "params": {
+                "operand": "add"
+              },
+              "type": "compositeTOP"
+            },
+            "/out": {
+              "family": "TOP",
+              "name": "out",
+              "params": {},
+              "type": "nullTOP"
+            },
+            "/soften": {
+              "family": "TOP",
+              "name": "soften",
+              "params": {
+                "size": 12
+              },
+              "type": "blurTOP"
+            },
+            "/src": {
+              "family": "TOP",
+              "name": "src",
+              "params": {},
+              "type": "moviefileinTOP"
+            }
+          }
+        },
+        "required_op_types": [
+          "blurTOP",
+          "compositeTOP",
+          "edgeTOP",
+          "moviefileinTOP",
+          "nullTOP"
+        ],
+        "source_path": null,
+        "tags": [
+          "composite",
+          "edge",
+          "glow",
+          "neon",
+          "starter"
+        ],
+        "td_build": "",
+        "verified_on": null
+      },
+      "updated_at": "2026-07-09T00:00:00+00:00",
+      "validation_result": null
+    }
+  },
+  "version": 1
+}
