@@ -601,11 +601,11 @@ _AUTOPIN_KEY = "TDPILOT_AUTO_PIN_TAG"
 def _autopin_env_file_path() -> Path:
     """Resolve the env file path autopin reads/writes.
 
-    Single source of truth: ``~/.tdpilot/.tdpilot.env``. This matches the
-    second of two locations checked by ``td_component/tdpilot_startup.py``
-    `_load_env_file()` (the first is a repo-local copy used during dev).
-    Reusing the same path guarantees the CLI write and the TD-startup
-    read agree on what file to look at.
+    Single source of truth: ``~/.tdpilot/.tdpilot.env`` — the same (and
+    only) file checked by ``td_component/tdpilot_startup.py``
+    ``_load_env_file()`` since the batch-E secret unification. Reusing the
+    same path guarantees the CLI write and the TD-startup read agree on
+    what file to look at.
     """
     from td_mcp.auth_bootstrap import default_env_file
 

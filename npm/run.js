@@ -6,9 +6,11 @@
  *   npx tdpilot                 run the MCP server (default)
  *   npx tdpilot install         install TD auto-load (.toe + pref.txt)
  *   npx tdpilot uninstall       undo install
+ *   npx tdpilot update          update ~/.tdpilot to the latest release tag
  *   npx tdpilot plugin-install  install as a Claude Code plugin via marketplace
  *   npx tdpilot plugin-uninstall remove the Claude Code plugin
  *   npx tdpilot brains          manage downloaded brain DBs
+ *   npx tdpilot help | --help   show this usage
  *
  * IMPORTANT — stdout discipline (v1.6.12 fix):
  * When invoked without a subcommand, this wrapper eventually spawns the Python
@@ -100,8 +102,8 @@ function ensureRepo() {
   if (existsSync(marker)) {
     // Auto-update is OPT-IN — prior behavior silently ran `git pull` on every
     // invocation, which surprised users with local edits. Set TDPILOT_AUTO_UPDATE=1
-    // to restore the old behavior, or use `npx tdpilot update` (see brains.js)
-    // for an explicit refresh.
+    // to restore the old behavior, or use `npx tdpilot update` (updateRepo()
+    // below) for an explicit refresh.
     if (process.env.TDPILOT_AUTO_UPDATE === "1") {
       try {
         // Fetch tags too, then re-pin to the latest tag so users move
@@ -144,14 +146,109 @@ function ensureRepo() {
   }
 }
 
+function updateRepo() {
+  // `npx tdpilot update` — explicit refresh of ~/.tdpilot to the latest
+  // release tag. Mirrors the pinning strategy of ensureRepo()/install.sh:
+  // fetch tags, fast-forward main, then check out the newest reachable tag
+  // (never leave the user on unpinned main HEAD). Windows-safe: every git
+  // invocation is a plain fixed `git ...` string through run() — no &&,
+  // no pipes, no shell-isms, no interpolated user input.
+  const marker = join(INSTALL_DIR, "pyproject.toml");
+  if (!existsSync(marker)) {
+    console.error(`[TDPilot] No install found at ${INSTALL_DIR}. Run 'npx tdpilot' once first.`);
+    process.exit(1);
+  }
+  if (!existsSync(join(INSTALL_DIR, ".git"))) {
+    console.error(
+      `[TDPilot] ${INSTALL_DIR} is not a git checkout (zip-based install?). ` +
+        "Delete it and re-run 'npx tdpilot' to reinstall from git."
+    );
+    process.exit(1);
+  }
+
+  let before = "";
+  try {
+    before = run("git describe --tags --always", { cwd: INSTALL_DIR });
+  } catch {
+    /* fresh/odd checkout — proceed; the after-state still gets printed */
+  }
+
+  console.log(`[TDPilot] Updating ${INSTALL_DIR}...`);
+  try {
+    run("git fetch --tags origin main", { cwd: INSTALL_DIR });
+    run("git checkout main", { cwd: INSTALL_DIR });
+    run("git pull --ff-only origin main", { cwd: INSTALL_DIR });
+  } catch (err) {
+    console.error("[TDPilot] Update failed: " + (err && err.message ? err.message : err));
+    console.error(
+      "[TDPilot] If you have local edits in " +
+        INSTALL_DIR +
+        ", stash or revert them, then re-run 'npx tdpilot update'."
+    );
+    process.exit(1);
+  }
+
+  const pinnedTag = pinToLatestTag(INSTALL_DIR);
+  let after = "";
+  try {
+    after = run("git describe --tags --always", { cwd: INSTALL_DIR });
+  } catch {
+    /* ignore */
+  }
+
+  if (before && after && before === after) {
+    console.log(`[TDPilot] Already up to date (${after}).`);
+  } else {
+    console.log(`[TDPilot] Updated: ${before || "(unknown)"} -> ${after || pinnedTag || "(unknown)"}`);
+  }
+  console.log("");
+  console.log("[TDPilot] Next steps:");
+  console.log("  1. Restart your MCP client (Claude Desktop / Claude Code) so the new server loads.");
+  console.log("  2. Update the TouchDesigner component too: run the td_self_update tool from your");
+  console.log("     AI client, or run setup_mcp_in_td.py in the TD Textport");
+  console.log("     (the 'npx tdpilot install' output and the README carry the exact snippet).");
+}
+
+function printHelp() {
+  // Keep in sync with the usage block in the top-of-file comment.
+  console.log(
+    [
+      "Usage: npx tdpilot [subcommand]",
+      "",
+      "  (none)            run the MCP server (default)",
+      "  install           install TD auto-load (.toe + pref.txt)",
+      "  uninstall         undo install",
+      "  update            update ~/.tdpilot to the latest release tag",
+      "  plugin-install    install as a Claude Code plugin via marketplace",
+      "  plugin-uninstall  remove the Claude Code plugin",
+      "  brains            manage downloaded brain DBs",
+      "  help, --help      show this usage",
+      "",
+      "Docs: https://github.com/dreamrec/TDPilot",
+    ].join("\n")
+  );
+}
+
 // ── Subcommands that don't need uv/repo ──────────────────────
 // (plugin-install runs Claude Code — no Python needed)
 const subcommand = process.argv[2];
+
+if (subcommand === "help" || subcommand === "--help" || subcommand === "-h") {
+  printHelp();
+  process.exit(0);
+}
 
 if (subcommand === "plugin-install" || subcommand === "plugin-uninstall") {
   const { install, uninstall } = require("./plugin");
   if (subcommand === "plugin-install") install();
   else uninstall();
+  process.exit(0);
+}
+
+// `update` needs git + an existing checkout, but not uv — dispatch before
+// the uv bootstrap so updating never triggers a toolchain install.
+if (subcommand === "update") {
+  updateRepo();
   process.exit(0);
 }
 

@@ -115,10 +115,20 @@ if [ -f "$CONFIG_PATH" ]; then
     echo "  Backed up config to: $BACKUP_PATH"
 fi
 
-# Use Python to safely merge JSON (always available on macOS) and generate a secret.
-# Paths are passed via the environment (NOT interpolated into the Python source),
-# so a path containing a quote/newline can't break out of the string literal or
-# inject code. install.ps1 keeps these as data the same way.
+# Use Python to safely merge JSON (always available on macOS) and provision the
+# canonical secret file. Paths are passed via the environment (NOT interpolated
+# into the Python source), so a path containing a quote/newline can't break out
+# of the string literal or inject code. install.ps1 keeps these as data the
+# same way.
+#
+# Secret unification (audit batch E): ~/.tdpilot/.tdpilot.env is THE secret
+# file. The client config gets TD_MCP_AUTOGENERATE_SECRET=1 instead of a
+# literal secret (matching the shipped .mcp.json), and the installer writes
+# only the canonical file — no repo-local .tdpilot.env, no secret material in
+# claude_desktop_config.json. Existing secrets are preserved in this priority:
+# canonical file > legacy repo-local file > legacy client-config literal;
+# otherwise a fresh secrets.token_urlsafe(32) is generated (the same approach
+# auth_bootstrap.maybe_generate_secret and the TD-side autostart use).
 TDPILOT_CONFIG_PATH="$CONFIG_PATH" \
 TDPILOT_REPO_PATH="$REPO_PATH" \
 TDPILOT_UV_PATH="$UV_PATH" \
@@ -128,8 +138,25 @@ import json, os, secrets, sys
 config_path = os.environ['TDPILOT_CONFIG_PATH']
 repo_path = os.environ['TDPILOT_REPO_PATH']
 uv_path = os.environ['TDPILOT_UV_PATH']
+canonical_env_path = os.path.join(os.path.expanduser('~'), '.tdpilot', '.tdpilot.env')
 
-# Load or create
+
+def read_env_secret(path):
+    try:
+        with open(path, encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith('TD_MCP_SHARED_SECRET='):
+                    value = line.partition('=')[2].strip()
+                    if len(value) >= 2 and value[0] == value[-1] and value[0] in ('\'', chr(34)):
+                        value = value[1:-1]
+                    return value
+    except OSError:
+        pass
+    return ''
+
+
+# Load or create the client config
 if os.path.exists(config_path):
     try:
         with open(config_path) as f:
@@ -141,15 +168,21 @@ if os.path.exists(config_path):
 else:
     config = {}
 
-# Ensure mcpServers exists
 if 'mcpServers' not in config:
     config['mcpServers'] = {}
 
-# Preserve an existing secret if we already installed once.
+# Migrate any pre-unification secret so re-running the installer never
+# rotates a working secret out from under a live TD session.
 existing = config['mcpServers'].get('touchdesigner', {})
-existing_secret = existing.get('env', {}).get('TD_MCP_SHARED_SECRET', '')
-shared_secret = existing_secret or secrets.token_hex(32)
+legacy_config_secret = existing.get('env', {}).get('TD_MCP_SHARED_SECRET', '')
+legacy_repo_secret = read_env_secret(os.path.join(repo_path, '.tdpilot.env'))
+canonical_secret = read_env_secret(canonical_env_path)
+shared_secret = (
+    canonical_secret or legacy_repo_secret or legacy_config_secret or secrets.token_urlsafe(32)
+)
 
+# No literal secret in the client config: the server autogenerates/reads the
+# canonical env file via TD_MCP_AUTOGENERATE_SECRET=1 (same as .mcp.json).
 config['mcpServers']['touchdesigner'] = {
     'command': uv_path,
     'args': ['run', '--directory', repo_path, 'tdpilot'],
@@ -159,7 +192,7 @@ config['mcpServers']['touchdesigner'] = {
         'TD_MCP_WS_PORT': '9982',
         'TD_MCP_EXEC_MODE': 'restricted',
         'TD_MCP_REQUIRE_AUTH': '1',
-        'TD_MCP_SHARED_SECRET': shared_secret,
+        'TD_MCP_AUTOGENERATE_SECRET': '1',
     }
 }
 
@@ -169,14 +202,32 @@ os.chmod(config_path, 0o600)
 
 print('  Config updated: ' + config_path)
 
-# Also write the secret into a TD-readable env file so the .tox picks it up.
-env_path = os.path.join(repo_path, '.tdpilot.env')
-with open(env_path, 'w') as f:
-    f.write('TD_MCP_SHARED_SECRET=' + shared_secret + '\n')
-    f.write('TD_MCP_REQUIRE_AUTH=1\n')
-    f.write('TD_MCP_EXEC_MODE=restricted\n')
-os.chmod(env_path, 0o600)
-print('  Secret written to: ' + env_path + ' (TD reads this at startup)')
+# Write the canonical env file (~/.tdpilot/.tdpilot.env) — the ONE file every
+# reader (MCP server, td_client, TD component, TD startup scripts) resolves
+# after the explicit TD_MCP_SHARED_SECRET env var. Preserve unrelated keys.
+os.makedirs(os.path.dirname(canonical_env_path), exist_ok=True)
+managed = {'TD_MCP_SHARED_SECRET', 'TD_MCP_REQUIRE_AUTH', 'TD_MCP_EXEC_MODE'}
+kept = []
+if os.path.exists(canonical_env_path):
+    try:
+        with open(canonical_env_path, encoding='utf-8') as f:
+            for raw in f.read().splitlines():
+                key = raw.strip().partition('=')[0].strip()
+                if key not in managed:
+                    kept.append(raw)
+    except OSError:
+        pass
+lines = kept + [
+    'TD_MCP_SHARED_SECRET=' + shared_secret,
+    'TD_MCP_REQUIRE_AUTH=1',
+    'TD_MCP_EXEC_MODE=restricted',
+]
+tmp_path = canonical_env_path + '.tmp'
+with open(tmp_path, 'w', encoding='utf-8') as f:
+    f.write('\n'.join(lines) + '\n')
+os.chmod(tmp_path, 0o600)
+os.replace(tmp_path, canonical_env_path)
+print('  Secret written to: ' + canonical_env_path + ' (canonical secret file)')
 "
 
 # ---------- Step 4: Summary ----------

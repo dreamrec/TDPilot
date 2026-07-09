@@ -159,6 +159,7 @@ def test_default_base_dir_is_local(monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
     home = tmp_path / "fake_home"
     home.mkdir()
     monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("USERPROFILE", str(home))  # windows expanduser
     s = KnowledgeStore(project_name="LocalCheck")
     assert str(s._base).startswith(str(home))
-    assert "tdpilot/knowledge" in str(s._base)
+    assert "tdpilot/knowledge" in str(s._base).replace("\\", "/")

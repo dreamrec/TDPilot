@@ -45,6 +45,12 @@ uv run pytest -q
   stay in sync — edit both or CI packaging checks fail.
 - **Docs don't carry counts.** Don't hardcode tool/pack/hint counts in prose;
   docs-truth tests fail on stale counts. Point to the live query instead.
+- **`docs/API_REFERENCE.md` is generated.** The tool tables between the
+  `BEGIN/END GENERATED` markers come from the FastMCP registry — never edit
+  them by hand. After changing any tool signature/docstring, run
+  `uv run python scripts/gen_api_reference.py` and commit the result;
+  CI runs the script's `--check` mode and fails on a stale doc. Prose outside
+  the markers (env vars, exec modes, envelope notes) is still hand-written.
 - **No personal paths.** `scripts/check_no_personal_paths.sh` runs in CI;
   run it after `git add`, not before.
 

@@ -108,6 +108,7 @@ async def td_create_macro(
 
 @mcp.tool(name="td_list_macros")
 async def td_list_macros(ctx: Context) -> str:
+    """List all available macro templates (built-in plus user templates). Returns a JSON envelope."""
     finish = _tr._start_tool(ctx, "td_list_macros")
     try:
         data = _tr._get_macro_engine(ctx).list_macros()

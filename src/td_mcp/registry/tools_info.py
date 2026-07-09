@@ -38,16 +38,19 @@ from td_mcp.tool_registry import (  # noqa: E402
 
 @mcp.tool(name="td_get_info")
 async def td_get_info(ctx: Context) -> str:
+    """Get TouchDesigner project info: version, build, project name, OS. Returns a JSON envelope."""
     return await _tr._forward(ctx, "td_get_info", "info")
 
 
 @mcp.tool(name="td_list_families")
 async def td_list_families(ctx: Context) -> str:
+    """List available operator families (TOP, CHOP, SOP, DAT, COMP, MAT, POP). Returns a JSON envelope."""
     return await _tr._forward(ctx, "td_list_families", "families")
 
 
 @mcp.tool(name="td_get_capabilities")
 async def td_get_capabilities(ctx: Context) -> str:
+    """Detect MCP client capabilities plus server/component versions and runtime config. Returns a JSON envelope."""
     finish = _tr._start_tool(ctx, "td_get_capabilities")
     try:
         services = _tr._get_services(ctx)
@@ -95,6 +98,7 @@ async def td_get_capabilities(ctx: Context) -> str:
 
 @mcp.tool(name="td_get_server_metrics")
 async def td_get_server_metrics(ctx: Context) -> str:
+    """Get MCP server runtime metrics: telemetry, events, streams, safety, snapshots, jobs. Returns a JSON envelope."""
     finish = _tr._start_tool(ctx, "td_get_server_metrics")
     try:
         telemetry = _tr._get_telemetry(ctx)

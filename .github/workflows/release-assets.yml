@@ -40,6 +40,8 @@ on:
 permissions:
   contents: write
   id-token: write
+  # Needed by the "Require green CI" step to read workflow-run conclusions.
+  actions: read
 
 jobs:
   build-and-upload:
@@ -69,6 +71,43 @@ jobs:
           ref: ${{ steps.resolve.outputs.tag }}
           fetch-depth: 0
 
+      # Publish gating (audit batch E): this workflow fires on release
+      # publish with NO dependency on CI — a release created off a red (or
+      # never-tested) commit would happily ship assets. Resolve the tagged
+      # commit's CI conclusion via the GitHub API and fail before building
+      # when CI is not green for that exact SHA. Untrusted inputs stay in
+      # env vars (repo security style); the SHA comes from the checked-out
+      # tag itself, not from event payload text.
+      - name: Require green CI for the tagged commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          sha="$(git rev-parse HEAD)"
+          echo "Tagged commit: $sha"
+          deadline=$(( $(date +%s) + 1200 ))
+          while :; do
+            runs_json="$(gh api "repos/$GH_REPO/actions/workflows/ci.yml/runs?head_sha=$sha&per_page=100" --jq '.workflow_runs')"
+            total="$(printf '%s' "$runs_json" | jq 'length')"
+            green="$(printf '%s' "$runs_json" | jq '[.[] | select(.status == "completed" and .conclusion == "success")] | length')"
+            pending="$(printf '%s' "$runs_json" | jq '[.[] | select(.status != "completed")] | length')"
+            if [ "$green" -ge 1 ]; then
+              echo "CI is green for $sha ($green successful run(s))."
+              break
+            fi
+            if [ "$pending" -ge 1 ] || [ "$total" -eq 0 ]; then
+              if [ "$(date +%s)" -ge "$deadline" ]; then
+                echo "::error::Timed out waiting for a green CI run for $sha (runs: $total, pending: $pending). Refusing to build release assets."
+                exit 1
+              fi
+              echo "CI not concluded yet for $sha (runs: $total, pending: $pending) — retrying in 30s..."
+              sleep 30
+              continue
+            fi
+            echo "::error::CI concluded non-success for $sha. Fix CI on the tagged commit, then re-run this workflow."
+            exit 1
+          done
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -91,6 +130,35 @@ jobs:
 
       - name: Install dependencies
         run: uv sync --all-extras
+
+      # Release gates (audit batch E). check_release_gates.py's strongest
+      # mode is --require-complete, but that additionally demands the
+      # brain_live_smoke and operator_availability reports, which can only
+      # be produced against a live TouchDesigner (CI runners have none) and
+      # whose committed point-in-time copies under reports/ can lag the
+      # gate's schema. Rubber-stamping stale live artifacts — or hard-
+      # blocking tags on files CI cannot regenerate — would both be wrong,
+      # so CI runs the strongest HONEST subset instead: every offline-
+      # generatable report is regenerated fresh here and required
+      # (--require-plugin-surface --require-param-semantics-risk), while
+      # bench/soak come from the committed release-ritual reports. The full
+      # --require-complete gate remains a release-time step on a dev
+      # machine with TouchDesigner running (output: reports/release_gates.json).
+      - name: Release gates (offline-verifiable subset, reports regenerated fresh)
+        run: |
+          mkdir -p /tmp/gate-reports
+          uv run python scripts/eval_brain_golden.py > /tmp/gate-reports/brain_eval.json
+          uv run python scripts/brain_live_smoke.py --dry-run > /tmp/gate-reports/brain_smoke_dry_run.json
+          uv run python scripts/audit_plugin_surface.py > /tmp/gate-reports/plugin_surface.json
+          uv run python scripts/audit_param_semantics_risks.py > /tmp/gate-reports/param_semantics_risk.json
+          uv run python scripts/check_release_gates.py \
+            --bench-report reports/bench_tools.json \
+            --soak-report reports/soak_events.json \
+            --brain-eval-report /tmp/gate-reports/brain_eval.json \
+            --brain-smoke-report /tmp/gate-reports/brain_smoke_dry_run.json \
+            --plugin-surface-report /tmp/gate-reports/plugin_surface.json \
+            --param-semantics-risk-report /tmp/gate-reports/param_semantics_risk.json \
+            --require-plugin-surface --require-param-semantics-risk
 
       - name: Build tdpilot.plugin
         run: uv run python scripts/build_plugin_zip.py

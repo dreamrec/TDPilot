@@ -30,6 +30,7 @@ from td_mcp.tool_registry import mcp  # noqa: E402
 
 @mcp.tool(name="td_timeline")
 async def td_timeline(ctx: Context) -> str:
+    """Read current timeline state: frame, seconds, FPS, playing. Returns a JSON envelope."""
     return await _tr._forward(ctx, "td_timeline", "timeline")
 
 
@@ -181,6 +182,7 @@ async def td_python_help(
 
 @mcp.tool(name="td_python_classes")
 async def td_python_classes(ctx: Context) -> str:
+    """List available Python classes in the TD runtime. Returns a JSON envelope."""
     return await _tr._forward(ctx, "td_python_classes", "python/classes")
 
 

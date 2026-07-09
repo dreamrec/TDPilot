@@ -38,6 +38,8 @@ on:
 permissions:
   contents: read
   id-token: write
+  # Needed by the "Require green CI" step to read workflow-run conclusions.
+  actions: read
 
 jobs:
   publish:
@@ -62,6 +64,45 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ steps.resolve.outputs.ref }}
+
+      # Publish gating (audit batch E): this workflow fires on tag push with
+      # NO dependency on CI — a tag on a red (or never-tested) commit would
+      # publish to npm anyway. Resolve the tagged commit's CI conclusion via
+      # the GitHub API and fail before publishing when CI is not green for
+      # that exact SHA. Tags are usually pushed moments after the commit, so
+      # an in-progress CI run is polled (bounded) rather than failed
+      # immediately. Untrusted inputs stay in env vars (repo security
+      # style); the SHA comes from the checked-out ref itself, not from
+      # event payload text.
+      - name: Require green CI for the tagged commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          sha="$(git rev-parse HEAD)"
+          echo "Tagged commit: $sha"
+          deadline=$(( $(date +%s) + 1200 ))
+          while :; do
+            runs_json="$(gh api "repos/$GH_REPO/actions/workflows/ci.yml/runs?head_sha=$sha&per_page=100" --jq '.workflow_runs')"
+            total="$(printf '%s' "$runs_json" | jq 'length')"
+            green="$(printf '%s' "$runs_json" | jq '[.[] | select(.status == "completed" and .conclusion == "success")] | length')"
+            pending="$(printf '%s' "$runs_json" | jq '[.[] | select(.status != "completed")] | length')"
+            if [ "$green" -ge 1 ]; then
+              echo "CI is green for $sha ($green successful run(s))."
+              break
+            fi
+            if [ "$pending" -ge 1 ] || [ "$total" -eq 0 ]; then
+              if [ "$(date +%s)" -ge "$deadline" ]; then
+                echo "::error::Timed out waiting for a green CI run for $sha (runs: $total, pending: $pending). Refusing to publish."
+                exit 1
+              fi
+              echo "CI not concluded yet for $sha (runs: $total, pending: $pending) — retrying in 30s..."
+              sleep 30
+              continue
+            fi
+            echo "::error::CI concluded non-success for $sha. Fix CI on the tagged commit, then re-run this workflow (workflow_dispatch supports backfill)."
+            exit 1
+          done
 
       - name: Setup Node.js
         uses: actions/setup-node@v6

@@ -45,8 +45,6 @@ import glob
 import os
 
 _CONFIG_FILE = os.path.join(os.path.expanduser("~"), ".tdpilot_path")
-_ENV_FILE_NAME = ".tdpilot.env"
-_HOME_ENV_FILE = os.path.join(os.path.expanduser("~"), ".tdpilot", ".tdpilot.env")
 _TOX_RELATIVE = os.path.join("td_component", "tdpilot.tox")
 _BUILD_SCRIPT_RELATIVE = os.path.join("td_component", "build_export_mcp_tox.py")
 # v1.6.5: handle both COMP names a tdpilot install might have.
@@ -88,39 +86,58 @@ def _read_config():
     return path if path else None
 
 
-def _load_env_file(repo_root):
-    """Load KEY=VALUE pairs from .tdpilot.env into os.environ.
+def _canonical_env_file():
+    """Path of the ONE canonical env/secret file.
 
-    Loads from two locations in priority order (first one wins per key):
-      1. <repo_root>/.tdpilot.env         — installer-written, repo-local
-      2. ~/.tdpilot/.tdpilot.env          — canonical Python-server path
-                                            (auth_bootstrap.maybe_generate_secret
-                                            writes here when TD_MCP_AUTOGENERATE_SECRET=1)
-
-    Carries the shared secret and auth policy into the TD process without
-    hardcoding them in the .toe file. The two-file scan keeps TD-side and
-    Python-side auth in sync so the dragged-in / auto-rebuilt .tox sees
-    the same secret the Python MCP server generated.
-
-    Existing os.environ keys are NEVER overwritten — process-supplied env
-    wins, matching auth_bootstrap.load_env_file's contract.
+    Mirrors ``src/td_mcp/auth_bootstrap.default_env_file``: the
+    ``TDPILOT_ENV_FILE`` env var overrides (isolated tests / custom
+    installs), otherwise ``~/.tdpilot/.tdpilot.env``. Resolved at call
+    time (not import time) so test sandboxes and late env overrides work.
     """
-    for env_path in (os.path.join(repo_root, _ENV_FILE_NAME), _HOME_ENV_FILE):
-        if not os.path.isfile(env_path):
-            continue
-        try:
-            with open(env_path, encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line or line.startswith("#") or "=" not in line:
-                        continue
-                    key, _, value = line.partition("=")
-                    key = key.strip()
-                    value = value.strip().strip('"').strip("'")
-                    if key and key not in os.environ:
-                        os.environ[key] = value
-        except OSError as exc:
-            print(f"[TDPilot] Could not read {env_path}: {exc}")
+    override = (os.environ.get("TDPILOT_ENV_FILE") or "").strip()
+    if override:
+        return os.path.expanduser(override)
+    return os.path.join(os.path.expanduser("~"), ".tdpilot", ".tdpilot.env")
+
+
+def _load_env_file(repo_root=None):
+    """Load KEY=VALUE pairs from the canonical .tdpilot.env into os.environ.
+
+    Canonical secret resolution order (audit batch E — unified across ALL
+    readers: auth_bootstrap, td_client, mcp_webserver_callbacks, autostart,
+    and this startup script):
+
+      1. Explicit process env var           — never overwritten by files
+      2. ~/.tdpilot/.tdpilot.env            — THE secret file (installers
+                                              write it; auth_bootstrap /
+                                              autostart autogenerate into it;
+                                              TDPILOT_ENV_FILE overrides)
+
+    The pre-unification behavior additionally scanned ``<repo_root>/
+    .tdpilot.env`` FIRST — a divergent second secret file that caused the
+    recurring-401 drift class (two generators writing two files that
+    different readers preferred). That repo-local scan is intentionally
+    gone; ``repo_root`` is kept in the signature for callers/back-compat
+    but no longer participates in resolution. ``td_sync_diagnose`` flags
+    leftover legacy repo-local files.
+    """
+    del repo_root  # no longer part of secret resolution (see docstring)
+    env_path = _canonical_env_file()
+    if not os.path.isfile(env_path):
+        return
+    try:
+        with open(env_path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = value
+    except OSError as exc:
+        print(f"[TDPilot] Could not read {env_path}: {exc}")
 
 
 def _validate_repo(repo_root):

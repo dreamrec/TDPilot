@@ -8,9 +8,11 @@ from __future__ import annotations
 
 import hashlib
 import importlib.metadata
+import json
 import os
 import re
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -63,6 +65,153 @@ def _read_secret_from_env_file(path: Path) -> str | None:
             value = value[1:-1]
         return value
     return None
+
+
+def _read_secret_from_client_config(path: Path) -> str | None:
+    """Extract a literal ``TD_MCP_SHARED_SECRET`` from an MCP client config.
+
+    Walks ``mcpServers.*.env`` in the JSON. Returns ``None`` on any parse or
+    I/O failure — the chain report only needs best-effort presence.
+    """
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    servers = data.get("mcpServers") if isinstance(data, dict) else None
+    if not isinstance(servers, dict):
+        return None
+    for server in servers.values():
+        if not isinstance(server, dict):
+            continue
+        env = server.get("env")
+        if isinstance(env, dict):
+            value = str(env.get("TD_MCP_SHARED_SECRET") or "").strip()
+            if value:
+                return value
+    return None
+
+
+def _default_client_config_paths(local_root: Path) -> list[Path]:
+    """Client config files that may (wrongly, post-unification) embed a secret."""
+    home = Path.home()
+    if sys.platform == "darwin":
+        desktop = home / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"
+    elif os.name == "nt":
+        desktop = home / "AppData" / "Roaming" / "Claude" / "claude_desktop_config.json"
+    else:
+        desktop = home / ".config" / "Claude" / "claude_desktop_config.json"
+    return [desktop, local_root / ".mcp.json", local_root / ".mcp.json.local"]
+
+
+def _default_legacy_env_paths(local_root: Path, env_path: Path) -> list[Path]:
+    """Pre-unification repo-local .tdpilot.env locations (no longer read by anyone)."""
+    candidates = [
+        local_root / ".tdpilot.env",
+        Path.home() / "TDPilot" / ".tdpilot.env",
+    ]
+    resolved_env = env_path.expanduser()
+    return [p for p in candidates if p.expanduser() != resolved_env]
+
+
+def _secret_chain_report(
+    *,
+    env_path: Path,
+    local_root: Path,
+    client_config_paths: list[Path] | None = None,
+    legacy_env_paths: list[Path] | None = None,
+) -> dict[str, Any]:
+    """Fingerprint EVERY file in the secret chain and name the winner.
+
+    Canonical resolution order (unified across all readers in audit batch E):
+    explicit ``TD_MCP_SHARED_SECRET`` process env var, then the canonical
+    env file (``~/.tdpilot/.tdpilot.env`` / ``TDPILOT_ENV_FILE``). Client
+    configs and legacy repo-local env files are scanned as drift suspects —
+    a literal secret there becomes process env when that client launches the
+    server, so a divergent one is a live 401 source. Output carries short
+    SHA-256 fingerprints only, never secret material.
+    """
+    env_secret = (os.environ.get("TD_MCP_SHARED_SECRET") or "").strip() or None
+    file_secret = _read_secret_from_env_file(env_path)
+
+    sources: list[dict[str, Any]] = [
+        {
+            "id": "process_env",
+            "kind": "env_var",
+            "canonical": True,
+            "present": env_secret is not None,
+            "secret_present": env_secret is not None,
+            "fingerprint": _secret_fingerprint(env_secret),
+        },
+        {
+            "id": "canonical_env_file",
+            "kind": "env_file",
+            "path": str(env_path),
+            "canonical": True,
+            "present": env_path.is_file(),
+            "secret_present": file_secret is not None,
+            "fingerprint": _secret_fingerprint(file_secret),
+        },
+    ]
+    config_paths = (
+        client_config_paths if client_config_paths is not None else _default_client_config_paths(local_root)
+    )
+    for path in config_paths:
+        secret = _read_secret_from_client_config(path)
+        sources.append(
+            {
+                "id": f"client_config:{path.name}",
+                "kind": "client_config",
+                "path": str(path),
+                "canonical": False,
+                "present": path.is_file(),
+                "secret_present": secret is not None,
+                "fingerprint": _secret_fingerprint(secret),
+            }
+        )
+    for path in (
+        legacy_env_paths if legacy_env_paths is not None else _default_legacy_env_paths(local_root, env_path)
+    ):
+        secret = _read_secret_from_env_file(path)
+        sources.append(
+            {
+                "id": f"legacy_env_file:{path}",
+                "kind": "legacy_env_file",
+                "path": str(path),
+                "canonical": False,
+                "present": path.is_file(),
+                "secret_present": secret is not None,
+                "fingerprint": _secret_fingerprint(secret),
+            }
+        )
+
+    if env_secret is not None:
+        winner = "process_env"
+        winner_fp = _secret_fingerprint(env_secret)
+    elif file_secret is not None:
+        winner = "canonical_env_file"
+        winner_fp = _secret_fingerprint(file_secret)
+    else:
+        winner = None
+        winner_fp = None
+
+    if winner_fp:
+        divergent = [s["id"] for s in sources if s.get("fingerprint") and s["fingerprint"] != winner_fp]
+    else:
+        # No canonical secret anywhere, but a non-canonical source has one:
+        # that literal will win inside whichever client ships it — divergence.
+        divergent = [s["id"] for s in sources if s.get("fingerprint")]
+
+    return {
+        "canonical_order": ["process_env:TD_MCP_SHARED_SECRET", f"env_file:{env_path}"],
+        "sources": sources,
+        "winner": winner,
+        "winner_fingerprint": winner_fp,
+        "divergent_sources": divergent,
+        "non_canonical_secret_sources": [
+            s["id"] for s in sources if not s["canonical"] and s.get("secret_present")
+        ],
+        "ok": not divergent,
+    }
 
 
 def _installed_version() -> str | None:
@@ -160,6 +309,11 @@ def _default_source_install_roots(local_version: str) -> dict[str, Path]:
         ),
     }
     return roots
+
+
+def _ps_available() -> bool:
+    """The running-process probes shell out to ps(1) — absent on Windows."""
+    return os.name != "nt"
 
 
 def _process_start_epoch(pid: str) -> float | None:
@@ -268,6 +422,17 @@ def _running_process_report(
     env_file_secret_fingerprint: str | None,
     process_rows: list[dict[str, Any]] | None,
 ) -> dict[str, Any]:
+    if process_rows is None and not _ps_available():
+        # ps(1)-based probes can't run on Windows. Report that explicitly —
+        # a silently-empty process list reads as "no drift" when it actually
+        # means "not checked" (audit batch E, Windows-safety item).
+        return {
+            "status": "unsupported_platform",
+            "processes": [],
+            "process_count": 0,
+            "mismatches": [],
+            "ok": True,
+        }
     rows = list(process_rows) if process_rows is not None else _running_mcp_process_rows()
     mismatches: list[dict[str, Any]] = []
     for row in rows:
@@ -292,6 +457,7 @@ def _running_process_report(
                 }
             )
     return {
+        "status": "checked",
         "processes": rows,
         "process_count": len(rows),
         "mismatches": mismatches,
@@ -406,6 +572,8 @@ async def diagnose_sync(
     local_root: Path | None = None,
     install_roots: dict[str, Path] | None = None,
     running_processes: list[dict[str, Any]] | None = None,
+    client_config_paths: list[Path] | None = None,
+    legacy_env_paths: list[Path] | None = None,
 ) -> dict[str, Any]:
     env_path = env_file or default_env_file()
     process_secret = (os.environ.get("TD_MCP_SHARED_SECRET") or "").strip() or None
@@ -431,8 +599,16 @@ async def diagnose_sync(
 
     auth_mismatch = bool(process_fp and file_fp and process_fp != file_fp)
     version_mismatch = _version_mismatch(versions)
+    resolved_local_root = local_root or _repo_root()
+    secret_chain = _secret_chain_report(
+        env_path=env_path,
+        local_root=resolved_local_root,
+        client_config_paths=client_config_paths,
+        legacy_env_paths=legacy_env_paths,
+    )
+    secret_chain_divergence = not secret_chain["ok"]
     source_hashes = _source_hash_report(
-        local_root=local_root or _repo_root(),
+        local_root=resolved_local_root,
         install_roots=(
             install_roots
             if install_roots is not None
@@ -465,6 +641,28 @@ async def diagnose_sync(
         recommendations.append(
             f"Align TD_MCP_SHARED_SECRET between process env and {env_path}; restart MCP and TouchDesigner."
         )
+    if secret_chain_divergence:
+        for source in secret_chain["sources"]:
+            if source["id"] not in secret_chain["divergent_sources"]:
+                continue
+            if source["kind"] == "client_config":
+                recommendations.append(
+                    f"Client config {source.get('path')} embeds a TD_MCP_SHARED_SECRET that diverges "
+                    "from the canonical winner. Remove the literal secret and set "
+                    "TD_MCP_AUTOGENERATE_SECRET=1 instead (re-run install.sh / install.ps1), "
+                    f"or copy the winning secret into {env_path}."
+                )
+            elif source["kind"] == "legacy_env_file":
+                recommendations.append(
+                    f"Legacy secret file {source.get('path')} diverges from the canonical winner and "
+                    "is no longer read by any TDPilot component. Delete it (or sync it with "
+                    f"{env_path}) to stop 401 confusion."
+                )
+            elif source["id"] == "canonical_env_file":
+                recommendations.append(
+                    f"Canonical env file {env_path} diverges from the process env secret; the process "
+                    "env wins. Restart clients after aligning them."
+                )
     if include_live and live.get("error"):
         recommendations.append(
             "Run with TouchDesigner WebServer active on the configured endpoint and matching shared secret."
@@ -474,6 +672,7 @@ async def diagnose_sync(
         "schema_version": 1,
         "ok": not version_mismatch
         and not auth_mismatch
+        and not secret_chain_divergence
         and not source_hash_mismatch
         and not running_process_mismatch
         and not live.get("error"),
@@ -489,11 +688,13 @@ async def diagnose_sync(
             "fingerprints_match": (
                 process_fp == file_fp if process_fp is not None and file_fp is not None else None
             ),
+            "secret_chain": secret_chain,
         },
         "live": live,
         "drift": {
             "version_mismatch": version_mismatch,
             "auth_mismatch": auth_mismatch,
+            "secret_chain_divergence": secret_chain_divergence,
             "source_hash_mismatch": source_hash_mismatch,
             "running_process_mismatch": running_process_mismatch,
         },

@@ -996,7 +996,7 @@
     ]
   },
   "td_get_capabilities": {
-    "description_present": false,
+    "description_present": true,
     "properties": {},
     "required": []
   },
@@ -1158,7 +1158,7 @@
     "required": []
   },
   "td_get_info": {
-    "description_present": false,
+    "description_present": true,
     "properties": {},
     "required": []
   },
@@ -1381,7 +1381,7 @@
     "required": []
   },
   "td_get_server_metrics": {
-    "description_present": false,
+    "description_present": true,
     "properties": {},
     "required": []
   },
@@ -1570,12 +1570,12 @@
     ]
   },
   "td_list_families": {
-    "description_present": false,
+    "description_present": true,
     "properties": {},
     "required": []
   },
   "td_list_macros": {
-    "description_present": false,
+    "description_present": true,
     "properties": {},
     "required": []
   },
@@ -2519,7 +2519,7 @@
     ]
   },
   "td_python_classes": {
-    "description_present": false,
+    "description_present": true,
     "properties": {},
     "required": []
   },
@@ -3052,7 +3052,7 @@
     "required": []
   },
   "td_timeline": {
-    "description_present": false,
+    "description_present": true,
     "properties": {},
     "required": []
   },

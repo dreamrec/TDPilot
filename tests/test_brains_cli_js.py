@@ -58,18 +58,22 @@ def isolated_home(tmp_path: Path) -> Path:
 
 
 def _node(home: Path, args: list) -> subprocess.CompletedProcess:
-    """Invoke brains.js with HOME overridden to an isolated fixture path.
+    """Invoke brains.js with the home dir overridden to an isolated fixture path.
 
     We preserve the caller's PATH so node is locatable (it lives in
     /usr/local/bin on Homebrew installs, /opt/homebrew/bin on Apple Silicon,
-    and other places), and only override HOME — that's what brains.js reads
-    to compute INSTALL_DIR.
+    and other places), and only override the home-dir env vars — that's what
+    brains.js reads (via node's os.homedir()) to compute INSTALL_DIR. Both
+    HOME and USERPROFILE are set: os.homedir() reads USERPROFILE on Windows,
+    so overriding only HOME there would let the test touch the user's REAL
+    ~/.tdpilot.
     """
     import os as _os
 
     cmd = ["node", str(BRAINS_JS)] + args
     env = dict(_os.environ)
     env["HOME"] = str(home)
+    env["USERPROFILE"] = str(home)
     return subprocess.run(cmd, capture_output=True, text=True, env=env)
 
 

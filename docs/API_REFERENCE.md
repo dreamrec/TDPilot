@@ -1,252 +1,385 @@
 # TDPilot API Reference
 
-> TDPilot v2.0.3 | 114 tools | Hand-maintained reference — the canonical source of truth is the `@mcp.tool` registrations under `src/td_mcp/registry/`. If this document and the code disagree, the code wins.
+<!-- BEGIN GENERATED: tool-reference (scripts/gen_api_reference.py) -->
 
----
+> TDPilot v2.0.3 | 114 tools | This region is **generated** from the FastMCP registry by `scripts/gen_api_reference.py` — do not edit it by hand. Regenerate with `uv run python scripts/gen_api_reference.py`; CI enforces freshness with `--check`. Sections group tools by their `src/td_mcp/registry/` module of origin.
 
 ## Table of Contents
 
-1. [Scene & Info](#1-scene--info)
-2. [Node Graph -- Read](#2-node-graph--read)
-3. [Node Graph -- Write](#3-node-graph--write)
-4. [Parameters & Content](#4-parameters--content)
-5. [Data Inspection (Screenshot, CHOP, SOP, POP)](#5-data-inspection-screenshot-chop-sop-pop)
-6. [Diagnostics (Cook times, Errors, Capabilities)](#6-diagnostics-cook-times-errors-capabilities)
-7. [Python Execution](#7-python-execution)
-8. [Timeline & Pulse](#8-timeline--pulse)
-9. [Events & Monitoring](#9-events--monitoring)
-10. [Technique Memory & User Knowledge Store](#10-technique-memory--user-knowledge-store)
-11. [Safety & Recovery (Snapshots, Param Bounds, Instability)](#11-safety--recovery-snapshots-param-bounds-instability)
-12. [Macros & Planning](#12-macros--planning)
-13. [Vision & Streaming](#13-vision--streaming)
-14. [Official Knowledge (Docs, Snippets, Palette, Release)](#14-official-knowledge-docs-snippets-palette-release)
-15. [TD 2025 Native (Python Env, Threading, Logger, TDResources, COMP Audit, Color Pipeline)](#15-td-2025-native-python-env-threading-logger-tdresources-comp-audit-color-pipeline)
-16. [Server Introspection](#16-server-introspection)
-17. [Brain Planning, Transactions, And Cockpit](#17-brain-planning-transactions-and-cockpit)
+1. [Scene & Server Info](#1-scene--server-info)
+2. [Node Graph & Parameters](#2-node-graph--parameters)
+3. [Content & Python Execution](#3-content--python-execution)
+4. [Data Inspection & Diagnostics](#4-data-inspection--diagnostics)
+5. [Runtime State](#5-runtime-state)
+6. [Timeline, Lifecycle & Python Help](#6-timeline-lifecycle--python-help)
+7. [Events & Subscriptions](#7-events--subscriptions)
+8. [Technique Memory & Preferences](#8-technique-memory--preferences)
+9. [User Knowledge Store](#9-user-knowledge-store)
+10. [Safety & Stability](#10-safety--stability)
+11. [Snapshots](#11-snapshots)
+12. [Macros](#12-macros)
+13. [Planning & Project Audit](#13-planning--project-audit)
+14. [Patch Pipeline](#14-patch-pipeline)
+15. [Vision & Frame Analysis](#15-vision--frame-analysis)
+16. [Visual Monitoring & Streaming](#16-visual-monitoring--streaming)
+17. [Visual Optimization & Dynamics](#17-visual-optimization--dynamics)
+18. [Official & POPx Knowledge](#18-official--popx-knowledge)
+19. [Recommendations](#19-recommendations)
+20. [Hints](#20-hints)
+21. [Component Notes](#21-component-notes)
+22. [TD 2025 Native & System](#22-td-2025-native--system)
+23. [Tool Batch](#23-tool-batch)
+24. [Brain Planning & Transactions](#24-brain-planning--transactions)
+25. [Sync, Self-Update & Activity](#25-sync-self-update--activity)
+
+_Hand-written sections (response envelope, environment variables, exec modes, response formats, macro types) follow the generated region below._
 
 ---
 
-## 1. Scene & Info
+## 1. Scene & Server Info
+
+_Registry module: `src/td_mcp/registry/tools_info.py`_
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_get_info` | Get TouchDesigner project info: version, build, project name, OS. | _(none)_ | JSON with `version`, `build`, `project_name`, `os`, etc. |
-| `td_list_families` | List all available operator families (TOP, CHOP, SOP, DAT, COMP, MAT, etc.). | _(none)_ | JSON array of operator family names. |
+| `td_get_capabilities` | Detect MCP client capabilities plus server/component versions and runtime config. Returns a JSON envelope. | _(none)_ | Returns a JSON envelope. |
+| `td_get_info` | Get TouchDesigner project info: version, build, project name, OS. Returns a JSON envelope. | _(none)_ | Returns a JSON envelope. |
+| `td_get_server_metrics` | Get MCP server runtime metrics: telemetry, events, streams, safety, snapshots, jobs. Returns a JSON envelope. | _(none)_ | Returns a JSON envelope. |
+| `td_list_families` | List available operator families (TOP, CHOP, SOP, DAT, COMP, MAT, POP). Returns a JSON envelope. | _(none)_ | Returns a JSON envelope. |
 
 ---
 
-## 2. Node Graph -- Read
+## 2. Node Graph & Parameters
+
+_Registry module: `src/td_mcp/registry/tools_graph.py`_
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_get_nodes` | List child nodes at a given COMP path with optional filtering. | `path` (str, opt, default `"/"`): Absolute path to a COMP node. `family` (str, opt): Filter by family (TOP, CHOP, SOP, DAT, COMP, MAT, PANEL). `type` (str, opt): Filter by operator type (e.g. `noiseTOP`). `include_params` (bool, opt, default `false`): Include all parameters per node. `limit` (int, opt, default `100`, 1-500): Max nodes. `offset` (int, opt, default `0`): Pagination offset. `response_format` (enum, opt, default `json`): `json` or `markdown`. | JSON with `nodes` array and `has_more` flag. |
-| `td_get_node_detail` | Get full detail for a single node: type, family, parameters, inputs, outputs, errors. | `path` (str, **required**): Absolute node path. `response_format` (enum, opt, default `json`): `json` or `markdown`. | JSON with `name`, `path`, `type`, `family`, `parameters`, `inputs`, `outputs`, `errors`, `warnings`, `isCOMP`. |
-| `td_get_connections` | Get input/output connections for a node. | `path` (str, **required**): Absolute node path. `response_format` (enum, opt, default `json`). | JSON with connection arrays. |
-| `td_search_nodes` | Search nodes by name, type, family, or all. | `query` (str, **required**): Search string (case-insensitive). `path` (str, opt, default `"/"`): Root path. `search_type` (str, opt, default `"all"`): `name`, `type`, `family`, or `all`. `limit` (int, opt, default `50`, 1-200): Max results. | JSON array of matching nodes. |
+| `td_connect_nodes` | Connect two nodes (source output → target input). | `source_path` (string, **required**): Path of the source (output) node<br>`target_path` (string, **required**): Path of the target (input) node<br>`source_index` (integer, opt, default `0`): Output connector index on the source node (0 = first output)<br>`target_index` (integer, opt, default `0`): Input connector index on the target node (0 = first input) | JSON envelope (string). |
+| `td_copy_node` | Copy/duplicate a node. | `source_path` (string, **required**): Path of the node to copy<br>`dest_parent` (string, opt, default `null`): Path of the destination parent COMP. If None, copies into the same parent.<br>`new_name` (string, opt, default `null`): Name for the copy | JSON envelope (string). |
+| `td_create_node` | Create a new TouchDesigner operator. | `node_type` (string, **required**): TouchDesigner operator type to create. Examples: TOPs: 'noiseTOP', 'levelTOP', 'nullTOP', 'compositeTOP', 'feedbackTOP', 'moviefileinTOP' \| CHOPs: 'waveCHOP', 'noiseCHOP', 'nullCHOP', 'mathCHOP', 'constantCHOP', 'selectCHOP' \| SOPs: 'sphereSOP', 'boxSOP', 'gridSOP', 'lineSOP', 'nullSOP', 'transformSOP', 'noiseSOP' \| DATs: 'textDAT', 'tableDAT', 'scriptDAT', 'nullDAT', 'selectDAT', 'chopexecDAT' \| COMPs: 'baseCOMP', 'containerCOMP', 'geometryCOMP', 'cameraCOMP', 'lightCOMP' \| MATs: 'pbrMAT', 'phongMAT', 'wireframeMAT', 'constMAT'<br>`parent_path` (string, opt, default `"/project1"`): Path to the parent COMP where the node will be created<br>`name` (string, opt, default `null`): Custom name for the new node. If None, TD assigns a default name.<br>`nodeX` (integer, opt, default `null`): Horizontal position in the network editor (pixels). Use multiples of 200 for clean spacing between nodes.<br>`nodeY` (integer, opt, default `null`): Vertical position in the network editor (pixels). Use multiples of 200 for clean spacing between rows.<br>`include_hints` (boolean, opt, default `false`): If True, attach a ``hints`` block sourced from td_get_hints for the chosen op_type. Auto-injection still fires for high-risk op_types (feedbackTOP, glslTOP, geometryCOMP, …) regardless of this flag. | JSON envelope (string). |
+| `td_delete_node` | Delete a node by its absolute path. | `path` (string, **required**): Absolute path of the node to delete (e.g. '/project1/noise1') | JSON envelope (string). |
+| `td_disconnect` | Disconnect a node's input or output connector. | `path` (string, **required**): Path of the node to disconnect<br>`connector_type` (string, opt, default `"input"`): Which connector side to disconnect: 'input' or 'output'<br>`index` (integer, opt, default `0`): Connector index to disconnect | JSON envelope (string). |
+| `td_get_connections` | Get upstream/downstream connections for a node. | `path` (string, **required**): Absolute path to the node (e.g. '/project1/noise1', '/project1/geo1/sphere1') | JSON envelope (string). |
+| `td_get_node_detail` | Get detailed info about a node (type, errors, warnings, parameters). | `path` (string, **required**): Absolute path to the node (e.g. '/project1/noise1', '/project1/geo1/sphere1')<br>`response_format` (enum: `markdown`, `json`, opt, default `"json"`): Output format<br>`param_limit` (integer, opt, default `50`): Max parameters to serialize. Default 50; hard cap 200. If the node has more, the response sets parameters_truncated=true and parameters_total to the real count. Use td_get_params for the rest.<br>`include_notes` (boolean, opt, default `false`): If True, look up any per-COMP note saved via td_component_notes for this path and surface it as ``note`` in the response. Default False to keep response sizes stable.<br>`include_hints` (boolean, opt, default `false`): If True, attach a ``hints`` block via td_get_hints scoped to the inspected node's op_type and the 'inspect' response surface. Auto-injection still fires when surface-restricted hints exist for this op_type. | JSON envelope (string). |
+| `td_get_nodes` | List child nodes at a path. | `path` (string, opt, default `"/"`): Absolute path to a COMP node whose children to list (e.g. '/', '/project1', '/project1/myComp')<br>`family` (string, opt, default `null`): Filter by operator family: TOP, CHOP, SOP, DAT, COMP, MAT, or PANEL<br>`type` (string, opt, default `null`): Filter by specific operator type (e.g. 'noiseTOP', 'waveCHOP', 'textDAT')<br>`include_params` (boolean, opt, default `false`): If true, include all parameters for each node (slower for large networks)<br>`limit` (integer, opt, default `100`): Max number of nodes to return<br>`offset` (integer, opt, default `0`): Pagination offset<br>`response_format` (enum: `markdown`, `json`, opt, default `"json"`): Output format | JSON envelope (string). |
+| `td_get_params` | Get parameter values and metadata for a node. | `path` (string, **required**): Absolute node path<br>`page` (string, opt, default `null`): Filter by parameter page name<br>`names` (list[string], opt, default `null`): Filter to specific parameter names<br>`response_format` (enum: `markdown`, `json`, opt, default `"json"`): Output format | JSON envelope (string). |
+| `td_rename_node` | Rename a node. | `path` (string, **required**): Current absolute path of the node<br>`new_name` (string, **required**): New name for the node | JSON envelope (string). |
+| `td_set_params` | Set node parameters (static values or live expressions). | `path` (string, **required**): Absolute node path<br>`params` (object, **required**): Dictionary of parameter names to values. Supports five modes: • Static value (plain): {'seed': 42, 'colorr': 1.0} • Expression (reactive, updates every frame): {'seed': {'expr': 'absTime.seconds * 10'}, 'tx': {'expr': "op('noise1')['chan1']"}} • Explicit static: {'seed': {'val': 42}} • Reset to default: {'seed': {'reset': true}} — resets value and clears expression • Clear expression: {'seed': {'mode': 'constant', 'val': 42}} — force constant mode Expressions make networks ALIVE — use them for anything that should move, react, or change over time.<br>`include_hints` (boolean, opt, default `false`): If True, attach a ``hints`` block via td_get_hints. Auto-injection still fires when the params dict assigns a string to a reference-style parameter (instanceop/material/camera/lights/geometry/top/chop/sop/dat/comp).<br>`param_semantics_policy` (enum: `warn`, `block`, opt, default `"warn"`): Docs-grounded parameter safety policy for direct writes. 'warn' (default) preserves normal direct-tool behavior with attached findings — the write PROCEEDS even on invalid enum / out-of-range / bad op-reference; 'block' refuses the write before mutation when parameter semantics find invalid, unknown, or high-risk bindings. NOTE: this direct path is advisory by default. The brain/transaction path (td_brain_plan → td_brain_execute) HARD-FAILS the same contract violations. Pass 'block' here for equivalent strictness on direct writes. | JSON envelope (string). |
 
 ---
 
-## 3. Node Graph -- Write
+## 3. Content & Python Execution
+
+_Registry module: `src/td_mcp/registry/tools_content.py`_
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_create_node` | Create a new operator node. | `parent_path` (str, opt, default `"/project1"`): Parent COMP path. `node_type` (str, **required**): Operator type (e.g. `noiseTOP`, `waveCHOP`, `boxSOP`). Must end with a family suffix. `name` (str, opt): Custom name. `nodeX` (int, opt): Horizontal position (multiples of 200). `nodeY` (int, opt): Vertical position. | JSON with created node info (`path`, `name`, `type`). |
-| `td_delete_node` | Delete a node. | `path` (str, **required**): Absolute path of node to delete. | JSON confirmation. |
-| `td_copy_node` | Copy/duplicate a node. | `source_path` (str, **required**): Source node path. `dest_parent` (str, opt): Destination parent COMP. `new_name` (str, opt): Name for the copy. | JSON with new node info. |
-| `td_rename_node` | Rename a node. | `path` (str, **required**): Current absolute path. `new_name` (str, **required**, max 100 chars): New name. | JSON confirmation with new path. |
-| `td_connect_nodes` | Wire two nodes together. | `source_path` (str, **required**): Source (output) node. `target_path` (str, **required**): Target (input) node. `source_index` (int, opt, default `0`): Output connector index. `target_index` (int, opt, default `0`): Input connector index. | JSON confirmation. |
-| `td_disconnect` | Disconnect a node connector. | `path` (str, **required**): Node path. `connector_type` (str, opt, default `"input"`): `input` or `output`. `index` (int, opt, default `0`): Connector index. | JSON confirmation. |
+| `td_custom_parameters` | Create or update a custom parameter page on a COMP. | `path` (string, **required**): Path to a COMP with custom parameters<br>`page` (string, **required**): Custom page name<br>`params` (list[object], **required**): One or more parameter specifications to create on the page. Each spec has kind (float/int/toggle/menu/str/rgb/rgba/pulse/file/filesave/folder/chop/comp/dat/mat/header), name, and optional label/size/default/min/max. | JSON envelope (string). |
+| `td_exec_python` | Execute Python code inside TouchDesigner. | `code` (string, **required**): Python code to execute in TouchDesigner's Python environment. Has access to: op(), ops(), project, app, absTime, me, parent(), mod, ui, tdu. Set __result__ = <value> to return a value to the caller. Example: '__result__ = op("/project1/noise1").par.type.eval()'<br>`timeout_ms` (integer, opt, default `null`): Optional per-call execution timeout in milliseconds. When omitted, TouchDesigner uses its configured default. Bounds: 100-60000 ms.<br>`include_hints` (boolean, opt, default `false`): If True, attach a ``hints`` block via td_get_hints. Auto-injection still fires when the code touches restricted patterns (.text=, .par.file=, imports, OS escapes). | JSON envelope (string). |
+| `td_get_content` | Read DAT text/table content. | `path` (string, **required**): Path to a DAT node | JSON envelope (string). |
+| `td_set_content` | Write DAT text/table content. | `path` (string, **required**): Path to a DAT node<br>`text` (string, opt, default `null`): Text content to write (for Text DATs, Script DATs, etc.)<br>`table` (list[list[string]], opt, default `null`): Table content as 2D array of strings (for Table DATs) | JSON envelope (string). |
 
 ---
 
-## 4. Parameters & Content
+## 4. Data Inspection & Diagnostics
+
+_Registry module: `src/td_mcp/registry/tools_data.py`_
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_get_params` | Read parameters for a node. | `path` (str, **required**): Absolute node path. `page` (str, opt): Filter by parameter page. `names` (list[str], opt): Filter to specific parameter names. `response_format` (enum, opt, default `json`). | JSON dict of parameters with `value`, `default`, `label`, `page`, etc. |
-| `td_set_params` | Set parameter values (static, expression, reset, or clear expression). Safety bounds enforced. | `path` (str, **required**): Absolute node path. `params` (dict, **required**): Parameter name to value mapping. Supports 5 modes: plain static (`{'seed': 42}`), expression (`{'tx': {'expr': "op('noise1')['chan1']"}}`), explicit static (`{'seed': {'val': 42}}`), reset to default (`{'seed': {'reset': true}}`), force constant (`{'seed': {'mode': 'constant', 'val': 42}}`). | JSON confirmation; may include `safety_warnings`. |
-| `td_get_content` | Read DAT text/table content. | `path` (str, **required**): Path to a DAT node. | JSON with `text` or `table` content. |
-| `td_set_content` | Write DAT text/table content. | `path` (str, **required**): Path to a DAT node. `text` (str, opt): Text content for Text/Script DATs. `table` (list[list[str]], opt): 2D array for Table DATs. | JSON confirmation. |
-| `td_custom_parameters` | Create or update a custom parameter page on a COMP. | `path` (str, **required**): COMP path. `page` (str, **required**, max 64 chars): Page name. `params` (list[CustomParameterSpec], **required**): One or more parameter specs. Each spec has: `kind` (str, **required**: float, int, toggle, menu, str, rgb, rgba, pulse, file, filesave, folder, chop, comp, dat, mat, header), `name` (str, **required**), `label` (str, opt), `size` (int, opt, 1-4), `order` (int, opt), `replace` (bool, opt, default `true`), `menu_names` (list[str], opt), `menu_labels` (list[str], opt), `default` (any, opt), `min` (float, opt), `max` (float, opt), `norm_min` (float, opt), `norm_max` (float, opt), `clamp_min` (bool, opt), `clamp_max` (bool, opt). | JSON confirmation. |
-| `td_project_lifecycle` | Save, load, undo, redo, and undo-block management. | `action` (str, **required**): `status`, `save`, `load`, `undo`, `redo`, `start_undo_block`, `end_undo_block`, `clear_undo`. `path` (str, opt): Project file path for save/load. `save_external_toxs` (bool, opt, default `false`). `name` (str, opt): Undo block name (for `start_undo_block`). `enable` (bool, opt, default `true`): Whether undo block records state. | JSON with lifecycle result. |
+| `td_chop_data` | Read CHOP channel data (values/samples). | `path` (string, **required**): Path to a CHOP node<br>`channels` (list[string], opt, default `null`): List of channel names to read. If None, reads all channels.<br>`range` (list[integer], opt, default `null`): Sample range [start, end] to read. If None, reads all samples. | JSON envelope (string). |
+| `td_cooking_info` | Get cooking/performance info for a subtree. | `path` (string, opt, default `"/"`): Root path to inspect<br>`recurse` (boolean, opt, default `false`): Recursively inspect children<br>`sort_by` (string, opt, default `"cookTime"`): Sort by: 'cookTime' or 'cpuCookTime'<br>`limit` (integer, opt, default `20`): Max nodes to return | JSON envelope (string). |
+| `td_geometry_data` | Read SOP/POP geometry data (points/prims). | `path` (string, **required**): Path to a SOP or POP node<br>`include_points` (boolean, opt, default `true`): Include point position data<br>`include_prims` (boolean, opt, default `false`): Include primitive data<br>`limit` (integer, opt, default `500`): Max points/prims to return | JSON envelope (string). |
+| `td_get_errors` | Get errors + warnings for a node (optionally recursive). | `path` (string, opt, default `"/"`): Node path to check<br>`recurse` (boolean, opt, default `true`): Recursively check children<br>`max_depth` (integer, opt, default `10`): Max recursion depth (prevents runaway on huge projects)<br>`include_hints` (boolean, opt, default `false`): If True, attach a ``hints`` block via td_get_hints. Auto-injection still fires when the response contains known error patterns (eg. 'Not enough sources', 'extension', 'missing input'). | JSON envelope (string). |
+| `td_pop_inspect` | Read structured POP metadata and attribute samples. | `path` (string, **required**): Path to a POP node<br>`include_bounds` (boolean, opt, default `true`): Include POP bounds and dimension metadata<br>`include_attributes` (boolean, opt, default `true`): Include point/prim/vert attribute metadata<br>`point_attributes` (list[string], opt, default `null`): Specific point attributes to sample. If omitted, the tool samples common attributes such as P, PartVel, PartAge, Noise, and PartForce when present.<br>`prim_attributes` (list[string], opt, default `null`): Specific primitive attributes to sample. If omitted, no primitive attribute samples are returned unless requested.<br>`vert_attributes` (list[string], opt, default `null`): Specific vertex attributes to sample. If omitted, no vertex attribute samples are returned unless requested.<br>`start` (integer, opt, default `0`): Starting element index for attribute sampling<br>`count` (integer, opt, default `32`): Max elements to sample per requested attribute<br>`delayed` (boolean, opt, default `false`): Use TouchDesigner's delayed GPU readback mode where supported to reduce stalls | JSON envelope (string). |
+| `td_screenshot` | Capture a TOP frame. | `path` (string, **required**): Path to a TOP node to capture as an image (e.g. '/project1/null1', '/project1/render1')<br>`quality` (number, opt, default `0.5`): JPEG quality from 0.0 (smallest) to 1.0 (best). Default 0.5 gives good diagnostic quality at ~85KB.<br>`save_path` (string, opt, default `null`): Optional disk destination. When set, TouchDesigner writes the image to this path and the tool returns metadata + the saved path with NO base64 payload (near-zero token cost — the cheap visual-verify loop). Accepts an absolute path under your home directory or a bare filename (saved under ~/.tdpilot/captures/). Extension must be .png/.jpg/.jpeg. | JSON envelope (string). |
+| `td_search_nodes` | Search nodes across a subtree. | `query` (string, **required**): Search string (case-insensitive)<br>`path` (string, opt, default `"/"`): Root path to search from<br>`search_type` (string, opt, default `null`): DEPRECATED — prefer ``scopes``. One of 'name', 'type', 'family', 'all'. When both are set, ``scopes`` wins.<br>`scopes` (list[string], opt, default `null`): Search scopes (v1.6.0+). Any of: 'name', 'type', 'family', 'all', 'dat_text' (search DAT text contents), 'param_exprs' (search parameter expressions). Multiple scopes merge. Defaults to ['all'].<br>`limit` (integer, opt, default `50`): Max results | JSON envelope (string). |
 
 ---
 
-## 5. Data Inspection (Screenshot, CHOP, SOP, POP)
+## 5. Runtime State
+
+_Registry module: `src/td_mcp/registry/tools_state.py`_
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_screenshot` | Capture a TOP node as an image. With `save_path` the image is written to disk TD-side and only metadata + the path return (no base64 — the cheap visual-verify loop). Without it, base64 payload is included; ask user before repeated base64 captures. | `path` (str, **required**): TOP node path. `quality` (float, opt, default `0.5`, 0.0-1.0): JPEG quality. `save_path` (str, opt): disk destination — absolute path under the user home dir or a bare filename (saved under `~/.tdpilot/captures/`); extension must be `.png`/`.jpg`/`.jpeg`; validated server-side (traversal/symlink/extension checks) before it is sent to TD. | JSON with `path`, `format`, `size_bytes`, resolution, and `data_base64` (no save_path) or `saved_to` + `data_omitted` (save_path). |
-| `td_chop_data` | Read CHOP channel sample data. | `path` (str, **required**): CHOP node path. `channels` (list[str], opt): Channel names (all if omitted). `range` (list[int], opt, len=2): Sample range [start, end]. | JSON with channel names and sample arrays. |
-| `td_geometry_data` | Read SOP/POP geometry point and primitive data. | `path` (str, **required**): SOP or POP node path. `include_points` (bool, opt, default `true`). `include_prims` (bool, opt, default `false`). `limit` (int, opt, default `500`, 1-10000): Max points/prims. | JSON with point positions and primitive data. |
-| `td_pop_inspect` | Read structured POP metadata: bounds, attributes, and sampled attribute values. | `path` (str, **required**): POP node path. `include_bounds` (bool, opt, default `true`). `include_attributes` (bool, opt, default `true`). `point_attributes` (list[str], opt): Specific point attributes to sample (defaults to P, PartVel, PartAge, Noise, PartForce). `prim_attributes` (list[str], opt). `vert_attributes` (list[str], opt). `start` (int, opt, default `0`): Starting element index. `count` (int, opt, default `32`, 1-2048): Max elements per attribute. `delayed` (bool, opt, default `false`): Use delayed GPU readback. | JSON with bounds, attribute metadata, and sampled values. |
-| `td_capture_frame` | Capture a single TOP frame returning metadata. Base64 data only included when `confirm=true`. With `save_path` the frame is written to disk TD-side (overrides `confirm`; no base64). | `path` (str, **required**): TOP node path. `quality` (float, opt, default `0.8`, 0.0-1.0). `confirm` (bool, opt, default `false`): Include base64 image. `save_path` (str, opt): disk destination — absolute path under the user home dir or a bare filename (saved under `~/.tdpilot/captures/`); extension must be `.png`/`.jpg`/`.jpeg`; validated server-side before it is sent to TD. | JSON with `resolution`, `format`, `size_bytes`, and `data_base64` (confirm) or `saved_to` + `data_omitted` (save_path). |
-| `td_analyze_frame` | Analyze pixel data of a TOP node server-side (no image transfer). Modes: histogram, luminance, alpha_coverage, color_dominant, roi_diff. | `path` (str, **required**): TOP node path. `modes` (list[str], opt, default `["histogram","luminance"]`): Analysis modes. `roi` (list[int], opt): Region of interest [x, y, w, h] for roi_diff. `reference_path` (str, opt): Reference TOP for roi_diff. | JSON with per-mode analysis results. |
+| `td_get_focus` | Return where the user currently is in TouchDesigner: active network pane, selection, project metadata, timeline state. Reduces the cold-start tax of needing to ask the user 'what path are you working in?' before every patch. | `include_pane_history` (boolean, opt, default `false`): Reserved for future use; pane-history capture is not yet wired. | Return where the user currently is in TouchDesigner: active network pane, selection, project metadata, timeline state. |
+| `td_get_state_vector` | Aggregated scene state vector (cached for _tr.TD_STATE_VECTOR_TTL seconds). | `path` (string, opt, default `"/project1"`): Root path for aggregated diagnostics.<br>`force_refresh` (boolean, opt, default `false`): Bypass cache and fetch fresh state. | JSON envelope (string). |
+| `td_get_timescale_state` | Beat/phrase derived timeline state. | `bpm_hint` (number, opt, default `null`): Optional BPM hint. Defaults to 120 when omitted.<br>`beats_per_bar` (integer, opt, default `4`): Musical beats per bar for phase calculations. | JSON envelope (string). |
+| `td_locations` | Save, list, jump-to, rename, or delete named network locations per project. Storage is host-side JSON in ``~/.tdpilot/locations/<hash>.json`` and survives session restarts. Pairs with td_get_focus to give the agent + user a shared spatial vocabulary for big projects. | `action` (string, **required**): Action to perform: 'save' (capture current focus or override path), 'list' (return all per-project locations), 'go' (navigate to a saved location), 'delete' (remove by name), or 'rename'.<br>`name` (string, opt, default `null`): Location name. Required for save/go/delete/rename.<br>`new_name` (string, opt, default `null`): New name (rename action only).<br>`path` (string, opt, default `null`): Override path for the save action. Defaults to td_get_focus.active_pane_path.<br>`description` (string, opt, default `null`): Optional human-readable note (save action). | JSON envelope (string). |
 
 ---
 
-## 6. Diagnostics (Cook times, Errors, Capabilities)
+## 6. Timeline, Lifecycle & Python Help
+
+_Registry module: `src/td_mcp/registry/tools_runtime.py`_
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_cooking_info` | Get cooking/performance data: FPS, cook times, heaviest nodes. | `path` (str, opt, default `"/"`): Root path. `recurse` (bool, opt, default `false`). `sort_by` (str, opt, default `"cookTime"`): `cookTime` or `cpuCookTime`. `limit` (int, opt, default `20`, 1-100). | JSON with `fps`, `realTime`, `nodes` array sorted by cook time. |
-| `td_get_errors` | Check for node errors and warnings. | `path` (str, opt, default `"/"`): Node path. `recurse` (bool, opt, default `true`). `max_depth` (int, opt, default `10`, 1-50): Max recursion depth. | JSON with `issues` array. |
-| `td_get_capabilities` | Detect MCP server and client capabilities. | _(none)_ | JSON with `client_capabilities` (sampling, roots, elicitation support) and `runtime` config (transport, exec_mode, ports, etc.). |
-| `td_get_state_vector` | Aggregated scene state: project info, timeline, health, performance, events, monitoring, safety, snapshots, jobs. Cached with configurable TTL. | `path` (str, opt, default `"/project1"`): Root path. `force_refresh` (bool, opt, default `false`): Bypass cache. | JSON with `project`, `timeline`, `health`, `performance`, `events`, `monitoring`, `safety`, `snapshots`, `jobs`, `cache` sections. |
-| `td_get_timescale_state` | Derive beat/bar/phrase/section/arc phase from timeline, with BPM hint. | `bpm_hint` (float, opt, default `120.0`, 0-400). `beats_per_bar` (int, opt, default `4`, 1-32). | JSON with `timeline`, `timescale` (beat_index, bar_index, phases, seconds_to_next_beat/bar/phrase, arc_stage, tempo_health, collapse_risk, plateau_risk). |
-| `td_detect_instability` | Check FPS, errors, and heavy nodes to detect instability. | `path` (str, opt, default `"/project1"`): Root path. | JSON with `unstable` flag, `signals` (fps, issues_count, heavy_nodes_count), `heavy_nodes`, `issues`, `suggested_actions`. |
-| `td_describe_dynamics` | Observe temporal dynamics over a time window. Runs as async job collecting samples. | `path` (str, opt, default `"/project1"`): Root path. `observation_window` (float, opt, default `3.0`, 0.5-30.0): Duration in seconds. `sample_rate` (float, opt, default `10.0`, 1.0-60.0): Samples/sec. | JSON with `job_id`, then final result contains `samples`, `classifications` (overall_character, energy_level, predictability, fps_trend). |
-| `td_audit_project` | Audit a project subtree: count nodes by family/type, detect palette components, find errors, check build compatibility. | `root_path` (str, opt, default `"/project1"`). | JSON with `total_nodes`, `by_family`, `by_op_type`, `palette_components`, `unknown_op_types`, `compat_issues`, `node_errors`. |
+| `td_project_lifecycle` | Save/load/undo/redo project lifecycle operations. | `action` (string, **required**): Lifecycle action: status, save, load, undo, redo, start_undo_block, end_undo_block, clear_undo<br>`path` (string, opt, default `null`): Project path for save/load. For save with no path, TouchDesigner will perform its default incremental save behavior.<br>`save_external_toxs` (boolean, opt, default `false`): Also save external tox contents on save<br>`name` (string, opt, default `null`): Undo block name when action=start_undo_block<br>`enable` (boolean, opt, default `true`): Whether a started undo block should record undo state | JSON envelope (string). |
+| `td_pulse_param` | Pulse a pulse-type parameter (e.g. a button par). | `path` (string, **required**): Node path<br>`param` (string, **required**): Parameter name to pulse | JSON envelope (string). |
+| `td_python_classes` | List available Python classes in the TD runtime. Returns a JSON envelope. | _(none)_ | Returns a JSON envelope. |
+| `td_python_help` | Get Python help documentation for a TD class/module. | `target` (string, **required**): Python object/class to get help for (e.g. 'td', 'td.OP', 'tdu', 'td.TOP') | JSON envelope (string). |
+| `td_timeline` | Read current timeline state: frame, seconds, FPS, playing. Returns a JSON envelope. | _(none)_ | Returns a JSON envelope. |
+| `td_timeline_set` | Control timeline playback: play/pause, jump to frame, set FPS. | `action` (string, opt, default `null`): Timeline action: 'play', 'pause', or 'frame' (set specific frame)<br>`frame` (integer, opt, default `null`): Frame number to jump to (when action='frame')<br>`fps` (number, opt, default `null`): Set cook rate / FPS | JSON envelope (string). |
 
 ---
 
-## 7. Python Execution
+## 7. Events & Subscriptions
+
+_Registry module: `src/td_mcp/registry/tools_events.py`_
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_exec_python` | Execute Python code inside TouchDesigner. Set `__result__` to return a value. Subject to `TD_MCP_EXEC_MODE` safety filtering (off/restricted/standard/full). | `code` (str, **required**, max 50000 chars): Python code. Has access to `op()`, `ops()`, `project`, `app`, `absTime`, `me`, `parent()`, `mod`, `ui`, `tdu`. | JSON with `result` (the `__result__` value), `output`, `error`. |
-| `td_python_help` | Get Python help documentation for a TD object or class. | `target` (str, **required**): Python object (e.g. `td`, `td.OP`, `tdu`, `td.TOP`). | JSON with help text. |
-| `td_python_classes` | List available Python classes in TD runtime. | _(none)_ | JSON with class names and hierarchy. |
+| `td_get_events` | Read recent event history. | `event_type` (string, opt, default `null`): Optional event type filter.<br>`limit` (integer, opt, default `50`): Maximum number of events to return. | JSON envelope (string). |
+| `td_subscribe` | Subscribe to runtime TD events for a node. | `path` (string, **required**): TD node path to monitor, e.g. '/project1/audio1'.<br>`event_types` (list[string], opt, default `null`): Event types: chop_change, par_change, cook_complete, node_error, timeline. Defaults to ['chop_change', 'par_change'].<br>`channels` (list[string], opt, default `null`): Specific CHOP channels to monitor. None means all channels.<br>`params` (list[string], opt, default `null`): Specific parameters to monitor. None means all tracked params.<br>`threshold` (number, opt, default `null`): Only emit events when delta exceeds this threshold.<br>`rate_limit` (number, opt, default `0.016`): Minimum seconds between repeated events from same source. | JSON envelope (string). |
+| `td_unsubscribe` | Remove a node subscription. | `path` (string, **required**): TD node path to stop monitoring. | JSON envelope (string). |
 
 ---
 
-## 8. Timeline & Pulse
+## 8. Technique Memory & Preferences
+
+_Registry module: `src/td_mcp/registry/tools_memory.py`_
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_timeline` | Read current timeline state: frame, seconds, FPS, playing. | _(none)_ | JSON with `frame`, `seconds`, `fps`, `playing`. |
-| `td_timeline_set` | Control timeline playback. | `action` (str, opt): `play`, `pause`, or `frame`. `frame` (int, opt, >=0): Target frame (when action=`frame`). `fps` (float, opt, 0-240): Set cook rate. | JSON confirmation. |
-| `td_pulse_param` | Pulse a pulse-type parameter on a node. | `path` (str, **required**): Node path. `param` (str, **required**): Parameter name. | JSON confirmation. |
+| `td_memory_export` | Export the technique library as a portable JSON object for sharing or backup. | `scope` (string, opt, default `"project"`): 'project' or 'global'. | JSON envelope (string). |
+| `td_memory_favorite` | Mark a technique as favorite and/or rate it (0-5). | `technique_id` (string, **required**): ID of the technique.<br>`favorite` (boolean, opt, default `true`): Set favorite status.<br>`rating` (integer, opt, default `-1`): Rating 0-5, or -1 to skip.<br>`scope` (string, opt, default `"project"`): 'project' or 'global'. | JSON envelope (string). |
+| `td_memory_import` | Import techniques from an exported library (from td_memory_export). | `data` (object, **required**): Exported library data (from td_memory_export).<br>`scope` (string, opt, default `"project"`): 'project' or 'global'.<br>`overwrite` (boolean, opt, default `false`): Overwrite existing techniques with same ID. | JSON envelope (string). |
+| `td_memory_learn` | Analyze a network subtree and extract a reusable technique recipe. | `path` (string, **required**): Root path of the network subtree to analyze.<br>`name` (string, opt, default `""`): Human-readable name for this technique.<br>`description` (string, opt, default `""`): What this technique does.<br>`tags` (list[string], opt, default `null`): Tags for categorization.<br>`max_depth` (integer, opt, default `3`): Max child depth to walk. | Returns the technique dict — pass it to td_memory_save to persist. |
+| `td_memory_list` | List saved techniques with optional filtering by scope, tags, and favorites. | `scope` (string, opt, default `"all"`): 'project', 'global', or 'all'.<br>`tags` (list[string], opt, default `null`): Filter by tags.<br>`favorites_only` (boolean, opt, default `false`): Only return favorites.<br>`limit` (integer, opt, default `50`): Max results. | JSON envelope (string). |
+| `td_memory_preferences` | Get, set, list, or delete user preferences. | `action` (string, **required**): One of: 'get', 'set', 'list', 'delete'.<br>`key` (string, opt, default `""`): Preference key (required for get/set/delete).<br>`value` (any, opt, default `null`): Value to set (required for 'set').<br>`scope` (string, opt, default `"project"`): 'project' or 'global'. | JSON envelope (string). |
+| `td_memory_promote` | Copy a project technique to the global library so it's available across all projects. | `technique_id` (string, **required**): Project technique ID to promote. | JSON envelope (string). |
+| `td_memory_recall` | Search the technique library by text query and/or tags. | `query` (string, opt, default `""`): Text search across names, descriptions, tags.<br>`tags` (list[string], opt, default `null`): Filter by tags.<br>`scope` (string, opt, default `"all"`): 'project', 'global', or 'all'.<br>`limit` (integer, opt, default `20`): Max results. | Returns summaries (not full recipes). Use td_memory_replay to rebuild a found technique. |
+| `td_memory_replay` | Rebuild a saved technique in a new location in the TD project. | `technique_id` (string, **required**): ID of the saved technique to replay.<br>`parent_path` (string, **required**): Parent COMP path where the technique will be rebuilt.<br>`name_prefix` (string, opt, default `""`): Optional prefix for created node names.<br>`scope` (string, opt, default `"project"`): 'project' or 'global'.<br>`force` (boolean, opt, default `false`): Skip build compatibility checks and replay anyway.<br>`recreate_root` (boolean, opt, default `false`): v1.4.7 Bug V opt-in. If True and the recipe's '/' entry has family='COMP', the replay creates that wrapper COMP under parent_path first and builds all children inside it. Default False preserves the existing flat-replay behavior where '/' is aliased to parent_path (children land as siblings). Set to True when you want a faithful clone of a COMP-wrapped technique.<br>`param_semantics_policy` (enum: `warn`, `block`, opt, default `"warn"`): Docs-grounded parameter safety policy for replayed recipe params. 'warn' preserves replay behavior with attached findings; 'block' refuses risky or invalid parameter writes before any live mutation. | JSON envelope (string). |
+| `td_memory_save` | Save a technique to the project or global library. | `technique` (object, **required**): Technique dict (from td_memory_learn output).<br>`scope` (string, opt, default `"project"`): 'project' or 'global'.<br>`name` (string, opt, default `""`): Override technique name.<br>`description` (string, opt, default `""`): Override description.<br>`tags` (list[string], opt, default `null`): Additional tags.<br>`notes` (string, opt, default `""`): Freeform notes about this technique. | JSON envelope (string). |
 
 ---
 
-## 9. Events & Monitoring
+## 9. User Knowledge Store
+
+_Registry module: `src/td_mcp/registry/tools_knowledge_store.py`_
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_subscribe` | Subscribe to runtime events from a TD node. Provisions WebSocket listener. | `path` (str, **required**): Node path to monitor. `event_types` (list[str], opt, default `["chop_change","par_change"]`): `chop_change`, `par_change`, `cook_complete`, `node_error`, `timeline`. `channels` (list[str], opt): Specific CHOP channels. `params` (list[str], opt): Specific parameters. `threshold` (float, opt): Delta threshold for events. `rate_limit` (float, opt, default `0.016`, 0.001-10.0): Min seconds between events. | JSON with `resource_uris`, `active_subscriptions`. |
-| `td_unsubscribe` | Remove all event subscriptions for a node path. | `path` (str, **required**): Node path to stop monitoring. | JSON with `active_subscriptions` count. |
-| `td_get_events` | Read recent event history from the event buffer. | `event_type` (str, opt): Filter by event type. `limit` (int, opt, default `50`, 1-1000). | JSON with `events` array and `count`. |
+| `td_knowledge_get` | Fetch the full markdown body + metadata for one entry. | `entry_id` (string, **required**): Entry id from td_knowledge_recall.<br>`scope` (string, opt, default `"project"`): 'project' or 'global'. | JSON envelope (string). |
+| `td_knowledge_list` | List knowledge entry summaries, newest first. | `scope` (string, opt, default `"all"`): 'project' \| 'global' \| 'all'.<br>`tags` (list[string], opt, default `null`): Filter to entries with at least one of these tags.<br>`favorites_only` (boolean, opt, default `false`): If true, return only favorited entries.<br>`limit` (integer, opt, default `50`): Max results. | JSON envelope (string). |
+| `td_knowledge_recall` | Search knowledge entries. Returns summaries (no full bodies). | `query` (string, opt, default `""`): Free-text search across name/description/tags/notes.<br>`tags` (list[string], opt, default `null`): Filter to entries that have at least one of these tags.<br>`scope` (string, opt, default `"all"`): 'project' \| 'global' \| 'all' (default).<br>`limit` (integer, opt, default `20`): Max results.<br>`full_text` (boolean, opt, default `false`): If true, also search the body of each entry (slower — reads files). Default false searches only metadata. | Returns summaries (no full bodies). |
+| `td_knowledge_save` | Persist a free-form markdown knowledge entry. | `body` (string, **required**): Markdown body of the knowledge entry. Reference essay, math, explanations — keep under 200 KB. Split larger writeups into multiple linked entries.<br>`name` (string, opt, default `""`): Short title for the entry.<br>`description` (string, opt, default `""`): One-line summary used in search results.<br>`tags` (list[string], opt, default `null`): Lowercase tags for filtering, e.g. ['feedback', 'reaction-diffusion'].<br>`source` (string, opt, default `""`): Optional attribution — where this technique came from (e.g. 'youtube tutorial 2025-03-01', 'forum post').<br>`notes` (string, opt, default `""`): Free-form internal notes.<br>`scope` (string, opt, default `"project"`): 'project' or 'global'. Project requires TDPILOT_PROJECT_NAME. | Returns the entry id. The body is stored at |
 
 ---
 
-## 10. Technique Memory & User Knowledge Store
+## 10. Safety & Stability
 
-Two parallel persistence surfaces — **technique memory** for replayable network recipes, **user knowledge store** *(new in v1.5.3)* for free-form markdown reference essays (prose + math).
-
-### 10a. Technique memory (replayable network recipes)
+_Registry module: `src/td_mcp/registry/tools_safety.py`_
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_memory_learn` | Analyze a network subtree and extract a reusable technique recipe. Auto-detects complexity: small (<10 nodes) gets full recipe, large (>20) gets structure summary only. | `path` (str, **required**): Root path of subtree. `name` (str, opt): Technique name. `description` (str, opt). `tags` (list[str], opt). `max_depth` (int, opt, default `3`, 1-10). | JSON with `technique` dict containing `recipe`, `nodes`, `connections`, `key_params`, `families`, `op_types`. |
-| `td_memory_save` | Persist a technique dict to the project or global library. | `technique` (dict, **required**): Technique dict (from `td_memory_learn`). `scope` (str, opt, default `"project"`): `project` or `global`. `name` (str, opt): Override name. `description` (str, opt). `tags` (list[str], opt). `notes` (str, opt). | JSON with `technique_id`, `scope`. |
-| `td_memory_recall` | Search the technique library by text query and/or tags. Multi-word queries use tokenized OR-matching ranked by hit count (exact-phrase matches rank highest). Returns summaries, not full recipes. | `query` (str, opt): Text search. `tags` (list[str], opt). `scope` (str, opt, default `"all"`): `project`, `global`, or `all`. `limit` (int, opt, default `20`, 1-100). | JSON with `techniques` array and `count`. |
-| `td_memory_replay` | Rebuild a saved technique in a new location. Creates nodes, sets params/expressions, wires connections. Auto-validates after replay. | `technique_id` (str, **required**). `parent_path` (str, **required**): Destination COMP path. `name_prefix` (str, opt). `scope` (str, opt, default `"project"`). `force` (bool, opt, default `false`): Skip compatibility checks. | JSON with `nodes_created`, `connections_wired`, `created_paths`, `skipped_nodes`, `validation_result`. |
-| `td_memory_favorite` | Mark/rate a technique (0-5 stars). | `technique_id` (str, **required**). `favorite` (bool, opt, default `true`). `rating` (int, opt, default `-1`, -1 to 5): -1 to skip. `scope` (str, opt, default `"project"`). | JSON confirmation. |
-| `td_memory_promote` | Copy a project technique to the global library. | `technique_id` (str, **required**): Project technique ID. | JSON with `global_technique_id`. |
-| `td_memory_preferences` | Get, set, list, or delete user preferences (color palettes, default resolutions, naming conventions, etc.). | `action` (str, **required**): `get`, `set`, `list`, or `delete`. `key` (str, opt): Preference key (required for get/set/delete). `value` (any, opt): Value (required for `set`). `scope` (str, opt, default `"project"`). | JSON with preference data. |
-| `td_memory_list` | List saved techniques with optional filtering. | `scope` (str, opt, default `"all"`): `project`, `global`, or `all`. `tags` (list[str], opt). `favorites_only` (bool, opt, default `false`). `limit` (int, opt, default `50`, 1-200). | JSON with `techniques` array and `count`. |
-
-### 10b. User knowledge store (markdown reference essays) — new in v1.5.3
-
-For prose-with-math reference content (BZ reaction equations, feedback recipes, "why this approach works" essays). Storage at `~/.tdpilot/knowledge/{global,projects/<safe_name>}/entries/<uuid>.md` with metadata in adjacent `index.json`. Body capped at 200 KB per entry — split larger writeups into linked entries.
-
-| Tool | Description | Parameters | Returns |
-|------|-------------|------------|---------|
-| `td_knowledge_save` | Persist a free-form markdown knowledge entry. Body stored at `entries/<id>.md`, metadata in `index.json`. Local-only, never pushed. | `body` (str, **required**, min 1 char, max 200 KB UTF-8): Markdown body. `name` (str, opt): Short title. `description` (str, opt): One-line summary used in search results. `tags` (list[str], opt): Lowercase, e.g. `['feedback', 'reaction-diffusion']`. `source` (str, opt): Attribution (e.g. "youtube tutorial", "blog post"). `notes` (str, opt). `scope` (str, opt, default `"project"`): `project` or `global`. Project requires `TDPILOT_PROJECT_NAME`. | JSON with `success`, `id`, `scope`, `stats`. |
-| `td_knowledge_recall` | Search knowledge entries by query and/or tags. Returns summaries (no bodies — use `td_knowledge_get` to fetch a body). | `query` (str, opt): Free-text across name/description/tags/source/notes. `tags` (list[str], opt): At-least-one-match. `scope` (str, opt, default `"all"`): `project`, `global`, or `all`. `limit` (int, opt, default `20`, 1-100). `full_text` (bool, opt, default `false`): If true, also reads each body file (slower but more thorough). | JSON with `success`, `count`, `results` array of summaries. |
-| `td_knowledge_get` | Fetch the full markdown body + metadata for one entry. | `entry_id` (str, **required**, min 1 char): Entry id from `td_knowledge_recall`. `scope` (str, opt, default `"project"`): `project` or `global`. | JSON with `success`, `entry` (full record + `body` field). Returns `success=False` with error if not found. |
-| `td_knowledge_list` | List entry summaries newest-first with optional filtering. | `scope` (str, opt, default `"all"`): `project`, `global`, or `all`. `tags` (list[str], opt): At-least-one-match filter. `favorites_only` (bool, opt, default `false`). `limit` (int, opt, default `50`, 1-200). | JSON with `success`, `count`, `results` array, `stats` dict. |
+| `td_clear_param_bounds` | Clear parameter bounds for specific paths, or all bounds if paths is None. | `paths` (list[string], opt, default `null`): Clear bounds for specific node paths (None = clear all). | JSON envelope (string). |
+| `td_detect_instability` | Detect instability signals: FPS, heavy cookers, critical errors. | `path` (string, opt, default `"/project1"`): Root path to inspect. | JSON envelope (string). |
+| `td_emergency_stabilize` | Emergency stabilization: pause timeline, clamp safety, capture baseline snapshot. | `path` (string, opt, default `"/project1"`): Root path to stabilize. | JSON envelope (string). |
+| `td_set_param_bounds` | Set parameter safety bounds with enforcement mode. | `bounds` (list[object], **required**): One or more parameter safety bounds. Each bound has path, param, and optional min_val / max_val / max_rate.<br>`enforce_mode` (string, opt, default `"clamp"`): Enforcement mode: clamp \| reject \| warn | JSON envelope (string). |
 
 ---
 
-## 11. Safety & Recovery (Snapshots, Param Bounds, Instability)
+## 11. Snapshots
+
+_Registry module: `src/td_mcp/registry/tools_snapshots.py`_
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_set_param_bounds` | Set numeric safety bounds for parameters. All subsequent `td_set_params` calls enforce these bounds. | `bounds` (list[ParamBound], **required**, 1-500): Each bound has `path` (str), `param` (str), `min_val` (float, opt), `max_val` (float, opt), `max_rate` (float, opt, >=0: max change/sec). `enforce_mode` (str, opt, default `"clamp"`): `clamp`, `reject`, or `warn`. | JSON with `mode`, `bounds_count`, `bounds` dict. |
-| `td_clear_param_bounds` | Clear safety bounds. | `paths` (list[str], opt): Clear bounds for specific node paths. If omitted, clears all. | JSON with `cleared` count and `remaining`. |
-| `td_emergency_stabilize` | Emergency action: snapshot current state, pause timeline, set safety to clamp mode. | `path` (str, opt, default `"/project1"`). | JSON with `actions` taken, `snapshot` info, `next` steps. |
-| `td_snapshot_scene` | Capture a full scene snapshot: all node params, connections, and optionally a visual screenshot. | `name` (str, opt): Snapshot label. `path` (str, opt, default `"/project1"`): Root path. `include_visual` (bool, opt, default `false`). | JSON with `snapshot_id`, `name`, `timestamp`, `summary` (captured_nodes, connection_count, truncated). |
-| `td_list_snapshots` | List stored snapshots. | `limit` (int, opt, default `20`, 1-100). | JSON with `snapshots` array and `count`. |
-| `td_diff_snapshots` | Diff two snapshots, or a snapshot vs. live state. | `snapshot_a` (str, **required**): First snapshot ID. `snapshot_b` (str, opt): Second snapshot ID. If omitted, diffs against live state. | JSON with `diff` containing added/removed/changed nodes and params. |
-| `td_restore_snapshot` | Restore parameter values from a snapshot. Restores params only -- does not add/remove nodes or connections. | `snapshot_id` (str, **required**). `partial` (list[str], opt): Subset of node paths to restore. `dry_run` (bool, opt, default `false`): Preview changes without applying. | JSON with `restored`, `skipped`, `failures`, `safety_warnings`. |
+| `td_diff_snapshots` | Diff two snapshots, or a snapshot against live state. | `snapshot_a` (string, **required**): Baseline snapshot id.<br>`snapshot_b` (string, opt, default `null`): If omitted, diff snapshot_a vs live state. | JSON envelope (string). |
+| `td_list_snapshots` | List saved scene snapshots (newest first). | `limit` (integer, opt, default `20`): Max number of snapshots to return (newest first). | JSON envelope (string). |
+| `td_restore_snapshot` | Restore parameter values from a previously saved snapshot. | `snapshot_id` (string, **required**): Snapshot id to restore parameter values from.<br>`partial` (list[string], opt, default `null`): Optional subset of node paths. When provided, only these nodes (and no others) have their parameters restored from the snapshot.<br>`dry_run` (boolean, opt, default `false`): Return diff only without applying.<br>`param_semantics_policy` (enum: `warn`, `block`, opt, default `"warn"`): Docs-grounded parameter safety policy for restored snapshot params. 'warn' preserves restore behavior with attached findings; 'block' refuses unsafe parameter restores before any live mutation. | JSON envelope (string). |
+| `td_snapshot_scene` | Capture a scene snapshot (structure + params; optionally visual). | `name` (string, opt, default `null`): Optional snapshot label.<br>`path` (string, opt, default `"/project1"`): Root path to snapshot.<br>`include_visual` (boolean, opt, default `false`): Include screenshot payload. | JSON envelope (string). |
 
 ---
 
-## 12. Macros & Planning
+## 12. Macros
+
+_Registry module: `src/td_mcp/registry/tools_macros.py`_
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_create_macro` | Instantiate a built-in macro template network. | `parent_path` (str, opt, default `"/project1"`). `macro_type` (enum, **required**): `feedback_loop`, `feedback_displacement`, `audio_reactive`, `particle_gpu`, `post_processing`. `name` (str, opt): Name prefix. `nodeX` (int, opt, default `0`). `nodeY` (int, opt, default `0`). `params` (dict, opt): Override template defaults. | JSON with created node paths and connections. |
-| `td_list_macros` | List all available macro templates. | _(none)_ | JSON array of macro template descriptors. |
-| `td_get_macro_params` | Inspect the parameter schema for a macro template. | `macro_type` (enum, **required**): Same enum as `td_create_macro`. | JSON with parameter names, types, defaults, and descriptions. |
-| `td_plan_patch` | Generate a structured patch plan for an intent without mutating the project. Inspects current state and optionally loads a recipe. | `intent` (str, **required**): What to achieve. `target_path` (str, opt, default `"/project1"`). `recipe_id` (str, opt): Base plan on a recipe. | JSON with `plan` dict containing `steps`, `current_node_count`, `existing_names`. |
-| `td_preflight_patch` | Validate a plan from `td_plan_patch` before execution. Checks target path, op type validity, name conflicts. | `plan` (dict, **required**): Plan dict from `td_plan_patch`. | JSON with `valid` bool, `errors`, `warnings`, `step_count`. |
-| `td_validate_recipe` | Validate a technique recipe: check op types against knowledge corpus, verify structure, report build compatibility. | `recipe_id` (str, opt): Recipe ID to validate. `recipe` (dict, opt): Inline recipe dict. `scope` (str, opt, default `"project"`). | JSON with `valid`, `node_count`, `unknown_op_types`, `compat_issues`, `errors`, `warnings`. |
+| `td_create_macro` | Create a macro template network. | `macro_type` (enum: `feedback_loop`, `feedback_displacement`, `audio_reactive`, `particle_gpu`, `post_processing`, **required**): Macro template to create.<br>`parent_path` (string, opt, default `"/project1"`): Parent COMP path where the macro will be instantiated.<br>`name` (string, opt, default `null`): Optional name prefix for all nodes created by this macro.<br>`nodeX` (integer, opt, default `0`): Macro origin X position in the network editor.<br>`nodeY` (integer, opt, default `0`): Macro origin Y position in the network editor.<br>`params` (object, opt, default `null`): Override template parameter defaults with custom values.<br>`param_semantics_policy` (enum: `warn`, `block`, opt, default `"warn"`): Docs-grounded parameter safety policy for macro parameter writes. 'warn' preserves macro creation with attached warnings; 'block' refuses invalid or high-risk macro param writes before setting them. | JSON envelope (string). |
+| `td_get_macro_params` | Inspect parameter schema for a macro template. | `macro_type` (enum: `feedback_loop`, `feedback_displacement`, `audio_reactive`, `particle_gpu`, `post_processing`, **required**): Macro template to inspect. | JSON envelope (string). |
+| `td_list_macros` | List all available macro templates (built-in plus user templates). Returns a JSON envelope. | _(none)_ | Returns a JSON envelope. |
 
 ---
 
-## 13. Vision & Streaming
+## 13. Planning & Project Audit
+
+_Registry module: `src/td_mcp/registry/tools_planning.py`_
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_capture_and_analyze` | Capture a TOP screenshot with optional AI analysis. Requires confirmation gate. | `path` (str, **required**): TOP node path. `quality` (float, opt, default `0.5`, 0.0-1.0). `confirm_image_capture` (bool, opt, default `false`): Must be `true` to execute. `analyze` (bool, opt, default `false`): Request AI analysis. `analysis_prompt` (str, opt). `compare_with` (str, opt): Resource URI to compare against. | JSON with `capture`, `analysis`, `token_notice`. |
-| `td_monitor_visual` | Start periodic visual monitoring of a TOP node. Default mode omits base64 frames. | `path` (str, **required**): TOP path. `interval` (float, opt, default `2.0`, 0.5-30.0): Capture interval seconds. `quality` (float, opt, default `0.3`, 0.0-1.0). `include_image` (bool, opt, default `false`): Include base64 frames. `confirm_high_token_mode` (bool, opt, default `false`): Required when `include_image=true`. `auto_analyze` (bool, opt, default `false`). `analysis_prompt` (str, opt). | JSON with `monitor` config, `resource_uri`, `active_monitors`, `token_notice`. |
-| `td_stop_monitor_visual` | Stop a visual monitor. | `path` (str, **required**): TOP path being monitored. | JSON with `success` and `active_monitors`. |
-| `td_stream_top` | Start continuous TOP frame stream. Default mode omits base64 frames. | `path` (str, **required**): TOP path. `fps` (float, opt, default `8.0`, 0.5-60.0): Target frame rate (clamped to server max). `quality` (float, opt, default `0.25`, 0.0-1.0). `include_image` (bool, opt, default `false`). `confirm_high_token_mode` (bool, opt, default `false`): Required when `include_image=true`. `emit_unchanged` (bool, opt, default `false`): Suppress identical consecutive frames. | JSON with `stream` config, `resource_uri`, `active_streams`, `limits`. |
-| `td_stop_stream_top` | Stop a TOP stream. | `path` (str, **required**): TOP path being streamed. | JSON with `success`, `active_streams`, `stats`. |
-| `td_optimize_visual` | Autonomous visual goal optimization via bounded parameter search. Runs as async job. Supports pre-optimization snapshot. | `goal` (str, **required**, min 3 chars): Natural-language goal. `profile` (str, opt): `balanced`, `complexity`, `motion_rhythm`, `stability_guard`. `objective_weights` (dict[str,float], opt): e.g. `{'motion_rhythm': 0.8, 'stability': 0.4}`. `output_top` (str, **required**): TOP path as output reference. `adjustable_params` (list[AdjustableParamInput], **required**, 1-200): Each has `path` (str), `param` (str), `min_val` (float), `max_val` (float), `step` (float, opt, default `0.05`). `max_iterations` (int, opt, default `10`, 1-50). `convergence_threshold` (float, opt, default `0.8`, 0.0-1.0). `safety_profile` (str, opt, default `"balanced"`): `conservative`, `balanced`, `aggressive`. `root_path` (str, opt, default `"/project1"`). `snapshot_before` (bool, opt, default `true`). | JSON with `job_id`, `job_resource_uri`, `baseline_snapshot_id`, `goal_profile`. Final job result contains `converged`, `iterations`, `final_score`, `final_params`. |
+| `td_audit_project` | Read-only project audit. Pair with td_brain_plan for new build/debug requests that need plan-aware changes afterward. | `root_path` (string, opt, default `"/project1"`): Root path to audit | JSON envelope (string). |
+| `td_plan_patch` | Legacy compatibility planner returning the pre-v1.5 patch dict shape. For new concept-to-network TouchDesigner work, prefer td_brain_plan followed by td_brain_execute. | `intent` (string, **required**): What you want to achieve<br>`target_path` (string, opt, default `"/project1"`): Target path to plan changes for<br>`recipe_id` (string, opt, default `null`): Optional recipe ID to base plan on<br>`include_hints` (boolean, opt, default `false`): If True, attach a ``hints`` block via td_get_hints. Auto-injection still fires when the plan touches feedback, GLSL, or audio-reactive territory. | JSON envelope (string). |
+| `td_preflight_patch` | Read-only validation for legacy td_plan_patch dicts. For new TDPilot-authored builds, use the BrainPlan path: td_brain_plan then td_brain_execute. | `plan` (object, **required**): Plan dict from td_plan_patch to validate | JSON envelope (string). |
+| `td_validate_recipe` | Read-only recipe compatibility check. Use td_brain_plan for new grounded visual-programming requests that should become a BrainPlan. | `recipe_id` (string, opt, default `null`): Recipe ID to validate<br>`recipe` (object, opt, default `null`): Inline recipe dict to validate<br>`scope` (string, opt, default `"project"`): 'project' or 'global' | JSON envelope (string). |
 
 ---
 
-## 14. Official Knowledge (Docs, Snippets, Palette, Release)
+## 14. Patch Pipeline
+
+_Registry module: `src/td_mcp/registry/tools_patch.py`_
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_search_official_docs` | Search the knowledge corpus for operators, palette components, releases, or snippets. | `query` (str, **required**): Search text. `card_types` (list[str], opt): Filter by card type. `family` (str, opt): Filter by operator family. `limit` (int, opt, default `10`). | JSON with `results` array, `count`, `provenance`. |
-| `td_get_operator_doc` | Get full documentation card for an operator type or live node. | `op_type` (str, opt): Operator type string. `node_path` (str, opt): Resolve type from live node. | JSON with `card` (key_params, summary, common_gotchas, etc.), `provenance`, and `param_semantics` (docs-grounded per-param contracts — enum_values, valid_range, default_strategy, cook_risk — when known). |
-| `td_get_param_help` | Get help for a specific parameter: live metadata + knowledge card entry + current value. | `node_path` (str, **required**). `param_name` (str, **required**). | JSON with `live` param info, `card_param` enrichment, `provenance`, and `param_semantics` (enum_values, valid_range, default_strategy, cook_risk — when known for this param). |
-| `td_lookup_snippets` | Search OP Snippets by keyword and optional family. | `query` (str, **required**). `family` (str, opt). | JSON with `results` array, `count`, `provenance`. |
-| `td_lookup_palette_component` | Look up a palette component by name or search by query. | `component_name` (str, opt): Exact name. `query` (str, opt): Search text. | JSON with `card` or `results` array, `provenance`. |
-| `td_get_release_delta` | Get release notes for a specific build (defaults to current). | `build` (str, opt): Build string. | JSON with release `card` and `provenance`. |
-| `td_get_build_compatibility` | Check if an operator type is compatible with a specific TD build. | `op_type` (str, **required**). `build` (str, opt): Defaults to current build. | JSON with `compatible` bool, `reason`, `provenance`. |
-| `td_recommend_official_component` | Recommend official palette or built-in operator components for a given goal. | `goal` (str, **required**). | JSON with `recommendations` array (type, name, summary, when_to_use). |
-| `td_find_official_example` | Search for official examples and snippets matching a query. | `query` (str, **required**). `family` (str, opt): Filter by family. | JSON with `examples` array (type, id, display_name, summary). |
-| `td_explain_better_way` | Suggest better official alternatives for a given intent, with gotcha warnings. | `intent` (str, **required**). `current_plan` (str, opt): Current approach to evaluate. | JSON with `recommendation`, `official_alternative`, `gotchas`. |
+| `td_patch_apply` | Destructive compatibility/expert PatchPlan executor. Prefer td_brain_execute for BrainPlans because it is the default validated transaction path for TDPilot-authored builds. | `plan` (object, **required**): PatchPlan dict to execute<br>`label` (string, opt, default `null`): Override plan.undo_label<br>`auto_validate` (boolean, opt, default `true`): Run validate_target after apply<br>`transaction_options` (object, opt, default `null`): Optional TransactionOptions dict. When provided, td_patch_apply uses the vNext transaction executor with preflight, snapshot, validation, and rollback policy.<br>`param_semantics_policy` (enum: `warn`, `block`, opt, default `"warn"`): Docs-grounded parameter safety policy for legacy patch applies. 'warn' preserves legacy behavior and attaches findings; 'block' refuses invalid or high-risk set_params operations before mutation. | JSON envelope (string). |
+| `td_patch_plan` | Compatibility/expert surface for typed PatchPlan construction. For new concept-to-network TouchDesigner builds, prefer td_brain_plan followed by td_brain_execute. | `target_root` (string, **required**): Absolute TD path the plan operates on, e.g. '/project1'<br>`intent` (string, opt, default `null`): Free-text goal; triggers heuristic macro match<br>`recipe_id` (string, opt, default `null`): Technique/recipe ID to materialize into a plan<br>`operations` (list[object], opt, default `null`): Pre-built operation list (LLM-authored)<br>`undo_label` (string, opt, default `null`): Override for the TD undo block label | JSON envelope (string). |
+| `td_patch_preview` | Read-only PatchPlan preview for compatibility/expert workflows. For new visual builds, prefer td_brain_plan because it carries concept, corpus, and validation context. | `plan` (object, **required**): PatchPlan dict (from td_patch_plan)<br>`include_hints` (boolean, opt, default `false`): If True, attach a ``hints`` block via td_get_hints. Auto-injection still fires when the plan touches feedback, GLSL, or audio-reactive territory. | JSON envelope (string). |
+| `td_patch_validate` | Read-only validation for patch compatibility workflows. BrainPlan workflows should use td_brain_plan and td_brain_execute so validation is tied to the authored plan. | `target_root` (string, **required**): Subtree to validate<br>`capture_frames` (list[string], opt, default `null`): TOP paths to capture; None = none (cheap) | JSON envelope (string). |
+| `td_patch_variations` | Generate PatchPlan variants for compatibility/expert workflows. For new creative builds, start with td_brain_plan so variants remain grounded in a BrainPlan. | `plan` (object, **required**): Base PatchPlan dict to derive variants from<br>`n` (integer, opt, default `3`): Number of variants<br>`strategies` (list[string], opt, default `null`): None defaults to ['param_jitter']<br>`seed` (integer, opt, default `null`): RNG seed; None = random | JSON envelope (string). |
 
 ---
 
-## 15. TD 2025 Native (Python Env, Threading, Logger, TDResources, COMP Audit, Color Pipeline)
+## 15. Vision & Frame Analysis
 
-All tools in this section execute Python inside TouchDesigner. Most require `full` exec mode.
+_Registry module: `src/td_mcp/registry/tools_vision.py`_
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_python_env_status` | Inspect the Python environment inside TD: version, installed packages, paths. Requires `full` exec mode. | _(none)_ | JSON with `python_version`, `executable`, `paths`, `installed_packages`. |
-| `td_threading_status` | Inspect threading status: active threads, cook rate. Requires `full` exec mode. | _(none)_ | JSON with `active_thread_count`, `current_thread`, `thread_names`, `cook_rate`. |
-| `td_logger_status` | Inspect Python logging config: log level, handlers, registered loggers. Requires `full` exec mode. | _(none)_ | JSON with `root_level`, `handler_count`, `handlers`, `loggers`. |
-| `td_tdresources_inspect` | Inspect TDResources: fonts, icons, defaults. | `category` (str, opt): `fonts`, `icons`, `defaults`, or omit for all. | JSON with `categories` dict and `total_children`. |
-| `td_component_standardize` | Audit or fix COMP standardization: required custom params (Version, Help, Creator), extension, naming. Fix mode wraps in undo block. | `path` (str, **required**): COMP path. `fix` (bool, opt, default `false`): Auto-fix issues. | JSON with `issues`, `fixed`, `has_extension`, `op_type`. |
-| `td_color_pipeline` | Inspect color management pipeline: color space, gamma, display settings. | _(none)_ | JSON with `defaultParameterColorSpace`, `workingColorSpace`, `editorWindowPixelFormat`, `sdrReferenceWhiteNits`, `hdrReferenceWhiteNits`, `monitorGamma` (legacy fallback). |
+| `td_analyze_frame` | Analyze pixel data of a TOP node without transferring full image data. | `path` (string, **required**): Path to a TOP node to analyze<br>`modes` (list[string], opt, default `null`): Analysis modes: histogram, luminance, alpha_coverage, color_dominant, roi_diff. Defaults to ['histogram', 'luminance'] when omitted.<br>`roi` (list[integer], opt, default `null`): Region of interest [x, y, w, h] for roi_diff mode<br>`reference_path` (string, opt, default `null`): Reference TOP path for roi_diff mode<br>`sample_grid` (integer, opt, default `20`): Grid size used by TD-side sample() fallback and normalized quality metrics.<br>`thresholds` (object, opt, default `null`): Optional visual-quality threshold overrides.<br>`quality_mode` (boolean, opt, default `true`): If True, include normalized visual-quality metrics in the TD response. | JSON envelope (string). |
+| `td_capture_frame` | Capture a single frame from a TOP node and return metadata. | `path` (string, **required**): Path to a TOP node to capture<br>`quality` (number, opt, default `0.8`): JPEG quality 0.0-1.0<br>`confirm` (boolean, opt, default `false`): If True, include base64 image in response<br>`save_path` (string, opt, default `null`): Optional disk destination. When set, TouchDesigner writes the frame to this path and the tool returns metadata + the saved path with NO base64 payload (overrides confirm). Accepts an absolute path under your home directory or a bare filename (saved under ~/.tdpilot/captures/). Extension must be .png/.jpg/.jpeg. | Returns resolution, format, and byte size. If save_path is set the frame |
 
 ---
 
-## 16. Server Introspection
+## 16. Visual Monitoring & Streaming
+
+_Registry module: `src/td_mcp/registry/tools_streaming.py`_
 
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
-| `td_get_server_metrics` | Get MCP server runtime metrics: telemetry, events, streams, safety, snapshots, jobs, audit status. | _(none)_ | JSON with `runtime`, `telemetry`, `events`, `visual_monitor`, `top_stream`, `safety`, `snapshots`, `jobs`, `audit_enabled`. |
-| `td_describe_surface` | Describe the MCP server surface: tool count, resource count, capabilities, version. | _(none)_ | JSON with `version`, `tool_count`, `resource_count`, `capabilities`. |
-| `td_tool_batch` | Dispatch up to 8 tool calls in a single model roundtrip. Sequential execution; per-call failures don't abort siblings. Backport from deepseek-v4. | `calls` (list[dict], **required**, max 8): Each entry is `{tool: str, args: dict}`. | JSON with `ok: true`, `count` (int), `results` array of `{tool, ok, result, error, elapsed_ms}`. |
-| `td_get_activity_log` *(new in v1.6.16)* | Return recent tool-call activity from a 200-entry server-side ring buffer (mirrored to in-TD Table DAT `/local/mcp_server/activity_log`). | `limit` (int, default 20, 1-200), `tool_filter` (str, optional, exact tool name match). | JSON with `schema_version`, `count`, `max_buffer`, `entries[]` (newest first; each entry has `ts`, `tool`, `args_summary`, `result_summary`, `duration_ms`, `ok`). |
-| `td_self_update` *(new in v1.6.16)* | Check (and optionally install) the latest TDPilot release from GitHub. Pure-stdlib so it also runs from TD Textport via `python -m td_mcp.self_updater`. | `check_only` (bool, default `True`). When `False`, downloads the asset and writes it to the three install paths (repo working-tree, Claude Code plugin cache, `~/.tdpilot/`). | JSON with `installed`, `latest`, `newer_available`, `release_url`, `follow_up` (re-run-setup_mcp_in_td.py reminder). When `check_only=False` and an update happened: `installed_to[]`, `md5{path: hash}`, `bytes_written`. |
-| `td_sync_status` *(new in v2.0.3)* | Report whether the server, live TD component, `.tox`, plugin caches, npm/GitHub releases, and public GitHub description are in sync. | `check_remote` (bool, default `True`): include GitHub/npm/repository checks. | JSON with `server`, `touchdesigner`, `tox`, `plugin_caches`, `remote`, `github_repo`, `overall`, and actionable `recommendations[]`. |
-| `td_sync_diagnose` *(new in v2.0.3)* | Diagnose local/live version, endpoint, package, plugin-cache, and shared-secret fingerprint drift without exposing secret values. | `include_live` (bool, default `True`): query the running TD endpoint when available; `check_remote` (bool, default `False`): include remote version checks. | JSON with `local`, `installed_package`, `plugin_caches`, `running_mcp`, `touchdesigner`, `auth`, `overall`, and actionable `recommendations[]`. |
+| `td_capture_and_analyze` | Screenshot capture with optional AI analysis. | `path` (string, **required**): Path to TOP node to capture.<br>`quality` (number, opt, default `0.5`): JPEG quality 0.0-1.0.<br>`confirm_image_capture` (boolean, opt, default `false`): Must be true to execute the capture. This is an explicit acknowledgement that image payloads can consume tokens.<br>`analyze` (boolean, opt, default `false`): Request AI analysis if sampling is supported.<br>`analysis_prompt` (string, opt, default `null`): Custom analysis prompt.<br>`compare_with` (string, opt, default `null`): Optional resource URI to compare against. | JSON envelope (string). |
+| `td_monitor_visual` | Start periodic monitor for a TOP. | `path` (string, **required**): TOP path to monitor.<br>`interval` (number, opt, default `2.0`): Capture interval seconds.<br>`quality` (number, opt, default `0.3`): JPEG quality.<br>`include_image` (boolean, opt, default `false`): When false (default), monitor events omit base64 image data to reduce token usage. Set true only when you explicitly want frame payloads in context.<br>`confirm_high_token_mode` (boolean, opt, default `false`): Must be true when include_image=true. This is an explicit acknowledgement that continuous image payloads can consume many tokens.<br>`auto_analyze` (boolean, opt, default `false`): Auto analyze each capture if sampling available.<br>`analysis_prompt` (string, opt, default `null`): Optional analysis prompt. | JSON envelope (string). |
+| `td_stop_monitor_visual` | Stop a running visual monitor. | `path` (string, **required**): TOP path being monitored. | JSON envelope (string). |
+| `td_stop_stream_top` | Stop a running TOP stream. | `path` (string, **required**): TOP path being streamed. | JSON envelope (string). |
+| `td_stream_top` | Start continuous TOP stream. | `path` (string, **required**): TOP path to stream continuously.<br>`fps` (number, opt, default `8.0`): Target stream frame rate.<br>`quality` (number, opt, default `0.25`): JPEG quality for stream frames.<br>`include_image` (boolean, opt, default `false`): When false (default), streamed resource updates omit base64 image data to reduce token usage. Set true only when you explicitly want frame payloads in context.<br>`confirm_high_token_mode` (boolean, opt, default `false`): Must be true when include_image=true. This is an explicit acknowledgement that continuous image payloads can consume many tokens.<br>`emit_unchanged` (boolean, opt, default `false`): When false, identical consecutive frames are suppressed. | JSON envelope (string). |
 
-### Response envelope: `_read_journal` *(new in v1.6.16)*
+---
 
-Every successful tool response routed through the MCP dispatcher now carries an
+## 17. Visual Optimization & Dynamics
+
+_Registry module: `src/td_mcp/registry/tools_optimizer.py`_
+
+| Tool | Description | Parameters | Returns |
+|------|-------------|------------|---------|
+| `td_describe_dynamics` | Asynchronous temporal dynamics observation (frame, cooking, events). | `path` (string, opt, default `"/project1"`): Root path to observe.<br>`observation_window` (number, opt, default `3.0`): Observation duration in seconds.<br>`sample_rate` (number, opt, default `10.0`): Samples per second while observing. | JSON envelope (string). |
+| `td_optimize_visual` | Autonomous visual goal optimization via bounded parameter search. | `goal` (string, **required**): Natural-language optimization goal.<br>`output_top` (string, **required**): TOP path used as output reference.<br>`adjustable_params` (list[object], **required**): Parameter search space. Each entry specifies path/param/min_val/max_val/step for a parameter the optimizer may adjust.<br>`profile` (string, opt, default `null`): Optional optimizer profile: balanced \| complexity \| motion_rhythm \| stability_guard<br>`objective_weights` (object, opt, default `null`): Optional explicit objective weights, e.g. {'motion_rhythm': 0.8, 'stability': 0.4}.<br>`max_iterations` (integer, opt, default `10`): Max iterations.<br>`convergence_threshold` (number, opt, default `0.8`): Convergence threshold.<br>`safety_profile` (string, opt, default `"balanced"`): Optimizer safety profile: conservative \| balanced \| aggressive<br>`param_semantics_policy` (enum: `warn`, `block`, opt, default `"warn"`): Docs-grounded parameter safety policy for optimizer writes. 'warn' preserves bounded search with attached findings; 'block' refuses invalid or high-risk writes before mutation.<br>`root_path` (string, opt, default `"/project1"`): Root scope for instability checks and snapshots.<br>`snapshot_before` (boolean, opt, default `true`): Capture snapshot before optimization loop starts. | JSON envelope (string). |
+
+---
+
+## 18. Official & POPx Knowledge
+
+_Registry module: `src/td_mcp/registry/tools_knowledge.py`_
+
+| Tool | Description | Parameters | Returns |
+|------|-------------|------------|---------|
+| `td_describe_surface` | Describe the MCP server surface: tool count, resource count, capabilities, version. | _(none)_ | JSON envelope (string). |
+| `td_get_build_compatibility` | Check if an operator type is compatible with a specific build. | `op_type` (string, **required**)<br>`build` (string, opt, default `null`) | JSON envelope (string). |
+| `td_get_operator_doc` | Get full documentation card for an operator type or a specific node. | `op_type` (string, opt, default `null`)<br>`node_path` (string, opt, default `null`) | JSON envelope (string). |
+| `td_get_param_help` | Get help for a specific parameter: live metadata + knowledge card entry + current value. | `node_path` (string, **required**)<br>`param_name` (string, **required**) | JSON envelope (string). |
+| `td_get_popx_operator` | Get full documentation for a POPx operator (e.g. 'Particle SIM', 'Shape Falloff'). | `operator_name` (string, **required**) | JSON envelope (string). |
+| `td_get_release_delta` | Get release notes for a specific build (default: current). | `build` (string, opt, default `null`) | JSON envelope (string). |
+| `td_lookup_palette_component` | Look up a palette component by name or search by query. | `component_name` (string, opt, default `null`)<br>`query` (string, opt, default `null`) | JSON envelope (string). |
+| `td_lookup_snippets` | Search for OP Snippets by keyword and optional family. | `query` (string, **required**)<br>`family` (string, opt, default `null`) | JSON envelope (string). |
+| `td_search_official_docs` | Search the knowledge corpus for operators, palette, releases, snippets, or articles. | `query` (string, **required**)<br>`card_types` (list[string], opt, default `null`)<br>`family` (string, opt, default `null`)<br>`limit` (integer, opt, default `10`) | JSON envelope (string). |
+| `td_search_popx_docs` | Search POPx operator documentation — GPU particles, falloffs, simulations. | `query` (string, **required**)<br>`limit` (integer, opt, default `10`) | JSON envelope (string). |
+
+---
+
+## 19. Recommendations
+
+_Registry module: `src/td_mcp/registry/tools_recommendations.py`_
+
+| Tool | Description | Parameters | Returns |
+|------|-------------|------------|---------|
+| `td_explain_better_way` | Suggest better official alternatives for a given intent, with gotcha warnings. | `intent` (string, **required**): What you intend to do<br>`current_plan` (string, opt, default `null`): Current approach to evaluate | JSON envelope (string). |
+| `td_find_official_example` | Search for official examples and snippets matching a query. | `query` (string, **required**): Search query for official examples<br>`family` (string, opt, default `null`): Filter by operator family: TOP, CHOP, SOP, etc. | JSON envelope (string). |
+| `td_recommend_official_component` | Recommend official palette or built-in operator components for a given goal. | `goal` (string, **required**): What you want to achieve | JSON envelope (string). |
+
+---
+
+## 20. Hints
+
+_Registry module: `src/td_mcp/registry/tools_hints.py`_
+
+| Tool | Description | Parameters | Returns |
+|------|-------------|------------|---------|
+| `td_get_hints` | Return concise, source-cited hints for a topic, op_type, or intent. | `topic` (string, opt, default `null`): Topic name. Allowed values evolve with the shipped hint corpus; current topics are returned in every response under ``available_topics``. Examples: 'feedback', 'glsl', 'render_pipeline', 'audio_reactive', 'extensions'.<br>`op_type` (string, opt, default `null`): OP type to get type-specific hints (e.g., 'glslTOP', 'feedbackTOP', 'geometryCOMP'). Combines additively with ``topic`` when both are set.<br>`intent` (string, opt, default `null`): Free-text description of what you're about to do. Used to score ``intent_match`` clauses on individual hints (e.g. intent='set up trail decay' bumps the level.opacity hint).<br>`node_path` (string, opt, default `null`): Optional: path of node about to be modified. Reserved for future hints that compute against live node state.<br>`error_text` (string, opt, default `null`): Optional: error/warning text to match against ``error_match`` clauses. Mirrors what auto-injection does after a failed td_get_errors call.<br>`surface` (string, opt, default `null`): Optional response-surface filter (v1.6.2). Allowed values: 'create_node', 'set_params', 'exec', 'errors', 'plan', 'preview', 'query', 'inspect', 'screenshot'. Surface-restricted hints (those declaring ``when.surface``) only fire when the requested surface matches; hints without a surface clause fire from any surface. Auto-injection from each tool wrapper passes the tool's natural surface automatically; explicit callers pass it here to narrow results.<br>`max_hints` (integer, opt, default `8`): Cap on returned hints. Critical-priority hints win ties. | Return concise, source-cited hints for a topic, op_type, or intent. |
+
+---
+
+## 21. Component Notes
+
+_Registry module: `src/td_mcp/registry/tools_notes.py`_
+
+| Tool | Description | Parameters | Returns |
+|------|-------------|------------|---------|
+| `td_component_notes` | Per-COMP markdown notes — what this subnet does, why it's wired this way, gotchas, TODOs. External JSON storage by default; ``embed=True`` also writes a hidden Text DAT inside the COMP for portability. | `action` (string, **required**): One of: 'get' (fetch a single note), 'set' (write/overwrite), 'append' (append with timestamp divider), 'delete', 'index' (list every note for the project), 'summarize' (markdown digest).<br>`path` (string, opt, default `null`): COMP path (required for get/set/append/delete; optional for summarize as a subtree filter; omit for index/summarize-all).<br>`body` (string, opt, default `null`): Note body (markdown). Required for set/append.<br>`embed` (boolean, opt, default `false`): If True (set action only), also write a hidden Text DAT named `tdpilot_notes` inside the target COMP. Lets the note travel with the .tox/.toe but bloats save files; default is external-only.<br>`tags` (list[string], opt, default `null`): Optional tags for indexing/search (set/append actions). | JSON envelope (string). |
+
+---
+
+## 22. TD 2025 Native & System
+
+_Registry module: `src/td_mcp/registry/tools_system.py`_
+
+| Tool | Description | Parameters | Returns |
+|------|-------------|------------|---------|
+| `td_color_pipeline` | Inspect the color management pipeline in TouchDesigner: color space, gamma, display settings. | _(none)_ | JSON envelope (string). |
+| `td_component_standardize` | Audit or fix COMP standardization: required custom parameters (Version, Help, Creator), extension, naming. | `path` (string, **required**): Path to COMP to audit<br>`fix` (boolean, opt, default `false`): If True, auto-fix issues (wrapped in undo block) | JSON envelope (string). |
+| `td_logger_status` | Inspect the Python logging configuration inside TouchDesigner: log level, handlers, registered loggers. | _(none)_ | JSON envelope (string). |
+| `td_python_env_status` | Inspect the Python environment inside TouchDesigner: version, installed packages, env manager status. | _(none)_ | JSON envelope (string). |
+| `td_tdresources_inspect` | Inspect TDResources available in the TouchDesigner installation: fonts, icons, defaults. | `category` (string, opt, default `null`): Category: fonts, icons, defaults, or None for all | JSON envelope (string). |
+| `td_threading_status` | Inspect the threading status inside TouchDesigner: active threads, cook rate. | _(none)_ | JSON envelope (string). |
+
+---
+
+## 23. Tool Batch
+
+_Registry module: `src/td_mcp/registry/tools_batch.py`_
+
+| Tool | Description | Parameters | Returns |
+|------|-------------|------------|---------|
+| `td_tool_batch` | Dispatch up to 8 tool calls in one model roundtrip. | `calls` (list[object], **required**): List of {tool: str, args: dict} dicts. Max 8 sub-calls. | Returns: |
+
+---
+
+## 24. Brain Planning & Transactions
+
+_Registry module: `src/td_mcp/registry/tools_brain.py`_
+
+| Tool | Description | Parameters | Returns |
+|------|-------------|------------|---------|
+| `td_brain_execute` | Use this when you already have a BrainPlan from td_brain_plan and need TDPilot to apply it transactionally with validation, rollback, and optional local learning. | `plan` (object, opt, default `null`): BrainPlan dict returned by td_brain_plan. Raw free text is not accepted here. Omit when passing plan_id instead.<br>`plan_id` (string, opt, default `null`): ID of the most recent td_brain_plan result. Server-side lookup — avoids echoing the full multi-KB plan back through the host context window (and the silent-corruption risk of hosts that re-serialize large tool arguments). Provide exactly one of plan or plan_id.<br>`transaction_policy` (string, opt, default `"rollback_on_failure"`): 'rollback_on_failure' (default), 'dry_run', or 'no_rollback'.<br>`learn_on_success` (boolean, opt, default `false`): Persist a compact validated task trace to td_knowledge_* memory.<br>`confirm_visual_payload` (boolean, opt, default `false`): Reserved for future image payload confirmation; currently no large images returned. | JSON envelope (string). |
+| `td_brain_ground` | Use this when td_brain_plan returns blocked or unsupported, or when you want to author a creative BrainPlan draft yourself: it returns a read-only grounding pack (task features, corpus evidence, candidate operators, parameter contracts, operator availability, live state, exemplars, and the draft authoring contract) so you can write a draft for td_brain_propose. Do not use it for trivial single-node edits. | `intent` (string, **required**): Natural-language visual programming task to ground.<br>`target_root` (string, opt, default `"/project1"`): Absolute TD parent/root path the draft will build inside.<br>`preferred_domains` (list[string], opt, default `null`): Preferred TD data domains: TOP, CHOP, SOP, POP, DAT, COMP, MAT.<br>`include_live_state` (boolean, opt, default `true`): Include existing node names/types at target_root when TD is reachable. | JSON envelope (string). |
+| `td_brain_plan` | Use this when the user asks TDPilot to build or debug a real TouchDesigner visual system and you need a grounded, non-mutating concept graph plus typed patch plan. | `intent` (string, **required**): Natural-language visual programming task.<br>`target_root` (string, opt, default `"/project1"`): Absolute TD parent/root path to plan inside.<br>`output_top` (string, opt, default `null`): Optional TOP path expected to show final visual output.<br>`constraints` (object, opt, default `null`): Optional hard constraints, e.g. palette, FPS, node count, or operators.<br>`preferred_domains` (list[string], opt, default `null`): Preferred TD data domains: TOP, CHOP, SOP, POP, DAT, COMP, MAT.<br>`validation_profile` (string, opt, default `"auto"`): Validation profile. 'auto' resolves to structural_visual_safe.<br>`include_memory` (boolean, opt, default `true`): Search local technique memory while grounding the plan.<br>`include_docs` (boolean, opt, default `true`): Use loaded DocsBrain/CardIndex operator knowledge while grounding the plan. | JSON envelope (string). |
+| `td_brain_propose` | Use this when you have authored a draft candidate graph from a td_brain_ground grounding pack and need TDPilot to validate it into an executable BrainPlan. It is read-only and never mutates TouchDesigner: accepted drafts are compiled, gated by parameter semantics, and cached server-side so td_brain_execute(plan_id=...) can run them immediately; rejected drafts return machine-readable rejections to fix and retry. | `draft` (object, **required**): Host-authored draft candidate graph matching the td_brain_ground authoring_contract draft_schema (label, concepts, edges, required_ops, ...).<br>`target_root` (string, opt, default `"/project1"`): Absolute TD parent/root path the plan will build inside.<br>`validation_profile` (string, opt, default `"auto"`): Validation profile. 'auto' resolves to structural_visual_safe.<br>`intent` (string, opt, default `null`): Original natural-language intent behind the draft. Defaults to the draft label so the same intent used for td_brain_ground can be carried through. | JSON envelope (string). |
+| `td_cockpit_render` | Use this when you already have BrainPlan or transaction data and want to render the optional local cockpit UI. This is read-only presentation; call td_brain_plan or td_brain_execute first for authoritative data. | `plan` (object, opt, default `null`): BrainPlan dict or td_brain_plan result to summarize.<br>`transaction_result` (object, opt, default `null`): TransactionResult dict or td_brain_execute result to summarize.<br>`trace` (object, opt, default `null`): Optional BrainTrace or trace summary.<br>`title` (string, opt, default `"TDPilot Brain Cockpit"`): Human-readable cockpit title. | JSON envelope (string). |
+| `td_transaction_apply` | Use this when you need to apply an existing PatchPlan or BrainPlan with preflight, snapshot, validation, dry-run, max-op, and rollback controls. | `plan` (object, **required**): PatchPlan dict or BrainPlan dict.<br>`options` (object, opt, default `null`): TransactionOptions override. Missing fields use safe defaults. | JSON envelope (string). |
+
+---
+
+## 25. Sync, Self-Update & Activity
+
+_Registry module: `src/td_mcp/registry/tools_meta.py`_
+
+| Tool | Description | Parameters | Returns |
+|------|-------------|------------|---------|
+| `td_get_activity_log` | Recent tool-call activity from this MCP server's ring buffer. | `limit` (integer, opt, default `20`): How many recent entries to return (1–200, newest first).<br>`tool_filter` (string, opt, default `null`): If set, only return entries for this exact tool name. | Returns a JSON array of entries newest-first, each with ``ts``, ``tool``, |
+| `td_self_update` | Check for and optionally install a newer TDPilot release from GitHub. | `check_only` (boolean, opt, default `true`): If True (default), only check whether a newer release exists. If False, download + install the latest .plugin/.tox to all three install paths (~/.tdpilot, plugin cache, repo). | returns ``{installed, latest, newer_available, release_url, asset_urls}``. |
+| `td_sync_diagnose` | Strict version/auth sync diagnostic without exposing secret material. | `include_live` (boolean, opt, default `true`): If true, probe the live TouchDesigner WebServer.<br>`check_remote` (boolean, opt, default `false`): Reserved for compatibility; remote checks are not required. | JSON envelope (string). |
+| `td_sync_status` | Report whether the local server, TD component, packages, and public surfaces are in sync. | `check_remote` (boolean, opt, default `true`): If true, also check GitHub release, npm latest, and GitHub repository description. | JSON envelope (string). |
+
+<!-- END GENERATED: tool-reference -->
+
+---
+
+## Response envelope: `_read_journal` *(new in v1.6.16)*
+
+Every successful tool response routed through the MCP dispatcher carries an
 extra top-level field on its JSON envelope:
 
 ```json
@@ -269,19 +402,6 @@ extra top-level field on its JSON envelope:
 
 ---
 
-## 17. Brain Planning, Transactions, And Cockpit
-
-| Tool | Description | Parameters | Returns |
-|------|-------------|------------|---------|
-| `td_brain_plan` *(new in v2.0.0)* | Read-only planner for non-trivial TouchDesigner visual programming tasks. Produces a grounded `BrainPlan` with concept graph, typed patch plan, risks, missing facts, blocked questions, and validation profile. | `intent` (str, required), `target_root` (str, default `/project1`), `output_top` (str, optional), `constraints` (object, optional), `preferred_domains` (array, optional), `validation_profile` (str, default `auto`), `include_memory` (bool, default `true`), `include_docs` (bool, default `true`). | Structured JSON with `success` and `plan`. Blocked plans include `blocked_questions` and must not be executed. |
-| `td_brain_ground` *(new)* | Read-only grounding pack for the host-authored draft loop. Compiles the intent into task features, gathers cited corpus evidence, up to 12 candidate operator cards (op_type, family, summary, key params, gotchas), tiered parameter contracts for those operators (`tier: registry_contract` entries carry full static value contracts; `tier: atlas_name_verified` entries are names proven by the operator's official docs card whose values survive propose and are checked by post-apply live validation), live operator availability, existing nodes at the target root, 1-2 pattern exemplars, and the draft `authoring_contract` accepted by `td_brain_propose`. Use it when `td_brain_plan` returns blocked/unsupported or when you want to author a creative plan yourself; skip it for trivial single-node edits. | `intent` (str, required), `target_root` (str, default `/project1`), `preferred_domains` (array, optional), `include_live_state` (bool, default `true`). | Structured JSON with `success` and `grounding_pack` (`task_features`, `corpus_evidence`, `candidate_operators`, `param_semantics`, `param_semantics_tiers`, `operator_availability`, `live_state`, `exemplars`, `authoring_contract`). Degrades gracefully when TD is unreachable (`operator_availability`/`live_state` report `available: false` with a reason). |
-| `td_brain_propose` *(new)* | Read-only validation of a host-authored draft candidate graph — it never mutates TouchDesigner. Runs the deterministic review gate (schema, official docs, operator availability, parameter-semantics strip), compiles accepted drafts into a full `BrainPlan`, and caches it server-side so `td_brain_execute(plan_id=...)` works immediately. Param values survive when the name is verified by a registry contract OR by the operator's official docs card `key_params` (atlas name tier); params neither tier can verify are STRIPPED (not rejected) and surfaced in `plan_summary.stripped_params`. | `draft` (object, required — see the td_brain_ground `authoring_contract`), `target_root` (str, default `/project1`), `validation_profile` (str, default `auto`), `intent` (str, optional — defaults to the draft label). | On acceptance: `success: true`, `plan_id`, compact `plan_summary` (profile, operators, operation_count, review_status/score, `stripped_params`), and the full `plan`. On rejection: `success: false` with machine-readable `rejections` (code/subject/message/fix) plus the reviewer `review` payload to iterate on. |
-| `td_brain_execute` *(new in v2.0.0)* | Executes any schema-valid `BrainPlan` — typically authored by `td_brain_plan`, but a host agent may also submit a plan it authored itself — using transaction defaults, validation, rollback, trace export, and optional validated learning. Blocked plans (non-empty `blocked_questions`) are refused. | `plan` (object, required), `transaction_policy` (`rollback_on_failure`, `dry_run`, or `no_rollback`, default `rollback_on_failure`), `learn_on_success` (bool, default `false`), `confirm_visual_payload` (bool, default `false`). | Structured JSON with transaction `result`, `trace`, `trace_export_path`, and optional `learned_memory_id`. |
-| `td_transaction_apply` *(new in v2.0.0)* | Safe executor for an existing `PatchPlan` or `BrainPlan` with preflight, snapshot, dry-run, max-op, dependency ordering, validation, and rollback options. | `plan` (object, required), `options` (`TransactionOptions`, optional). | Structured JSON with transaction status, validation report, rollback state, snapshot ids, failed op, and manual recovery flag when needed. |
-| `td_cockpit_render` *(new in v2.0.0)* | Read-only MCP Apps payload for the optional TDPilot Brain Cockpit. It renders plan, transaction, validation, rollback, and trace summaries without becoming authoritative state. | `plan` (object, optional), `transaction_result` (object, optional), `trace` (object, optional), `title` (str, default `TDPilot Brain Cockpit`). | Structured JSON with `cockpit` payload and `ui://tdpilot/cockpit.html` output template metadata. |
-
----
-
 ## Environment Variables
 
 | Variable | Default | Description |
@@ -294,6 +414,9 @@ extra top-level field on its JSON envelope:
 | `TD_MCP_TRANSPORT` | `stdio` | Transport mode: `stdio`, `streamable-http`, `sse` |
 | `TD_MCP_EXEC_MODE` | `restricted` | Python execution safety: `off`, `restricted`, `standard`, `full` |
 | `TD_MCP_SHARED_SECRET` | _(empty)_ | Shared secret for TD API authentication |
+| `TD_MCP_REQUIRE_AUTH` | `1` | Require the shared secret on every TD API request |
+| `TD_MCP_AUTOGENERATE_SECRET` | _(unset)_ | When truthy, autogenerate a missing secret into `~/.tdpilot/.tdpilot.env` |
+| `TDPILOT_ENV_FILE` | `~/.tdpilot/.tdpilot.env` | Override path of the canonical shared env/secret file |
 | `TD_MCP_EVENT_BUFFER` | `1000` | Max events in history buffer |
 | `TD_MCP_CAPTURE_QUALITY` | `0.3` | Default JPEG quality for captures |
 | `TD_MCP_STREAM_MAX_FPS` | `15.0` | Max FPS for TOP streams |
@@ -304,6 +427,20 @@ extra top-level field on its JSON envelope:
 | `TD_MCP_AUDIT_LOG` | _(empty)_ | Audit log file path |
 | `TDPILOT_PROJECT_NAME` | _(empty)_ | Project name for technique memory scoping |
 | `TDPILOT_MEMORY_DIR` | _(empty)_ | Base directory for technique memory storage |
+
+### Shared-secret resolution order
+
+Every reader of the shared secret (the MCP server, `td_client`, the TD-side
+component callbacks, and the TD-side startup scripts) resolves it in the same
+canonical order:
+
+1. Explicit process env var `TD_MCP_SHARED_SECRET` (never overwritten by files).
+2. The canonical env file `~/.tdpilot/.tdpilot.env` (path overridable via `TDPILOT_ENV_FILE`).
+
+That file is THE secret file — installers write it and client configs opt in
+to autogeneration (`TD_MCP_AUTOGENERATE_SECRET=1`) instead of embedding
+literal secrets. `td_sync_diagnose` fingerprints the full chain and names the
+winner when debugging 401s.
 
 ---
 

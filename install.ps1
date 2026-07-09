@@ -129,23 +129,57 @@ $ConfigPath = "$ConfigDir\claude_desktop_config.json"
 # Find uv full path for the config
 $uvFullPath = (Get-Command uv).Source
 
-# Read existing secret (if any) so re-running the installer is idempotent.
-$existingSecret = ""
+# ---------- Secret unification (audit batch E) ----------
+# ~/.tdpilot/.tdpilot.env is THE secret file. The client config gets
+# TD_MCP_AUTOGENERATE_SECRET=1 instead of a literal secret (matching the
+# shipped .mcp.json), and the installer writes only the canonical file.
+# Existing secrets are preserved in this priority: canonical file >
+# legacy repo-local .tdpilot.env > legacy client-config literal; otherwise
+# a fresh URL-safe base64 secret (32 random bytes, no padding) is generated —
+# byte-for-byte the same shape as Python's secrets.token_urlsafe(32) used by
+# auth_bootstrap and the TD-side autostart.
+
+function Read-EnvFileSecret([string]$Path) {
+    if (-not (Test-Path $Path)) { return "" }
+    try {
+        foreach ($line in (Get-Content $Path -ErrorAction Stop)) {
+            $trimmed = $line.Trim()
+            if ($trimmed.StartsWith("TD_MCP_SHARED_SECRET=")) {
+                $value = $trimmed.Substring("TD_MCP_SHARED_SECRET=".Length).Trim()
+                $value = $value.Trim("'").Trim('"')
+                return $value
+            }
+        }
+    } catch { }
+    return ""
+}
+
+$CanonicalEnvDir = Join-Path $env:USERPROFILE ".tdpilot"
+$CanonicalEnvPath = Join-Path $CanonicalEnvDir ".tdpilot.env"
+
+$legacyConfigSecret = ""
 if (Test-Path $ConfigPath) {
     try {
         $existingConfig = Get-Content $ConfigPath -Raw | ConvertFrom-Json
         if ($existingConfig.mcpServers.touchdesigner.env.TD_MCP_SHARED_SECRET) {
-            $existingSecret = $existingConfig.mcpServers.touchdesigner.env.TD_MCP_SHARED_SECRET
+            $legacyConfigSecret = $existingConfig.mcpServers.touchdesigner.env.TD_MCP_SHARED_SECRET
         }
     } catch { }
 }
-if ([string]::IsNullOrWhiteSpace($existingSecret)) {
+$canonicalSecret = Read-EnvFileSecret $CanonicalEnvPath
+$legacyRepoSecret = Read-EnvFileSecret (Join-Path $RepoPath ".tdpilot.env")
+
+$sharedSecret = $canonicalSecret
+if ([string]::IsNullOrWhiteSpace($sharedSecret)) { $sharedSecret = $legacyRepoSecret }
+if ([string]::IsNullOrWhiteSpace($sharedSecret)) { $sharedSecret = $legacyConfigSecret }
+if ([string]::IsNullOrWhiteSpace($sharedSecret)) {
     $bytes = New-Object byte[] 32
     [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
-    $existingSecret = ([BitConverter]::ToString($bytes) -replace '-', '').ToLower()
+    $sharedSecret = [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
 }
 
-# Build the touchdesigner server entry
+# Build the touchdesigner server entry — no literal secret; the server
+# autogenerates/reads the canonical env file via TD_MCP_AUTOGENERATE_SECRET=1.
 $tdServer = @{
     command = $uvFullPath
     args = @("run", "--directory", $RepoPath, "tdpilot")
@@ -155,7 +189,7 @@ $tdServer = @{
         TD_MCP_WS_PORT = "9982"
         TD_MCP_EXEC_MODE = "restricted"
         TD_MCP_REQUIRE_AUTH = "1"
-        TD_MCP_SHARED_SECRET = $existingSecret
+        TD_MCP_AUTOGENERATE_SECRET = "1"
     }
 }
 
@@ -221,17 +255,32 @@ $json = $output | ConvertTo-Json -Depth 10
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($ConfigPath, $json, $utf8NoBom)
 
-# Write .tdpilot.env beside the repo so the TD-side startup script picks up the secret.
-$envFile = Join-Path $RepoPath ".tdpilot.env"
-$envText = @"
-TD_MCP_SHARED_SECRET=$existingSecret
-TD_MCP_REQUIRE_AUTH=1
-TD_MCP_EXEC_MODE=restricted
-"@
-[System.IO.File]::WriteAllText($envFile, $envText, $utf8NoBom)
+# Write the canonical env file (~/.tdpilot/.tdpilot.env) — the ONE file every
+# reader (MCP server, td_client, TD component, TD startup scripts) resolves
+# after the explicit TD_MCP_SHARED_SECRET env var. Preserve unrelated keys.
+if (-not (Test-Path $CanonicalEnvDir)) {
+    New-Item -ItemType Directory -Path $CanonicalEnvDir -Force | Out-Null
+}
+$managedKeys = @("TD_MCP_SHARED_SECRET", "TD_MCP_REQUIRE_AUTH", "TD_MCP_EXEC_MODE")
+$keptLines = @()
+if (Test-Path $CanonicalEnvPath) {
+    try {
+        foreach ($line in (Get-Content $CanonicalEnvPath -ErrorAction Stop)) {
+            $key = $line.Trim().Split("=")[0].Trim()
+            if ($managedKeys -notcontains $key) { $keptLines += $line }
+        }
+    } catch { }
+}
+$envLines = $keptLines + @(
+    "TD_MCP_SHARED_SECRET=$sharedSecret",
+    "TD_MCP_REQUIRE_AUTH=1",
+    "TD_MCP_EXEC_MODE=restricted"
+)
+$envText = ($envLines -join "`n") + "`n"
+[System.IO.File]::WriteAllText($CanonicalEnvPath, $envText, $utf8NoBom)
 
 Write-Host "  Config updated: $ConfigPath" -ForegroundColor Green
-Write-Host "  Secret written to: $envFile (TD reads at startup)" -ForegroundColor Green
+Write-Host "  Secret written to: $CanonicalEnvPath (canonical secret file)" -ForegroundColor Green
 
 # ---------- Step 4: Summary ----------
 

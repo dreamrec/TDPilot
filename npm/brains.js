@@ -54,6 +54,24 @@ function readManifest() {
   return null;
 }
 
+function resolvePython() {
+  // Windows has no `python3` alias (the bare spawn used pre-batch-E failed
+  // with ENOENT there). Try python3, then python, then the Windows launcher
+  // `py -3`. Returns { cmd, argsPrefix } or null when no interpreter found.
+  const candidates = [
+    { cmd: "python3", argsPrefix: [] },
+    { cmd: "python", argsPrefix: [] },
+    { cmd: "py", argsPrefix: ["-3"] },
+  ];
+  for (const candidate of candidates) {
+    const probe = spawnSync(candidate.cmd, [...candidate.argsPrefix, "--version"], {
+      stdio: "pipe",
+    });
+    if (!probe.error && probe.status === 0) return candidate;
+  }
+  return null;
+}
+
 function downloadBrains(brainIds) {
   const tmpFile = join(os.tmpdir(), "tdpilot-selected-brains.json");
   writeFileSync(tmpFile, JSON.stringify(brainIds));
@@ -67,7 +85,15 @@ function downloadBrains(brainIds) {
   }
   args.push("--brains-file", tmpFile);
 
-  const result = spawnSync("python3", args, {
+  const python = resolvePython();
+  if (!python) {
+    console.error(
+      "[TDPilot] No Python interpreter found (tried python3, python, py -3). " +
+        "Install Python 3 and re-run."
+    );
+    return false;
+  }
+  const result = spawnSync(python.cmd, [...python.argsPrefix, ...args], {
     stdio: "inherit",
     cwd: INSTALL_DIR,
   });
