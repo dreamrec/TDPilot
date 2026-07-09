@@ -1,6 +1,6 @@
 # TDPilot API Reference
 
-> Auto-generated from TDPilot v2.0.3 | 112 tools | Source: `src/td_mcp/tool_registry.py`
+> TDPilot v2.0.3 | 112 tools | Hand-maintained reference — the canonical source of truth is the `@mcp.tool` registrations under `src/td_mcp/registry/`. If this document and the code disagree, the code wins.
 
 ---
 
@@ -274,7 +274,7 @@ extra top-level field on its JSON envelope:
 | Tool | Description | Parameters | Returns |
 |------|-------------|------------|---------|
 | `td_brain_plan` *(new in v2.0.0)* | Read-only planner for non-trivial TouchDesigner visual programming tasks. Produces a grounded `BrainPlan` with concept graph, typed patch plan, risks, missing facts, blocked questions, and validation profile. | `intent` (str, required), `target_root` (str, default `/project1`), `output_top` (str, optional), `constraints` (object, optional), `preferred_domains` (array, optional), `validation_profile` (str, default `auto`), `include_memory` (bool, default `true`), `include_docs` (bool, default `true`). | Structured JSON with `success` and `plan`. Blocked plans include `blocked_questions` and must not be executed. |
-| `td_brain_execute` *(new in v2.0.0)* | Executes only a valid `BrainPlan` from `td_brain_plan`, using transaction defaults, validation, rollback, trace export, and optional validated learning. | `plan` (object, required), `transaction_policy` (`rollback_on_failure`, `dry_run`, or `no_rollback`, default `rollback_on_failure`), `learn_on_success` (bool, default `false`), `confirm_visual_payload` (bool, default `false`). | Structured JSON with transaction `result`, `trace`, `trace_export_path`, and optional `learned_memory_id`. |
+| `td_brain_execute` *(new in v2.0.0)* | Executes any schema-valid `BrainPlan` — typically authored by `td_brain_plan`, but a host agent may also submit a plan it authored itself — using transaction defaults, validation, rollback, trace export, and optional validated learning. Blocked plans (non-empty `blocked_questions`) are refused. | `plan` (object, required), `transaction_policy` (`rollback_on_failure`, `dry_run`, or `no_rollback`, default `rollback_on_failure`), `learn_on_success` (bool, default `false`), `confirm_visual_payload` (bool, default `false`). | Structured JSON with transaction `result`, `trace`, `trace_export_path`, and optional `learned_memory_id`. |
 | `td_transaction_apply` *(new in v2.0.0)* | Safe executor for an existing `PatchPlan` or `BrainPlan` with preflight, snapshot, dry-run, max-op, dependency ordering, validation, and rollback options. | `plan` (object, required), `options` (`TransactionOptions`, optional). | Structured JSON with transaction status, validation report, rollback state, snapshot ids, failed op, and manual recovery flag when needed. |
 | `td_cockpit_render` *(new in v2.0.0)* | Read-only MCP Apps payload for the optional TDPilot Brain Cockpit. It renders plan, transaction, validation, rollback, and trace summaries without becoming authoritative state. | `plan` (object, optional), `transaction_result` (object, optional), `trace` (object, optional), `title` (str, default `TDPilot Brain Cockpit`). | Structured JSON with `cockpit` payload and `ui://tdpilot/cockpit.html` output template metadata. |
 

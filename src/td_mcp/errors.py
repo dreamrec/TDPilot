@@ -82,6 +82,36 @@ def format_tool_error_dict(exc: Exception) -> dict:
         )
 
     if isinstance(exc, TouchDesignerAPIError):
+        if exc.status_code == 401:
+            # The single most expensive recurring failure in the field:
+            # shared-secret drift between the client config and the TD
+            # component. A generic envelope here has historically cost
+            # users multi-hour debugging sessions.
+            return _error_body(
+                "TD_AUTH_ERROR",
+                "TouchDesigner rejected the request: authentication failed "
+                "(HTTP 401). The MCP server's TD_MCP_SHARED_SECRET does not "
+                "match the secret the TD component loaded.",
+                {
+                    "status_code": 401,
+                    "api_details": exc.details or {},
+                    "troubleshooting": [
+                        "Run td_sync_diagnose first — it fingerprints the "
+                        "secret/config chain and names the mismatched layer.",
+                        "Secrets live in TWO places that drift independently: "
+                        "the client config env block (.mcp.json / "
+                        ".mcp.json.local) and ~/.tdpilot/.tdpilot.env. Both "
+                        "must hold the same TD_MCP_SHARED_SECRET.",
+                        "Check for a zombie server still holding port 9981 "
+                        "from an earlier session (macOS: `lsof -i :9981`; "
+                        "Windows: `Get-NetTCPConnection -LocalPort 9981`) "
+                        "and kill leaked `npm exec tdpilot` processes.",
+                        "After fixing the secret, toggle the TD component's "
+                        "webserver `active` parameter off/on (or restart "
+                        "TouchDesigner) so it reloads the env file.",
+                    ],
+                },
+            )
         return _error_body(
             "TD_API_ERROR",
             str(exc),

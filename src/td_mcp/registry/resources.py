@@ -27,6 +27,16 @@ def set_cached_resource(resource_uri: str, payload: dict) -> None:
     _RESOURCE_CACHE[resource_uri] = payload
 
 
+def get_cached_resource(resource_uri: str) -> dict | None:
+    """Return the cached payload for ``resource_uri`` (None when absent).
+
+    Process-local: survives across tool calls within one server run, empty
+    after a restart. Callers must treat a miss as recoverable state, not an
+    error in the user's input.
+    """
+    return _RESOURCE_CACHE.get(resource_uri)
+
+
 def _cached_or_note(resource_uri: str, note: str, **extra) -> dict:
     cached = _RESOURCE_CACHE.get(resource_uri)
     if cached is not None:

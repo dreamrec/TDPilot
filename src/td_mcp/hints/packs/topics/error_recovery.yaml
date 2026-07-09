@@ -17,15 +17,21 @@ hints:
   - id: api_unauthorized
     priority: critical
     rule: |
-      API authentication failed. The MCP server's shared secret is missing
-      or wrong. Run setup_mcp_in_td.py to regenerate ~/.tdpilot/.env, then
-      restart TouchDesigner so the running MCP WebServer reloads.
+      API authentication failed (HTTP 401): the client's TD_MCP_SHARED_SECRET
+      does not match what the TD component loaded. Run td_sync_diagnose first
+      -- it fingerprints the secret/config chain and names the mismatched
+      layer. The two files that drift independently: the client config env
+      block (.mcp.json / .mcp.json.local) and ~/.tdpilot/.tdpilot.env. Also
+      check for a zombie server still holding port 9981 from an earlier
+      session (kill leaked `npm exec tdpilot` processes). After fixing the
+      secret, toggle the component's webserver `active` off/on (or restart
+      TouchDesigner) so it reloads the env file.
     source: deepseek-v4 tdpilot_api_recovery.py:50
     source_kind: backport
     when:
       error_match: "\\b401\\b|Unauthorized|API key invalid|API key.*missing"
       surface: ["error_recovery"]
-    next_tools: []
+    next_tools: [td_sync_diagnose, td_sync_status]
 
   - id: path_not_found
     priority: critical

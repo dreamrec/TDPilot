@@ -221,3 +221,66 @@ def test_brain_execute_does_not_learn_when_validation_failed(monkeypatch, mcp_ct
     assert learned_calls == []
     assert result["learned_memory_id"] is None
     assert result["trace"]["validation_ok"] is False
+
+
+def test_brain_execute_requires_exactly_one_of_plan_or_plan_id(monkeypatch, mcp_ctx):
+    monkeypatch.setattr(tools_brain._tr, "_start_tool", lambda ctx, name: lambda: None)
+
+    neither = asyncio.run(tools_brain.td_brain_execute(mcp_ctx))
+    assert neither["success"] is False
+    assert neither["error"]["code"] == "INVALID_INPUT"
+
+    both = asyncio.run(
+        tools_brain.td_brain_execute(
+            mcp_ctx,
+            plan=_minimal_brain_plan().model_dump(mode="json"),
+            plan_id="brain-anything",
+        )
+    )
+    assert both["success"] is False
+    assert both["error"]["code"] == "INVALID_INPUT"
+
+
+def test_brain_execute_plan_id_resolves_the_cached_plan(monkeypatch, mcp_ctx):
+    """plan_id passthrough: the host can execute the latest td_brain_plan
+    result without echoing the full multi-KB plan back through its context."""
+    brain_plan = _minimal_brain_plan()
+    plan_dump = brain_plan.model_dump(mode="json")
+    tx_result = TransactionResult(
+        plan_id="patch-1",
+        status="dry_run",
+        validation_failed=False,
+        rollback_performed=False,
+    )
+
+    async def fake_run_transaction(*args, **kwargs):
+        return tx_result
+
+    monkeypatch.setattr(tools_brain._tr, "_start_tool", lambda ctx, name: lambda: None)
+    monkeypatch.setattr(tools_brain._tr, "_audit_log", lambda *args, **kwargs: None)
+    monkeypatch.setattr(tools_brain, "_run_transaction", fake_run_transaction)
+    monkeypatch.setattr(tools_brain, "_export_trace_safely", lambda **kwargs: None)
+    monkeypatch.setattr(tools_brain, "_cache_transaction", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        tools_brain,
+        "get_cached_resource",
+        lambda uri: {"latest_brain_plan": plan_dump} if uri == "td://project/state" else None,
+    )
+
+    result = asyncio.run(
+        tools_brain.td_brain_execute(mcp_ctx, plan_id=plan_dump["id"], transaction_policy="dry_run")
+    )
+
+    assert result["success"] is True
+    assert result["trace"]["plan_id"] == plan_dump["id"]
+
+
+def test_brain_execute_plan_id_miss_is_a_recoverable_error(monkeypatch, mcp_ctx):
+    monkeypatch.setattr(tools_brain._tr, "_start_tool", lambda ctx, name: lambda: None)
+    monkeypatch.setattr(tools_brain, "get_cached_resource", lambda uri: None)
+
+    result = asyncio.run(tools_brain.td_brain_execute(mcp_ctx, plan_id="brain-stale-id"))
+
+    assert result["success"] is False
+    assert result["error"]["code"] == "INVALID_INPUT"
+    assert "td_brain_plan" in result["error"]["message"]

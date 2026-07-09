@@ -14,9 +14,14 @@ name: Build & upload release assets
 #   - workflow_dispatch — manually re-run for an existing tag (useful for
 #     backfilling old releases).
 #
-# .tox is intentionally NOT auto-built here — it has to be rebuilt inside
-# a running TouchDesigner instance (see CLAUDE.md: _TOX_SOURCE_FILES).
-# The .tox is uploaded manually as part of the release creation step.
+# .tox is NOT auto-built here — it has to be rebuilt inside a running
+# TouchDesigner instance (see CLAUDE.md: _TOX_SOURCE_FILES). Instead the
+# COMMITTED td_component/tdpilot.tox from the tag checkout is uploaded as
+# the canonical `tdpilot.tox` release asset (self_updater.DEFAULT_ASSET_NAME
+# downloads exactly that name; releases v1.6.9–v2.0.3 shipped without it,
+# which silently broke td_self_update's install path). Freshness of the
+# committed binary is enforced separately by scripts/check_tox_freshness.py
+# in CI.
 #
 # Security note: untrusted release/dispatch inputs are captured via env:
 # blocks and referenced as shell variables (per
@@ -97,12 +102,13 @@ jobs:
         run: |
           test -f tdpilot.plugin || { echo "::error::tdpilot.plugin not produced"; exit 1; }
           test -f tdpilot.mcpb   || { echo "::error::tdpilot.mcpb not produced"; exit 1; }
-          ls -lh tdpilot.plugin tdpilot.mcpb
+          test -f td_component/tdpilot.tox || { echo "::error::td_component/tdpilot.tox missing from tag checkout — td_self_update depends on this asset"; exit 1; }
+          ls -lh tdpilot.plugin tdpilot.mcpb td_component/tdpilot.tox
 
       - name: Upload assets to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.resolve.outputs.tag }}
         run: |
-          gh release upload "$TAG" tdpilot.plugin tdpilot.mcpb --clobber
-          echo "Uploaded tdpilot.plugin + tdpilot.mcpb to release $TAG"
+          gh release upload "$TAG" tdpilot.plugin tdpilot.mcpb td_component/tdpilot.tox --clobber
+          echo "Uploaded tdpilot.plugin + tdpilot.mcpb + tdpilot.tox to release $TAG"

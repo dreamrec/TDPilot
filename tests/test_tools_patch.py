@@ -81,8 +81,11 @@ async def test_td_patch_plan_requires_one_input(mcp_ctx, td_client, monkeypatch)
     _patch_services(monkeypatch, td_client)
     result = await tools_patch.td_patch_plan(mcp_ctx, target_root="/p")
     assert result["success"] is False
-    assert "error" in result
-    assert "requires one of" in result["error"].lower() or "one of" in result["error"].lower()
+    # ValueError now flows through the canonical envelope (INVALID_INPUT),
+    # matching every other error path instead of a bare string.
+    assert result["error"]["code"] == "INVALID_INPUT"
+    message = result["error"]["message"].lower()
+    assert "requires one of" in message or "one of" in message
 
 
 @pytest.mark.asyncio

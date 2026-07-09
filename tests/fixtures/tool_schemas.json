@@ -89,10 +89,22 @@
         "type": "boolean"
       },
       "plan": {
-        "any_of_types": [],
-        "default_present": false,
+        "any_of_types": [
+          "null",
+          "object"
+        ],
+        "default_present": true,
         "enum": null,
-        "type": "object"
+        "type": null
+      },
+      "plan_id": {
+        "any_of_types": [
+          "null",
+          "string"
+        ],
+        "default_present": true,
+        "enum": null,
+        "type": null
       },
       "transaction_policy": {
         "any_of_types": [],
@@ -101,9 +113,7 @@
         "type": "string"
       }
     },
-    "required": [
-      "plan"
-    ]
+    "required": []
   },
   "td_brain_plan": {
     "description_present": true,

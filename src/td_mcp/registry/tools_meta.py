@@ -259,6 +259,12 @@ async def td_self_update(
     and the repo working-tree (when running from a clone). On success returns
     md5 fingerprints for each install path so the caller can verify sync.
 
+    Releases v1.6.9 through v2.0.3 shipped without the ``tdpilot.tox`` asset;
+    against those, ``check_only=False`` returns
+    ``error_code="release_asset_missing"`` with remediation hints instead of
+    installing. Releases after v2.0.3 attach the asset automatically
+    (.github/workflows/release-assets.yml).
+
     Network-only — does not touch TouchDesigner. Safe to run when TD is closed.
     """
     finish = _tr._start_tool(ctx, "td_self_update")

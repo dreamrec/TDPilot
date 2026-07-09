@@ -94,17 +94,18 @@ function install() {
     console.log("[TDPilot] One-time TD setup needed:");
     console.log("[TDPilot] Open TouchDesigner and run these commands in the Textport:");
     console.log("");
-    var setupPath = join(INSTALL_DIR, "setup_mcp_in_td.py");
-    console.log('  # Step 1: Load TDPilot');
-    console.log('  f=open("' + setupPath + '"); c=f.read(); f.close()');
-    console.log('  compile(c, "setup", "exec")');
+    // Forward slashes: backslashes inside the printed Python string literals
+    // would be parsed as escape sequences on Windows. TD's Python accepts
+    // forward-slash paths on every platform. The printed snippet is TD-side
+    // Python (Textport), not shell — Python's exec/compile, no child_process.
+    var setupPath = join(INSTALL_DIR, "setup_mcp_in_td.py").replace(/\\/g, "/");
+    var startupToe = STARTUP_TOE.replace(/\\/g, "/");
+    console.log("  # Step 1: Load TDPilot (installs /local/mcp_server)");
+    console.log('  c = open("' + setupPath + '", encoding="utf-8").read()');
+    console.log('  exec(compile(c, "' + setupPath + '", "exec"), globals(), globals())');
     console.log("");
-    console.log("  # Step 2: Create auto-start and save");
-    console.log("  dat = op('/project1').create('executeDAT', 'tdpilot_autostart')");
-    console.log("  dat.par.active = True");
-    console.log("  dat.par.start = True");
-    console.log("  dat.comment = 'TDPilot auto-load'");
-    console.log("  project.save('" + STARTUP_TOE + "')");
+    console.log("  # Step 2: Save the startup project so TDPilot auto-loads");
+    console.log('  project.save("' + startupToe + '")');
     console.log("");
     console.log("[TDPilot] After that, TDPilot will auto-load on every TD launch.");
   }

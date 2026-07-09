@@ -97,7 +97,29 @@ client (Claude Desktop, Claude Code, and similar). It is NOT designed to be
 multi-tenant or internet-exposed. If you need that, put TDPilot behind a
 reverse proxy with real auth and treat exec mode as `off`.
 
-## Reporting
+## Supported versions
 
-Open an issue at https://github.com/dreamrec/TDPilot/issues with a
-`security:` prefix, or contact the maintainer for confidential disclosure.
+| Version | Supported |
+|---------|-----------|
+| 2.x (latest release) | Yes — security fixes ship as patch releases |
+| 1.6.x | Critical fixes only, best-effort |
+| < 1.6 | No — upgrade (`npx tdpilot`, or the plugin Update button) |
+
+Security fixes are documented in CHANGELOG.md and, when user action is
+required (secret rotation, component reinstall), called out in the release
+notes.
+
+## Reporting a vulnerability
+
+**Do not open a public issue for exploitable vulnerabilities.** Use GitHub's
+private vulnerability reporting instead: the **Security tab → "Report a
+vulnerability"** on https://github.com/dreamrec/TDPilot (this opens a private
+GHSA advisory only the maintainer can see). Include the TDPilot version,
+exec mode, and a minimal reproduction.
+
+You can expect an acknowledgement within a few days. Please allow a fix to
+ship before public disclosure; credit is given in the advisory and CHANGELOG
+unless you prefer otherwise.
+
+For non-exploitable hardening suggestions, a normal public issue with a
+`security:` prefix is fine.

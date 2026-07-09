@@ -31,7 +31,7 @@ from pydantic import Field
 # Intentional cycle — see registry/__init__.py.
 from td_mcp import patch  # noqa: E402
 from td_mcp import tool_registry as _tr  # noqa: E402
-from td_mcp.errors import format_tool_error
+from td_mcp.errors import format_tool_error, format_tool_error_dict
 from td_mcp.tool_registry import mcp  # noqa: E402
 
 
@@ -200,7 +200,7 @@ async def td_plan_patch(
         )
     except Exception as exc:  # noqa: BLE001
         _tr._record_tool_error(ctx, "td_plan_patch")
-        return {"error": str(exc)}
+        return format_tool_error_dict(exc)
     finally:
         finish()
 
@@ -298,7 +298,7 @@ async def td_preflight_patch(
         }
     except Exception as exc:
         _tr._record_tool_error(ctx, "td_preflight_patch")
-        return {"error": str(exc)}
+        return format_tool_error_dict(exc)
     finally:
         finish()
 

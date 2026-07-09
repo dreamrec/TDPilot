@@ -24,7 +24,7 @@ from td_mcp.brain.transaction import apply_transaction
 from td_mcp.errors import format_tool_error_dict
 from td_mcp.models.brain import BrainPlan, BrainTrace, TransactionOptions
 from td_mcp.models.patch import PatchPlan
-from td_mcp.registry.resources import set_cached_resource
+from td_mcp.registry.resources import get_cached_resource, set_cached_resource
 from td_mcp.tool_registry import mcp
 
 
@@ -140,9 +140,28 @@ async def td_brain_plan(
 async def td_brain_execute(
     ctx: Context,
     plan: Annotated[
-        dict[str, Any],
-        Field(description="BrainPlan dict returned by td_brain_plan. Raw free text is not accepted here."),
-    ],
+        dict[str, Any] | None,
+        Field(
+            default=None,
+            description=(
+                "BrainPlan dict returned by td_brain_plan. Raw free text is not "
+                "accepted here. Omit when passing plan_id instead."
+            ),
+        ),
+    ] = None,
+    plan_id: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description=(
+                "ID of the most recent td_brain_plan result. Server-side lookup — "
+                "avoids echoing the full multi-KB plan back through the host "
+                "context window (and the silent-corruption risk of hosts that "
+                "re-serialize large tool arguments). Provide exactly one of "
+                "plan or plan_id."
+            ),
+        ),
+    ] = None,
     transaction_policy: Annotated[
         str,
         Field(
@@ -166,10 +185,29 @@ async def td_brain_execute(
     started = time.perf_counter()
     finish = _tr._start_tool(ctx, "td_brain_execute")
     try:
+        if (plan is None) == (plan_id is None):
+            return format_tool_error_dict(ValueError("provide exactly one of 'plan' or 'plan_id'"))
+        if plan is None:
+            cached = get_cached_resource("td://project/state") or {}
+            cached_plan = cached.get("latest_brain_plan")
+            cached_id = (cached_plan or {}).get("id")
+            if not cached_plan or cached_id != plan_id:
+                hint = (
+                    f" (latest cached plan is {cached_id!r})"
+                    if cached_id
+                    else " (cache is empty — was the server restarted?)"
+                )
+                return format_tool_error_dict(
+                    ValueError(
+                        f"plan_id {plan_id!r} not found in the server-side plan "
+                        f"cache{hint}. Re-run td_brain_plan and retry."
+                    )
+                )
+            plan = cached_plan
         try:
             brain_plan = BrainPlan.model_validate(plan)
         except ValidationError as exc:
-            return {"success": False, "error": f"invalid BrainPlan: {exc}"}
+            return format_tool_error_dict(ValueError(f"invalid BrainPlan: {exc}"))
         if brain_plan.blocked_questions:
             return {
                 "success": False,
@@ -265,7 +303,7 @@ async def td_transaction_apply(
         try:
             tx_options = TransactionOptions.model_validate(options or {})
         except ValidationError as exc:
-            return {"success": False, "error": f"invalid TransactionOptions: {exc}"}
+            return format_tool_error_dict(ValueError(f"invalid TransactionOptions: {exc}"))
         concept_profile = brain_plan.concept_graph.profile if brain_plan is not None else None
         concept_profiles = _concept_profiles_for_brain_plan(brain_plan) if brain_plan is not None else None
         result = await _run_transaction(
@@ -287,7 +325,7 @@ async def td_transaction_apply(
             "result": result.model_dump(mode="json"),
         }
     except ValueError as exc:
-        return {"success": False, "error": str(exc)}
+        return format_tool_error_dict(exc)
     except Exception as exc:  # noqa: BLE001
         _tr._record_tool_error(ctx, "td_transaction_apply")
         return format_tool_error_dict(exc)

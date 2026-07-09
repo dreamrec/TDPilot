@@ -91,7 +91,7 @@ async def td_patch_plan(
         _tr._audit_log(ctx, "td_patch_plan", {"plan_id": plan.id, "source": plan.source})
         return {"success": True, "plan": plan.model_dump(mode="json")}
     except ValueError as exc:
-        return {"success": False, "error": str(exc)}
+        return format_tool_error_dict(exc)
     except Exception as exc:  # noqa: BLE001
         _tr._record_tool_error(ctx, "td_patch_plan")
         return format_tool_error_dict(exc)
