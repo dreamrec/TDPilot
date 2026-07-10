@@ -1,7 +1,22 @@
 from __future__ import annotations
 
 import importlib.util
+import sys
 from pathlib import Path
+
+import pytest
+
+# The docs-mirror refresh is a maintainer build tool (fetches from
+# docs.derivative.ca and writes one file per Derivative page ID). Derivative
+# page IDs legitimately contain ':' (e.g. "Palette:bitwigMain",
+# "File:Screenshot", "Experimental:Phaser_POP"), which is an illegal filename
+# character on Windows — so these files cannot be created there and the tool
+# is not run on Windows. Skip the whole module on win32 rather than pretend a
+# macOS/Linux build script is cross-platform.
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="docs-mirror refresh uses ':'-containing Derivative page IDs as filenames (illegal on Windows); maintainer build tool runs on macOS/Linux only",
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location(

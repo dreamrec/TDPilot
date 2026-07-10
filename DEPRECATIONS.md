@@ -92,22 +92,20 @@ v3.0 release checklist, not this deprecation notice.
 
 ---
 
-## Known-issue triage: Windows portability (advisory CI)
+## Resolved: Windows portability (v2.1.1)
 
-v2.1.0 added the first Windows CI job (`test-windows` in `ci.yml`). Its first
-run surfaced pre-existing, platform-only test failures that are unrelated to
-any product feature. The job is marked `continue-on-error: true` (advisory)
-so it reports without blocking releases until these are fixed:
+The first Windows CI job (added v2.1.0, advisory) surfaced pre-existing,
+platform-only failures. All are fixed in v2.1.1 and the `test-windows` job is
+now **blocking**:
 
 1. **Path separators** — `scripts/check_versions.py` emitted OS-native paths;
-   fixed in v2.1.0 to always use forward slashes (`Path.as_posix()`).
-2. **SQLite handle cleanup** — some tests open a DocsBrain/POPx `.db` in a
-   temp dir; on Windows the open connection blocks `TemporaryDirectory`
-   cleanup (`WinError 32`). Fix: close the connection (context manager /
-   explicit `.close()`) before teardown.
-3. **Docs-mirror page ordering** — `tests/test_docs_mirror_refresh.py` sees a
-   different page count/order on Windows (directory-walk ordering). Fix:
-   sort deterministically and normalize separators in the mirror walker.
-
-**Exit criteria:** once the Windows suite is green, remove
-`continue-on-error: true` from the `test-windows` job so it becomes blocking.
+   fixed to always use forward slashes (`Path.as_posix()`).
+2. **SQLite handle cleanup** — `DocsBrain` held its SQLite connection open with
+   no way to close it; on Windows that pinned the `.db` and blocked
+   `TemporaryDirectory` teardown (`WinError 32`). `DocsBrain` now supports
+   `close()` + the context-manager protocol (and a best-effort `__del__`), and
+   the temp-DB tests close it before teardown.
+3. **Docs-mirror colon page IDs** — `tests/test_docs_mirror_refresh.py` writes
+   files named after Derivative page IDs, some of which contain ':' (illegal in
+   Windows filenames). The refresh script is a macOS/Linux-only maintainer build
+   tool, so those tests now skip on Windows.

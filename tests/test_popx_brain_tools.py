@@ -36,8 +36,10 @@ def test_popx_brain_search():
 
     with tempfile.TemporaryDirectory() as tmp:
         db_path = _create_test_popx_db(Path(tmp))
-        brain = DocsBrain(db_path=db_path)
-        results = brain.search("particle simulation")
+        # Close the brain's SQLite handle before the tempdir teardown, or
+        # Windows raises PermissionError (WinError 32) deleting the open .db.
+        with DocsBrain(db_path=db_path) as brain:
+            results = brain.search("particle simulation")
         assert len(results) >= 1
         assert "particle" in results[0]["content"].lower()
 
@@ -48,5 +50,7 @@ def test_popx_brain_count():
 
     with tempfile.TemporaryDirectory() as tmp:
         db_path = _create_test_popx_db(Path(tmp))
-        brain = DocsBrain(db_path=db_path)
-        assert brain.count() == 1
+        # Context-manage so the SQLite handle is closed before teardown
+        # (Windows blocks deleting an open .db — WinError 32).
+        with DocsBrain(db_path=db_path) as brain:
+            assert brain.count() == 1

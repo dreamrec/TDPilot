@@ -155,6 +155,35 @@ class DocsBrain:
         # silently filtered out.
         self._operator_name_to_op_type: dict[str, str] = {v: k for k, v in self._op_type_map.items()}
 
+    def close(self) -> None:
+        """Close the underlying SQLite connection.
+
+        At runtime DocsBrain is a long-lived singleton, so this is rarely
+        needed — but holding the connection open pins the .db file on disk.
+        On Windows an open handle blocks deleting/replacing the file (e.g.
+        a TemporaryDirectory teardown raises ``PermissionError`` / WinError
+        32), so callers that create a DocsBrain over a temp DB should close
+        it (or use it as a context manager). Idempotent.
+        """
+        conn = getattr(self, "_conn", None)
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:  # noqa: BLE001 — close must never raise
+                pass
+            self._conn = None
+
+    def __enter__(self) -> DocsBrain:
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        self.close()
+
+    def __del__(self) -> None:
+        # Best-effort safety net; GC timing is non-deterministic, so it does
+        # not replace an explicit close()/context-manager on Windows temp DBs.
+        self.close()
+
     def count(self) -> int:
         """Total number of chunks in the index."""
         cursor = self._conn.execute("SELECT COUNT(*) FROM chunks")
