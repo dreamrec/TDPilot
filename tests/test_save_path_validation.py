@@ -116,10 +116,19 @@ class TestValidateSavePathRejects:
         with pytest.raises(SavePathError, match="extension"):
             validate_save_path(raw)
 
-    @pytest.mark.parametrize("raw", ["/private/var/outside.png", "/etc/shadow.jpg"])
-    def test_outside_home_rejected(self, fake_home: Path, raw: str):
-        with pytest.raises(SavePathError, match="home"):
-            validate_save_path(raw)
+    def test_outside_home_rejected(self, fake_home: Path):
+        # Absolute paths outside home must be rejected. Build them from the
+        # home drive/anchor so they are genuinely absolute on THIS platform —
+        # a Unix-style "/etc/x.png" is not absolute on Windows (no drive
+        # letter), where it would trip the earlier "must be absolute" guard
+        # instead of the home-containment check.
+        anchor = Path(fake_home).anchor  # "/" on POSIX, "C:\\" on Windows
+        for raw in (
+            f"{anchor}var_not_home/outside.png",
+            f"{anchor}etc_not_home/shadow.jpg",
+        ):
+            with pytest.raises(SavePathError, match="home"):
+                validate_save_path(raw)
 
     def test_nul_byte_rejected(self, fake_home: Path):
         with pytest.raises(SavePathError, match="NUL"):
