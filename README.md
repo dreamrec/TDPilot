@@ -7,7 +7,7 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v2.1.0
+# TDPilot Runtime v2.1.1
 
 [![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
@@ -136,7 +136,7 @@ Everything else (vision, streaming, optimization, planning, TD2025 inspection) b
 
 ## Latest Release
 
-**v2.1.0** — the ultrareview cycle: host-authored planning (`td_brain_ground` + `td_brain_propose`), parameter value grounding across all 656 operators, screenshot-to-disk + motion verification, single-secret reliability, `npx tdpilot update`, and 114/114 tool annotations. Full history, every release: [`CHANGELOG.md`](CHANGELOG.md).
+**v2.1.1** — Windows portability, now CI-enforced: DocsBrain releases its SQLite handle (no more pinned `docs.db` / `WinError 32` on Windows), platform-aware tests, and the Windows unit suite promoted from advisory to a blocking CI gate; plus release-plumbing fixes (npm@11 pin on Node 22, release-assets gate no longer requires gitignored dev-machine reports). Full history, every release: [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Core Thinking Model (How To Think With This MCP)
 

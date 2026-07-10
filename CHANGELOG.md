@@ -1,6 +1,47 @@
 # Changelog
 
 
+## 2.1.1 - 2026-07-10 — Windows portability: green & blocking
+
+Patch release. Windows is now a first-class, CI-enforced platform, and the
+release plumbing gaps the v2.1.0 release morning surfaced are closed. Tool
+count unchanged at **114**.
+
+**⚠️ Upgrade note:** no functional TD-side changes — the `.tox` is rebuilt
+only to keep the baked `API_VERSION` in lockstep with the server, which
+clears the `td_get_capabilities` server/component mismatch warning. Update
+the server, then reinstall the component (`td_self_update`, or re-run
+`setup_mcp_in_td.py` in the Textport, or drag the new `tdpilot.tox` into
+`/local`).
+
+### Windows
+- **DocsBrain now releases its SQLite handle** — `close()` + context-manager
+  support (+ best-effort `__del__`). Previously the connection stayed open
+  for the object's lifetime; on Windows the open handle pinned `docs.db`, so
+  deleting or replacing the docs database failed with `WinError 32` (and
+  temp-dir teardown broke in tests). Runtime-correct fix, not a test shim.
+- Docs-mirror refresh tests skip on win32 — the refresh script is a
+  macOS/Linux-only maintainer build tool whose output filenames include
+  `:` (`Palette:`, `File:`, `Experimental:`), an illegal character in
+  Windows filenames.
+- `save_path` outside-home test now derives a platform-absolute path from
+  the home drive anchor (`Path.anchor`) instead of hardcoding Unix paths —
+  the validator itself was already correct and safe on Windows; only the
+  test's expectation was Unix-specific.
+- **The Windows unit suite is now a BLOCKING CI gate** (advisory at
+  v2.1.0). All 9 failures from the first advisory run are fixed;
+  DEPRECATIONS.md "Windows portability" moved to Resolved.
+
+### Release plumbing
+- npm-publish: runs on Node 22 with npm pinned to 11 — npm@12 ships broken
+  sigstore/provenance signing that failed the v2.1.0 publish until
+  retried with the pin.
+- release-assets: the offline release-gate step no longer passes gitignored
+  dev-machine bench/soak report paths (the `FileNotFoundError` that failed
+  the v2.1.0 release-assets runs); every offline-generatable report is
+  regenerated fresh in CI and required.
+
+
 ## 2.1.0 - 2026-07-09 — Ultrareview cycle: LLM-as-planner, value grounding, reliability & trust
 
 The largest single release since the v2.0 brain. An 8-dimension product
