@@ -134,15 +134,15 @@ jobs:
       # Release gates (audit batch E). check_release_gates.py's strongest
       # mode is --require-complete, but that additionally demands the
       # brain_live_smoke and operator_availability reports, which can only
-      # be produced against a live TouchDesigner (CI runners have none) and
-      # whose committed point-in-time copies under reports/ can lag the
-      # gate's schema. Rubber-stamping stale live artifacts — or hard-
-      # blocking tags on files CI cannot regenerate — would both be wrong,
-      # so CI runs the strongest HONEST subset instead: every offline-
-      # generatable report is regenerated fresh here and required
-      # (--require-plugin-surface --require-param-semantics-risk), while
-      # bench/soak come from the committed release-ritual reports. The full
-      # --require-complete gate remains a release-time step on a dev
+      # be produced against a live TouchDesigner (CI runners have none). The
+      # bench/soak reports under reports/ are gitignored dev-machine
+      # artifacts and are NOT present at a tag checkout, so CI cannot and
+      # must not gate on them (passing their paths crashed the v2.1.0
+      # release-assets run with FileNotFoundError). CI therefore runs the
+      # strongest HONEST subset: every offline-generatable report is
+      # regenerated fresh here and required (--require-plugin-surface
+      # --require-param-semantics-risk). The full --require-complete gate
+      # (incl. bench/soak + live smoke) stays a release-time step on a dev
       # machine with TouchDesigner running (output: reports/release_gates.json).
       - name: Release gates (offline-verifiable subset, reports regenerated fresh)
         run: |
@@ -152,8 +152,6 @@ jobs:
           uv run python scripts/audit_plugin_surface.py > /tmp/gate-reports/plugin_surface.json
           uv run python scripts/audit_param_semantics_risks.py > /tmp/gate-reports/param_semantics_risk.json
           uv run python scripts/check_release_gates.py \
-            --bench-report reports/bench_tools.json \
-            --soak-report reports/soak_events.json \
             --brain-eval-report /tmp/gate-reports/brain_eval.json \
             --brain-smoke-report /tmp/gate-reports/brain_smoke_dry_run.json \
             --plugin-surface-report /tmp/gate-reports/plugin_surface.json \
