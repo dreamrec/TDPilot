@@ -45,10 +45,10 @@ def check_line(path: Path, pattern: str, expected: str, label: str, *, flags: in
     text = path.read_text()
     match = re.search(pattern, text, flags)
     if not match:
-        return f"{label}: pattern not found in {path.relative_to(ROOT)}"
+        return f"{label}: pattern not found in {path.relative_to(ROOT).as_posix()}"
     actual = match.group(1)
     if actual != expected:
-        return f"{label}: {path.relative_to(ROOT)} says {actual}, expected {expected}"
+        return f"{label}: {path.relative_to(ROOT).as_posix()} says {actual}, expected {expected}"
     return None
 
 
@@ -58,7 +58,7 @@ def check_json_version(path: Path, expected: str, label: str) -> str | None:
     data = json.loads(path.read_text())
     actual = data.get("version")
     if actual != expected:
-        return f"{label}: {path.relative_to(ROOT)} says {actual}, expected {expected}"
+        return f"{label}: {path.relative_to(ROOT).as_posix()} says {actual}, expected {expected}"
     return None
 
 
@@ -77,7 +77,7 @@ def check_json_value(path: Path, key_path: str, expected: object, label: str) ->
     data = json.loads(path.read_text())
     actual = _json_path_value(data, key_path)
     if actual != expected:
-        return f"{label}: {path.relative_to(ROOT)} says {actual}, expected {expected}"
+        return f"{label}: {path.relative_to(ROOT).as_posix()} says {actual}, expected {expected}"
     return None
 
 

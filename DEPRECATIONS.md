@@ -89,3 +89,25 @@ These tools will be removed in **v3.0** once:
 
 Removing them will also drop the tool count below 114; that bump is part of the
 v3.0 release checklist, not this deprecation notice.
+
+---
+
+## Known-issue triage: Windows portability (advisory CI)
+
+v2.1.0 added the first Windows CI job (`test-windows` in `ci.yml`). Its first
+run surfaced pre-existing, platform-only test failures that are unrelated to
+any product feature. The job is marked `continue-on-error: true` (advisory)
+so it reports without blocking releases until these are fixed:
+
+1. **Path separators** — `scripts/check_versions.py` emitted OS-native paths;
+   fixed in v2.1.0 to always use forward slashes (`Path.as_posix()`).
+2. **SQLite handle cleanup** — some tests open a DocsBrain/POPx `.db` in a
+   temp dir; on Windows the open connection blocks `TemporaryDirectory`
+   cleanup (`WinError 32`). Fix: close the connection (context manager /
+   explicit `.close()`) before teardown.
+3. **Docs-mirror page ordering** — `tests/test_docs_mirror_refresh.py` sees a
+   different page count/order on Windows (directory-walk ordering). Fix:
+   sort deterministically and normalize separators in the mirror walker.
+
+**Exit criteria:** once the Windows suite is green, remove
+`continue-on-error: true` from the `test-windows` job so it becomes blocking.
