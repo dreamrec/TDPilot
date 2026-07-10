@@ -117,12 +117,12 @@ jobs:
       - name: Upgrade npm to a version that supports Trusted Publisher OIDC
         # Trusted Publisher OIDC auth — where the registry exchanges a
         # workflow OIDC token for a short-lived publish token — landed in
-        # npm 11.5. Node 22 ships an older npm, so upgrade to the latest.
-        # Without this the publish request goes out without a valid auth
-        # token and the registry returns the cryptic "E404 'pkg@ver' is not
-        # in this registry" error (npm's way of saying "I refuse to tell you
-        # about this package via this auth context").
-        run: npm install -g npm@latest
+        # npm 11.5, so we need >= 11.5. Pin to the 11.x line rather than
+        # npm@latest: npm@12.0.0 ships a broken provenance path
+        # ("Cannot find module 'sigstore'", MODULE_NOT_FOUND) that fails
+        # `npm publish --provenance`. npm@11 has working OIDC + provenance
+        # and runs on Node 22.
+        run: npm install -g npm@11
 
       - name: Verify package.json version matches the tag
         env:
