@@ -4,12 +4,35 @@ import json
 import shutil
 import subprocess
 import sys
+import types
 from pathlib import Path
 
 from td_mcp.brain import hook_check
 from td_mcp.brain.hook_check import evaluate_post_tool_use, evaluate_release_stop
 
 ROOT = Path(__file__).resolve().parent.parent.parent
+
+
+def _load_hook_runner_module():
+    path = ROOT / "hooks" / "run_hook.py"
+    module = types.ModuleType("tdpilot_hook_runner_test")
+    module.__file__ = str(path)
+    source = path.read_text(encoding="utf-8")
+    exec(compile(source, str(path), "exec"), module.__dict__)
+    return module
+
+
+def test_hook_runner_candidates_fail_open_without_home_directory(monkeypatch):
+    run_hook = _load_hook_runner_module()
+
+    def missing_home(cls):
+        raise RuntimeError("Could not determine home directory.")
+
+    monkeypatch.setattr(run_hook.Path, "home", classmethod(missing_home))
+
+    roots = run_hook._candidate_roots()
+
+    assert Path(run_hook.__file__).resolve().parents[1] in roots
 
 
 def test_post_tool_use_hook_blocks_manual_recovery_result():

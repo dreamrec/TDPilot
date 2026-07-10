@@ -74,7 +74,15 @@ def _candidate_roots() -> list[Path]:
     # The runner's containing package is trusted because this file is already
     # executing from it. The vendor import is Codex's known installation root.
     roots.append(Path(__file__).resolve().parents[1])
-    roots.append(Path.home() / ".codex" / "vendor_imports" / "TDPilot")
+    try:
+        home = Path.home()
+    except (OSError, RuntimeError):
+        # Minimal hook environments on Windows may omit USERPROFILE,
+        # HOMEDRIVE, and HOMEPATH. The packaged runner root above remains a
+        # trusted candidate; an unavailable optional vendor root must fail open.
+        home = None
+    if home is not None:
+        roots.append(home / ".codex" / "vendor_imports" / "TDPilot")
     return roots
 
 
@@ -94,7 +102,9 @@ def _is_runtime_root(root: Path) -> bool:
             return False
         return isinstance(project, dict) and project.get("name") == "tdpilot"
     project_section = re.search(r"(?ms)^\[project\]\s*(.*?)(?=^\[|\Z)", text)
-    return bool(project_section and re.search(r'(?m)^name\s*=\s*["\']tdpilot["\']\s*$', project_section.group(1)))
+    return bool(
+        project_section and re.search(r'(?m)^name\s*=\s*["\']tdpilot["\']\s*$', project_section.group(1))
+    )
 
 
 if __name__ == "__main__":
