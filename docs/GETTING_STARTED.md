@@ -28,6 +28,18 @@ undoable. If you'd rather start read-only on an existing project, run
 Everything below is the mental model that makes the rest of your hours with
 TDPilot productive.
 
+For an artistic or multi-domain request, use the concept route directly:
+
+```text
+/td-concept A luminous particle tunnel with depth, fog, slow camera drift, and audio-reactive motion
+```
+
+TDPilot grounds every required facet, authors a module architecture, reviews
+it, and refuses execution if the proposed graph does not actually cover the
+request. Exact known patterns take the shorter `td_brain_plan` route; artistic,
+spatial, camera/depth/fog, and implicit-architecture work uses
+`td_brain_ground` → author → `td_brain_propose`.
+
 If you have never used MCP before, the most important thing to understand is this:
 
 MCP does not make the AI magical.
@@ -176,11 +188,13 @@ This is how you keep the patch understandable.
 
 ## The Small Set Of Tools That Matter Most
 
-You do not need to learn all 112 tools to get real value.
+You do not need to learn all 114 tools to get real value.
 
 If you are new, focus on these:
 
 - `td_brain_plan`
+- `td_brain_ground`
+- `td_brain_propose`
 - `td_brain_execute`
 - `td_transaction_apply`
 - `td_get_info`
@@ -200,6 +214,14 @@ If you are new, focus on these:
 
 Everything else is useful later.
 These are the ones that make TDPilot feel real.
+
+The routing rule is simple:
+
+- use `td_brain_plan` for an exact validated topology or technique composition
+- use `td_brain_ground` → author → `td_brain_propose` for artistic,
+  multi-domain, spatial, camera/depth/fog, or implicit architecture
+- execute only when server-derived intent coverage is complete and every
+  semantic binding has a concrete operation
 
 ## A Good First Session
 

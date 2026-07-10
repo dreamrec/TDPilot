@@ -499,3 +499,298 @@ async def test_macro_block_policy_preflights_before_undo_or_mutation():
     assert preflight_calls[0]["param_semantics_policy"] == "block"
     assert client.calls == []
     assert sentinel.is_active() is False
+
+
+# ─── Guarded destructive and route operations (v2.4) ─────────────────
+
+
+@pytest.mark.asyncio
+async def test_delete_node_requires_owned_descendant_and_records_readback():
+    op = PatchOperation(kind="delete_node", target="/p/system/old", args={"owned": True})
+    client = FakeTDClient(
+        scripted={
+            "node/delete": {
+                "success": True,
+                "deleted": {"path": "/p/system/old", "type": "nullTOP"},
+            }
+        }
+    )
+
+    result = await apply_plan(
+        client,
+        _plan([op]),
+        sentinel=UndoBlockSentinel(),
+        auto_validate=False,
+    )
+
+    assert result.status == "clean"
+    assert result.deleted_paths == ["/p/system/old"]
+    assert next(call for call in client.calls if call[0] == "node/delete")[1] == {"path": "/p/system/old"}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("target_root", "target", "args", "reason"),
+    [
+        ("/p", "/foreign/old", {"owned": True}, "outside target_root"),
+        ("/p", "/p/old", {"owned": False}, "owned=true"),
+        ("/", "/project1/old", {"owned": True}, "scoped target_root"),
+        ("/p", "/p", {"owned": True}, "target root itself"),
+    ],
+)
+async def test_delete_node_safety_failures_happen_before_undo_or_mutation(target_root, target, args, reason):
+    op = PatchOperation(kind="delete_node", target=target, args=args)
+    client = FakeTDClient()
+
+    result = await apply_plan(
+        client,
+        _plan([op], target_root=target_root),
+        sentinel=UndoBlockSentinel(),
+        auto_validate=False,
+    )
+
+    assert result.status == "broken"
+    assert reason in (result.failed_reason or "")
+    assert result.undo_block_opened is False
+    assert client.calls == []
+
+
+@pytest.mark.asyncio
+async def test_disconnect_checks_expected_route_and_proves_removal():
+    state = {"connected": True}
+
+    def connections(_params):
+        return {
+            "path": "/p/out",
+            "inputs": (
+                [{"from_path": "/p/src", "from_index": 0, "to_index": 0}] if state["connected"] else []
+            ),
+            "outputs": [],
+        }
+
+    def disconnect(_params):
+        state["connected"] = False
+        return {"success": True, "path": "/p/out", "connector_type": "input", "index": 0}
+
+    op = PatchOperation(
+        kind="disconnect",
+        target="/p/out",
+        args={
+            "owned": True,
+            "connector_type": "input",
+            "index": 0,
+            "expected_peer": "/p/src",
+            "expected_peer_index": 0,
+        },
+    )
+    client = FakeTDClient(scripted={"node/connections": connections, "node/disconnect": disconnect})
+
+    result = await apply_plan(
+        client,
+        _plan([op]),
+        sentinel=UndoBlockSentinel(),
+        auto_validate=False,
+    )
+
+    assert result.status == "clean"
+    assert result.connections_removed == [("/p/src", "/p/out")]
+    assert [call[0] for call in client.calls].count("node/connections") == 2
+    body = next(call[1] for call in client.calls if call[0] == "node/disconnect")
+    assert body == {"path": "/p/out", "connector_type": "input", "index": 0}
+
+
+@pytest.mark.asyncio
+async def test_disconnect_refuses_precondition_mismatch_without_mutation():
+    op = PatchOperation(
+        kind="disconnect",
+        target="/p/out",
+        args={
+            "owned": True,
+            "connector_type": "input",
+            "index": 0,
+            "expected_peer": "/p/expected",
+        },
+    )
+    client = FakeTDClient(
+        scripted={
+            "node/connections": {
+                "path": "/p/out",
+                "inputs": [{"from_path": "/p/actual", "from_index": 0, "to_index": 0}],
+                "outputs": [],
+            }
+        }
+    )
+
+    result = await apply_plan(
+        client,
+        _plan([op]),
+        sentinel=UndoBlockSentinel(),
+        auto_validate=False,
+    )
+
+    assert result.status == "broken"
+    assert "precondition failed" in (result.failed_reason or "")
+    assert not any(call[0] == "node/disconnect" for call in client.calls)
+
+
+@pytest.mark.asyncio
+async def test_disconnect_refuses_output_fanout_without_mutation():
+    op = PatchOperation(
+        kind="disconnect",
+        target="/p/src",
+        args={
+            "owned": True,
+            "connector_type": "output",
+            "index": 0,
+            "expected_peer": "/p/a",
+        },
+    )
+    client = FakeTDClient(
+        scripted={
+            "node/connections": {
+                "path": "/p/src",
+                "inputs": [],
+                "outputs": [
+                    {"to_path": "/p/a", "to_index": 0, "from_index": 0},
+                    {"to_path": "/p/b", "to_index": 0, "from_index": 0},
+                ],
+            }
+        }
+    )
+
+    result = await apply_plan(
+        client,
+        _plan([op]),
+        sentinel=UndoBlockSentinel(),
+        auto_validate=False,
+    )
+
+    assert result.status == "broken"
+    assert "expected exactly one route" in (result.failed_reason or "")
+    assert not any(call[0] == "node/disconnect" for call in client.calls)
+
+
+@pytest.mark.asyncio
+async def test_guarded_route_swap_checks_both_conditions_and_records_rollback():
+    state = {"source": "/p/active_old", "source_index": 0}
+
+    def connections(_params):
+        return {
+            "path": "/p/public_out",
+            "inputs": [
+                {
+                    "from_path": state["source"],
+                    "from_index": state["source_index"],
+                    "to_index": 0,
+                }
+            ],
+            "outputs": [],
+        }
+
+    def connect(params):
+        state["source"] = params["source_path"]
+        state["source_index"] = params["source_index"]
+        return {"success": True, "connection": dict(params)}
+
+    op = PatchOperation(
+        kind="route_swap",
+        target="/p/public_out",
+        args={
+            "old_from": "/p/active_old",
+            "old_from_output": 0,
+            "from": "/p/staging/new_out",
+            "from_output": 1,
+            "to": "/p/public_out",
+            "to_input": 0,
+        },
+    )
+    client = FakeTDClient(scripted={"node/connections": connections, "node/connect": connect})
+
+    result = await apply_plan(
+        client,
+        _plan([op]),
+        sentinel=UndoBlockSentinel(),
+        auto_validate=False,
+    )
+
+    assert result.status == "clean"
+    assert result.connections_removed == [("/p/active_old", "/p/public_out")]
+    assert result.connections_made == [("/p/staging/new_out", "/p/public_out")]
+    assert result.route_swaps[0]["rollback"] == {
+        "source_path": "/p/active_old",
+        "target_path": "/p/public_out",
+        "source_index": 0,
+        "target_index": 0,
+    }
+    connect_body = next(call[1] for call in client.calls if call[0] == "node/connect")
+    assert connect_body == {
+        "source_path": "/p/staging/new_out",
+        "target_path": "/p/public_out",
+        "source_index": 1,
+        "target_index": 0,
+    }
+    assert [call[0] for call in client.calls].count("node/connections") == 2
+
+
+@pytest.mark.asyncio
+async def test_route_swap_precondition_mismatch_never_connects():
+    op = PatchOperation(
+        kind="route_swap",
+        target="/p/public_out",
+        args={
+            "old_from": "/p/expected_old",
+            "from": "/p/staging/new_out",
+            "to": "/p/public_out",
+        },
+    )
+    client = FakeTDClient(
+        scripted={
+            "node/connections": {
+                "path": "/p/public_out",
+                "inputs": [{"from_path": "/p/actual_old", "from_index": 0, "to_index": 0}],
+                "outputs": [],
+            }
+        }
+    )
+
+    result = await apply_plan(
+        client,
+        _plan([op]),
+        sentinel=UndoBlockSentinel(),
+        auto_validate=False,
+    )
+
+    assert result.status == "broken"
+    assert "precondition failed" in (result.failed_reason or "")
+    assert not any(call[0] == "node/connect" for call in client.calls)
+
+
+@pytest.mark.asyncio
+async def test_route_swap_postcondition_failure_is_broken_and_rollbackable():
+    client = FakeTDClient(
+        scripted={
+            "node/connections": {
+                "path": "/p/public_out",
+                "inputs": [{"from_path": "/p/old", "from_index": 0, "to_index": 0}],
+                "outputs": [],
+            },
+            "node/connect": {"success": True},
+        }
+    )
+    op = PatchOperation(
+        kind="route_swap",
+        target="/p/public_out",
+        args={"old_from": "/p/old", "from": "/p/new", "to": "/p/public_out"},
+    )
+
+    result = await apply_plan(
+        client,
+        _plan([op]),
+        sentinel=UndoBlockSentinel(),
+        auto_validate=False,
+    )
+
+    assert result.status == "broken"
+    assert "postcondition failed" in (result.failed_reason or "")
+    assert result.rollback_hint is not None
+    assert any(call[0] == "node/connect" for call in client.calls)

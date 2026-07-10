@@ -25,6 +25,7 @@ from td_mcp.brain.validators import (
 from td_mcp.models.brain import TransactionOptions
 from td_mcp.models.patch import PatchOperation, PatchPlan, ValidationPlan
 from td_mcp.patch.undo_sentinel import UndoBlockSentinel
+from td_mcp.report_identity import stamp_report_identity
 from td_mcp.tool_registry import _direct_param_preflight_callback
 
 SmokeMode = Literal["dry_run", "live"]
@@ -46,6 +47,7 @@ class LiveSmokeScenario:
     validation_profile: str = "structural_visual_safe"
     tools: tuple[str, ...] = ("td_brain_plan", "td_brain_execute", "td_transaction_apply")
     requires_live_td: bool = True
+    expected_blocked: bool = False
 
 
 def live_smoke_scenarios() -> tuple[LiveSmokeScenario, ...]:
@@ -63,6 +65,32 @@ def live_smoke_scenarios() -> tuple[LiveSmokeScenario, ...]:
             intent="Create an audio reactive control chain from audio to analyzed range output.",
             expected_profile="audio_reactive",
             expected_ops=("audiofileinCHOP", "analyzeCHOP", "mathCHOP", "nullCHOP"),
+        ),
+        LiveSmokeScenario(
+            id="audio_feedback_level_binding",
+            intent="Build an audio-reactive feedback visual with a control panel and debug output",
+            expected_profile="concept_compiled",
+            expected_ops=(
+                "audiofileinCHOP",
+                "analyzeCHOP",
+                "mathCHOP",
+                "nullCHOP",
+                "noiseTOP",
+                "feedbackTOP",
+                "levelTOP",
+                "compositeTOP",
+                "nullTOP",
+                "baseCOMP",
+                "containerCOMP",
+                "sliderCOMP",
+                "buttonCOMP",
+                "panelCHOP",
+                "textDAT",
+                "annotateCOMP",
+                "infoCHOP",
+                "errorDAT",
+            ),
+            output_top="/project1/out1",
         ),
         LiveSmokeScenario(
             id="pop_particle_render",
@@ -106,6 +134,7 @@ def live_smoke_scenarios() -> tuple[LiveSmokeScenario, ...]:
                 "errorDAT",
             ),
             output_top="/project1/out1",
+            expected_blocked=True,
         ),
         LiveSmokeScenario(
             id="audio_terrain_glass_controls",
@@ -135,6 +164,7 @@ def live_smoke_scenarios() -> tuple[LiveSmokeScenario, ...]:
                 "errorDAT",
             ),
             output_top="/project1/out1",
+            expected_blocked=True,
         ),
         LiveSmokeScenario(
             id="glsl_pop_attribute_render",
@@ -449,7 +479,11 @@ async def build_live_smoke_report(
         if client_to_close is not None:
             await client_to_close.close()
 
-    ok_statuses = {"planned", "skipped_unavailable"} if mode == "live" else {"planned"}
+    ok_statuses = (
+        {"planned", "blocked_expected", "skipped_unavailable"}
+        if mode == "live"
+        else {"planned", "blocked_expected"}
+    )
     scenarios_ok = all(item["status"] in ok_statuses for item in scenario_reports)
     transactional_ok = transactional_smoke["status"] == "not_run" or bool(transactional_smoke.get("ok"))
     # `ok` reflects whether the planned scenarios + transactional smoke succeeded
@@ -460,24 +494,26 @@ async def build_live_smoke_report(
     # under `sync_diagnostic` and enforced separately by the release gate
     # (check_release_gates.py "brain live smoke sync diagnostic ok").
     ok = scenarios_ok and transactional_ok
-    return {
-        "schema_version": 1,
-        "mode": mode,
-        "ok": ok,
-        "mutated_td": bool(transactional_smoke.get("mutated_td")),
-        "scenario_count": len(scenario_reports),
-        "duration_ms": _elapsed_ms(started),
-        "td_health": health,
-        "connection_error": connection_error,
-        "sync_diagnostic": sync_diagnostic,
-        "visual_quality_summary": _visual_quality_summary(transactional_smoke),
-        "panel_interaction_results": _panel_interactions_not_run(),
-        "performance_summary": performance_summary,
-        "incident_replay": _incident_replay_not_run(),
-        "generated_code_summary": _generated_code_summary(scenario_reports),
-        "transactional_generated_code_smoke": transactional_smoke,
-        "scenarios": scenario_reports,
-    }
+    return stamp_report_identity(
+        {
+            "schema_version": 1,
+            "mode": mode,
+            "ok": ok,
+            "mutated_td": bool(transactional_smoke.get("mutated_td")),
+            "scenario_count": len(scenario_reports),
+            "duration_ms": _elapsed_ms(started),
+            "td_health": health,
+            "connection_error": connection_error,
+            "sync_diagnostic": sync_diagnostic,
+            "visual_quality_summary": _visual_quality_summary(transactional_smoke),
+            "panel_interaction_results": _panel_interactions_not_run(),
+            "performance_summary": performance_summary,
+            "incident_replay": _incident_replay_not_run(),
+            "generated_code_summary": _generated_code_summary(scenario_reports),
+            "transactional_generated_code_smoke": transactional_smoke,
+            "scenarios": scenario_reports,
+        }
+    )
 
 
 def _static_client_for(scenario: LiveSmokeScenario) -> StaticEvalTDClient:
@@ -511,6 +547,7 @@ async def _plan_scenario(
             "validation_profile": scenario.validation_profile,
             "tools": list(scenario.tools),
             "requires_live_td": scenario.requires_live_td,
+            "expected_blocked": scenario.expected_blocked,
             "status": "failed",
             "error": str(exc),
             "checks": checks_for_profile(scenario.validation_profile, scenario.expected_profile),
@@ -521,12 +558,22 @@ async def _plan_scenario(
             "operation_count": 0,
             "generated_code_blocks": [],
             "generated_code_runtime_contracts": [],
+            "control_bindings": [],
             "blocked_questions": [],
             "missing_facts": [],
         }
 
     missing_expected = sorted(set(scenario.expected_ops) - set(plan.concept_graph.operators))
-    status = "planned" if not plan.blocked_questions and not missing_expected else "blocked"
+    safely_blocked = (
+        bool(plan.blocked_questions)
+        and not plan.patch_plan.operations
+        and not missing_expected
+        and any(str(item).startswith(("intent_coverage:", "semantic_edge:")) for item in plan.missing_facts)
+    )
+    if scenario.expected_blocked:
+        status = "blocked_expected" if safely_blocked else "expected_block_failed"
+    else:
+        status = "planned" if not plan.blocked_questions and not missing_expected else "blocked"
     if (
         allow_unavailable_skip
         and status == "blocked"
@@ -543,6 +590,7 @@ async def _plan_scenario(
         "validation_profile": plan.validation_profile,
         "tools": list(scenario.tools),
         "requires_live_td": scenario.requires_live_td,
+        "expected_blocked": scenario.expected_blocked,
         "status": status,
         "plan_id": plan.id,
         "concept_graph_id": plan.concept_graph.id,
@@ -552,6 +600,7 @@ async def _plan_scenario(
         "operation_count": len(plan.patch_plan.operations),
         "generated_code_blocks": _generated_code_block_summaries(plan.patch_plan),
         "generated_code_runtime_contracts": patch_plan_generated_code_runtime_contracts(plan.patch_plan),
+        "control_bindings": _control_binding_summaries(plan.patch_plan),
         "blocked_questions": plan.blocked_questions,
         "missing_facts": plan.missing_facts,
         "risk_flags": plan.risk_flags,
@@ -651,6 +700,30 @@ def _generated_code_block_summaries(patch_plan) -> list[dict[str, Any]]:
         }
         for block in extract_generated_code_blocks(patch_plan)
     ]
+
+
+def _control_binding_summaries(patch_plan: PatchPlan) -> list[dict[str, str]]:
+    summaries: list[dict[str, str]] = []
+    for operation in patch_plan.operations:
+        if operation.kind != "set_params" or not operation.target:
+            continue
+        params = operation.args.get("params")
+        if not isinstance(params, dict):
+            continue
+        for name, value in params.items():
+            if not isinstance(value, dict) or set(value) != {"expr"}:
+                continue
+            expression = value.get("expr")
+            if not isinstance(expression, str) or not expression.startswith("op("):
+                continue
+            summaries.append(
+                {
+                    "target": operation.target,
+                    "param": str(name),
+                    "expression": expression,
+                }
+            )
+    return summaries
 
 
 def _generated_code_summary(scenarios: list[dict[str, Any]]) -> dict[str, Any]:
@@ -1080,47 +1153,51 @@ def _connection_failed_report(
         "Verify TD_MCP_SHARED_SECRET in the MCP process and canonical .tdpilot env file, "
         "then restart the MCP server and TouchDesigner WebServer component."
     )
-    return {
-        "schema_version": 1,
-        "mode": mode,
-        "ok": False,
-        "mutated_td": False,
-        "scenario_count": len(scenarios),
-        "duration_ms": duration_ms,
-        "td_health": None,
-        "connection_error": connection_error,
-        "sync_diagnostic": sync_diagnostic or {},
-        "visual_quality_summary": _visual_quality_summary(_transactional_generated_code_not_run()),
-        "panel_interaction_results": _panel_interactions_not_run(),
-        "performance_summary": _performance_not_run(),
-        "incident_replay": _incident_replay_not_run(),
-        "remediation": remediation,
-        "generated_code_summary": _generated_code_summary([]),
-        "transactional_generated_code_smoke": _transactional_generated_code_not_run(),
-        "scenarios": [
-            {
-                "id": scenario.id,
-                "intent": scenario.intent,
-                "profile": scenario.expected_profile,
-                "target_root": scenario.target_root,
-                "output_top": scenario.output_top,
-                "validation_profile": scenario.validation_profile,
-                "tools": list(scenario.tools),
-                "requires_live_td": scenario.requires_live_td,
-                "status": "skipped_no_td",
-                "operators": list(scenario.expected_ops),
-                "checks": checks_for_profile(scenario.validation_profile, scenario.expected_profile),
-                "profile_probes": probe_summaries_for_profile(
-                    scenario.validation_profile, scenario.expected_profile
-                ),
-                "generated_code_blocks": [],
-                "generated_code_runtime_contracts": [],
-                "blocked_questions": [],
-                "missing_facts": ["TouchDesigner was not reachable for live smoke planning."],
-            }
-            for scenario in scenarios
-        ],
-    }
+    return stamp_report_identity(
+        {
+            "schema_version": 1,
+            "mode": mode,
+            "ok": False,
+            "mutated_td": False,
+            "scenario_count": len(scenarios),
+            "duration_ms": duration_ms,
+            "td_health": None,
+            "connection_error": connection_error,
+            "sync_diagnostic": sync_diagnostic or {},
+            "visual_quality_summary": _visual_quality_summary(_transactional_generated_code_not_run()),
+            "panel_interaction_results": _panel_interactions_not_run(),
+            "performance_summary": _performance_not_run(),
+            "incident_replay": _incident_replay_not_run(),
+            "remediation": remediation,
+            "generated_code_summary": _generated_code_summary([]),
+            "transactional_generated_code_smoke": _transactional_generated_code_not_run(),
+            "scenarios": [
+                {
+                    "id": scenario.id,
+                    "intent": scenario.intent,
+                    "profile": scenario.expected_profile,
+                    "target_root": scenario.target_root,
+                    "output_top": scenario.output_top,
+                    "validation_profile": scenario.validation_profile,
+                    "tools": list(scenario.tools),
+                    "requires_live_td": scenario.requires_live_td,
+                    "expected_blocked": scenario.expected_blocked,
+                    "status": "skipped_no_td",
+                    "operators": list(scenario.expected_ops),
+                    "checks": checks_for_profile(scenario.validation_profile, scenario.expected_profile),
+                    "profile_probes": probe_summaries_for_profile(
+                        scenario.validation_profile, scenario.expected_profile
+                    ),
+                    "generated_code_blocks": [],
+                    "generated_code_runtime_contracts": [],
+                    "control_bindings": [],
+                    "blocked_questions": [],
+                    "missing_facts": ["TouchDesigner was not reachable for live smoke planning."],
+                }
+                for scenario in scenarios
+            ],
+        }
+    )
 
 
 async def _connection_sync_diagnostic(

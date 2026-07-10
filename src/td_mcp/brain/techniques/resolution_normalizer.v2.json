@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "pattern_id": "resolution_normalizer",
+  "title": "Explicit TOP resolution normalizer",
+  "role": "utility",
+  "profiles": ["concept_compiled"],
+  "intent_tags": ["resolution", "normalize", "size", "output"],
+  "families": ["TOP"],
+  "state": "validated",
+  "build_compatibility": {"minimum": "2023.10000", "maximum": null},
+  "compiler": {"type": "packaged_template", "template_version": 1},
+  "estimated_nodes": 2,
+  "estimated_gpu_cost": "low",
+  "estimated_cpu_cost": "low",
+  "required_ops": ["resolutionTOP", "nullTOP"],
+  "inputs": {"image": [{"node": "normalize", "input": 0}]},
+  "outputs": {"image": "output"},
+  "tunables": {
+    "width": {"type": "int", "minimum": 1, "maximum": 16384},
+    "height": {"type": "int", "minimum": 1, "maximum": 16384}
+  },
+  "controls": [],
+  "nodes": [
+    {
+      "id": "normalize",
+      "op_type": "resolutionTOP",
+      "name": "normalize_resolution",
+      "params": {
+        "outputresolution": "custom",
+        "resolutionw": "${parameters.width}",
+        "resolutionh": "${parameters.height}"
+      }
+    },
+    {"id": "output", "op_type": "nullTOP", "name": "out_image", "params": {}}
+  ],
+  "parameter_defaults": {"width": 1920, "height": 1080},
+  "connections": [
+    {"source": "normalize", "target": "output", "source_index": 0, "target_index": 0}
+  ],
+  "validation_defaults": [
+    {"id": "normalized_resolution", "kind": "resolution", "target": "${path.output}", "expected": ["${parameters.width}", "${parameters.height}"]}
+  ],
+  "failure_modes": ["unsupported output size", "upstream aspect mismatch"],
+  "evidence": {
+    "status": "atlas_fixture_validated",
+    "operator_cards": ["resolutionTOP", "nullTOP"],
+    "fixture": "tests/brain/test_build_compiler.py::test_all_packaged_v2_techniques_compile_deterministically"
+  }
+}

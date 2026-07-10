@@ -1328,20 +1328,18 @@ def _draft_typed_role_graph_candidate(
             cards_by_op=cards_by_op,
             corpus_evidence=corpus_evidence,
         )
-        if concept_id == visual_control_target and op_type == "levelTOP" and control_ids:
-            concept = concept.model_copy(
-                update={"params": {"brightness1": {"expr": f"op('${{path:{control_ids[-1]}}}')[0]"}}}
-            )
         concepts.append(concept)
         if index > 0:
             edges.append(ConceptEdge(source=visual_ids[index - 1], target=concept_id, kind="data"))
 
     if control_ids:
+        control_target = visual_control_target or visual_ids[min(1, len(visual_ids) - 1)]
         edges.append(
             ConceptEdge(
                 source=control_ids[-1],
-                target=visual_control_target or visual_ids[min(1, len(visual_ids) - 1)],
+                target=control_target,
                 kind="control",
+                binding=_level_top_control_binding(concepts, control_target),
             )
         )
 
@@ -1984,11 +1982,13 @@ def _draft_chop_export_bound_top_candidate(
             edges.append(ConceptEdge(source=visual_ids[index - 1], target=concept_id, kind="data"))
 
     if control_ids:
+        control_target = visual_control_target or visual_ids[min(1, len(visual_ids) - 1)]
         edges.append(
             ConceptEdge(
                 source=control_ids[-1],
-                target=visual_control_target or visual_ids[min(1, len(visual_ids) - 1)],
+                target=control_target,
                 kind="control",
+                binding=_level_top_control_binding(concepts, control_target),
             )
         )
 
@@ -2161,20 +2161,18 @@ def _draft_chop_controlled_top_candidate(
             cards_by_op=cards_by_op,
             corpus_evidence=corpus_evidence,
         )
-        if concept_id == visual_control_target and op_type == "levelTOP" and control_ids:
-            concept = concept.model_copy(
-                update={"params": {"brightness1": {"expr": f"op('${{path:{control_ids[-1]}}}')[0]"}}}
-            )
         concepts.append(concept)
         if index > 0:
             edges.append(ConceptEdge(source=visual_ids[index - 1], target=concept_id, kind="data"))
 
     if control_ids:
+        control_target = visual_control_target or visual_ids[min(1, len(visual_ids) - 1)]
         edges.append(
             ConceptEdge(
                 source=control_ids[-1],
-                target=visual_control_target or visual_ids[min(1, len(visual_ids) - 1)],
+                target=control_target,
                 kind="control",
+                binding=_level_top_control_binding(concepts, control_target),
             )
         )
 
@@ -4845,6 +4843,20 @@ def _default_output_marker(op_type: str) -> str:
     if domain == "POP":
         return "out_pop"
     return "out1"
+
+
+def _level_top_control_binding(
+    concepts: list[ConceptNode],
+    target_concept_id: str,
+) -> dict[str, Any] | None:
+    target = next((item for item in concepts if item.id == target_concept_id), None)
+    if target is None or target.op_type != "levelTOP":
+        return None
+    return {
+        "mode": "chop_reference_expression",
+        "source_channel": 0,
+        "target_param": "brightness1",
+    }
 
 
 def _candidate_score(

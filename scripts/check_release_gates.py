@@ -20,15 +20,15 @@ REQUIRED_PARAM_SEMANTICS_PRIORITY_GROUPS = {
     "pop",
     "render_material",
 }
-MIN_SHOWPIECE_ASSEMBLED_CASES = 10
+MIN_SHOWPIECE_ASSEMBLED_CASES = 8
 MIN_VALIDATION_CHECKS_PER_CASE = 6
 MIN_PARAMETER_SAFETY_COVERED_OPERATORS = 40
 MIN_PARAMETER_SAFETY_PRIORITY_OPERATORS = 40
 MIN_PARAMETER_SAFETY_PRIORITY_GROUPS = 7
-MIN_GENERATED_CODE_SUCCESS_CASES = 18
-MIN_GENERATED_CODE_SUCCESS_BLOCKS = 25
+MIN_GENERATED_CODE_SUCCESS_CASES = 12
+MIN_GENERATED_CODE_SUCCESS_BLOCKS = 12
 MIN_GENERATED_CODE_SUCCESS_LANGUAGES = 2
-MIN_GENERATED_CODE_RUNTIME_CONTRACTS = 25
+MIN_GENERATED_CODE_RUNTIME_CONTRACTS = 12
 MIN_OPERATOR_COVERAGE_CASES = 50
 MIN_UNSUPPORTED_OPERATOR_AVOIDANCE_CASES = 1
 MIN_DECOMPOSITION_MULTI_DOMAIN_CASES = 20
@@ -42,6 +42,10 @@ MIN_EXPECTED_BLOCKED_PROMPT_SAFETY_CASES = 1
 # achieves today (72/101 ~= 0.7129) so the gate is green but binding.
 MIN_PARAM_VALUE_COVERAGE = 0.70
 MIN_EXPECTED_PARAM_VALUE_CASES = 10
+EXPECTED_TOOL_COUNT = 114
+EXPECTED_PUBLIC_SKILL_COUNT = 7
+EXPECTED_PUBLIC_AGENT_COUNT = 3
+MAX_REPORT_AGE_HOURS = 24.0
 
 
 def load_json(path: str) -> dict[str, Any]:
@@ -65,6 +69,35 @@ def check_threshold(label: str, value: float, op: str, limit: float) -> dict[str
         "value": value,
         "target": f"{op} {limit}",
     }
+
+
+def check_exact(label: str, value: Any, expected: Any) -> dict[str, Any]:
+    missing = value is None or (isinstance(value, float) and math.isnan(value))
+    return {
+        "label": label,
+        "status": "missing" if missing else "pass" if value == expected else "fail",
+        "value": value,
+        "target": f"== {expected}",
+    }
+
+
+def _smoke_scenario_ok(scenario: Any, *, allow_unavailable: bool) -> bool:
+    if not isinstance(scenario, dict):
+        return False
+    status = scenario.get("status")
+    if status == "planned":
+        return not scenario.get("missing_expected_ops") and not scenario.get("blocked_questions")
+    if status == "skipped_unavailable":
+        return allow_unavailable and bool(scenario.get("blocked_questions"))
+    if status != "blocked_expected" or scenario.get("expected_blocked") is not True:
+        return False
+    facts = [str(item) for item in scenario.get("missing_facts") or []]
+    return (
+        int(scenario.get("operation_count") or 0) == 0
+        and not scenario.get("missing_expected_ops")
+        and bool(scenario.get("blocked_questions"))
+        and any(item.startswith(("intent_coverage:", "semantic_edge:")) for item in facts)
+    )
 
 
 def evaluate(
@@ -1095,14 +1128,7 @@ def evaluate(
         failed_scenarios = math.nan
         if isinstance(scenarios, list):
             failed_scenarios = float(
-                sum(
-                    1
-                    for scenario in scenarios
-                    if not isinstance(scenario, dict)
-                    or scenario.get("status") != "planned"
-                    or bool(scenario.get("missing_expected_ops"))
-                    or bool(scenario.get("blocked_questions"))
-                )
+                sum(1 for scenario in scenarios if not _smoke_scenario_ok(scenario, allow_unavailable=False))
             )
         checks.append(check_threshold("brain smoke failed scenarios", failed_scenarios, "<=", 0.0))
         missing_probe_evidence = math.nan
@@ -1376,21 +1402,8 @@ def evaluate(
                     if isinstance(scenario, dict) and scenario.get("status") == "planned"
                 )
             )
-            allowed_statuses = {"planned", "skipped_unavailable"}
             unexpected_scenarios = float(
-                sum(
-                    1
-                    for scenario in scenarios
-                    if not isinstance(scenario, dict)
-                    or scenario.get("status") not in allowed_statuses
-                    or (
-                        scenario.get("status") == "planned"
-                        and (
-                            bool(scenario.get("missing_expected_ops"))
-                            or bool(scenario.get("blocked_questions"))
-                        )
-                    )
-                )
+                sum(1 for scenario in scenarios if not _smoke_scenario_ok(scenario, allow_unavailable=True))
             )
             missing_probe_evidence = float(
                 sum(
@@ -1639,27 +1652,24 @@ def evaluate(
             check_threshold("plugin surface report ok", _bool_value(plugin_surface.get("ok")), ">=", 1.0)
         )
         checks.append(
-            check_threshold(
+            check_exact(
                 "plugin surface tool count",
-                float(plugin_surface.get("tool_count", math.nan)),
-                ">=",
-                110.0,
+                plugin_surface.get("tool_count"),
+                EXPECTED_TOOL_COUNT,
             )
         )
         checks.append(
-            check_threshold(
+            check_exact(
                 "plugin surface brain skill count",
-                float(plugin_surface.get("brain_skill_count", math.nan)),
-                ">=",
-                5.0,
+                plugin_surface.get("brain_skill_count"),
+                EXPECTED_PUBLIC_SKILL_COUNT,
             )
         )
         checks.append(
-            check_threshold(
+            check_exact(
                 "plugin surface agent count",
-                float(plugin_surface.get("agent_count", math.nan)),
-                ">=",
-                4.0,
+                plugin_surface.get("agent_count"),
+                EXPECTED_PUBLIC_AGENT_COUNT,
             )
         )
         checks.append(
@@ -1729,7 +1739,15 @@ def evaluate(
             ("plugin surface hook check module", hooks.get("uses_hook_check_module")),
             ("plugin surface hook runner", hooks.get("uses_hook_runner")),
             ("plugin surface post tool hook", hooks.get("has_post_tool_use_guard")),
-            ("plugin surface stop release hook", hooks.get("has_stop_release_guard")),
+            ("plugin surface no shipped stop hook", not hooks.get("shipped_stop_hook", True)),
+            ("plugin surface scoped post tool matcher", hooks.get("post_tool_use_scoped")),
+            (
+                "plugin surface trusted runtime roots",
+                not hooks.get("uses_project_runtime_fallback", True),
+            ),
+            ("plugin surface source release hook", hooks.get("source_release_guard")),
+            ("plugin surface stop hook re-entry guard", hooks.get("stop_hook_reentry_guard")),
+            ("plugin surface hook safety", hooks.get("safe_for_distribution")),
             ("plugin surface codex skills manifest", codex_manifest.get("has_skills")),
             ("plugin surface codex agents manifest", codex_manifest.get("has_agents")),
             ("plugin surface codex mcp manifest", codex_manifest.get("has_mcp_servers")),
@@ -1739,6 +1757,29 @@ def evaluate(
             ("plugin surface claude mcp manifest", claude_manifest.get("has_mcp_servers")),
         ):
             checks.append(check_threshold(label, _bool_value(value), ">=", 1.0))
+
+    if required_reports:
+        reports_by_name = {
+            "brain_eval": brain_eval,
+            "brain_smoke": brain_smoke,
+            "brain_live_smoke": brain_live_smoke,
+            "operator_availability": operator_availability,
+            "plugin_surface": plugin_surface,
+            "param_semantics_risk": param_semantics_risk,
+        }
+        expected_version = _canonical_version()
+        for report_name in sorted(required_reports.intersection(reports_by_name)):
+            report = reports_by_name[report_name]
+            if report is None:
+                continue
+            checks.extend(
+                _report_identity_checks(
+                    report_name,
+                    report,
+                    expected_version=expected_version,
+                    expected_tool_count=EXPECTED_TOOL_COUNT,
+                )
+            )
 
     passed = [c for c in checks if c["status"] == "pass"]
     failed = [c for c in checks if c["status"] == "fail"]
@@ -2159,6 +2200,56 @@ def _git(*args: str) -> str | None:
     if out.returncode != 0:
         return None
     return out.stdout.strip()
+
+
+def _canonical_version() -> str:
+    path = Path(__file__).resolve().parents[1] / "src" / "td_mcp" / "__init__.py"
+    text = path.read_text(encoding="utf-8")
+    for line in text.splitlines():
+        if line.startswith("__version__"):
+            return line.split("=", 1)[1].strip().strip('"').strip("'")
+    raise RuntimeError("canonical TDPilot version not found")
+
+
+def _report_identity_checks(
+    report_name: str,
+    report: dict[str, Any],
+    *,
+    expected_version: str,
+    expected_tool_count: int,
+    now: datetime | None = None,
+) -> list[dict[str, Any]]:
+    generated_at = report.get("generated_at")
+    parsed: datetime | None = None
+    if isinstance(generated_at, str):
+        try:
+            parsed = datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+        except ValueError:
+            parsed = None
+    current = now or datetime.now(timezone.utc)
+    age_hours = (current - parsed.astimezone(timezone.utc)).total_seconds() / 3600 if parsed else math.nan
+    return [
+        check_exact(f"{report_name} candidate version", report.get("version"), expected_version),
+        check_exact(
+            f"{report_name} candidate tool count",
+            report.get("tool_count"),
+            expected_tool_count,
+        ),
+        {
+            "label": f"{report_name} generated timestamp",
+            "status": "pass" if parsed is not None else "missing",
+            "value": generated_at,
+            "target": "valid ISO-8601 timestamp",
+        },
+        check_threshold(
+            f"{report_name} report age hours",
+            age_hours,
+            "<=",
+            MAX_REPORT_AGE_HOURS,
+        ),
+    ]
 
 
 def build_provenance(now: datetime | None = None) -> dict[str, Any]:

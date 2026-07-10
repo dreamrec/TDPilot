@@ -58,6 +58,32 @@ def test_list_macros_has_defaults():
     assert "post_processing" in names
 
 
+def test_legacy_visual_macros_advertise_truthful_scaffold_contracts():
+    engine = MacroEngine(td_client=FakeTDClient())
+    summaries = {item["name"]: item for item in engine.list_macros()["macros"]}
+
+    feedback = summaries["feedback_loop"]
+    assert feedback["capability"] == "external_input_feedback_scaffold"
+    assert feedback["completion_status"] == "scaffold"
+    assert feedback["required_inputs"][0]["domain"] == "TOP"
+    assert feedback["outputs"] == [{"name": "out", "domain": "TOP", "stable": True}]
+    assert "complete-visual shortcut" in feedback["deprecation_warning"]
+
+    audio = summaries["audio_reactive"]
+    assert audio["capability"] == "audio_chop_preprocessing"
+    assert audio["outputs"] == [{"name": "out", "domain": "CHOP", "stable": True}]
+    assert any("Does not bind" in item for item in audio["limitations"])
+
+
+@pytest.mark.asyncio
+async def test_legacy_visual_macro_creation_returns_deprecation_warning():
+    engine = MacroEngine(td_client=FakeTDClient())
+    result = await engine.create_macro(parent_path="/project1", macro_type="audio_reactive")
+
+    assert result["completion_status"] == "scaffold"
+    assert result["deprecation_warning"] in result["warnings"]
+
+
 def test_feedback_displacement_macro_uses_feedback_top_reference_not_invalid_input_wiring():
     engine = MacroEngine(td_client=FakeTDClient())
     template = engine._templates["feedback_displacement"]

@@ -59,19 +59,33 @@ PLUGIN_FILES: list[tuple[str, str, bool]] = [
     ("commands/td-first-wow.md", "commands/td-first-wow.md", True),
     ("commands/td-audio-reactive.md", "commands/td-audio-reactive.md", True),
     ("commands/td-explain-patch.md", "commands/td-explain-patch.md", True),
+    ("commands/td-concept.md", "commands/td-concept.md", True),
+    # Public agents. The source-only release auditor is intentionally absent.
+    ("agents/td-brain-builder.md", "agents/td-brain-builder.md", True),
+    ("agents/td-brain-explorer.md", "agents/td-brain-explorer.md", True),
+    ("agents/td-brain-validator.md", "agents/td-brain-validator.md", True),
 ]
 
 # Directories bundled recursively (source code + lockfile so ``uv run``
 # inside the unpacked ZIP can resolve dependencies). Mirrors the
 # .mcpb bundle (scripts/build_mcpb.py) layout for consistency.
 PLUGIN_DIRS: tuple[tuple[str, str], ...] = (
-    ("skills", "skills"),
-    ("agents", "agents"),
     ("hooks", "hooks"),
     ("src", "src"),
     # Starter technique recipes (td_memory_import format) — the out-of-box
     # value-grounding seed; see data/techniques_starter/ + README §Starter.
     ("data/techniques_starter", "data/techniques_starter"),
+)
+# Explicit public skill allowlist. Release authoring/auditing stays available in
+# the source repository but is not installed into end-user plugins.
+PUBLIC_SKILL_DIRS: tuple[tuple[str, str], ...] = (
+    ("skills/tdpilot-core", "skills/tdpilot-core"),
+    ("skills/tdpilot-production", "skills/tdpilot-production"),
+    ("skills/popx-touchdesigner", "skills/popx-touchdesigner"),
+    ("skills/tdpilot-brain-builder", "skills/tdpilot-brain-builder"),
+    ("skills/tdpilot-brain-explorer", "skills/tdpilot-brain-explorer"),
+    ("skills/tdpilot-brain-validator", "skills/tdpilot-brain-validator"),
+    ("skills/tdpilot-brain-recovery", "skills/tdpilot-brain-recovery"),
 )
 PLUGIN_EXTRA_FILES: tuple[tuple[str, str, bool], ...] = (
     ("pyproject.toml", "pyproject.toml", True),
@@ -119,6 +133,14 @@ def build(output: Path) -> None:
             zf.write(src, arc)
         # 3. Source dirs (src/ — so uv run can resolve td_mcp).
         for src_rel, arc_root in PLUGIN_DIRS:
+            src = ROOT / src_rel
+            if not src.is_dir():
+                missing_required.append(src_rel + "/")
+                continue
+            _walk_dir_into_zip(zf, src, arc_root)
+        # 4. Public skills only. Keeping this explicit makes archive closure a
+        # release-gated property rather than an accidental recursive copy.
+        for src_rel, arc_root in PUBLIC_SKILL_DIRS:
             src = ROOT / src_rel
             if not src.is_dir():
                 missing_required.append(src_rel + "/")

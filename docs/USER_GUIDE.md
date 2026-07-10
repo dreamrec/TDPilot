@@ -241,10 +241,11 @@ Prompt:
 
 ## Your "Good Enough" TDPilot Starter Stack
 
-If you do not want to learn all 112 tools, focus on this stack:
+If you do not want to learn all 114 tools, focus on this stack:
 
 - brain:
-  `td_brain_plan`, `td_brain_execute`, `td_transaction_apply`
+  `td_brain_plan`, `td_brain_ground`, `td_brain_propose`,
+  `td_brain_execute`, `td_transaction_apply`
 - inspect:
   `td_get_info`, `td_get_nodes`, `td_get_node_detail`, `td_get_params`
 - build:
@@ -257,6 +258,28 @@ If you do not want to learn all 112 tools, focus on this stack:
   `td_memory_learn`, `td_memory_save`, `td_memory_recall`
 
 That is enough to get real value.
+
+## Pattern route versus concept route
+
+Use the pattern route when the requested topology or technique composition is
+already exact and validated:
+
+```text
+td_brain_plan → coverage gate → td_brain_execute
+```
+
+Use the concept-authoring route when the request is artistic, multi-domain,
+spatial, camera/depth/fog driven, or leaves architecture implicit:
+
+```text
+td_brain_ground → host-authored module graph → td_brain_propose
+→ coverage gate → td_brain_execute
+```
+
+A blocked pattern plan is not permission to execute a partial result. Continue
+through concept authoring or clarify the genuinely unresolved input. New plans
+must cover required capabilities, inputs, outputs, behaviors, spatial and
+quality constraints, bindings, and validation assertions before execution.
 
 ## The Right Goal For Month 1
 

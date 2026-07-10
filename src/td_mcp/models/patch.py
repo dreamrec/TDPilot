@@ -28,7 +28,18 @@ class PatchOperation(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    kind: Literal["create_node", "set_params", "set_dat_content", "connect", "layout", "annotate", "macro"]
+    kind: Literal[
+        "create_node",
+        "set_params",
+        "set_dat_content",
+        "connect",
+        "layout",
+        "annotate",
+        "macro",
+        "delete_node",
+        "disconnect",
+        "route_swap",
+    ]
     target: str | None = None
     args: dict[str, Any] = Field(default_factory=dict)
     depends_on: list[int] = Field(default_factory=list)
@@ -100,6 +111,9 @@ class PatchResult(BaseModel):
     created_paths: list[str] = Field(default_factory=list)
     changed_params: list[dict[str, Any]] = Field(default_factory=list)
     connections_made: list[tuple[str, str]] = Field(default_factory=list)
+    deleted_paths: list[str] = Field(default_factory=list)
+    connections_removed: list[tuple[str, str]] = Field(default_factory=list)
+    route_swaps: list[dict[str, Any]] = Field(default_factory=list)
     validation: ValidationReport | None = None
     risk_flags: list[str] = Field(default_factory=list)
     safety_warnings: list[str] = Field(default_factory=list)

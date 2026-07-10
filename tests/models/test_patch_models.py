@@ -17,8 +17,19 @@ class TestPatchOperation:
         assert op.target == "/project1"
         assert op.depends_on == []
 
-    def test_each_of_six_kinds_parseable(self):
-        for kind in ("create_node", "set_params", "connect", "layout", "annotate", "macro"):
+    def test_each_operation_kind_parseable(self):
+        for kind in (
+            "create_node",
+            "set_params",
+            "set_dat_content",
+            "connect",
+            "layout",
+            "annotate",
+            "macro",
+            "delete_node",
+            "disconnect",
+            "route_swap",
+        ):
             op = PatchOperation(kind=kind, args={})
             assert op.kind == kind
 
@@ -136,6 +147,9 @@ class TestPatchResult:
         r = PatchResult(plan_id="abc", status="clean", undo_label="test")
         assert r.applied_ops == [] and r.risk_flags == []
         assert r.before_snapshot_id is None
+        assert r.deleted_paths == []
+        assert r.connections_removed == []
+        assert r.route_swaps == []
 
     def test_broken(self):
         r = PatchResult(

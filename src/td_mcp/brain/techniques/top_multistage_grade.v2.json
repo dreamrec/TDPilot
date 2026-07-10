@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "pattern_id": "top_multistage_grade",
+  "title": "Compact multistage TOP grade",
+  "role": "grade",
+  "profiles": ["concept_compiled"],
+  "intent_tags": ["grade", "color", "contrast", "finish", "post"],
+  "families": ["TOP"],
+  "state": "validated",
+  "build_compatibility": {"minimum": "2023.10000", "maximum": null},
+  "compiler": {"type": "packaged_template", "template_version": 1},
+  "estimated_nodes": 4,
+  "estimated_gpu_cost": "low",
+  "estimated_cpu_cost": "low",
+  "required_ops": ["levelTOP", "hsvadjustTOP", "bloomTOP", "nullTOP"],
+  "inputs": {"image": [{"node": "levels", "input": 0}]},
+  "outputs": {"image": "output"},
+  "tunables": {
+    "brightness": {"type": "float", "minimum": 0.0, "maximum": 4.0},
+    "saturation": {"type": "float", "minimum": 0.0, "maximum": 4.0},
+    "bloom": {"type": "float", "minimum": 0.0, "maximum": 2.0}
+  },
+  "controls": [],
+  "parameter_defaults": {"brightness": 1.0, "saturation": 1.05, "bloom": 0.12},
+  "nodes": [
+    {"id": "levels", "op_type": "levelTOP", "name": "grade_levels", "params": {"brightness1": "${parameters.brightness}"}},
+    {"id": "color", "op_type": "hsvadjustTOP", "name": "grade_color", "params": {"saturationmult": "${parameters.saturation}"}},
+    {"id": "bloom", "op_type": "bloomTOP", "name": "grade_bloom", "params": {"bloomintensity": "${parameters.bloom}"}},
+    {"id": "output", "op_type": "nullTOP", "name": "out_image", "params": {}}
+  ],
+  "connections": [
+    {"source": "levels", "target": "color", "source_index": 0, "target_index": 0},
+    {"source": "color", "target": "bloom", "source_index": 0, "target_index": 0},
+    {"source": "bloom", "target": "output", "source_index": 0, "target_index": 0}
+  ],
+  "validation_defaults": [
+    {"id": "grade_output_exists", "kind": "exists", "target": "${path.output}", "expected": true},
+    {"id": "grade_output_nonuniform", "kind": "nonuniform_image", "target": "${path.output}", "expected": true}
+  ],
+  "failure_modes": ["unconnected image input", "excessive bloom clipping", "invalid grade range"],
+  "evidence": {
+    "status": "atlas_fixture_validated",
+    "operator_cards": ["levelTOP", "hsvadjustTOP", "bloomTOP", "nullTOP"],
+    "fixture": "tests/brain/test_build_compiler.py::test_all_packaged_v2_techniques_compile_deterministically"
+  }
+}

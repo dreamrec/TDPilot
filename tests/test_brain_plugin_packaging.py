@@ -4,6 +4,7 @@ import importlib.util
 import json
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 from td_mcp.brain.plugin_surface import audit_plugin_surface
@@ -32,37 +33,58 @@ def _load_build_mcpb_module():
     return module
 
 
-def test_plugin_zip_bundles_brain_skills_agents_and_hooks():
+def test_plugin_zip_bundles_public_surface_without_stop_hook(tmp_path):
     module = _load_build_plugin_zip_module()
     packaged_dirs = dict(module.PLUGIN_DIRS)
+    public_skill_dirs = dict(module.PUBLIC_SKILL_DIRS)
 
-    assert packaged_dirs["skills"] == "skills"
-    assert packaged_dirs["agents"] == "agents"
     assert packaged_dirs["hooks"] == "hooks"
+    assert "skills/tdpilot-brain-builder" in public_skill_dirs
+    assert "skills/tdpilot-brain-release" not in public_skill_dirs
 
     for rel in (
         "skills/tdpilot-brain-builder/SKILL.md",
         "skills/tdpilot-brain-explorer/SKILL.md",
         "skills/tdpilot-brain-validator/SKILL.md",
         "skills/tdpilot-brain-recovery/SKILL.md",
-        "skills/tdpilot-brain-release/SKILL.md",
         "agents/td-brain-explorer.md",
         "agents/td-brain-builder.md",
         "agents/td-brain-validator.md",
-        "agents/td-release-auditor.md",
         "hooks/hooks.json",
         "hooks/run_hook.py",
     ):
         assert (ROOT / rel).exists(), f"missing plugin package file: {rel}"
+
+    output = tmp_path / "tdpilot.plugin"
+    module.build(output)
+    with zipfile.ZipFile(output) as archive:
+        names = set(archive.namelist())
+        hooks = json.loads(archive.read("hooks/hooks.json"))
+        runner = archive.read("hooks/run_hook.py").decode("utf-8")
+
+    assert "PostToolUse" in hooks["hooks"]
+    assert "Stop" not in hooks["hooks"]
+    assert ".claude/settings.json" not in names
+    assert "CLAUDE_PROJECT_DIR" not in json.dumps(hooks)
+    assert "CODEX_PROJECT_DIR" not in json.dumps(hooks)
+    assert "CLAUDE_PROJECT_DIR" not in runner
+    assert "CODEX_PROJECT_DIR" not in runner
+    assert "commands/td-concept.md" in names
+    assert "agents/td-brain-builder.md" in names
+    assert "agents/td-brain-explorer.md" in names
+    assert "agents/td-brain-validator.md" in names
+    assert "agents/td-release-auditor.md" not in names
+    assert "skills/tdpilot-brain-release/SKILL.md" not in names
+    assert not any(name.startswith(".claude/") for name in names)
 
 
 def test_plugin_surface_audit_proves_codex_claude_and_package_mirrors():
     report = audit_plugin_surface(ROOT)
 
     assert report["ok"] is True
-    assert report["brain_skill_count"] == 5
-    assert report["agent_count"] == 4
-    assert report["hook_count"] >= 1
+    assert report["brain_skill_count"] == 7
+    assert report["agent_count"] == 3
+    assert report["hook_count"] == 1
     assert report["tool_count"] == EXPECTED_MIN_TOOL_COUNT
     assert report["registry_tool_count"] == EXPECTED_MIN_TOOL_COUNT
     assert report["registry_tool_count"] == report["tool_count"]
@@ -76,6 +98,13 @@ def test_plugin_surface_audit_proves_codex_claude_and_package_mirrors():
     assert report["hooks"]["uses_hook_runner"] is True
     assert report["hooks"]["has_post_tool_use_guard"] is True
     assert report["hooks"]["has_stop_release_guard"] is True
+    assert report["hooks"]["shipped_stop_hook"] is False
+    assert report["hooks"]["post_tool_use_scoped"] is True
+    assert report["hooks"]["uses_project_runtime_fallback"] is False
+    assert report["hooks"]["source_release_guard"] is True
+    assert report["hooks"]["stop_hook_reentry_guard"] is True
+    assert report["hooks"]["safe_for_distribution"] is True
+    assert report["claude_manifest"]["uses_convention_discovery"] is True
 
 
 def test_codex_claude_plugin_surfaces_advertise_reviewed_operator_atlas():

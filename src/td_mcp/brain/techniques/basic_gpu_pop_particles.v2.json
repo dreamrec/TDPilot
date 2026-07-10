@@ -1,0 +1,45 @@
+{
+  "schema_version": 2,
+  "pattern_id": "basic_gpu_pop_particles",
+  "title": "Bounded GPU POP particle system",
+  "role": "simulation",
+  "profiles": ["pop_particles", "concept_compiled"],
+  "intent_tags": ["gpu", "pop", "particles", "simulation", "points", "motion"],
+  "families": ["POP"],
+  "state": "validated",
+  "build_compatibility": {"minimum": "2025.30000", "maximum": null},
+  "compiler": {"type": "packaged_template", "template_version": 1},
+  "estimated_nodes": 3,
+  "estimated_gpu_cost": "medium",
+  "estimated_cpu_cost": "low",
+  "required_ops": ["pointgeneratorPOP", "particlePOP", "nullPOP"],
+  "inputs": {},
+  "outputs": {"particles": "output"},
+  "tunables": {
+    "seed_points": {"type": "int", "minimum": 1, "maximum": 1000000},
+    "birth_rate": {"type": "float", "minimum": 0.0, "maximum": 100000.0},
+    "life": {"type": "float", "minimum": 0.01, "maximum": 120.0}
+  },
+  "controls": [],
+  "parameter_defaults": {"seed_points": 64, "birth_rate": 24.0, "life": 4.0},
+  "nodes": [
+    {"id": "source", "op_type": "pointgeneratorPOP", "name": "particle_source", "params": {"shape": "sphere", "numpoints": "${parameters.seed_points}", "distribution": "volume", "random": true, "seed": 7}},
+    {"id": "particles", "op_type": "particlePOP", "name": "particle_sim", "params": {"targetpop": "${path.output}", "birthrate": "${parameters.birth_rate}", "life": "${parameters.life}"}},
+    {"id": "output", "op_type": "nullPOP", "name": "out_particles", "params": {}}
+  ],
+  "connections": [
+    {"source": "source", "target": "particles", "source_index": 0, "target_index": 0},
+    {"source": "particles", "target": "output", "source_index": 0, "target_index": 0}
+  ],
+  "validation_defaults": [
+    {"id": "particle_output", "kind": "exists", "target": "${path.output}", "expected": true},
+    {"id": "particle_runtime", "kind": "no_errors", "target": "${path.output}", "expected": true},
+    {"id": "particle_nodes", "kind": "operator_count", "target": "${path.output}", "expected": 3}
+  ],
+  "failure_modes": ["POP unavailable on active build", "target feedback reference lost", "unbounded birth rate", "particle lifecycle not started"],
+  "evidence": {
+    "status": "atlas_fixture_validated",
+    "operator_cards": ["pointgeneratorPOP", "particlePOP", "nullPOP"],
+    "fixture": "tests/brain/test_build_compiler.py::test_all_packaged_v2_techniques_compile_deterministically"
+  }
+}

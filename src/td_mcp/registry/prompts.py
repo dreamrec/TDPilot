@@ -8,15 +8,21 @@ from td_mcp.tool_registry import mcp
 @mcp.prompt(
     name="td_brain_build",
     title="Build TD Brain Network",
-    description="Plan and execute a grounded TouchDesigner network build through td_brain_plan and td_brain_execute.",
+    description="Route, ground, review, execute, and validate a complete TouchDesigner network build.",
 )
 def td_brain_build(intent: str = "", target_root: str = "/project1") -> str:
     return (
-        "Use TDPilot's correctness-first brain loop.\n"
+        "Use TDPilot's practical-intelligence brain loop.\n"
         f"Intent: {intent or '<ask user for the exact visual system>'}\n"
         f"Target root: {target_root}\n"
-        "Call td_brain_plan first. If blocked_questions are returned, ask those before mutating. "
-        "Only call td_brain_execute with the returned BrainPlan after checking the risks."
+        "Inspect the relevant live scope and extract every required capability, input, output, constraint, "
+        "spatial feature, behavior, binding, and validation need. Use td_brain_plan(detail_level='summary') "
+        "only for an exact validated pattern. For artistic, multi-domain, spatial, camera/depth/fog, or "
+        "implicit architecture, call td_brain_ground(include_memory=true, trace_level='summary'), author against "
+        "its contract, and review with td_brain_propose using the returned grounding_id and detail_level='summary'. "
+        "Execute only an accepted plan_id "
+        "whose required intent coverage is complete and whose semantic edges are fully lowered. Validate the "
+        "actual graph, runtime, and requested visual behavior before reporting completion."
     )
 
 
@@ -28,7 +34,9 @@ def td_brain_build(intent: str = "", target_root: str = "/project1") -> str:
 def td_brain_debug(path: str = "/project1") -> str:
     return (
         f"Debug {path} with TDPilot. Inspect focus/state, get node errors recursively, read cook stats, "
-        "load relevant hints, and propose a BrainPlan only if a mutation is needed."
+        "load relevant hints and recent activity, and identify the failed assertion before mutating. "
+        "Use a typed direct repair for one proven edit; otherwise choose the exact-pattern or "
+        "ground-author-propose brain route. Validate the repaired behavior and rollback state."
     )
 
 
@@ -39,8 +47,10 @@ def td_brain_debug(path: str = "/project1") -> str:
 )
 def td_brain_validate(path: str = "/project1", output_top: str = "") -> str:
     return (
-        f"Validate {path}. Run td_patch_validate and, when output_top is provided, td_analyze_frame for "
-        f"{output_top or '<output TOP>'}. Report remaining errors, warnings, and whether rollback is recommended."
+        f"Validate the actual result at {path}, not only its plan structure. Check requirement coverage, "
+        "graph topology, references and bindings, TD errors, cook health, and relevant signal/readback. "
+        f"When an output is available, analyze {output_top or '<output TOP>'} for the requested visual and "
+        "temporal behavior. Report unavailable evidence as unverified and say whether rollback is recommended."
     )
 
 

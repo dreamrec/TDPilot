@@ -82,7 +82,7 @@ async def td_create_macro(
         ),
     ] = "warn",
 ) -> str:
-    """Instantiate a macro template network (e.g. feedback) inside a parent COMP."""
+    """Instantiate a legacy scaffold; feedback/audio macros are not complete visuals."""
     finish = _tr._start_tool(ctx, "td_create_macro")
     try:
         engine = _tr._get_macro_engine(ctx)
@@ -144,7 +144,7 @@ async def td_get_macro_params(
         Field(description="Macro template to inspect."),
     ],
 ) -> str:
-    """Inspect parameter schema for a macro template."""
+    """Inspect parameters plus truthful capability, I/O, limitations, and completion status."""
     finish = _tr._start_tool(ctx, "td_get_macro_params")
     try:
         data = _tr._get_macro_engine(ctx).get_macro_params(macro_type.value)

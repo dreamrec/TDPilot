@@ -1139,6 +1139,14 @@ async def test_compiler_routes_only_emit_docs_grounded_set_param_bindings():
             constraints=constraints,
         )
 
+        if case_id in {"audio_glsl_material", "terrain_material_controls"}:
+            # v2.2 deliberately supports CHOP reference expressions only
+            # into numeric Level TOP parameters. Material/SOP control edges
+            # remain non-executable until a typed technique compiler exists.
+            assert plan.blocked_questions
+            assert plan.patch_plan.operations == []
+            missing_by_case[case_id] = []
+            continue
         assert plan.blocked_questions == []
         missing_by_case[case_id] = _missing_set_param_semantics(plan.patch_plan)
 

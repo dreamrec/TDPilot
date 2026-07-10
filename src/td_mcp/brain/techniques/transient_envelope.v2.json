@@ -1,0 +1,48 @@
+{
+  "schema_version": 2,
+  "pattern_id": "transient_envelope",
+  "title": "Audio transient envelope",
+  "role": "analysis",
+  "profiles": ["audio_reactive", "concept_compiled"],
+  "intent_tags": ["audio", "transient", "envelope", "attack", "trigger", "beat"],
+  "families": ["CHOP"],
+  "state": "validated",
+  "build_compatibility": {"minimum": "2023.10000", "maximum": null},
+  "compiler": {"type": "packaged_template", "template_version": 1},
+  "estimated_nodes": 4,
+  "estimated_gpu_cost": "low",
+  "estimated_cpu_cost": "low",
+  "required_ops": ["analyzeCHOP", "triggerCHOP", "lagCHOP", "nullCHOP"],
+  "inputs": {"audio": [{"node": "level", "input": 0}]},
+  "outputs": {"envelope": "output"},
+  "tunables": {
+    "threshold": {"type": "float", "minimum": 0.0, "maximum": 1.0},
+    "attack": {"type": "float", "minimum": 0.0, "maximum": 2.0},
+    "decay": {"type": "float", "minimum": 0.0, "maximum": 4.0},
+    "smoothing": {"type": "float", "minimum": 0.0, "maximum": 2.0}
+  },
+  "controls": [],
+  "parameter_defaults": {"threshold": 0.08, "attack": 0.01, "decay": 0.18, "smoothing": 0.025},
+  "nodes": [
+    {"id": "level", "op_type": "analyzeCHOP", "name": "transient_level", "params": {"function": "RMS Power"}},
+    {"id": "trigger", "op_type": "triggerCHOP", "name": "transient_trigger", "params": {"threshold": "${parameters.threshold}", "attack": "${parameters.attack}", "peak": 1.0, "peaklen": 0.0, "decay": "${parameters.decay}", "sustain": 0.0}},
+    {"id": "smooth", "op_type": "lagCHOP", "name": "transient_smooth", "params": {"lag1": "${parameters.smoothing}", "lag2": "${parameters.smoothing}"}},
+    {"id": "output", "op_type": "nullCHOP", "name": "out_envelope", "params": {}}
+  ],
+  "connections": [
+    {"source": "level", "target": "trigger", "source_index": 0, "target_index": 0},
+    {"source": "trigger", "target": "smooth", "source_index": 0, "target_index": 0},
+    {"source": "smooth", "target": "output", "source_index": 0, "target_index": 0}
+  ],
+  "validation_defaults": [
+    {"id": "envelope_output", "kind": "exists", "target": "${path.output}", "expected": true},
+    {"id": "envelope_active", "kind": "nonzero_signal", "target": "${path.output}", "expected": true},
+    {"id": "envelope_runtime", "kind": "no_errors", "target": "${path.output}", "expected": true}
+  ],
+  "failure_modes": ["inactive audio source", "threshold above signal", "excessive smoothing", "trigger held continuously"],
+  "evidence": {
+    "status": "atlas_fixture_validated",
+    "operator_cards": ["analyzeCHOP", "triggerCHOP", "lagCHOP", "nullCHOP"],
+    "fixture": "tests/brain/test_build_compiler.py::test_all_packaged_v2_techniques_compile_deterministically"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "name": "tdpilot",
-  "version": "2.1.1",
-  "description": "TDPilot for Codex: TouchDesigner MCP control with 114 tools, a 656-card reviewed operator atlas with zero-concept backlog, Official Derivative grounded BrainPlans, transactions, diagnostics, optional cockpit UI, and sync-status checks.",
+  "version": "2.4.0",
+  "description": "TDPilot for Codex: local-first TouchDesigner control with 114 tools, truthful pattern/concept routing, deterministic visual techniques, complete intent coverage, transactional execution, live validation, and bounded repair.",
   "author": {
     "name": "dreamrec",
     "email": "dreamrec@users.noreply.github.com",
@@ -26,8 +26,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "TDPilot",
-    "shortDescription": "TouchDesigner MCP control for Codex.",
-    "longDescription": "Codex-facing TDPilot wrapper with vNext brain skills, a 656-card reviewed operator atlas with zero-concept backlog, Official Derivative docs grounding, concept-to-node BrainPlan discipline, transaction rollback defaults, validation-first learning, and an MCP server configuration that points at Codex's local vendor import.",
+    "shortDescription": "Practical, validated TouchDesigner MCP control for Codex.",
+    "longDescription": "Codex-facing TDPilot wrapper with dual-route practical intelligence: exact validated patterns use deterministic planning, artistic and multi-domain concepts use grounded host authoring and proposal review, and accepted BrainPlans execute transactionally with validation and rollback. Includes the 656-card reviewed operator atlas and stays local-first.",
     "developerName": "dreamrec",
     "category": "Developer Tools",
     "capabilities": [
@@ -42,10 +42,10 @@
     ],
     "websiteURL": "https://github.com/dreamrec/TDPilot",
     "defaultPrompt": [
-      "Explore this TouchDesigner project with tdpilot-brain-explorer before planning.",
-      "Use the 656-card reviewed operator atlas and Official Derivative docs to turn this concept-to-node.",
-      "Plan this TouchDesigner build with td_brain_plan before editing.",
-      "Execute this BrainPlan transactionally and validate it.",
+      "Explore the relevant TouchDesigner scope with tdpilot-brain-explorer before mutation.",
+      "Route an exact validated TouchDesigner pattern through td_brain_plan, then check complete intent coverage.",
+      "Route this artistic or multi-domain concept through td_brain_ground, author, and td_brain_propose.",
+      "Execute only an accepted BrainPlan transactionally and validate its actual graph, runtime, and visual behavior.",
       "Recover this TDPilot network from the last failed transaction."
     ],
     "brandColor": "#4A8CFF"

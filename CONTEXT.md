@@ -1,7 +1,7 @@
 # TDPilot Context
 
 > Shared language and stable architectural decisions for TDPilot — the
-> TouchDesigner MCP plugin (104+ tools, plus skills, commands, and a `.tox`).
+> TouchDesigner MCP plugin (114 tools, plus skills, commands, and a `.tox`).
 > Consumed by Claude Code sessions before any work on this repo.
 >
 > A companion `CONTEXT-local.md` (gitignored) captures session-specific
@@ -30,7 +30,8 @@ marketplace. Built by `scripts/build_plugin_zip.py`. Contains `skills/`,
 contextually by Claude. Distinct from a **tool** (capability) and a
 **command** (slash entry under `commands/`). _Avoid_: prompt, agent.
 
-**Tool** — A `@mcp.tool()`-decorated function in `src/td_mcp/server.py`,
+**Tool** — A `@mcp.tool()`-decorated function registered from
+`src/td_mcp/registry/`,
 callable as `td_<name>` from the MCP client. Tool count is enforced by
 `EXPECTED_MIN_TOOL_COUNT` in `src/td_mcp/release_gates.py` — the **single
 source of truth**. _Avoid_: function (too generic), endpoint, action.
@@ -42,9 +43,10 @@ rollback. Distinct from a **git tag** (release-level) and a `.tox`
 (implies disaster-recovery, not surgical rollback).
 
 **Derived artifact** — A file that depends on other files but is NOT
-auto-regenerated: `td_component/tdpilot.tox` (depends on 4 source `.py`
-files), `tdpilot.plugin` ZIP (depends on skills + .tox + manifests), the
-user-visible tool count printed in 10 docs. CI gates catch drift; the
+auto-regenerated: `td_component/tdpilot.tox` (depends on the nine source files
+listed by `td_component/build_tdpilot_tox.py`), `tdpilot.plugin` ZIP (depends
+on skills + .tox + manifests), the
+generated API reference, and public package mirrors. CI gates catch drift; the
 artifacts themselves do not refresh on their own. _Avoid_: build output
 (misleading — implies an automatic build target).
 
@@ -86,9 +88,9 @@ sequential — the win is roundtrip latency, not concurrency), bulk call.
 - A **session** loads a **skill** at start, calls **tools** during work,
   optionally captures **snapshots** before destructive operations, and
   persists **memory** at end.
-- A **release** = git tag + 8 version-cascade updates + `.tox` rebuild
-  inside TD + plugin ZIP rebuild + 5 CI gates green + GitHub Release +
-  npm publish.
+- A **release** = git tag + version-cascade updates + `.tox` rebuild inside TD
+  + plugin ZIP/MCPB rebuild + six-report release gate green + GitHub Release
+  + npm publish.
 - A **bug report** describing a UI/visual symptom in TD almost always
   has its actual cause 2–3 **layers** below the symptom. **Probe before
   hypothesizing** (see ADR-001).

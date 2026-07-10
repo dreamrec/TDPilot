@@ -15,6 +15,7 @@ from td_mcp.brain.concept_compiler import (
     is_supported_compiler_route,
 )
 from td_mcp.brain.corpus_bridge import build_corpus_evidence, corpus_evidence_markers
+from td_mcp.brain.intent_coverage import compute_intent_coverage, control_binding_operation
 from td_mcp.brain.operator_availability import (
     build_operator_availability_matrix,
     load_operator_availability_report,
@@ -473,6 +474,7 @@ _PROFILE_SPECS: dict[str, _ProfileSpec] = {
                 "role": "control",
                 "domain": "CHOP",
                 "op_type": "panelCHOP",
+                "params": {"component": "${path:panel}"},
             },
             {
                 "id": "output",
@@ -483,8 +485,7 @@ _PROFILE_SPECS: dict[str, _ProfileSpec] = {
             },
         ),
         edges=(
-            ("slider", "panel_chop", 0, 0, "reference"),
-            ("button", "panel_chop", 0, 0, "reference"),
+            ("panel", "panel_chop", 0, 0, "reference"),
             ("panel_chop", "output", 0, 0, "data"),
         ),
         risk_flags=("validate-panel-callbacks-or-exports",),
@@ -523,7 +524,6 @@ _PROFILE_SPECS: dict[str, _ProfileSpec] = {
             },
         ),
         edges=(
-            ("ctrl", "values", 0, 0, "reference"),
             ("values", "scale", 0, 0, "data"),
             ("scale", "output", 0, 0, "data"),
         ),
@@ -554,6 +554,7 @@ async def build_brain_plan(
     validation_profile: str = "auto",
     include_memory: bool = True,
     include_docs: bool = True,
+    inspect: bool = True,
     technique_store=None,
     card_index=None,
 ) -> BrainPlan:
@@ -583,27 +584,31 @@ async def build_brain_plan(
         patch_plan = _empty_patch(
             task, reason="complex multi-output library brief requires explicit compiler"
         )
-        return BrainPlan(
-            task=task,
-            concept_graph=graph,
-            patch_plan=patch_plan,
-            validation_profile=_resolve_validation_profile(validation_profile),
-            blocked_questions=[
-                "This request asks for multiple distinct visual systems plus an interactive review library. The current safe compiler cannot guarantee concept diversity, panel navigation, visual QA, and 60 fps performance in one BrainPlan yet. Split the brief into smaller systems: for each one, call td_brain_ground, author a draft candidate graph, validate it with td_brain_propose, then run td_brain_execute(plan_id=...)."
-            ],
-            missing_facts=["complex_multi_output_library"],
-            grounding_evidence=[
-                "profile:generic",
-                "planner:blocked_complex_multi_output",
-                "requires:multi_output_diversity",
-                "requires:panel_interaction_validation",
-                "requires:visual_quality_gate",
-            ],
-            risk_flags=["multi-output-brief", "needs-diversity-compiler", "needs-panel-validator"],
+        return _finalize_semantic_plan(
+            BrainPlan(
+                task=task,
+                concept_graph=graph,
+                patch_plan=patch_plan,
+                compiled_task=compiled_task,
+                validation_profile=_resolve_validation_profile(validation_profile),
+                blocked_questions=[
+                    "This request asks for multiple distinct visual systems plus an interactive review library. The current safe compiler cannot guarantee concept diversity, panel navigation, visual QA, and 60 fps performance in one BrainPlan yet. Split the brief into smaller systems: for each one, call td_brain_ground, author a draft candidate graph, validate it with td_brain_propose, then run td_brain_execute(plan_id=...)."
+                ],
+                missing_facts=["complex_multi_output_library"],
+                grounding_evidence=[
+                    "profile:generic",
+                    "planner:blocked_complex_multi_output",
+                    "requires:multi_output_diversity",
+                    "requires:panel_interaction_validation",
+                    "requires:visual_quality_gate",
+                ],
+                risk_flags=["multi-output-brief", "needs-diversity-compiler", "needs-panel-validator"],
+            ),
+            compiled_task,
         )
     supported_compiler_route = is_supported_compiler_route(compiled_task)
     if supported_compiler_route:
-        available_ops = await _read_available_ops(td_client)
+        available_ops = await _read_available_ops(td_client) if inspect else set()
         constraint_availability_matrix = _availability_matrix_from_constraints(constraints_data)
         sampled_unavailable_ops = _sampled_unavailable_ops_from_constraints(constraints_data)
         sampled_unavailable_reasons = _sampled_unavailable_reasons_from_constraints(constraints_data)
@@ -626,7 +631,7 @@ async def build_brain_plan(
             device_sources=_device_sources_from_constraints(constraints_data),
         )
         if candidate_graphs:
-            existing_names = await _read_existing_names(td_client, target_root)
+            existing_names = await _read_existing_names(td_client, target_root) if inspect else set()
             return _plan_from_candidate_graph(
                 task=task,
                 compiled_task=compiled_task,
@@ -660,17 +665,21 @@ async def build_brain_plan(
                 *corpus_evidence_markers(corpus_evidence),
             ]
         )
-        return BrainPlan(
-            task=task,
-            concept_graph=graph,
-            patch_plan=patch_plan,
-            blocked_questions=[
-                "What visual system should TDPilot build: feedback, audio-reactive, POP, GLSL, render pipeline, panel UI, or a specific operator chain? If the intent is already clear to you, call td_brain_ground with a sharper intent, author a draft candidate graph, and validate it with td_brain_propose instead of stopping here."
-            ],
-            missing_facts=["under-specified intent: no supported visual concept matched"],
-            grounding_evidence=grounding,
-            corpus_evidence=corpus_evidence,
-            risk_flags=["under-specified"],
+        return _finalize_semantic_plan(
+            BrainPlan(
+                task=task,
+                concept_graph=graph,
+                patch_plan=patch_plan,
+                compiled_task=compiled_task,
+                blocked_questions=[
+                    "What visual system should TDPilot build: feedback, audio-reactive, POP, GLSL, render pipeline, panel UI, or a specific operator chain? If the intent is already clear to you, call td_brain_ground with a sharper intent, author a draft candidate graph, and validate it with td_brain_propose instead of stopping here."
+                ],
+                missing_facts=["under-specified intent: no supported visual concept matched"],
+                grounding_evidence=grounding,
+                corpus_evidence=corpus_evidence,
+                risk_flags=["under-specified"],
+            ),
+            compiled_task,
         )
 
     if profile == "generic" and not supported_compiler_route:
@@ -688,8 +697,8 @@ async def build_brain_plan(
             card_index=card_index if include_docs else None,
         )
         if atlas_draft.accepted and atlas_draft.candidate_graph is not None:
-            available_ops = await _read_available_ops(td_client)
-            existing_names = await _read_existing_names(td_client, target_root)
+            available_ops = await _read_available_ops(td_client) if inspect else set()
+            existing_names = await _read_existing_names(td_client, target_root) if inspect else set()
             return _plan_from_atlas_candidate_graph(
                 task=task,
                 compiled_task=compiled_task,
@@ -710,26 +719,30 @@ async def build_brain_plan(
                 *corpus_evidence_markers(corpus_evidence),
             ]
         )
-        return BrainPlan(
-            task=task,
-            concept_graph=graph,
-            patch_plan=patch_plan,
-            validation_profile=_resolve_validation_profile(validation_profile),
-            blocked_questions=[
-                "The operator atlas returned grounding evidence, but no safe topology compiler route exists yet. Do not stop here: call td_brain_ground with this intent to get a grounding pack, author a draft candidate graph from its candidate_operators and param_semantics, validate it with td_brain_propose, then run td_brain_execute(plan_id=...)."
-            ],
-            missing_facts=[
-                "unsupported_open_prompt:atlas_grounded_planner_required",
-                *atlas_draft.rejection_reasons,
-            ],
-            grounding_evidence=grounding,
-            corpus_evidence=corpus_evidence,
-            risk_flags=["open-prompt-atlas-grounding"],
+        return _finalize_semantic_plan(
+            BrainPlan(
+                task=task,
+                concept_graph=graph,
+                patch_plan=patch_plan,
+                compiled_task=compiled_task,
+                validation_profile=_resolve_validation_profile(validation_profile),
+                blocked_questions=[
+                    "The operator atlas returned grounding evidence, but no safe topology compiler route exists yet. Do not stop here: call td_brain_ground with this intent to get a grounding pack, author a draft candidate graph from its candidate_operators and param_semantics, validate it with td_brain_propose, then run td_brain_execute(plan_id=...)."
+                ],
+                missing_facts=[
+                    "unsupported_open_prompt:atlas_grounded_planner_required",
+                    *atlas_draft.rejection_reasons,
+                ],
+                grounding_evidence=grounding,
+                corpus_evidence=corpus_evidence,
+                risk_flags=["open-prompt-atlas-grounding"],
+            ),
+            compiled_task,
         )
 
     spec = spec or _PROFILE_SPECS["generic"]
-    available_ops = await _read_available_ops(td_client)
-    existing_names = await _read_existing_names(td_client, target_root)
+    available_ops = await _read_available_ops(td_client) if inspect else set()
+    existing_names = await _read_existing_names(td_client, target_root) if inspect else set()
     concepts = [ConceptNode(**item) for item in spec.concepts]
     operators = sorted({node.op_type for node in concepts if node.op_type})
     grounding = _grounding_evidence(
@@ -819,16 +832,20 @@ async def build_brain_plan(
             graph.risk_flags = _dedupe([*graph.risk_flags, *_param_issue_risk_flags(param_issues)])
             patch_plan = _empty_patch(task, reason="invalid parameter semantics")
 
-    return BrainPlan(
-        task=task,
-        concept_graph=graph,
-        patch_plan=patch_plan,
-        validation_profile=_resolve_validation_profile(validation_profile),
-        blocked_questions=blocked_questions,
-        missing_facts=missing_facts,
-        grounding_evidence=list(graph.evidence),
-        corpus_evidence=corpus_evidence,
-        risk_flags=list(graph.risk_flags),
+    return _finalize_semantic_plan(
+        BrainPlan(
+            task=task,
+            concept_graph=graph,
+            patch_plan=patch_plan,
+            compiled_task=compiled_task,
+            validation_profile=_resolve_validation_profile(validation_profile),
+            blocked_questions=blocked_questions,
+            missing_facts=missing_facts,
+            grounding_evidence=list(graph.evidence),
+            corpus_evidence=corpus_evidence,
+            risk_flags=list(graph.risk_flags),
+        ),
+        compiled_task,
     )
 
 
@@ -1329,20 +1346,24 @@ def _plan_from_candidate_graph(
                 graph.risk_flags = _dedupe([*graph.risk_flags, *_param_issue_risk_flags(param_issues)])
                 patch_plan = _empty_patch(task, reason="invalid parameter semantics")
 
-    return BrainPlan(
-        task=task,
-        concept_graph=graph,
-        patch_plan=patch_plan,
-        compiled_task=compiled_task,
-        candidate_graphs=candidate_graphs,
-        availability_matrix=availability_matrix,
-        validation_profile=_resolve_validation_profile(validation_profile),
-        blocked_questions=blocked_questions,
-        missing_facts=missing_facts,
-        grounding_evidence=list(graph.evidence),
-        corpus_evidence=corpus_evidence,
-        substitution_explanations=substitution_explanations,
-        risk_flags=list(graph.risk_flags),
+    return _finalize_semantic_plan(
+        BrainPlan(
+            task=task,
+            concept_graph=graph,
+            patch_plan=patch_plan,
+            compiled_task=compiled_task,
+            candidate_graphs=candidate_graphs,
+            availability_matrix=availability_matrix,
+            validation_profile=_resolve_validation_profile(validation_profile),
+            blocked_questions=blocked_questions,
+            missing_facts=missing_facts,
+            grounding_evidence=list(graph.evidence),
+            corpus_evidence=corpus_evidence,
+            substitution_explanations=substitution_explanations,
+            risk_flags=list(graph.risk_flags),
+        ),
+        compiled_task,
+        validation_needs=candidate.validation_needs,
     )
 
 
@@ -1423,18 +1444,22 @@ def _plan_from_atlas_candidate_graph(
             graph.risk_flags = _dedupe([*graph.risk_flags, *_param_issue_risk_flags(param_issues)])
             patch_plan = _empty_patch(task, reason="invalid parameter semantics")
 
-    return BrainPlan(
-        task=task,
-        concept_graph=graph,
-        patch_plan=patch_plan,
-        compiled_task=compiled_task,
-        candidate_graphs=ranked_candidates,
-        validation_profile=_resolve_validation_profile(validation_profile),
-        blocked_questions=blocked_questions,
-        missing_facts=missing_facts,
-        grounding_evidence=list(graph.evidence),
-        corpus_evidence=corpus_evidence,
-        risk_flags=list(graph.risk_flags),
+    return _finalize_semantic_plan(
+        BrainPlan(
+            task=task,
+            concept_graph=graph,
+            patch_plan=patch_plan,
+            compiled_task=compiled_task,
+            candidate_graphs=ranked_candidates,
+            validation_profile=_resolve_validation_profile(validation_profile),
+            blocked_questions=blocked_questions,
+            missing_facts=missing_facts,
+            grounding_evidence=list(graph.evidence),
+            corpus_evidence=corpus_evidence,
+            risk_flags=list(graph.risk_flags),
+        ),
+        compiled_task,
+        validation_needs=candidate.validation_needs,
     )
 
 
@@ -1458,6 +1483,7 @@ async def build_brain_plan_from_reviewed_candidate(
     card_index=None,
     validation_profile: str = "auto",
     available_ops: set[str] | None = None,
+    grounding_id: str | None = None,
 ) -> BrainPlan:
     """Compile a review-gated, host-authored candidate graph into a full BrainPlan.
 
@@ -1487,6 +1513,7 @@ async def build_brain_plan_from_reviewed_candidate(
     )
     plan.grounding_evidence = _dedupe(["planner:host_authored_draft", *plan.grounding_evidence])
     plan.concept_graph.evidence = _dedupe(["planner:host_authored_draft", *plan.concept_graph.evidence])
+    plan.grounding_id = grounding_id
     return plan
 
 
@@ -2055,6 +2082,39 @@ def _compile_patch_plan(task: VisualTaskSpec, graph: ConceptGraph, existing_name
                 )
             )
 
+    concepts_by_id = {concept.id: concept for concept in graph.concepts}
+    for edge in graph.edges:
+        if edge.kind != "control" or edge.binding is None:
+            continue
+        source = concepts_by_id.get(edge.source)
+        target = concepts_by_id.get(edge.target)
+        source_name = concept_names.get(edge.source)
+        target_name = concept_names.get(edge.target)
+        if source is None or target is None or source_name is None or target_name is None:
+            continue
+        source_path = _join_path(task.target_root, source_name)
+        target_path = _join_path(task.target_root, target_name)
+        try:
+            target_param, payload = control_binding_operation(
+                edge,
+                source_op_type=source.create_type or source.op_type,
+                target_op_type=target.op_type,
+                source_path=source_path,
+                target_path=target_path,
+                target_params=target.params,
+            )
+        except ValueError:
+            # The v2 coverage gate reports the exact unresolved semantic edge;
+            # never guess or silently substitute a different parameter here.
+            continue
+        operations.append(
+            PatchOperation(
+                kind="set_params",
+                target=target_path,
+                args={"params": {target_param: payload}},
+            )
+        )
+
     for edge in graph.edges:
         if edge.kind not in {"data", "feedback"}:
             continue
@@ -2182,6 +2242,65 @@ def _empty_patch(task: VisualTaskSpec, *, reason: str) -> PatchPlan:
         undo_label=f"td brain blocked: {task.intent[:32]}",
         validation_plan=ValidationPlan(target_root=task.target_root, capture_frames=[]),
     )
+
+
+def _finalize_semantic_plan(
+    plan: BrainPlan,
+    compiled_task,
+    *,
+    validation_needs: list[str] | None = None,
+    grounding_id: str | None = None,
+) -> BrainPlan:
+    """Attach a server-derived v2 execution gate and zero unsafe partial plans."""
+    selected_validation = _dedupe(
+        [
+            *compiled_task.validation_needs,
+            *(validation_needs or []),
+        ]
+    )
+    coverage = compute_intent_coverage(
+        compiled_task,
+        plan.concept_graph,
+        plan.patch_plan,
+        validation_needs=selected_validation,
+    )
+    blocked = list(plan.blocked_questions)
+    missing_facts = list(plan.missing_facts)
+    route = "pattern"
+
+    if blocked:
+        clarify_markers = {"under-specified", "complex_multi_output_library"}
+        route = (
+            "clarify"
+            if compiled_task.blocked_questions
+            or any(any(marker in fact for marker in clarify_markers) for fact in missing_facts)
+            else "host_authored"
+        )
+    elif not coverage.complete:
+        route = "host_authored"
+        blocked.append(
+            "The selected topology does not cover every required intent facet or semantic edge. "
+            "Use td_brain_ground, author an explicit complete draft, and validate it with td_brain_propose."
+        )
+        missing_facts.extend(f"intent_coverage:{item}" for item in coverage.uncovered_requirement_ids)
+        missing_facts.extend(f"semantic_edge:{item}" for item in coverage.unresolved_semantic_edges)
+        plan.patch_plan = _empty_patch(plan.task, reason="incomplete intent coverage")
+        # Recompute against the returned zero-op plan so the serialized proof
+        # cannot imply that semantic edges still have executable operations.
+        coverage = compute_intent_coverage(
+            compiled_task,
+            plan.concept_graph,
+            plan.patch_plan,
+            validation_needs=selected_validation,
+        )
+
+    plan.compiled_task = compiled_task
+    plan.route = route
+    plan.grounding_id = grounding_id or plan.grounding_id
+    plan.intent_coverage = coverage
+    plan.blocked_questions = _dedupe(blocked)
+    plan.missing_facts = _dedupe(missing_facts)
+    return plan
 
 
 def _resolve_validation_profile(requested: str) -> str:

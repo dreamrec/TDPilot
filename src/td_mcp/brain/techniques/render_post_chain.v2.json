@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "pattern_id": "render_post_chain",
+  "title": "Render-oriented post-processing chain",
+  "role": "grade",
+  "profiles": ["render_pipeline", "concept_compiled"],
+  "intent_tags": ["render", "post", "bloom", "grade", "finish", "top"],
+  "families": ["TOP"],
+  "state": "validated",
+  "build_compatibility": {"minimum": "2023.10000", "maximum": null},
+  "compiler": {"type": "packaged_template", "template_version": 1},
+  "estimated_nodes": 4,
+  "estimated_gpu_cost": "medium",
+  "estimated_cpu_cost": "low",
+  "required_ops": ["bloomTOP", "levelTOP", "hsvadjustTOP", "nullTOP"],
+  "inputs": {"image": [{"node": "bloom", "input": 0}]},
+  "outputs": {"image": "output"},
+  "tunables": {
+    "bloom": {"type": "float", "minimum": 0.0, "maximum": 2.0},
+    "contrast": {"type": "float", "minimum": 0.0, "maximum": 4.0},
+    "saturation": {"type": "float", "minimum": 0.0, "maximum": 4.0}
+  },
+  "controls": [],
+  "parameter_defaults": {"bloom": 0.18, "contrast": 1.08, "saturation": 1.05},
+  "nodes": [
+    {"id": "bloom", "op_type": "bloomTOP", "name": "post_bloom", "params": {"bloomintensity": "${parameters.bloom}"}},
+    {"id": "level", "op_type": "levelTOP", "name": "post_level", "params": {"contrast": "${parameters.contrast}"}},
+    {"id": "color", "op_type": "hsvadjustTOP", "name": "post_color", "params": {"saturationmult": "${parameters.saturation}"}},
+    {"id": "output", "op_type": "nullTOP", "name": "out_post", "params": {}}
+  ],
+  "connections": [
+    {"source": "bloom", "target": "level", "source_index": 0, "target_index": 0},
+    {"source": "level", "target": "color", "source_index": 0, "target_index": 0},
+    {"source": "color", "target": "output", "source_index": 0, "target_index": 0}
+  ],
+  "validation_defaults": [
+    {"id": "post_output", "kind": "exists", "target": "${path.output}", "expected": true},
+    {"id": "post_visible", "kind": "not_black", "target": "${path.output}", "expected": true},
+    {"id": "post_detail", "kind": "nonuniform_image", "target": "${path.output}", "expected": true}
+  ],
+  "failure_modes": ["black render input", "bloom clipping", "grade crushes dynamic range", "excessive full-resolution cook cost"],
+  "evidence": {
+    "status": "atlas_fixture_validated",
+    "operator_cards": ["bloomTOP", "levelTOP", "hsvadjustTOP", "nullTOP"],
+    "fixture": "tests/brain/test_build_compiler.py::test_all_packaged_v2_techniques_compile_deterministically"
+  }
+}

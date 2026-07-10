@@ -1,34 +1,50 @@
 ---
-description: Build an audio-reactive visual chain in TouchDesigner — audio analysis driving live visuals, verified with a screenshot
+description: Build a grounded audio-reactive visual with a real source, explicit binding, and visual proof
 ---
 
-Build an audio-reactive visual network in the user's TouchDesigner project and
-prove it reacts. Do every step, verify every step, finish with a screenshot.
+Build an audio-reactive TouchDesigner visual whose live audio signal is
+explicitly bound to a visible TOP parameter. Finish with one low-quality
+screenshot of the verified stable output. Do not use a legacy macro template.
 
-1. **Verify the connection** with `td_get_info` (on auth/connection failure,
-   follow the error envelope's recovery steps and stop).
-2. **Ask nothing you can discover.** If the user gave an audio source (file
-   path, mic), use it; otherwise default to the audio-file route and say the
-   user can swap the source afterwards.
-3. **Inspect the macro schema** with `td_get_macro_params`
-   `macro_type="audio_reactive"` — use the template's real parameter names,
-   never guessed ones.
-4. **Build it** with `td_create_macro` `macro_type="audio_reactive"` in
-   `/project1`, overriding 2-3 params for a strong default look (clear beat
-   response, readable motion). If the user supplied an audio file path, set it
-   via `td_set_params` on the created audio-in operator (file-path params are
-   safe to set through tools).
-5. **Check errors** with `td_get_errors` on `/project1` and fix anything
-   before continuing. Common trap: no audio device / missing file → the CHOP
-   chain cooks but outputs silence; check the analysis CHOP actually carries
-   non-zero channels via `td_chop_data` before declaring success.
-6. **Verify visually.** `td_screenshot` the output TOP at `quality=0.25`.
-   For reactivity proof, take two screenshots a moment apart — if the frames
-   are identical and audio is playing, debug the chain (export/bind from the
-   analysis CHOP to the visual parameters) before presenting.
-7. **Present.** Show the screenshot(s), explain the signal path in one
-   paragraph (audio in → analysis → parameter binding → visual), name the 2-3
-   parameters the user should play with live, and how to undo.
+1. **Connect and locate.** Call `td_get_info` and `td_get_focus`. On connection
+   or authentication failure, follow `td_sync_diagnose` and stop. Resolve the
+   target root and intended output from the user's request or focused project.
+2. **Find a real audio source.** If the user supplied a file or microphone,
+   honor it. Otherwise inspect the target and nearby project scope for existing
+   audio-file/device CHOPs and sample likely outputs with `td_chop_data`.
+   A cooking CHOP with zero signal is not an active source. If no active source
+   or user choice exists, ask the user for an audio file or microphone route and
+   do not build a silent placeholder.
+3. **Define the complete intent.** Include source, analysis, normalization,
+   bounded modulation, a visible TOP chain, a stable output, one explicit
+   CHOP-to-parameter binding, signal/readback checks, nonblack content, and
+   temporal response. Default the supported binding target to a grounded numeric
+   `levelTOP` parameter; do not target MAT, POP, camera, or arbitrary parameters
+   unless the current compiler and grounding explicitly support them.
+4. **Ground the concept.** Call `td_brain_ground` directly with the complete
+   intent, source constraint, target root, desired output,
+   `include_memory=true`, and `trace_level="summary"`. Read the `grounding_id`,
+   authoring contract, availability, parameter semantics, and recalled evidence.
+5. **Author and review.** Draft the smallest complete CHOP + TOP graph. The
+   control edge must carry one explicit
+   `chop_reference_expression` binding with a safe source channel and a
+   registry-backed numeric target parameter. Remove any conflicting static
+   value. Call `td_brain_propose` with the same `grounding_id`,
+   `draft_schema_version="2"`, and `detail_level="summary"`; repair
+   machine-readable rejections and creatively important stripped parameters.
+6. **Execute transactionally.** Require complete server-recomputed intent
+   coverage and zero unresolved semantic edges, then execute the accepted
+   `plan_id` with rollback on failure.
+7. **Prove reactivity.** Validate the transaction result, final errors, cook
+   health, nonzero source/analysis signal, installed expression or parameter
+   readback, nonblack TOP content, and temporal visual change. Use metadata-only
+   dynamics for time comparison instead of sending two screenshots. Apply at
+   most one assertion-specific repair; otherwise roll back and report the
+   blocker.
+8. **Show it.** Take one screenshot of the stable output at `quality=0.25`.
+   Explain audio → analysis → normalized control → explicit binding → visual,
+   name two safe live controls, and state the rollback result and any unverified
+   evidence.
 
-Quality bar: this is a first impression, not a stress test — favor a chain
-that visibly pulses with the music over a complex one that might break.
+Never report an audio-reactive success when the source is silent, the binding is
+missing, or visual change was not measured.

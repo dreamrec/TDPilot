@@ -16,6 +16,7 @@ EXPECTED_BRAIN_SKILLS = {
     "tdpilot-brain-recovery",
     "tdpilot-brain-release",
 }
+EXPECTED_PUBLIC_BRAIN_SKILLS = EXPECTED_BRAIN_SKILLS - {"tdpilot-brain-release"}
 
 
 def _frontmatter(path: Path) -> dict[str, str]:
@@ -45,13 +46,16 @@ def _brain_skill_paths(root: Path) -> dict[str, Path]:
 
 
 def test_root_and_plugin_brain_skills_are_complete_and_trigger_optimized():
-    for skill_root in (ROOT / "skills", ROOT / ".agents" / "skills", ROOT / "plugins" / "tdpilot" / "skills"):
+    expected_by_root = {
+        ROOT / "skills": EXPECTED_BRAIN_SKILLS,
+        ROOT / ".agents" / "skills": EXPECTED_BRAIN_SKILLS,
+        ROOT / "plugins" / "tdpilot" / "skills": EXPECTED_PUBLIC_BRAIN_SKILLS,
+    }
+    for skill_root, expected in expected_by_root.items():
         skills = _brain_skill_paths(skill_root)
-        assert EXPECTED_BRAIN_SKILLS.issubset(skills), (
-            f"{skill_root} missing {EXPECTED_BRAIN_SKILLS - set(skills)}"
-        )
+        assert expected.issubset(skills), f"{skill_root} missing {expected - set(skills)}"
 
-        for name in EXPECTED_BRAIN_SKILLS:
+        for name in expected:
             meta = _frontmatter(skills[name])
             description = re.sub(r"\s+", " ", meta["description"]).strip(" >")
             assert description.startswith("Use when "), f"{name} description must be trigger-only"
@@ -143,7 +147,7 @@ def test_audit_brain_skills_cli_outputs_json_report():
 
 
 def test_release_skill_includes_plugin_surface_audit_gate():
-    for skill_root in (ROOT / "skills", ROOT / ".agents" / "skills", ROOT / "plugins" / "tdpilot" / "skills"):
+    for skill_root in (ROOT / "skills", ROOT / ".agents" / "skills"):
         text = (skill_root / "tdpilot-brain-release" / "SKILL.md").read_text(encoding="utf-8")
 
         assert "uv run python scripts/audit_plugin_surface.py" in text
@@ -152,3 +156,5 @@ def test_release_skill_includes_plugin_surface_audit_gate():
         assert "--require-plugin-surface" in text
         assert "--brain-live-smoke-report" in text
         assert "--require-live-smoke" in text
+
+    assert not (ROOT / "plugins" / "tdpilot" / "skills" / "tdpilot-brain-release" / "SKILL.md").exists()

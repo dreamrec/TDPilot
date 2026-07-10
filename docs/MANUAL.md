@@ -1,4 +1,4 @@
-# TDPilot v2.1.1 Production Manual
+# TDPilot v2.4.0 Production Manual
 
 This manual is for people who need real output in TouchDesigner, not theory. It explains what TDPilot does well, what it does not do, and how to run it with repeatable production discipline.
 
@@ -11,7 +11,12 @@ This manual is for people who need real output in TouchDesigner, not theory. It 
 - Recoverability: snapshots, diff, restore, and safety boundaries.
 - Technique reuse: memory tools convert successful subnet patterns into reusable recipes.
 - Team consistency: shared naming, tags, and preference memory reduce random drift between sessions.
-- **Typed patch sessions (v1.5.0):** plan → preview → apply → validate → undo flow with sentinel-guarded undo blocks, name-collision readback, and live-state risk flags. Each patch is a typed `PatchPlan` value object that can be inspected, varied (`td_patch_variations`), and replayed.
+- **Practical Intelligence (v2.4.0):** exact validated patterns compile through
+  `td_brain_plan`; artistic, multi-domain, spatial, camera/depth/fog, and
+  implicit architecture uses `td_brain_ground` → author →
+  `td_brain_propose`. Server-derived intent coverage, explicit bindings,
+  transactional execution, actual-state validation, and bounded repair prevent
+  partial scaffolds from being presented as finished visuals.
 
 ### What TDPilot is not
 
@@ -82,12 +87,18 @@ uv run --directory /ABS/PATH/TDPilot tdpilot run
 
 ## 4. Standard Working Loop (Use This Every Time)
 
-1. Inspect first.
-2. Check memory before rebuilding known patterns.
-3. Make small edits.
-4. Validate with errors/cooking/visual checks.
-5. Learn + save successful patterns.
-6. Snapshot for rollback points before risky changes.
+1. Extract the requested capabilities, inputs, outputs, behavior, spatial and
+   quality constraints, bindings, and measurable success criteria.
+2. Choose the route: exact validated pattern → `td_brain_plan`; artistic or
+   implicit architecture → `td_brain_ground` → author → `td_brain_propose`.
+3. Inspect only the relevant live scope and recall validated techniques before
+   rebuilding known work.
+4. Execute only a complete accepted plan, transactionally.
+5. Validate the actual graph, runtime, bindings/references, visual motion, and
+   performance requirements at logical checkpoints.
+6. Permit only bounded assertion-specific repair; roll back when evidence is
+   insufficient or budgets are exhausted.
+7. Learn and save only validated outcomes.
 
 Minimum inspect stack:
 
@@ -125,6 +136,19 @@ Rule: avoid bulk edits until you can verify each stage.
 6. If degraded, restore immediately: `td_restore_snapshot`.
 
 Rule: always keep one known-good snapshot when optimizing live.
+
+### Show-safe workflow: replace a generated system without cutting live output
+
+1. Resolve ownership metadata and preservation requirements for the active
+   generated system.
+2. Compile the replacement into a staging COMP.
+3. Validate staging before touching the active route.
+4. Commit through a guarded `route_swap` with the old-connection precondition
+   and new-connection postcondition.
+5. Retain the old path for rollback. Deletion is a separate explicit action.
+
+Rule: refuse partial rebuild or route replacement when ownership or
+preservation evidence is insufficient.
 
 ### Advanced workflow: memory-driven production system
 

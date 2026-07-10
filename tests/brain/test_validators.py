@@ -391,7 +391,7 @@ async def test_default_visual_output_sample_defers_when_analysis_endpoint_is_abs
 
 
 @pytest.mark.asyncio
-async def test_transaction_auto_repair_revalidates_empty_visual_output_when_enabled():
+async def test_transaction_does_not_fabricate_content_for_an_empty_output():
     plan = _patch_plan(
         [PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"})],
         required_ops=["nullTOP"],
@@ -405,16 +405,7 @@ async def test_transaction_auto_repair_revalidates_empty_visual_output_when_enab
                 "luminance": {"mean": 0.0, "min": 0.0, "max": 0.0, "std": 0.0},
                 "alpha_coverage": {"opaque_fraction": 0.0},
             },
-        },
-        {
-            "path": "/project1/out1",
-            "resolution": [64, 64],
-            "channels": 4,
-            "modes": {
-                "luminance": {"mean": 0.2, "min": 0.0, "max": 0.6, "std": 0.05},
-                "alpha_coverage": {"opaque_fraction": 1.0},
-            },
-        },
+        }
     ]
 
     def analyze_frame(_params):
@@ -438,11 +429,14 @@ async def test_transaction_auto_repair_revalidates_empty_visual_output_when_enab
         options=TransactionOptions(auto_repair=True, max_repair_attempts=1),
     )
 
-    assert result.status == "clean"
-    assert result.validation_failed is False
-    assert result.repair_attempts[0]["status"] == "applied"
-    assert result.repair_attempts[0]["repair_plan"]["risk_flags"] == ["auto-repair:visual-output-sample"]
-    assert len([call for call in client.calls if call[0] == "analyze_frame"]) == 2
+    assert result.status == "rolled_back"
+    assert result.validation_failed is True
+    assert result.repair_attempts == []
+    assert len([call for call in client.calls if call[0] == "analyze_frame"]) == 1
+    assert all(
+        not (endpoint == "node/create" and params.get("op_type") == "constantTOP")
+        for endpoint, params in client.calls
+    )
 
 
 @pytest.mark.asyncio
@@ -451,8 +445,19 @@ async def test_transaction_auto_repair_then_validation_fails_reverts_both_undo_b
     fails, rollback must undo BOTH blocks — a single undo would revert only the
     repair and leave the original mutation live while reporting rolled_back."""
     plan = _patch_plan(
-        [PatchOperation(kind="create_node", target="/project1", args={"op_type": "nullTOP", "name": "out1"})],
-        required_ops=["nullTOP"],
+        [
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "feedbackTOP", "name": "feedback1"},
+            ),
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "nullTOP", "name": "out1"},
+            ),
+        ],
+        required_ops=["feedbackTOP", "nullTOP"],
     )
     # Every visual sample is empty, so the repair is applied but re-validation
     # still fails, forcing a rollback after two undo blocks were sealed.
@@ -489,7 +494,10 @@ async def test_transaction_auto_repair_then_validation_fails_reverts_both_undo_b
     assert len(undo_calls) == 2
     assert result.status == "rolled_back"
     assert result.rollback_performed is True
-    assert any(call[0] == "node/connect" for call in client.calls)
+    assert any(
+        endpoint == "node/params/set" and params.get("params") == {"reset": True}
+        for endpoint, params in client.calls
+    )
 
 
 @pytest.mark.asyncio

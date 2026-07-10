@@ -85,7 +85,7 @@ _OSC_DAT_PROTOCOL_ROUTE = ("osc_in_dat_protocol_bridge",)
 _WEBSOCKET_DAT_PROTOCOL_ROUTE = ("websocket_dat_protocol_bridge",)
 _MQTT_DAT_PROTOCOL_ROUTE = ("mqtt_client_dat_protocol_bridge",)
 _UDP_DAT_PROTOCOL_ROUTE = ("udp_in_dat_protocol_bridge",)
-_DAT_TABLE_RENDER_SWITCH_ROUTE = ("dat_table_render_switch_top",)
+_DAT_TABLE_RENDER_SWITCH_ROUTE = ("dat_table_render_switch_top", "debug_output_conventions")
 _DAT_EXECUTE_CALLBACK_ROUTE = ("dat_execute_table_change_callback",)
 _NDI_POST_FX_ROUTE = ("ndi_in_to_post_fx_output",)
 _POP_PARTICLE_PREVIEW_ROUTE = ("pop_particle_field_preview", "debug_output_conventions")
@@ -340,10 +340,71 @@ def resolve_candidate_graphs(
                     device_sources=device_sources,
                 )
             )
+    candidates = _hydrate_incomplete_promoted_candidates(candidates)
     candidates = _with_unsubstituted_operator_alternatives(candidates, availability_matrix)
     candidates = _with_runtime_validation_explanations(candidates, registry)
     candidates.sort(key=lambda candidate: candidate.score, reverse=True)
     return candidates
+
+
+def _hydrate_incomplete_promoted_candidates(
+    candidates: list[CandidateConceptGraph],
+) -> list[CandidateConceptGraph]:
+    """Compile compact promoted memories through an existing validated route.
+
+    Older trace promotions intentionally stored terse concept summaries.  A
+    summary can rank a route, but it cannot replace the route's actual topology
+    or bindings.  Reuse the matching built-in candidate while preserving the
+    promoted identity/evidence instead of producing a partial executable plan.
+    """
+    builtins = [candidate for candidate in candidates if not _is_promoted_candidate(candidate)]
+    hydrated: list[CandidateConceptGraph] = []
+    for candidate in candidates:
+        if not _is_promoted_candidate(candidate) or not _candidate_needs_hydration(candidate):
+            hydrated.append(candidate)
+            continue
+        matches = [
+            base
+            for base in builtins
+            if set(base.profiles) == set(candidate.profiles)
+            and set(candidate.required_ops).issubset(set(base.required_ops))
+        ]
+        if not matches:
+            hydrated.append(candidate)
+            continue
+        base = max(matches, key=lambda item: item.score)
+        hydrated.append(
+            candidate.model_copy(
+                update={
+                    "concepts": list(base.concepts),
+                    "edges": list(base.edges),
+                    "required_ops": list(dict.fromkeys([*base.required_ops, *candidate.required_ops])),
+                    "optional_ops": list(dict.fromkeys([*base.optional_ops, *candidate.optional_ops])),
+                    "expected_outputs": list(base.expected_outputs),
+                    "validation_needs": list(
+                        dict.fromkeys([*base.validation_needs, *candidate.validation_needs])
+                    ),
+                    "grounding_evidence": list(
+                        dict.fromkeys([*candidate.grounding_evidence, *base.grounding_evidence])
+                    ),
+                    "explanation": f"{candidate.explanation}; compiler_topology:{base.label}",
+                }
+            )
+        )
+    return hydrated
+
+
+def _is_promoted_candidate(candidate: CandidateConceptGraph) -> bool:
+    return any(marker.startswith("trace-promoted:") for marker in candidate.grounding_evidence)
+
+
+def _candidate_needs_hydration(candidate: CandidateConceptGraph) -> bool:
+    has_output = any(concept.role == "output" and concept.domain == "TOP" for concept in candidate.concepts)
+    has_visual_control = any(edge.kind == "control" and edge.binding is not None for edge in candidate.edges)
+    needs_visual_control = "audio_reactive" in candidate.profiles and any(
+        profile in candidate.profiles for profile in ("feedback", "render_pipeline", "pop")
+    )
+    return not has_output or (needs_visual_control and not has_visual_control)
 
 
 def _supports_phase_one_audio_feedback_panel(compiled: CompiledVisualTaskSpec) -> bool:
@@ -556,15 +617,33 @@ def _candidate_from_audio_feedback_panel_patterns(
 
     audio_out = _exposed_node(patterns[0], "analysis_chop")
     panel_out = _exposed_node(_pattern_with_id(patterns, "panel_controls_to_chop_output"), "panel_chop")
-    stable_top = _exposed_node(_pattern_with_id(patterns, "feedback_decay_top_loop"), "stable_top")
     feedback_target = _consumed_target(_pattern_with_id(patterns, "feedback_decay_top_loop"), "analysis_chop")
-    debug_target = _exposed_node(_pattern_with_id(patterns, "debug_output_conventions"), "debug_dat")
     if audio_out and feedback_target:
-        edges.append(ConceptEdge(source=audio_out, target=feedback_target, kind="control"))
+        edges.append(
+            ConceptEdge(
+                source=audio_out,
+                target=feedback_target,
+                kind="control",
+                binding={
+                    "mode": "chop_reference_expression",
+                    "source_channel": 0,
+                    "target_param": "brightness1",
+                },
+            )
+        )
     if panel_out and feedback_target:
-        edges.append(ConceptEdge(source=panel_out, target=feedback_target, kind="control"))
-    if stable_top and debug_target:
-        edges.append(ConceptEdge(source=stable_top, target=debug_target, kind="reference"))
+        edges.append(
+            ConceptEdge(
+                source=panel_out,
+                target=feedback_target,
+                kind="control",
+                binding={
+                    "mode": "chop_reference_expression",
+                    "source_channel": 0,
+                    "target_param": "gamma1",
+                },
+            )
+        )
 
     required_ops = sorted(set(required_ops))
     optional_ops = sorted(set(optional_ops))
@@ -657,8 +736,6 @@ def _candidate_from_audio_glsl_material_patterns(
     panel_out = _exposed_node(panel_pattern, "panel_chop")
     terrain_pattern = _pattern_with_id(patterns, "sop_noise_terrain_surface")
     terrain_out = _exposed_node(terrain_pattern, "terrain_sop")
-    stable_top = _exposed_node(material_pattern, "stable_top")
-    debug_target = _exposed_node(_pattern_with_id(patterns, "debug_output_conventions"), "debug_dat")
     if audio_out and material_target:
         edges.append(ConceptEdge(source=audio_out, target=material_target, kind="control"))
     if terrain_out and terrain_target:
@@ -666,8 +743,6 @@ def _candidate_from_audio_glsl_material_patterns(
         concepts = _with_concept_param(concepts, terrain_target, "sop", f"${{path:{terrain_out}}}")
     if panel_out and material_target:
         edges.append(ConceptEdge(source=panel_out, target=material_target, kind="control"))
-    if stable_top and debug_target:
-        edges.append(ConceptEdge(source=stable_top, target=debug_target, kind="reference"))
 
     required_ops = sorted(set(required_ops))
     optional_ops = sorted(set(optional_ops))
@@ -1397,13 +1472,6 @@ def _candidate_from_pop_particle_preview_patterns(
         pattern_ids.append(pattern.pattern_id)
         pattern_ids.extend(pattern_id_aliases(pattern.pattern_id))
 
-    pop_pattern = _pattern_with_id(patterns, "pop_particle_field_preview")
-    debug_pattern = _pattern_with_id(patterns, "debug_output_conventions")
-    stable_top = _exposed_node(pop_pattern, "stable_top")
-    debug_target = _exposed_node(debug_pattern, "debug_dat")
-    if stable_top and debug_target:
-        edges.append(ConceptEdge(source=stable_top, target=debug_target, kind="reference"))
-
     required_ops = sorted(set(required_ops))
     optional_ops = sorted(set(optional_ops))
     concepts, required_ops, operator_substitution_evidence = _apply_available_operator_substitutions(
@@ -1474,13 +1542,6 @@ def _candidate_from_glsl_top_shader_patterns(
         pattern_ids.append(pattern.pattern_id)
         pattern_ids.extend(pattern_id_aliases(pattern.pattern_id))
 
-    shader_pattern = _pattern_with_id(patterns, "glsl_top_shader_with_text_dat")
-    debug_pattern = _pattern_with_id(patterns, "debug_output_conventions")
-    stable_top = _exposed_node(shader_pattern, "stable_top")
-    debug_target = _exposed_node(debug_pattern, "debug_dat")
-    if stable_top and debug_target:
-        edges.append(ConceptEdge(source=stable_top, target=debug_target, kind="reference"))
-
     required_ops = sorted(set(required_ops))
     optional_ops = sorted(set(optional_ops))
     concepts, required_ops, operator_substitution_evidence = _apply_available_operator_substitutions(
@@ -1550,13 +1611,6 @@ def _candidate_from_glsl_advanced_pop_topology_patterns(
         risk_flags.extend(pattern.rollback_risks)
         pattern_ids.append(pattern.pattern_id)
         pattern_ids.extend(pattern_id_aliases(pattern.pattern_id))
-
-    shader_pattern = _pattern_with_id(patterns, "glsl_advanced_pop_topology_shader")
-    debug_pattern = _pattern_with_id(patterns, "debug_output_conventions")
-    stable_top = _exposed_node(shader_pattern, "stable_top")
-    debug_target = _exposed_node(debug_pattern, "debug_dat")
-    if stable_top and debug_target:
-        edges.append(ConceptEdge(source=stable_top, target=debug_target, kind="reference"))
 
     required_ops = sorted(set(required_ops))
     optional_ops = sorted(set(optional_ops))

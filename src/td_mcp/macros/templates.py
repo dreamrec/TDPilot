@@ -19,7 +19,10 @@ def build_default_templates() -> dict[str, MacroTemplate]:
 
     templates["feedback_loop"] = MacroTemplate(
         name="feedback_loop",
-        description="Classic feedback chain: feedback -> level -> composite -> out.",
+        description=(
+            "External-input TOP feedback scaffold: feedback -> level decay -> composite -> out. "
+            "It does not create source imagery or animation."
+        ),
         nodes=[
             NodeSpec("feedbackTOP", "feedback", dx=0, dy=0),
             NodeSpec("levelTOP", "decay", dx=220, dy=0, params={"opacity": 0.95}),
@@ -48,6 +51,27 @@ def build_default_templates() -> dict[str, MacroTemplate]:
         },
         entry_node="merge",
         exit_node="out",
+        capability="external_input_feedback_scaffold",
+        required_inputs=[
+            {
+                "name": "visual_source",
+                "domain": "TOP",
+                "target_node": "merge",
+                "target_input": 1,
+                "required": True,
+            }
+        ],
+        outputs=[{"name": "out", "domain": "TOP", "stable": True}],
+        completion_status="scaffold",
+        limitations=[
+            "Requires an external TOP source on the composite input.",
+            "Does not supply spatial transform, displacement, or time-varying motion.",
+            "Does not prove nonblack output or temporal change.",
+        ],
+        deprecation_warning=(
+            "feedback_loop is retained as an external-input scaffold and is deprecated as a "
+            "complete-visual shortcut; use td_brain_plan or /td-concept for finished visuals."
+        ),
     )
 
     templates["post_processing"] = MacroTemplate(
@@ -88,7 +112,10 @@ def build_default_templates() -> dict[str, MacroTemplate]:
 
     templates["audio_reactive"] = MacroTemplate(
         name="audio_reactive",
-        description="Audio signal preprocessing chain with gain stage and null output.",
+        description=(
+            "Audio CHOP preprocessing scaffold: device input -> analysis -> gain -> normalized "
+            "CHOP output. It does not create or bind a visual chain."
+        ),
         nodes=[
             NodeSpec("audiodeviceinCHOP", "audio_in", dx=0, dy=0),
             NodeSpec("analyzeCHOP", "audio_level", dx=220, dy=0),
@@ -114,6 +141,26 @@ def build_default_templates() -> dict[str, MacroTemplate]:
         },
         entry_node="audio_in",
         exit_node="out",
+        capability="audio_chop_preprocessing",
+        required_inputs=[
+            {
+                "name": "active_audio_device",
+                "domain": "device",
+                "target_node": "audio_in",
+                "required": True,
+            }
+        ],
+        outputs=[{"name": "out", "domain": "CHOP", "stable": True}],
+        completion_status="scaffold",
+        limitations=[
+            "Requires an active configured audio device.",
+            "Does not create a TOP, geometry, render, or particle system.",
+            "Does not bind the CHOP signal to any visual parameter.",
+        ],
+        deprecation_warning=(
+            "audio_reactive is retained as CHOP preprocessing and is deprecated as a "
+            "complete-visual shortcut; use /td-audio-reactive for a verified binding and TOP."
+        ),
     )
 
     templates["ableton_link_sync"] = MacroTemplate(

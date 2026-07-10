@@ -7,7 +7,7 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v2.1.1
+# TDPilot Runtime v2.4.0
 
 [![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
@@ -37,6 +37,11 @@ Try these, verbatim, once installed:
 > Builds a moving feedback visual in your project, verifies it error-free, and shows you the screenshot — in about two minutes.
 
 ```
+/td-concept A luminous particle tunnel with deep fog and slow camera drift
+```
+> Grounds the complete artistic request, reviews a concrete TD architecture, and executes it only when every required facet is covered.
+
+```
 Make my project audio-reactive: drive the main TOP chain from the kick drum of audio_in.
 ```
 > Plans the CHOP analysis chain, wires it to your visuals, and proves the binding works before calling it done.
@@ -60,7 +65,7 @@ no API key, no hosted service — your work never leaves your machine.
 /plugin install tdpilot@dreamrec-TDPilot
 ```
 
-That installs the full MCP tool surface, the TDPilot skills (`tdpilot-core`, `tdpilot-production`, `popx-touchdesigner`, plus the brain skills), the brain agents, the guided slash commands (`/td-first-wow`, `/td-audio-reactive`, `/td-explain-patch`, `/td-check`, `/td-snapshot`), and the TD-side `.tox` component — one command, no Python setup required.
+That installs the full MCP tool surface, the TDPilot skills (`tdpilot-core`, `tdpilot-production`, `popx-touchdesigner`, plus the public brain skills), the brain agents, the guided slash commands (`/td-concept`, `/td-first-wow`, `/td-audio-reactive`, `/td-explain-patch`, `/td-check`, `/td-snapshot`), and the TD-side `.tox` component — one command, no Python setup required.
 
 **Shell one-liner alternative:**
 
@@ -93,6 +98,7 @@ Using Claude Desktop, Cursor, Codex, or another MCP client? See [`docs/INSTALL_O
 - User guide: `docs/USER_GUIDE.md`
 - Memory guide: `docs/MEMORY_GUIDE.md`
 - Production manual: `docs/MANUAL.md`
+- Practical Intelligence v2.4 architecture and guarantees: `docs/PRACTICAL_INTELLIGENCE.md`
 - API reference: `docs/API_REFERENCE.md`
 - Security model: `docs/SECURITY.md`
 - Troubleshooting: `docs/TROUBLESHOOTING.md`
@@ -111,8 +117,8 @@ Using Claude Desktop, Cursor, Codex, or another MCP client? See [`docs/INSTALL_O
 ## Packaged Add-ons
 
 - **Reviewed operator atlas** — The core local add-on for translating abstract ideas into real TD operators. Agents can use the 656-card reviewed operator atlas, Official Derivative source URLs, params, concepts, and gotchas to choose smaller, safer operator chains.
-- **Brain skills and agents** — Codex and Claude Code both ship explorer, builder, validator, recovery, and release workflows, so the same inspect -> plan -> execute -> validate discipline works in either client.
-- **Hooks and release guards** — Local deterministic checks catch plugin mirror drift, personal path leaks, stale `.tox` state, and unsafe release handoffs.
+- **Brain skills and agents** — Codex and Claude Code ship explorer, builder, validator, and recovery workflows. Exact validated patterns use deterministic planning; artistic and multi-domain work uses ground -> author -> propose before transactional execution.
+- **Scoped transaction hook** — The shipped hook runs only after brain/transaction mutations to reinforce final validation. Source-repository release guards check mirror drift, personal paths, and stale artifacts but are not shipped to user projects.
 - **Optional local knowledge packs** — POPX and future specialty packs stay local and user-owned; they extend planning context without adding hosted-service dependencies.
 
 ## Start Here: Core Workflow
@@ -121,7 +127,8 @@ You don't need all 114 tools. Start with these and expand as needed:
 
 | Step | Tools | What You're Doing |
 |------|-------|-------------------|
-| **Plan** | `td_brain_plan` | Ground the user's visual intent in real TD operators, the reviewed atlas, Official Derivative docs, constraints, hints, memory, and live state |
+| **Route a pattern** | `td_brain_plan` | Compile an exact validated topology, then require complete intent coverage |
+| **Author a concept** | `td_brain_ground`, `td_brain_propose` | Ground artistic, multi-domain, spatial, or implicit architecture and review the authored graph |
 | **Execute** | `td_brain_execute`, `td_transaction_apply` | Apply only a valid BrainPlan or PatchPlan with preflight, snapshots, rollback, and validation |
 | **Inspect** | `td_get_info`, `td_get_nodes`, `td_get_params`, `td_get_errors` | Understand current state before touching anything |
 | **Check memory** | `td_memory_recall` | See if a reusable technique already exists |
@@ -130,36 +137,36 @@ You don't need all 114 tools. Start with these and expand as needed:
 | **Protect** | `td_snapshot_scene`, `td_restore_snapshot` | Save milestones, roll back if needed |
 | **Remember** | `td_memory_learn`, `td_memory_save` | Save successful patterns for reuse |
 
-**The loop:** Inspect -> Plan -> Execute transactionally -> Validate -> Snapshot or Roll back -> Learn only if validated.
+**The loop:** Inspect -> Route -> Plan or Ground/Propose -> Execute transactionally -> Validate -> Learn only if validated.
 
 Everything else (vision, streaming, optimization, planning, TD2025 inspection) builds on top of this core.
 
 ## Latest Release
 
-**v2.1.1** — Windows portability, now CI-enforced: DocsBrain releases its SQLite handle (no more pinned `docs.db` / `WinError 32` on Windows), platform-aware tests, and the Windows unit suite promoted from advisory to a blocking CI gate; plus release-plumbing fixes (npm@11 pin on Node 22, release-assets gate no longer requires gitignored dev-machine reports). Full history, every release: [`CHANGELOG.md`](CHANGELOG.md).
+**v2.4.0** — Practical Intelligence: truthful pattern-versus-concept routing, server-derived intent coverage, explicit CHOP→`levelTOP` bindings, cached grounding and recall, 15 deterministic compiler-backed techniques, live task-specific validation, bounded repairs, show-safe staging/route swaps, and ownership-guarded partial rebuilds. The public surface remains 114 tools and local-first. Read the [Practical Intelligence guide](docs/PRACTICAL_INTELLIGENCE.md) or the full [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Core Thinking Model (How To Think With This MCP)
 
 Use this loop for every non-trivial task:
 
-1. **Inspect first** — Read current state before touching anything. Start with `td_get_info`, `td_get_nodes`, `td_get_node_detail`, `td_get_params`.
+1. **Inspect the relevant scope** — Read focus, target nodes, direct connections, and parameters before touching anything. Batch independent reads when that saves a roundtrip.
 
 2. **Check memory** — Before building from scratch, use `td_memory_recall` to check if a similar technique already exists in the library.
 
-3. **Build in small steps** — Create or modify one chunk at a time. Prefer: create -> wire -> set params -> verify.
+3. **Choose the route** — Use `td_brain_plan` for an exact validated pattern. Use `td_brain_ground` -> author -> `td_brain_propose` for artistic, multi-domain, spatial, or implicit architecture.
 
-4. **Learn and save** — When you discover a reusable network pattern, use `td_memory_learn` to extract the recipe and `td_memory_save` to persist it.
+4. **Execute safely** — Execute only complete accepted plans, or use a small typed direct edit for one proven change. Validate at logical checkpoints rather than after every primitive operation.
 
-5. **Validate at the end** — Always run `td_get_errors` on the affected root. Report warnings/errors and fix before marking done.
+5. **Validate the request** — Check graph, runtime, bindings/references, and the requested visual/temporal behavior. Zero TD errors alone is not visual proof.
 
-6. **Control token cost** — Prefer metadata checks over continuous image payloads. Ask the user before enabling high-token frame streaming.
+6. **Learn and control cost** — Save only validated reusable work. Prefer metadata and one low-quality proof thumbnail; ask before repeated images or streaming.
 
 ## Tool Map (114 Tools)
 
 ### 0) Brain Planning + Transactions
-Use for non-trivial visual programming tasks where correctness, rollback, and validation matter.
+Use for non-trivial visual programming tasks where complete intent coverage, rollback, and validation matter.
 
-- `td_brain_plan`, `td_brain_execute`, `td_transaction_apply`, `td_cockpit_render`
+- `td_brain_plan`, `td_brain_ground`, `td_brain_propose`, `td_brain_execute`, `td_transaction_apply`, `td_cockpit_render`
 
 ### 1) Scene + Timeline + Project Lifecycle
 Use for global context, playback control, save/load, and undo operations.

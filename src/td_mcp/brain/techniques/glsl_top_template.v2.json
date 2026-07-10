@@ -1,0 +1,51 @@
+{
+  "schema_version": 2,
+  "pattern_id": "glsl_top_template",
+  "title": "Packaged GLSL TOP pixel template",
+  "role": "generator",
+  "profiles": ["glsl_top", "concept_compiled"],
+  "intent_tags": ["glsl", "shader", "top", "procedural", "animated", "pixel"],
+  "families": ["DAT", "TOP"],
+  "state": "validated",
+  "build_compatibility": {"minimum": "2023.10000", "maximum": null},
+  "compiler": {"type": "packaged_template", "template_version": 1},
+  "estimated_nodes": 3,
+  "estimated_gpu_cost": "low",
+  "estimated_cpu_cost": "low",
+  "required_ops": ["textDAT", "glslTOP", "nullTOP"],
+  "inputs": {},
+  "outputs": {"image": "output", "shader_source": "pixel_shader"},
+  "tunables": {
+    "width": {"type": "int", "minimum": 1, "maximum": 8192},
+    "height": {"type": "int", "minimum": 1, "maximum": 8192}
+  },
+  "controls": [],
+  "parameter_defaults": {"width": 1280, "height": 720},
+  "nodes": [
+    {
+      "id": "pixel_shader",
+      "op_type": "textDAT",
+      "name": "pixel_shader",
+      "params": {"language": "glsl", "extension": "frag"},
+      "text": "layout(location = 0) out vec4 fragColor;\n\nvoid main()\n{\n    vec2 uv = vUV.st;\n    float wave = 0.5 + 0.5 * sin(absTime.seconds + uv.x * 9.0 + uv.y * 6.0);\n    vec3 color = mix(vec3(0.02, 0.08, 0.18), vec3(0.1, 0.75, 1.0), wave);\n    fragColor = TDOutputSwizzle(vec4(color, 1.0));\n}\n"
+    },
+    {"id": "shader", "op_type": "glslTOP", "name": "shader", "params": {"pixeldat": "${path.pixel_shader}", "compilebehavior": "automatic", "errorbehavior": "use previous result", "outputresolution": "custom", "resolutionw": "${parameters.width}", "resolutionh": "${parameters.height}"}},
+    {"id": "output", "op_type": "nullTOP", "name": "out_shader", "params": {}}
+  ],
+  "connections": [
+    {"source": "shader", "target": "output", "source_index": 0, "target_index": 0}
+  ],
+  "validation_defaults": [
+    {"id": "shader_source", "kind": "exists", "target": "${path.pixel_shader}", "expected": true},
+    {"id": "shader_compile", "kind": "no_errors", "target": "${path.shader}", "expected": true},
+    {"id": "shader_resolution", "kind": "resolution", "target": "${path.output}", "expected": ["${parameters.width}", "${parameters.height}"]},
+    {"id": "shader_visible", "kind": "nonuniform_image", "target": "${path.output}", "expected": true},
+    {"id": "shader_temporal", "kind": "changing_signal", "target": "${path.output}", "expected": true}
+  ],
+  "failure_modes": ["GLSL compile failure", "pixel DAT reference lost", "unsupported output format", "shader output remains static"],
+  "evidence": {
+    "status": "atlas_fixture_validated",
+    "operator_cards": ["textDAT", "glslTOP", "nullTOP"],
+    "fixture": "tests/brain/test_build_compiler.py::test_packaged_glsl_template_emits_bounded_text_content"
+  }
+}

@@ -225,6 +225,7 @@ async def test_live_smoke_dry_run_covers_required_visual_domains():
     expected = {
         "feedback_loop": ("feedback", "feedbackTOP"),
         "audio_reactive_top": ("audio_reactive", "audiofileinCHOP"),
+        "audio_feedback_level_binding": ("concept_compiled", "levelTOP"),
         "pop_particle_render": ("pop", "rendersimpleTOP"),
         "glsl_shader_top": ("glsl", "glslTOP"),
         "glsl_material_render": ("glsl_material", "glslMAT"),
@@ -248,15 +249,28 @@ async def test_live_smoke_dry_run_covers_required_visual_domains():
     }
     assert set(expected).issubset(scenarios)
 
+    expected_blocked = {"audio_glsl_material_render", "audio_terrain_glass_controls"}
     for scenario_id, (profile, required_op) in expected.items():
         item = scenarios[scenario_id]
-        assert item["status"] == "planned"
         assert item["profile"] == profile
         assert required_op in item["operators"]
-        assert item["blocked_questions"] == []
+        if scenario_id in expected_blocked:
+            assert item["status"] == "blocked_expected"
+            assert item["expected_blocked"] is True
+            assert item["operation_count"] == 0
+            assert item["blocked_questions"]
+        else:
+            assert item["status"] == "planned"
+            assert item["expected_blocked"] is False
+            assert item["blocked_questions"] == []
         assert item["validation_profile"] == "structural_visual_safe"
         assert "td_brain_plan" in item["tools"]
         assert "td_brain_execute" in item["tools"]
+
+    binding = scenarios["audio_feedback_level_binding"]
+    assert len(binding["control_bindings"]) == 2
+    assert {item["param"] for item in binding["control_bindings"]} == {"brightness1", "gamma1"}
+    assert all(item["target"].endswith("/level") for item in binding["control_bindings"])
 
 
 def test_live_smoke_scenario_catalog_is_explicit_about_live_td_requirement():
@@ -372,7 +386,7 @@ async def test_compiler_backed_live_smoke_uses_candidate_profile_probes():
 
 
 @pytest.mark.asyncio
-async def test_compiler_backed_live_smoke_reports_assembly_probe_results():
+async def test_compiler_backed_live_smoke_does_not_claim_assembly_for_blocked_draft():
     report = await build_live_smoke_report(mode="dry_run")
     scenarios = {item["id"]: item for item in report["scenarios"]}
 
@@ -382,17 +396,15 @@ async def test_compiler_backed_live_smoke_reports_assembly_probe_results():
 
     assert ("concept_compiled", "component_shell_present") in probe_pairs
     assert ("concept_compiled", "output_node_present") in probe_pairs
-    assert result_pairs[("concept_compiled", "component_shell_present")]["status"] == "static_pass"
-    assert result_pairs[("concept_compiled", "component_shell_present")]["present_required_inputs"] == [
-        "baseCOMP"
-    ]
-    assert result_pairs[("concept_compiled", "output_node_present")]["status"] == "static_pass"
+    assert result_pairs[("concept_compiled", "component_shell_present")]["status"] == "static_incomplete"
+    assert result_pairs[("concept_compiled", "component_shell_present")]["present_required_inputs"] == []
+    assert result_pairs[("concept_compiled", "output_node_present")]["status"] == "static_incomplete"
     assert "component_shell_present" in showpiece["checks"]
     assert "output_node_present" in showpiece["checks"]
 
 
 @pytest.mark.asyncio
-async def test_live_smoke_covers_audio_terrain_material_controls_showpiece():
+async def test_live_smoke_truthfully_blocks_unbound_audio_terrain_material_controls():
     report = await build_live_smoke_report(mode="dry_run")
     scenarios = {item["id"]: item for item in report["scenarios"]}
 
@@ -400,7 +412,11 @@ async def test_live_smoke_covers_audio_terrain_material_controls_showpiece():
     probe_pairs = {(item["profile"], item["probe_id"]) for item in showpiece["profile_probes"]}
 
     assert showpiece["profile"] == "concept_compiled"
-    assert showpiece["status"] == "planned"
+    assert showpiece["status"] == "blocked_expected"
+    assert showpiece["expected_blocked"] is True
+    assert showpiece["operation_count"] == 0
+    assert showpiece["blocked_questions"]
+    assert any(item.startswith("semantic_edge:") for item in showpiece["missing_facts"])
     assert showpiece["output_top"] == "/project1/out1"
     assert showpiece["missing_expected_ops"] == []
     assert {
@@ -691,7 +707,7 @@ async def test_live_smoke_uses_docs_evidence_when_live_family_list_is_sparse():
     )
 
     assert report["ok"] is True
-    assert all(item["status"] == "planned" for item in report["scenarios"])
+    assert all(item["status"] in {"planned", "blocked_expected"} for item in report["scenarios"])
     assert any("family-list-omitted:feedbackTOP" in item["risk_flags"] for item in report["scenarios"])
 
 
@@ -968,10 +984,11 @@ def test_release_skills_include_live_smoke_gate_commands():
     skill_paths = [
         ROOT / "skills" / "tdpilot-brain-release" / "SKILL.md",
         ROOT / ".agents" / "skills" / "tdpilot-brain-release" / "SKILL.md",
-        ROOT / "plugins" / "tdpilot" / "skills" / "tdpilot-brain-release" / "SKILL.md",
     ]
 
     for path in skill_paths:
         text = path.read_text(encoding="utf-8")
         assert "uv run python scripts/brain_live_smoke.py --dry-run" in text
         assert "uv run python scripts/brain_live_smoke.py --live" in text
+
+    assert not (ROOT / "plugins" / "tdpilot" / "skills" / "tdpilot-brain-release" / "SKILL.md").exists()

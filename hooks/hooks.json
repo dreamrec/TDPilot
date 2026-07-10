@@ -6,18 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run --directory \"${CLAUDE_PLUGIN_ROOT:-${CODEX_PLUGIN_ROOT:-${CLAUDE_PROJECT_DIR:-.}}}\" python hooks/run_hook.py post-tool-use"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run --directory \"${CLAUDE_PLUGIN_ROOT:-${CODEX_PLUGIN_ROOT:-${CLAUDE_PROJECT_DIR:-.}}}\" python hooks/run_hook.py release-stop"
+            "command": "if [ -n \"${CLAUDE_PLUGIN_ROOT:-${CODEX_PLUGIN_ROOT:-}}\" ]; then python3 \"${CLAUDE_PLUGIN_ROOT:-${CODEX_PLUGIN_ROOT}}/hooks/run_hook.py\" post-tool-use; fi"
           }
         ]
       }

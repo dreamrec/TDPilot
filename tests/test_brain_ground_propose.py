@@ -10,6 +10,7 @@ monkeypatched _tr helpers).
 from __future__ import annotations
 
 import asyncio
+import json
 
 import pytest
 from conftest import RecordingTDClient
@@ -183,6 +184,7 @@ def test_ground_returns_full_pack_when_td_is_unreachable(quiet_tr, service_conta
         "operator_availability",
         "live_state",
         "exemplars",
+        "technique_candidates",
         "authoring_contract",
     ):
         assert key in pack, f"grounding pack missing {key}"
@@ -228,7 +230,62 @@ def test_ground_returns_full_pack_when_td_is_unreachable(quiet_tr, service_conta
     assert "td_brain_propose" in contract["loop"]
     assert "td_brain_execute" in contract["loop"]
     assert contract["draft_schema"]["label"]
+    assert contract["module_draft_schema"]["module_graph"]
     assert isinstance(pack["exemplars"], list)
+
+
+def test_propose_v2_module_graph_compiles_and_caches_compiler_artifacts(quiet_tr, service_container, mcp_ctx):
+    quiet_tr.responses = {
+        "families": {"families": {"TOP": ["null"]}},
+        "nodes": {"nodes": []},
+    }
+    service_container.card_index = SearchableCardIndex({"nullTOP": _operator_card("nullTOP")})
+    draft = {
+        "build_intent": {"mode": "production", "operation": "create"},
+        "module_graph": {
+            "target_root": "/project1",
+            "modules": [
+                {
+                    "id": "output",
+                    "role": "output",
+                    "technique_id": "stable_output_null",
+                    "label": "Stable output",
+                    "td_family": "TOP",
+                    "inputs": [{"name": "image", "domain": "TOP"}],
+                    "outputs": [{"name": "image", "domain": "TOP"}],
+                    "source_ref": "/project1/source",
+                }
+            ],
+            "edges": [],
+            "output_module_id": "output",
+        },
+    }
+
+    result = asyncio.run(
+        tools_brain.td_brain_propose(
+            mcp_ctx,
+            draft,
+            intent="Create a stable TOP output",
+            draft_schema_version="2",
+            detail_level="full",
+        )
+    )
+
+    assert result["success"] is True
+    assert result["plan_summary"]["module_count"] == 1
+    assert result["plan_summary"]["compiler"]["mode"] == "production"
+    summary_response = {
+        "success": result["success"],
+        "plan_id": result["plan_id"],
+        "plan_summary": result["plan_summary"],
+    }
+    assert len(json.dumps(summary_response, separators=(",", ":")).encode("utf-8")) <= 8 * 1024
+    assert (
+        result["plan"]["compiler_artifacts"]["build_program"]["patch_plan_id"]
+        == result["plan"]["patch_plan"]["id"]
+    )
+    cached = resources.get_cached_resource("td://project/state")
+    assert cached["latest_brain_plan"]["id"] == result["plan_id"]
 
 
 def test_ground_respects_include_live_state_toggle(quiet_tr, service_container, mcp_ctx):
@@ -238,6 +295,23 @@ def test_ground_respects_include_live_state_toggle(quiet_tr, service_container, 
 
     assert result["success"] is True
     assert result["grounding_pack"]["live_state"]["available"] is False
+
+
+def test_plan_inspect_false_avoids_live_td_reads(quiet_tr, service_container, mcp_ctx):
+    service_container.card_index = _feedback_card_index()
+
+    result = asyncio.run(
+        tools_brain.td_brain_plan(
+            mcp_ctx,
+            "Build a stable feedback trail",
+            inspect=False,
+            detail_level="summary",
+        )
+    )
+
+    assert result["success"] is True
+    assert result["plan_summary"]["blocked"] is False
+    assert quiet_tr.calls == []
 
 
 def test_propose_valid_draft_caches_plan_for_plan_id_execution(
@@ -261,6 +335,12 @@ def test_propose_valid_draft_caches_plan_for_plan_id_execution(
     assert summary["operation_count"] > 0
     assert summary["stripped_params"] == []
     assert "feedbackTOP" in summary["operators"]
+    summary_response = {
+        "success": result["success"],
+        "plan_id": result["plan_id"],
+        "plan_summary": summary,
+    }
+    assert len(json.dumps(summary_response, separators=(",", ":")).encode("utf-8")) <= 8 * 1024
     assert result["plan"]["blocked_questions"] == []
     assert "planner:host_authored_draft" in result["plan"]["grounding_evidence"]
 
@@ -402,3 +482,93 @@ def test_blocked_open_prompt_plan_points_to_the_ground_propose_loop():
     assert plan.blocked_questions
     assert "td_brain_ground" in plan.blocked_questions[0]
     assert "td_brain_propose" in plan.blocked_questions[0]
+
+
+def test_grounding_id_binds_proposal_to_original_multidomain_requirements(
+    quiet_tr, service_container, mcp_ctx, monkeypatch
+):
+    audio_ops = ("audiofileinCHOP", "analyzeCHOP", "mathCHOP", "nullCHOP")
+    quiet_tr.responses = {
+        "families": {"families": {"CHOP": list(audio_ops)}},
+        "nodes": {"nodes": []},
+    }
+    service_container.card_index = SearchableCardIndex(
+        {op_type: _operator_card(op_type) for op_type in audio_ops}
+    )
+
+    grounded = asyncio.run(
+        tools_brain.td_brain_ground(
+            mcp_ctx,
+            "Build an audio-reactive 3D particle tunnel with fog and stable TOP output",
+            output_top="/project1/out1",
+        )
+    )
+    grounding_id = grounded["grounding_id"]
+    assert grounded["grounding_pack"]["grounding_id"] == grounding_id
+    assert grounded["grounding_pack"]["recall"]["advisory_only"] is True
+
+    audio_only_draft = {
+        "label": "Audio analysis only",
+        "profiles": ["audio_reactive"],
+        "concepts": [
+            {
+                "id": "audio",
+                "label": "Audio source",
+                "role": "source",
+                "domain": "CHOP",
+                "op_type": "audiofileinCHOP",
+            },
+            {
+                "id": "analyze",
+                "label": "Analyze",
+                "role": "process",
+                "domain": "CHOP",
+                "op_type": "analyzeCHOP",
+            },
+            {
+                "id": "scale",
+                "label": "Scale",
+                "role": "process",
+                "domain": "CHOP",
+                "op_type": "mathCHOP",
+            },
+            {
+                "id": "out",
+                "label": "Control output",
+                "role": "output",
+                "domain": "CHOP",
+                "op_type": "nullCHOP",
+            },
+        ],
+        "edges": [
+            {"source": "audio", "target": "analyze", "kind": "data"},
+            {"source": "analyze", "target": "scale", "kind": "data"},
+            {"source": "scale", "target": "out", "kind": "data"},
+        ],
+        "required_ops": list(audio_ops),
+    }
+    proposed = asyncio.run(
+        tools_brain.td_brain_propose(
+            mcp_ctx,
+            audio_only_draft,
+            grounding_id=grounding_id,
+            draft_schema_version="2",
+        )
+    )
+
+    assert proposed["success"] is False
+    assert proposed["rejections"][0]["code"] == "intent_coverage_incomplete"
+    coverage = proposed["plan"]["intent_coverage"]
+    labels = {item["label"] for item in coverage["requirements"]}
+    assert {"tunnel_depth", "fog_atmosphere", "three_dimensional"}.issubset(labels)
+    assert (
+        proposed["plan"]["compiled_task"]["intent"] == grounded["grounding_pack"]["task_features"]["intent"]
+    )
+
+    async def must_not_execute(*args, **kwargs):
+        raise AssertionError("incomplete coverage reached the transaction layer")
+
+    monkeypatch.setattr(tools_brain, "_run_transaction", must_not_execute)
+    execution = asyncio.run(tools_brain.td_brain_execute(mcp_ctx, plan=proposed["plan"]))
+    assert execution["success"] is False
+    assert execution["code"] == "intent_coverage_incomplete"

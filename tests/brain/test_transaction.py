@@ -5,6 +5,7 @@ from patch.conftest import FakeTDClient
 
 from td_mcp.brain.transaction import _rollback, apply_transaction
 from td_mcp.models.brain import TransactionOptions, TransactionResult
+from td_mcp.models.build import ValidationAssertion, ValidationContract
 from td_mcp.models.patch import PatchOperation, PatchPlan, ValidationPlan
 from td_mcp.patch.undo_sentinel import UndoBlockSentinel
 
@@ -80,6 +81,64 @@ async def test_transaction_rolls_back_when_validation_fails():
     assert result.validation_report is not None
     assert result.validation_report.ok is False
     assert ("project/lifecycle", {"action": "undo"}) in client.calls
+
+
+@pytest.mark.asyncio
+async def test_transaction_uses_live_compiler_validation_contract_when_supplied():
+    ops = [PatchOperation(kind="create_node", target="/p", args={"op_type": "nullTOP", "name": "out1"})]
+    contract = ValidationContract(
+        target_root="/p",
+        output_path="/p/out1",
+        graph_assertions=[
+            ValidationAssertion(
+                id="output:exists",
+                kind="exists",
+                target="/p/out1",
+                comparator="exists",
+                expected=True,
+                probe="node_query",
+            )
+        ],
+        visual_assertions=[
+            ValidationAssertion(
+                id="output:visible",
+                kind="not_black",
+                target="/p/out1",
+                comparator="eq",
+                expected=True,
+                probe="frame_metrics",
+            )
+        ],
+    )
+    client = FakeTDClient()
+
+    def detail(_params):
+        if ("project/lifecycle", {"action": "undo"}) in client.calls:
+            return {"error": "not found"}
+        return {"path": "/p/out1", "type": "nullTOP"}
+
+    client.scripted.update(
+        {
+            "node/create": {"path": "/p/out1"},
+            "node/detail": detail,
+            "analyze_frame": RuntimeError("frame probe unavailable"),
+        }
+    )
+
+    result = await apply_transaction(
+        client,
+        _plan(ops),
+        sentinel=UndoBlockSentinel(),
+        validation_contract=contract,
+    )
+
+    assert result.status == "rolled_back"
+    assert result.validation_report is not None
+    assert result.validation_report.profile == "build_program_contract"
+    assert result.validation_report.ok is False
+    assertion_results = result.validation_report.cheap_metrics["assertion_results"]
+    assert [item["status"] for item in assertion_results] == ["passed", "unavailable"]
+    assert assertion_results[1]["issue_code"] == "runtime_probe_unavailable"
 
 
 @pytest.mark.asyncio

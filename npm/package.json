@@ -1,7 +1,7 @@
 {
   "name": "tdpilot",
-  "version": "2.1.1",
-  "description": "Build, debug, and verify TouchDesigner networks by talking to your AI. Live MCP control of a running TD session: create and wire operators, set real parameter values, screenshot-verify the render, roll back transactionally. No signup, no API key \u2014 npx tdpilot and you're connected.",
+  "version": "2.4.0",
+  "description": "Local-first TouchDesigner AI copilot with 114 MCP tools, truthful concept routing, deterministic visual techniques, transactional execution, live validation, and rollback.",
   "keywords": [
     "touchdesigner",
     "touchdesigner-mcp",

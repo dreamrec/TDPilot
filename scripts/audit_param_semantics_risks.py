@@ -15,11 +15,12 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from td_mcp.brain.param_semantics import audit_high_cook_risk_direct_param_coverage
+from td_mcp.report_identity import stamp_report_identity
 
 
 def audit_param_semantics_risks() -> dict[str, Any]:
     """Return high cook-risk params mapped to direct-risk or validation-only behavior."""
-    return audit_high_cook_risk_direct_param_coverage()
+    return stamp_report_identity(audit_high_cook_risk_direct_param_coverage())
 
 
 def main() -> int:

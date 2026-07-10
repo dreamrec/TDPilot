@@ -1,0 +1,51 @@
+{
+  "schema_version": 2,
+  "pattern_id": "top_edge_glow",
+  "title": "Edge extraction and glow composite",
+  "role": "composite",
+  "profiles": ["concept_compiled"],
+  "intent_tags": ["edge", "glow", "outline", "neon", "post"],
+  "families": ["TOP"],
+  "state": "validated",
+  "build_compatibility": {"minimum": "2023.10000", "maximum": null},
+  "compiler": {"type": "packaged_template", "template_version": 1},
+  "estimated_nodes": 4,
+  "estimated_gpu_cost": "medium",
+  "estimated_cpu_cost": "low",
+  "required_ops": ["edgeTOP", "blurTOP", "compositeTOP", "nullTOP"],
+  "inputs": {
+    "image": [
+      {"node": "edge", "input": 0},
+      {"node": "mix", "input": 0}
+    ]
+  },
+  "outputs": {"image": "output"},
+  "tunables": {
+    "edge_strength": {"type": "float", "minimum": 0.0, "maximum": 8.0},
+    "glow_size": {"type": "float", "minimum": 0.0, "maximum": 64.0}
+  },
+  "controls": [],
+  "parameter_defaults": {"edge_strength": 1.5, "glow_size": 9.0},
+  "nodes": [
+    {"id": "edge", "op_type": "edgeTOP", "name": "edge_extract", "params": {"strength": "${parameters.edge_strength}", "blacklevel": 0.0, "edgecolor": [0.2, 0.7, 1.0, 1.0]}},
+    {"id": "blur", "op_type": "blurTOP", "name": "edge_blur", "params": {"size": ["${parameters.glow_size}", "${parameters.glow_size}"], "npasses": 2}},
+    {"id": "mix", "op_type": "compositeTOP", "name": "edge_mix", "params": {"operand": "add"}},
+    {"id": "output", "op_type": "nullTOP", "name": "out_image", "params": {}}
+  ],
+  "connections": [
+    {"source": "edge", "target": "blur", "source_index": 0, "target_index": 0},
+    {"source": "blur", "target": "mix", "source_index": 0, "target_index": 1},
+    {"source": "mix", "target": "output", "source_index": 0, "target_index": 0}
+  ],
+  "validation_defaults": [
+    {"id": "edge_output", "kind": "exists", "target": "${path.output}", "expected": true},
+    {"id": "edge_visible", "kind": "not_black", "target": "${path.output}", "expected": true},
+    {"id": "edge_detail", "kind": "nonuniform_image", "target": "${path.output}", "expected": true}
+  ],
+  "failure_modes": ["flat source image", "excessive blur cost", "additive clipping"],
+  "evidence": {
+    "status": "atlas_fixture_validated",
+    "operator_cards": ["edgeTOP", "blurTOP", "compositeTOP", "nullTOP"],
+    "fixture": "tests/brain/test_build_compiler.py::test_all_packaged_v2_techniques_compile_deterministically"
+  }
+}

@@ -430,7 +430,8 @@ async def test_pop_intent_builds_particle_concept_graph():
     plan = await build_brain_plan(client, intent="make a POP particle field", target_root="/project1")
 
     assert plan.blocked_questions == []
-    assert plan.compiled_task is None
+    assert plan.compiled_task is not None
+    assert plan.intent_coverage is not None
     assert plan.candidate_graphs == []
     assert plan.concept_graph.profile == "pop"
     assert {"circlePOP", "noisePOP", "mathmixPOP", "nullPOP", "rendersimpleTOP", "nullTOP"}.issubset(
@@ -458,7 +459,8 @@ async def test_glsl_uses_docs_operator_but_short_create_type():
     plan = await build_brain_plan(client, intent="create a GLSL shader TOP", target_root="/project1")
 
     assert plan.blocked_questions == []
-    assert plan.compiled_task is None
+    assert plan.compiled_task is not None
+    assert plan.intent_coverage is not None
     assert plan.candidate_graphs == []
     assert plan.concept_graph.profile == "glsl"
     assert "glslTOP" in plan.concept_graph.operators
@@ -1024,7 +1026,7 @@ async def test_compiler_path_blocks_unapproved_available_audio_device_substituti
 
 
 @pytest.mark.asyncio
-async def test_compiler_path_builds_audio_reactive_glsl_material_render_candidate_graph():
+async def test_compiler_path_blocks_unlowered_audio_to_material_control_binding():
     client = FakeTDClient(
         scripted={
             "families": {
@@ -1048,78 +1050,21 @@ async def test_compiler_path_builds_audio_reactive_glsl_material_render_candidat
         card_index=FakeCardIndex(MATERIAL_RENDER_OPS),
     )
 
-    assert plan.blocked_questions == []
-    assert plan.missing_facts == []
+    assert plan.blocked_questions
     assert plan.compiled_task is not None
     assert plan.compiled_task.domains == ["CHOP", "TOP", "COMP", "DAT", "MAT"]
     assert plan.concept_graph.profile == "concept_compiled"
     candidate = plan.candidate_graphs[0]
     assert candidate.profiles == ["audio_reactive", "render_pipeline", "glsl_material"]
-    assert {
-        "audio_analysis_chop_chain",
-        "glsl_material_render_pipeline",
-        "debug_output_conventions",
-    }.issubset(set(candidate.pattern_ids))
-    assert set(candidate.required_ops).issubset(set(plan.patch_plan.required_ops))
-    assert "baseCOMP" in plan.patch_plan.required_ops
-    assert "glslMAT" in plan.patch_plan.required_ops
-    assert "renderTOP" in plan.patch_plan.required_ops
-    assert not any(flag.startswith("missing-op:") for flag in candidate.risk_flags)
-
-    shell_path = "/project1/tdpilot_concept"
-    create_names = [op.args["name"] for op in plan.patch_plan.operations if op.kind == "create_node"]
-    assert "tdpilot_concept" in create_names
-    assert "glsl" in create_names
-    assert "render" in create_names
-    assert "out1" in create_names
-    assert plan.patch_plan.validation_plan.capture_frames == [f"{shell_path}/out1"]
-
-    geometry_params = [
-        op.args["params"]
-        for op in plan.patch_plan.operations
-        if op.kind == "set_params" and op.target == f"{shell_path}/geometry"
-    ]
-    assert geometry_params and geometry_params[0]["material"] == f"{shell_path}/glsl"
-    material_params = [
-        op.args["params"]
-        for op in plan.patch_plan.operations
-        if op.kind == "set_params" and op.target == f"{shell_path}/glsl"
-    ]
-    assert material_params and material_params[0]["vdat"] == f"{shell_path}/text"
-    assert material_params[0]["pdat"] == f"{shell_path}/text2"
-    generated_ops = [
-        op
-        for op in plan.patch_plan.operations
-        if op.kind == "set_dat_content" and isinstance(op.args.get("generated_code"), dict)
-    ]
-    generated_by_target = {
-        op.args["generated_code"]["target_param"]: op.args["generated_code"] for op in generated_ops
-    }
-    assert {"vdat", "pdat"}.issubset(generated_by_target)
-    assert generated_by_target["vdat"]["target_op"] == f"{shell_path}/glsl"
-    assert generated_by_target["vdat"]["source_refs"] == [f"{shell_path}/text"]
-    assert "glsl_mat_vertex_shader" in generated_by_target["vdat"]["static_checks"]
-    assert generated_by_target["pdat"]["target_op"] == f"{shell_path}/glsl"
-    assert generated_by_target["pdat"]["source_refs"] == [f"{shell_path}/text2"]
-    assert "glsl_mat_pixel_shader" in generated_by_target["pdat"]["static_checks"]
-    assert validate_patch_plan_generated_code(plan.patch_plan) == []
-    render_params = [
-        op.args["params"]
-        for op in plan.patch_plan.operations
-        if op.kind == "set_params" and op.target == f"{shell_path}/render"
-    ]
-    assert render_params and render_params[0]["camera"] == f"{shell_path}/camera"
-    assert render_params[0]["geometry"] == f"{shell_path}/geometry"
-    debug_info_params = [
-        op.args["params"]
-        for op in plan.patch_plan.operations
-        if op.kind == "set_params" and op.target == f"{shell_path}/debug_info"
-    ]
-    assert debug_info_params and debug_info_params[0]["op"] == f"{shell_path}/out1"
+    assert plan.patch_plan.operations == []
+    assert plan.route == "host_authored"
+    assert plan.intent_coverage is not None and not plan.intent_coverage.complete
+    assert "req:binding:audio-to-visual-control" in plan.intent_coverage.uncovered_requirement_ids
+    assert any("control" in item for item in plan.intent_coverage.unresolved_semantic_edges)
 
 
 @pytest.mark.asyncio
-async def test_compiler_path_builds_audio_reactive_glsl_material_render_with_panel_controls():
+async def test_compiler_path_blocks_audio_and_panel_to_material_controls():
     client = FakeTDClient(
         scripted={
             "families": {
@@ -1158,59 +1103,20 @@ async def test_compiler_path_builds_audio_reactive_glsl_material_render_with_pan
         card_index=FakeCardIndex(MATERIAL_RENDER_OPS),
     )
 
-    assert plan.blocked_questions == []
-    assert plan.missing_facts == []
+    assert plan.blocked_questions
     assert plan.compiled_task is not None
     assert plan.compiled_task.domains == ["CHOP", "TOP", "COMP", "DAT", "MAT"]
     assert plan.concept_graph.profile == "concept_compiled"
     candidate = plan.candidate_graphs[0]
     assert candidate.profiles == ["audio_reactive", "render_pipeline", "glsl_material", "panel_ui"]
-    expected_path_marker = (
-        "compiler:path:phase1-audio-reactive-render-pipeline-glsl-material-panel-ui-debug-output"
-    )
-    assert "compiler:path:phase1-audio-feedback-panel-debug" not in plan.grounding_evidence
-    assert expected_path_marker in plan.grounding_evidence
-    assert {
-        "audio_analysis_chop_chain",
-        "glsl_material_render_pipeline",
-        "panel_control_output",
-        "debug_output_conventions",
-    }.issubset(set(candidate.pattern_ids))
-    assert any(
-        edge.kind == "control" and edge.source == "panel_out" and edge.target == "material"
-        for edge in plan.concept_graph.edges
-    )
-    assembly_ids = {
-        op.args["assembly_macro_id"] for op in plan.patch_plan.operations if op.args.get("assembly_macro_id")
-    }
-    assert "add_user_controls" in assembly_ids
-
-    shell_path = "/project1/tdpilot_concept"
-    create_names = [op.args["name"] for op in plan.patch_plan.operations if op.kind == "create_node"]
-    assert "panel_container" in create_names
-    assert "panel_slider" in create_names
-    assert "panel_button" in create_names
-    assert "panel_reader" in create_names
-    assert plan.patch_plan.validation_plan.capture_frames == [f"{shell_path}/out1"]
-
-    panel_reader_params = [
-        op.args["params"]
-        for op in plan.patch_plan.operations
-        if op.kind == "set_params" and op.target == f"{shell_path}/panel_reader"
-    ]
-    assert panel_reader_params and panel_reader_params[0]["component"] == f"{shell_path}/panel_container"
-
-    material_params = [
-        op.args["params"]
-        for op in plan.patch_plan.operations
-        if op.kind == "set_params" and op.target == f"{shell_path}/glsl"
-    ]
-    assert material_params and material_params[0]["vdat"] == f"{shell_path}/text"
-    assert material_params[0]["pdat"] == f"{shell_path}/text2"
+    assert plan.patch_plan.operations == []
+    assert plan.intent_coverage is not None and not plan.intent_coverage.complete
+    assert "req:binding:audio-to-visual-control" in plan.intent_coverage.uncovered_requirement_ids
+    assert len([item for item in plan.intent_coverage.unresolved_semantic_edges if "control" in item]) >= 2
 
 
 @pytest.mark.asyncio
-async def test_compiler_path_builds_audio_reactive_terrain_material_with_controls():
+async def test_compiler_path_blocks_terrain_material_until_control_compiler_exists():
     client = FakeTDClient(
         scripted={
             "families": {
@@ -1250,8 +1156,7 @@ async def test_compiler_path_builds_audio_reactive_terrain_material_with_control
         card_index=FakeCardIndex(TERRAIN_MATERIAL_OPS),
     )
 
-    assert plan.blocked_questions == []
-    assert plan.missing_facts == []
+    assert plan.blocked_questions
     assert plan.compiled_task is not None
     assert plan.compiled_task.domains == ["CHOP", "TOP", "COMP", "DAT", "SOP", "MAT"]
     candidate = plan.candidate_graphs[0]
@@ -1266,27 +1171,9 @@ async def test_compiler_path_builds_audio_reactive_terrain_material_with_control
         edge.kind == "reference" and edge.source == "terrain_out" and edge.target == "geo"
         for edge in plan.concept_graph.edges
     )
-
-    shell_path = "/project1/tdpilot_concept"
-    create_names = [op.args["name"] for op in plan.patch_plan.operations if op.kind == "create_node"]
-    assert "grid" in create_names
-    assert "noise" in create_names
-    assert "out_sop" in create_names
-    assert "geometry" in create_names
-    assert "panel_container" in create_names
-
-    geometry_params = [
-        op.args["params"]
-        for op in plan.patch_plan.operations
-        if op.kind == "set_params" and op.target == f"{shell_path}/geometry"
-    ]
-    assert geometry_params
-    assert geometry_params[0]["sop"] == f"{shell_path}/out_sop"
-    assert geometry_params[0]["material"] == f"{shell_path}/glsl"
-    assert "add_user_controls" in {
-        op.args["assembly_macro_id"] for op in plan.patch_plan.operations if op.args.get("assembly_macro_id")
-    }
-    assert plan.patch_plan.validation_plan.capture_frames == [f"{shell_path}/out1"]
+    assert plan.patch_plan.operations == []
+    assert plan.intent_coverage is not None and not plan.intent_coverage.complete
+    assert "req:binding:audio-to-visual-control" in plan.intent_coverage.uncovered_requirement_ids
 
 
 @pytest.mark.asyncio
@@ -2293,7 +2180,7 @@ async def test_open_prompt_atlas_synthesizes_typed_sop_render_preview_graph():
 
 
 @pytest.mark.asyncio
-async def test_open_prompt_atlas_synthesizes_chop_export_bound_sop_render_preview():
+async def test_open_prompt_blocks_chop_export_bound_sop_until_typed_binding_compiler_exists():
     cards = [
         _atlas_card(
             "lfoCHOP",
@@ -2390,67 +2277,18 @@ async def test_open_prompt_atlas_synthesizes_chop_export_bound_sop_render_previe
         card_index=AtlasCardIndex(cards),
     )
 
-    assert plan.blocked_questions == []
-    assert plan.missing_facts == []
+    assert plan.blocked_questions
     assert plan.concept_graph.profile == "generic"
     assert plan.candidate_graphs
     candidate = plan.candidate_graphs[0]
     assert candidate.pattern_ids == ["atlas:synthesized:chop_export_bound_sop_render_preview_card_chain"]
-    assert {
-        "atlas-synthesis:typed-role-graph",
-        "atlas-synthesis:typed-role-path-search:v1:CHOP:control->process->output",
-        "atlas-synthesis:typed-role-path-search:v1:SOP:source->process->output",
-        "atlas-synthesis:role-graph:control->source->preview->output",
-        "atlas-synthesis:multi-domain:chop-export-to-sop-render-top-preview",
-        "atlas-synthesis:family:chop+sop+comp+top",
-        "atlas-synthesis:chop-export-binding:path-parameter",
-        "atlas-synthesis:binding:out_chop->noiseSOP.amp",
-        "atlas-synthesis:sop-control-target:noiseSOP.amp",
-    }.issubset(set(plan.grounding_evidence))
-    assert {
-        "lfoCHOP",
-        "mathCHOP",
-        "nullCHOP",
-        "gridSOP",
-        "noiseSOP",
-        "nullSOP",
-        "geometryCOMP",
-        "cameraCOMP",
-        "lightCOMP",
-        "renderTOP",
-        "nullTOP",
-    } == set(candidate.required_ops)
-    assert "export-flag-requires-review" in candidate.risk_flags
-
-    assert _set_params_for(plan, "/project1/lfo") == {"channelname": "/project1/noise:amp"}
-    assert _set_params_for(plan, "/project1/out_chop") == {"exportmethod": "Channel Name is Path:Parameter"}
-    assert _set_params_for(plan, "/project1/geometry") == {"sop": "/project1/out_sop"}
-    assert _set_params_for(plan, "/project1/render") == {
-        "geometry": "/project1/geometry",
-        "camera": "/project1/camera",
-        "lights": "/project1/light",
-    }
-
-    noise_param_sets = [
-        operation.args["params"]
-        for operation in plan.patch_plan.operations
-        if operation.kind == "set_params" and operation.target == "/project1/noise"
-    ]
-    assert noise_param_sets == []
-
-    connect_pairs = [
-        (op.args["from"], op.args["to"]) for op in plan.patch_plan.operations if op.kind == "connect"
-    ]
-    assert ("/project1/lfo", "/project1/math") in connect_pairs
-    assert ("/project1/math", "/project1/out_chop") in connect_pairs
-    assert ("/project1/grid", "/project1/noise") in connect_pairs
-    assert ("/project1/noise", "/project1/out_sop") in connect_pairs
-    assert ("/project1/render", "/project1/out1") in connect_pairs
-    assert ("/project1/out_chop", "/project1/noise") not in connect_pairs
+    assert plan.patch_plan.operations == []
+    assert plan.intent_coverage is not None and not plan.intent_coverage.complete
+    assert any("control" in item for item in plan.intent_coverage.unresolved_semantic_edges)
 
 
 @pytest.mark.asyncio
-async def test_open_prompt_atlas_searches_messy_chop_export_sop_binding_candidates():
+async def test_open_prompt_keeps_sop_binding_search_evidence_but_blocks_execution():
     cards = [
         _atlas_card(
             "noiseCHOP",
@@ -2571,25 +2409,10 @@ async def test_open_prompt_atlas_searches_messy_chop_export_sop_binding_candidat
         card_index=AtlasCardIndex(cards),
     )
 
-    assert plan.blocked_questions == []
-    assert plan.missing_facts == []
+    assert plan.blocked_questions
     assert plan.candidate_graphs
     candidate = plan.candidate_graphs[0]
     assert candidate.pattern_ids == ["atlas:synthesized:chop_export_bound_sop_render_preview_card_chain"]
-    assert candidate.required_ops == [
-        "lfoCHOP",
-        "mathCHOP",
-        "nullCHOP",
-        "gridSOP",
-        "noiseSOP",
-        "nullSOP",
-        "geometryCOMP",
-        "cameraCOMP",
-        "lightCOMP",
-        "renderTOP",
-        "nullTOP",
-    ]
-
     evidence = set(plan.grounding_evidence)
     assert "atlas-synthesis:typed-role-graph-search:v1" in evidence
     assert "atlas-synthesis:typed-role-path-search:v1:CHOP:control->process->output" in evidence
@@ -2612,15 +2435,8 @@ async def test_open_prompt_atlas_searches_messy_chop_export_sop_binding_candidat
         for marker in evidence
     )
 
-    assert _set_params_for(plan, "/project1/lfo") == {"channelname": "/project1/noise:amp"}
-    assert _set_params_for(plan, "/project1/out_chop") == {"exportmethod": "Channel Name is Path:Parameter"}
-    assert _set_params_for(plan, "/project1/geometry") == {"sop": "/project1/out_sop"}
-    noise_param_sets = [
-        operation.args["params"]
-        for operation in plan.patch_plan.operations
-        if operation.kind == "set_params" and operation.target == "/project1/noise"
-    ]
-    assert noise_param_sets == []
+    assert plan.patch_plan.operations == []
+    assert plan.intent_coverage is not None and not plan.intent_coverage.complete
 
 
 @pytest.mark.asyncio
@@ -2724,7 +2540,7 @@ async def test_open_prompt_atlas_synthesizes_chop_export_path_parameter_binding(
         for operation in plan.patch_plan.operations
         if operation.kind == "set_params" and operation.target == "/project1/level"
     ]
-    assert level_param_sets == []
+    assert level_param_sets == [{"brightness1": {"expr": "op('/project1/out_chop')[0]"}}]
 
     connect_pairs = [
         (op.args["from"], op.args["to"]) for op in plan.patch_plan.operations if op.kind == "connect"

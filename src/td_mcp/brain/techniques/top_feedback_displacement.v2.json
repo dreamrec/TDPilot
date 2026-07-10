@@ -1,0 +1,61 @@
+{
+  "schema_version": 2,
+  "pattern_id": "top_feedback_displacement",
+  "title": "Animated displacement feedback",
+  "role": "simulation",
+  "profiles": ["feedback", "concept_compiled"],
+  "intent_tags": ["feedback", "displacement", "organic", "motion", "trails"],
+  "families": ["TOP"],
+  "state": "validated",
+  "build_compatibility": {"minimum": "2023.10000", "maximum": null},
+  "compiler": {"type": "packaged_template", "template_version": 1},
+  "estimated_nodes": 6,
+  "estimated_gpu_cost": "medium",
+  "estimated_cpu_cost": "low",
+  "required_ops": ["feedbackTOP", "noiseTOP", "displaceTOP", "levelTOP", "compositeTOP", "nullTOP"],
+  "inputs": {
+    "image": [
+      {"node": "feedback", "input": 0},
+      {"node": "mix", "input": 0}
+    ]
+  },
+  "outputs": {"image": "output"},
+  "tunables": {
+    "decay": {"type": "float", "minimum": 0.0, "maximum": 0.999},
+    "displacement": {"type": "float", "minimum": 0.0, "maximum": 0.2},
+    "noise_period": {"type": "float", "minimum": 0.05, "maximum": 10.0}
+  },
+  "controls": [],
+  "parameter_defaults": {
+    "decay": 0.96,
+    "displacement": 0.018,
+    "noise_period": 1.8
+  },
+  "nodes": [
+    {"id": "feedback", "op_type": "feedbackTOP", "name": "fb_state", "params": {"top": "${path.mix}"}},
+    {"id": "noise", "op_type": "noiseTOP", "name": "fb_noise", "params": {"period": "${parameters.noise_period}", "harmon": 4, "amp": 1.0, "mono": true, "t4d": {"expr": "absTime.seconds * 0.12"}}},
+    {"id": "displace", "op_type": "displaceTOP", "name": "fb_displace", "params": {"midpoint": [0.5, 0.5, 0.5], "displaceweight": ["${parameters.displacement}", "${parameters.displacement}", 0.0], "aspectcorrect": true, "extend": "repeat"}},
+    {"id": "decay", "op_type": "levelTOP", "name": "fb_decay", "params": {"opacity": "${parameters.decay}"}},
+    {"id": "mix", "op_type": "compositeTOP", "name": "fb_mix", "params": {"operand": "over"}},
+    {"id": "output", "op_type": "nullTOP", "name": "out_image", "params": {}}
+  ],
+  "connections": [
+    {"source": "feedback", "target": "displace", "source_index": 0, "target_index": 0},
+    {"source": "noise", "target": "displace", "source_index": 0, "target_index": 1},
+    {"source": "displace", "target": "decay", "source_index": 0, "target_index": 0},
+    {"source": "decay", "target": "mix", "source_index": 0, "target_index": 1},
+    {"source": "mix", "target": "output", "source_index": 0, "target_index": 0}
+  ],
+  "validation_defaults": [
+    {"id": "feedback_target", "kind": "connected", "target": "${path.feedback}", "expected": "${path.mix}"},
+    {"id": "feedback_visible", "kind": "not_black", "target": "${path.output}", "expected": true},
+    {"id": "feedback_temporal", "kind": "changing_signal", "target": "${path.output}", "expected": true},
+    {"id": "feedback_runtime", "kind": "no_errors", "target": "${path.output}", "expected": true}
+  ],
+  "failure_modes": ["missing seed image", "feedback target reference lost", "unbounded displacement", "static noise expression"],
+  "evidence": {
+    "status": "atlas_fixture_validated",
+    "operator_cards": ["feedbackTOP", "noiseTOP", "displaceTOP", "levelTOP", "compositeTOP", "nullTOP"],
+    "fixture": "tests/brain/test_build_compiler.py::test_all_packaged_v2_techniques_compile_deterministically"
+  }
+}

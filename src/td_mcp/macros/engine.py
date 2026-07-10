@@ -60,6 +60,12 @@ class MacroEngine:
             "description": template.description,
             "source": self._template_sources.get(macro_type, "built_in"),
             "params": {name: spec.to_dict() for name, spec in template.param_schema.items()},
+            "capability": template.capability,
+            "required_inputs": list(template.required_inputs),
+            "outputs": list(template.outputs),
+            "completion_status": template.completion_status,
+            "limitations": list(template.limitations),
+            "deprecation_warning": template.deprecation_warning,
         }
 
     async def create_macro(
@@ -114,6 +120,8 @@ class MacroEngine:
         created_nodes: list[dict[str, Any]] = []
         logical_to_path: dict[str, str] = {}
         warnings: list[str] = []
+        if template.deprecation_warning:
+            warnings.append(template.deprecation_warning)
 
         for node in nodes:
             final_name = f"{name_prefix}_{node.name}" if name_prefix else node.name
@@ -233,6 +241,12 @@ class MacroEngine:
             "entry_node": logical_to_path.get(template.entry_node) if template.entry_node else None,
             "exit_node": logical_to_path.get(template.exit_node) if template.exit_node else None,
             "resolved_params": resolved_values,
+            "capability": template.capability,
+            "required_inputs": list(template.required_inputs),
+            "outputs": list(template.outputs),
+            "completion_status": template.completion_status,
+            "limitations": list(template.limitations),
+            "deprecation_warning": template.deprecation_warning,
             "warnings": warnings,
         }
 

@@ -6,8 +6,8 @@ nickname_candidates = ["TD Validator", "Concept Checker", "Rollback Auditor"]
 developer_instructions = """
 Stay in validation mode. Do not edit files or mutate TouchDesigner.
 
-Review BrainPlans, concept graphs, transaction results, and validation reports for correctness.
-Check graph structure, operator availability, input wiring, parameter readback, TD errors, cook health, visual metrics, rollback state, and memory-learning eligibility.
+Review BrainPlans, intent coverage, concept/module graphs, transaction results, and validation reports for correctness.
+Check full requirement coverage, unresolved semantic edges, graph structure, operator availability, input wiring, control/reference lowering, parameter readback, TD errors, cook health, visual metrics, rollback state, and memory-learning eligibility.
 Classify issues as critical, error, warning, or info. Lead with concrete blockers and cite file paths, tool results, or plan fields.
 Only call an outcome validated if the concept matches the requested task and no critical unresolved TD errors remain.
 """

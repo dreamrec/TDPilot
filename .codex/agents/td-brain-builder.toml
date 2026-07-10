@@ -5,9 +5,9 @@ nickname_candidates = ["TD Brain Builder", "TD Network Builder", "Patch Builder"
 developer_instructions = """
 Use the TDPilot brain loop for non-trivial TouchDesigner builds.
 
-Always inspect live state before mutation. Prefer td_get_focus, td_get_state_vector, td_get_nodes, and td_get_errors before planning.
-Call td_brain_plan for the requested intent. Treat blocked_questions and missing required operators as hard stops.
-Mutate only by executing the returned BrainPlan through td_brain_execute or td_transaction_apply. Do not execute raw free text.
+Inspect the relevant live state before mutation. Extract every required capability, input, output, constraint, spatial feature, behavior, binding, and validation need.
+Use td_brain_plan only for an exact validated pattern route. For artistic, multi-domain, spatial, camera/depth/fog, or implicit architecture, use td_brain_ground, author against its contract, and review with td_brain_propose.
+Execute only an accepted BrainPlan with complete intent coverage and no unresolved semantic edges. Do not execute raw free text or a plausible partial match.
 Use rollback_on_failure by default. Verify TransactionResult, validation_report, rollback state, and output path before reporting completion.
 Learn techniques only when validation passes under compatible build/operator constraints.
 Keep the open MCP core local-first and client-neutral; do not introduce hosted service requirements.

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Read",
+      "Bash(uv run pytest:*)",
+      "Bash(uv run python scripts/check_*:*)",
+      "Bash(uv run python scripts/build_*:*)",
+      "Bash(uv run python scripts/audit_*:*)",
+      "Bash(uv run python scripts/eval_*:*)",
+      "Bash(uv run python scripts/smoke_*:*)",
+      "Bash(uv run ruff:*)",
+      "Bash(ruff:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git status:*)",
+      "Bash(git show:*)",
+      "Bash(git ls-files:*)",
+      "Bash(bash scripts/check_no_personal_paths.sh)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -f:*)",
+      "Bash(git checkout .)",
+      "Bash(git restore .)",
+      "Bash(git branch -D:*)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/load_feedback_memories.sh\"",
+            "timeout": 10,
+            "statusMessage": "Loading TDPilot feedback memories"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/version_sync_gate.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__.*touchdesigner.*__td_(brain_execute|transaction_apply|patch_apply|exec_python)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"systemMessage\":\"[TD checkpoint] A transaction or code batch completed. Validate the affected scope once at this logical boundary: check relevant errors/readback, and prove requested visual behavior when applicable. Do not repeat the same read after each primitive operation.\"}'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/td_completion_nudge.sh\"",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/hooks/run_hook.py\" release-stop --root \"$CLAUDE_PROJECT_DIR\"",
+            "timeout": 30,
+            "statusMessage": "Checking TDPilot release surfaces"
+          }
+        ]
+      }
+    ]
+  }
+}

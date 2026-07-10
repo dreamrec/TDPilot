@@ -4,18 +4,35 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10 support.
+    tomllib = None  # type: ignore[assignment]
 
 from td_mcp.brain.atlas_audit import audit_brain_atlas
 from td_mcp.brain.plugin_surface import audit_plugin_surface
 from td_mcp.brain.skill_audit import audit_brain_skills
 
 BRAIN_TRANSACTION_TOOLS = ("td_brain_execute", "td_transaction_apply")
+GIT_TIMEOUT_SECONDS = 5
+SOURCE_REPO_MARKERS = (
+    ".claude/settings.json",
+    "mcp/manifest.json",
+    "scripts/audit_brain_atlas.py",
+    "scripts/audit_brain_skills.py",
+    "scripts/audit_plugin_surface.py",
+    "src/td_mcp/brain/hook_check.py",
+)
 RELEASE_RELEVANT_PREFIXES = (
     ".agents/",
+    ".claude/hooks/",
+    ".claude/settings.json",
     ".claude-plugin/",
     ".codex/",
     "AGENTS.md",
@@ -64,15 +81,29 @@ def evaluate_release_stop(
     changed_files: list[str] | None = None,
 ) -> dict[str, Any]:
     """Return Claude hook JSON for Stop events when release surfaces changed."""
-    repo_root = Path(root or payload.get("cwd") or Path.cwd())
+    if payload.get("stop_hook_active") is True:
+        return _silent()
+
+    project_cwd = root or payload.get("cwd")
+    if not project_cwd:
+        return _silent()
+    repo_root = _resolve_tdpilot_source_root(Path(project_cwd))
+    if repo_root is None:
+        return _silent()
+
     changed = changed_files if changed_files is not None else _changed_files(repo_root)
+    if changed is None:
+        return _silent()
     relevant = [path for path in changed if _release_relevant(path)]
     if not relevant:
         return _silent()
 
-    skill_report = audit_brain_skills(repo_root)
-    plugin_report = audit_plugin_surface(repo_root)
-    atlas_report = audit_brain_atlas(repo_root)
+    try:
+        skill_report = audit_brain_skills(repo_root)
+        plugin_report = audit_plugin_surface(repo_root)
+        atlas_report = audit_brain_atlas(repo_root)
+    except Exception:  # noqa: BLE001 - a Stop hook must fail open.
+        return _silent()
     messages = [
         f"TDPilot release hook: {len(relevant)} release-relevant file(s) changed.",
         "skill audit ok" if skill_report["ok"] else "skill audit failed",
@@ -171,17 +202,64 @@ def _is_brain_transaction_tool(tool_name: str) -> bool:
     return any(tool_name == name or tool_name.endswith(f"__{name}") for name in BRAIN_TRANSACTION_TOOLS)
 
 
-def _changed_files(root: Path) -> list[str]:
+def _resolve_tdpilot_source_root(project_cwd: Path) -> Path | None:
+    """Resolve and authenticate the source repository targeted by a Stop hook."""
     try:
         proc = subprocess.run(
-            ["git", "status", "--short"],
+            ["git", "-C", str(project_cwd), "rev-parse", "--show-toplevel"],
+            text=True,
+            capture_output=True,
+            check=True,
+            timeout=GIT_TIMEOUT_SECONDS,
+        )
+        root = Path(proc.stdout.strip()).expanduser().resolve()
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return root if _is_tdpilot_source_repo(root) else None
+
+
+def _is_tdpilot_source_repo(root: Path) -> bool:
+    if not root.is_dir() or not all((root / marker).is_file() for marker in SOURCE_REPO_MARKERS):
+        return False
+    if _project_name(root / "pyproject.toml") != "tdpilot":
+        return False
+    try:
+        manifest = json.loads((root / "mcp" / "manifest.json").read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return False
+    return isinstance(manifest, dict) and manifest.get("slug") == "tdpilot"
+
+
+def _project_name(path: Path) -> str | None:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return None
+    if tomllib is not None:
+        try:
+            project = tomllib.loads(text).get("project")
+        except tomllib.TOMLDecodeError:
+            return None
+        return str(project.get("name")) if isinstance(project, dict) and project.get("name") else None
+    project_section = re.search(r"(?ms)^\[project\]\s*(.*?)(?=^\[|\Z)", text)
+    if project_section is None:
+        return None
+    match = re.search(r'(?m)^name\s*=\s*["\']([^"\']+)["\']\s*$', project_section.group(1))
+    return match.group(1) if match else None
+
+
+def _changed_files(root: Path) -> list[str] | None:
+    try:
+        proc = subprocess.run(
+            ["git", "status", "--short", "--untracked-files=all"],
             cwd=root,
             text=True,
             capture_output=True,
             check=True,
+            timeout=GIT_TIMEOUT_SECONDS,
         )
-    except Exception:  # noqa: BLE001
-        return []
+    except (OSError, subprocess.SubprocessError):
+        return None
     changed: list[str] = []
     for line in proc.stdout.splitlines():
         path = line[3:].strip()

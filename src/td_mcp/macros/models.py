@@ -93,6 +93,12 @@ class MacroTemplate:
     param_targets: dict[str, list[ParamTarget]] = field(default_factory=dict)
     entry_node: str | None = None
     exit_node: str | None = None
+    capability: str = "network_scaffold"
+    required_inputs: list[dict[str, Any]] = field(default_factory=list)
+    outputs: list[dict[str, Any]] = field(default_factory=list)
+    completion_status: str = "scaffold"
+    limitations: list[str] = field(default_factory=list)
+    deprecation_warning: str | None = None
 
     def summary(self) -> dict[str, Any]:
         return {
@@ -103,4 +109,10 @@ class MacroTemplate:
             "entry_node": self.entry_node,
             "exit_node": self.exit_node,
             "params": {k: v.to_dict() for k, v in self.param_schema.items()},
+            "capability": self.capability,
+            "required_inputs": list(self.required_inputs),
+            "outputs": list(self.outputs),
+            "completion_status": self.completion_status,
+            "limitations": list(self.limitations),
+            "deprecation_warning": self.deprecation_warning,
         }

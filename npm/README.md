@@ -1,4 +1,4 @@
-# TDPilot v2.1.1
+# TDPilot v2.4.0
 
 [![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
@@ -6,7 +6,13 @@
 [![license](https://img.shields.io/badge/license-MIT-blue)](https://github.com/dreamrec/TDPilot/blob/main/LICENSE)
 [![MCP tools](https://img.shields.io/badge/MCP%20tools-114-blueviolet)](https://github.com/dreamrec/TDPilot/blob/main/docs/API_REFERENCE.md)
 
-AI copilot for TouchDesigner — 114 tools for full live control via MCP, with correctness-first BrainPlan transactions, optional cockpit UI, technique memory, knowledge corpus, POPx inspection, project lifecycle control, focus + locations, hint injection, component notes, custom parameter authoring, agent activity log, one-tool self-update, sync-status checks, and sync diagnosis.
+AI copilot for TouchDesigner — 114 tools for full live control via MCP. TDPilot
+v2.4.0 routes exact validated patterns through deterministic planning and
+artistic or multi-domain requests through grounded concept authoring. Complete
+intent coverage, explicit cross-domain bindings, transactional execution,
+actual-state validation, bounded repair, show-safe staging, technique memory,
+and a local reviewed operator atlas keep the workflow evidence-driven and
+local-first.
 
 ## Quick start
 

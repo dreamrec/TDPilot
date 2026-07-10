@@ -1,0 +1,64 @@
+{
+  "schema_version": 2,
+  "pattern_id": "audio_bands",
+  "title": "Three-band audio control analysis",
+  "role": "analysis",
+  "profiles": ["audio_reactive", "concept_compiled"],
+  "intent_tags": ["audio", "bands", "bass", "mid", "high", "spectrum", "control"],
+  "families": ["CHOP"],
+  "state": "validated",
+  "build_compatibility": {"minimum": "2023.10000", "maximum": null},
+  "compiler": {"type": "packaged_template", "template_version": 1},
+  "estimated_nodes": 9,
+  "estimated_gpu_cost": "low",
+  "estimated_cpu_cost": "medium",
+  "required_ops": ["audiofilterCHOP", "analyzeCHOP", "mergeCHOP", "mathCHOP", "nullCHOP"],
+  "inputs": {
+    "audio": [
+      {"node": "low_filter", "input": 0},
+      {"node": "mid_filter", "input": 0},
+      {"node": "high_filter", "input": 0}
+    ]
+  },
+  "outputs": {"bands": "output"},
+  "tunables": {
+    "low_cutoff": {"type": "float", "minimum": 20.0, "maximum": 400.0},
+    "mid_center": {"type": "float", "minimum": 200.0, "maximum": 4000.0},
+    "high_cutoff": {"type": "float", "minimum": 2000.0, "maximum": 16000.0},
+    "gain": {"type": "float", "minimum": 0.0, "maximum": 20.0}
+  },
+  "controls": [],
+  "parameter_defaults": {"low_cutoff": 180.0, "mid_center": 1200.0, "high_cutoff": 5000.0, "gain": 4.0},
+  "nodes": [
+    {"id": "low_filter", "op_type": "audiofilterCHOP", "name": "band_low", "params": {"filter": "lowpass", "frequency": "${parameters.low_cutoff}", "drywet": 1.0}},
+    {"id": "low_level", "op_type": "analyzeCHOP", "name": "level_low", "params": {"function": "RMS Power"}},
+    {"id": "mid_filter", "op_type": "audiofilterCHOP", "name": "band_mid", "params": {"filter": "bandpass", "frequency": "${parameters.mid_center}", "resonance": 0.6, "drywet": 1.0}},
+    {"id": "mid_level", "op_type": "analyzeCHOP", "name": "level_mid", "params": {"function": "RMS Power"}},
+    {"id": "high_filter", "op_type": "audiofilterCHOP", "name": "band_high", "params": {"filter": "highpass", "frequency": "${parameters.high_cutoff}", "drywet": 1.0}},
+    {"id": "high_level", "op_type": "analyzeCHOP", "name": "level_high", "params": {"function": "RMS Power"}},
+    {"id": "merge", "op_type": "mergeCHOP", "name": "bands_merge", "params": {}},
+    {"id": "normalize", "op_type": "mathCHOP", "name": "bands_normalize", "params": {"gain": "${parameters.gain}", "interppars": true}},
+    {"id": "output", "op_type": "nullCHOP", "name": "out_bands", "params": {}}
+  ],
+  "connections": [
+    {"source": "low_filter", "target": "low_level", "source_index": 0, "target_index": 0},
+    {"source": "mid_filter", "target": "mid_level", "source_index": 0, "target_index": 0},
+    {"source": "high_filter", "target": "high_level", "source_index": 0, "target_index": 0},
+    {"source": "low_level", "target": "merge", "source_index": 0, "target_index": 0},
+    {"source": "mid_level", "target": "merge", "source_index": 0, "target_index": 1},
+    {"source": "high_level", "target": "merge", "source_index": 0, "target_index": 2},
+    {"source": "merge", "target": "normalize", "source_index": 0, "target_index": 0},
+    {"source": "normalize", "target": "output", "source_index": 0, "target_index": 0}
+  ],
+  "validation_defaults": [
+    {"id": "bands_output", "kind": "exists", "target": "${path.output}", "expected": true},
+    {"id": "bands_active", "kind": "nonzero_signal", "target": "${path.output}", "expected": true},
+    {"id": "bands_runtime", "kind": "no_errors", "target": "${path.output}", "expected": true}
+  ],
+  "failure_modes": ["inactive audio source", "sample-rate mismatch", "filter gain clipping", "silent frequency band"],
+  "evidence": {
+    "status": "atlas_fixture_validated",
+    "operator_cards": ["audiofilterCHOP", "analyzeCHOP", "mergeCHOP", "mathCHOP", "nullCHOP"],
+    "fixture": "tests/brain/test_build_compiler.py::test_all_packaged_v2_techniques_compile_deterministically"
+  }
+}

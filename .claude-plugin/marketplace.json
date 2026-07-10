@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "dreamrec-TDPilot",
-  "description": "Build, debug, and verify TouchDesigner networks by talking to your AI. TDPilot gives the agent live control of a running TD session \u2014 it creates and wires operators, sets parameters, screenshots the result to check its own work, and can roll back anything it did.",
+  "description": "Local-first TouchDesigner AI control with truthful concept routing, deterministic visual techniques, transactional execution, live validation, and bounded repair.",
   "owner": {
     "name": "dreamrec",
     "email": "dreamrec@users.noreply.github.com"
@@ -9,8 +9,8 @@
   "plugins": [
     {
       "name": "tdpilot",
-      "description": "Build, debug, and verify TouchDesigner networks by talking to your AI. TDPilot gives the agent live control of a running TD session: it creates and wires operators, sets real parameter values, screenshots the render to verify its own work, and can transactionally roll back anything it did. Grounded in a full operator-knowledge atlas, guarded by snapshots, undo, and an activity log. Run /td-first-wow after install for a moving visual in under two minutes. Works with Claude Desktop, Claude Code, Cursor, Codex, and any MCP client \u2014 no signup, no API key.",
-      "version": "2.1.1",
+      "description": "TDPilot v2.4 routes exact validated patterns through deterministic planning and artistic or multi-domain requests through grounded concept authoring, then requires complete intent coverage before transactional execution. Live graph, runtime, visual, and performance checks plus bounded repair prevent partial scaffolds from being called finished. Local-first, 114 MCP tools, no signup or hosted model dependency.",
+      "version": "2.4.0",
       "author": {
         "name": "silviu"
       },

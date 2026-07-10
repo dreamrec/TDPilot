@@ -1,0 +1,54 @@
+{
+  "schema_version": 2,
+  "pattern_id": "top_feedback_transform",
+  "title": "Seeded transform feedback",
+  "role": "simulation",
+  "profiles": ["feedback", "concept_compiled"],
+  "intent_tags": ["feedback", "trail", "transform", "motion", "echo"],
+  "families": ["TOP"],
+  "state": "validated",
+  "build_compatibility": {"minimum": "2023.10000", "maximum": null},
+  "compiler": {"type": "packaged_template", "template_version": 1},
+  "estimated_nodes": 5,
+  "estimated_gpu_cost": "medium",
+  "estimated_cpu_cost": "low",
+  "required_ops": ["feedbackTOP", "transformTOP", "levelTOP", "compositeTOP", "nullTOP"],
+  "inputs": {
+    "image": [
+      {"node": "feedback", "input": 0},
+      {"node": "mix", "input": 0}
+    ]
+  },
+  "outputs": {"image": "output"},
+  "tunables": {
+    "decay": {"type": "float", "minimum": 0.0, "maximum": 0.999},
+    "scale": {"type": "float", "minimum": 0.9, "maximum": 1.1},
+    "rotation": {"type": "float", "minimum": -5.0, "maximum": 5.0}
+  },
+  "controls": [],
+  "parameter_defaults": {"decay": 0.94, "scale": 1.01, "rotation": 0.15},
+  "nodes": [
+    {"id": "feedback", "op_type": "feedbackTOP", "name": "fb_state", "params": {"top": "${path.mix}"}},
+    {"id": "transform", "op_type": "transformTOP", "name": "fb_transform", "params": {"s": ["${parameters.scale}", "${parameters.scale}"], "rotate": "${parameters.rotation}"}},
+    {"id": "decay", "op_type": "levelTOP", "name": "fb_decay", "params": {"opacity": "${parameters.decay}"}},
+    {"id": "mix", "op_type": "compositeTOP", "name": "fb_mix", "params": {"operand": "over"}},
+    {"id": "output", "op_type": "nullTOP", "name": "out_image", "params": {}}
+  ],
+  "connections": [
+    {"source": "feedback", "target": "transform", "source_index": 0, "target_index": 0},
+    {"source": "transform", "target": "decay", "source_index": 0, "target_index": 0},
+    {"source": "decay", "target": "mix", "source_index": 0, "target_index": 1},
+    {"source": "mix", "target": "output", "source_index": 0, "target_index": 0}
+  ],
+  "validation_defaults": [
+    {"id": "feedback_cycle", "kind": "connected", "target": "${path.feedback}", "expected": "${path.mix}"},
+    {"id": "feedback_visible", "kind": "not_black", "target": "${path.output}", "expected": true},
+    {"id": "feedback_moves", "kind": "changing_signal", "target": "${path.output}", "expected": true}
+  ],
+  "failure_modes": ["missing seed image", "feedback target reference lost", "decay outside stable range"],
+  "evidence": {
+    "status": "atlas_fixture_validated",
+    "operator_cards": ["feedbackTOP", "transformTOP", "levelTOP", "compositeTOP", "nullTOP"],
+    "fixture": "tests/brain/test_build_compiler.py::test_all_packaged_v2_techniques_compile_deterministically"
+  }
+}

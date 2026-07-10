@@ -1,6 +1,71 @@
 # Changelog
 
 
+## 2.4.0 - 2026-07-10 — Practical Intelligence
+
+Major additive upgrade to the 114-tool local-first brain. Existing primitive
+tools, legacy plans, draft schemas, and macros remain valid; new plans use
+truthful intent coverage, deterministic build programs, live validation, and
+bounded repair.
+
+### Security and packaging
+- Removed every end-user `Stop` hook. The shipped plugin now contains only the
+  transaction-scoped `PostToolUse` hook; source release auditing is guarded by
+  the project-local Claude configuration.
+- Hardened hook runtime selection and repository identity checks so foreign
+  repositories cannot become either the audit target or executable Python
+  root. Malformed markers, non-Git roots, failures, and timeouts fail open.
+- Public package closure is explicit: 7 skills, 3 agents, 6 commands, 1 hook,
+  and no release-only skill, agent, settings, or unavailable script reference.
+
+### Truthful routing and grounding
+- Added server-derived `IntentCoverage`, `IntentRequirement`, and
+  `CoverageEvidence`. Every required capability, input, output, behavior,
+  constraint, spatial/quality facet, binding, and validation assertion must be
+  covered before a v2 plan is executable.
+- Added cached `grounding_id` contexts with targeted live inspection,
+  per-facet operator retrieval, validated technique/knowledge recall, domain
+  diversity, TTL/LRU invalidation, and compact response modes.
+- Added explicit `ControlBindingSpec` lowering. The bounded supported path is a
+  safe CHOP reference expression into registry-backed numeric `levelTOP`
+  parameters; unsupported audio-to-MAT and arbitrary cross-domain bindings now
+  return zero operations and the host-authored route.
+- Added `/td-concept`; rebuilt `/td-first-wow` and `/td-audio-reactive` around
+  real visual chains, explicit outputs, validation, and audio-source discovery.
+
+### Deterministic visual compiler
+- Added `BuildIntent`, `ModuleGraph`, `BuildProgram`, `CompilerArtifacts`,
+  `ValidationContract`, `BuildProgramDiff`, deterministic naming/layout,
+  simplification, fingerprints, budgets, and operation-index references.
+- Evolved `BrainPattern` schema v2 into the canonical technique contract and
+  packaged 15 compiler-backed techniques with templates, parameter evidence,
+  validation defaults, compatibility, costs, and deterministic fixtures.
+- Added fast/production/show-safe inspection budgets and 16-entry TTL caches
+  for grounding, plans, and compiler programs without turning the passive read
+  journal into stale state.
+
+### Validation, repair, and show-safe updates
+- Validation now evaluates actual post-apply graph, runtime, visual,
+  performance, binding, and preservation evidence. Unavailable probes are
+  reported as unavailable, never silently passed.
+- Replaced the universal Constant TOP fallback with assertion-specific,
+  transaction-bounded repairs for black feedback, static/missing bindings,
+  broken connections/references, resolution mismatch, and cook cost.
+- Added guarded `delete_node`, `disconnect`, and `route_swap` operations;
+  show-safe builds validate in a staging COMP before a preconditioned route
+  commit and retain the old path for rollback.
+- Added compact ownership metadata and `BuildProgramDiff` authorization for
+  affected-module rebuilds, plus a 12-scenario benchmark harness that refuses
+  improvement claims without frozen baseline and current evidence.
+
+### Compatibility and evidence
+- Tool count remains **114**. `detail_level="full"` remains the API default;
+  shipped prompts use summaries and cached plan IDs.
+- The 102-case golden corpus now includes fail-closed sentinels for unsupported
+  semantic edges and spatial claims, plus a positive CHOP-to-`levelTOP`
+  binding smoke scenario.
+
+
 ## 2.1.1 - 2026-07-10 — Windows portability: green & blocking
 
 Patch release. Windows is now a first-class, CI-enforced platform, and the

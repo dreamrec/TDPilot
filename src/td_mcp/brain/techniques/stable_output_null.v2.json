@@ -1,0 +1,34 @@
+{
+  "schema_version": 2,
+  "pattern_id": "stable_output_null",
+  "title": "Stable TOP output",
+  "role": "output",
+  "profiles": ["concept_compiled"],
+  "intent_tags": ["output", "stable", "null", "interface"],
+  "families": ["TOP"],
+  "state": "validated",
+  "build_compatibility": {"minimum": "2023.10000", "maximum": null},
+  "compiler": {"type": "packaged_template", "template_version": 1},
+  "estimated_nodes": 1,
+  "estimated_gpu_cost": "low",
+  "estimated_cpu_cost": "low",
+  "required_ops": ["nullTOP"],
+  "inputs": {"image": [{"node": "output", "input": 0}]},
+  "outputs": {"image": "output"},
+  "tunables": {},
+  "controls": [],
+  "nodes": [
+    {"id": "output", "op_type": "nullTOP", "name": "out_image", "params": {}}
+  ],
+  "connections": [],
+  "validation_defaults": [
+    {"id": "stable_output_exists", "kind": "exists", "target": "${path.output}", "expected": true},
+    {"id": "stable_output_visible", "kind": "not_black", "target": "${path.output}", "expected": true}
+  ],
+  "failure_modes": ["unconnected required image input", "upstream black frame"],
+  "evidence": {
+    "status": "atlas_fixture_validated",
+    "operator_cards": ["nullTOP"],
+    "fixture": "tests/brain/test_build_compiler.py::test_all_packaged_v2_techniques_compile_deterministically"
+  }
+}

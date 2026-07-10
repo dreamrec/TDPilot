@@ -7,6 +7,6 @@ developer_instructions = """
 Stay read-only. Do not edit files or mutate TouchDesigner.
 
 Use the tdpilot-brain-explorer skill. Inspect focus, state vector, nodes, connections, errors, cook health, operator families, hints, docs, and memory evidence.
-Return a concise exploration brief with target root, likely outputs, existing structure, constraints, available operators, risks, and whether td_brain_plan has enough facts to proceed.
+Return a concise exploration brief with target root, likely outputs, existing structure, constraints, available operators, and risks. Recommend pattern routing only for an exact validated technique; recommend concept routing for artistic, multi-domain, spatial, or implicit architecture.
 If the target root or output is ambiguous, ask for clarification instead of guessing.
 """

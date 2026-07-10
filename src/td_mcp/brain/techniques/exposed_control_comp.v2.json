@@ -1,0 +1,48 @@
+{
+  "schema_version": 2,
+  "pattern_id": "exposed_control_comp",
+  "title": "Reusable control COMP with stable CHOP output",
+  "role": "control",
+  "profiles": ["control_rig", "concept_compiled"],
+  "intent_tags": ["control", "component", "reusable", "exposed", "parameter", "chop"],
+  "families": ["COMP", "CHOP"],
+  "state": "validated",
+  "build_compatibility": {"minimum": "2023.10000", "maximum": null},
+  "compiler": {"type": "packaged_template", "template_version": 1},
+  "estimated_nodes": 4,
+  "estimated_gpu_cost": "low",
+  "estimated_cpu_cost": "low",
+  "required_ops": ["baseCOMP", "constantCHOP", "mathCHOP", "nullCHOP"],
+  "inputs": {},
+  "outputs": {"control": "output", "component": "shell"},
+  "tunables": {
+    "default_value": {"type": "float", "minimum": 0.0, "maximum": 1.0},
+    "gain": {"type": "float", "minimum": 0.0, "maximum": 20.0}
+  },
+  "controls": [
+    {"name": "value", "label": "Value", "type": "float", "default": 0.5, "minimum": 0.0, "maximum": 1.0, "mapping_target": "${path.values}", "parameter": "const0value"},
+    {"name": "gain", "label": "Gain", "type": "float", "default": 1.0, "minimum": 0.0, "maximum": 20.0, "mapping_target": "${path.scale}", "parameter": "gain"}
+  ],
+  "parameter_defaults": {"default_value": 0.5, "gain": 1.0},
+  "nodes": [
+    {"id": "shell", "op_type": "baseCOMP", "name": "controls", "params": {"opviewer": "${path.output}"}},
+    {"id": "values", "op_type": "constantCHOP", "name": "values", "parent": "shell", "params": {"const0name": "value", "const0value": "${parameters.default_value}"}},
+    {"id": "scale", "op_type": "mathCHOP", "name": "scale", "parent": "shell", "params": {"gain": "${parameters.gain}", "interppars": true}},
+    {"id": "output", "op_type": "nullCHOP", "name": "out_control", "parent": "shell", "params": {}}
+  ],
+  "connections": [
+    {"source": "values", "target": "scale", "source_index": 0, "target_index": 0},
+    {"source": "scale", "target": "output", "source_index": 0, "target_index": 0}
+  ],
+  "validation_defaults": [
+    {"id": "control_component", "kind": "exists", "target": "${path.shell}", "expected": true},
+    {"id": "control_output", "kind": "nonzero_signal", "target": "${path.output}", "expected": true},
+    {"id": "control_runtime", "kind": "no_errors", "target": "${path.shell}", "expected": true}
+  ],
+  "failure_modes": ["component child path lost", "control output disconnected", "invalid gain", "viewer reference lost"],
+  "evidence": {
+    "status": "atlas_fixture_validated",
+    "operator_cards": ["baseCOMP", "constantCHOP", "mathCHOP", "nullCHOP"],
+    "fixture": "tests/brain/test_build_compiler.py::test_exposed_control_comp_compiles_nested_paths_and_metadata"
+  }
+}

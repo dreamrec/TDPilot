@@ -1,0 +1,45 @@
+{
+  "schema_version": 2,
+  "pattern_id": "sop_instancing",
+  "title": "SOP-driven Geometry COMP instancing",
+  "role": "render",
+  "profiles": ["render_pipeline", "concept_compiled"],
+  "intent_tags": ["sop", "instancing", "geometry", "points", "3d", "render"],
+  "families": ["SOP", "COMP", "MAT"],
+  "state": "validated",
+  "build_compatibility": {"minimum": "2023.10000", "maximum": null},
+  "compiler": {"type": "packaged_template", "template_version": 1},
+  "estimated_nodes": 4,
+  "estimated_gpu_cost": "medium",
+  "estimated_cpu_cost": "low",
+  "required_ops": ["geometryCOMP", "sphereSOP", "gridSOP", "constantMAT"],
+  "inputs": {},
+  "outputs": {"component": "geo", "positions": "points"},
+  "tunables": {
+    "rows": {"type": "int", "minimum": 2, "maximum": 256},
+    "columns": {"type": "int", "minimum": 2, "maximum": 256},
+    "spread_x": {"type": "float", "minimum": 0.1, "maximum": 20.0},
+    "spread_y": {"type": "float", "minimum": 0.1, "maximum": 20.0},
+    "instance_radius": {"type": "float", "minimum": 0.001, "maximum": 2.0}
+  },
+  "controls": [],
+  "parameter_defaults": {"rows": 12, "columns": 18, "spread_x": 5.0, "spread_y": 3.0, "instance_radius": 0.08},
+  "nodes": [
+    {"id": "geo", "op_type": "geometryCOMP", "name": "instanced_geo", "params": {"instancing": true, "instancecountmode": "Instance OP(s) Length", "instanceop": "${path.points}", "instancetx": "P(0)", "instancety": "P(1)", "instancetz": "P(2)", "material": "${path.material}", "render": true}},
+    {"id": "prototype", "op_type": "sphereSOP", "name": "prototype", "parent": "geo", "params": {"rad": ["${parameters.instance_radius}", "${parameters.instance_radius}", "${parameters.instance_radius}"], "rows": 12, "cols": 16, "normals": true}},
+    {"id": "points", "op_type": "gridSOP", "name": "instance_points", "params": {"rows": "${parameters.rows}", "cols": "${parameters.columns}", "sizex": "${parameters.spread_x}", "sizey": "${parameters.spread_y}"}},
+    {"id": "material", "op_type": "constantMAT", "name": "instance_material", "params": {"color": [0.2, 0.65, 1.0, 1.0], "depthtest": true}}
+  ],
+  "connections": [],
+  "validation_defaults": [
+    {"id": "instanced_geo", "kind": "exists", "target": "${path.geo}", "expected": true},
+    {"id": "instance_positions", "kind": "exists", "target": "${path.points}", "expected": true},
+    {"id": "instancing_runtime", "kind": "no_errors", "target": "${path.geo}", "expected": true}
+  ],
+  "failure_modes": ["instance source path lost", "missing P attributes", "excessive instance count", "prototype render flag disabled"],
+  "evidence": {
+    "status": "atlas_fixture_validated",
+    "operator_cards": ["geometryCOMP", "sphereSOP", "gridSOP", "constantMAT"],
+    "fixture": "tests/brain/test_build_compiler.py::test_all_packaged_v2_techniques_compile_deterministically"
+  }
+}

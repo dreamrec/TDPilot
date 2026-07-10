@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Literal, get_args
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, field_validator, model_validator
 
+from td_mcp.models.build import CompilerArtifacts
 from td_mcp.models.patch import PatchPlan, PatchPreview, PatchResult
 
 BrainProfile = Literal[
@@ -45,6 +47,17 @@ ParamValueKind = Literal["float", "int", "bool", "enum", "op_ref", "path", "stri
 ParamCookRisk = Literal["low", "medium", "high", "unknown"]
 ProbeCostLevel = Literal["cheap", "moderate", "expensive"]
 GeneratedCodeLanguage = Literal["python", "glsl"]
+IntentRequirementKind = Literal[
+    "capability",
+    "input",
+    "output",
+    "constraint",
+    "spatial",
+    "behavior",
+    "quality",
+    "binding",
+    "validation",
+]
 
 
 class VisualTaskSpec(BaseModel):
@@ -104,6 +117,33 @@ class ConceptNode(BaseModel):
     evidence: list[str] = Field(default_factory=list)
 
 
+class ControlBindingSpec(BaseModel):
+    """One deliberately narrow cross-domain parameter binding.
+
+    v2 currently supports direct CHOP channel references into registry-backed
+    numeric Level TOP parameters. Keeping the shape explicit prevents a
+    semantic ``control`` edge from disappearing during PatchPlan lowering.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["chop_reference_expression"] = "chop_reference_expression"
+    source_channel: int | str = 0
+    target_param: str = Field(min_length=1, pattern=r"^[A-Za-z][A-Za-z0-9_]*$")
+
+    @field_validator("source_channel")
+    @classmethod
+    def _safe_source_channel(cls, value: int | str) -> int | str:
+        if isinstance(value, int):
+            if value < 0:
+                raise ValueError("source_channel index must be non-negative")
+            return value
+        stripped = value.strip()
+        if not stripped or not stripped.replace("_", "a").isalnum() or len(stripped) > 64:
+            raise ValueError("source_channel name must be a safe alphanumeric/underscore token")
+        return stripped
+
+
 class ConceptEdge(BaseModel):
     """A semantic/data-flow edge between concept nodes."""
 
@@ -114,6 +154,73 @@ class ConceptEdge(BaseModel):
     kind: Literal["data", "control", "reference", "feedback"] = "data"
     source_index: int = Field(default=0, ge=0)
     target_index: int = Field(default=0, ge=0)
+    binding: ControlBindingSpec | None = None
+
+    @model_validator(mode="after")
+    def _binding_matches_edge_kind(self) -> ConceptEdge:
+        # A missing binding remains schema-valid for legacy serialized plans;
+        # the v2 coverage/execution gate rejects it on newly authored plans.
+        if self.kind != "control" and self.binding is not None:
+            raise ValueError("binding is only valid on control edges")
+        return self
+
+
+class IntentRequirement(BaseModel):
+    """One material request facet that an executable plan must cover."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    kind: IntentRequirementKind
+    label: str = Field(min_length=1)
+    required: bool = True
+
+
+class CoverageEvidence(BaseModel):
+    """Server-derived proof that graph/build artifacts cover a requirement."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    requirement_id: str = Field(min_length=1)
+    provider_kind: Literal["concept", "edge", "binding", "validation", "constraint"]
+    provider_ids: list[str] = Field(min_length=1)
+    note: str = ""
+
+
+class IntentCoverage(BaseModel):
+    """Closed execution gate for v2 plans.
+
+    ``complete`` and ``uncovered_requirement_ids`` are derived on validation;
+    callers cannot make an incomplete requirement set executable by forging
+    those two fields.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[2] = 2
+    requirements: list[IntentRequirement] = Field(default_factory=list)
+    evidence: list[CoverageEvidence] = Field(default_factory=list)
+    uncovered_requirement_ids: list[str] = Field(default_factory=list)
+    unresolved_semantic_edges: list[str] = Field(default_factory=list)
+    complete: bool = False
+
+    @model_validator(mode="after")
+    def _derive_completion(self) -> IntentCoverage:
+        requirement_ids = {item.id for item in self.requirements}
+        unknown = sorted({item.requirement_id for item in self.evidence} - requirement_ids)
+        if unknown:
+            raise ValueError(f"coverage evidence references unknown requirement ids: {unknown}")
+        covered = {
+            item.requirement_id
+            for item in self.evidence
+            if any(str(provider).strip() for provider in item.provider_ids)
+        }
+        self.uncovered_requirement_ids = [
+            item.id for item in self.requirements if item.required and item.id not in covered
+        ]
+        self.unresolved_semantic_edges = list(dict.fromkeys(self.unresolved_semantic_edges))
+        self.complete = not self.uncovered_requirement_ids and not self.unresolved_semantic_edges
+        return self
 
 
 class CandidateConceptGraph(BaseModel):
@@ -156,14 +263,21 @@ class CandidateConceptGraph(BaseModel):
 
 
 class BrainPattern(BaseModel):
-    """Reusable, docs-grounded pattern fragment for compiler candidates."""
+    """Canonical pattern/TechniqueSpec contract.
+
+    Schema v1 preserves the docs-grounded concept fragments used by the
+    legacy planner. Schema v2 adds the packaged deterministic compiler
+    contract; the build compiler consumes this same model rather than a
+    parallel technique type.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
+    schema_version: Literal[1, 2] = 1
     pattern_id: str = Field(min_length=1)
     title: str = Field(min_length=1)
     intent_tags: list[str] = Field(default_factory=list)
-    profiles: list[BrainProfile] = Field(default_factory=list)
+    profiles: list[str] = Field(default_factory=list)
     required_ops: list[str] = Field(default_factory=list)
     optional_ops: list[str] = Field(default_factory=list)
     concept_nodes: list[ConceptNode] = Field(default_factory=list)
@@ -180,6 +294,28 @@ class BrainPattern(BaseModel):
     rollback_risks: list[str] = Field(default_factory=list)
     official_sources: list[str] = Field(default_factory=list)
     promoted_from_trace: str | None = None
+    # TechniqueSpec v2 fields. They are optional/defaulted so every v1 fixture
+    # and serialized memory record remains valid.
+    role: str | None = None
+    families: list[DataDomain] = Field(default_factory=list)
+    state: Literal["draft", "validated", "deprecated"] | None = None
+    build_compatibility: dict[str, Any] = Field(default_factory=dict)
+    compiler: dict[str, Any] = Field(default_factory=dict)
+    inputs: dict[str, list[dict[str, Any]]] = Field(default_factory=dict)
+    outputs: dict[str, str] = Field(default_factory=dict)
+    tunables: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    controls: list[dict[str, Any]] = Field(default_factory=list)
+    nodes: list[dict[str, Any]] = Field(default_factory=list)
+    connections: list[dict[str, Any]] = Field(default_factory=list)
+    parameter_defaults: dict[str, Any] = Field(default_factory=dict)
+    estimated_nodes: int | None = Field(default=None, ge=0)
+    estimated_gpu_cost: Literal["low", "medium", "high", "unknown"] | None = None
+    estimated_cpu_cost: Literal["low", "medium", "high", "unknown"] | None = None
+    failure_modes: list[str] = Field(default_factory=list)
+    validation_defaults: list[dict[str, Any]] = Field(default_factory=list)
+    evidence: dict[str, Any] = Field(default_factory=dict)
+    _source_path: Path = PrivateAttr(default_factory=Path)
+    _packaged: bool = PrivateAttr(default=False)
 
     @field_validator("required_ops")
     @classmethod
@@ -192,7 +328,7 @@ class BrainPattern(BaseModel):
     @classmethod
     def _pattern_requires_probes(cls, value: list[str]) -> list[str]:
         if not value:
-            raise ValueError("pattern requires at least one validation probe")
+            return value
         # Phase 1 probe registry. Master plan §4.3 requires the schema to reject
         # unknown probe names so a typo cannot silently produce no validation.
         known = {
@@ -250,7 +386,7 @@ class BrainPattern(BaseModel):
     @classmethod
     def _sources_must_be_official_derivative_docs(cls, value: list[str]) -> list[str]:
         if not value:
-            raise ValueError("pattern requires official Derivative docs sources")
+            return value
         invalid = [item for item in value if not item.startswith("https://docs.derivative.ca/")]
         if invalid:
             raise ValueError("pattern sources must be official Derivative docs URLs")
@@ -274,6 +410,51 @@ class BrainPattern(BaseModel):
                 raise ValueError(f"edge target references unknown concept id: {edge.target}")
         self._validate_pattern_dict_domains()
         self._validate_pattern_dict_node_references(ids)
+        if self.schema_version == 1:
+            unknown_profiles = sorted(set(self.profiles) - set(get_args(BrainProfile)))
+            if unknown_profiles:
+                raise ValueError(f"schema v1 pattern has unknown profiles: {unknown_profiles}")
+            if not self.validation_probes:
+                raise ValueError("schema v1 pattern requires at least one validation probe")
+            if not self.official_sources:
+                raise ValueError("schema v1 pattern requires official Derivative docs sources")
+        else:
+            self._validate_technique_v2()
+        return self
+
+    def _validate_technique_v2(self) -> None:
+        if self.state != "validated":
+            raise ValueError("schema v2 technique must be validated")
+        if self.compiler.get("type") != "packaged_template":
+            raise ValueError("schema v2 technique requires a packaged_template compiler")
+        if not self.build_compatibility.get("minimum"):
+            raise ValueError("schema v2 technique requires minimum build compatibility")
+        if not self.nodes or not self.outputs:
+            raise ValueError("schema v2 technique requires nodes and output ports")
+        if not self.validation_defaults:
+            raise ValueError("schema v2 technique requires validation defaults")
+        if not self.failure_modes:
+            raise ValueError("schema v2 technique requires failure modes")
+        if not self.evidence.get("fixture"):
+            raise ValueError("schema v2 technique requires fixture evidence")
+
+    @property
+    def payload(self) -> dict[str, Any]:
+        """Compiler-ready normalized TechniqueSpec payload."""
+        return self.model_dump(mode="json", exclude_none=True)
+
+    @property
+    def source_path(self) -> Path:
+        return self._source_path
+
+    @property
+    def packaged(self) -> bool:
+        return self._packaged
+
+    def bind_packaged_source(self, path: Path, *, packaged: bool) -> BrainPattern:
+        """Attach non-serialized loader provenance used by content safety."""
+        self._source_path = path
+        self._packaged = packaged
         return self
 
     def _validate_pattern_dict_domains(self) -> None:
@@ -706,6 +887,10 @@ class BrainPlan(BaseModel):
     concept_graph: ConceptGraph
     patch_plan: PatchPlan
     compiled_task: CompiledVisualTaskSpec | None = None
+    route: Literal["legacy", "pattern", "host_authored", "clarify"] = "legacy"
+    grounding_id: str | None = None
+    intent_coverage: IntentCoverage | None = None
+    compiler_artifacts: CompilerArtifacts | None = None
     candidate_graphs: list[CandidateConceptGraph] = Field(default_factory=list)
     availability_matrix: OperatorAvailabilityMatrix | None = None
     validation_profile: str = "structural_visual_safe"
@@ -744,6 +929,7 @@ class TransactionResult(BaseModel):
     failed_op: int | None = None
     failed_reason: str | None = None
     repair_attempts: list[dict[str, Any]] = Field(default_factory=list)
+    phase_results: list[dict[str, Any]] = Field(default_factory=list)
     trace_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
 
 
@@ -775,14 +961,19 @@ __all__ = [
     "BrainTrace",
     "CandidateConceptGraph",
     "CompiledVisualTaskSpec",
+    "ControlBindingSpec",
     "ConceptEdge",
     "ConceptGraph",
     "ConceptNode",
+    "CoverageEvidence",
     "CorpusEvidenceRecord",
     "CorpusEvidenceSource",
     "DataDomain",
     "GeneratedCodeBlock",
     "GeneratedCodeLanguage",
+    "IntentCoverage",
+    "IntentRequirement",
+    "IntentRequirementKind",
     "OperatorAvailabilityMatrix",
     "OperatorSubstitutionRule",
     "ParamCookRisk",

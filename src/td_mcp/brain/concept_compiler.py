@@ -510,7 +510,19 @@ def _has_render_3d(text: str) -> bool:
 
 
 def _has_material(text: str) -> bool:
-    return any(token in text for token in ("material", "glass", "surface"))
+    # "surface" usually describes SOP geometry and must not silently invent a
+    # GLSL material requirement. Explicit material/glass language still routes.
+    if "glass" in text:
+        return True
+    if "material" not in text:
+        return False
+    # "material-ready" describes a render output that can receive a material;
+    # it does not request a shader or cross-domain material modulation system.
+    if re.search(r"\bmaterial[-\s]+ready\b", text) and not re.search(
+        r"\b(?:glsl|shader|modulat(?:e|ed|ion)|uniform)\b", text
+    ):
+        return False
+    return True
 
 
 def _has_panel(text: str) -> bool:

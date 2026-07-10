@@ -6,6 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from td_mcp.brain import hook_check
 from td_mcp.brain.hook_check import evaluate_post_tool_use, evaluate_release_stop
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -101,6 +102,79 @@ def test_release_stop_hook_suppresses_when_no_release_files_changed():
     assert output == {"suppressOutput": True}
 
 
+def test_release_stop_hook_suppresses_reentry():
+    output = evaluate_release_stop(
+        {"hook_event_name": "Stop", "stop_hook_active": True},
+        root=ROOT,
+        changed_files=["hooks/hooks.json"],
+    )
+
+    assert output == {"suppressOutput": True}
+
+
+def test_release_stop_hook_suppresses_for_foreign_repository(tmp_path):
+    foreign_root = tmp_path / "foreign"
+    (foreign_root / "hooks").mkdir(parents=True)
+    (foreign_root / "hooks" / "hooks.json").write_text("{}\n", encoding="utf-8")
+    subprocess.run(["git", "init", "-q", str(foreign_root)], check=True)
+
+    output = evaluate_release_stop(
+        {"hook_event_name": "Stop", "cwd": str(foreign_root)},
+        changed_files=["hooks/hooks.json", "AGENTS.md"],
+    )
+
+    assert output == {"suppressOutput": True}
+
+
+def test_release_stop_hook_suppresses_spoofed_or_malformed_markers(tmp_path):
+    foreign_root = tmp_path / "spoofed-tdpilot"
+    for relative_path in hook_check.SOURCE_REPO_MARKERS:
+        path = foreign_root / relative_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("{}\n", encoding="utf-8")
+    (foreign_root / "pyproject.toml").write_text(
+        '[project]\nname = "tdpilot"\nversion = "0.0.1"\n',
+        encoding="utf-8",
+    )
+    (foreign_root / "mcp" / "manifest.json").write_text(
+        '{"slug":"not-tdpilot"}\n',
+        encoding="utf-8",
+    )
+    subprocess.run(["git", "init", "-q", str(foreign_root)], check=True)
+
+    output = evaluate_release_stop(
+        {"hook_event_name": "Stop", "cwd": str(foreign_root)},
+        changed_files=["hooks/hooks.json"],
+    )
+
+    assert output == {"suppressOutput": True}
+
+
+def test_release_stop_hook_fails_open_when_git_resolution_times_out(monkeypatch):
+    def timeout(*args, **kwargs):
+        raise subprocess.TimeoutExpired(cmd=args[0], timeout=hook_check.GIT_TIMEOUT_SECONDS)
+
+    monkeypatch.setattr(hook_check.subprocess, "run", timeout)
+
+    output = evaluate_release_stop(
+        {"hook_event_name": "Stop", "cwd": str(ROOT)},
+        changed_files=["hooks/hooks.json"],
+    )
+
+    assert output == {"suppressOutput": True}
+
+
+def test_release_stop_hook_resolves_git_top_level_from_nested_project_path():
+    output = evaluate_release_stop(
+        {"hook_event_name": "Stop"},
+        root=ROOT / "tests" / "brain",
+        changed_files=["hooks/hooks.json"],
+    )
+
+    assert output["hookSpecificOutput"]["hookEventName"] == "Stop"
+    assert "plugin surface audit ok" in output["hookSpecificOutput"]["additionalContext"]
+
+
 def test_hooks_json_uses_deterministic_hook_module_and_is_mirrored():
     root_hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text(encoding="utf-8"))
     plugin_hooks = json.loads(
@@ -112,17 +186,19 @@ def test_hooks_json_uses_deterministic_hook_module_and_is_mirrored():
     assert "hooks/run_hook.py" in hook_text
     assert "td_mcp.brain.hook_check" in (ROOT / "hooks" / "run_hook.py").read_text(encoding="utf-8")
     assert "PostToolUse" in root_hooks["hooks"]
-    assert "Stop" in root_hooks["hooks"]
+    assert "Stop" not in root_hooks["hooks"]
+    assert "CLAUDE_PROJECT_DIR" not in hook_text
+    assert "CODEX_PROJECT_DIR" not in hook_text
+
+    project_settings = json.loads((ROOT / ".claude" / "settings.json").read_text(encoding="utf-8"))
+    assert "release-stop" in json.dumps(project_settings["hooks"]["Stop"])
 
 
-def test_packaged_hook_runner_delegates_from_plugin_cache_root(tmp_path):
-    package_root = tmp_path / "tdpilot"
-    shutil.copytree(ROOT / "plugins" / "tdpilot", package_root)
-
+def test_hook_runner_delegates_from_its_own_source_root():
     proc = subprocess.run(
         [
             sys.executable,
-            str(package_root / "hooks" / "run_hook.py"),
+            str(ROOT / "hooks" / "run_hook.py"),
             "post-tool-use",
             "--root",
             str(ROOT),
@@ -149,3 +225,45 @@ def test_packaged_hook_runner_delegates_from_plugin_cache_root(tmp_path):
     payload = json.loads(proc.stdout)
     assert payload["hookSpecificOutput"]["hookEventName"] == "PostToolUse"
     assert "validation ok" in payload["hookSpecificOutput"]["additionalContext"]
+
+
+def test_hook_runner_never_executes_from_foreign_project_roots(tmp_path):
+    foreign_root = tmp_path / "foreign"
+    (foreign_root / "hooks").mkdir(parents=True)
+    shutil.copy2(ROOT / "hooks" / "run_hook.py", foreign_root / "hooks" / "run_hook.py")
+    (foreign_root / "src" / "td_mcp" / "brain").mkdir(parents=True)
+    (foreign_root / "src" / "td_mcp" / "brain" / "hook_check.py").write_text(
+        "raise RuntimeError('foreign code executed')\n",
+        encoding="utf-8",
+    )
+    (foreign_root / "pyproject.toml").write_text(
+        '[project]\nname = "foreign-project"\nversion = "0.0.1"\n',
+        encoding="utf-8",
+    )
+    env = {
+        "HOME": str(tmp_path / "empty-home"),
+        "PATH": str(Path(sys.executable).parent),
+        "CLAUDE_PROJECT_DIR": str(foreign_root),
+        "CODEX_PROJECT_DIR": str(foreign_root),
+        "PWD": str(foreign_root),
+    }
+
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(foreign_root / "hooks" / "run_hook.py"),
+            "post-tool-use",
+            "--root",
+            str(foreign_root),
+        ],
+        cwd=foreign_root,
+        env=env,
+        input=json.dumps({"tool_name": "td_brain_execute"}),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert proc.returncode == 0
+    assert proc.stdout == ""
+    assert "foreign code executed" not in proc.stderr

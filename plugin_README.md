@@ -1,6 +1,6 @@
 # TDPilot — TouchDesigner AI Assistant Plugin
 
-TDPilot v2.1.1 provides 114 MCP tools for live control of TouchDesigner projects from Claude, Codex, and other MCP clients. The headline is the vNext visual programming brain: `td_brain_plan` grounds intent in real TD operators, hints, docs, memory, live state, and a 656-card reviewed operator atlas with zero-concept backlog; `td_brain_execute` mutates only from a valid BrainPlan; `td_transaction_apply` adds transactional rollback and validation to typed patch plans; `td_cockpit_render` exposes an optional read-only cockpit UI for plan, validation, rollback, and trace summaries; `td_sync_status` reports server/live-component/package drift in one call; and `td_sync_diagnose` gives strict live endpoint/version/auth fingerprint diagnostics.
+TDPilot v2.4.0 provides 114 MCP tools for live control of TouchDesigner projects from Claude, Codex, and other MCP clients. Its practical-intelligence brain uses two truthful routes: `td_brain_plan` compiles exact validated patterns, while artistic, multi-domain, spatial, and implicit architecture goes through `td_brain_ground` → host authoring → `td_brain_propose`. Only accepted BrainPlans with complete intent coverage execute through `td_brain_execute`; `td_transaction_apply` provides transactional rollback and validation for typed patch plans. Grounding stays local and uses live state, memory, official evidence, and the 656-card reviewed operator atlas with zero-concept backlog.
 
 The 1.6 observability layer remains: `_read_journal` hints, a 200-entry `activity_log` ring buffer mirrored into `/local/mcp_server/activity_log`, and `td_self_update` for syncing the `.tox` across repo, plugin cache, and `~/.tdpilot/`.
 
@@ -10,18 +10,22 @@ The 1.6 observability layer remains: `_read_journal` hints, a 200-entry `activit
 - **touchdesigner** — Connects to TDPilot MCP server via `npx tdpilot` (stdio transport)
 
 ### Skills
-- **tdpilot-core** — Core patching discipline: 114-tool reference, node layout, color coding, expressions, error verification, visual checks, technique memory, knowledge corpus, custom parameters, project lifecycle, POP inspection, agent activity log, self-update, sync diagnostics, and the brain transaction loop
+- **tdpilot-core** — Compact intent router for the 114-tool reference surface: targeted inspection, typed edits, brain-route selection, checkpoint validation, visual proof, rollback, and local memory
 - **tdpilot-production** — Production-safe workflow: staged edits, undo blocks, snapshots, completion gates, failure protocol
-- **tdpilot-brain-explorer / builder / validator / recovery / release** — Specialized v2 brain skills for inspect-before-mutate work, BrainPlan construction, validation, recovery, and release auditing
+- **tdpilot-brain-explorer / builder / validator / recovery** — Public brain skills for read-only discovery, pattern or concept routing, request-specific validation, and recovery
 - **popx-touchdesigner** — POPX workflow skill for 59 GPU-accelerated operators. References must be built locally from your own licensed POPx copy (see `references/BUILD.md`)
 
 ### Packaged Add-ons
 - **Reviewed operator atlas** — 656 structured operator cards across CHOP, COMP, DAT, MAT, POP, SOP, and TOP. The zero-concept backlog is closed, so agents can use Official Derivative docs, reviewed `key_concepts`, `key_params`, and gotchas to move from concept-to-node instead of guessing.
 - **Concept-to-node eval gate** — A 50+ case concept-to-node golden eval corpus is checked by `scripts/eval_brain_golden.py`, covering compiler-backed patterns, assembly macros, generated-code diagnostics, device-source prompts, and stable/debug output conventions.
-- **Brain skills and agents** — Codex and Claude Code get the same explorer, builder, validator, recovery, and release workflows, with deterministic local hooks.
+- **Brain skills and agents** — Codex and Claude Code get the same public explorer, builder, validator, and recovery workflows, with deterministic local transaction hooks.
 - **Local knowledge packs** — The core atlas ships with TDPilot. Optional packs such as POPX remain local add-ons and must be built from user-owned licensed documentation.
 
 ### Commands
+- **/td-concept** — Ground, author, review, execute, and validate an artistic or multi-domain concept
+- **/td-first-wow** — Build and prove a seeded moving feedback visual
+- **/td-audio-reactive** — Build and prove a real audio-to-visual binding
+- **/td-explain-patch** — Explain the current network without mutating it
 - **/td-check** — Run a comprehensive health check on the current TD project
 - **/td-snapshot** — Create a safety snapshot of the current scene
 
@@ -57,9 +61,9 @@ The TOX file is included in this plugin under `td_component/tdpilot.tox`.
 
 ## Usage
 
-Once installed, TDPilot skills activate automatically whenever you mention TouchDesigner, TD, TOPs, CHOPs, SOPs, or any TD-related topic. Use `/td-check` for quick health checks and `/td-snapshot` before major changes.
+Once installed, TDPilot skills activate automatically whenever you mention TouchDesigner, TD, TOPs, CHOPs, SOPs, or any TD-related topic. Use `/td-concept <idea>` for creative builds, `/td-check` for quick health checks, and `/td-snapshot` before risky direct edits.
 
-For abstract prompts, ask the agent to use the reviewed atlas and Official Derivative docs to turn the idea concept-to-node, then run `td_brain_plan` before any mutation.
+Exact validated patterns use `td_brain_plan`. Abstract, artistic, multi-domain, spatial, camera/depth/fog, or implicit architecture uses the reviewed atlas and Official Derivative evidence through `td_brain_ground` → author → `td_brain_propose`. In either route, execute only complete accepted plans and validate the actual result.
 
 ## v1.1 Features
 - `td_custom_parameters` — Declarative custom parameter pages on COMPs

@@ -26,6 +26,7 @@ from td_mcp.brain.trace_promotion import promote_trace_to_pattern, trace_promoti
 from td_mcp.brain.validation_probes import validation_probe_coverage_report
 from td_mcp.brain.validators import checks_for_profiles
 from td_mcp.models.brain import BrainTrace
+from td_mcp.report_identity import stamp_report_identity
 
 MIN_VALIDATION_CHECKS_PER_CASE = 6
 # Fraction of non-blocked golden cases whose plans must carry ANY non-default
@@ -165,64 +166,66 @@ async def evaluate_golden_cases(path: str | Path) -> dict[str, Any]:
         showpiece_assembly_metrics=showpiece_assembly_metrics,
         availability_matrix_metrics=availability_matrix_metrics,
     )
-    return {
-        "schema_version": 1,
-        "ok": passed == len(results)
-        and pattern_coverage["ok"]
-        and assembly_control_bindings["ok"]
-        and param_semantics_coverage["ok"]
-        and parameter_safety_metrics["ok"]
-        and operator_availability_coverage["ok"]
-        and validation_probe_coverage["ok"]
-        and generated_code_harness_coverage["ok"]
-        and trace_promotion_coverage["ok"]
-        and trace_memory_reuse_coverage["ok"]
-        and decomposition_accuracy_metrics["ok"]
-        and validation_metrics["ok"]
-        and operator_coverage_metrics["ok"]
-        and unsupported_operator_avoidance_metrics["ok"]
-        and generated_code_success_metrics["ok"]
-        and readability_metrics["ok"]
-        and showpiece_assembly_metrics["ok"]
-        and prompt_safety_metrics["ok"]
-        and runtime_safety_metrics["ok"]
-        and rollback_frequency_metrics["ok"]
-        and substitution_quality_metrics["ok"]
-        and availability_matrix_metrics["ok"]
-        and messy_project_metrics["ok"]
-        and param_value_coverage["ok"]
-        and delivery_phase_coverage["ok"],
-        "case_count": len(results),
-        "passed": passed,
-        "failed": len(results) - passed,
-        "pattern_coverage": pattern_coverage,
-        "assembly_control_bindings": assembly_control_bindings,
-        "param_semantics_coverage": param_semantics_coverage,
-        "parameter_safety_metrics": parameter_safety_metrics,
-        "operator_availability_coverage": operator_availability_coverage,
-        "validation_probe_coverage": validation_probe_coverage,
-        "generated_code_harness_coverage": generated_code_harness_coverage,
-        "trace_promotion_coverage": trace_promotion_coverage,
-        "trace_memory_reuse_coverage": trace_memory_reuse_coverage,
-        "compiler_stability": compiler_stability,
-        "decomposition_accuracy_metrics": decomposition_accuracy_metrics,
-        "delivery_phase_coverage": delivery_phase_coverage,
-        "validation_metrics": validation_metrics,
-        "operator_coverage_metrics": operator_coverage_metrics,
-        "unsupported_operator_avoidance_metrics": unsupported_operator_avoidance_metrics,
-        "generated_code_success_metrics": generated_code_success_metrics,
-        "readability_metrics": readability_metrics,
-        "showpiece_assembly_metrics": showpiece_assembly_metrics,
-        "prompt_safety_metrics": prompt_safety_metrics,
-        "runtime_safety_metrics": runtime_safety_metrics,
-        "rollback_frequency_metrics": rollback_frequency_metrics,
-        "substitution_quality_metrics": substitution_quality_metrics,
-        "availability_matrix_metrics": availability_matrix_metrics,
-        "messy_project_metrics": messy_project_metrics,
-        "param_value_coverage": param_value_coverage,
-        "time_metrics": _aggregate_time_metrics(results, report_start),
-        "cases": results,
-    }
+    return stamp_report_identity(
+        {
+            "schema_version": 1,
+            "ok": passed == len(results)
+            and pattern_coverage["ok"]
+            and assembly_control_bindings["ok"]
+            and param_semantics_coverage["ok"]
+            and parameter_safety_metrics["ok"]
+            and operator_availability_coverage["ok"]
+            and validation_probe_coverage["ok"]
+            and generated_code_harness_coverage["ok"]
+            and trace_promotion_coverage["ok"]
+            and trace_memory_reuse_coverage["ok"]
+            and decomposition_accuracy_metrics["ok"]
+            and validation_metrics["ok"]
+            and operator_coverage_metrics["ok"]
+            and unsupported_operator_avoidance_metrics["ok"]
+            and generated_code_success_metrics["ok"]
+            and readability_metrics["ok"]
+            and showpiece_assembly_metrics["ok"]
+            and prompt_safety_metrics["ok"]
+            and runtime_safety_metrics["ok"]
+            and rollback_frequency_metrics["ok"]
+            and substitution_quality_metrics["ok"]
+            and availability_matrix_metrics["ok"]
+            and messy_project_metrics["ok"]
+            and param_value_coverage["ok"]
+            and delivery_phase_coverage["ok"],
+            "case_count": len(results),
+            "passed": passed,
+            "failed": len(results) - passed,
+            "pattern_coverage": pattern_coverage,
+            "assembly_control_bindings": assembly_control_bindings,
+            "param_semantics_coverage": param_semantics_coverage,
+            "parameter_safety_metrics": parameter_safety_metrics,
+            "operator_availability_coverage": operator_availability_coverage,
+            "validation_probe_coverage": validation_probe_coverage,
+            "generated_code_harness_coverage": generated_code_harness_coverage,
+            "trace_promotion_coverage": trace_promotion_coverage,
+            "trace_memory_reuse_coverage": trace_memory_reuse_coverage,
+            "compiler_stability": compiler_stability,
+            "decomposition_accuracy_metrics": decomposition_accuracy_metrics,
+            "delivery_phase_coverage": delivery_phase_coverage,
+            "validation_metrics": validation_metrics,
+            "operator_coverage_metrics": operator_coverage_metrics,
+            "unsupported_operator_avoidance_metrics": unsupported_operator_avoidance_metrics,
+            "generated_code_success_metrics": generated_code_success_metrics,
+            "readability_metrics": readability_metrics,
+            "showpiece_assembly_metrics": showpiece_assembly_metrics,
+            "prompt_safety_metrics": prompt_safety_metrics,
+            "runtime_safety_metrics": runtime_safety_metrics,
+            "rollback_frequency_metrics": rollback_frequency_metrics,
+            "substitution_quality_metrics": substitution_quality_metrics,
+            "availability_matrix_metrics": availability_matrix_metrics,
+            "messy_project_metrics": messy_project_metrics,
+            "param_value_coverage": param_value_coverage,
+            "time_metrics": _aggregate_time_metrics(results, report_start),
+            "cases": results,
+        }
+    )
 
 
 def _parameter_safety_metrics(param_semantics_coverage: dict[str, Any]) -> dict[str, Any]:
@@ -982,14 +985,27 @@ def _expected_blocked_safety_check(
             "atlas-grounded-planner-required",
         )
     ) and bool(plan.corpus_evidence)
+    has_incomplete_coverage_evidence = any(
+        marker in normalized_evidence
+        for marker in (
+            "intent-coverage:",
+            "semantic-edge:",
+            "incomplete-intent-coverage",
+        )
+    )
     return {
         "ok": bool(plan.blocked_questions)
         and operation_count == 0
-        and (has_under_specified_evidence or (allow_open_prompt_grounding and has_open_prompt_evidence)),
+        and (
+            has_under_specified_evidence
+            or has_incomplete_coverage_evidence
+            or (allow_open_prompt_grounding and has_open_prompt_evidence)
+        ),
         "blocked_question_count": len(plan.blocked_questions),
         "operation_count": operation_count,
         "has_under_specified_evidence": has_under_specified_evidence,
         "has_open_prompt_evidence": has_open_prompt_evidence,
+        "has_incomplete_coverage_evidence": has_incomplete_coverage_evidence,
         "corpus_evidence_count": len(plan.corpus_evidence),
     }
 
@@ -1155,6 +1171,9 @@ async def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
                 "operation_count": expected_blocked_safety["operation_count"],
                 "has_under_specified_evidence": expected_blocked_safety["has_under_specified_evidence"],
                 "has_open_prompt_evidence": expected_blocked_safety["has_open_prompt_evidence"],
+                "has_incomplete_coverage_evidence": expected_blocked_safety[
+                    "has_incomplete_coverage_evidence"
+                ],
                 "corpus_evidence_count": expected_blocked_safety["corpus_evidence_count"],
             }
         }
@@ -1752,7 +1771,10 @@ def _aggregate_decomposition_accuracy_metrics(results: list[dict[str, Any]]) -> 
 
 
 def _aggregate_showpiece_assembly_metrics(results: list[dict[str, Any]]) -> dict[str, Any]:
-    showpieces = [result for result in results if _is_showpiece_result(result)]
+    # Expected-blocked sentinels prove that unsupported cross-domain bindings
+    # fail closed. They are not executable showpieces and therefore must not be
+    # counted as failed assembly output.
+    showpieces = [result for result in _normal_case_results(results) if _is_showpiece_result(result)]
     assembled = [result for result in showpieces if result.get("assembly_macros")]
     fully_readable = [
         result

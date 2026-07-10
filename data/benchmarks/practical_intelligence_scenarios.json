@@ -1,0 +1,125 @@
+[
+  {
+    "id": "build_feedback_visual",
+    "title": "Feedback visual",
+    "category": "build",
+    "intent": "Build animated feedback with transform, decay, source injection, and a stable TOP output.",
+    "required_outcomes": ["nonblack", "nonuniform", "temporal_change", "stable_top"],
+    "expected_techniques": ["top_feedback_transform", "stable_output_null"],
+    "medium_build": true,
+    "validated_template": true
+  },
+  {
+    "id": "build_audio_reactive_feedback",
+    "title": "Audio-reactive feedback",
+    "category": "build",
+    "intent": "Use an existing audio CHOP to drive bounded feedback displacement or scale.",
+    "required_outcomes": ["active_audio", "binding_readback", "temporal_change", "stable_top"],
+    "expected_techniques": ["normalized_modulator", "feedback_displacement"],
+    "medium_build": true,
+    "validated_template": true
+  },
+  {
+    "id": "build_three_band_control",
+    "title": "Three-band visual control",
+    "category": "build",
+    "intent": "Build normalized low, mid, and high audio controls with stable ranges.",
+    "required_outcomes": ["three_bands", "normalized_ranges", "active_signal"],
+    "expected_techniques": ["audio_bands", "normalized_modulator"],
+    "medium_build": true,
+    "validated_template": true
+  },
+  {
+    "id": "build_instanced_geometry",
+    "title": "Instanced geometry",
+    "category": "build",
+    "intent": "Build SOP and CHOP instance data, Geometry COMP instancing, render, and stable TOP output.",
+    "required_outcomes": ["instance_count_positive", "visible_render", "stable_top"],
+    "expected_techniques": ["sop_instancing", "basic_3d_render"],
+    "medium_build": true,
+    "validated_template": true
+  },
+  {
+    "id": "build_basic_3d_render",
+    "title": "Basic 3D render pipeline",
+    "category": "build",
+    "intent": "Build geometry, camera, light, render, compact grade, and output.",
+    "required_outcomes": ["valid_references", "visible_render", "stable_top"],
+    "expected_techniques": ["basic_3d_render", "render_post_chain"],
+    "medium_build": true,
+    "validated_template": true
+  },
+  {
+    "id": "build_glsl_visual",
+    "title": "GLSL visual",
+    "category": "build",
+    "intent": "Build a packaged GLSL TOP template with stable output.",
+    "required_outcomes": ["shader_compiles", "nonuniform", "stable_top"],
+    "expected_techniques": ["glsl_top_template"],
+    "medium_build": true,
+    "validated_template": true
+  },
+  {
+    "id": "modify_add_audio_reactivity",
+    "title": "Make an existing visual audio-reactive",
+    "category": "modify",
+    "intent": "Preserve the current output path and add one bounded audio modulation architecture.",
+    "required_outcomes": ["output_preserved", "binding_readback", "active_signal"],
+    "expected_techniques": ["normalized_modulator"],
+    "medium_build": true,
+    "validated_template": false
+  },
+  {
+    "id": "modify_add_post_processing",
+    "title": "Add post-processing",
+    "category": "modify",
+    "intent": "Preserve the source chain and add bloom, edge, and grade compactly.",
+    "required_outcomes": ["source_preserved", "visible_output", "stable_top"],
+    "expected_techniques": ["edge_glow", "render_post_chain"],
+    "medium_build": true,
+    "validated_template": true
+  },
+  {
+    "id": "modify_consolidate_modulation",
+    "title": "Refactor duplicate modulation",
+    "category": "modify",
+    "intent": "Consolidate repeated CHOP modulation chains while preserving behavior within tolerance.",
+    "required_outcomes": ["duplicate_removed", "behavior_preserved", "output_preserved"],
+    "expected_techniques": ["normalized_modulator"],
+    "medium_build": true,
+    "validated_template": false
+  },
+  {
+    "id": "repair_black_feedback",
+    "title": "Repair black feedback",
+    "category": "repair",
+    "intent": "Repair an injected black feedback result without replacing it with unrelated imagery.",
+    "required_outcomes": ["feedback_visible", "temporal_change", "route_preserved"],
+    "expected_techniques": ["top_feedback_transform"],
+    "injected_failure": "black_feedback",
+    "medium_build": false,
+    "validated_template": false
+  },
+  {
+    "id": "repair_render_references",
+    "title": "Repair broken render references",
+    "category": "repair",
+    "intent": "Repair injected camera or geometry reference failures in a Render TOP.",
+    "required_outcomes": ["valid_references", "visible_render", "route_preserved"],
+    "expected_techniques": ["basic_3d_render"],
+    "injected_failure": "broken_render_reference",
+    "medium_build": false,
+    "validated_template": false
+  },
+  {
+    "id": "repair_static_binding",
+    "title": "Repair static binding",
+    "category": "repair",
+    "intent": "Repair an injected static CHOP-to-parameter binding.",
+    "required_outcomes": ["active_signal", "binding_readback", "target_changes"],
+    "expected_techniques": ["normalized_modulator"],
+    "injected_failure": "static_binding",
+    "medium_build": false,
+    "validated_template": false
+  }
+]

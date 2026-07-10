@@ -212,6 +212,12 @@ async def test_open_prompt_plans_atlas_grounded_candidate_topology():
         )
 
         assert plan.concept_graph.profile == "generic"
+        if "volumetric" in intent:
+            assert plan.blocked_questions
+            assert plan.route == "host_authored"
+            assert plan.patch_plan.operations == []
+            assert plan.intent_coverage is not None and not plan.intent_coverage.complete
+            continue
         assert plan.blocked_questions == []
         assert plan.missing_facts == []
         assert plan.candidate_graphs
@@ -326,7 +332,12 @@ async def test_open_prompt_synthesizes_multi_domain_dat_controlled_topology():
         card_index=index,
     )
 
-    assert plan.blocked_questions == []
+    assert plan.blocked_questions
+    assert plan.route == "host_authored"
+    assert plan.patch_plan.operations == []
+    assert plan.intent_coverage is not None
+    assert plan.intent_coverage.complete is False
+    assert any(item.startswith("semantic_edge:") for item in plan.missing_facts)
     candidate = plan.candidate_graphs[0]
     assert candidate.pattern_ids == ["atlas:synthesized:dat_controlled_top_card_chain"]
     assert candidate.required_ops == ["tableDAT", "selectDAT", "moviefileinTOP", "switchTOP", "nullTOP"]
@@ -345,7 +356,7 @@ async def test_open_prompt_synthesizes_multi_domain_dat_controlled_topology():
         not (op.args["from"].endswith("/selectdat") and op.args["to"].endswith("/switch"))
         for op in connections
     )
-    assert plan.patch_plan.validation_plan.capture_frames == ["/project1/out1"]
+    assert plan.patch_plan.validation_plan.capture_frames == []
 
 
 @pytest.mark.asyncio

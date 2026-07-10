@@ -997,7 +997,9 @@ def test_candidate_graph_composes_pop_particle_preview_and_debug_patterns():
     }.issubset(set(candidate.required_ops))
     assert "finite_pop_bounds" in candidate.validation_needs
     assert "validate-pop-render-preview" in candidate.risk_flags
-    assert any(edge.kind == "reference" and edge.source == "stable_output" for edge in candidate.edges)
+    # Debug notes are validation metadata, not an operator reference target;
+    # the compiler must not emit a semantic reference edge it cannot lower.
+    assert not any(edge.kind == "reference" and edge.target == "debug_notes" for edge in candidate.edges)
     assert all(f"docs:{op_type}" in candidate.grounding_evidence for op_type in candidate.required_ops)
 
 
@@ -1019,7 +1021,7 @@ def test_candidate_graph_composes_glsl_top_shader_and_debug_patterns():
     assert "shader_source_present" in candidate.validation_needs
     assert "compile_state" in candidate.validation_needs
     assert "validate-glsl-compile-state" in candidate.risk_flags
-    assert any(edge.kind == "reference" and edge.source == "stable_output" for edge in candidate.edges)
+    assert not any(edge.kind == "reference" and edge.target == "debug_notes" for edge in candidate.edges)
     assert all(f"docs:{op_type}" in candidate.grounding_evidence for op_type in candidate.required_ops)
 
 

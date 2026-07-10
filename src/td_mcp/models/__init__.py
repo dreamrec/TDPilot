@@ -22,3 +22,4 @@ from __future__ import annotations
 # ``from td_mcp.models import X``, matching the pre-split behavior exactly.
 from td_mcp.models._legacy import *  # noqa: F401,F403
 from td_mcp.models.brain import *  # noqa: F401,F403
+from td_mcp.models.build import *  # noqa: F401,F403

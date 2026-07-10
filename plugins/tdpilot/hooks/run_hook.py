@@ -1,84 +1,100 @@
-"""Bootstrap TDPilot hook checks from a lightweight plugin cache."""
+"""Bootstrap TDPilot hook checks from a trusted TDPilot runtime root."""
 
 from __future__ import annotations
 
-import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10 is still supported.
+    tomllib = None  # type: ignore[assignment]
+
+
+_RUNTIME_ROOT_ENV_VARS = (
+    "TDPILOT_RUNTIME_ROOT",
+    "TDPILOT_REPO_ROOT",
+    "TD_MCP_REPO_ROOT",
+    "CLAUDE_PLUGIN_ROOT",
+    "CODEX_PLUGIN_ROOT",
+)
+
 
 def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
-    runtime_root = _find_runtime_root(args)
+    runtime_root = _find_runtime_root()
     if runtime_root is None:
-        event_name = "PostToolUse" if args[:1] == ["post-tool-use"] else "Stop"
-        print(
-            json.dumps(
-                {
-                    "hookSpecificOutput": {
-                        "hookEventName": event_name,
-                        "additionalContext": (
-                            "TDPilot hook runner could not locate a Python runtime root. "
-                            "Set TD_MCP_REPO_ROOT or refresh the TDPilot plugin cache."
-                        ),
-                    }
-                },
-                separators=(",", ":"),
-            )
-        )
+        # Hooks are safety aids, not a reason to break an unrelated host
+        # session. Missing or malformed runtimes therefore fail open.
         return 0
 
-    return subprocess.run(
-        [
-            "uv",
-            "run",
-            "--directory",
-            str(runtime_root),
-            "python",
-            "-m",
-            "td_mcp.brain.hook_check",
-            *args,
-        ],
-        check=False,
-    ).returncode
+    try:
+        subprocess.run(
+            [
+                "uv",
+                "run",
+                "--directory",
+                str(runtime_root),
+                "python",
+                "-m",
+                "td_mcp.brain.hook_check",
+                *args,
+            ],
+            check=False,
+        )
+    except OSError:
+        pass
+    return 0
 
 
-def _find_runtime_root(args: list[str]) -> Path | None:
-    for candidate in _candidate_roots(args):
-        root = candidate.expanduser().resolve()
+def _find_runtime_root() -> Path | None:
+    """Find code only in roots controlled by the plugin or its installer.
+
+    Project cwd variables and ``--root`` name the project being audited; they
+    must never select executable Python code.
+    """
+    for candidate in _candidate_roots():
+        try:
+            root = candidate.expanduser().resolve()
+        except OSError:
+            continue
         if _is_runtime_root(root):
             return root
     return None
 
 
-def _candidate_roots(args: list[str]) -> list[Path]:
+def _candidate_roots() -> list[Path]:
     roots: list[Path] = []
-    for key in ("TD_MCP_REPO_ROOT", "TDPILOT_REPO_ROOT", "CODEX_PROJECT_DIR", "CLAUDE_PROJECT_DIR"):
+    for key in _RUNTIME_ROOT_ENV_VARS:
         if value := os.environ.get(key):
             roots.append(Path(value))
-    roots.extend(_root_args(args))
-    if value := os.environ.get("PWD"):
-        roots.append(Path(value))
-    roots.append(Path.cwd())
-    roots.append(Path.home() / ".codex" / "vendor_imports" / "TDPilot")
+    # The runner's containing package is trusted because this file is already
+    # executing from it. The vendor import is Codex's known installation root.
     roots.append(Path(__file__).resolve().parents[1])
-    return roots
-
-
-def _root_args(args: list[str]) -> list[Path]:
-    roots: list[Path] = []
-    for index, value in enumerate(args):
-        if value == "--root" and index + 1 < len(args):
-            roots.append(Path(args[index + 1]))
+    roots.append(Path.home() / ".codex" / "vendor_imports" / "TDPilot")
     return roots
 
 
 def _is_runtime_root(root: Path) -> bool:
-    return (root / "pyproject.toml").exists() and (
-        root / "src" / "td_mcp" / "brain" / "hook_check.py"
-    ).exists()
+    pyproject_path = root / "pyproject.toml"
+    hook_module_path = root / "src" / "td_mcp" / "brain" / "hook_check.py"
+    if not pyproject_path.is_file() or not hook_module_path.is_file():
+        return False
+    try:
+        text = pyproject_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return False
+    if tomllib is not None:
+        try:
+            project = tomllib.loads(text).get("project")
+        except tomllib.TOMLDecodeError:
+            return False
+        return isinstance(project, dict) and project.get("name") == "tdpilot"
+    project_section = re.search(r"(?ms)^\[project\]\s*(.*?)(?=^\[|\Z)", text)
+    return bool(project_section and re.search(r'(?m)^name\s*=\s*["\']tdpilot["\']\s*$', project_section.group(1)))
 
 
 if __name__ == "__main__":

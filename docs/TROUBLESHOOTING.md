@@ -162,7 +162,7 @@ TD_MCP_WS_PORT=9992 npx -y tdpilot
 | Mode | Imports | System access | Use case |
 |------|---------|---------------|----------|
 | `off` | Blocked | Blocked | Fully disable Python exec |
-| `restricted` | All blocked | Blocked | Safe read-only probes (default) |
+| `restricted` | All blocked | Blocked | Sandboxed Python helpers; TD graph mutation remains possible (default) |
 | `standard` | 14 safe modules allowed | Blocked | Data transforms (json, math, re, datetime, collections, itertools, functools, copy, textwrap, string, random, decimal, fractions, statistics) |
 | `full` | All allowed | Allowed | Unrestricted (use with caution) |
 

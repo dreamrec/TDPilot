@@ -1,86 +1,131 @@
 ---
 name: tdpilot-production
 description: >
-  Production-grade TouchDesigner MCP workflow for TDPilot v2.1.1 (114 tools):
-  staged edits with undo blocks, rollback safety via snapshots, token-efficient
-  diagnostics, strict completion gates, and vNext BrainPlan transactions.
+  Production-grade TouchDesigner MCP workflow for TDPilot v2.4.0 (114 tools):
+  show-safe routing, bounded inspection, staged transactions, rollback,
+  performance checks, preservation assertions, and evidence-based handoff.
 ---
 
-# TDPilot Production v2.1.1
+# TDPilot Production v2.4.0
 
-## Use This Skill When
-- The user asks for reliable, production-safe network edits.
-- The task affects live performance, show-critical logic, or many nodes.
-- The user asks for "stable", "ship-ready", "realistic", or "production" workflows.
+Use this skill in addition to `tdpilot-core` when work is show-critical,
+performance-sensitive, destructive, broad in scope, or explicitly requested as
+stable, production-ready, or show-safe.
 
-## Non-Negotiable Output Contract
-- Make small, reversible edit batches wrapped in undo blocks.
-- For non-trivial network construction, prefer `td_brain_plan` followed by
-  `td_brain_execute` over hand-authored low-level edits.
-- Keep token usage controlled (no continuous image payloads unless explicitly approved).
-- End every meaningful mutation task with verification evidence.
-- Report unresolved risks explicitly.
+## Core Rule
+
+Protect the running project and its active output. Prove the target and
+preservation boundary, use the correct brain route, apply the smallest staged
+change, and accept it only when graph, runtime, visual, performance, and
+preservation checks pass.
 
 ## Production Workflow
 
-### 1) Preflight and Scope Lock
-- Call `td_get_info` and `td_get_capabilities`.
-- Inspect only the target scope first (`td_get_nodes`, `td_get_node_detail`, `td_get_params`).
-- For comprehensive overview: `td_get_state_vector` returns project, timeline, health, performance, events, monitoring, safety, snapshots, and jobs in one call.
-- Confirm exact root path and objective before mutation.
+### 1. Scope and preflight
 
-### 2) Safety Baseline
-- Create a rollback point with `td_snapshot_scene`.
-- For risky parameters, set bounds first with `td_set_param_bounds`.
-- If scene health is unknown, run `td_detect_instability` before large edits.
-- Start an undo block: `td_project_lifecycle({ action: "start_undo_block", name: "description" })`.
+- Inspect focus, exact target root, direct connections, active output, and
+  protected paths. Use `td_get_info`/`td_get_capabilities` only when build or
+  capability compatibility matters.
+- Read current errors and performance once for a baseline.
+- Batch independent reads with `td_tool_batch`; keep mutations transactional.
+- Record device, resolution, FPS, latency, and output-routing constraints.
+- Treat an ambiguous active route, missing external device, or unproven
+  ownership boundary as a blocking question.
 
-### 3) Mutation Strategy
-- Apply edits in batches of one structural step: create → connect → parameterize → validate.
-- When a BrainPlan is available, execute it transactionally with rollback on
-  apply or validation failure.
-- Prefer deterministic parameter sets over arbitrary Python execution.
-- Use `td_custom_parameters` (v1.1) for custom param pages instead of `td_exec_python`.
-- Use `td_exec_python` only when no direct tool path exists.
-- For POP data, use `td_pop_inspect` (v1.1) instead of Python hacks.
+### 2. Choose the build route
 
-### 4) Continuous Verification
-- After each batch, run:
-  - `td_get_errors` on affected root
-  - `td_cooking_info` (or `td_get_state_vector`) for performance signal
-- If instability rises, pause and rollback or clamp before continuing.
+- One proven edit at a known path may use a typed primitive tool.
+- An exact compiler-backed pattern may use `td_brain_plan`.
+- Artistic, multi-domain, spatial, or implicit architecture goes directly
+  through `td_brain_ground` → author → `td_brain_propose`.
+- Require complete intent coverage and concrete lowering for control/reference
+  edges before execution. A partial plan is not a production fallback.
 
-### 5) Token-Efficient Visual Checks
-- Default: metadata-only monitoring (`include_image=false`).
-- Use one-off `td_screenshot` for targeted visual confirmation.
-- Enable streaming image payloads only after explicit user approval.
+Recall compatible local techniques before taste-critical authoring. Memory and
+knowledge may inform a proposal, but only validated techniques or promoted
+traces may compile automatically.
 
-### 6) Technique Reuse Rules
-- Check existing memory first with `td_memory_recall`.
-- Save only proven reusable patterns with `td_memory_learn` + `td_memory_save`.
-- Promote to global (`td_memory_promote`) only after repeated successful reuse.
+### 3. Safety baseline
 
-### 7) Completion Gates (Must Pass)
-- No unacknowledged critical errors in `td_get_errors`.
-- Performance remains acceptable for the stated context.
-- Snapshot/rollback path exists and is documented.
-- End the undo block: `td_project_lifecycle({ action: "end_undo_block" })`.
-- Final response includes: changed scope, verification evidence, and residual risks.
+Brain execution already provides snapshot, undo, validation, and rollback; do
+not surround it with redundant manual wrappers. For direct primitive edits:
 
-## Failure Protocol
-- On unsafe drift or rising errors:
-  1. Pause timeline if needed (`td_emergency_stabilize` or `td_timeline_set`).
-  2. Restore with `td_restore_snapshot` or `td_project_lifecycle({ action: "undo" })`.
-  3. Report root cause and smallest next safe step.
+- Snapshot before destructive or broad changes.
+- Start one named undo block around a coherent batch.
+- Set bounds before modifying show-sensitive numeric controls.
+- Keep the prior active path intact until a replacement is validated.
 
-## v1.1 Lifecycle Features
-- **Undo blocks**: Wrap major operations in `start_undo_block`/`end_undo_block` so the user can Ctrl+Z the entire batch as one step.
-- **Project save**: `td_project_lifecycle({ action: "save" })` — save before destructive ops.
-- **Undo/redo**: Quick rollback without snapshots for recent changes.
+### 4. Apply in logical batches
+
+- Prefer deterministic typed operations over arbitrary Python.
+- Keep source, processing, control, render, and output stages independently
+  inspectable.
+- End each module with a stable named output and preserve external consumers.
+- Check errors and readback at logical batch boundaries, on failure, and at
+  completion—not after every individual create/connect/set call.
+- If errors or cook cost rise materially, stop the next batch and diagnose or
+  roll back.
+
+For show-safe work, build in staging, validate there, then use only a guarded
+route swap (`route_swap`) whose old connection, new connection, and rollback behavior are
+explicit. Never delete the previous path as part of the swap.
+
+### 5. Validation contract
+
+Require evidence appropriate to the request:
+
+- Graph: topology, references, bindings, outputs, ownership, protected nodes.
+- Runtime: TD errors, cook health, expression readback, signal/geometry/POP
+  activity.
+- Visual: nonblack/nonuniform content, temporal change, and expected response.
+- Performance: FPS trend, cook hotspots, resolution, viewers/always-cook state.
+- Preservation: active output and protected paths remain within the agreed
+  tolerance.
+
+Start with metadata. One low-quality thumbnail is appropriate when visual proof
+is required. Ask before repeated image payloads or continuous monitoring.
+Unavailable evidence remains explicitly unverified.
+
+### 6. Failure and repair
+
+- Use the smallest repair tied to the failed assertion.
+- Re-run affected assertions plus final critical assertions.
+- Respect the plan's repair budget; never enter an unbounded fix loop.
+- Roll back on unsafe drift, unknown failure, preservation failure, or exhausted
+  repair budget.
+- After rollback or manual edits, refresh live state before reusing any plan.
+
+## Completion Gates
+
+- Required intent coverage is complete.
+- No unacknowledged critical TD errors remain.
+- Requested runtime and visual behavior is proven.
+- Performance is acceptable for the declared context.
+- Protected nodes and active routing pass preservation checks.
+- Rollback status and previous-path availability are known.
 
 ## Handoff Format
-- `Scope`: exact root/components changed.
-- `Actions`: structural and parameter edits made.
-- `Validation`: error + performance checks run and outcomes.
-- `Rollback`: snapshot id and/or undo block name, restore instructions.
-- `Risks`: what is still uncertain or deferred.
+
+- `Outcome`: what is now usable.
+- `Scope`: exact roots/modules changed.
+- `Route`: direct, pattern, or concept-authoring.
+- `Validation`: graph/runtime/visual/performance/preservation evidence.
+- `Rollback`: transaction result or snapshot/undo identifier.
+- `Risks`: unresolved or unavailable evidence.
+
+## Pressure Scenarios
+
+- Pressure: The show starts soon. Reduce ambition and batch reads, but do not
+  bypass staging, preservation, or rollback gates.
+- Pressure: A replacement validates in staging. Do not delete the old path;
+  switch through a guarded route operation and retain rollback data.
+- Pressure: The result looks plausible but performance was not measured. Keep
+  it unapproved for show-safe use until cook/FPS evidence is available.
+
+## Common Mistakes
+
+- Running every non-trivial request through the pattern planner.
+- Taking redundant snapshots around an already transactional BrainPlan.
+- Calling `td_get_errors` after every primitive rather than at checkpoints.
+- Replacing the live route before staging validation passes.
+- Treating a static plan-structure probe as runtime or visual proof.

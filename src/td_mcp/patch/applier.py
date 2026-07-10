@@ -39,6 +39,9 @@ _KIND_REQUIRED: dict[str, tuple[str, ...]] = {
     "layout": ("x", "y"),
     "annotate": ("text",),
     "macro": ("macro_type",),
+    "delete_node": ("owned",),
+    "disconnect": ("owned", "connector_type", "index", "expected_peer"),
+    "route_swap": ("from", "to", "old_from"),
 }
 
 
@@ -54,6 +57,93 @@ def _validate_args(op: PatchOperation, index: int) -> None:
             raise PatchOperationArgsError(
                 f"op[{index}] kind={op.kind}: missing required arg 'text' or 'table'"
             )
+
+
+def _validate_guarded_op(op: PatchOperation, index: int, *, target_root: str) -> None:
+    """Validate destructive-operation authority before opening an undo block.
+
+    The new v2 operations are intentionally stricter than legacy primitive
+    operations.  They may only touch descendants of a concrete target root;
+    delete/disconnect also require compiler-supplied ownership evidence, and
+    connection mutations require an explicit expected live route.
+    """
+    _validate_args(op, index)
+    if op.kind not in {"delete_node", "disconnect", "route_swap"}:
+        return
+
+    root = _normalized_td_path(target_root, label="target_root", index=index)
+    if root == "/":
+        raise PatchOperationArgsError(
+            f"op[{index}] kind={op.kind}: destructive operations require a scoped target_root"
+        )
+
+    if op.kind in {"delete_node", "disconnect"}:
+        if op.args.get("owned") is not True:
+            raise PatchOperationArgsError(
+                f"op[{index}] kind={op.kind}: explicit owned=true evidence is required"
+            )
+        target = _guarded_descendant(op.target, root=root, label="target", index=index)
+        if target == root:
+            raise PatchOperationArgsError(
+                f"op[{index}] kind={op.kind}: refusing to mutate the target root itself"
+            )
+
+    if op.kind == "disconnect":
+        connector_type = op.args.get("connector_type")
+        if connector_type not in {"input", "output"}:
+            raise PatchOperationArgsError(
+                f"op[{index}] kind=disconnect: connector_type must be 'input' or 'output'"
+            )
+        _connector_index(op.args.get("index"), label="index", op_index=index)
+        if op.args.get("expected_peer_index") is not None:
+            _connector_index(
+                op.args.get("expected_peer_index"),
+                label="expected_peer_index",
+                op_index=index,
+            )
+        _guarded_descendant(op.args.get("expected_peer"), root=root, label="expected_peer", index=index)
+
+    if op.kind == "route_swap":
+        if not op.target:
+            raise PatchOperationArgsError(f"op[{index}] kind=route_swap: missing target path")
+        source = _guarded_descendant(op.args.get("from"), root=root, label="from", index=index)
+        target = _guarded_descendant(op.args.get("to"), root=root, label="to", index=index)
+        old_source = _guarded_descendant(op.args.get("old_from"), root=root, label="old_from", index=index)
+        op_target = _guarded_descendant(op.target, root=root, label="target", index=index)
+        if target != op_target:
+            raise PatchOperationArgsError(f"op[{index}] kind=route_swap: target must match args['to']")
+        if source == old_source:
+            raise PatchOperationArgsError(
+                f"op[{index}] kind=route_swap: new and old source paths must differ"
+            )
+        _connector_index(op.args.get("from_output", 0), label="from_output", op_index=index)
+        _connector_index(op.args.get("old_from_output", 0), label="old_from_output", op_index=index)
+        _connector_index(op.args.get("to_input", 0), label="to_input", op_index=index)
+
+
+def _normalized_td_path(value: Any, *, label: str, index: int) -> str:
+    if not isinstance(value, str) or not value.startswith("/"):
+        raise PatchOperationArgsError(f"op[{index}]: {label} must be an absolute TouchDesigner path")
+    parts = value.split("/")
+    if any(part in {".", ".."} for part in parts):
+        raise PatchOperationArgsError(f"op[{index}]: {label} may not contain '.' or '..'")
+    normalized = value.rstrip("/") or "/"
+    if "//" in normalized:
+        raise PatchOperationArgsError(f"op[{index}]: {label} may not contain empty path segments")
+    return normalized
+
+
+def _guarded_descendant(value: Any, *, root: str, label: str, index: int) -> str:
+    path = _normalized_td_path(value, label=label, index=index)
+    if path != root and not path.startswith(root + "/"):
+        raise PatchOperationArgsError(f"op[{index}]: {label} {path!r} is outside target_root {root!r}")
+    return path
+
+
+def _connector_index(value: Any, *, label: str, op_index: int) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise PatchOperationArgsError(f"op[{op_index}]: {label} must be a non-negative integer")
+    return value
 
 
 async def apply_plan(
@@ -97,6 +187,20 @@ async def apply_plan(
         result.failed_reason = str(preflight_info.get("reason") or "set_params preflight blocked mutation")
         return result
 
+    # Validate the authority envelope for all new destructive operations before
+    # opening an undo block.  Live connection preconditions are checked again
+    # immediately adjacent to their mutation in ``_apply_op``.
+    for i, op in enumerate(effective_plan.operations):
+        if op.kind not in {"delete_node", "disconnect", "route_swap"}:
+            continue
+        try:
+            _validate_guarded_op(op, i, target_root=effective_plan.target_root)
+        except Exception as exc:  # noqa: BLE001
+            result.status = "broken"
+            result.failed_op = i
+            result.failed_reason = str(exc)
+            return result
+
     sentinel.mark_active(block_label)
     try:
         await td_client.request(
@@ -113,6 +217,7 @@ async def apply_plan(
                         op,
                         macro_engine=macro_engine,
                         param_semantics_policy=param_semantics_policy,
+                        target_root=effective_plan.target_root,
                     )
                     _record_outcome(result, i, op, outcome)
                 except Exception as exc:  # noqa: BLE001
@@ -306,6 +411,7 @@ async def _apply_op(
     *,
     macro_engine=None,
     param_semantics_policy: str = "warn",
+    target_root: str | None = None,
 ) -> dict[str, Any]:
     """Route one operation to its TD endpoint. Returns the response.
 
@@ -364,6 +470,113 @@ async def _apply_op(
             )
             or {}
         )
+    if op.kind == "delete_node":
+        # Guard validation is repeated here for callers that exercise this
+        # helper directly and to keep the mutation adjacent to its authority
+        # check.  ``owned=true`` is compiler-derived evidence; free-form delete
+        # operations without it are never dispatched.
+        _validate_guarded_op(op, -1, target_root=target_root or "/")
+        outcome = await td_client.request("node/delete", {"path": op.target}) or {}
+        _raise_new_op_error(outcome, kind=op.kind)
+        return outcome
+    if op.kind == "disconnect":
+        _validate_guarded_op(op, -1, target_root=target_root or "/")
+        connector_type = str(op.args["connector_type"])
+        connector_index = int(op.args["index"])
+        expected_peer = str(op.args["expected_peer"])
+        before = await td_client.request("node/connections", {"path": op.target}) or {}
+        _assert_expected_connection(
+            before,
+            path=str(op.target),
+            connector_type=connector_type,
+            index=connector_index,
+            expected_peer=expected_peer,
+            expected_peer_index=op.args.get("expected_peer_index"),
+        )
+        outcome = (
+            await td_client.request(
+                "node/disconnect",
+                {
+                    "path": op.target,
+                    "connector_type": connector_type,
+                    "index": connector_index,
+                },
+            )
+            or {}
+        )
+        _raise_new_op_error(outcome, kind=op.kind)
+        after = await td_client.request("node/connections", {"path": op.target}) or {}
+        _assert_connection_absent(
+            after,
+            path=str(op.target),
+            connector_type=connector_type,
+            index=connector_index,
+        )
+        return {
+            **outcome,
+            "removed_connection": {
+                "path": op.target,
+                "connector_type": connector_type,
+                "index": connector_index,
+                "peer": expected_peer,
+            },
+        }
+    if op.kind == "route_swap":
+        _validate_guarded_op(op, -1, target_root=target_root or "/")
+        target = str(op.args["to"])
+        old_source = str(op.args["old_from"])
+        new_source = str(op.args["from"])
+        target_index = int(op.args.get("to_input", 0))
+        old_source_index = int(op.args.get("old_from_output", 0))
+        new_source_index = int(op.args.get("from_output", 0))
+
+        before = await td_client.request("node/connections", {"path": target}) or {}
+        _assert_expected_connection(
+            before,
+            path=target,
+            connector_type="input",
+            index=target_index,
+            expected_peer=old_source,
+            expected_peer_index=old_source_index,
+        )
+        connect_outcome = (
+            await td_client.request(
+                "node/connect",
+                {
+                    "source_path": new_source,
+                    "target_path": target,
+                    "source_index": new_source_index,
+                    "target_index": target_index,
+                },
+            )
+            or {}
+        )
+        _raise_new_op_error(connect_outcome, kind=op.kind)
+        after = await td_client.request("node/connections", {"path": target}) or {}
+        _assert_expected_connection(
+            after,
+            path=target,
+            connector_type="input",
+            index=target_index,
+            expected_peer=new_source,
+            expected_peer_index=new_source_index,
+            phase="postcondition",
+        )
+        route = {
+            "target": target,
+            "target_index": target_index,
+            "old_source": old_source,
+            "old_source_index": old_source_index,
+            "new_source": new_source,
+            "new_source_index": new_source_index,
+            "rollback": {
+                "source_path": old_source,
+                "target_path": target,
+                "source_index": old_source_index,
+                "target_index": target_index,
+            },
+        }
+        return {**connect_outcome, "route_swap": route}
     if op.kind == "layout":
         # TD has no dedicated set-position endpoint, so we route through
         # /api/exec with a minimal one-liner. Restricted exec mode allows
@@ -438,6 +651,117 @@ async def _apply_op(
     raise PatchOperationArgsError(f"unreachable: unknown kind {op.kind!r}")
 
 
+def _raise_new_op_error(outcome: Any, *, kind: str) -> None:
+    if not isinstance(outcome, dict):
+        raise PatchOperationArgsError(f"{kind} returned a non-object response")
+    if outcome.get("error"):
+        raise PatchOperationArgsError(str(outcome["error"]))
+    if outcome.get("success") is False:
+        raise PatchOperationArgsError(str(outcome.get("message") or f"{kind} failed"))
+    if outcome.get("success") is not True:
+        raise PatchOperationArgsError(f"{kind} response did not confirm success")
+
+
+def _matching_connections(
+    payload: Any,
+    *,
+    path: str,
+    connector_type: str,
+    index: int,
+    expected_peer: str,
+    expected_peer_index: Any = None,
+) -> list[dict[str, Any]]:
+    if not isinstance(payload, dict) or payload.get("error"):
+        return []
+    matches: list[dict[str, Any]] = []
+    if connector_type == "input":
+        for item in payload.get("inputs") or []:
+            if not isinstance(item, dict):
+                continue
+            if item.get("to_index") != index or item.get("from_path") != expected_peer:
+                continue
+            if expected_peer_index is not None and item.get("from_index") != expected_peer_index:
+                continue
+            matches.append(item)
+    else:
+        for item in payload.get("outputs") or []:
+            if not isinstance(item, dict):
+                continue
+            if item.get("from_index") != index or item.get("to_path") != expected_peer:
+                continue
+            if expected_peer_index is not None and item.get("to_index") != expected_peer_index:
+                continue
+            matches.append(item)
+    return matches
+
+
+def _assert_expected_connection(
+    payload: Any,
+    *,
+    path: str,
+    connector_type: str,
+    index: int,
+    expected_peer: str,
+    expected_peer_index: Any = None,
+    phase: str = "precondition",
+) -> None:
+    if not isinstance(payload, dict):
+        raise PatchOperationArgsError(f"connection {phase} could not be read for {path!r}")
+    if payload.get("error"):
+        raise PatchOperationArgsError(
+            f"connection {phase} could not be read for {path!r}: {payload['error']}"
+        )
+    collection_name = "inputs" if connector_type == "input" else "outputs"
+    collection = payload.get(collection_name)
+    if not isinstance(collection, list):
+        raise PatchOperationArgsError(
+            f"connection {phase} could not be proven for {path!r}: missing {collection_name} readback"
+        )
+    index_name = "to_index" if connector_type == "input" else "from_index"
+    all_at_index = [item for item in collection if isinstance(item, dict) and item.get(index_name) == index]
+    matches = _matching_connections(
+        payload,
+        path=path,
+        connector_type=connector_type,
+        index=index,
+        expected_peer=expected_peer,
+        expected_peer_index=expected_peer_index,
+    )
+    if len(matches) != 1 or len(all_at_index) != 1:
+        raise PatchOperationArgsError(
+            f"connection {phase} failed for {path!r} {connector_type}[{index}]: "
+            f"expected exactly one route, from/to {expected_peer!r}"
+        )
+
+
+def _assert_connection_absent(
+    payload: Any,
+    *,
+    path: str,
+    connector_type: str,
+    index: int,
+) -> None:
+    if not isinstance(payload, dict):
+        raise PatchOperationArgsError(f"disconnect postcondition could not be read for {path!r}")
+    if payload.get("error"):
+        raise PatchOperationArgsError(
+            f"disconnect postcondition could not be read for {path!r}: {payload['error']}"
+        )
+    collection_name = "inputs" if connector_type == "input" else "outputs"
+    collection = payload.get(collection_name)
+    if not isinstance(collection, list):
+        raise PatchOperationArgsError(
+            f"disconnect postcondition could not be proven for {path!r}: missing {collection_name} readback"
+        )
+    index_name = "to_index" if connector_type == "input" else "from_index"
+    remaining = [item for item in collection if isinstance(item, dict) and item.get(index_name) == index]
+    if remaining:
+        raise PatchOperationArgsError(
+            f"disconnect postcondition failed for {path!r} {connector_type}[{index}]: "
+            "connector is still routed"
+        )
+
+
 def _record_outcome(
     result: PatchResult,
     index: int,
@@ -486,6 +810,26 @@ def _record_outcome(
         )
     elif op.kind == "connect":
         result.connections_made.append((op.args["from"], op.args["to"]))
+    elif op.kind == "delete_node":
+        deleted = outcome.get("deleted") if isinstance(outcome, dict) else None
+        path = deleted.get("path") if isinstance(deleted, dict) else None
+        result.deleted_paths.append(str(path or op.target))
+    elif op.kind == "disconnect":
+        peer = str(op.args["expected_peer"])
+        target = str(op.target)
+        if op.args.get("connector_type") == "input":
+            result.connections_removed.append((peer, target))
+        else:
+            result.connections_removed.append((target, peer))
+    elif op.kind == "route_swap":
+        old_source = str(op.args["old_from"])
+        new_source = str(op.args["from"])
+        target = str(op.args["to"])
+        result.connections_removed.append((old_source, target))
+        result.connections_made.append((new_source, target))
+        route = outcome.get("route_swap") if isinstance(outcome, dict) else None
+        if isinstance(route, dict):
+            result.route_swaps.append(route)
 
 
 def _compute_status_and_hint(result: PatchResult) -> None:

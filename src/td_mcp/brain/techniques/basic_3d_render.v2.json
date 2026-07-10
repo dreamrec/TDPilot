@@ -1,0 +1,51 @@
+{
+  "schema_version": 2,
+  "pattern_id": "basic_3d_render",
+  "title": "Basic camera geometry render",
+  "role": "render",
+  "profiles": ["render_pipeline", "concept_compiled"],
+  "intent_tags": ["3d", "render", "camera", "geometry", "light", "top"],
+  "families": ["COMP", "SOP", "MAT", "TOP"],
+  "state": "validated",
+  "build_compatibility": {"minimum": "2023.10000", "maximum": null},
+  "compiler": {"type": "packaged_template", "template_version": 1},
+  "estimated_nodes": 7,
+  "estimated_gpu_cost": "medium",
+  "estimated_cpu_cost": "low",
+  "required_ops": ["geometryCOMP", "sphereSOP", "constantMAT", "cameraCOMP", "lightCOMP", "renderTOP", "nullTOP"],
+  "inputs": {},
+  "outputs": {"image": "output", "geometry": "geo"},
+  "tunables": {
+    "width": {"type": "int", "minimum": 1, "maximum": 8192},
+    "height": {"type": "int", "minimum": 1, "maximum": 8192},
+    "camera_distance": {"type": "float", "minimum": 0.1, "maximum": 1000.0},
+    "radius": {"type": "float", "minimum": 0.001, "maximum": 100.0}
+  },
+  "controls": [],
+  "parameter_defaults": {"width": 1280, "height": 720, "camera_distance": 4.0, "radius": 0.9},
+  "nodes": [
+    {"id": "geo", "op_type": "geometryCOMP", "name": "render_geo", "params": {"material": "${path.material}", "render": true}},
+    {"id": "sphere", "op_type": "sphereSOP", "name": "surface", "parent": "geo", "params": {"rad": ["${parameters.radius}", "${parameters.radius}", "${parameters.radius}"], "rows": 32, "cols": 48, "normals": true}},
+    {"id": "material", "op_type": "constantMAT", "name": "render_material", "params": {"color": [0.15, 0.55, 1.0, 1.0], "depthtest": true}},
+    {"id": "camera", "op_type": "cameraCOMP", "name": "render_camera", "params": {"t": [0.0, 0.0, "${parameters.camera_distance}"], "near": 0.1, "far": 100.0}},
+    {"id": "light", "op_type": "lightCOMP", "name": "render_light", "params": {"c": [1.0, 0.95, 0.9], "dimmer": 1.0}},
+    {"id": "render", "op_type": "renderTOP", "name": "render_image", "params": {"camera": "${path.camera}", "geometry": "${path.geo}", "lights": "${path.light}", "bgcolor": [0.01, 0.015, 0.025, 1.0], "antialias": 4, "outputresolution": "custom", "resolutionw": "${parameters.width}", "resolutionh": "${parameters.height}"}},
+    {"id": "output", "op_type": "nullTOP", "name": "out_render", "params": {}}
+  ],
+  "connections": [
+    {"source": "render", "target": "output", "source_index": 0, "target_index": 0}
+  ],
+  "validation_defaults": [
+    {"id": "render_geometry", "kind": "exists", "target": "${path.geo}", "expected": true},
+    {"id": "render_camera", "kind": "exists", "target": "${path.camera}", "expected": true},
+    {"id": "render_resolution", "kind": "resolution", "target": "${path.output}", "expected": ["${parameters.width}", "${parameters.height}"]},
+    {"id": "render_runtime", "kind": "no_errors", "target": "${path.render}", "expected": true},
+    {"id": "render_visible", "kind": "not_black", "target": "${path.output}", "expected": true}
+  ],
+  "failure_modes": ["camera misses geometry", "geometry render flag disabled", "material reference lost", "unsupported output resolution"],
+  "evidence": {
+    "status": "atlas_fixture_validated",
+    "operator_cards": ["geometryCOMP", "sphereSOP", "constantMAT", "cameraCOMP", "lightCOMP", "renderTOP", "nullTOP"],
+    "fixture": "tests/brain/test_build_compiler.py::test_all_packaged_v2_techniques_compile_deterministically"
+  }
+}

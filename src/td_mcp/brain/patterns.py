@@ -521,8 +521,7 @@ _DEFAULT_PATTERNS = [
             ),
         ],
         "concept_edges": [
-            ConceptEdge(source="panel_slider", target="panel_reader", kind="reference"),
-            ConceptEdge(source="panel_button", target="panel_reader", kind="reference"),
+            ConceptEdge(source="panel_container", target="panel_reader", kind="reference"),
             ConceptEdge(source="panel_reader", target="panel_out", kind="data"),
         ],
         "exposes": [{"port_id": "panel_chop", "domain": "CHOP", "node_id": "panel_out"}],
@@ -608,8 +607,7 @@ _DEFAULT_PATTERNS = [
             ),
         ],
         "concept_edges": [
-            ConceptEdge(source="panel_slider", target="panel_reader", kind="reference"),
-            ConceptEdge(source="panel_button", target="panel_reader", kind="reference"),
+            ConceptEdge(source="panel_container", target="panel_reader", kind="reference"),
             ConceptEdge(source="panel_reader", target="panel_out", kind="data"),
         ],
         "exposes": [{"port_id": "panel_chop", "domain": "CHOP", "node_id": "panel_out"}],
@@ -1361,7 +1359,6 @@ _DEFAULT_PATTERNS = [
         ],
         "concept_edges": [
             ConceptEdge(source="serial_source", target="serial_out", kind="data"),
-            ConceptEdge(source="serial_source", target="serial_diagnostics", kind="reference"),
         ],
         "exposes": [{"port_id": "protocol_dat", "domain": "DAT", "node_id": "serial_out"}],
         "consumes": [{"port_id": "serial_device", "domain": "DAT"}],
@@ -1414,7 +1411,6 @@ _DEFAULT_PATTERNS = [
         ],
         "concept_edges": [
             ConceptEdge(source="osc_source", target="osc_out", kind="data"),
-            ConceptEdge(source="osc_source", target="osc_diagnostics", kind="reference"),
         ],
         "exposes": [{"port_id": "protocol_dat", "domain": "DAT", "node_id": "osc_out"}],
         "consumes": [{"port_id": "osc_source", "domain": "DAT"}],
@@ -1467,7 +1463,6 @@ _DEFAULT_PATTERNS = [
         ],
         "concept_edges": [
             ConceptEdge(source="websocket_source", target="websocket_out", kind="data"),
-            ConceptEdge(source="websocket_source", target="websocket_diagnostics", kind="reference"),
         ],
         "exposes": [{"port_id": "protocol_dat", "domain": "DAT", "node_id": "websocket_out"}],
         "consumes": [{"port_id": "websocket_endpoint", "domain": "DAT"}],
@@ -1520,7 +1515,6 @@ _DEFAULT_PATTERNS = [
         ],
         "concept_edges": [
             ConceptEdge(source="mqtt_source", target="mqtt_out", kind="data"),
-            ConceptEdge(source="mqtt_source", target="mqtt_diagnostics", kind="reference"),
         ],
         "exposes": [{"port_id": "protocol_dat", "domain": "DAT", "node_id": "mqtt_out"}],
         "consumes": [{"port_id": "mqtt_broker", "domain": "DAT"}],
@@ -1579,7 +1573,6 @@ _DEFAULT_PATTERNS = [
         ],
         "concept_edges": [
             ConceptEdge(source="udp_source", target="udp_out", kind="data"),
-            ConceptEdge(source="udp_source", target="udp_diagnostics", kind="reference"),
         ],
         "exposes": [{"port_id": "protocol_dat", "domain": "DAT", "node_id": "udp_out"}],
         "consumes": [{"port_id": "udp_source", "domain": "DAT"}],
@@ -1795,7 +1788,6 @@ _DEFAULT_PATTERNS = [
         "concept_edges": [
             ConceptEdge(source="watched_table", target="callback_out", kind="data"),
             ConceptEdge(source="watched_table", target="table_change_exec", kind="reference"),
-            ConceptEdge(source="callback_code", target="table_change_exec", kind="reference"),
         ],
         "exposes": [{"port_id": "callback_dat", "domain": "DAT", "node_id": "callback_out"}],
         "consumes": [],

@@ -1,7 +1,7 @@
 [project]
 name = "tdpilot"
-version = "2.1.1"
-description = "MCP server for live control of TouchDesigner — create, inspect, connect, and manipulate nodes via AI agents"
+version = "2.4.0"
+description = "Local-first TouchDesigner MCP server with truthful concept routing, deterministic visual techniques, transactional execution, and live validation"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"

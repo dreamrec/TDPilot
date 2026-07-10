@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "pattern_id": "normalized_modulator",
+  "title": "Bounded normalized control modulator",
+  "role": "modulation",
+  "profiles": ["audio_reactive", "concept_compiled"],
+  "intent_tags": ["normalize", "modulator", "control", "bounded", "smooth", "map"],
+  "families": ["CHOP"],
+  "state": "validated",
+  "build_compatibility": {"minimum": "2023.10000", "maximum": null},
+  "compiler": {"type": "packaged_template", "template_version": 1},
+  "estimated_nodes": 4,
+  "estimated_gpu_cost": "low",
+  "estimated_cpu_cost": "low",
+  "required_ops": ["mathCHOP", "limitCHOP", "lagCHOP", "nullCHOP"],
+  "inputs": {"control": [{"node": "map", "input": 0}]},
+  "outputs": {"control": "output"},
+  "tunables": {
+    "input_low": {"type": "float"},
+    "input_high": {"type": "float"},
+    "output_low": {"type": "float"},
+    "output_high": {"type": "float"},
+    "smoothing": {"type": "float", "minimum": 0.0, "maximum": 2.0}
+  },
+  "controls": [],
+  "parameter_defaults": {"input_low": 0.0, "input_high": 1.0, "output_low": 0.0, "output_high": 1.0, "smoothing": 0.05},
+  "nodes": [
+    {"id": "map", "op_type": "mathCHOP", "name": "mod_map", "params": {"fromrange": ["${parameters.input_low}", "${parameters.input_high}"], "torange": ["${parameters.output_low}", "${parameters.output_high}"], "interppars": true}},
+    {"id": "limit", "op_type": "limitCHOP", "name": "mod_limit", "params": {"type": "clamp", "min": "${parameters.output_low}", "max": "${parameters.output_high}"}},
+    {"id": "smooth", "op_type": "lagCHOP", "name": "mod_smooth", "params": {"lag1": "${parameters.smoothing}", "lag2": "${parameters.smoothing}"}},
+    {"id": "output", "op_type": "nullCHOP", "name": "out_control", "params": {}}
+  ],
+  "connections": [
+    {"source": "map", "target": "limit", "source_index": 0, "target_index": 0},
+    {"source": "limit", "target": "smooth", "source_index": 0, "target_index": 0},
+    {"source": "smooth", "target": "output", "source_index": 0, "target_index": 0}
+  ],
+  "validation_defaults": [
+    {"id": "modulator_output", "kind": "exists", "target": "${path.output}", "expected": true},
+    {"id": "modulator_activity", "kind": "nonzero_signal", "target": "${path.output}", "expected": true, "required": false},
+    {"id": "modulator_runtime", "kind": "no_errors", "target": "${path.output}", "expected": true}
+  ],
+  "failure_modes": ["zero-width input range", "inverted output bounds", "static upstream control", "excessive smoothing"],
+  "evidence": {
+    "status": "atlas_fixture_validated",
+    "operator_cards": ["mathCHOP", "limitCHOP", "lagCHOP", "nullCHOP"],
+    "fixture": "tests/brain/test_build_compiler.py::test_all_packaged_v2_techniques_compile_deterministically"
+  }
+}

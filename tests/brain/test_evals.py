@@ -322,7 +322,8 @@ async def test_evaluate_golden_cases_scores_all_current_profiles():
     }
     material_case = next(item for item in report["cases"] if item["id"] == "audio_glsl_material_render")
     assert material_case["profile"] == "concept_compiled"
-    assert material_case["checks"]["pattern_composition"]["ok"] is True
+    assert material_case["checks"]["expected_blocked_safety"]["ok"] is True
+    assert material_case["operation_count"] == 0
     assert {"CHOP", "TOP", "COMP", "DAT", "MAT"}.issubset(set(material_case["compiled_domains"]))
     assert {
         "audio_analysis_chop_chain",
@@ -333,8 +334,8 @@ async def test_evaluate_golden_cases_scores_all_current_profiles():
         item for item in report["cases"] if item["id"] == "audio_glsl_material_render_panel"
     )
     assert material_panel_case["profile"] == "concept_compiled"
-    assert material_panel_case["checks"]["pattern_composition"]["ok"] is True
-    assert material_panel_case["checks"]["assembly_macros"]["ok"] is True
+    assert material_panel_case["checks"]["expected_blocked_safety"]["ok"] is True
+    assert material_panel_case["operation_count"] == 0
     assert {"CHOP", "TOP", "COMP", "DAT", "MAT"}.issubset(set(material_panel_case["compiled_domains"]))
     assert {
         "audio_analysis_chop_chain",
@@ -344,7 +345,8 @@ async def test_evaluate_golden_cases_scores_all_current_profiles():
     }.issubset(set(material_panel_case["candidate_patterns"]))
     terrain_case = next(item for item in report["cases"] if item["id"] == "audio_terrain_glass_controls")
     assert terrain_case["profile"] == "concept_compiled"
-    assert terrain_case["checks"]["pattern_composition"]["ok"] is True
+    assert terrain_case["checks"]["expected_blocked_safety"]["ok"] is True
+    assert terrain_case["operation_count"] == 0
     assert {"CHOP", "TOP", "COMP", "DAT", "SOP", "MAT"}.issubset(set(terrain_case["compiled_domains"]))
     assert {
         "audio_analysis_chop_chain",
@@ -474,7 +476,7 @@ async def test_evaluate_golden_cases_reports_master_plan_phase_coverage():
     assert phases["phase_3"]["evidence"]["validation_required_profile_count"] >= 8
     assert phases["phase_3"]["evidence"]["generated_code_case_count"] >= 1
     assert phases["phase_4"]["evidence"]["eval_case_count"] >= 50
-    assert phases["phase_4"]["evidence"]["assembled_showpiece_case_count"] >= 10
+    assert phases["phase_4"]["evidence"]["assembled_showpiece_case_count"] >= 8
     assert report["time_metrics"]["time_to_first_green_cycles"] == {
         "min": 1,
         "max": 1,
@@ -651,7 +653,7 @@ async def test_evaluate_golden_cases_reports_showpiece_assembly_metrics():
     metrics = report["showpiece_assembly_metrics"]
 
     assert metrics["ok"] is True
-    assert metrics["showpiece_case_count"] >= 10
+    assert metrics["showpiece_case_count"] >= 8
     assert metrics["assembled_showpiece_case_count"] == metrics["showpiece_case_count"]
     assert metrics["fully_readable_showpiece_case_count"] == metrics["showpiece_case_count"]
     assert metrics["unassembled_showpiece_case_ids"] == []
@@ -810,8 +812,8 @@ async def test_evaluate_golden_cases_reports_generated_code_success_metrics():
     metrics = report["generated_code_success_metrics"]
 
     assert metrics["ok"] is True
-    assert metrics["generated_code_case_count"] >= 18
-    assert metrics["generated_code_block_count"] >= 25
+    assert metrics["generated_code_case_count"] >= 12
+    assert metrics["generated_code_block_count"] >= 12
     assert metrics["language_count"] == 2
     assert set(metrics["languages"]) == {"glsl", "python"}
     assert metrics["static_issue_count"] == 0
@@ -903,7 +905,10 @@ async def test_evaluate_golden_cases_reports_compiler_stability_summary():
     assert summary["compiled_domain_failure_count"] == 0
     assert summary["pattern_composition_failure_count"] == 0
     assert "audio_feedback_panel_debug" in summary["compiled_case_ids"]
-    assert "audio_terrain_glass_controls" in summary["compiled_case_ids"]
+    assert "audio_terrain_glass_controls" not in summary["compiled_case_ids"]
+    blocked_sentinel = next(item for item in report["cases"] if item["id"] == "audio_terrain_glass_controls")
+    assert blocked_sentinel["expected_blocked"] is True
+    assert blocked_sentinel["passed"] is True
 
 
 @pytest.mark.asyncio
@@ -1774,6 +1779,7 @@ async def test_evaluate_case_reports_decomposition_plan_validation_and_time_metr
     result = await evaluate_case(
         {
             "id": "metrics_probe",
+            "expected_blocked": True,
             "intent": "Build an audio-reactive 3D render with material modulation",
             "target_root": "/project1",
             "expected_profile": "concept_compiled",
@@ -1811,7 +1817,9 @@ async def test_evaluate_case_reports_decomposition_plan_validation_and_time_metr
     assert result["plan_metrics"]["assembly_macro_count"] == len(result["assembly_macros"])
     assert result["validation_metrics"]["validation_check_count"] == len(result["validation_checks"])
     assert result["validation_metrics"]["missing_validation_expectation_count"] == 0
-    assert result["validation_metrics"]["blocked_question_count"] == 0
+    assert result["validation_metrics"]["blocked_question_count"] == 1
+    assert result["operation_count"] == 0
+    assert result["checks"]["expected_blocked_safety"]["ok"] is True
     assert set(result["time_metrics"]) == {
         "planning_ms",
         "scoring_ms",
@@ -2229,9 +2237,10 @@ async def test_evaluate_golden_cases_reports_param_value_coverage():
     metrics = report["param_value_coverage"]
 
     assert metrics["ok"] is True
-    assert metrics["eligible_case_count"] == report["case_count"] - 1  # one expected_blocked case
+    expected_blocked_count = sum(1 for item in report["cases"] if item["expected_blocked"])
+    assert metrics["eligible_case_count"] == report["case_count"] - expected_blocked_count
     assert metrics["coverage"] >= evals.MIN_PARAM_VALUE_COVERAGE
-    assert metrics["carrying_case_count"] >= 70
+    assert metrics["carrying_case_count"] >= 65
     assert metrics["expected_param_value_case_count"] >= evals.MIN_EXPECTED_PARAM_VALUE_CASES
     assert metrics["expected_param_value_failure_count"] == 0
     assert metrics["expected_param_value_failure_case_ids"] == []

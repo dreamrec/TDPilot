@@ -1,10 +1,12 @@
 # Installing TDPilot as a Claude Code Plugin
 
 TDPilot ships as a Claude Code plugin via the `dreamrec/TDPilot` marketplace.
-You get 112 MCP tools, 8 skills (`tdpilot-core`, `tdpilot-production`,
-`popx-touchdesigner`, plus 5 brain skills), 4 brain agents, two slash commands
-(`/td-check`, `/td-snapshot`), and the TD-side `.tox` component all in one
-install.
+You get 114 MCP tools, 7 public skills (`tdpilot-core`, `tdpilot-production`,
+`popx-touchdesigner`, plus the builder, explorer, validator, and recovery brain
+skills), 3 brain agents, 6 slash commands (`/td-concept`, `/td-first-wow`,
+`/td-audio-reactive`, `/td-explain-patch`, `/td-check`, `/td-snapshot`), and the
+TD-side `.tox` component in one install. Release-only auditing stays in the
+source repository and is not shipped into user projects.
 
 ## Prerequisites
 

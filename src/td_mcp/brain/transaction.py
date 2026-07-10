@@ -15,6 +15,7 @@ from td_mcp.brain.code_harness import (
 )
 from td_mcp.brain.param_semantics import validate_patch_plan_parameter_contract
 from td_mcp.brain.repair import build_validation_repair_plan
+from td_mcp.brain.validation_engine import to_validation_report_v2, validate_contract
 from td_mcp.brain.validators import (
     build_validation_report_v2,
     static_profile_probe_metrics_for_plan,
@@ -22,6 +23,7 @@ from td_mcp.brain.validators import (
     validate_reference_params_for_plan,
 )
 from td_mcp.models.brain import TransactionOptions, TransactionResult, ValidationIssue, ValidationReportV2
+from td_mcp.models.build import ValidationContract
 from td_mcp.models.patch import PatchPlan, PatchPreview
 from td_mcp.patch.undo_sentinel import UndoBlockSentinel
 
@@ -42,6 +44,7 @@ async def apply_transaction(
     create_snapshot: SnapshotCallback | None = None,
     restore_snapshot: RestoreCallback | None = None,
     param_preflight: ParamPreflightCallback | None = None,
+    validation_contract: ValidationContract | None = None,
 ) -> TransactionResult:
     """Apply a PatchPlan with preflight, snapshot, validation, and rollback."""
     opts = options or TransactionOptions()
@@ -129,32 +132,40 @@ async def apply_transaction(
         concept_profile=concept_profile,
         concept_profiles=concept_profiles,
     )
-    validation_report = await _build_transaction_validation_report(
+    validation_report = await _build_selected_validation_report(
         td_client,
         plan,
         apply_result,
         options=opts,
         concept_profile=concept_profile,
         concept_profiles=profile_layers,
+        validation_contract=validation_contract,
     )
     result.validation_report = validation_report
     result.validation_failed = not validation_report.ok
     if result.validation_failed and opts.auto_repair and opts.max_repair_attempts > 0:
-        repaired_report = await _attempt_validation_repair(
-            td_client,
-            plan,
-            result,
-            validation_report,
-            options=opts,
-            sentinel=sentinel,
-            concept_profile=concept_profile,
-            concept_profiles=profile_layers,
-            macro_engine=macro_engine,
-            param_preflight=param_preflight,
-        )
-        if repaired_report is not None:
+        current_report = validation_report
+        for _attempt_number in range(opts.max_repair_attempts):
+            repaired_report = await _attempt_validation_repair(
+                td_client,
+                plan,
+                result,
+                current_report,
+                options=opts,
+                sentinel=sentinel,
+                concept_profile=concept_profile,
+                concept_profiles=profile_layers,
+                macro_engine=macro_engine,
+                param_preflight=param_preflight,
+                validation_contract=validation_contract,
+            )
+            if repaired_report is None:
+                break
+            current_report = repaired_report
             result.validation_report = repaired_report
             result.validation_failed = not repaired_report.ok
+            if repaired_report.ok:
+                break
 
     should_rollback = (
         apply_result.status == "broken"
@@ -227,6 +238,29 @@ async def _build_transaction_validation_report(
     return validation_report
 
 
+async def _build_selected_validation_report(
+    td_client,
+    plan: PatchPlan,
+    apply_result,
+    *,
+    options: TransactionOptions,
+    concept_profile: str | None,
+    concept_profiles: Iterable[str | None],
+    validation_contract: ValidationContract | None,
+) -> ValidationReportV2:
+    if validation_contract is not None:
+        contract_report = await validate_contract(td_client, validation_contract)
+        return to_validation_report_v2(contract_report)
+    return await _build_transaction_validation_report(
+        td_client,
+        plan,
+        apply_result,
+        options=options,
+        concept_profile=concept_profile,
+        concept_profiles=concept_profiles,
+    )
+
+
 async def _attempt_validation_repair(
     td_client,
     plan: PatchPlan,
@@ -239,6 +273,7 @@ async def _attempt_validation_repair(
     concept_profiles: Iterable[str | None],
     macro_engine=None,
     param_preflight: ParamPreflightCallback | None = None,
+    validation_contract: ValidationContract | None = None,
 ) -> ValidationReportV2 | None:
     repair_plan = build_validation_repair_plan(plan, validation_report)
     if repair_plan is None:
@@ -273,13 +308,14 @@ async def _attempt_validation_repair(
         attempt["status"] = "failed"
         attempt["error"] = repair_apply_result.failed_reason or "repair apply failed"
         return None
-    repaired_report = await _build_transaction_validation_report(
+    repaired_report = await _build_selected_validation_report(
         td_client,
         plan,
         repair_apply_result,
         options=options,
         concept_profile=concept_profile,
         concept_profiles=concept_profiles,
+        validation_contract=validation_contract,
     )
     attempt["status"] = "applied" if repaired_report.ok else "validation_failed"
     attempt["validation_ok"] = repaired_report.ok

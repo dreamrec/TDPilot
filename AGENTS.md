@@ -12,10 +12,12 @@ For TouchDesigner work, use the TDPilot brain skills:
 
 ## TouchDesigner Safety
 
-- Inspect before mutating: `td_get_focus`, `td_get_state_vector`, `td_get_nodes`, `td_get_errors`.
-- Plan before building: call `td_brain_plan` for non-trivial visual-programming tasks.
+- Inspect the relevant live scope before mutating; batch independent reads when useful.
+- Route exact validated patterns through `td_brain_plan`.
+- Route artistic, multi-domain, spatial, camera/depth/fog, or implicit architecture through `td_brain_ground` → author → `td_brain_propose`.
 - Execute only valid plans: call `td_brain_execute` or `td_transaction_apply`, not raw free text.
-- Treat `blocked_questions` as a hard stop.
+- Treat incomplete intent coverage and unresolved semantic edges as execution hard stops. A blocked pattern plan may continue through the concept-authoring route.
+- Check errors at logical checkpoints and completion, not after every primitive operation.
 - Learn only validated outcomes.
 
 ## Verification

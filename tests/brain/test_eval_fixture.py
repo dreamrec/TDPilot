@@ -71,7 +71,17 @@ async def test_golden_eval_case_maps_to_expected_profile_and_ops(case: dict):
     if case.get("expected_blocked") is True:
         assert plan.blocked_questions
         assert plan.patch_plan.operations == []
-        assert set(plan.concept_graph.operators) == set()
+        expected_ops = set(case["expected_ops"])
+        if expected_ops:
+            # Coverage failures preserve the compiled diagnostic graph while
+            # removing every executable operation.
+            assert expected_ops.issubset(set(plan.concept_graph.operators))
+            assert plan.compiled_task is not None
+            assert plan.intent_coverage is not None
+            assert plan.intent_coverage.complete is False
+            assert plan.route in {"host_authored", "clarify"}
+        else:
+            assert set(plan.concept_graph.operators) == set()
     else:
         assert plan.blocked_questions == []
         assert plan.concept_graph.profile == case["expected_profile"]

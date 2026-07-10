@@ -4,6 +4,7 @@ import importlib.util
 import json
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 _SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "check_release_gates.py"
@@ -11,6 +12,14 @@ _SPEC = importlib.util.spec_from_file_location("check_release_gates", _SCRIPT_PA
 assert _SPEC and _SPEC.loader
 check_release_gates = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(check_release_gates)
+
+
+def _candidate_report_identity() -> dict:
+    return {
+        "version": check_release_gates._canonical_version(),
+        "tool_count": 114,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 def test_evaluate_fails_when_no_reports_are_provided():
@@ -462,6 +471,7 @@ def _complete_delivery_phase_coverage() -> dict:
 
 def _complete_brain_smoke_payload() -> dict:
     return {
+        **_candidate_report_identity(),
         "ok": True,
         "mode": "dry_run",
         "mutated_td": False,
@@ -580,7 +590,8 @@ def _complete_brain_live_smoke_payload() -> dict:
         {
             "id": "serial_dat_protocol_bridge",
             "status": "skipped_unavailable",
-            "blocked_questions": [],
+            "blocked_questions": ["Required operator is unavailable in this TouchDesigner build."],
+            "missing_facts": ["missing_op:serialDAT"],
         }
     )
     return payload
@@ -588,11 +599,12 @@ def _complete_brain_live_smoke_payload() -> dict:
 
 def _complete_plugin_surface_payload() -> dict:
     return {
+        **_candidate_report_identity(),
         "ok": True,
-        "tool_count": 112,
-        "brain_skill_count": 5,
-        "agent_count": 4,
-        "hook_count": 2,
+        "tool_count": 114,
+        "brain_skill_count": 7,
+        "agent_count": 3,
+        "hook_count": 1,
         "missing_artifacts": [],
         "mirror_mismatches": [],
         "personal_path_leaks": [],
@@ -603,6 +615,12 @@ def _complete_plugin_surface_payload() -> dict:
             "uses_hook_runner": True,
             "has_post_tool_use_guard": True,
             "has_stop_release_guard": True,
+            "shipped_stop_hook": False,
+            "post_tool_use_scoped": True,
+            "uses_project_runtime_fallback": False,
+            "source_release_guard": True,
+            "stop_hook_reentry_guard": True,
+            "safe_for_distribution": True,
         },
         "codex_manifest": {"has_skills": True, "has_agents": True, "has_mcp_servers": True},
         "claude_manifest": {
@@ -616,6 +634,7 @@ def _complete_plugin_surface_payload() -> dict:
 
 def _complete_param_semantics_risk_payload() -> dict:
     return {
+        **_candidate_report_identity(),
         "ok": True,
         "contract": "high_cook_risk_direct_param_coverage_v1",
         "high_cook_risk_count": 10,
@@ -637,6 +656,7 @@ def _complete_param_semantics_risk_payload() -> dict:
 
 def _complete_operator_availability_payload(stored_path: str | None = None) -> dict:
     payload = {
+        **_candidate_report_identity(),
         "schema_version": 1,
         "ok": True,
         "target_count": 3,
@@ -695,6 +715,7 @@ def _complete_operator_availability_payload(stored_path: str | None = None) -> d
 
 def _complete_brain_eval_payload(*, case_count: int = 50, passed: int = 50) -> dict:
     return {
+        **_candidate_report_identity(),
         "ok": True,
         "case_count": case_count,
         "passed": passed,
@@ -1428,9 +1449,9 @@ def test_evaluate_fails_when_brain_eval_showpiece_assembly_regresses():
     brain_eval = _complete_brain_eval_payload()
     brain_eval["showpiece_assembly_metrics"] = {
         "ok": False,
-        "showpiece_case_count": 10,
-        "assembled_showpiece_case_count": 9,
-        "fully_readable_showpiece_case_count": 9,
+        "showpiece_case_count": 8,
+        "assembled_showpiece_case_count": 7,
+        "fully_readable_showpiece_case_count": 7,
         "unassembled_showpiece_case_ids": ["audio_feedback_panel_debug"],
         "not_fully_readable_showpiece_case_ids": ["audio_feedback_panel_debug"],
     }
@@ -1494,12 +1515,12 @@ def test_evaluate_fails_when_brain_eval_generated_code_success_regresses():
     brain_eval = _complete_brain_eval_payload()
     brain_eval["generated_code_success_metrics"] = {
         "ok": False,
-        "generated_code_case_count": 17,
-        "generated_code_block_count": 24,
+        "generated_code_case_count": 11,
+        "generated_code_block_count": 11,
         "language_count": 1,
         "languages": ["glsl"],
         "static_issue_count": 1,
-        "runtime_contract_count": 24,
+        "runtime_contract_count": 11,
         "runtime_contract_missing_count": 1,
         "runtime_check_count": 2,
         "runtime_checks": ["compile_state"],
@@ -2423,10 +2444,10 @@ def test_evaluate_fails_when_brain_live_smoke_has_uncontrolled_expensive_probe()
 def test_evaluate_passes_with_valid_plugin_surface_payload():
     plugin_surface = {
         "ok": True,
-        "tool_count": 112,
-        "brain_skill_count": 5,
-        "agent_count": 4,
-        "hook_count": 2,
+        "tool_count": 114,
+        "brain_skill_count": 7,
+        "agent_count": 3,
+        "hook_count": 1,
         "missing_artifacts": [],
         "mirror_mismatches": [],
         "personal_path_leaks": [],
@@ -2437,6 +2458,12 @@ def test_evaluate_passes_with_valid_plugin_surface_payload():
             "uses_hook_runner": True,
             "has_post_tool_use_guard": True,
             "has_stop_release_guard": True,
+            "shipped_stop_hook": False,
+            "post_tool_use_scoped": True,
+            "uses_project_runtime_fallback": False,
+            "source_release_guard": True,
+            "stop_hook_reentry_guard": True,
+            "safe_for_distribution": True,
         },
         "codex_manifest": {"has_skills": True, "has_agents": True, "has_mcp_servers": True},
         "claude_manifest": {
@@ -2456,7 +2483,31 @@ def test_evaluate_passes_with_valid_plugin_surface_payload():
     assert labels["plugin surface mirror mismatch count"]["status"] == "pass"
     assert labels["plugin surface hosted llm dependency leak count"]["status"] == "pass"
     assert labels["plugin surface hook runner"]["status"] == "pass"
+    assert labels["plugin surface no shipped stop hook"]["status"] == "pass"
+    assert labels["plugin surface scoped post tool matcher"]["status"] == "pass"
+    assert labels["plugin surface trusted runtime roots"]["status"] == "pass"
+    assert labels["plugin surface stop hook re-entry guard"]["status"] == "pass"
     assert labels["plugin surface mcp placeholder"]["status"] == "pass"
+
+
+def test_evaluate_fails_when_plugin_surface_ships_stop_hook():
+    plugin_surface = _complete_plugin_surface_payload()
+    plugin_surface["ok"] = False
+    plugin_surface["hooks"]["shipped_stop_hook"] = True
+    plugin_surface["hooks"]["safe_for_distribution"] = False
+
+    report = check_release_gates.evaluate(
+        None,
+        None,
+        None,
+        brain_smoke=None,
+        plugin_surface=plugin_surface,
+    )
+
+    assert report["summary"]["ok"] is False
+    labels = {check["label"]: check for check in report["checks"]}
+    assert labels["plugin surface no shipped stop hook"]["status"] == "fail"
+    assert labels["plugin surface hook safety"]["status"] == "fail"
 
 
 def test_evaluate_fails_when_plugin_surface_has_hosted_llm_dependency_leaks():
@@ -2491,6 +2542,12 @@ def test_evaluate_fails_when_plugin_surface_packaging_is_incomplete():
             "uses_hook_runner": True,
             "has_post_tool_use_guard": True,
             "has_stop_release_guard": True,
+            "shipped_stop_hook": False,
+            "post_tool_use_scoped": True,
+            "uses_project_runtime_fallback": False,
+            "source_release_guard": True,
+            "stop_hook_reentry_guard": True,
+            "safe_for_distribution": True,
         },
         "codex_manifest": {"has_skills": True, "has_agents": True, "has_mcp_servers": True},
         "claude_manifest": {
@@ -2508,6 +2565,45 @@ def test_evaluate_fails_when_plugin_surface_packaging_is_incomplete():
     assert labels["plugin surface missing artifact count"]["status"] == "fail"
     assert labels["plugin surface mirror mismatch count"]["status"] == "fail"
     assert labels["plugin surface mcp placeholder"]["status"] == "fail"
+
+
+def test_plugin_surface_counts_are_exact_not_minimums():
+    plugin_surface = _complete_plugin_surface_payload()
+    plugin_surface["tool_count"] = 115
+    plugin_surface["brain_skill_count"] = 8
+    plugin_surface["agent_count"] = 4
+
+    report = check_release_gates.evaluate(None, None, plugin_surface=plugin_surface)
+    labels = {check["label"]: check for check in report["checks"]}
+
+    assert labels["plugin surface tool count"]["status"] == "fail"
+    assert labels["plugin surface brain skill count"]["status"] == "fail"
+    assert labels["plugin surface agent count"]["status"] == "fail"
+
+
+def test_required_report_identity_rejects_stale_version_tool_count_and_timestamp():
+    plugin_surface = _complete_plugin_surface_payload()
+    plugin_surface.update(
+        {
+            "version": "1.0.0",
+            "tool_count": 110,
+            "generated_at": "2020-01-01T00:00:00+00:00",
+        }
+    )
+
+    report = check_release_gates.evaluate(
+        None,
+        None,
+        plugin_surface=plugin_surface,
+        required_reports={"plugin_surface"},
+    )
+    labels = {check["label"]: check for check in report["checks"]}
+
+    assert labels["plugin_surface candidate version"]["status"] == "fail"
+    assert labels["plugin_surface candidate tool count"]["status"] == "fail"
+    assert labels["plugin_surface generated timestamp"]["status"] == "pass"
+    assert labels["plugin_surface report age hours"]["status"] == "fail"
+    assert report["summary"]["ok"] is False
 
 
 def test_evaluate_fails_when_brain_smoke_missing_profile_probe_evidence():

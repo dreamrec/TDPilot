@@ -18,6 +18,7 @@ from td_mcp.brain.operator_availability import (  # noqa: E402
     sample_operator_availability,
     save_operator_availability_report,
 )
+from td_mcp.report_identity import stamp_report_identity  # noqa: E402
 from td_mcp.td_client import TDClient  # noqa: E402
 
 
@@ -73,6 +74,8 @@ def main() -> int:
             "ok": False,
             "error": str(exc),
         }
+
+    report = stamp_report_identity(report)
 
     if report.get("ok") and args.store_root:
         report["stored_availability_report"] = str(

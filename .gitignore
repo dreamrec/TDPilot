@@ -90,7 +90,13 @@ tdpilot.mcpb
 
 # Dev tooling scratch
 .playwright-mcp/
-.claude/
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
+.claude/hooks/*
+!.claude/hooks/load_feedback_memories.sh
+!.claude/hooks/td_completion_nudge.sh
+!.claude/hooks/version_sync_gate.py
 
 # Git worktrees
 .worktrees/

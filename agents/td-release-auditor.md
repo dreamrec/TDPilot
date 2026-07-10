@@ -1,7 +1,6 @@
 ---
 name: td-release-auditor
 description: Use before releasing or publishing TDPilot brain, MCP surface, schema, prompt, resource, skill, or plugin changes.
-model: sonnet
 effort: high
 maxTurns: 20
 disallowedTools: Write, Edit
