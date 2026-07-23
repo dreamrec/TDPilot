@@ -19,8 +19,10 @@ def test_release_bump_dry_run_matches_current_public_surfaces() -> None:
         ],
         cwd=ROOT,
         capture_output=True,
-        text=True,
+        encoding="utf-8",
         check=False,
+        # Reproduce the Windows runner's legacy console default; the command
+        # must still emit a complete UTF-8 dry-run diff.
         env={**os.environ, "PYTHONIOENCODING": "cp1252"},
     )
 
