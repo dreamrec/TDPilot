@@ -39,6 +39,11 @@ def _configure_utf8_stdio() -> None:
             reconfigure(encoding="utf-8")
 
 
+def _display_path(path: Path) -> str:
+    """Return stable, copyable repository paths on every platform."""
+    return path.relative_to(ROOT).as_posix()
+
+
 # ---------------------------------------------------------------------------
 # Transformation registry
 # Maps path → ordered list of (transform_fn, description) pairs.
@@ -383,7 +388,7 @@ def _compute_changes() -> tuple[dict[Path, tuple[str, str]], list[str]]:
         try:
             original = path.read_text(encoding="utf-8")
         except OSError as e:
-            errors.append(f"Could not read {path.relative_to(ROOT)}: {e}")
+            errors.append(f"Could not read {_display_path(path)}: {e}")
             continue
 
         current = original
@@ -391,7 +396,7 @@ def _compute_changes() -> tuple[dict[Path, tuple[str, str]], list[str]]:
             try:
                 current = fn(current)
             except ValueError as e:
-                errors.append(f"{path.relative_to(ROOT)}: {e}")
+                errors.append(f"{_display_path(path)}: {e}")
                 break
 
         if current != original:
@@ -401,7 +406,7 @@ def _compute_changes() -> tuple[dict[Path, tuple[str, str]], list[str]]:
 
 
 def _unified_diff(path: Path, old: str, new: str) -> str:
-    rel = str(path.relative_to(ROOT))
+    rel = _display_path(path)
     return "".join(
         difflib.unified_diff(
             old.splitlines(keepends=True),
@@ -495,7 +500,7 @@ def main(argv: list[str] | None = None) -> int:
         print("=" * 72)
         print("DESIGN MAP — files that would be patched:")
         for path, (old, new) in changed.items():
-            rel = path.relative_to(ROOT)
+            rel = _display_path(path)
             n_lines = sum(
                 1
                 for line in difflib.unified_diff(old.splitlines(), new.splitlines())
@@ -517,7 +522,7 @@ def main(argv: list[str] | None = None) -> int:
     # --- Real run: write all or nothing ---
     for path, (_, new) in changed.items():
         path.write_text(new, encoding="utf-8")
-        print(f"  wrote: {path.relative_to(ROOT)}")
+        print(f"  wrote: {_display_path(path)}")
 
     print(f"\nDone. {len(changed)} file(s) updated.")
     if args.version:

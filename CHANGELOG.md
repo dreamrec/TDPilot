@@ -35,7 +35,7 @@
   header and latest-release layout, and extended it to update the packaged
   Codex skill mirrors, npm runtime description, and TouchDesigner component
   verification docs. Dry-run output is now UTF-8-safe on Windows cp1252
-  consoles.
+  consoles and uses stable `/` path separators on every platform.
 - Added a dry-run regression test so future releases fail before writing when
   any required public version surface drifts.
 
