@@ -10,7 +10,7 @@
     {
       "name": "tdpilot",
       "description": "TDPilot v2.4 routes exact validated patterns through deterministic planning and artistic or multi-domain requests through grounded concept authoring, then requires complete intent coverage before transactional execution. Live graph, runtime, visual, and performance checks plus bounded repair prevent partial scaffolds from being called finished. Local-first, 114 MCP tools, no signup or hosted model dependency.",
-      "version": "2.4.0",
+      "version": "2.4.1",
       "author": {
         "name": "silviu"
       },

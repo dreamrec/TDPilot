@@ -1,6 +1,6 @@
 {
   "name": "tdpilot",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "Local-first TouchDesigner AI copilot with 114 MCP tools, truthful concept routing, deterministic visual techniques, transactional execution, live validation, and rollback.",
   "keywords": [
     "touchdesigner",

@@ -136,34 +136,53 @@ def _register_version_transforms(new_ver: str, api_ver: str) -> None:
     # plugin_README.md  — "TDPilot vX.Y.Z provides"
     r("plugin_README.md", r"(TDPilot v)\d+\.\d+\.\d+", rf"\g<1>{V}")
 
-    # docs/API_REFERENCE.md  — "Auto-generated from TDPilot vX.Y.Z"
-    r("docs/API_REFERENCE.md", r"(Auto-generated from TDPilot v)\d+\.\d+\.\d+", rf"\g<1>{V}")
+    # docs/API_REFERENCE.md  — "> TDPilot vX.Y.Z | N tools"
+    r("docs/API_REFERENCE.md", r"(> TDPilot v)\d+\.\d+\.\d+", rf"\g<1>{V}")
 
     # docs/MANUAL.md  — "# TDPilot vX.Y.Z"
     r("docs/MANUAL.md", r"(# TDPilot v)\d+\.\d+\.\d+", rf"\g<1>{V}")
 
-    # npm/README.md  — "# TDPilot vX.Y.Z"
+    # npm/README.md  — title plus current-runtime description
     r("npm/README.md", r"(# TDPilot v)\d+\.\d+\.\d+", rf"\g<1>{V}")
+    r("npm/README.md", r"(TDPilot\s+v)\d+\.\d+\.\d+", rf"\g<1>{V}")
 
-    # skills/tdpilot-core/SKILL.md  — "TDPilot Core vX.Y.Z" and "for TDPilot vX.Y.Z"
-    r("skills/tdpilot-core/SKILL.md", r"(TDPilot (?:Core )?v)\d+\.\d+\.\d+", rf"\g<1>{V}")
-
-    # skills/tdpilot-production/SKILL.md
-    r("skills/tdpilot-production/SKILL.md", r"(TDPilot (?:Production )?v)\d+\.\d+\.\d+", rf"\g<1>{V}")
+    # Root skills and the packaged Codex mirrors must move together.
+    for rel in (
+        "skills/tdpilot-core/SKILL.md",
+        "plugins/tdpilot/skills/tdpilot-core/SKILL.md",
+    ):
+        r(rel, r"(TDPilot (?:Core )?v)\d+\.\d+\.\d+", rf"\g<1>{V}")
+    for rel in (
+        "skills/tdpilot-production/SKILL.md",
+        "plugins/tdpilot/skills/tdpilot-production/SKILL.md",
+    ):
+        r(rel, r"(TDPilot (?:Production )?v)\d+\.\d+\.\d+", rf"\g<1>{V}")
 
     # README.md  — title "# TDPilot Runtime vX.Y.Z"
     r("README.md", r"(# TDPilot Runtime v)\d+\.\d+\.\d+", rf"\g<1>{V}")
 
-    # README.md  — "## What's New In X.Y.Z" — FIRST occurrence only (most recent entry)
-    def _readme_whats_new(text: str) -> str:
+    # README.md  — first Latest Release marker, e.g. "**v2.4.0** —"
+    def _readme_latest_release(text: str) -> str:
         return re.sub(
-            r"(## What[''']s New In )\d+\.\d+\.\d+",
-            rf"\g<1>{V}",
+            r"(\*\*v)\d+\.\d+\.\d+(\*\*\s+—)",
+            rf"\g<1>{V}\g<2>",
             text,
             count=1,
         )
 
-    _register("README.md", _readme_whats_new, f"README What's New In → {V}")
+    _register("README.md", _readme_latest_release, f"README Latest Release → {V}")
+
+    # TD component docs expose the baked bridge version users must verify.
+    r(
+        "td_component/README.md",
+        r"(# TouchDesigner Component — TDPilot v)\d+\.\d+\.\d+",
+        rf"\g<1>{V}",
+    )
+    r(
+        "td_component/README.md",
+        r"(`api_version:\s*)\d+\.\d+\.\d+(`)",
+        rf"\g<1>{V}\g<2>",
+    )
 
 
 # ---------------------------------------------------------------------------

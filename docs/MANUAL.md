@@ -1,4 +1,4 @@
-# TDPilot v2.4.0 Production Manual
+# TDPilot v2.4.1 Production Manual
 
 This manual is for people who need real output in TouchDesigner, not theory. It explains what TDPilot does well, what it does not do, and how to run it with repeatable production discipline.
 
@@ -11,6 +11,10 @@ This manual is for people who need real output in TouchDesigner, not theory. It 
 - Recoverability: snapshots, diff, restore, and safety boundaries.
 - Technique reuse: memory tools convert successful subnet patterns into reusable recipes.
 - Team consistency: shared naming, tags, and preference memory reduce random drift between sessions.
+- **TouchDesigner 2025.33070 (v2.4.1):** exact release knowledge covers
+  Script POP, glTF In/Out COMPs, native `.pop` round trips, quaternion-focused
+  POP workflows, and Web Server DAT's Local Address. Fresh components bind the
+  bridge to `127.0.0.1` by default on this build and newer.
 - **Practical Intelligence (v2.4.0):** exact validated patterns compile through
   `td_brain_plan`; artistic, multi-domain, spatial, camera/depth/fog, and
   implicit architecture uses `td_brain_ground` → author →

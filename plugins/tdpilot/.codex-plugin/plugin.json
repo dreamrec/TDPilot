@@ -1,6 +1,6 @@
 {
   "name": "tdpilot",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "TDPilot for Codex: local-first TouchDesigner control with 114 tools, truthful pattern/concept routing, deterministic visual techniques, complete intent coverage, transactional execution, live validation, and bounded repair.",
   "author": {
     "name": "dreamrec",

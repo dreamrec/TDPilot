@@ -114,9 +114,7 @@ class TestTouchDesigner202533070WebServerBinding:
 
     def test_builder_sources_are_part_of_the_tox_freshness_contract(self):
         legacy_text = BUILD_LEGACY.read_text(encoding="utf-8")
-        freshness_text = (
-            REPO_ROOT / "scripts" / "check_tox_freshness.py"
-        ).read_text(encoding="utf-8")
+        freshness_text = (REPO_ROOT / "scripts" / "check_tox_freshness.py").read_text(encoding="utf-8")
 
         for relative_path in (
             "td_component/build_export_mcp_tox.py",

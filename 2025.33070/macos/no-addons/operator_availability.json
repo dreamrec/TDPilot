@@ -46,7 +46,7 @@
         "webrenderTOP"
       ]
     },
-    "generated_at": "2026-07-23T15:11:09.261659+00:00",
+    "generated_at": "2026-07-23T15:27:39.605292+00:00",
     "installed_addons": [],
     "operators": {
       "audiobandeqCHOP": {
@@ -169,7 +169,7 @@
   "available_count": 16,
   "cleanup_error": "",
   "cleanup_ok": true,
-  "generated_at": "2026-07-23T15:11:09.262103+00:00",
+  "generated_at": "2026-07-23T15:27:39.605729+00:00",
   "ok": true,
   "parent_path": "/project1",
   "results": [
@@ -448,13 +448,13 @@
   "scratch_path": "/project1/tdpilot_availability_probe",
   "target_count": 26,
   "td_health": {
-    "api_version": "2.4.0",
+    "api_version": "2.4.1",
     "platform": "macOS",
     "status": "ok",
     "td_build": "2025.33070",
-    "timestamp": 1784819468.7688372
+    "timestamp": 1784820459.116936
   },
   "tool_count": 114,
   "unavailable_count": 10,
-  "version": "2.4.0"
+  "version": "2.4.1"
 }

@@ -1,4 +1,4 @@
-# TDPilot v2.4.0
+# TDPilot v2.4.1
 
 [![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
@@ -7,7 +7,7 @@
 [![MCP tools](https://img.shields.io/badge/MCP%20tools-114-blueviolet)](https://github.com/dreamrec/TDPilot/blob/main/docs/API_REFERENCE.md)
 
 AI copilot for TouchDesigner — 114 tools for full live control via MCP. TDPilot
-v2.4.0 routes exact validated patterns through deterministic planning and
+v2.4.1 routes exact validated patterns through deterministic planning and
 artistic or multi-domain requests through grounded concept authoring. Complete
 intent coverage, explicit cross-domain bindings, transactional execution,
 actual-state validation, bounded repair, show-safe staging, technique memory,

@@ -7,7 +7,7 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v2.4.0
+# TDPilot Runtime v2.4.1
 
 [![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
@@ -145,7 +145,7 @@ Everything else (vision, streaming, optimization, planning, TD2025 inspection) b
 
 ## Latest Release
 
-**v2.4.0** — Practical Intelligence: truthful pattern-versus-concept routing, server-derived intent coverage, explicit CHOP→`levelTOP` bindings, cached grounding and recall, 15 deterministic compiler-backed techniques, live task-specific validation, bounded repairs, show-safe staging/route swaps, and ownership-guarded partial rebuilds. The public surface remains 114 tools and local-first. Read the [Practical Intelligence guide](docs/PRACTICAL_INTELLIGENCE.md) or the full [`CHANGELOG.md`](CHANGELOG.md).
+**v2.4.1** — TouchDesigner 2025.33070 compatibility: exact release knowledge, reviewed Script POP and glTF In/Out COMP cards, native `.pop` round-trip guidance, release-driven live operator sampling, and loopback-by-default Web Server DAT builds. The 114-tool practical-intelligence surface remains local-first and backward compatible. Read the [Practical Intelligence guide](docs/PRACTICAL_INTELLIGENCE.md) or the full [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Core Thinking Model (How To Think With This MCP)
 

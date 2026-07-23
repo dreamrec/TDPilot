@@ -1,6 +1,6 @@
 [project]
 name = "tdpilot"
-version = "2.4.0"
+version = "2.4.1"
 description = "Local-first TouchDesigner MCP server with truthful concept routing, deterministic visual techniques, transactional execution, and live validation"
 readme = "README.md"
 license = "MIT"

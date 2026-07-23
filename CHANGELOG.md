@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+## 2.4.1 - 2026-07-23 — TouchDesigner 2025.33070 Compatibility
+
 ### TouchDesigner 2025.33070 compatibility
 - Added an exact 2025.33070 release card plus reviewed operator cards for
   Script POP, glTF In COMP, and glTF Out COMP.
@@ -27,6 +29,14 @@
   release card, and the complete release workflow persists its build-specific
   evidence artifact. The 2025.33070 macOS sample confirms glTF In COMP, glTF
   Out COMP, and Script POP are all creatable.
+
+### Release tooling
+- Repaired the atomic release-bump command for the current API-reference
+  header and latest-release layout, and extended it to update the packaged
+  Codex skill mirrors, npm runtime description, and TouchDesigner component
+  verification docs.
+- Added a dry-run regression test so future releases fail before writing when
+  any required public version surface drifts.
 
 
 ## 2.4.0 - 2026-07-10 — Practical Intelligence

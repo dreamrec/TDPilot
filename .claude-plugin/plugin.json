@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "tdpilot",
   "displayName": "TDPilot",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "TDPilot - local-first TouchDesigner AI copilot with 114 MCP tools, truthful pattern-versus-concept routing, complete intent coverage, 15 deterministic visual techniques, transactional execution, live validation, bounded repair, and a 659-card reviewed operator atlas.",
   "author": {
     "name": "silviu"

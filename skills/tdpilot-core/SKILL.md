@@ -1,13 +1,13 @@
 ---
 name: tdpilot-core
 description: >
-  Core patching discipline for TDPilot v2.4.0 — the AI assistant inside
+  Core patching discipline for TDPilot v2.4.1 — the AI assistant inside
   TouchDesigner. Use for all work through the td_ MCP tools: routing intent,
   inspecting live state, making safe edits, validating results, and recalling
   or learning local techniques.
 ---
 
-# TDPilot Core v2.4.0 — Practical Patching Discipline (114 tools)
+# TDPilot Core v2.4.1 — Practical Patching Discipline (114 tools)
 
 TDPilot works inside a real TouchDesigner project. Leave the requested scope
 more usable, readable, and stable than you found it.

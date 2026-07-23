@@ -2,7 +2,7 @@
   "schema_version": 1,
   "name": "TDPilot",
   "slug": "tdpilot",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "repository": "https://github.com/dreamrec/TDPilot",
   "description": "Local-first TouchDesigner MCP server with 114 tools, truthful pattern/concept routing, complete intent coverage, deterministic visual techniques, transactional execution, live validation, bounded repair, diagnostics, memory, and streaming.",
   "entrypoints": {

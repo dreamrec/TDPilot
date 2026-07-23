@@ -4510,9 +4510,7 @@ def test_web_server_dat_bind_address_is_grounded_and_ranked_as_a_network_risk():
     by_key = {(item.op_type, item.name): item for item in registry}
     bind_semantics = by_key[("webserverDAT", "localaddress")]
 
-    assert bind_semantics.default_strategy == (
-        "loopback_address_unless_remote_access_is_explicitly_declared"
-    )
+    assert bind_semantics.default_strategy == ("loopback_address_unless_remote_access_is_explicitly_declared")
     assert bind_semantics.official_source == "https://docs.derivative.ca/Web_Server_DAT"
 
     plan = _plan_with_ops(

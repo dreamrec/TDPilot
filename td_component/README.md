@@ -1,4 +1,4 @@
-# TouchDesigner Component — TDPilot v2.4.0
+# TouchDesigner Component — TDPilot v2.4.1
 
 This folder contains the TouchDesigner-side component and helper scripts.
 
@@ -52,6 +52,6 @@ using it:
 uv run python scripts/diagnose_live_sync.py --live --pretty
 ```
 
-The health response must report `api_version: 2.4.0`. For release validation,
+The health response must report `api_version: 2.4.1`. For release validation,
 use a disposable project and run the transactional live smoke plus operator
 availability sampler; both create and clean scratch networks.

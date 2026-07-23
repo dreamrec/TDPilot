@@ -2150,9 +2150,7 @@ def _latest_release_new_operator_coverage(report: dict[str, Any]) -> float:
     covered = {
         str(item.get("op_type") or "")
         for item in results
-        if isinstance(item, dict)
-        and item.get("role") == "release_new_op"
-        and item.get("available") is True
+        if isinstance(item, dict) and item.get("role") == "release_new_op" and item.get("available") is True
     }
     return 1.0 if required <= covered else 0.0
 
