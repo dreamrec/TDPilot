@@ -15,10 +15,10 @@ project opens within the same TD session.  Override with:
     os.environ["TD_MCP_PARENT_PATH"] = ""             # export only, no install
 """
 
-import os
 import glob
 import hashlib
 import json
+import os
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
@@ -31,6 +31,12 @@ from urllib.parse import urlparse
 # parent COMP that the v1.5.6 .tox now exports. CI hash-tracks them so a
 # committed .tox stays in sync with the source on disk.
 _TOX_SOURCE_FILES = (
+    # Builder behavior is part of the binary artifact contract too: these
+    # scripts create the operator hierarchy and set built-in parameters that
+    # are saved into tdpilot.tox. Hashing only embedded Text DAT sources lets
+    # structural builder changes ship with a stale binary.
+    "td_component/build_export_mcp_tox.py",
+    "td_component/build_tdpilot_tox.py",
     "td_component/mcp_webserver_callbacks.py",
     "td_component/event_emitter.py",
     "td_component/ws_callbacks.py",
@@ -112,6 +118,7 @@ INSTALL_PARENT_PATH = _env_parent.strip() if _env_parent is not None else "/loca
 COMP_NAME = "mcp_server"
 TEMP_CONTAINER_NAME = "__tdpilot_export__"
 WEB_PORT = 9981
+WEB_BIND_ADDRESS = os.environ.get("TD_MCP_BIND_ADDRESS", "127.0.0.1").strip()
 WS_URL = "ws://127.0.0.1:9982"
 OVERWRITE_COMPONENT = True
 
@@ -467,6 +474,11 @@ def _populate_component(comp, callbacks_code, event_emitter_code, ws_callbacks_c
     # data stream inside the live patch.
     activity_log = _create_with_fallback(comp, ("tableDAT",), "activity_log")
 
+    # TouchDesigner 2025.33070 added Web Server DAT's Local Address
+    # parameter. Bind fresh TDPilot components to loopback by default when
+    # the parameter exists; _set_first_par keeps older supported TD builds
+    # working because a missing parameter is a harmless no-op.
+    _set_first_par(webserver, ("localaddress",), WEB_BIND_ADDRESS)
     _set_first_par(webserver, ("port",), WEB_PORT)
     _set_first_par(webserver, ("active", "enable"), 1)
     _set_first_par(webserver, ("callbacks", "callbackdat", "callback"), "callbacks")
@@ -585,6 +597,10 @@ def build_and_export():
 
     print("[TDPilot] Built reusable component")
     print("[TDPilot] WebServer port: {}".format(WEB_PORT))
+    if WEB_BIND_ADDRESS:
+        print(f"[TDPilot] WebServer bind address: {WEB_BIND_ADDRESS}")
+    else:
+        print("[TDPilot] WebServer bind address: all interfaces")
     print("[TDPilot] WebSocket URL: {}".format(WS_URL))
     print("[TDPilot] Exported TOX: {}".format(export_path))
     if install_parent is None:

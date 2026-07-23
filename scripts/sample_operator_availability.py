@@ -41,7 +41,8 @@ def parse_args() -> argparse.Namespace:
 
 async def main_async(args: argparse.Namespace) -> dict:
     atlas_report = audit_brain_atlas(ROOT)
-    targets = build_availability_targets(atlas_report)
+    release_card = _load_latest_release_card()
+    targets = build_availability_targets(atlas_report, release_card=release_card)
     client = TDClient(host=args.host, port=args.port, timeout=args.timeout, max_retries=1)
     report = await sample_operator_availability(
         client,
@@ -61,7 +62,28 @@ async def main_async(args: argparse.Namespace) -> dict:
             atlas_report["docsbrain_operator_coverage"]["priority_missing_operator_cards"]
         ),
     }
+    if release_card:
+        report["sampled_release_build"] = release_card.get("build")
+        report["sampled_release_new_ops"] = [
+            item.get("type")
+            for item in release_card.get("new_ops", [])
+            if isinstance(item, dict) and item.get("type")
+        ]
     return report
+
+
+def _load_latest_release_card() -> dict:
+    release_dir = ROOT / "src" / "td_mcp" / "knowledge" / "cards" / "release"
+    candidates: list[tuple[tuple[int, ...], Path]] = []
+    for path in release_dir.glob("*.json"):
+        try:
+            build_key = tuple(int(part) for part in path.stem.split("."))
+        except ValueError:
+            continue
+        candidates.append((build_key, path))
+    if not candidates:
+        return {}
+    return json.loads(max(candidates)[1].read_text(encoding="utf-8"))
 
 
 def main() -> int:

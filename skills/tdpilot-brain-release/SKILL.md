@@ -84,7 +84,7 @@ Live reports (TouchDesigner MUST be running — these mutate the live project an
 
 ```bash
 uv run python scripts/brain_live_smoke.py --live --transactional-generated-code > /tmp/tdpilot_brain_live_smoke.json
-uv run python scripts/sample_operator_availability.py --out /tmp/tdpilot_operator_availability.json
+uv run python scripts/sample_operator_availability.py --out /tmp/tdpilot_operator_availability.json --store-root .
 ```
 
 Complete gate (needs all six reports above):

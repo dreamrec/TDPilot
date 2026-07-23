@@ -2103,6 +2103,12 @@ def _operator_availability_checks(report: dict[str, Any]) -> list[dict[str, Any]
             ">=",
             1.0,
         ),
+        check_threshold(
+            "operator availability latest release new-op coverage",
+            _latest_release_new_operator_coverage(report),
+            ">=",
+            1.0,
+        ),
     ]
 
 
@@ -2134,6 +2140,21 @@ def _glsl_advanced_pop_replacement_coverage(report: dict[str, Any]) -> float:
     if topology.get("replacement_for") != "glslcreatePOP":
         return 0.0
     return 1.0 if advanced.get("available") is True and topology.get("available") is True else 0.0
+
+
+def _latest_release_new_operator_coverage(report: dict[str, Any]) -> float:
+    results = report.get("results")
+    if not isinstance(results, list):
+        return math.nan
+    required = {"gltfinCOMP", "gltfoutCOMP", "scriptPOP"}
+    covered = {
+        str(item.get("op_type") or "")
+        for item in results
+        if isinstance(item, dict)
+        and item.get("role") == "release_new_op"
+        and item.get("available") is True
+    }
+    return 1.0 if required <= covered else 0.0
 
 
 def _operator_availability_report_core_ok(report: dict[str, Any] | None) -> bool:

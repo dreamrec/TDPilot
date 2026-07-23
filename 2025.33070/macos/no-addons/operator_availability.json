@@ -1,0 +1,460 @@
+{
+  "atlas_summary": {
+    "card_count": 781,
+    "deprecated_missing_operator_card_count": 11,
+    "priority_missing_operator_card_count": 0,
+    "structured_operator_card_count": 659
+  },
+  "availability_matrix": {
+    "family_aliases": {
+      "CHOP": [
+        "audiobandeqCHOP",
+        "audioparaeqCHOP",
+        "bandeqCHOP",
+        "etherdreamCHOP",
+        "heliosdacCHOP",
+        "laserCHOP",
+        "laserdeviceCHOP",
+        "laserdeviceCHOP",
+        "parametriceqCHOP",
+        "realsenseCHOP",
+        "scanCHOP"
+      ],
+      "COMP": [
+        "fieldCOMP",
+        "gltfinCOMP",
+        "gltfoutCOMP",
+        "textCOMP"
+      ],
+      "DAT": [
+        "webDAT",
+        "webclientDAT"
+      ],
+      "POP": [
+        "glsladvancedPOP",
+        "glslcreatePOP",
+        "scriptPOP",
+        "topologyPOP"
+      ],
+      "SOP": [
+        "fontSOP",
+        "textSOP"
+      ],
+      "TOP": [
+        "realsenseTOP",
+        "svgTOP",
+        "webrenderTOP"
+      ]
+    },
+    "generated_at": "2026-07-23T15:11:09.261659+00:00",
+    "installed_addons": [],
+    "operators": {
+      "audiobandeqCHOP": {
+        "available": true,
+        "family": "CHOP"
+      },
+      "audioparaeqCHOP": {
+        "available": true,
+        "family": "CHOP"
+      },
+      "bandeqCHOP": {
+        "available": false,
+        "family": "CHOP"
+      },
+      "etherdreamCHOP": {
+        "available": false,
+        "family": "CHOP"
+      },
+      "fieldCOMP": {
+        "available": true,
+        "family": "COMP"
+      },
+      "fontSOP": {
+        "available": false,
+        "family": "SOP"
+      },
+      "glsladvancedPOP": {
+        "available": true,
+        "family": "POP"
+      },
+      "glslcreatePOP": {
+        "available": false,
+        "family": "POP"
+      },
+      "gltfinCOMP": {
+        "available": true,
+        "family": "COMP"
+      },
+      "gltfoutCOMP": {
+        "available": true,
+        "family": "COMP"
+      },
+      "heliosdacCHOP": {
+        "available": false,
+        "family": "CHOP"
+      },
+      "laserCHOP": {
+        "available": true,
+        "family": "CHOP"
+      },
+      "laserdeviceCHOP": {
+        "available": true,
+        "family": "CHOP"
+      },
+      "parametriceqCHOP": {
+        "available": false,
+        "family": "CHOP"
+      },
+      "realsenseCHOP": {
+        "available": false,
+        "family": "CHOP"
+      },
+      "realsenseTOP": {
+        "available": true,
+        "family": "TOP"
+      },
+      "scanCHOP": {
+        "available": false,
+        "family": "CHOP"
+      },
+      "scriptPOP": {
+        "available": true,
+        "family": "POP"
+      },
+      "svgTOP": {
+        "available": false,
+        "family": "TOP"
+      },
+      "textCOMP": {
+        "available": true,
+        "family": "COMP"
+      },
+      "textSOP": {
+        "available": true,
+        "family": "SOP"
+      },
+      "topologyPOP": {
+        "available": true,
+        "family": "POP"
+      },
+      "webDAT": {
+        "available": false,
+        "family": "DAT"
+      },
+      "webclientDAT": {
+        "available": true,
+        "family": "DAT"
+      },
+      "webrenderTOP": {
+        "available": true,
+        "family": "TOP"
+      }
+    },
+    "platform": "macOS",
+    "schema_version": 1,
+    "td_build": "2025.33070",
+    "unavailable_reasons": {
+      "bandeqCHOP": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('bandeqCHOP', 'probe_00_bandeqchop') Type:<class 'tuple'>.",
+      "etherdreamCHOP": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('etherdreamCHOP', 'probe_02_etherdreamchop') Type:<class 'tuple'>.",
+      "fontSOP": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('fontSOP', 'probe_06_fontsop') Type:<class 'tuple'>.",
+      "glslcreatePOP": "Failed to create node: Unknown operator type. Value:'glslcreatePOP' Type:<class 'str'>.",
+      "heliosdacCHOP": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('heliosdacCHOP', 'probe_11_heliosdacchop') Type:<class 'tuple'>.",
+      "parametriceqCHOP": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('parametriceqCHOP', 'probe_13_parametriceqchop') Type:<class 'tuple'>.",
+      "realsenseCHOP": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('realsenseCHOP', 'probe_15_realsensechop') Type:<class 'tuple'>.",
+      "scanCHOP": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('scanCHOP', 'probe_17_scanchop') Type:<class 'tuple'>.",
+      "svgTOP": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('svgTOP', 'probe_19_svgtop') Type:<class 'tuple'>.",
+      "webDAT": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('webDAT', 'probe_21_webdat') Type:<class 'tuple'>."
+    }
+  },
+  "available_count": 16,
+  "cleanup_error": "",
+  "cleanup_ok": true,
+  "generated_at": "2026-07-23T15:11:09.262103+00:00",
+  "ok": true,
+  "parent_path": "/project1",
+  "results": [
+    {
+      "available": false,
+      "created_path": "",
+      "error": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('bandeqCHOP', 'probe_00_bandeqchop') Type:<class 'tuple'>.",
+      "family": "CHOP",
+      "gap_status": "deprecated_replaced",
+      "op_type": "bandeqCHOP",
+      "replacement_for": null,
+      "role": "deprecated_gap"
+    },
+    {
+      "available": true,
+      "created_path": "/project1/tdpilot_availability_probe/probe_01_audiobandeqchop",
+      "error": "",
+      "family": null,
+      "gap_status": null,
+      "op_type": "audiobandeqCHOP",
+      "replacement_for": "bandeqCHOP",
+      "role": "replacement"
+    },
+    {
+      "available": false,
+      "created_path": "",
+      "error": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('etherdreamCHOP', 'probe_02_etherdreamchop') Type:<class 'tuple'>.",
+      "family": "CHOP",
+      "gap_status": "deprecated_replaced",
+      "op_type": "etherdreamCHOP",
+      "replacement_for": null,
+      "role": "deprecated_gap"
+    },
+    {
+      "available": true,
+      "created_path": "/project1/tdpilot_availability_probe/probe_03_laserdevicechop",
+      "error": "",
+      "family": null,
+      "gap_status": null,
+      "op_type": "laserdeviceCHOP",
+      "replacement_for": "etherdreamCHOP",
+      "role": "replacement"
+    },
+    {
+      "available": true,
+      "created_path": "/project1/tdpilot_availability_probe/probe_04_fieldcomp",
+      "error": "",
+      "family": "COMP",
+      "gap_status": "deprecated_replaced",
+      "op_type": "fieldCOMP",
+      "replacement_for": null,
+      "role": "deprecated_gap"
+    },
+    {
+      "available": true,
+      "created_path": "/project1/tdpilot_availability_probe/probe_05_textcomp",
+      "error": "",
+      "family": null,
+      "gap_status": null,
+      "op_type": "textCOMP",
+      "replacement_for": "fieldCOMP",
+      "role": "replacement"
+    },
+    {
+      "available": false,
+      "created_path": "",
+      "error": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('fontSOP', 'probe_06_fontsop') Type:<class 'tuple'>.",
+      "family": "SOP",
+      "gap_status": "deprecated_replaced",
+      "op_type": "fontSOP",
+      "replacement_for": null,
+      "role": "deprecated_gap"
+    },
+    {
+      "available": true,
+      "created_path": "/project1/tdpilot_availability_probe/probe_07_textsop",
+      "error": "",
+      "family": null,
+      "gap_status": null,
+      "op_type": "textSOP",
+      "replacement_for": "fontSOP",
+      "role": "replacement"
+    },
+    {
+      "available": false,
+      "created_path": "",
+      "error": "Failed to create node: Unknown operator type. Value:'glslcreatePOP' Type:<class 'str'>.",
+      "family": "POP",
+      "gap_status": "deprecated_pending_removal",
+      "op_type": "glslcreatePOP",
+      "replacement_for": null,
+      "role": "deprecated_gap"
+    },
+    {
+      "available": true,
+      "created_path": "/project1/tdpilot_availability_probe/probe_09_glsladvancedpop",
+      "error": "",
+      "family": null,
+      "gap_status": null,
+      "op_type": "glsladvancedPOP",
+      "replacement_for": "glslcreatePOP",
+      "role": "replacement"
+    },
+    {
+      "available": true,
+      "created_path": "/project1/tdpilot_availability_probe/probe_10_topologypop",
+      "error": "",
+      "family": null,
+      "gap_status": null,
+      "op_type": "topologyPOP",
+      "replacement_for": "glslcreatePOP",
+      "role": "replacement"
+    },
+    {
+      "available": false,
+      "created_path": "",
+      "error": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('heliosdacCHOP', 'probe_11_heliosdacchop') Type:<class 'tuple'>.",
+      "family": "CHOP",
+      "gap_status": "deprecated_replaced",
+      "op_type": "heliosdacCHOP",
+      "replacement_for": null,
+      "role": "deprecated_gap"
+    },
+    {
+      "available": true,
+      "created_path": "/project1/tdpilot_availability_probe/probe_12_laserdevicechop",
+      "error": "",
+      "family": null,
+      "gap_status": null,
+      "op_type": "laserdeviceCHOP",
+      "replacement_for": "heliosdacCHOP",
+      "role": "replacement"
+    },
+    {
+      "available": false,
+      "created_path": "",
+      "error": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('parametriceqCHOP', 'probe_13_parametriceqchop') Type:<class 'tuple'>.",
+      "family": "CHOP",
+      "gap_status": "deprecated_replaced",
+      "op_type": "parametriceqCHOP",
+      "replacement_for": null,
+      "role": "deprecated_gap"
+    },
+    {
+      "available": true,
+      "created_path": "/project1/tdpilot_availability_probe/probe_14_audioparaeqchop",
+      "error": "",
+      "family": null,
+      "gap_status": null,
+      "op_type": "audioparaeqCHOP",
+      "replacement_for": "parametriceqCHOP",
+      "role": "replacement"
+    },
+    {
+      "available": false,
+      "created_path": "",
+      "error": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('realsenseCHOP', 'probe_15_realsensechop') Type:<class 'tuple'>.",
+      "family": "CHOP",
+      "gap_status": "deprecated_feature_unavailable",
+      "op_type": "realsenseCHOP",
+      "replacement_for": null,
+      "role": "deprecated_gap"
+    },
+    {
+      "available": true,
+      "created_path": "/project1/tdpilot_availability_probe/probe_16_realsensetop",
+      "error": "",
+      "family": null,
+      "gap_status": null,
+      "op_type": "realsenseTOP",
+      "replacement_for": "realsenseCHOP",
+      "role": "replacement"
+    },
+    {
+      "available": false,
+      "created_path": "",
+      "error": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('scanCHOP', 'probe_17_scanchop') Type:<class 'tuple'>.",
+      "family": "CHOP",
+      "gap_status": "deprecated_replaced",
+      "op_type": "scanCHOP",
+      "replacement_for": null,
+      "role": "deprecated_gap"
+    },
+    {
+      "available": true,
+      "created_path": "/project1/tdpilot_availability_probe/probe_18_laserchop",
+      "error": "",
+      "family": null,
+      "gap_status": null,
+      "op_type": "laserCHOP",
+      "replacement_for": "scanCHOP",
+      "role": "replacement"
+    },
+    {
+      "available": false,
+      "created_path": "",
+      "error": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('svgTOP', 'probe_19_svgtop') Type:<class 'tuple'>.",
+      "family": "TOP",
+      "gap_status": "deprecated_nonfunctional",
+      "op_type": "svgTOP",
+      "replacement_for": null,
+      "role": "deprecated_gap"
+    },
+    {
+      "available": true,
+      "created_path": "/project1/tdpilot_availability_probe/probe_20_webrendertop",
+      "error": "",
+      "family": null,
+      "gap_status": null,
+      "op_type": "webrenderTOP",
+      "replacement_for": "svgTOP",
+      "role": "replacement"
+    },
+    {
+      "available": false,
+      "created_path": "",
+      "error": "Failed to create node: Invalid number or type of arguments. See help for details. Value:('webDAT', 'probe_21_webdat') Type:<class 'tuple'>.",
+      "family": "DAT",
+      "gap_status": "deprecated_replaced",
+      "op_type": "webDAT",
+      "replacement_for": null,
+      "role": "deprecated_gap"
+    },
+    {
+      "available": true,
+      "created_path": "/project1/tdpilot_availability_probe/probe_22_webclientdat",
+      "error": "",
+      "family": null,
+      "gap_status": null,
+      "op_type": "webclientDAT",
+      "replacement_for": "webDAT",
+      "role": "replacement"
+    },
+    {
+      "available": true,
+      "created_path": "/project1/tdpilot_availability_probe/probe_23_gltfincomp",
+      "error": "",
+      "family": "COMP",
+      "gap_status": null,
+      "op_type": "gltfinCOMP",
+      "release_build": "2025.33070",
+      "replacement_for": null,
+      "role": "release_new_op"
+    },
+    {
+      "available": true,
+      "created_path": "/project1/tdpilot_availability_probe/probe_24_gltfoutcomp",
+      "error": "",
+      "family": "COMP",
+      "gap_status": null,
+      "op_type": "gltfoutCOMP",
+      "release_build": "2025.33070",
+      "replacement_for": null,
+      "role": "release_new_op"
+    },
+    {
+      "available": true,
+      "created_path": "/project1/tdpilot_availability_probe/probe_25_scriptpop",
+      "error": "",
+      "family": "POP",
+      "gap_status": null,
+      "op_type": "scriptPOP",
+      "release_build": "2025.33070",
+      "replacement_for": null,
+      "role": "release_new_op"
+    }
+  ],
+  "sampled_release_build": "2025.33070",
+  "sampled_release_new_ops": [
+    "gltfinCOMP",
+    "gltfoutCOMP",
+    "scriptPOP"
+  ],
+  "schema_version": 1,
+  "scratch_name": "tdpilot_availability_probe",
+  "scratch_path": "/project1/tdpilot_availability_probe",
+  "target_count": 26,
+  "td_health": {
+    "api_version": "2.4.0",
+    "platform": "macOS",
+    "status": "ok",
+    "td_build": "2025.33070",
+    "timestamp": 1784819468.7688372
+  },
+  "tool_count": 114,
+  "unavailable_count": 10,
+  "version": "2.4.0"
+}

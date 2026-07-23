@@ -32,6 +32,19 @@ import os
 os.environ["TD_MCP_PARENT_PATH"] = ""
 ```
 
+TouchDesigner 2025.33070+ builds bind the Web Server DAT to `127.0.0.1` by
+default. To build for a different interface, set the override before running
+setup:
+
+```python
+import os
+os.environ["TD_MCP_BIND_ADDRESS"] = "100.64.0.10"  # for example, a VPN address
+```
+
+An empty value listens on all interfaces. Older supported TD builds lack the
+Local Address parameter, so the override is ignored and OS firewall rules
+remain the isolation boundary.
+
 After loading the component, verify the embedded version and bridge before
 using it:
 

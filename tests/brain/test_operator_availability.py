@@ -76,6 +76,38 @@ def test_build_availability_targets_includes_deprecated_gaps_and_replacements() 
     ]
 
 
+def test_build_availability_targets_includes_latest_release_new_operators() -> None:
+    targets = build_availability_targets(
+        {"docsbrain_operator_coverage": {"deprecated_missing_operator_cards": []}},
+        release_card={
+            "build": "2025.33070",
+            "new_ops": [
+                {"type": "scriptPOP", "family": "POP"},
+                {"type": "gltfinCOMP", "family": "COMP"},
+            ],
+        },
+    )
+
+    assert targets == [
+        {
+            "op_type": "gltfinCOMP",
+            "family": "COMP",
+            "role": "release_new_op",
+            "gap_status": None,
+            "replacement_for": None,
+            "release_build": "2025.33070",
+        },
+        {
+            "op_type": "scriptPOP",
+            "family": "POP",
+            "role": "release_new_op",
+            "gap_status": None,
+            "replacement_for": None,
+            "release_build": "2025.33070",
+        },
+    ]
+
+
 class _AvailabilityFakeClient:
     def __init__(self) -> None:
         self.calls: list[tuple[str, dict]] = []

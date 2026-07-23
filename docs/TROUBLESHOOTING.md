@@ -74,6 +74,13 @@ Or set these in your MCP client config:
 }
 ```
 
+On TouchDesigner 2025.33070+, the Web Server DAT also has a **Local Address**
+parameter. TDPilot-generated components default it to `127.0.0.1`. For remote
+access, set it to the intended VPN/LAN interface and set `TD_MCP_HOST` on the
+client to the matching address. Leaving Local Address blank listens on all
+interfaces. On older TD builds this parameter is unavailable and OS firewall
+rules are the fallback.
+
 ### Firewall blocking localhost
 
 On macOS, the first time TD opens a network port you may get a firewall dialog. Click "Allow". If you dismissed it:
@@ -395,6 +402,11 @@ Or call `td_get_events` more frequently.
 | `TD_MCP_SHARED_SECRET` | (none) | Auth secret for TD API |
 | `TDPILOT_PROJECT_NAME` | (none) | Per-project memory scope |
 | `TDPILOT_MEMORY_DIR` | `~/.tdpilot/memory/` | Memory storage path |
+
+`TD_MCP_BIND_ADDRESS` is a TouchDesigner component **build-time** override,
+not an MCP-server runtime variable. Set it inside TouchDesigner before running
+`setup_mcp_in_td.py` or `build_tdpilot_tox.py`; fresh 2025.33070+ builds
+default to `127.0.0.1`.
 
 ---
 

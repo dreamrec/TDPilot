@@ -3770,6 +3770,16 @@ def _web_server_dat_semantics() -> list[ParamSemantics]:
         ),
         ParamSemantics(
             op_type="webserverDAT",
+            name="localaddress",
+            label="Local Address",
+            value_kind="string",
+            default_strategy="loopback_address_unless_remote_access_is_explicitly_declared",
+            cook_risk="high",
+            validation_rule="network_address_scope",
+            official_source=_WEB_SERVER_DAT_DOCS,
+        ),
+        ParamSemantics(
+            op_type="webserverDAT",
             name="secure",
             label="Secure",
             value_kind="bool",
@@ -11842,6 +11852,12 @@ def _semantic_risk_flags(*, semantic: ParamSemantics, value: Any) -> list[str]:
         flags.append("param-semantics:web-server-listener:webserverDAT.active")
     if semantic.op_type == "webserverDAT" and semantic.name == "restart" and _is_pulse_action_value(value):
         flags.append("param-semantics:web-server-restart:webserverDAT.restart")
+    if (
+        semantic.op_type == "webserverDAT"
+        and semantic.name == "localaddress"
+        and _has_nonempty_text_value(value)
+    ):
+        flags.append("param-semantics:web-server-bind-address:webserverDAT.localaddress")
     if _is_callback_execution_semantic(semantic):
         if semantic.name == "callbacks" and _has_nonempty_reference_value(value):
             flags.append(f"param-semantics:callback-dat-binding:{semantic.op_type}.{semantic.name}")

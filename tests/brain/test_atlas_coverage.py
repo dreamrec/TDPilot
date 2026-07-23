@@ -693,7 +693,30 @@ def test_brain_atlas_audit_reports_profile_operator_coverage():
     assert report["profiles"]["feedback"]["missing_cards"] == []
     assert "levelTOP" in report["profiles"]["feedback"]["operators"]
     assert report["operator_family_counts"]["POP"] >= 10
-    assert report["release_freshness"]["structured_latest_build"] >= "2025.32820"
+    assert report["release_freshness"]["structured_latest_build"] >= "2025.33070"
+    assert {"gltfinCOMP", "gltfoutCOMP", "scriptPOP"}.issubset(
+        set(report["operator_card_quality"]["strict_operator_types"])
+    )
+
+
+def test_touchdesigner_2025_33070_operator_cards_cover_new_and_changed_workflows():
+    cards = CardIndex(Path("src/td_mcp/knowledge/cards"))
+
+    gltf_in = cards.get_operator("gltfinCOMP")
+    gltf_out = cards.get_operator("gltfoutCOMP")
+    script_pop = cards.get_operator("scriptPOP")
+    dat_to_pop = cards.get_operator("dattoPOP")
+    web_server = cards.get_operator("webserverDAT")
+
+    assert gltf_in is not None and gltf_in["build_relevance"].startswith("2025.33070+")
+    assert gltf_out is not None and gltf_out["build_relevance"].startswith("2025.33070+")
+    assert script_pop is not None and script_pop["build_relevance"].startswith("2025.33070+")
+    assert dat_to_pop is not None
+    assert {"primitivesdat", "verticesdat", "detailsdat", "dimensionsdat"}.issubset(
+        {item["name"] for item in dat_to_pop["key_params"]}
+    )
+    assert web_server is not None
+    assert "localaddress" in {item["name"] for item in web_server["key_params"]}
 
 
 @_REQUIRES_DOCSBRAIN
@@ -2158,11 +2181,12 @@ def test_dat_network_web_and_comp_priority_cards_are_structured():
         assert card["key_params"], op_type
         assert card["common_gotchas"], op_type
         assert card["build_relevance"] != "unverified-docsbrain"
-        expected_verified = (
-            "2026-06-18"
-            if op_type in _COMP_REVIEWED_2026_06_18 or op_type in _DAT_REVIEWED_2026_06_18
-            else "2026-06-17"
-        )
+        if op_type == "webserverDAT":
+            expected_verified = "2026-07-23"
+        elif op_type in _COMP_REVIEWED_2026_06_18 or op_type in _DAT_REVIEWED_2026_06_18:
+            expected_verified = "2026-06-18"
+        else:
+            expected_verified = "2026-06-17"
         assert card["last_verified"] == expected_verified
 
     coverage = audit_brain_atlas(Path("."))["docsbrain_operator_coverage"]
@@ -6233,6 +6257,7 @@ def test_high_value_operator_quality_gate_requires_reviewed_key_concepts():
             "active",
             "restart",
             "port",
+            "localaddress",
             "secure",
             "privatekey",
             "certificate",

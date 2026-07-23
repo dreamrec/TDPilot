@@ -106,7 +106,7 @@ substitute.
 
 ## Concept-to-node Atlas Workflow
 
-The packaged 656-card reviewed operator atlas has a zero-concept backlog across
+The packaged 659-card reviewed operator atlas has a zero-concept backlog across
 CHOP, COMP, DAT, MAT, POP, SOP, and TOP and cites Official Derivative sources.
 
 1. Name every data domain required by the complete intent.

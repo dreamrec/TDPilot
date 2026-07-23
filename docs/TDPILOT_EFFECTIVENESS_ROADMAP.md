@@ -12,7 +12,7 @@ For the deep implementation blueprint, see
 
 - 114 local MCP tools for live TD inspection, mutation, validation, memory,
   search, recommendations, safety, snapshots, and transactions.
-- 656-card reviewed operator atlas across CHOP, COMP, DAT, MAT, POP, SOP, and
+- 659-card reviewed operator atlas across CHOP, COMP, DAT, MAT, POP, SOP, and
   TOP, with Official Derivative docs URLs, `key_concepts`, `key_params`, and
   `common_gotchas`.
 - BrainPlan workflow that keeps planning read-only, executes transactionally,

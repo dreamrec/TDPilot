@@ -127,7 +127,7 @@ def test_codex_claude_plugin_surfaces_advertise_reviewed_operator_atlas():
         ]
     )
 
-    assert "656-card reviewed operator atlas" in advertised_surfaces
+    assert "659-card reviewed operator atlas" in advertised_surfaces
     assert "zero-concept backlog" in advertised_surfaces
     assert "concept-to-node" in advertised_surfaces
     assert "Official Derivative" in advertised_surfaces

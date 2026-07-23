@@ -1,0 +1,32 @@
+{
+  "card_type": "operator",
+  "op_type": "scriptPOP",
+  "family": "POP",
+  "display_name": "Script POP",
+  "docs_url": "https://docs.derivative.ca/Script_POP",
+  "summary": "Runs Python callbacks to construct or process POP points, primitives, vertices, and attributes through CPU-side GeometryStagingData before uploading the result to GPU memory.",
+  "key_params": [
+    {"name": "callbacks", "type": "DAT", "note": "DAT containing cook(), onPulse(), and setupParameters() callbacks"},
+    {"name": "setuppars", "type": "Pulse", "note": "Run setupParameters() to create custom parameters"},
+    {"name": "bypass", "type": "Toggle", "note": "Pass the first input through unchanged"},
+    {"name": "freeextragpumem", "type": "Pulse", "note": "Release accumulated output GPU memory after geometry shrinks"},
+    {"name": "delinputattrs", "type": "Toggle", "note": "Output only attributes explicitly produced by the Script POP"}
+  ],
+  "key_concepts": [
+    "createGeometryStagingData() allocates the CPU-side staging object used to describe geometry.",
+    "buildGeometry() allocates output resources and uploads staged points, primitives, vertices, and attributes to the GPU.",
+    "cook() builds or processes output whenever the Script POP cooks.",
+    "setupParameters() and onPulse() support custom controls on the Script POP.",
+    "Input POP data can be read, processed in Python, and emitted as a new POP result."
+  ],
+  "common_gotchas": [
+    "Python geometry construction is CPU-side before upload, so bound workload and avoid rebuilding unchanged large geometry every cook.",
+    "buildGeometry() clears staging data by default; use forceCopy only when retaining that data is necessary.",
+    "Callbacks are case-sensitive and the callbacks DAT must define the expected function signatures.",
+    "Repeated output growth and shrinkage can retain extra GPU memory until Free Extra GPU Memory is pulsed.",
+    "Delete Input Attributes changes pass-through behavior and can remove attributes downstream nodes expect."
+  ],
+  "related_snippets": ["POP_snippets", "Script_POP_snippets"],
+  "build_relevance": "2025.33070+",
+  "last_verified": "2026-07-23"
+}

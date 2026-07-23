@@ -6,15 +6,16 @@ This is the external analog of scripts/check_versions.py. Where check_versions
 guards TDPilot's own seven version fields, this script guards the *upstream*
 version — the TouchDesigner build that the doc atlas tracks. The cards in
 src/td_mcp/knowledge/cards/release/<build>.json power td_get_release_delta
-and td_get_build_compatibility; once the newest seed card lags real
-Derivative shipments by more than one build, those tools start returning
+and td_get_build_compatibility; whenever the newest seed card lags real
+Derivative shipments, those tools start returning
 "No release card for build X" on fresh installs running current TD.
 
 Policy:
-    - max-drift = 1 (default): the seed corpus may trail Derivative by at
-      most one stable build. Loose enough that maintainers don't have to ship
-      a card the same day Derivative posts a build, strict enough that the
-      Official build is always covered within one release.
+    - max-drift = 0 (default): the seed corpus must cover the current stable
+      build exactly. TDPilot's compatibility tools should not return an
+      unknown-build response for Derivative's production release.
+    - Maintainers can pass a non-zero --max-drift explicitly for an
+      informational or grace-period check.
     - Network failures soft-pass by default (a Derivative outage shouldn't
       redden CI). Use --strict-network in environments where the page must be
       reachable.
@@ -32,7 +33,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CARDS_DIR = ROOT / "src" / "td_mcp" / "knowledge" / "cards" / "release"
 RELEASE_NOTES_URL = "https://docs.derivative.ca/Release_Notes"
-DEFAULT_MAX_DRIFT = 1
+DEFAULT_MAX_DRIFT = 0
 NETWORK_TIMEOUT_SECONDS = 15
 USER_AGENT = "TDPilot-release-freshness-check/1.0"
 

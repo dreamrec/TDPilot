@@ -4303,6 +4303,7 @@ def test_network_dat_connection_output_params_have_docs_grounded_semantics_and_p
         ("webserverDAT", "active"),
         ("webserverDAT", "restart"),
         ("webserverDAT", "port"),
+        ("webserverDAT", "localaddress"),
         ("webserverDAT", "secure"),
         ("webserverDAT", "privatekey"),
         ("webserverDAT", "certificate"),
@@ -4501,6 +4502,36 @@ def test_web_server_dat_active_and_restart_are_ranked_as_direct_live_write_risks
     assert parameter_risk_flags_for_plan(plan) == [
         "param-semantics:web-server-listener:webserverDAT.active",
         "param-semantics:web-server-restart:webserverDAT.restart",
+    ]
+
+
+def test_web_server_dat_bind_address_is_grounded_and_ranked_as_a_network_risk():
+    registry = load_param_semantics_registry()
+    by_key = {(item.op_type, item.name): item for item in registry}
+    bind_semantics = by_key[("webserverDAT", "localaddress")]
+
+    assert bind_semantics.default_strategy == (
+        "loopback_address_unless_remote_access_is_explicitly_declared"
+    )
+    assert bind_semantics.official_source == "https://docs.derivative.ca/Web_Server_DAT"
+
+    plan = _plan_with_ops(
+        [
+            PatchOperation(
+                kind="create_node",
+                target="/project1",
+                args={"op_type": "webserverDAT", "name": "web_server"},
+            ),
+            PatchOperation(
+                kind="set_params",
+                target="/project1/web_server",
+                args={"params": {"localaddress": "127.0.0.1"}},
+            ),
+        ]
+    )
+
+    assert parameter_risk_flags_for_plan(plan) == [
+        "param-semantics:web-server-bind-address:webserverDAT.localaddress",
     ]
 
 

@@ -22,6 +22,11 @@
       "note": "Connection port, for example localhost:9980"
     },
     {
+      "name": "localaddress",
+      "type": "String",
+      "note": "IP address/interface to bind; blank listens on all interfaces"
+    },
+    {
       "name": "secure",
       "type": "Toggle",
       "note": "Enable TLS/HTTPS connections"
@@ -80,6 +85,7 @@
   "common_gotchas": [
     "Most behavior goes through callbacks such as onHTTPRequest and WebSocket open/close/receive handlers.",
     "Security is the project author's responsibility; authenticate requests and store secrets privately.",
+    "Leaving Local Address blank listens on every interface; use 127.0.0.1 for a local-only service.",
     "Certificate passwords are only visually hidden and should be protected by putting the DAT in a private component when needed.",
     "Secure TLS changes access from HTTP to HTTPS and requires valid key/certificate paths.",
     "If exposing beyond localhost, account for firewall, CORS/application logic, and any authentication requirements."
@@ -87,12 +93,13 @@
   "related_snippets": [
     "DAT_snippets"
   ],
-  "build_relevance": "2020.20000+ embedded HTTP/WebSocket server",
-  "last_verified": "2026-06-18",
   "key_concepts": [
     "Web Server DAT hosts HTTP and WebSocket endpoints inside TouchDesigner.",
+    "TouchDesigner 2025.33070+ can bind the listener to a selected interface through Local Address.",
     "Request handling is callback-driven, including HTTP requests and WebSocket open/close/text/binary events.",
     "TLS uses secure, private key, certificate, and certificate password parameters.",
     "Security and authentication are the project author responsibility; sensitive certificate passwords should be protected in private components."
-  ]
+  ],
+  "build_relevance": "2025.33070+ Local Address binding",
+  "last_verified": "2026-07-23"
 }

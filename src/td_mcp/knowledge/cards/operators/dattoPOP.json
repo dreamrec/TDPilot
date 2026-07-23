@@ -4,31 +4,41 @@
   "family": "POP",
   "display_name": "DAT to POP",
   "docs_url": "https://docs.derivative.ca/DAT_to_POP",
-  "summary": "Converts a DAT table into a POP point list, using column headers as POP attribute names and one row per POP point. Vector components use column names such as P(0), P(1), and P(2).",
+  "summary": "Reconstructs POP geometry from DAT tables containing point, primitive, vertex, detail-attribute, group, and dimension data. Its table conventions support a full round trip from POP to DAT back to POP.",
   "key_params": [
     {"name": "pointsdat", "type": "DAT", "note": "DAT table containing point attributes"},
+    {"name": "createpointprim", "type": "Toggle", "note": "Create point primitives when no Primitives DAT is provided"},
+    {"name": "cnvrtallpointcols", "type": "Toggle", "note": "Automatically create point attributes from column names"},
+    {"name": "pointgroupnamescol", "type": "String/Menu", "note": "Column containing point group membership"},
     {"name": "attr", "type": "Sequential", "note": "Attribute creation blocks"},
     {"name": "attr0columnstype", "type": "Menu", "note": "Select DAT columns by name or number"},
     {"name": "attr0columns", "type": "String", "note": "Column pattern to convert"},
     {"name": "attr0outputscope", "type": "String/Menu", "note": "Output attribute or components"},
     {"name": "attr0type", "type": "Menu", "note": "Attribute numeric type"},
-    {"name": "attr0numcomps", "type": "Int", "note": "Number of attribute components"}
+    {"name": "primitivesdat", "type": "DAT", "note": "DAT containing primitive definitions and primitive attributes"},
+    {"name": "primtypecol", "type": "String/Menu", "note": "Column containing point, line, triangle, quad, or linestrip type"},
+    {"name": "primvertices", "type": "String/Menu", "note": "Column containing primitive vertex indices"},
+    {"name": "verticesdat", "type": "DAT", "note": "DAT containing vertex attributes"},
+    {"name": "detailsdat", "type": "DAT", "note": "DAT containing detail attributes"},
+    {"name": "dimensionsdat", "type": "DAT", "note": "DAT containing POP dimensions"},
+    {"name": "dimcol", "type": "String/Menu", "note": "Column containing dimension information"}
   ],
   "key_concepts": [
-    "DAT table rows become POP points",
-    "column headers as POP attribute component names",
-    "POP to DAT-compatible table structure",
-    "P(0), P(1), P(2), Color(3), and array component headers",
-    "sequential attribute creation blocks",
-    "question-mark component gathering such as P(?)",
-    "point-list conversion without primitive or vertex topology"
+    "Point-table rows become POP points while dedicated tables reconstruct primitives, vertices, details, groups, and dimensions.",
+    "Column headers can automatically define POP attribute names and components.",
+    "The accepted table structure mirrors POP to DAT output, enabling lossless table-side editing round trips.",
+    "P(0), P(1), P(2), Color(3), and array component headers map table columns to typed attributes.",
+    "Sequential attribute blocks can override automatic inference for numeric type, array shape, and output scope.",
+    "Primitive type values include point, line, triangle, quad, and linestrip."
   ],
   "common_gotchas": [
     "The DAT must be structured like POP to DAT output, though the index column is optional for DAT to POP.",
     "Use ? in P(?) to gather P(0), P(1), and P(2) into one float3 P attribute.",
-    "Current DAT to POP support converts point lists; primitives and vertices are not yet represented."
+    "Primitive vertex indices must refer to valid rows in the point table.",
+    "Automatic column conversion is convenient, but explicit attribute blocks are safer when numeric type or array shape must be preserved.",
+    "Provide the matching primitive, vertex, detail, and dimension tables when a full POP round trip is required."
   ],
   "related_snippets": ["POP_snippets"],
-  "build_relevance": "2025.30000+",
-  "last_verified": "2026-06-17"
+  "build_relevance": "2025.33070+ full POP table reconstruction",
+  "last_verified": "2026-07-23"
 }

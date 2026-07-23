@@ -1,0 +1,42 @@
+{
+  "card_type": "operator",
+  "op_type": "gltfinCOMP",
+  "family": "COMP",
+  "display_name": "glTF In COMP",
+  "docs_url": "https://docs.derivative.ca/Experimental:GlTF_In_COMP",
+  "summary": "Imports a glTF 2.0 .gltf or .glb scene into a generated TouchDesigner network with meshes, textures, PBR materials, cameras, lights, blend shapes, skeletons, and animation assets.",
+  "key_params": [
+    {"name": "file", "type": "File", "note": "glTF 2.0 .gltf or .glb file to import"},
+    {"name": "scene", "type": "Menu", "note": "Scene to import from the selected file"},
+    {"name": "importmethod", "type": "Menu", "note": "Full Replacement, Merge with Existing, or Reload Assets"},
+    {"name": "autoimport", "type": "Toggle", "note": "Reimport after supported parameter changes"},
+    {"name": "imp", "type": "Pulse", "note": "Import assets and generate the internal network"},
+    {"name": "cameras", "type": "Toggle", "note": "Import cameras from the file"},
+    {"name": "quats", "type": "Toggle", "note": "Import quaternion animation channels for smooth interpolation and accurate re-export"},
+    {"name": "geocolorspace", "type": "Menu", "note": "Color space for imported mesh Color attributes"},
+    {"name": "matcolorspace", "type": "Menu", "note": "Color space for generated PBR materials"},
+    {"name": "keepparams", "type": "Toggle", "note": "Preserve user parameter edits when merging imports"},
+    {"name": "keepconnections", "type": "Toggle", "note": "Preserve user wiring when merging imports"},
+    {"name": "callbacks", "type": "DAT", "note": "Import/update callbacks for generated-network customization"},
+    {"name": "animation", "type": "Menu", "note": "Imported animation to play"},
+    {"name": "playmode", "type": "Menu", "note": "Timeline, index, sequential, or full-range animation playback"}
+  ],
+  "key_concepts": [
+    "glTF In COMP supports glTF 2.0 .gltf and .glb files, not glTF 1.0.",
+    "Import first creates reusable mesh, texture, blend-shape, and animation assets, then generates a component hierarchy that follows the source scene.",
+    "Import Select POPs, TOPs, and CHOPs expose imported assets inside the generated network.",
+    "Quaternion animation channels improve interpolation and take priority over Euler channels when exporting through glTF Out COMP.",
+    "Merge with Existing and Reload Assets preserve more user work than Full Replacement when the source asset changes."
+  ],
+  "common_gotchas": [
+    "Full Replacement clears and rebuilds the internal network, overwriting user-made changes.",
+    "Reload Assets is appropriate only when asset content changed without structural or hierarchy changes.",
+    "Auto Import reacts to supported parameter changes but does not detect a file being overwritten on disk.",
+    "Only one scene is imported per glTF In COMP; use multiple COMPs for multiple scenes.",
+    "For color-correct rendering, choose a project working color space and set geometry/material color-space parameters deliberately.",
+    "glTF In COMP does not load glTF files from TouchDesigner's Virtual File System."
+  ],
+  "related_snippets": ["COMP_snippets", "glTF_samples"],
+  "build_relevance": "2025.33070+",
+  "last_verified": "2026-07-23"
+}

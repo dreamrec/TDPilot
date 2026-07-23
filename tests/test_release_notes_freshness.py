@@ -86,13 +86,14 @@ def test_main_passes_when_seed_matches_derivative(tmp_path: Path, capsys):
     assert "matches or exceeds" in out
 
 
-def test_main_passes_when_seed_one_behind_with_default_drift(tmp_path: Path, capsys):
+def test_main_fails_when_seed_one_behind_with_default_exact_match_policy(tmp_path: Path, capsys):
     cards = _write_cards(tmp_path, "2025.32460")
     fixture = _fixture_html(tmp_path, "2025.32820", "2025.32460", "2025.32280")
     code = freshness.main(["--cards-dir", str(cards), "--offline-fixture", str(fixture)])
-    assert code == 0
-    out = capsys.readouterr().out
-    assert "1 build(s) behind" in out
+    assert code == 1
+    err = capsys.readouterr().err
+    assert "1 builds behind" in err
+    assert "--max-drift=0" in err
 
 
 def test_main_fails_when_seed_two_behind(tmp_path: Path, capsys):
@@ -151,19 +152,31 @@ def test_main_strict_network_fails_on_unparseable_html(tmp_path: Path, capsys):
 # ── shipped-corpus invariant ─────────────────────────────────────────
 
 
-def test_shipped_seed_corpus_matches_or_lags_by_one():
-    """The cards we ship must satisfy our own --max-drift=1 policy when run
-    against any reasonable Derivative listing. This pins the corpus state
-    we committed and guards against accidentally deleting the newest card.
+def test_shipped_seed_corpus_tracks_touchdesigner_2025_33070_or_newer():
+    """The cards we ship must include the current official build known when
+    this invariant was updated. Future bumps naturally raise this floor.
     """
     from td_mcp.knowledge import card_index  # noqa: F401  — confirm package import works
 
     cards_dir = Path(__file__).resolve().parents[1] / "src" / "td_mcp" / "knowledge" / "cards" / "release"
     latest = freshness.seed_card_latest_build(cards_dir)
     assert latest is not None, "shipped corpus has no release cards"
-    # Sanity floor: the newest card we ship is at least as new as 2025.32820
-    # (the build present at the time this test was written). Future bumps
-    # naturally raise this floor.
-    assert freshness.parse_build_key(latest) >= freshness.parse_build_key("2025.32820"), (
-        f"shipped newest release card is {latest}, expected >= 2025.32820"
+    assert freshness.parse_build_key(latest) >= freshness.parse_build_key("2025.33070"), (
+        f"shipped newest release card is {latest}, expected >= 2025.33070"
     )
+
+
+def test_touchdesigner_2025_33070_release_card_covers_new_runtime_surface():
+    cards_dir = Path(__file__).resolve().parents[1] / "src" / "td_mcp" / "knowledge" / "cards"
+    card = json.loads((cards_dir / "release" / "2025.33070.json").read_text(encoding="utf-8"))
+
+    assert card["release_date"] == "2026-07-16"
+    assert {(item["type"], item["family"]) for item in card["new_ops"]} == {
+        ("gltfinCOMP", "COMP"),
+        ("gltfoutCOMP", "COMP"),
+        ("scriptPOP", "POP"),
+    }
+    changed = {item["type"]: item["change"] for item in card["changed_ops"]}
+    assert "full POP reconstruction" in changed["dattoPOP"]
+    assert "Local Address" in changed["webserverDAT"]
+    assert any("OP_CommonAPIVersion" in warning for warning in card["migration_warnings"])

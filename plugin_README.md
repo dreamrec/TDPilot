@@ -1,6 +1,6 @@
 # TDPilot — TouchDesigner AI Assistant Plugin
 
-TDPilot v2.4.0 provides 114 MCP tools for live control of TouchDesigner projects from Claude, Codex, and other MCP clients. Its practical-intelligence brain uses two truthful routes: `td_brain_plan` compiles exact validated patterns, while artistic, multi-domain, spatial, and implicit architecture goes through `td_brain_ground` → host authoring → `td_brain_propose`. Only accepted BrainPlans with complete intent coverage execute through `td_brain_execute`; `td_transaction_apply` provides transactional rollback and validation for typed patch plans. Grounding stays local and uses live state, memory, official evidence, and the 656-card reviewed operator atlas with zero-concept backlog.
+TDPilot v2.4.0 provides 114 MCP tools for live control of TouchDesigner projects from Claude, Codex, and other MCP clients. Its practical-intelligence brain uses two truthful routes: `td_brain_plan` compiles exact validated patterns, while artistic, multi-domain, spatial, and implicit architecture goes through `td_brain_ground` → host authoring → `td_brain_propose`. Only accepted BrainPlans with complete intent coverage execute through `td_brain_execute`; `td_transaction_apply` provides transactional rollback and validation for typed patch plans. Grounding stays local and uses live state, memory, official evidence, and the 659-card reviewed operator atlas with zero-concept backlog.
 
 The 1.6 observability layer remains: `_read_journal` hints, a 200-entry `activity_log` ring buffer mirrored into `/local/mcp_server/activity_log`, and `td_self_update` for syncing the `.tox` across repo, plugin cache, and `~/.tdpilot/`.
 
@@ -16,7 +16,7 @@ The 1.6 observability layer remains: `_read_journal` hints, a 200-entry `activit
 - **popx-touchdesigner** — POPX workflow skill for 59 GPU-accelerated operators. References must be built locally from your own licensed POPx copy (see `references/BUILD.md`)
 
 ### Packaged Add-ons
-- **Reviewed operator atlas** — 656 structured operator cards across CHOP, COMP, DAT, MAT, POP, SOP, and TOP. The zero-concept backlog is closed, so agents can use Official Derivative docs, reviewed `key_concepts`, `key_params`, and gotchas to move from concept-to-node instead of guessing.
+- **Reviewed operator atlas** — 659 structured operator cards across CHOP, COMP, DAT, MAT, POP, SOP, and TOP. The zero-concept backlog is closed, so agents can use Official Derivative docs, reviewed `key_concepts`, `key_params`, and gotchas to move from concept-to-node instead of guessing.
 - **Concept-to-node eval gate** — A 50+ case concept-to-node golden eval corpus is checked by `scripts/eval_brain_golden.py`, covering compiler-backed patterns, assembly macros, generated-code diagnostics, device-source prompts, and stable/debug output conventions.
 - **Brain skills and agents** — Codex and Claude Code get the same public explorer, builder, validator, and recovery workflows, with deterministic local transaction hooks.
 - **Local knowledge packs** — The core atlas ships with TDPilot. Optional packs such as POPX remain local add-ons and must be built from user-owned licensed documentation.

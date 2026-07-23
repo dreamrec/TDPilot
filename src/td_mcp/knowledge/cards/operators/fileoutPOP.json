@@ -4,10 +4,10 @@
   "family": "POP",
   "display_name": "File Out POP",
   "docs_url": "https://docs.derivative.ca/File_Out_POP",
-  "summary": "Writes POP contents to geometry and point-cloud file formats such as OBJ, EXR, PLY, SPZ, and E57. It supports single-file writes, file sequences, recording, frame pulses, selected attributes, and primitive inclusion.",
+  "summary": "Writes POP contents to the native lossless .pop format or interchange formats such as OBJ, EXR, PLY, SPZ, and E57. It supports single-file writes, file sequences, recording, frame pulses, selected attributes, and primitive inclusion.",
   "key_params": [
     {"name": "type", "type": "Menu", "note": "File or file sequence output"},
-    {"name": "objectfiletype", "type": "Menu", "note": "OBJ, EXR, PLY, SPZ, or E57 output format"},
+    {"name": "objectfiletype", "type": "Menu", "note": "Native POP, OBJ, EXR, PLY, SPZ, or E57 output format"},
     {"name": "uniquesuff", "type": "Toggle", "note": "Use a unique file suffix through me.fileSuffix"},
     {"name": "n", "type": "Int", "note": "Starting index for unique suffix naming"},
     {"name": "leadingzerosdigits", "type": "Int", "note": "Minimum suffix digit count for file sequences"},
@@ -29,18 +29,20 @@
     {"name": "attr0fields", "type": "Str", "note": "Output field names for the selected attribute"}
   ],
   "key_concepts": [
-    "File Out POP writes POP contents to geometry and point-cloud formats including OBJ, EXR, PLY, SPZ, and E57.",
+    "File Out POP writes POP contents to the native .pop format and interchange formats including OBJ, EXR, PLY, SPZ, and E57.",
+    "The native .pop format is an exact representation of POP primitive types, attributes, groups, and Dimension.",
     "Type selects single-file writes or file-sequence recording; Record, Record Pulse, Pause, Add Frame, length limits, suffix controls, and max active saves control the write lifecycle.",
     "Format support differs: OBJ requires P(float3) and has specific normal/texture handling, SPZ requires P, Color, Scale, and Rot, and EXR/PLY can write arbitrary point attributes.",
-    "Primitive attributes are not written for any documented format, so planner output should bake critical primitive metadata into supported point or vertex attributes before export.",
+    "Interchange-format support differs; when not using native .pop, planner output should verify which point, vertex, and primitive data the destination format preserves.",
     "Attribute sequence blocks and output color-space controls let the card describe exactly which attributes become file fields."
   ],
   "common_gotchas": [
     "OBJ requires P(float3), and only OBJ supports vertex Normal/Texture writing in the documented way.",
     "SPZ requires specific attributes such as P, Color, Scale, and Rot.",
-    "Primitive attributes are not written for every format, so bake critical primitive data to supported point attributes when needed."
+    "Primitive attributes are not written by every interchange format, so bake critical primitive data to supported point attributes when needed.",
+    "Native .pop preserves the full POP but can create large files for high-capacity or attribute-heavy data."
   ],
   "related_snippets": ["POP_snippets"],
-  "build_relevance": "2025.30000+",
-  "last_verified": "2026-06-18"
+  "build_relevance": "2025.33070+ native .pop support",
+  "last_verified": "2026-07-23"
 }

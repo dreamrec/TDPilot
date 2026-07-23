@@ -395,8 +395,12 @@ def load_operator_availability_report(path: str | Path) -> dict[str, Any]:
     return payload
 
 
-def build_availability_targets(atlas_report: dict[str, Any]) -> list[dict[str, Any]]:
-    """Build deprecated-gap and replacement-op sampling targets from atlas audit output."""
+def build_availability_targets(
+    atlas_report: dict[str, Any],
+    *,
+    release_card: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    """Build gap, replacement, and latest-release operator sampling targets."""
     coverage = atlas_report.get("docsbrain_operator_coverage", {})
     deprecated_gaps = coverage.get("deprecated_missing_operator_cards", [])
     if not isinstance(deprecated_gaps, list):
@@ -436,6 +440,30 @@ def build_availability_targets(atlas_report: dict[str, Any]) -> list[dict[str, A
                     "replacement_for": op_type,
                 },
             )
+
+    if isinstance(release_card, dict):
+        release_build = str(release_card.get("build") or "").strip()
+        new_ops = release_card.get("new_ops")
+        if isinstance(new_ops, list):
+            for operator in sorted(
+                (item for item in new_ops if isinstance(item, dict)),
+                key=lambda item: str(item.get("type") or ""),
+            ):
+                op_type = str(operator.get("type") or "").strip()
+                if not op_type:
+                    continue
+                _append_unique_target(
+                    targets,
+                    seen,
+                    {
+                        "op_type": op_type,
+                        "family": operator.get("family"),
+                        "role": "release_new_op",
+                        "gap_status": None,
+                        "replacement_for": None,
+                        "release_build": release_build or None,
+                    },
+                )
 
     return targets
 
@@ -477,6 +505,8 @@ async def sample_operator_availability(
                 "created_path": "",
                 "error": "",
             }
+            if target.get("release_build"):
+                result["release_build"] = target["release_build"]
             if not op_type:
                 result["error"] = "missing op_type"
                 results.append(result)

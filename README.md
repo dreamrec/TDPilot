@@ -55,6 +55,8 @@ Why is my render black? Fix it.
 validated, and rolled back; risky parameter writes are gated by an
 operator-semantics contract; and the whole session is auditable. No signup,
 no API key, no hosted service — your work never leaves your machine.
+On TouchDesigner 2025.33070+, fresh components also bind their Web Server DAT
+to loopback by default instead of exposing the bridge on every interface.
 
 ## Install — Claude Code plugin (recommended)
 
@@ -116,7 +118,7 @@ Using Claude Desktop, Cursor, Codex, or another MCP client? See [`docs/INSTALL_O
 
 ## Packaged Add-ons
 
-- **Reviewed operator atlas** — The core local add-on for translating abstract ideas into real TD operators. Agents can use the 656-card reviewed operator atlas, Official Derivative source URLs, params, concepts, and gotchas to choose smaller, safer operator chains.
+- **Reviewed operator atlas** — The core local add-on for translating abstract ideas into real TD operators. Agents can use the 659-card reviewed operator atlas, Official Derivative source URLs, params, concepts, and gotchas to choose smaller, safer operator chains.
 - **Brain skills and agents** — Codex and Claude Code ship explorer, builder, validator, and recovery workflows. Exact validated patterns use deterministic planning; artistic and multi-domain work uses ground -> author -> propose before transactional execution.
 - **Scoped transaction hook** — The shipped hook runs only after brain/transaction mutations to reinforce final validation. Source-repository release guards check mirror drift, personal paths, and stale artifacts but are not shipped to user projects.
 - **Optional local knowledge packs** — POPX and future specialty packs stay local and user-owned; they extend planning context without adding hosted-service dependencies.

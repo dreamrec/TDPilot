@@ -64,3 +64,10 @@ def test_check_tox_freshness_rejects_binary_drift_with_matching_source_hash(tmp_
 
     assert ok is False
     assert "binary changed" in "\n".join(messages)
+
+
+def test_tox_freshness_hashes_structural_builder_sources():
+    module = _load_check_tox_freshness_module()
+
+    assert "td_component/build_export_mcp_tox.py" in module.SOURCE_FILES
+    assert "td_component/build_tdpilot_tox.py" in module.SOURCE_FILES

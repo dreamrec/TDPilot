@@ -2,8 +2,9 @@
 """Fail if the committed ``td_component/tdpilot.tox`` is out of sync with source.
 
 The .tox is a binary TD artifact and can only be rebuilt inside TouchDesigner.
-That means after any edit to the `.py` files it embeds, the .tox goes stale
-silently — users who install the plugin get outdated callback code.
+That means after any edit to the `.py` files it embeds *or the builders that
+shape its operator hierarchy and built-in parameters*, the .tox goes stale
+silently — users who install the plugin get outdated behavior.
 
 This guard compares the hash of the source files and the hash/size of the
 actual ``td_component/tdpilot.tox`` binary against metadata recorded in
@@ -24,6 +25,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # Must match _TOX_SOURCE_FILES in td_component/build_export_mcp_tox.py
 SOURCE_FILES = (
+    # Builder behavior is saved into the binary even though the builder
+    # source is not embedded as a Text DAT.
+    "td_component/build_export_mcp_tox.py",
+    "td_component/build_tdpilot_tox.py",
     "td_component/mcp_webserver_callbacks.py",
     "td_component/event_emitter.py",
     "td_component/ws_callbacks.py",

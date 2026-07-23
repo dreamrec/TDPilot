@@ -9,7 +9,7 @@ roadmap. The roadmap names the gaps; this plan explains how to close them.
 
 The current system has a strong local foundation: 112 MCP tools, transactional
 BrainPlan execution, live TD inspection, rollback, validation, memory, search,
-and a 656-card reviewed operator atlas with a zero-concept backlog across CHOP,
+and a 659-card reviewed operator atlas with a zero-concept backlog across CHOP,
 COMP, DAT, MAT, POP, SOP, and TOP. The next leap is composition. TDPilot should
 not only know what an operator is. It should know how to decompose a creative
 intent, choose a small operator chain, bind parameters safely, generate code

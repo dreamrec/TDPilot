@@ -98,6 +98,34 @@ class TestStateCacheRestored:
         )
 
 
+class TestTouchDesigner202533070WebServerBinding:
+    """TD 2025.33070 added Web Server DAT Local Address binding."""
+
+    def test_fresh_components_default_to_loopback_when_supported(self):
+        text = BUILD_LEGACY.read_text(encoding="utf-8")
+        bind_line = '_set_first_par(webserver, ("localaddress",), WEB_BIND_ADDRESS)'
+        active_line = '_set_first_par(webserver, ("active", "enable"), 1)'
+
+        assert 'os.environ.get("TD_MCP_BIND_ADDRESS", "127.0.0.1")' in text
+        assert bind_line in text
+        assert text.index(bind_line) < text.index(active_line), (
+            "Web Server DAT must receive Local Address before it is activated"
+        )
+
+    def test_builder_sources_are_part_of_the_tox_freshness_contract(self):
+        legacy_text = BUILD_LEGACY.read_text(encoding="utf-8")
+        freshness_text = (
+            REPO_ROOT / "scripts" / "check_tox_freshness.py"
+        ).read_text(encoding="utf-8")
+
+        for relative_path in (
+            "td_component/build_export_mcp_tox.py",
+            "td_component/build_tdpilot_tox.py",
+        ):
+            assert f'"{relative_path}"' in legacy_text
+            assert f'"{relative_path}"' in freshness_text
+
+
 class TestAutostartTriggersEnabled:
     """Bug 2: executeDAT trigger toggles all stayed at default False, so
     autostart's callbacks never fired automatically."""

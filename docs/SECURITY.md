@@ -100,23 +100,26 @@ reverse proxy with real auth and treat exec mode as `off`.
 ### Network exposure (be precise about "localhost")
 
 The MCP server connects to `127.0.0.1` **by default** (`TD_MCP_HOST`), so in the
-default config the bearer secret crosses only the loopback interface. But be
-aware of two facts:
+default config the bearer secret crosses only the loopback interface.
+TouchDesigner 2025.33070 added a Web Server DAT **Local Address** parameter;
+fresh TDPilot components set it to `127.0.0.1` before activating the server.
+Be aware of two facts:
 
-- The TouchDesigner **WebServer DAT has no bind-address parameter** — it listens
-  on **all interfaces**, so the port (default `9981`) is reachable from the LAN
-  regardless of the client-side `127.0.0.1` host. The barriers for a LAN peer are
-  the mandatory 256-bit bearer secret (constant-time compared), the CORS /
+- On TouchDesigner 2025.33070+, clearing Local Address makes the Web Server DAT
+  listen on **all interfaces**. Older supported TD builds do not expose the
+  parameter and also listen on all interfaces. In either case the port
+  (default `9981`) can be reachable from the LAN. The barriers for a LAN peer
+  are the mandatory 256-bit bearer secret (constant-time compared), the CORS /
   `Sec-Fetch-Site` cross-site rejection, and — over plain HTTP — nothing
   encrypting the secret on the wire.
 - Setting `TD_MCP_HOST` to a non-loopback address (e.g. to reach TD from another
   machine) sends the secret in cleartext. Use an encrypted transport
   (Tailscale, WireGuard, or an SSH tunnel), or a reverse proxy terminating TLS.
 
-If the machine is on an untrusted network, firewall the port to loopback, e.g.
-on macOS/Linux block inbound `9981` except from `127.0.0.1`, or bind TD's host
-interface behind a VPN. This is an operational mitigation for a TouchDesigner
-platform limitation, not something the callbacks file can enforce itself.
+If the machine is on an untrusted network, keep Local Address at `127.0.0.1`.
+For older builds, firewall the port to loopback, e.g. on macOS/Linux block
+inbound `9981` except from `127.0.0.1`. If remote access is intentional, bind
+the selected VPN interface and use an encrypted transport.
 
 ## Supported versions
 

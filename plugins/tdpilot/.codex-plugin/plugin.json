@@ -27,7 +27,7 @@
   "interface": {
     "displayName": "TDPilot",
     "shortDescription": "Practical, validated TouchDesigner MCP control for Codex.",
-    "longDescription": "Codex-facing TDPilot wrapper with dual-route practical intelligence: exact validated patterns use deterministic planning, artistic and multi-domain concepts use grounded host authoring and proposal review, and accepted BrainPlans execute transactionally with validation and rollback. Includes the 656-card reviewed operator atlas and stays local-first.",
+    "longDescription": "Codex-facing TDPilot wrapper with dual-route practical intelligence: exact validated patterns use deterministic planning, artistic and multi-domain concepts use grounded host authoring and proposal review, and accepted BrainPlans execute transactionally with validation and rollback. Includes the 659-card reviewed operator atlas and stays local-first.",
     "developerName": "dreamrec",
     "category": "Developer Tools",
     "capabilities": [

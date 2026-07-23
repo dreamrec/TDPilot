@@ -1,0 +1,33 @@
+{
+  "card_type": "operator",
+  "op_type": "gltfoutCOMP",
+  "family": "COMP",
+  "display_name": "glTF Out COMP",
+  "docs_url": "https://docs.derivative.ca/Experimental:GlTF_Out_COMP",
+  "summary": "Exports TouchDesigner geometry, scenes, cameras, PBR materials, textures, blend shapes, skeletons, and animation data to a glTF 2.0 .gltf or .glb file.",
+  "key_params": [
+    {"name": "extension", "type": "Menu", "note": "Choose JSON-based .gltf or self-contained binary .glb output"},
+    {"name": "file", "type": "File", "note": "Destination glTF 2.0 file"},
+    {"name": "exportmethod", "type": "Menu", "note": "Export the internal network or a referenced component"},
+    {"name": "exp", "type": "Pulse", "note": "Write the glTF file"},
+    {"name": "cameras", "type": "Toggle", "note": "Include cameras in the exported scene"},
+    {"name": "netmode", "type": "Menu", "note": "Automatic or Manual network traversal"}
+  ],
+  "key_concepts": [
+    "glTF Out COMP writes glTF 2.0 as separate JSON/buffer assets or a self-contained .glb.",
+    "Component Reference exports another network; Internal Network exports nodes inside the glTF Out COMP.",
+    "Automatic traversal follows render-enabled Geometry, Camera, Null-joint, and POP nodes.",
+    "PBR MATs provide the supported material path for exported Geometry COMPs.",
+    "Animation export can reuse glTF In COMP Import Select CHOPs or properly formatted full-range animation CHOPs."
+  ],
+  "common_gotchas": [
+    "glTF 1.0 output is not supported.",
+    "Automatic mode ignores otherwise valid nodes when their render flags are disabled.",
+    "Animation CHOPs must be non-time-sliced/full-range; quaternion channels are preferred over Euler rotations when both exist.",
+    "The referenced component itself is not exported as a node; traversal starts with its contents.",
+    "Procedural TouchDesigner networks are translated to glTF scene data, not preserved as procedural operator graphs."
+  ],
+  "related_snippets": ["COMP_snippets", "glTF_samples"],
+  "build_relevance": "2025.33070+",
+  "last_verified": "2026-07-23"
+}

@@ -1,6 +1,34 @@
 # Changelog
 
 
+## Unreleased
+
+### TouchDesigner 2025.33070 compatibility
+- Added an exact 2025.33070 release card plus reviewed operator cards for
+  Script POP, glTF In COMP, and glTF Out COMP.
+- Updated DAT to POP for full point/primitive/vertex/detail/dimension
+  round-trips, File In/Out POP for the native lossless `.pop` format, and Web
+  Server DAT for its new Local Address parameter.
+- Added Local Address parameter semantics and migration coverage for Python
+  3.11.15, quaternion-oriented POP workflows, high-frequency MIDI, Custom
+  Operator Common API v2, and the 2025.33070 Phong MAT hotfix.
+
+### Security and release evidence
+- Freshly built TDPilot components bind Web Server DAT to `127.0.0.1` by
+  default on TD 2025.33070+, while retaining a no-op compatibility fallback
+  for older supported TD builds. Maintainers can override the build-time
+  address with `TD_MCP_BIND_ADDRESS`.
+- Release-card freshness now requires exact coverage of the current official
+  TD build by default instead of permitting one missing release.
+- `.tox` freshness now hashes both builder scripts, closing a gap where
+  structural or built-in-parameter changes could leave the committed binary
+  stale without failing the release gate.
+- Live availability sampling now includes operators introduced by the latest
+  release card, and the complete release workflow persists its build-specific
+  evidence artifact. The 2025.33070 macOS sample confirms glTF In COMP, glTF
+  Out COMP, and Script POP are all creatable.
+
+
 ## 2.4.0 - 2026-07-10 — Practical Intelligence
 
 Major additive upgrade to the 114-tool local-first brain. Existing primitive
