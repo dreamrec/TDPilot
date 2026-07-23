@@ -30,6 +30,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+
+def _configure_utf8_stdio() -> None:
+    """Keep dry-run diffs portable when the host console defaults to cp1252."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            reconfigure(encoding="utf-8")
+
+
 # ---------------------------------------------------------------------------
 # Transformation registry
 # Maps path → ordered list of (transform_fn, description) pairs.
@@ -410,6 +419,7 @@ def _unified_diff(path: Path, old: str, new: str) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     global _transforms, _parse_errors
+    _configure_utf8_stdio()
     # Reset globals for re-entrant use (important for tests)
     _transforms = collections.defaultdict(list)
     _parse_errors = []

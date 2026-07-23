@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -20,6 +21,7 @@ def test_release_bump_dry_run_matches_current_public_surfaces() -> None:
         capture_output=True,
         text=True,
         check=False,
+        env={**os.environ, "PYTHONIOENCODING": "cp1252"},
     )
 
     assert result.returncode == 0, result.stderr
