@@ -180,6 +180,11 @@ Everything else (vision, streaming, optimization, planning, TD2025 inspection) b
 
 **v2.6.2** — [Faster HTTP dispatch, timeline wrapping, and reproducible Git installs](docs/UPDATE_2_6_2.md)
 
+The cached router removes repeated callback compilation. Absolute cook timestamps
+keep validation correct across timeline loops and backward seeks. Fresh Mac
+qualification passed **2,344 tests** and **215/215 complete release checks** in
+TouchDesigner 2025.33230, including rollback, visuals, panels and cleanup.
+
 **v2.6.1** — [Windows RTX qualification and reliable live release checks](https://github.com/dreamrec/TDPilot/releases/tag/v2.6.1)
 
 - **Verified recovery:** typed patches run inside one TouchDesigner callback and one owned undo block. Failed edits restore and compare affected state, including DAT text and tables. Automatic undo refuses intervening edits.

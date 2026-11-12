@@ -52,3 +52,35 @@ it is not the way to install fixes newer than that tag.
 See [validation instructions](VALIDATION.md) for the required offline and live
 commands. Platform-specific results must be recorded against the actual source
 commit and TD build; prior Windows or Mac results are not interchangeable.
+
+## Mac qualification — 12 November 2026
+
+Tested runtime commit: `45cf5ad7bf4edcc4499bd9a2ca25bcc1eecf8d8c`, on macOS
+26.6.2 / Apple Silicon with TouchDesigner **2025.33230**. Subsequent documentation
+records these results without changing the tested runtime.
+
+| Check | Result |
+| --- | --- |
+| Full Python suite | 2,344 passed; no skips |
+| Complete release gate | 215 passed, 0 failed, 0 missing; all six reports present |
+| Native transactions and guarded rollback | 29 checks passed; scratch cleanup verified |
+| SDK 2 | Four stdio/HTTP sessions passed, including legacy protocol negotiation and verified rollback |
+| Bounded control bindings | All 16 parameter-value checks passed |
+| Live brain planning | 24 scenarios passed |
+| Integrated visuals and panels | 13 visual checks and five panel checks passed |
+| Timeline wrapping and backward seek | Both passed with five fresh steady intervals each |
+| Actual client launch configurations | Eight fresh launches passed; version 2.6.2, 114 tools |
+| Packaging | Wheel, npm, plugin ZIP and MCPB built; clean Git clone installed and registry smoke passed |
+
+The integrated generated-code fixture peaked at **0.258 ms** per operator;
+the incident fixture peaked at **0.119 ms**. Both retained the 16.667 ms budget.
+The large router's compile count stayed constant during subsequent bridge
+requests, confirming that the rebuilt component uses the cache.
+
+The empty project's passive measurement correctly remained `missing_metrics`;
+it is retained in the report, not represented as measured performance. Existing
+project children, other local component IDs, play state, client configuration
+and canonical authentication were preserved. The project was not saved or
+rewritten. Pre-existing errors in an unrelated POPX component remained unchanged;
+the project and TDPilot/local scopes had no errors. These are Mac results, not
+a claim of a new Windows live qualification or whole-show performance.
