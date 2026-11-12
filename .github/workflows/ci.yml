@@ -86,7 +86,7 @@ jobs:
       - name: Run tests with coverage
         # -rs surfaces skip reasons so the ~36 atlas operator-coverage tests that
         # skip when the DocsBrain corpus is absent are visible, not silent.
-        run: uv run pytest tests/ -q -rs --cov=src/td_mcp --cov-report=term --cov-report=xml
+        run: uv run pytest tests/ -q -rs --durations=15 -o faulthandler_timeout=180 --cov=src/td_mcp --cov-report=term --cov-report=xml
 
       - name: Warn if DocsBrain corpus absent (atlas coverage not verified)
         if: always()

@@ -12,6 +12,7 @@
 - Respect the one-second precision of process start timestamps, avoiding false stale-process warnings immediately after unpacking an installation while still detecting provably later source updates.
 - Document reproducible Git-source setup, canonical auth reuse, reconnect requirements and strict live validation. Keep the 114-tool MCP surface unchanged.
 - Include every source-fingerprint file in plugin and MCPB downloads so their sync diagnostics agree with the identical Git-source installation; verify both archive layouts in regression tests.
+- Reuse an isolated copy of the deterministic golden report across 19 metric tests, avoiding redundant full-corpus evaluations under coverage. Keep behavior-changing cases independent and add CI duration/stack diagnostics.
 
 - Clean up owned incident-replay scratch roots after partial construction, validation failure, or cancellation; verify removal in the actual parent across every results page and reject malformed readbacks.
 - Require fresh target metrics and advancing frame evidence for every performance sample. Match operator paths on component boundaries so similarly named siblings cannot satisfy a target's measurements.

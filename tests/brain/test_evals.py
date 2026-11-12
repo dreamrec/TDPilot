@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import copy
 import json
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
+import pytest_asyncio
 
 from td_mcp.brain import evals
 from td_mcp.brain.evals import (
@@ -16,6 +18,19 @@ from td_mcp.brain.evals import (
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 EVAL_PATH = ROOT / "tests" / "evals" / "td_brain_golden.jsonl"
+
+
+@pytest_asyncio.fixture(scope="module", loop_scope="module")
+async def _golden_report_once():
+    # These metric assertions all inspect the same deterministic input. Keep
+    # behavior-changing/monkeypatched tests on fresh evaluations below.
+    return await evaluate_golden_cases(EVAL_PATH)
+
+
+@pytest.fixture
+def golden_report(_golden_report_once):
+    # Never share mutable result state between tests.
+    return copy.deepcopy(_golden_report_once)
 
 
 def test_load_golden_cases_preserves_ids_and_expected_ops():
@@ -261,9 +276,8 @@ def test_golden_eval_report_includes_registry_pattern_coverage():
     assert "audio_terrain_glass_controls" in coverage["coverage_by_pattern"]["sop_noise_terrain_surface"]
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_scores_all_current_profiles():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_scores_all_current_profiles(golden_report):
+    report = golden_report
 
     assert report["ok"] is True
     assert report["pattern_coverage"]["ok"] is True
@@ -393,9 +407,8 @@ async def test_evaluate_case_expected_blocked_vague_prompt_passes_safely():
     assert result["checks"]["expected_blocked_safety"]["ok"] is True
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_prompt_safety_metrics_for_expected_blocked_cases():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_prompt_safety_metrics_for_expected_blocked_cases(golden_report):
+    report = golden_report
 
     assert report["prompt_safety_metrics"]["ok"] is True
     assert report["prompt_safety_metrics"]["expected_blocked_case_count"] >= 1
@@ -406,9 +419,8 @@ async def test_evaluate_golden_cases_reports_prompt_safety_metrics_for_expected_
     assert report["prompt_safety_metrics"]["failed_expected_blocked_case_ids"] == []
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_messy_project_metrics():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_messy_project_metrics(golden_report):
+    report = golden_report
 
     metrics = report["messy_project_metrics"]
 
@@ -441,9 +453,8 @@ async def test_trace_memory_reuse_report_replays_promoted_patterns_from_local_tr
         assert reused["trace_promoted_evidence"] is True
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_aggregate_time_metrics():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_aggregate_time_metrics(golden_report):
+    report = golden_report
 
     assert set(report["time_metrics"]) == {
         "total_ms",
@@ -454,9 +465,8 @@ async def test_evaluate_golden_cases_reports_aggregate_time_metrics():
     assert report["time_metrics"]["avg_case_total_ms"] >= 0
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_master_plan_phase_coverage():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_master_plan_phase_coverage(golden_report):
+    report = golden_report
 
     coverage = report["delivery_phase_coverage"]
     phases = {phase["phase_id"]: phase for phase in coverage["phases"]}
@@ -484,9 +494,8 @@ async def test_evaluate_golden_cases_reports_master_plan_phase_coverage():
     }
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_aggregate_validation_strength_metrics():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_aggregate_validation_strength_metrics(golden_report):
+    report = golden_report
 
     metrics = report["validation_metrics"]
     normal_case_count = sum(1 for item in report["cases"] if item.get("expected_blocked") is not True)
@@ -546,9 +555,8 @@ async def test_evaluate_case_scores_expected_compiled_time_behavior():
     assert result["decomposition_metrics"]["compiled_time_behavior_count"] == 3
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_time_behavior_decomposition_coverage():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_time_behavior_decomposition_coverage(golden_report):
+    report = golden_report
 
     metrics = report["decomposition_accuracy_metrics"]
 
@@ -557,9 +565,8 @@ async def test_evaluate_golden_cases_reports_time_behavior_decomposition_coverag
     assert "audio_feedback_panel_debug" in metrics["time_behavior_checked_case_ids"]
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_parameter_safety_metrics():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_parameter_safety_metrics(golden_report):
+    report = golden_report
 
     metrics = report["parameter_safety_metrics"]
 
@@ -573,9 +580,8 @@ async def test_evaluate_golden_cases_reports_parameter_safety_metrics():
     assert "audio_control" in metrics["priority_groups"]
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_aggregate_readability_metrics():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_aggregate_readability_metrics(golden_report):
+    report = golden_report
     assembled_cases = [case for case in report["cases"] if case["assembly_macros"]]
 
     assert report["readability_metrics"]["ok"] is True
@@ -646,9 +652,8 @@ async def test_evaluate_golden_cases_ok_includes_showpiece_assembly_metrics(monk
     assert report["ok"] is False
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_showpiece_assembly_metrics():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_showpiece_assembly_metrics(golden_report):
+    report = golden_report
 
     metrics = report["showpiece_assembly_metrics"]
 
@@ -661,9 +666,8 @@ async def test_evaluate_golden_cases_reports_showpiece_assembly_metrics():
     assert "audio_feedback_panel_debug" in metrics["showpiece_case_ids"]
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_runtime_safety_metrics():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_runtime_safety_metrics(golden_report):
+    report = golden_report
 
     safety = report["runtime_safety_metrics"]
     normal_case_count = sum(1 for item in report["cases"] if item.get("expected_blocked") is not True)
@@ -681,9 +685,8 @@ async def test_evaluate_golden_cases_reports_runtime_safety_metrics():
     assert safety["max_plan_ops_failure_count"] == 0
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_rollback_frequency_metrics():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_rollback_frequency_metrics(golden_report):
+    report = golden_report
 
     metrics = report["rollback_frequency_metrics"]
     normal_case_count = sum(1 for item in report["cases"] if item.get("expected_blocked") is not True)
@@ -699,9 +702,8 @@ async def test_evaluate_golden_cases_reports_rollback_frequency_metrics():
     assert "audio_feedback_panel_debug" in metrics["rollback_enabled_case_ids"]
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_unsupported_operator_avoidance_metrics():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_unsupported_operator_avoidance_metrics(golden_report):
+    report = golden_report
 
     metrics = report["unsupported_operator_avoidance_metrics"]
 
@@ -713,9 +715,8 @@ async def test_evaluate_golden_cases_reports_unsupported_operator_avoidance_metr
     assert "audio_feedback_panel_live_source" in metrics["checked_forbidden_operator_case_ids"]
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_required_operator_coverage_metrics():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_required_operator_coverage_metrics(golden_report):
+    report = golden_report
 
     coverage = report["operator_coverage_metrics"]
 
@@ -728,9 +729,8 @@ async def test_evaluate_golden_cases_reports_required_operator_coverage_metrics(
     assert "audio_feedback_panel_debug" in coverage["checked_case_ids"]
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_substitution_quality_metrics():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_substitution_quality_metrics(golden_report):
+    report = golden_report
 
     substitution = report["substitution_quality_metrics"]
 
@@ -805,9 +805,8 @@ def test_decomposition_accuracy_metrics_track_time_behavior_failures():
     assert metrics["failed_case_ids"] == ["time_behavior_regression"]
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_generated_code_success_metrics():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_generated_code_success_metrics(golden_report):
+    report = golden_report
 
     metrics = report["generated_code_success_metrics"]
 
@@ -892,9 +891,8 @@ def test_substitution_quality_accepts_declared_device_source_as_approval_evidenc
     ]
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_compiler_stability_summary():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_compiler_stability_summary(golden_report):
+    report = golden_report
 
     summary = report["compiler_stability"]
 
@@ -911,9 +909,8 @@ async def test_evaluate_golden_cases_reports_compiler_stability_summary():
     assert blocked_sentinel["passed"] is True
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_decomposition_accuracy_metrics():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_decomposition_accuracy_metrics(golden_report):
+    report = golden_report
 
     metrics = report["decomposition_accuracy_metrics"]
 
@@ -2230,9 +2227,8 @@ async def test_evaluate_case_fails_when_expected_param_value_is_missing():
     ]
 
 
-@pytest.mark.asyncio
-async def test_evaluate_golden_cases_reports_param_value_coverage():
-    report = await evaluate_golden_cases(EVAL_PATH)
+def test_evaluate_golden_cases_reports_param_value_coverage(golden_report):
+    report = golden_report
 
     metrics = report["param_value_coverage"]
 
