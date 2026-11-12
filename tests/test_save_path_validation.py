@@ -33,6 +33,15 @@ from td_mcp.vision.save_path import (
 )
 
 
+def _symlink_or_skip(link, target, **kwargs):
+    try:
+        link.symlink_to(target, **kwargs)
+    except OSError as exc:
+        if os.name == "nt" and exc.winerror == 1314:
+            pytest.skip("Windows account lacks symlink privilege; no security settings changed")
+        raise
+
+
 @pytest.fixture
 def fake_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Point ``~`` / ``Path.home()`` at an isolated tmp directory."""
@@ -138,7 +147,7 @@ class TestValidateSavePathRejects:
         outside = tmp_path / "outside"
         outside.mkdir()
         link = fake_home / "innocent"
-        link.symlink_to(outside, target_is_directory=True)
+        _symlink_or_skip(link, outside, target_is_directory=True)
         with pytest.raises(SavePathError, match="home"):
             validate_save_path(str(link / "shot.png"))
 
@@ -146,7 +155,7 @@ class TestValidateSavePathRejects:
         real = fake_home / "actually.sh"
         real.write_text("#!/bin/sh\n", encoding="utf-8")
         link = fake_home / "shot.png"
-        link.symlink_to(real)
+        _symlink_or_skip(link, real)
         with pytest.raises(SavePathError, match="extension"):
             validate_save_path(str(link))
 

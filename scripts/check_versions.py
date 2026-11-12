@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def canonical_version() -> str:
-    text = (ROOT / "src" / "td_mcp" / "__init__.py").read_text()
+    text = (ROOT / "src" / "td_mcp" / "__init__.py").read_text(encoding="utf-8")
     match = re.search(r'__version__\s*=\s*"([^"]+)"', text)
     if not match:
         raise SystemExit("Could not find __version__ in src/td_mcp/__init__.py")
@@ -24,7 +24,7 @@ def canonical_version() -> str:
 
 
 def pyproject_version() -> str:
-    text = (ROOT / "pyproject.toml").read_text()
+    text = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     match = re.search(r'^version\s*=\s*"([^"]+)"', text, re.MULTILINE)
     if not match:
         raise SystemExit("Could not find version in pyproject.toml")
@@ -32,7 +32,7 @@ def pyproject_version() -> str:
 
 
 def canonical_tool_count() -> str:
-    text = (ROOT / "src" / "td_mcp" / "release_gates.py").read_text()
+    text = (ROOT / "src" / "td_mcp" / "release_gates.py").read_text(encoding="utf-8")
     match = re.search(r"EXPECTED_MIN_TOOL_COUNT\s*:\s*int\s*=\s*(\d+)", text)
     if not match:
         raise SystemExit("Could not find EXPECTED_MIN_TOOL_COUNT in src/td_mcp/release_gates.py")
@@ -42,7 +42,7 @@ def canonical_tool_count() -> str:
 def check_line(path: Path, pattern: str, expected: str, label: str, *, flags: int = 0) -> str | None:
     if not path.exists():
         return f"{label}: missing file {path}"
-    text = path.read_text()
+    text = path.read_text(encoding="utf-8")
     match = re.search(pattern, text, flags)
     if not match:
         return f"{label}: pattern not found in {path.relative_to(ROOT).as_posix()}"
@@ -55,7 +55,7 @@ def check_line(path: Path, pattern: str, expected: str, label: str, *, flags: in
 def check_json_version(path: Path, expected: str, label: str) -> str | None:
     if not path.exists():
         return f"{label}: missing file {path}"
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding="utf-8"))
     actual = data.get("version")
     if actual != expected:
         return f"{label}: {path.relative_to(ROOT).as_posix()} says {actual}, expected {expected}"
@@ -74,7 +74,7 @@ def _json_path_value(data: object, key_path: str) -> object:
 def check_json_value(path: Path, key_path: str, expected: object, label: str) -> str | None:
     if not path.exists():
         return f"{label}: missing file {path}"
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding="utf-8"))
     actual = _json_path_value(data, key_path)
     if actual != expected:
         return f"{label}: {path.relative_to(ROOT).as_posix()} says {actual}, expected {expected}"

@@ -7,7 +7,7 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v2.6.0
+# TDPilot Runtime v2.6.1
 
 [![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
@@ -148,7 +148,7 @@ Everything else (vision, streaming, optimization, planning, TD2025 inspection) b
 
 ## Latest Release
 
-**v2.6.0** — [Native transactions, MCP SDK 2, and TD 2025.33230](https://github.com/dreamrec/TDPilot/releases/tag/v2.6.0)
+**v2.6.1** — [Windows RTX qualification and reliable live release checks](https://github.com/dreamrec/TDPilot/releases/tag/v2.6.1)
 
 - **Verified recovery:** typed patches run inside one TouchDesigner callback and one owned undo block. Failed edits restore and compare affected state, including DAT text and tables. Automatic undo refuses intervening edits.
 - **MCP SDK 2.3:** updated protocol support, explicit request context, resource subscriptions, and cancellation recovery. The full profile retains the same 114 tools.

@@ -1,5 +1,16 @@
 # Changelog
 
+
+## 2.6.1 — 2026-11-12 — Windows live qualification
+
+- Qualify native transactions, SDK 2 stdio/HTTP protocols, bounded controls and integrated release gates on Windows 11 / RTX 5090 / TD 2025.33230.
+- Discover registered TD operator classes in empty/sparse projects; graph inventory is no longer mistaken for installed operator availability. Class presence does not certify hardware or licensing.
+- Require advancing frames and fresh per-node cook timestamps for steady-state measurements; exclude cached startup timings. Force cooks only in the owned incident fixture, and clean it after validation.
+- Keep required POP migration sampling independent of optional DocsBrain data.
+- Fix UTF-8 version checks and Python source line endings on Windows. Report unavailable symlink privileges as explicit test skips.
+- Generate release checksums from the final uploaded asset bytes, avoiding mismatches after CI rebuilds ZIP bundles.
+
+See [Windows qualification](docs/UPDATE_2_6_1.md).
 ## Unreleased
 
 ## 2.6.0 — 2026-11-12

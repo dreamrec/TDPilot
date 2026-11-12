@@ -129,11 +129,13 @@ class _TransactionalGeneratedCodeLiveClient(_SparseLiveClient):
         if endpoint == "node/errors":
             return {"issues": []}
         if endpoint == "cooking":
+            self.perf_frame = getattr(self, "perf_frame", 100) + 30
             return {
+                "frame": self.perf_frame,
                 "stuck": [],
                 "nodes": [
-                    {"path": "/project1/tdpilot_gc_smoke_out", "cookTime": 4.5},
-                    {"path": "/sys/internal", "cookTime": 18.0},
+                    {"path": "/project1/tdpilot_gc_smoke_out", "cookTime": 4.5, "cookFrame": self.perf_frame},
+                    {"path": "/sys/internal", "cookTime": 18.0, "cookFrame": self.perf_frame},
                 ],
             }
         if endpoint == "analyze_frame":
@@ -945,7 +947,7 @@ class _PerfLiveClient:
             return {
                 "frame": frame,
                 "nodes": [
-                    {"path": "/project1/moviefilein1", "cookTime": self._cook_ms},
+                    {"path": "/project1/moviefilein1", "cookTime": self._cook_ms, "cookFrame": frame},
                 ],
             }
         return {}
@@ -994,3 +996,46 @@ def test_release_skills_include_live_smoke_gate_commands():
         assert "uv run python scripts/brain_live_smoke.py --live" in text
 
     assert not (ROOT / "plugins" / "tdpilot" / "skills" / "tdpilot-brain-release" / "SKILL.md").exists()
+
+
+@pytest.mark.asyncio
+async def test_performance_rejects_cached_cooks_despite_advancing_frames():
+    from td_mcp.brain.live_smoke import _collect_performance_summary
+
+    class Cached(_PerfLiveClient):
+        async def request(self, endpoint, params=None):
+            result = await super().request(endpoint, params)
+            for node in result.get("nodes", []):
+                node["cookFrame"] = 12
+            return result
+
+    result = await _collect_performance_summary(
+        Cached(cook_ms=0.01, frame_step=30),
+        target_root="/project1",
+        sample_interval_s=0,
+        steady_samples=2,
+    )
+    assert result["frame_advance_ok"] is True
+    assert result["ok"] is False
+    assert result["steady_state_max_ms"] is None
+
+
+@pytest.mark.asyncio
+async def test_performance_excludes_stale_startup_spikes():
+    from td_mcp.brain.live_smoke import _collect_performance_summary
+
+    class Mixed(_PerfLiveClient):
+        async def request(self, endpoint, params=None):
+            result = await super().request(endpoint, params)
+            result["nodes"].append({"path": "/project1/static", "cookTime": 900, "cookFrame": 1})
+            return result
+
+    result = await _collect_performance_summary(
+        Mixed(cook_ms=4, frame_step=30),
+        target_root="/project1",
+        sample_interval_s=0,
+        steady_samples=2,
+    )
+    assert result["warmup_max_ms"] == 900
+    assert result["steady_state_max_ms"] == 4
+    assert result["ok"] is True

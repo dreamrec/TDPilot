@@ -457,29 +457,38 @@ async def _panel_interaction_checks(client, built: dict[str, Any]) -> dict[str, 
 
 
 async def _performance_check(client, target: str) -> dict[str, Any]:
-    payload = await _checked_request(client, "cooking", {"path": target})
-    nodes = payload.get("nodes") if isinstance(payload, dict) else []
-    cook_values: list[float] = []
-    if isinstance(nodes, list):
-        for item in nodes:
-            if not isinstance(item, dict):
-                continue
-            for key in ("cookTime", "cook_time_ms", "cook_ms", "total_cook_ms"):
-                value = item.get(key)
-                if isinstance(value, (int, float)):
-                    cook_values.append(float(value))
-                    break
-    max_ms = max(cook_values) if cook_values else 0.0
-    return {
-        "ok": max_ms <= 16.667,
-        "steady_state_max_ms": max_ms,
-        "frame_budget_ms": 16.667,
-        "sample_count": len(cook_values),
-    }
+    from td_mcp.brain.live_smoke import _collect_performance_summary
+
+    class ForcedScratchClient:
+        async def request(self, endpoint, body):
+            # Force only the owned fixture's TOPs. Never force user callbacks.
+            code = (
+                f"nodes = op({target!r}).findChildren()\n"
+                "for node in nodes:\n"
+                "    if node.family == 'TOP':\n"
+                "        node.cook(force=True)\n"
+                "__result__ = True\n"
+            )
+            await _checked_request(client, "exec", {"code": code, "exec_mode": "restricted"})
+            return await _checked_request(client, endpoint, body)
+
+    result = await _collect_performance_summary(ForcedScratchClient(), target_root=target)
+    result["measurement_scope"] = "owned fixture per-operator CPU cook time; not whole-show FPS"
+    return result
 
 
 async def _run_live_scratch_replay(client, target: str) -> dict[str, Any]:
     built = await _build_ten_output_library(client, target)
+    try:
+        return await _validate_live_scratch_replay(client, built)
+    finally:
+        await _checked_request(client, "node/delete", {"path": built["root"]})
+        remaining = await _checked_request(client, "nodes", {"path": "/project1"})
+        if any(n.get("path") == built["root"] for n in remaining.get("nodes", [])):
+            raise RuntimeError("Incident scratch cleanup could not be verified")
+
+
+async def _validate_live_scratch_replay(client, built: dict[str, Any]) -> dict[str, Any]:
     grid_quality = await _visual_quality_checks(client, [built["grid"]])
     panel = await _panel_interaction_checks(client, built)
     detail_quality = await _visual_quality_checks(client, [built["display"]])
@@ -510,7 +519,7 @@ async def _run_live_scratch_replay(client, target: str) -> dict[str, Any]:
         "visual_quality_summary": visual,
         "panel_interaction_results": panel,
         "performance_summary": performance,
-        "note": "Scratch replay root is left in TouchDesigner for manual inspection.",
+        "note": "Owned scratch root removed after qualification.",
     }
 
 

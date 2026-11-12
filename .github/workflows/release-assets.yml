@@ -178,3 +178,17 @@ jobs:
         run: |
           gh release upload "$TAG" tdpilot.plugin tdpilot.mcpb td_component/tdpilot.tox --clobber
           echo "Uploaded tdpilot.plugin + tdpilot.mcpb + tdpilot.tox to release $TAG"
+
+      # Build tools can produce different ZIP bytes on each invocation. Hash the
+      # exact bytes uploaded by this run, after all other assets are present.
+      - name: Refresh manifest from final published assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.resolve.outputs.tag }}
+        run: |
+          mkdir -p /tmp/final-release-assets
+          gh release download "$TAG" --dir /tmp/final-release-assets --skip-existing
+          cd /tmp/final-release-assets
+          rm -f SHA256SUMS.txt
+          sha256sum * > SHA256SUMS.txt
+          gh release upload "$TAG" SHA256SUMS.txt --clobber

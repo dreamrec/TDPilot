@@ -1,0 +1,2 @@
+# Component source hashes and embedded DATs must be identical on every host.
+*.py text eol=lf

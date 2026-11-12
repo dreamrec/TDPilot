@@ -1066,7 +1066,7 @@ async def _cleanup_transactional_generated_code_smoke(td_client, owned_root: str
             owned_root for node in payload["nodes"] if node.get("path") == owned_root
         ]
         errors = await td_client.request(
-            "node/errors", {"path": "/project1", "recurse": True, "max_depth": 10}
+            "node/errors", {"path": "/project1", "recurse": True, "max_depth": 10, "limit": 10000}
         )
         cooking = await td_client.request("cooking", {"path": "/project1"})
         if not isinstance(errors, dict) or not isinstance(errors.get("issues"), list):
@@ -1281,6 +1281,7 @@ async def _collect_performance_summary(
 ) -> dict[str, Any]:
     samples: list[dict[str, Any]] = []
     frames: list[int] = []
+    last_cooks: dict[str, float] = {}
     total_samples = 1 + max(1, steady_samples)  # warmup + steady window
     for index in range(total_samples):
         if index > 0 and sample_interval_s > 0:
@@ -1289,7 +1290,7 @@ async def _collect_performance_summary(
             await asyncio.sleep(sample_interval_s)
         try:
             payload = await td_client.request(
-                "cooking", {"path": target_root, "recurse": True, "max_depth": 10}
+                "cooking", {"path": target_root, "recurse": True, "max_depth": 10, "limit": 10000}
             )
         except Exception as exc:  # noqa: BLE001
             return {
@@ -1297,7 +1298,20 @@ async def _collect_performance_summary(
                 "status": "failed",
                 "error": str(exc),
             }
-        samples.append(_cook_sample_summary(payload, sample_index=index))
+        sample = _cook_sample_summary(payload, sample_index=index)
+        fresh = []
+        for node in sample["nodes"]:
+            cook_frame = node.get("cook_frame")
+            previous = last_cooks.get(node["path"])
+            if isinstance(cook_frame, (int, float)):
+                last_cooks[node["path"]] = cook_frame
+                if index == 0 or (previous is not None and cook_frame > previous):
+                    fresh.append(node)
+        sample["stale_node_count"] = len(sample["nodes"]) - len(fresh)
+        sample["nodes"] = fresh
+        sample["node_count"] = len(fresh)
+        sample["max_ms"] = max((node["cook_ms"] for node in fresh), default=None)
+        samples.append(sample)
         frame_value = _sample_frame(payload)
         if frame_value is not None:
             frames.append(frame_value)
@@ -1334,7 +1348,7 @@ async def _collect_performance_summary(
         and float(node.get("cook_ms") or 0.0) > frame_budget_ms
     )
     return {
-        "ok": steady_max is not None and steady_max <= frame_budget_ms,
+        "ok": frame_advance_ok is True and steady_max is not None and steady_max <= frame_budget_ms,
         "status": "checked" if steady_max is not None else "missing_metrics",
         "sample_count": len(samples),
         "warmup_max_ms": warmup_max,
@@ -1381,6 +1395,7 @@ def _cook_sample_summary(payload: Any, *, sample_index: int) -> dict[str, Any]:
             {
                 "path": str(node.get("path") or node.get("node") or ""),
                 "cook_ms": cook_ms,
+                "cook_frame": node.get("cookFrame"),
             }
         )
     max_ms = max((node["cook_ms"] for node in normalized_nodes), default=None)

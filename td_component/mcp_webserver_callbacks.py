@@ -27,7 +27,7 @@ import traceback
 # Configuration
 # ─────────────────────────────────────────────────────────────
 
-API_VERSION = "2.6.0"
+API_VERSION = "2.6.1"
 SCREENSHOT_TEMP_PATH = os.path.join(os.environ.get('TEMP', os.environ.get('TMP', '/tmp')), 'td_mcp_screenshot.jpg')
 
 # Auth + policy env is read at CALL TIME, not import time — otherwise TD's
@@ -2533,7 +2533,18 @@ def handle_list_families(body):
     if root is None:
         return {'error': f'Node not found: {path}'}
 
+    # Registered classes describe the installed build, even in an empty project.
+    # Presence does not certify device access, licensing or successful cooking.
+    import td
     families = {}
+    for name in dir(td):
+        for family in ('COMP', 'TOP', 'CHOP', 'SOP', 'DAT', 'MAT', 'POP'):
+            if name != family and name.endswith(family):
+                candidate = getattr(td, name)
+                base = getattr(td, family, None)
+                if isinstance(candidate, type) and base and issubclass(candidate, base):
+                    families.setdefault(family, set()).add(name)
+                break
 
     def collect_types(n):
         fam = n.family

@@ -41,6 +41,19 @@ def parse_args() -> argparse.Namespace:
 
 async def main_async(args: argparse.Namespace) -> dict:
     atlas_report = audit_brain_atlas(ROOT)
+    # This migration is a required release contract even without a local
+    # DocsBrain database (whose optional coverage list can be empty).
+    coverage = atlas_report.setdefault("docsbrain_operator_coverage", {})
+    gaps = coverage.setdefault("deprecated_missing_operator_cards", [])
+    if not any(item.get("op_type") == "glslcreatePOP" for item in gaps):
+        gaps.append(
+            {
+                "op_type": "glslcreatePOP",
+                "family": "POP",
+                "gap_status": "deprecated_pending_removal",
+                "replacement_op_types": ["glsladvancedPOP", "topologyPOP"],
+            }
+        )
     release_card = _load_latest_release_card()
     targets = build_availability_targets(atlas_report, release_card=release_card)
     client = TDClient(host=args.host, port=args.port, timeout=args.timeout, max_retries=1)
