@@ -44,6 +44,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from td_mcp.release_gates import EXPECTED_MIN_TOOL_COUNT  # noqa: E402
+from td_mcp.sync_diagnostics import _SOURCE_HASH_PATHS  # noqa: E402
 
 DEFAULT_OUTPUT = ROOT / "tdpilot.mcpb"
 
@@ -188,6 +189,14 @@ def _copy_into(staging: Path) -> None:
             ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".venv", "tests"),
         )
         print(f"  + {dname}/")
+
+    # Keep source diagnostics comparable with the same release's Git/runtime
+    # installs. Most files are already in src/ and td_component/ above.
+    for relative in _SOURCE_HASH_PATHS:
+        target = staging / relative
+        if not target.is_file():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / relative, target)
 
 
 def main() -> int:

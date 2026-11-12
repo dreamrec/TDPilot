@@ -9,8 +9,28 @@ from pathlib import Path
 
 from td_mcp.brain.plugin_surface import audit_plugin_surface
 from td_mcp.release_gates import EXPECTED_MIN_TOOL_COUNT
+from td_mcp.sync_diagnostics import _source_hash_for_root
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def test_plugin_archive_source_fingerprint_matches_git_checkout(tmp_path):
+    output = tmp_path / "tdpilot.plugin"
+    _load_build_plugin_zip_module().build(output)
+    unpacked = tmp_path / "unpacked"
+    with zipfile.ZipFile(output) as archive:
+        assert len(archive.namelist()) == len(set(archive.namelist()))
+        archive.extractall(unpacked)
+    packaged = _source_hash_for_root(unpacked)
+    assert packaged["missing"] == []
+    assert packaged["hash"] == _source_hash_for_root(ROOT)["hash"]
+
+
+def test_mcpb_staging_source_fingerprint_matches_git_checkout(tmp_path):
+    _load_build_mcpb_module()._copy_into(tmp_path)
+    packaged = _source_hash_for_root(tmp_path)
+    assert packaged["missing"] == []
+    assert packaged["hash"] == _source_hash_for_root(ROOT)["hash"]
 
 
 def _load_build_plugin_zip_module():

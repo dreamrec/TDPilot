@@ -42,6 +42,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from td_mcp import __version__  # noqa: E402
 from td_mcp.release_gates import EXPECTED_MIN_TOOL_COUNT  # noqa: E402
+from td_mcp.sync_diagnostics import _SOURCE_HASH_PATHS  # noqa: E402
 
 # Every entry is (source_relative_to_ROOT, arcname_in_zip, required).
 # `required=True` means the build fails if the file is missing.
@@ -146,6 +147,18 @@ def build(output: Path) -> None:
                 missing_required.append(src_rel + "/")
                 continue
             _walk_dir_into_zip(zf, src, arc_root)
+
+        # A bundled runtime must have the same verifiable source fingerprint
+        # as a Git install. Add only files not already included above.
+        included = set(zf.namelist())
+        for relative in _SOURCE_HASH_PATHS:
+            if relative in included:
+                continue
+            source = ROOT / relative
+            if not source.is_file():
+                missing_required.append(relative)
+                continue
+            zf.write(source, relative)
 
     if missing_required:
         output.unlink(missing_ok=True)

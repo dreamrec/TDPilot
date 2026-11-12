@@ -4,6 +4,10 @@ This patch fixes realtime HTTP callback overhead, timeline-wrap performance
 evidence, and source-path detection on installations whose directory contains
 spaces. It retains the 114-tool surface and MCP SDK 2.
 
+Plugin ZIP and MCPB downloads now include all source files used by synchronization
+diagnostics. Their fingerprints match the same release's Git installation;
+missing packaging files no longer masquerade as modified runtime code.
+
 ## Runtime changes
 
 The Web Server DAT now calls a small `http_dispatch` DAT. That dispatcher loads
@@ -57,11 +61,12 @@ commit and TD build; prior Windows or Mac results are not interchangeable.
 
 Tested runtime commit: `45cf5ad7bf4edcc4499bd9a2ca25bcc1eecf8d8c`, on macOS
 26.6.2 / Apple Silicon with TouchDesigner **2025.33230**. Subsequent documentation
-records these results without changing the tested runtime.
+and bundle-closure fixes preserve this runtime; the full suite was rerun with
+both new archive fingerprint regressions.
 
 | Check | Result |
 | --- | --- |
-| Full Python suite | 2,344 passed; no skips |
+| Full Python suite | 2,346 passed; no skips |
 | Complete release gate | 215 passed, 0 failed, 0 missing; all six reports present |
 | Native transactions and guarded rollback | 29 checks passed; scratch cleanup verified |
 | SDK 2 | Four stdio/HTTP sessions passed, including legacy protocol negotiation and verified rollback |
