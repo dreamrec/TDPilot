@@ -1039,3 +1039,44 @@ async def test_performance_excludes_stale_startup_spikes():
     assert result["warmup_max_ms"] == 900
     assert result["steady_state_max_ms"] == 4
     assert result["ok"] is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("missing", ["nodes", "frame"])
+async def test_performance_rejects_partial_sample_windows(missing):
+    from td_mcp.brain.live_smoke import _collect_performance_summary
+
+    class Partial(_PerfLiveClient):
+        async def request(self, endpoint, params=None):
+            result = await super().request(endpoint, params)
+            if result["frame"] == 160:
+                result.pop(missing)
+            return result
+
+    result = await _collect_performance_summary(
+        Partial(cook_ms=4, frame_step=30),
+        target_root="/project1",
+        sample_interval_s=0,
+        steady_samples=3,
+    )
+    assert result["ok"] is False
+
+
+@pytest.mark.asyncio
+async def test_performance_does_not_count_similarly_named_sibling_as_target():
+    from td_mcp.brain.live_smoke import _collect_performance_summary
+
+    class Sibling(_PerfLiveClient):
+        async def request(self, endpoint, params=None):
+            result = await super().request(endpoint, params)
+            result["nodes"][0]["path"] = "/project10/moviefilein1"
+            return result
+
+    result = await _collect_performance_summary(
+        Sibling(cook_ms=4, frame_step=30),
+        target_root="/project1",
+        sample_interval_s=0,
+        steady_samples=2,
+    )
+    assert result["ok"] is False
+    assert result["steady_state_max_ms"] is None

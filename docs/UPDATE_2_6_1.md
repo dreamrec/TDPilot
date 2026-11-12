@@ -87,3 +87,29 @@ project file, TD license/preferences and unrelated jobs were preserved.
 
 **Mac coordinator:** synchronize the Mac runtime and TD component to 2.6.1 after
 publication. Do not relabel the 2.6.0 Mac tests as tests of this patch.
+
+## Post-release review — main branch
+
+A follow-up review found six reproducible validation failures: partial fixture
+construction leaked its scratch root; cleanup could accept the wrong parent,
+an incomplete results page, or malformed evidence; performance could pass with
+missing timing/frame samples or measurements from a similarly named sibling.
+The regression tests now pass. Fixture ownership is established before child
+construction, cleanup verifies every page in the actual parent, and every
+steady performance sample must contain fresh metrics from the exact target scope.
+
+The reviewed Windows suite passed **2,275 tests with 43 explicit skips**.
+Live failure and cancellation injection both removed their owned scratch roots.
+The ten-output visual/panel replay also passed and preserved the original project
+children, with zero TD errors before and after. Golden evaluation, dry smoke,
+atlas, skills, plugin, registry, version, API and component-freshness checks passed.
+
+Release asset writers now serialize per tag; editing release notes no longer
+rebuilds bundles. A local execution of the final checksum step verified its output
+against mocked uploaded bytes, and all seven actual v2.6.1 assets were downloaded
+again and matched the published manifest.
+
+These fixes are on `main` after v2.6.1. The release tag, npm package and `.tox`
+are unchanged. A Mac installation using the release tag has the original 2.6.1
+qualification tools; fetch the reviewed main-branch commit to use these additional
+validation fixes. Mac validation still needs separate live evidence.

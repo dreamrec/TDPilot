@@ -29,7 +29,7 @@ name: Build & upload release assets
 
 on:
   release:
-    types: [published, edited]
+    types: [published]
   workflow_dispatch:
     inputs:
       tag:
@@ -42,6 +42,12 @@ permissions:
   id-token: write
   # Needed by the "Require green CI" step to read workflow-run conclusions.
   actions: read
+
+# Serialize writers to each release, including manual rebuilds. Cancelling an
+# in-flight upload can leave new assets paired with an old checksum manifest.
+concurrency:
+  group: release-assets-${{ inputs.tag || github.event.release.tag_name }}
+  cancel-in-progress: false
 
 jobs:
   build-and-upload:
@@ -187,9 +193,10 @@ jobs:
           GH_REPO: ${{ github.repository }}
           TAG: ${{ steps.resolve.outputs.tag }}
         run: |
-          mkdir -p /tmp/final-release-assets
-          gh release download "$TAG" --dir /tmp/final-release-assets --skip-existing
-          cd /tmp/final-release-assets
+          asset_dir="$(mktemp -d)"
+          trap 'rm -rf "$asset_dir"' EXIT
+          gh release download "$TAG" --dir "$asset_dir"
+          cd "$asset_dir"
           rm -f SHA256SUMS.txt
-          sha256sum * > SHA256SUMS.txt
+          sha256sum -- * > SHA256SUMS.txt
           gh release upload "$TAG" SHA256SUMS.txt --clobber

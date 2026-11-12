@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import math
 import time
 import uuid
 from dataclasses import dataclass
@@ -1320,7 +1321,9 @@ async def _collect_performance_summary(
     # otherwise the timeline is paused/frozen and the "steady state" numbers are
     # not describing a live-cooking graph.
     frames_advanced = (frames[-1] - frames[0]) if len(frames) >= 2 else None
-    frame_advance_ok = (frames_advanced is not None and frames_advanced > 0) if frames else None
+    frame_advance_ok = len(frames) == total_samples and all(
+        current > previous for previous, current in zip(frames, frames[1:])
+    )
 
     warmup_max = _max_cook_for_prefixes(samples[0], (target_root,)) if samples else None
     global_steady_values = [sample["max_ms"] for sample in samples[1:] if sample["max_ms"] is not None]
@@ -1333,23 +1336,27 @@ async def _collect_performance_summary(
     frame_budget_ms = 16.667
     global_steady_max = max(global_steady_values) if global_steady_values else None
     steady_max = max(steady_values) if steady_values else None
+    complete_metrics = len(steady_values) == total_samples - 1
     target_root_spike_count = sum(
         1
         for sample in samples[1:]
         for node in sample.get("nodes", [])
-        if str(node.get("path") or "").startswith(target_root)
+        if _path_in_roots(str(node.get("path") or ""), (target_root,))
         and float(node.get("cook_ms") or 0.0) > frame_budget_ms
     )
     sys_ui_spike_count = sum(
         1
         for sample in samples[1:]
         for node in sample.get("nodes", [])
-        if str(node.get("path") or "").startswith(("/sys", "/ui"))
+        if _path_in_roots(str(node.get("path") or ""), ("/sys", "/ui"))
         and float(node.get("cook_ms") or 0.0) > frame_budget_ms
     )
     return {
-        "ok": frame_advance_ok is True and steady_max is not None and steady_max <= frame_budget_ms,
-        "status": "checked" if steady_max is not None else "missing_metrics",
+        "ok": (
+            frame_advance_ok and complete_metrics and steady_max is not None and steady_max <= frame_budget_ms
+        ),
+        "status": "checked" if complete_metrics else "missing_metrics",
+        "steady_samples_with_metrics": len(steady_values),
         "sample_count": len(samples),
         "warmup_max_ms": warmup_max,
         "steady_state_max_ms": steady_max,
@@ -1377,7 +1384,7 @@ def _sample_frame(payload: Any) -> int | None:
         raw = payload.get("frame")
         if isinstance(raw, bool):
             return None
-        if isinstance(raw, (int, float)):
+        if isinstance(raw, (int, float)) and math.isfinite(raw):
             return int(raw)
     return None
 
@@ -1407,11 +1414,15 @@ def _cook_sample_summary(payload: Any, *, sample_index: int) -> dict[str, Any]:
     }
 
 
+def _path_in_roots(path: str, roots: tuple[str, ...]) -> bool:
+    return any(path == root.rstrip("/") or path.startswith(root.rstrip("/") + "/") for root in roots)
+
+
 def _max_cook_for_prefixes(sample: dict[str, Any], prefixes: tuple[str, ...]) -> float | None:
     values = [
         float(node.get("cook_ms") or 0.0)
         for node in sample.get("nodes", [])
-        if isinstance(node, dict) and str(node.get("path") or "").startswith(prefixes)
+        if isinstance(node, dict) and _path_in_roots(str(node.get("path") or ""), prefixes)
     ]
     return max(values) if values else None
 

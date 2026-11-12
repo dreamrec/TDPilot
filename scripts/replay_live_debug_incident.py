@@ -257,12 +257,7 @@ def _callback_source(root: str) -> str:
     )
 
 
-async def _build_ten_output_library(client, target: str) -> dict[str, Any]:
-    parent, name = _parent_and_name(target)
-    # Creation may choose a new name if target already exists; use its returned
-    # path and preserve any existing project component.
-    root = await _create_node(client, parent=parent, op_type="baseCOMP", name=name, x=0, y=-700)
-
+async def _build_ten_output_library(client, root: str) -> dict[str, Any]:
     outputs: list[str] = []
     for index in range(PROJECT_COUNT):
         y = -index * 160
@@ -478,14 +473,37 @@ async def _performance_check(client, target: str) -> dict[str, Any]:
 
 
 async def _run_live_scratch_replay(client, target: str) -> dict[str, Any]:
-    built = await _build_ten_output_library(client, target)
+    parent, name = _parent_and_name(target)
+    # Record ownership before building children so partial builds are cleaned up.
+    # TD may rename a collision: only delete the path returned by creation.
+    root = await _create_node(client, parent=parent, op_type="baseCOMP", name=name, x=0, y=-700)
     try:
+        built = await _build_ten_output_library(client, root)
         return await _validate_live_scratch_replay(client, built)
     finally:
-        await _checked_request(client, "node/delete", {"path": built["root"]})
-        remaining = await _checked_request(client, "nodes", {"path": "/project1"})
-        if any(n.get("path") == built["root"] for n in remaining.get("nodes", [])):
+        await _cleanup_scratch_root(client, root)
+
+
+async def _cleanup_scratch_root(client, root: str) -> None:
+    await _checked_request(client, "node/delete", {"path": root})
+    parent, _ = _parent_and_name(root)
+    offset = 0
+    while True:
+        remaining = await _checked_request(client, "nodes", {"path": parent, "offset": offset, "limit": 100})
+        nodes = remaining.get("nodes")
+        if (
+            not isinstance(nodes, list)
+            or not isinstance(remaining.get("has_more"), bool)
+            or any(not isinstance(n, dict) or not n.get("path") for n in nodes)
+        ):
+            raise RuntimeError("Incident scratch cleanup readback is malformed")
+        if any(n["path"] == root for n in nodes):
             raise RuntimeError("Incident scratch cleanup could not be verified")
+        if not remaining["has_more"]:
+            return
+        if not nodes:
+            raise RuntimeError("Incident scratch cleanup readback made no progress")
+        offset += len(nodes)
 
 
 async def _validate_live_scratch_replay(client, built: dict[str, Any]) -> dict[str, Any]:

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Clean up owned incident-replay scratch roots after partial construction, validation failure, or cancellation; verify removal in the actual parent across every results page and reject malformed readbacks.
+- Require fresh target metrics and advancing frame evidence for every performance sample. Match operator paths on component boundaries so similarly named siblings cannot satisfy a target's measurements.
+- Serialize release-asset rebuilds per tag and stop rebuilding binary bundles when release notes are edited. Generate checksums in a fresh temporary directory.
+
+These post-2.6.1 review fixes are on `main`; published v2.6.1 artifacts and its tag are unchanged.
+
 
 ## 2.6.1 — 2026-11-12 — Windows live qualification
 
@@ -11,7 +19,6 @@
 - Generate release checksums from the final uploaded asset bytes, avoiding mismatches after CI rebuilds ZIP bundles.
 
 See [Windows qualification](docs/UPDATE_2_6_1.md).
-## Unreleased
 
 ## 2.6.0 — 2026-11-12
 
