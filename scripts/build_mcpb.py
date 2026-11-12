@@ -219,9 +219,11 @@ def main() -> int:
         npm_global_bin = str(Path.home() / ".npm-global" / "bin")
         env["PATH"] = f"{npm_global_bin}{os.pathsep}{env.get('PATH', '')}"
 
+        mcpb_command = shutil.which("mcpb", path=env["PATH"]) or "mcpb"
+
         try:
             subprocess.run(
-                ["mcpb", "validate", str(staging / "manifest.json")],
+                [mcpb_command, "validate", str(staging / "manifest.json")],
                 check=True,
                 env=env,
             )
@@ -235,7 +237,7 @@ def main() -> int:
         # Pack the staging dir into the .mcpb file.
         try:
             subprocess.run(
-                ["mcpb", "pack", str(staging), str(args.output)],
+                [mcpb_command, "pack", str(staging), str(args.output)],
                 check=True,
                 env=env,
             )
