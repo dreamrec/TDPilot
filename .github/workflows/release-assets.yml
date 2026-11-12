@@ -184,6 +184,7 @@ jobs:
       - name: Refresh manifest from final published assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
           TAG: ${{ steps.resolve.outputs.tag }}
         run: |
           mkdir -p /tmp/final-release-assets
