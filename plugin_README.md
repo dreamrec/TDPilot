@@ -6,7 +6,7 @@ Version 2.6 adds native atomic TD transactions with verified rollback (including
 DAT content), MCP SDK 2.3, TouchDesigner 2025.33230 support, bounded CHOP controls,
 and optional inspection/build tool profiles. Update both the runtime and
 `tdpilot.tox`, then restart your MCP client. See
-[upgrade and qualification notes](docs/UPDATE_2_6.md).
+[upgrade and qualification notes](https://github.com/dreamrec/TDPilot/blob/main/docs/UPDATE_2_6.md).
 
 The 1.6 observability layer remains: `_read_journal` hints, a 200-entry `activity_log` ring buffer mirrored into `/local/mcp_server/activity_log`, and `td_self_update` for syncing the `.tox` across repo, plugin cache, and `~/.tdpilot/`.
 

@@ -1,5 +1,6 @@
 # Changelog
 
+## Unreleased
 
 ## 2.6.0 — 2026-11-12
 
@@ -10,9 +11,9 @@
 - Add live atomic rollback and modern/legacy MCP qualification scripts, plus regression tests for cancellation, retry identity, state interference and SDK resource handling.
 
 
-## Unreleased
-
 ## 2.5.0 - 2026-11-12 — TD 2025.33230 and Safer Validation
+
+These baseline improvements are distributed in the 2.6.0 release.
 
 - Updated runtime and development dependencies with patched transitive floors;
   Python 3.11+ is now required. MCP uses the maintained 1.30 line pending the

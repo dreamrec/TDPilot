@@ -41,7 +41,7 @@ research and links to official SDK documentation.
 
 Reports are in `reports/atomic-sdk2-2026-11-12/` (local, ignored by Git).
 
-- Full suite: **2,307 passed**, plus the subsequent focused release-gate tests.
+- Full suite: **2,308 passed** on the final source.
 - Python 3.11 isolated checks: **50 passed**; primary suite uses Python 3.12.
 - Golden evaluation: **102 cases passed**.
 - Native TD atomic qualification: **29 checks passed**, including exact mixed-state rollback, deliberate mid-patch failure, failed validation, macro expansion, duplicate requests, lost responses and intervening-edit refusal.
