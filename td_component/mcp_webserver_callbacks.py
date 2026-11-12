@@ -27,7 +27,7 @@ import traceback
 # Configuration
 # ─────────────────────────────────────────────────────────────
 
-API_VERSION = "2.6.1"
+API_VERSION = "2.6.2"
 SCREENSHOT_TEMP_PATH = os.path.join(os.environ.get('TEMP', os.environ.get('TMP', '/tmp')), 'td_mcp_screenshot.jpg')
 
 # Auth + policy env is read at CALL TIME, not import time — otherwise TD's
@@ -2460,6 +2460,10 @@ def handle_cooking_info(body):
                 'cookTime': n.cookTime if hasattr(n, 'cookTime') else 0,
                 'cpuCookTime': n.cpuCookTime if hasattr(n, 'cpuCookTime') else 0,
                 'cookFrame': n.cookFrame if hasattr(n, 'cookFrame') else 0,
+                # Local cookFrame wraps/seeks with a COMP timeline. Absolute
+                # cook time is the freshness clock for multi-frame sampling.
+                'cookAbsFrame': getattr(n, 'cookAbsFrame', None),
+                'totalCooks': getattr(n, 'totalCooks', None),
             })
         except Exception:
             # Skip nodes that can't provide cook info (e.g., locked or internal)
@@ -3775,26 +3779,34 @@ def handle_analyze_frame(body):
 import hashlib
 import uuid
 
-# TD may re-evaluate callback globals on each HTTP request. Store the receipt
-# ledger on the callback DAT, but explicitly exclude it from saved projects.
-try:
-    # fetch() registers a dependency on this DAT's own storage and causes a
-    # self-cook loop when TD evaluates the WebServer callback. Read the dict
-    # directly; receipt mutations must not participate in the cook graph.
-    _atomic_state = me.storage.get('_tdpilot_atomic_v1')
-    if _atomic_state is None:
-        _atomic_state = {'session': str(uuid.uuid4()), 'receipts': {}}
-        me.storage['_tdpilot_atomic_v1'] = _atomic_state
-        me.storeStartupValue('_tdpilot_atomic_v1', None)
-except NameError:  # ordinary Python unit-test import
-    _atomic_state = {'session': str(uuid.uuid4()), 'receipts': {}}
-_ATOMIC_SESSION = _atomic_state['session']
-_ATOMIC_RECEIPTS = _atomic_state['receipts']
+# Do not read ANY TD object at module scope. Even me.storage registers a
+# dependency during DAT compilation. Initialize from an
+# actual request instead, retaining receipts across code reloads on the same
+# DAT and excluding them from saved projects.
+_ATOMIC_SESSION = None
+_ATOMIC_RECEIPTS = None
 _ATOMIC_MAX_OPS = 512
 _ATOMIC_MAX_BYTES = 8 * 1024 * 1024
 
 
+def _ensure_atomic_state():
+    global _ATOMIC_SESSION, _ATOMIC_RECEIPTS
+    if _ATOMIC_SESSION is not None:
+        return
+    try:
+        state = me.storage.get('_tdpilot_atomic_v1')
+        if state is None:
+            state = {'session': str(uuid.uuid4()), 'receipts': {}}
+            me.storage['_tdpilot_atomic_v1'] = state
+            me.storeStartupValue('_tdpilot_atomic_v1', None)
+    except NameError:  # ordinary Python unit-test import
+        state = {'session': str(uuid.uuid4()), 'receipts': {}}
+    _ATOMIC_SESSION = state['session']
+    _ATOMIC_RECEIPTS = state['receipts']
+
+
 def handle_patch_status(body):
+    _ensure_atomic_state()
     key = body.get('request_id')
     if key:
         record = _ATOMIC_RECEIPTS.get(key)
@@ -4048,6 +4060,7 @@ def _atomic_rollback(record, immediate=False):
 
 
 def handle_patch_rollback(body):
+    _ensure_atomic_state()
     if body.get('session') != _ATOMIC_SESSION:
         return {'ok': False, 'reason': 'Transaction session changed; undo refused'}
     record = _ATOMIC_RECEIPTS.get(body.get('request_id'))
@@ -4057,6 +4070,7 @@ def handle_patch_rollback(body):
 
 
 def handle_patch_apply(body):
+    _ensure_atomic_state()
     if body.get('session') != _ATOMIC_SESSION:
         return {'error': 'Atomic session changed; reconnect and inspect before resubmitting'}
     request_id = body.get('request_id')

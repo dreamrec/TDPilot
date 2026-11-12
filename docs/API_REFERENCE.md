@@ -2,7 +2,7 @@
 
 <!-- BEGIN GENERATED: tool-reference (scripts/gen_api_reference.py) -->
 
-> TDPilot v2.6.1 | 114 tools | This region is **generated** from the MCPServer registry by `scripts/gen_api_reference.py` — do not edit it by hand. Regenerate with `uv run python scripts/gen_api_reference.py`; CI enforces freshness with `--check`. Sections group tools by their `src/td_mcp/registry/` module of origin.
+> TDPilot v2.6.2 | 114 tools | This region is **generated** from the MCPServer registry by `scripts/gen_api_reference.py` — do not edit it by hand. Regenerate with `uv run python scripts/gen_api_reference.py`; CI enforces freshness with `--check`. Sections group tools by their `src/td_mcp/registry/` module of origin.
 
 ## Table of Contents
 

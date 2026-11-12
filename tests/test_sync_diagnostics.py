@@ -63,6 +63,37 @@ def test_sync_diagnose_process_parser_ignores_non_tdpilot_python_process_with_pl
     assert _process_root_from_command(command) is None
 
 
+@pytest.mark.parametrize(
+    "command",
+    [
+        "uv run --directory /workspace/DREAM AI/TDPilot tdpilot",
+        "uv run --frozen --directory /workspace/DREAM AI/TDPilot tdpilot",
+        'uv run --directory "/workspace/DREAM AI/TDPilot" tdpilot',
+        "/opt/tools/uv run --directory /workspace/DREAM AI/TDPilot tdpilot",
+        "/workspace/DREAM AI/TDPilot/.venv/bin/python3 /workspace/DREAM AI/TDPilot/.venv/bin/tdpilot",
+        "/opt/python/bin/python3.12 /workspace/DREAM AI/TDPilot/.venv/bin/tdpilot",
+        "/workspace/DREAM AI/TDPilot/.venv/bin/tdpilot",
+    ],
+)
+def test_sync_process_roots_preserve_spaces(command):
+    from pathlib import Path
+
+    from td_mcp.sync_diagnostics import _process_root_from_command
+
+    assert _process_root_from_command(command) == Path("/workspace/DREAM AI/TDPilot")
+
+
+def test_sync_does_not_double_count_client_wrappers():
+    from td_mcp.sync_diagnostics import _process_root_from_command
+
+    assert (
+        _process_root_from_command(
+            "/Applications/Claude.app/Contents/Helpers/disclaimer /opt/bin/uv run --directory /tmp/TDPilot tdpilot"
+        )
+        is None
+    )
+
+
 @pytest.mark.asyncio
 async def test_sync_diagnose_reports_version_skew_and_redacts_secret(tmp_path, monkeypatch):
     from td_mcp.sync_diagnostics import diagnose_sync

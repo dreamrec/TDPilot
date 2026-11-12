@@ -38,6 +38,7 @@ _TOX_SOURCE_FILES = (
     "td_component/build_export_mcp_tox.py",
     "td_component/build_tdpilot_tox.py",
     "td_component/mcp_webserver_callbacks.py",
+    "td_component/http_dispatch.py",
     "td_component/event_emitter.py",
     "td_component/ws_callbacks.py",
     "td_component/tdpilot_startup.py",
@@ -434,7 +435,7 @@ def _reset_or_create_comp(parent, name):
     return existing
 
 
-def _populate_component(comp, callbacks_code, event_emitter_code, ws_callbacks_code, info_text, state_cache_code=""):
+def _populate_component(comp, callbacks_code, event_emitter_code, ws_callbacks_code, info_text, state_cache_code="", http_dispatch_code=""):
     """Populate the mcp_server baseCOMP with its child DATs.
 
     v1.6.7: ``state_cache_code`` is the new positional-with-default arg.
@@ -457,6 +458,7 @@ def _populate_component(comp, callbacks_code, event_emitter_code, ws_callbacks_c
 
     webserver = _create_with_fallback(comp, ("webserverDAT",), "webserver")
     callbacks = _create_with_fallback(comp, ("textDAT",), "callbacks")
+    dispatch = _create_with_fallback(comp, ("textDAT",), "http_dispatch") if http_dispatch_code else None
     ws_client = _create_with_fallback(comp, ("webSocketDAT", "websocketDAT"), "ws_client")
     ws_callbacks = _create_with_fallback(comp, ("textDAT",), "ws_callbacks")
     event_emitter = _create_with_fallback(comp, ("textDAT",), "event_emitter")
@@ -481,9 +483,12 @@ def _populate_component(comp, callbacks_code, event_emitter_code, ws_callbacks_c
     _set_first_par(webserver, ("localaddress",), WEB_BIND_ADDRESS)
     _set_first_par(webserver, ("port",), WEB_PORT)
     _set_first_par(webserver, ("active", "enable"), 1)
-    _set_first_par(webserver, ("callbacks", "callbackdat", "callback"), "callbacks")
+    _set_first_par(webserver, ("callbacks", "callbackdat", "callback"), "http_dispatch" if dispatch is not None else "callbacks")
 
     callbacks.text = callbacks_code
+    if dispatch is not None:
+        dispatch.text = http_dispatch_code
+        _set_first_par(dispatch, ("language",), "python")
     ws_callbacks.text = ws_callbacks_code
     event_emitter.text = event_emitter_code
     info.text = info_text
@@ -547,6 +552,7 @@ def build_and_export():
     # writer down with it. This read closes the loop so the DAT ships
     # with a compilable module body.
     state_cache_code = _read_repo_file(repo_root, "td_component/state_cache.py")
+    http_dispatch_code = _read_repo_file(repo_root, "td_component/http_dispatch.py")
     export_path = _resolve_export_path(repo_root)
     info_text = _build_info_text(repo_root, export_path)
 
@@ -572,6 +578,7 @@ def build_and_export():
             ws_callbacks_code,
             info_text,
             state_cache_code,
+            http_dispatch_code,
         )
         export_comp.save(export_path)
         _save_versioned_export(repo_root, export_comp, export_path)
@@ -592,6 +599,7 @@ def build_and_export():
             ws_callbacks_code,
             info_text,
             state_cache_code,
+            http_dispatch_code,
         )
         print("[TDPilot] Installed {}".format(installed_comp.path))
 

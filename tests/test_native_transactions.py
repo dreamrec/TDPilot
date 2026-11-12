@@ -53,7 +53,7 @@ def native(monkeypatch):
     monkeypatch.setattr(module, "_atomic_capture", lambda watch: copy.deepcopy(graph))
     monkeypatch.setattr(module, "_atomic_op", apply)
     body = {
-        "session": module._ATOMIC_SESSION,
+        "session": module.handle_patch_status({})["session"],
         "request_id": "test-id",
         "target_root": "/test",
         "operations": [{"value": 8}],
@@ -210,8 +210,15 @@ def test_after_capture_failure_still_undoes_owned_block_in_same_callback(native,
 
 def test_receipt_storage_does_not_register_self_cook_dependency():
     class CallbackDAT:
-        storage = {}
-        startup = {}
+        def __init__(self):
+            self.data = {}
+            self.startup = {}
+            self.storage_reads = 0
+
+        @property
+        def storage(self):
+            self.storage_reads += 1
+            return self.data
 
         def fetch(self, *args, **kwargs):
             raise AssertionError("fetch() creates a callback DAT self-dependency")
@@ -222,7 +229,16 @@ def test_receipt_storage_does_not_register_self_cook_dependency():
     dat = CallbackDAT()
     namespace = {"me": dat}
     exec(compile(PATH.read_text(), str(PATH), "exec"), namespace)
-    session = namespace["_ATOMIC_SESSION"]
+    # Even direct storage reads at module scope register TD dependencies and
+    # cause this large callback module to recompile on later requests.
+    assert dat.storage_reads == 0
+    session = namespace["handle_patch_status"]({})["session"]
+    namespace["_ATOMIC_RECEIPTS"]["preserved"] = {"response": {"status": "clean"}}
+    reads = dat.storage_reads
     exec(compile(PATH.read_text(), str(PATH), "exec"), namespace)
-    assert namespace["_ATOMIC_SESSION"] == session
+    assert dat.storage_reads == reads
+    assert namespace["handle_patch_status"]({"request_id": "preserved"}) == {
+        "session": session,
+        "receipt": {"status": "clean"},
+    }
     assert dat.startup["_tdpilot_atomic_v1"] is None

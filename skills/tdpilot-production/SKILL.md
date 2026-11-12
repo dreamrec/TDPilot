@@ -1,12 +1,12 @@
 ---
 name: tdpilot-production
 description: >
-  Production-grade TouchDesigner MCP workflow for TDPilot v2.6.1 (114 tools):
+  Production-grade TouchDesigner MCP workflow for TDPilot v2.6.2 (114 tools):
   show-safe routing, bounded inspection, staged transactions, rollback,
   performance checks, preservation assertions, and evidence-based handoff.
 ---
 
-# TDPilot Production v2.6.1
+# TDPilot Production v2.6.2
 
 Use this skill in addition to `tdpilot-core` when work is show-critical,
 performance-sensitive, destructive, broad in scope, or explicitly requested as

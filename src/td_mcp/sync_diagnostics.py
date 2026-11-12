@@ -22,6 +22,7 @@ from td_mcp.auth_bootstrap import default_env_file
 
 _SOURCE_HASH_PATHS = (
     "td_component/mcp_webserver_callbacks.py",
+    "td_component/http_dispatch.py",
     "td_component/autostart.py",
     "td_component/tdpilot_startup.py",
     "td_component/build_export_mcp_tox.py",
@@ -349,20 +350,23 @@ def _process_env_secret_fingerprint(pid: str) -> str | None:
 
 
 def _process_root_from_command(command: str) -> Path | None:
-    directory_match = re.search(
-        r"(?:^|\s)(?:uv|/[^\s]+/uv)\s+run\s+--directory\s+([^\s]+)\s+tdpilot(?:\s|$)",
+    # ps on macOS flattens argv without quoting paths containing spaces. Anchor
+    # the executable and use the known launcher suffix as the boundary; a
+    # whitespace-only token regex turned "DREAM AI/..." into a different root.
+    # Anchoring also avoids counting Claude wrappers/JSON config as servers.
+    command = command.strip()
+    directory_match = re.match(
+        r"(?:uv|/[^\s]+/uv)\s+run\s+(?:--frozen\s+)?--directory\s+(.+?)\s+tdpilot(?:\s|$)",
         command,
     )
     if directory_match:
         return Path(directory_match.group(1).strip().strip("'\"")).expanduser()
-    venv_match = re.search(r"(\S+?)/(?:\.venv|venv)/bin/tdpilot\b", command)
-    if not venv_match:
-        venv_match = re.search(
-            r"(?:^|\s)\S+/(?:\.venv|venv)/bin/python\d*(?:\.\d+)?\s+(\S+?)/(?:\.venv|venv)/bin/tdpilot\b",
-            command,
-        )
+    venv_match = re.match(
+        r"(?:/[^\n]+?/bin/python\d*(?:\.\d+)?\s+)?(/[^\n]+?)/(?:\.venv|venv)/bin/tdpilot(?:\s|$)",
+        command,
+    )
     if venv_match:
-        return Path(venv_match.group(1)).expanduser()
+        return Path(venv_match.group(1).strip("'\"")).expanduser()
     return None
 
 

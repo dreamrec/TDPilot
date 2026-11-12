@@ -571,6 +571,7 @@ def _populate_tdpilot_comp(comp, repo_root, info_text):
     # inside mcp_server. Without this, the renderer's bootstrap silently
     # fails on every fresh loadTox (panel stays at TD's "Ctn" placeholder).
     state_cache_code = _legacy._read_repo_file(repo_root, "td_component/state_cache.py")
+    http_dispatch_code = _legacy._read_repo_file(repo_root, "td_component/http_dispatch.py")
     _legacy._populate_component(
         mcp_comp,
         callbacks_code,
@@ -578,6 +579,7 @@ def _populate_tdpilot_comp(comp, repo_root, info_text):
         ws_callbacks_code,
         info_text,
         state_cache_code=state_cache_code,
+        http_dispatch_code=http_dispatch_code,
     )
     try:
         mcp_comp.nodeX, mcp_comp.nodeY = 375, 0

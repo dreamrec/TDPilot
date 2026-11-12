@@ -134,10 +134,16 @@ class _TransactionalGeneratedCodeLiveClient(_SparseLiveClient):
                 "frame": self.perf_frame,
                 "stuck": [],
                 "nodes": [
-                    {"path": "/project1/tdpilot_gc_smoke_out", "cookTime": 4.5, "cookFrame": self.perf_frame},
+                    {
+                        "path": payload.get("path", "/project1") + "/tdpilot_gc_smoke_out",
+                        "cookTime": 4.5,
+                        "cookFrame": self.perf_frame,
+                    },
                     {"path": "/sys/internal", "cookTime": 18.0, "cookFrame": self.perf_frame},
                 ],
             }
+        if endpoint == "exec":
+            return {"success": True, "result": True}
         if endpoint == "analyze_frame":
             return {
                 "resolution": [16, 16],
@@ -781,6 +787,52 @@ async def test_live_smoke_transactional_generated_code_smoke_is_opt_in_and_clean
     assert smoke["cleanup"]["remaining_created_paths"] == []
     assert not any(ep == "project/lifecycle" and body.get("action") == "undo" for ep, body in client.calls)
     assert any(call[0] == "node/create" for call in client.calls)
+
+
+@pytest.mark.asyncio
+async def test_performance_qualifies_owned_fixture_before_cleanup_and_retains_idle_project():
+    class IdleProjectClient(_TransactionalGeneratedCodeLiveClient):
+        async def request(self, endpoint, params=None):
+            payload = params or {}
+            if endpoint == "cooking":
+                target = payload["path"]
+                if target == "/project1":
+                    self.calls.append((endpoint, payload))
+                    return {"frame": 10000, "nodes": [], "stuck": []}
+                assert target in self.created_paths, "Qualification must precede cleanup"
+            return await super().request(endpoint, params)
+
+    client = IdleProjectClient()
+    report = await build_live_smoke_report(
+        mode="live",
+        td_client=client,
+        card_index=_AllScenarioCards(),
+        run_transactional_generated_code=True,
+    )
+    assert report["performance_summary"]["ok"] is True
+    assert report["performance_summary"]["target_root"].startswith("/project1/")
+    assert report["project_performance_summary"]["ok"] is False
+    assert report["project_performance_summary"]["status"] == "missing_metrics"
+    assert not client.created_paths
+
+
+@pytest.mark.asyncio
+async def test_owned_performance_rejects_failed_force_cook(monkeypatch):
+    from td_mcp.brain import live_smoke
+
+    class FailedCookClient:
+        async def request(self, endpoint, params):
+            assert endpoint == "exec", "Do not accept cached timing after a failed cook"
+            return {"success": False, "result": True}
+
+    async def no_wait(_seconds):
+        pass
+
+    monkeypatch.setattr(live_smoke.asyncio, "sleep", no_wait)
+    report = await live_smoke._collect_owned_performance_summary(FailedCookClient(), "/project1/owned")
+    assert report["ok"] is False
+    assert report["status"] == "failed"
+    assert "did not cook successfully" in report["error"]
 
 
 @pytest.mark.asyncio

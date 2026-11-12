@@ -7,7 +7,7 @@
    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝
 ```
 
-# TDPilot Runtime v2.6.1
+# TDPilot Runtime v2.6.2
 
 [![CI](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dreamrec/TDPilot/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/tdpilot?label=npm)](https://www.npmjs.com/package/tdpilot)
@@ -86,7 +86,37 @@ npx tdpilot plugin-install
 
 Drag `~/.claude/plugins/cache/dreamrec-TDPilot/tdpilot/<version>/td_component/tdpilot.tox` into your TD `/local` container. Or paste the auto-setup Python block from [`docs/INSTALL_CLAUDE_PLUGIN.md`](docs/INSTALL_CLAUDE_PLUGIN.md) into the Textport (auto-detects the latest installed version).
 
-Using Claude Desktop, Cursor, Codex, or another MCP client? See [`docs/INSTALL_OTHER_CLIENTS.md`](docs/INSTALL_OTHER_CLIENTS.md) — one page per client, including the one-click `.mcpb` bundle for Claude Desktop. (Don't mix the Desktop and Claude Code flows on one machine.)
+Using Claude Desktop, Cursor, Codex, or another MCP client? See [`docs/INSTALL_OTHER_CLIENTS.md`](docs/INSTALL_OTHER_CLIENTS.md) — one page per client, including the one-click `.mcpb` bundle for Claude Desktop. Multiple clients can share one current runtime and the canonical authentication file; avoid duplicate entries for the same server within a client.
+
+### Install the current Git source
+
+For fixes on `main` that are newer than a published release, use the checkout
+itself for both the Python server and the component:
+
+```bash
+git clone https://github.com/dreamrec/TDPilot.git
+cd TDPilot
+uv sync --frozen
+```
+
+Drag **`td_component/tdpilot.tox`** from that checkout into TD's `/local`.
+Configure your MCP client to run `uv run --frozen --directory /absolute/path/to/TDPilot tdpilot`
+using separate command/argument fields, so paths containing spaces work. Set
+`TD_MCP_HOST=127.0.0.1`, `TD_MCP_PORT=9981`, `TD_MCP_REQUIRE_AUTH=1` and
+`TD_MCP_AUTOGENERATE_SECRET=1`; the component and server share the canonical
+`~/.tdpilot/.tdpilot.env` secret. Keep that file private and reuse it across
+clients. See the [client configuration examples](docs/INSTALL_OTHER_CLIENTS.md).
+
+After loading the component, run `uv run --frozen tdpilot doctor` and
+`uv run --frozen python scripts/diagnose_live_sync.py --live --pretty`.
+Reconnect existing TDPilot client sessions after an update: changing files on
+disk does not replace Python code already loaded in a running server. Avoid
+`npx tdpilot update` when intentionally testing a newer source commit; that
+command selects the published release tag.
+
+Version 2.6.2 adds a cached HTTP router and timeline-wrap-safe performance
+sampling. See [the update notes](docs/UPDATE_2_6_2.md) and
+[reproducible live validation](docs/VALIDATION.md).
 
 ## Documentation
 
@@ -147,6 +177,8 @@ You don't need all 114 tools. Start with these and expand as needed:
 Everything else (vision, streaming, optimization, planning, TD2025 inspection) builds on top of this core.
 
 ## Latest Release
+
+**v2.6.2** — [Faster HTTP dispatch, timeline wrapping, and reproducible Git installs](docs/UPDATE_2_6_2.md)
 
 **v2.6.1** — [Windows RTX qualification and reliable live release checks](https://github.com/dreamrec/TDPilot/releases/tag/v2.6.1)
 

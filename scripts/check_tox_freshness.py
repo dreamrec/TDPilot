@@ -30,6 +30,7 @@ SOURCE_FILES = (
     "td_component/build_export_mcp_tox.py",
     "td_component/build_tdpilot_tox.py",
     "td_component/mcp_webserver_callbacks.py",
+    "td_component/http_dispatch.py",
     "td_component/event_emitter.py",
     "td_component/ws_callbacks.py",
     "td_component/tdpilot_startup.py",

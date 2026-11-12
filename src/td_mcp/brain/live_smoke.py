@@ -462,6 +462,7 @@ async def build_live_smoke_report(
 
     transactional_smoke = _transactional_generated_code_not_run()
     performance_summary = _performance_not_run()
+    project_performance_summary = _performance_not_run()
     try:
         scenario_reports = []
         for scenario in scenarios:
@@ -476,7 +477,11 @@ async def build_live_smoke_report(
             )
         if mode == "live" and run_transactional_generated_code:
             transactional_smoke = await _run_transactional_generated_code_smoke(client)
-            performance_summary = await _collect_performance_summary(client, target_root="/project1")
+            performance_summary = transactional_smoke.get("performance_summary", _performance_not_run())
+            # Retain passive project evidence separately. An empty/default or
+            # intentionally idle user project cannot qualify TDPilot's workload;
+            # the release measurement belongs to the owned fixture before cleanup.
+            project_performance_summary = await _collect_performance_summary(client, target_root="/project1")
     finally:
         if client_to_close is not None:
             await client_to_close.close()
@@ -510,6 +515,7 @@ async def build_live_smoke_report(
             "visual_quality_summary": _visual_quality_summary(transactional_smoke),
             "panel_interaction_results": _panel_interactions_not_run(),
             "performance_summary": performance_summary,
+            "project_performance_summary": project_performance_summary,
             "incident_replay": _incident_replay_not_run(),
             "generated_code_summary": _generated_code_summary(scenario_reports),
             "transactional_generated_code_smoke": transactional_smoke,
@@ -799,6 +805,8 @@ async def _run_transactional_generated_code_smoke(td_client) -> dict[str, Any]:
         owned_root = confirmed
         report["mutated_td"] = True
         report = await _execute_generated_code_smoke(td_client, owned_root)
+        if report.get("ok"):
+            report["performance_summary"] = await _collect_owned_performance_summary(td_client, owned_root)
     except Exception as exc:  # noqa: BLE001
         report["error"] = str(exc)
     finally:
@@ -1273,6 +1281,28 @@ _PERF_STEADY_SAMPLES = 5
 _PERF_SAMPLE_INTERVAL_S = 0.5
 
 
+async def _collect_owned_performance_summary(td_client, target_root: str) -> dict[str, Any]:
+    """Measure an already-owned scratch fixture without forcing user callbacks."""
+
+    class OwnedFixtureClient:
+        async def request(self, endpoint, body):
+            code = (
+                f"nodes = op({target_root!r}).findChildren()\n"
+                "for node in nodes:\n"
+                "    if node.family == 'TOP':\n"
+                "        node.cook(force=True)\n"
+                "__result__ = True\n"
+            )
+            prepared = await td_client.request("exec", {"code": code, "exec_mode": "restricted"})
+            if not prepared.get("success") or prepared.get("result") is not True:
+                raise RuntimeError("Owned performance fixture did not cook successfully")
+            return await td_client.request(endpoint, body)
+
+    result = await _collect_performance_summary(OwnedFixtureClient(), target_root=target_root)
+    result["measurement_scope"] = "owned fixture per-operator CPU cook time; not whole-show FPS"
+    return result
+
+
 async def _collect_performance_summary(
     td_client,
     *,
@@ -1282,7 +1312,8 @@ async def _collect_performance_summary(
 ) -> dict[str, Any]:
     samples: list[dict[str, Any]] = []
     frames: list[int] = []
-    last_cooks: dict[str, float] = {}
+    last_cooks: dict[str, tuple[str, float]] = {}
+    previous_sample_frame: int | None = None
     total_samples = 1 + max(1, steady_samples)  # warmup + steady window
     for index in range(total_samples):
         if index > 0 and sample_interval_s > 0:
@@ -1300,22 +1331,37 @@ async def _collect_performance_summary(
                 "error": str(exc),
             }
         sample = _cook_sample_summary(payload, sample_index=index)
+        frame_value = _sample_frame(payload)
         fresh = []
         for node in sample["nodes"]:
-            cook_frame = node.get("cook_frame")
+            # Absolute cook frames survive local timeline wrapping and seeks.
+            # Legacy components can still supply local frames, but must advance
+            # monotonically; a missing/invalid absolute field is not downgraded.
+            absolute = "cook_abs_frame" in node
+            clock = "absolute" if absolute else "local"
+            cook_frame = node.get("cook_abs_frame" if absolute else "cook_frame")
             previous = last_cooks.get(node["path"])
-            if isinstance(cook_frame, (int, float)):
-                last_cooks[node["path"]] = cook_frame
-                if index == 0 or (previous is not None and cook_frame > previous):
+            if _finite_nonnegative_number(cook_frame):
+                last_cooks[node["path"]] = (clock, cook_frame)
+                advanced = previous is not None and previous[0] == clock and cook_frame > previous[1]
+                in_window = not absolute or (
+                    frame_value is not None
+                    and cook_frame <= frame_value
+                    and (
+                        index == 0
+                        or (previous_sample_frame is not None and cook_frame > previous_sample_frame)
+                    )
+                )
+                if in_window and (index == 0 or advanced):
                     fresh.append(node)
         sample["stale_node_count"] = len(sample["nodes"]) - len(fresh)
         sample["nodes"] = fresh
         sample["node_count"] = len(fresh)
         sample["max_ms"] = max((node["cook_ms"] for node in fresh), default=None)
         samples.append(sample)
-        frame_value = _sample_frame(payload)
         if frame_value is not None:
             frames.append(frame_value)
+        previous_sample_frame = frame_value
 
     # Frame-advance evidence: absTime.frame must move across the sampling window,
     # otherwise the timeline is paused/frozen and the "steady state" numbers are
@@ -1370,6 +1416,8 @@ async def _collect_performance_summary(
         "frames_advanced": frames_advanced,
         "frame_advance_ok": frame_advance_ok,
         "samples": samples,
+        "target_root": target_root,
+        "freshness_clock": "cookAbsFrame when available; monotonic cookFrame for legacy components",
     }
 
 
@@ -1403,6 +1451,7 @@ def _cook_sample_summary(payload: Any, *, sample_index: int) -> dict[str, Any]:
                 "path": str(node.get("path") or node.get("node") or ""),
                 "cook_ms": cook_ms,
                 "cook_frame": node.get("cookFrame"),
+                **({"cook_abs_frame": node["cookAbsFrame"]} if "cookAbsFrame" in node else {}),
             }
         )
     max_ms = max((node["cook_ms"] for node in normalized_nodes), default=None)
@@ -1440,15 +1489,27 @@ def _cook_nodes(payload: Any) -> list[Any]:
 
 
 def _node_cook_ms(node: dict[str, Any]) -> float | None:
-    for key in ("cookTime", "cook_time", "cook_ms", "cpuCookTime", "cpu_cook_time"):
+    for key in ("cpuCookTime", "cpu_cook_time", "cookTime", "cook_time", "cook_ms"):
         value = node.get(key)
         if value is None:
             continue
         try:
-            return float(value)
+            if isinstance(value, bool):
+                return None
+            number = float(value)
+            return number if _finite_nonnegative_number(number) else None
         except (TypeError, ValueError):
             continue
     return None
+
+
+def _finite_nonnegative_number(value: Any) -> bool:
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(value)
+        and value >= 0
+    )
 
 
 def _incident_replay_not_run() -> dict[str, Any]:
