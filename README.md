@@ -182,7 +182,7 @@ Everything else (vision, streaming, optimization, planning, TD2025 inspection) b
 
 The cached router removes repeated callback compilation. Absolute cook timestamps
 keep validation correct across timeline loops and backward seeks. Fresh Mac
-qualification passed **2,346 tests** and **215/215 complete release checks** in
+qualification passed **2,348 tests** and **215/215 complete release checks** in
 TouchDesigner 2025.33230, including rollback, visuals, panels and cleanup.
 
 **v2.6.1** — [Windows RTX qualification and reliable live release checks](https://github.com/dreamrec/TDPilot/releases/tag/v2.6.1)

@@ -9,6 +9,21 @@ import td_mcp.tool_registry as _registry
 from td_mcp.registry import tools_meta
 
 
+@pytest.mark.parametrize("source_mtime,stale", [(1000.8, False), (1001.0, True)])
+def test_process_age_respects_ps_one_second_precision(monkeypatch, source_mtime, stale):
+    from td_mcp import sync_diagnostics as sync
+
+    monkeypatch.setattr(
+        sync.subprocess, "check_output", lambda *a, **k: "123 uv run --directory /tmp/tdpilot tdpilot"
+    )
+    monkeypatch.setattr(sync, "_process_start_epoch", lambda pid: 1000.0)
+    monkeypatch.setattr(sync, "_source_latest_mtime", lambda root: source_mtime)
+    monkeypatch.setattr(sync, "_process_env_secret_fingerprint", lambda pid: None)
+    rows = sync._running_mcp_process_rows()
+    assert len(rows) == 1
+    assert rows[0]["stale_source"] is stale
+
+
 class _SkewedClient:
     async def request(self, endpoint, body=None):
         if endpoint == "health":

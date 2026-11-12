@@ -410,8 +410,12 @@ def _running_mcp_process_rows() -> list[dict[str, Any]]:
                 "process_secret_fingerprint": _process_env_secret_fingerprint(pid),
                 "started_at_epoch": started_at,
                 "source_latest_mtime_epoch": latest_mtime,
+                # ps lstart truncates start time to whole seconds. A file
+                # unpacked before launch within that same second is not proof
+                # that the running process predates it. Only flag an update
+                # after the entire possible process-start interval.
                 "stale_source": bool(
-                    started_at is not None and latest_mtime is not None and latest_mtime > started_at
+                    started_at is not None and latest_mtime is not None and latest_mtime >= started_at + 1.0
                 ),
             }
         )

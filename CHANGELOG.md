@@ -9,6 +9,7 @@
 - Measure fresh cooks with absolute frame timestamps so timeline loops and backward seeks cannot invalidate live measurements. Reject non-finite, negative and boolean timing values and samples outside their interval.
 - Qualify performance in an owned generated-code fixture before cleanup. Retain passive project measurements separately, so an empty or idle user project cannot be mistaken for a tested workload. Incident fixture and panel validation remain required.
 - Resolve running-server checkout paths containing spaces and avoid counting client wrappers as separate MCP servers.
+- Respect the one-second precision of process start timestamps, avoiding false stale-process warnings immediately after unpacking an installation while still detecting provably later source updates.
 - Document reproducible Git-source setup, canonical auth reuse, reconnect requirements and strict live validation. Keep the 114-tool MCP surface unchanged.
 - Include every source-fingerprint file in plugin and MCPB downloads so their sync diagnostics agree with the identical Git-source installation; verify both archive layouts in regression tests.
 
@@ -18,7 +19,7 @@
 
 These post-2.6.1 review fixes are on `main`; published v2.6.1 artifacts and its tag are unchanged.
 
-Mac qualification: 2,346 tests and all 215 complete release checks passed in
+Mac qualification: 2,348 tests and all 215 complete release checks passed in
 TouchDesigner 2025.33230. See [2.6.2 update notes](docs/UPDATE_2_6_2.md) for scope,
 timing, rollback and installation evidence.
 
