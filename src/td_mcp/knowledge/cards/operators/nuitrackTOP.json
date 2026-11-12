@@ -1,0 +1,47 @@
+{
+  "card_type": "operator",
+  "op_type": "nuitrackTOP",
+  "family": "TOP",
+  "display_name": "Nuitrack TOP",
+  "docs_url": "https://docs.derivative.ca/Nuitrack_TOP",
+  "summary": "Outputs depth, color, player masks or XYZ point-cloud images from a Nuitrack sensor.",
+  "key_params": [
+    {
+      "name": "image",
+      "type": "Menu",
+      "note": "depth, color, playerindex or pointcloud."
+    },
+    {
+      "name": "sensor",
+      "type": "Menu",
+      "note": "Select sensor."
+    },
+    {
+      "name": "rawresolution",
+      "type": "Toggle",
+      "note": "Use full sensor resolution."
+    },
+    {
+      "name": "restart",
+      "type": "Pulse",
+      "note": "Restart sensor."
+    }
+  ],
+  "key_concepts": [
+    "Multiple TOPs can expose different images from one sensor.",
+    "Depth values represent distance in meters."
+  ],
+  "common_gotchas": [
+    "Requires Windows, supported hardware and a separate Nuitrack license.",
+    "Player masks use 0.1 for player one, 0.2 for player two.",
+    "Point-cloud pixels encode XYZ, not ordinary display color."
+  ],
+  "related_snippets": [
+    "Nuitrack_TOP_snippets"
+  ],
+  "build_relevance": "2025.33230+",
+  "last_verified": "2026-11-12",
+  "platform_notes": [
+    "Windows only; hardware tracking remains unverified without a licensed sensor."
+  ]
+}

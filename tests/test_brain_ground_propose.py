@@ -147,9 +147,9 @@ def test_ground_and_propose_are_registered_with_mcp_metadata():
         tool = by_name[name]
         assert tool.title
         assert tool.description.startswith("Use this when")
-        assert tool.annotations.readOnlyHint is True
-        assert tool.annotations.destructiveHint is False
-        assert tool.annotations.openWorldHint is True
+        assert tool.annotations.read_only_hint is True
+        assert tool.annotations.destructive_hint is False
+        assert tool.annotations.open_world_hint is True
         assert tool.meta["anthropic/alwaysLoad"] is True
 
 

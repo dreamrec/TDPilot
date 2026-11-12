@@ -205,8 +205,8 @@ def test_destructive_daily_driver_tools_carry_destructive_hint():
         tool = by_name.get(name)
         assert tool is not None, f"missing tool: {name}"
         assert tool.annotations is not None, f"{name} has no ToolAnnotations"
-        assert tool.annotations.destructiveHint is True, f"{name} must be destructiveHint=True"
-        assert tool.annotations.readOnlyHint is False, f"{name} must be readOnlyHint=False"
+        assert tool.annotations.destructive_hint is True, f"{name} must be destructive_hint=True"
+        assert tool.annotations.read_only_hint is False, f"{name} must be read_only_hint=False"
 
 
 def test_readonly_daily_driver_tools_carry_read_only_hint():
@@ -215,8 +215,8 @@ def test_readonly_daily_driver_tools_carry_read_only_hint():
         tool = by_name.get(name)
         assert tool is not None, f"missing tool: {name}"
         assert tool.annotations is not None, f"{name} has no ToolAnnotations"
-        assert tool.annotations.readOnlyHint is True, f"{name} must be readOnlyHint=True"
-        assert tool.annotations.destructiveHint is False, f"{name} must be destructiveHint=False"
+        assert tool.annotations.read_only_hint is True, f"{name} must be read_only_hint=True"
+        assert tool.annotations.destructive_hint is False, f"{name} must be destructive_hint=False"
 
 
 # ── Batch F1: full ToolAnnotations coverage + name-derived hint invariants ──
@@ -227,7 +227,7 @@ def test_readonly_daily_driver_tools_carry_read_only_hint():
 # read/destructive families below must classify correctly so hosts can decide
 # confirm-vs-auto-approve from the annotation alone.
 
-# Read-family name prefixes that must always be readOnlyHint=True.
+# Read-family name prefixes that must always be read_only_hint=True.
 _READONLY_NAME_PREFIXES = ("td_get_", "td_list_", "td_search_", "td_describe_")
 
 # Substrings (or the exact td_project_lifecycle) that mark a destructive tool.
@@ -243,28 +243,28 @@ def test_every_tool_carries_tool_annotations():
 
 
 def test_read_family_names_are_read_only():
-    """Every td_get_/td_list_/td_search_/td_describe_ tool is readOnlyHint=True."""
+    """Every td_get_/td_list_/td_search_/td_describe_ tool is read_only_hint=True."""
     tools = asyncio.run(server.mcp.list_tools())
     offenders = [
         t.name
         for t in tools
         if t.name.startswith(_READONLY_NAME_PREFIXES)
-        and not (t.annotations is not None and t.annotations.readOnlyHint is True)
+        and not (t.annotations is not None and t.annotations.read_only_hint is True)
     ]
-    assert not offenders, f"read-family tools not marked readOnlyHint=True: {offenders}"
+    assert not offenders, f"read-family tools not marked read_only_hint=True: {offenders}"
 
 
 def test_destructive_family_names_are_destructive():
     """Every *delete*/*disconnect*/*restore*/*emergency*/*clear* tool (plus
-    td_project_lifecycle) is destructiveHint=True."""
+    td_project_lifecycle) is destructive_hint=True."""
     tools = asyncio.run(server.mcp.list_tools())
     offenders = [
         t.name
         for t in tools
         if (any(m in t.name for m in _DESTRUCTIVE_NAME_MARKERS) or t.name == "td_project_lifecycle")
-        and not (t.annotations is not None and t.annotations.destructiveHint is True)
+        and not (t.annotations is not None and t.annotations.destructive_hint is True)
     ]
-    assert not offenders, f"destructive-family tools not marked destructiveHint=True: {offenders}"
+    assert not offenders, f"destructive-family tools not marked destructive_hint=True: {offenders}"
 
 
 # ── Batch F2: description lint ──
@@ -274,7 +274,7 @@ def test_every_tool_has_a_substantial_description():
     """Every registered tool exposes a description/docstring of >= 40 chars.
 
     Guards against terse one-liners that give a host/model too little to
-    disambiguate the tool. FastMCP resolves ``tool.description`` from the
+    disambiguate the tool. MCPServer resolves ``tool.description`` from the
     decorator ``description=`` when present, else the function docstring.
     """
     tools = asyncio.run(server.mcp.list_tools())

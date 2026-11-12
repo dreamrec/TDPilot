@@ -24,8 +24,8 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -44,7 +44,7 @@ from td_mcp.tool_registry import mcp  # noqa: E402
 @mcp.tool(
     name="td_get_nodes",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_get_nodes(
@@ -120,7 +120,7 @@ async def td_get_nodes(
 @mcp.tool(
     name="td_get_node_detail",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_get_node_detail(
@@ -242,7 +242,7 @@ async def td_get_node_detail(
 @mcp.tool(
     name="td_get_params",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_get_params(
@@ -286,7 +286,7 @@ async def td_get_params(
 @mcp.tool(
     name="td_set_params",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=True
+        read_only_hint=False, destructive_hint=True, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_set_params(
@@ -438,7 +438,7 @@ async def _resolve_existing_node_op_type(client: Any, path: str) -> str | None:
 @mcp.tool(
     name="td_create_node",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+        read_only_hint=False, destructive_hint=True, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_create_node(
@@ -541,7 +541,7 @@ async def td_create_node(
 @mcp.tool(
     name="td_delete_node",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+        read_only_hint=False, destructive_hint=True, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_delete_node(
@@ -557,7 +557,7 @@ async def td_delete_node(
     """Delete a node by its absolute path.
 
     v1.4.6 Bug A PoC: explicit-args signature instead of the old
-    ``params: DeleteNodeInput`` wrapper. FastMCP wraps ``params: Model``
+    ``params: DeleteNodeInput`` wrapper. MCPServer wraps ``params: Model``
     signatures under a ``params: {"$ref": ...}`` property that MCP clients
     collapse to an opaque ``{}``. Explicit args produce a flat schema the
     client can render directly — callers see ``path`` as a required
@@ -577,7 +577,7 @@ async def td_delete_node(
 @mcp.tool(
     name="td_copy_node",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+        read_only_hint=False, destructive_hint=True, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_copy_node(
@@ -616,7 +616,7 @@ async def td_copy_node(
 @mcp.tool(
     name="td_rename_node",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=True
+        read_only_hint=False, destructive_hint=True, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_rename_node(
@@ -643,7 +643,7 @@ async def td_rename_node(
 @mcp.tool(
     name="td_connect_nodes",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=True
+        read_only_hint=False, destructive_hint=True, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_connect_nodes(
@@ -691,7 +691,7 @@ async def td_connect_nodes(
 @mcp.tool(
     name="td_disconnect",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+        read_only_hint=False, destructive_hint=True, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_disconnect(
@@ -728,7 +728,7 @@ async def td_disconnect(
 @mcp.tool(
     name="td_get_connections",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_get_connections(

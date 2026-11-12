@@ -3032,3 +3032,19 @@ def test_verify_report_rejects_missing_provenance():
     assert result["ok"] is False
     assert result["conditions"]["provenance"] is False
     assert result["conditions"]["fresh"] is False
+
+
+def test_operator_coverage_uses_sampled_release_card_instead_of_stale_fixed_list():
+    report = {
+        "sampled_release_build": "2025.33230",
+        "results": [
+            {"op_type": name, "role": "release_new_op", "available": True}
+            for name in ["timefilterPOP", "nuitrackCHOP", "nuitrackTOP"]
+        ],
+    }
+    assert check_release_gates._latest_release_new_operator_coverage(report) == 1.0
+    report["results"].pop()
+    report["sampled_release_new_ops"] = ["timefilterPOP", "nuitrackCHOP"]
+    assert check_release_gates._latest_release_new_operator_coverage(report) == 0.0
+    report["sampled_release_build"] = "../../untrusted"
+    assert check_release_gates._latest_release_new_operator_coverage(report) == 0.0

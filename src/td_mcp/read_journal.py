@@ -33,7 +33,7 @@ Storage shape::
     }
 
 Module-level state is thread-safe via :class:`threading.Lock`. MCP tool
-handlers may be invoked from worker threads under the FastMCP transport.
+handlers may be invoked from worker threads under the MCPServer transport.
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
 """Lint-style regression: no MCP tool should reintroduce the opaque
 ``params: InputModel`` signature pattern that Bug A (v1.5.0) eliminated.
 
-Each tool's MCP schema (as emitted by FastMCP's tool manager) must have its
+Each tool's MCP schema (as emitted by MCPServer's tool manager) must have its
 argument properties at the top level, not wrapped in a single ``params`` key
 that points at a ``$ref`` (which MCP clients don't resolve — they collapse
 it to an opaque ``{}``).
@@ -38,10 +38,10 @@ def test_no_tool_has_opaque_params_wrapper():
     tools = asyncio.run(server.mcp.list_tools())
     offenders: list[str] = []
     for tool in tools:
-        schema = tool.inputSchema or {}
+        schema = tool.input_schema or {}
         props = schema.get("properties", {})
         # The distinctive Bug-A signature: properties has exactly one entry
-        # called "params" AND the schema references $defs (i.e., FastMCP
+        # called "params" AND the schema references $defs (i.e., MCPServer
         # wrapped a Pydantic model under a $ref).
         if list(props.keys()) == ["params"] and "$ref" in json.dumps(props):
             offenders.append(tool.name)
@@ -66,14 +66,14 @@ def test_every_tool_schema_has_field_descriptions():
     missing_descriptions: list[str] = []
 
     for tool in tools:
-        schema = tool.inputSchema or {}
+        schema = tool.input_schema or {}
         props = schema.get("properties", {})
         for field_name, field_spec in props.items():
             if not isinstance(field_spec, dict):
                 continue
             # $ref fields inherit descriptions from the referenced definition
             # (e.g. ResponseFormat enum, ParamBound sub-model). Skip them
-            # since FastMCP doesn't copy the sub-definition description up.
+            # since MCPServer doesn't copy the sub-definition description up.
             if "$ref" in field_spec:
                 continue
             if not field_spec.get("description"):

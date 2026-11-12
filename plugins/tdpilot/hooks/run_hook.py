@@ -15,6 +15,7 @@ except ModuleNotFoundError:  # Python 3.10 is still supported.
 
 
 _RUNTIME_ROOT_ENV_VARS = (
+    "TDPILOT_INSTALL_DIR",
     "TDPILOT_RUNTIME_ROOT",
     "TDPILOT_REPO_ROOT",
     "TD_MCP_REPO_ROOT",
@@ -82,6 +83,15 @@ def _candidate_roots() -> list[Path]:
         # trusted candidate; an unavailable optional vendor root must fail open.
         home = None
     if home is not None:
+        try:
+            pointer = home / ".tdpilot_path"
+            if pointer.is_file():
+                configured = Path(pointer.read_text(encoding="utf-8").strip()).expanduser()
+                if configured.is_absolute():
+                    roots.append(configured)
+        except (OSError, UnicodeError):
+            pass
+        roots.append(home / ".tdpilot")
         roots.append(home / ".codex" / "vendor_imports" / "TDPilot")
     return roots
 

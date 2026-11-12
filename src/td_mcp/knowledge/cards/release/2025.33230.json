@@ -1,0 +1,62 @@
+{
+  "card_type": "release",
+  "build": "2025.33230",
+  "release_date": "2026-09-01",
+  "highlights": [
+    "Time Filter POP for temporal attribute smoothing",
+    "Nuitrack skeleton and depth tracking on Windows",
+    "Native Gaussian Splat detection in Point File In POP",
+    "POP cooking, memory and expression fixes"
+  ],
+  "new_ops": [
+    {
+      "type": "timefilterPOP",
+      "family": "POP"
+    },
+    {
+      "type": "nuitrackCHOP",
+      "family": "CHOP"
+    },
+    {
+      "type": "nuitrackTOP",
+      "family": "TOP"
+    }
+  ],
+  "changed_ops": [
+    {
+      "type": "pointfileinPOP",
+      "change": "Detects Gaussian Splat formats and creates the required splat attributes."
+    },
+    {
+      "type": "deletePOP",
+      "change": "Supports bounding surfaces and 2D outlines from the second input."
+    },
+    {
+      "type": "groupPOP",
+      "change": "Supports bounding surfaces and 2D outlines from the second input."
+    },
+    {
+      "type": "skinPOP",
+      "change": "Adds Compute Point Normals."
+    },
+    {
+      "type": "neighborPOP",
+      "change": "Adds Random and Closest distribution choices with a performance tradeoff."
+    },
+    {
+      "type": "midiinCHOP",
+      "change": "Resample labels become Evenly Spaced Events and Preserve Timestamp Steps."
+    },
+    {
+      "type": "camerablendCOMP",
+      "change": "Default translation is now (0,0,0)."
+    }
+  ],
+  "migration_warnings": [
+    "Nuitrack requires Windows, supported sensor hardware and a separate Nuitrack license.",
+    "The gsLoader palette component was removed; use Point File In POP.",
+    "ST2110 Device CHOP no longer supports Deltacast devices.",
+    "Query live menu tokens; renamed labels are not necessarily new enum values."
+  ],
+  "docs_url": "https://docs.derivative.ca/Release_Notes/2025.30000"
+}

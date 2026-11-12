@@ -23,8 +23,8 @@ from __future__ import annotations
 import json
 from typing import Annotated, Any
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -36,7 +36,7 @@ from td_mcp.tool_registry import mcp  # noqa: E402
 @mcp.tool(
     name="td_python_env_status",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_python_env_status(ctx: Context) -> dict[str, Any]:
@@ -85,7 +85,7 @@ async def td_python_env_status(ctx: Context) -> dict[str, Any]:
 @mcp.tool(
     name="td_threading_status",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_threading_status(ctx: Context) -> dict[str, Any]:
@@ -133,7 +133,7 @@ async def td_threading_status(ctx: Context) -> dict[str, Any]:
 @mcp.tool(
     name="td_logger_status",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_logger_status(ctx: Context) -> dict[str, Any]:
@@ -179,7 +179,7 @@ async def td_logger_status(ctx: Context) -> dict[str, Any]:
 @mcp.tool(
     name="td_tdresources_inspect",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_tdresources_inspect(
@@ -246,7 +246,7 @@ async def td_tdresources_inspect(
 @mcp.tool(
     name="td_component_standardize",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=False, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_component_standardize(
@@ -342,7 +342,7 @@ async def td_component_standardize(
 @mcp.tool(
     name="td_color_pipeline",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_color_pipeline(ctx: Context) -> dict[str, Any]:

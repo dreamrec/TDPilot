@@ -124,6 +124,34 @@ async def test_graph_existence_and_runtime_binding_readback_use_live_endpoints()
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "actual,passes",
+    [
+        ('op("/project1/audio_out")[ "low" ]', True),
+        ("op('/project1/audio_out')['low'] * 0", False),
+        ("0 # op('/project1/audio_out')['low']", False),
+        ("op('/project1/audio_out')['high']", False),
+        ("broken(", False),
+    ],
+)
+async def test_binding_readback_checks_expression_structure(actual, passes):
+    contract = _contract(
+        runtime_assertions=[
+            _assertion(
+                assertion_id="binding",
+                kind="binding_readback",
+                target="/project1/level1",
+                probe="param_query",
+                expected={"param": "opacity", "expr": "op('/project1/audio_out')['low']"},
+            )
+        ]
+    )
+    client = FakeTDClient({"node/params": {"parameters": {"opacity": {"expr": actual}}}})
+    report = await validate_contract(client, contract)
+    assert report.ok is passes
+
+
+@pytest.mark.asyncio
 async def test_black_feedback_and_static_motion_emit_repair_specific_failure_codes():
     contract = _contract(
         visual_assertions=[

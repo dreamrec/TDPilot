@@ -35,7 +35,7 @@ MIN_VALIDATION_CHECKS_PER_CASE = 6
 # default-gray, zero-param plans.
 MIN_PARAM_VALUE_COVERAGE = 0.70
 # Golden cases that must assert concrete expected_param_values on their plans.
-MIN_EXPECTED_PARAM_VALUE_CASES = 10
+MIN_EXPECTED_PARAM_VALUE_CASES = 20
 
 
 class StaticEvalTDClient:

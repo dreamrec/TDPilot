@@ -9,6 +9,7 @@ live probe.  Missing endpoints and malformed probe payloads are reported as
 
 from __future__ import annotations
 
+import ast
 import json
 import math
 from dataclasses import dataclass
@@ -345,7 +346,7 @@ async def _probe_parameter(session: _ReadSession, assertion: ValidationAssertion
             passed = True
         else:
             actual = expressions[0]
-            passed = any(expr == expected_expr or expected_expr in expr for expr in expressions)
+            passed = any(_expressions_match(expr, expected_expr) for expr in expressions)
         return _evaluated(
             passed,
             actual,
@@ -362,6 +363,20 @@ async def _probe_parameter(session: _ReadSession, assertion: ValidationAssertion
     else:
         actual = {name: _parameter_value(entry) for name, entry in parameters.items()}
     return _evaluated(_compare(actual, assertion.comparator, assertion.expected), actual, endpoint, assertion)
+
+
+def _expressions_match(actual: str, expected: str) -> bool:
+    """Compare Python structure without executing it or accepting substrings.
+
+    TD may normalize whitespace/quotes. A wrapper such as ``expected * 0``
+    changes behavior and must never count as successful binding readback.
+    """
+    try:
+        return ast.dump(ast.parse(actual.strip(), mode="eval")) == ast.dump(
+            ast.parse(expected.strip(), mode="eval")
+        )
+    except (SyntaxError, ValueError, RecursionError):
+        return False
 
 
 async def _probe_cook(session: _ReadSession, assertion: ValidationAssertion) -> _ProbeOutcome:

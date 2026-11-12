@@ -1,7 +1,45 @@
 # Changelog
 
 
+## 2.6.0 — 2026-11-12
+
+- Execute typed patch operations in one native TouchDesigner callback and one owned undo block. Macros and annotations compile into the same packet.
+- Add exact before/after rollback verification, explicit DAT text/table undo/redo, session-bound receipts, duplicate-request protection, and refusal to undo intervening changes.
+- Resolve lost responses and cancelled requests through their original receipt with bounded recovery. Old TD components fail closed with an upgrade requirement.
+- Migrate to MCP SDK 2.3.0: explicit batch Context, snake_case protocol models, server version reporting, transport configuration and resource subscriptions. Preserve the 114-tool surface and optional profiles.
+- Add live atomic rollback and modern/legacy MCP qualification scripts, plus regression tests for cancellation, retry identity, state interference and SDK resource handling.
+
+
 ## Unreleased
+
+## 2.5.0 - 2026-11-12 — TD 2025.33230 and Safer Validation
+
+- Updated runtime and development dependencies with patched transitive floors;
+  Python 3.11+ is now required. MCP uses the maintained 1.30 line pending the
+  separate SDK v2 protocol migration.
+- Added the exact TD 2025.33230 release card, Time Filter POP and Nuitrack cards,
+  native Gaussian-splat Point File In POP guidance, and live-verified parameter
+  semantics. Nuitrack sensor operation still requires platform/device testing.
+- Added finite affine CHOP mappings and clamped camera, Phong material, Particle
+  POP and Noise POP control targets; expression readback now compares parsed
+  structure instead of substrings.
+- Fixed the Codex wrapper to verify and launch its managed runtime instead of
+  falling through to an unrelated `tdpilot` executable on PATH.
+- Added `TD_MCP_TOOL_PROFILE=inspect|build|full` with matching discovery and
+  dispatch restrictions; full remains the 114-tool default.
+- Replaced placeholder panel rows with project, component, endpoint, auth and
+  recent-request diagnostics, without exposing credentials. Request-driven refresh
+  keeps the panel current while the TD timeline is paused.
+- Prevented automatic rollback from undoing unrelated TD history. Rollback
+  verifies an owned label and atomically checks the server history before undo;
+  callback-spanning blocks are no longer assumed to survive.
+- Isolated generated-code smoke tests in confirmed owned scratch containers;
+  cleanup removes operator-generated helper nodes and preserves existing nodes.
+  Availability sampling and incident replay also preserve existing targets.
+- Failed validation now produces a broken transaction even when rollback is
+  disabled. Expanded exact-value golden cases from 11 to 21 and added numerical
+  live qualification for the new bounded controls.
+
 
 ## 2.4.1 - 2026-07-23 — TouchDesigner 2025.33070 Compatibility
 

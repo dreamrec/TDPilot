@@ -18,7 +18,7 @@ Two separate stores, two separate jobs:
 * :mod:`td_mcp.activity_log` — flat time-ordered. Optimized for "what
   happened recently?"
 
-Thread-safe via :class:`threading.Lock`. FastMCP transports may dispatch
+Thread-safe via :class:`threading.Lock`. MCPServer transports may dispatch
 from worker threads.
 """
 

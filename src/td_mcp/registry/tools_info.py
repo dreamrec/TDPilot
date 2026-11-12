@@ -18,8 +18,8 @@ here because they're the "server introspection" surface.
 
 from __future__ import annotations
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 
 # Intentional cycle — see registry/__init__.py.
 from td_mcp import tool_registry as _tr  # noqa: E402
@@ -40,7 +40,7 @@ from td_mcp.tool_registry import (  # noqa: E402
 @mcp.tool(
     name="td_get_info",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_get_info(ctx: Context) -> str:
@@ -51,7 +51,7 @@ async def td_get_info(ctx: Context) -> str:
 @mcp.tool(
     name="td_list_families",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_list_families(ctx: Context) -> str:
@@ -62,7 +62,7 @@ async def td_list_families(ctx: Context) -> str:
 @mcp.tool(
     name="td_get_capabilities",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_get_capabilities(ctx: Context) -> str:
@@ -96,6 +96,8 @@ async def td_get_capabilities(ctx: Context) -> str:
             "client_capabilities": capabilities.to_dict(),
             "version": version_status,
             "runtime": {
+                "tool_profile": mcp.tool_profile,
+                "tool_count": len(await mcp.list_tools()),
                 "transport": TD_TRANSPORT,
                 "exec_mode": _tr._current_exec_mode(),
                 "shared_secret_enabled": bool(TD_SHARED_SECRET),
@@ -115,7 +117,7 @@ async def td_get_capabilities(ctx: Context) -> str:
 @mcp.tool(
     name="td_get_server_metrics",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_get_server_metrics(ctx: Context) -> str:

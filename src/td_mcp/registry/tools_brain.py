@@ -9,8 +9,8 @@ from collections import OrderedDict
 from typing import Annotated, Any
 from urllib.parse import quote
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 from pydantic import Field, ValidationError
 
 from td_mcp import tool_registry as _tr
@@ -77,7 +77,7 @@ def _direct_param_preflight(ctx: Context):
         "or implicit-architecture requests, start directly with td_brain_ground → td_brain_propose."
     ),
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=False, open_world_hint=True
     ),
     meta={"anthropic/alwaysLoad": True},
     structured_output=True,
@@ -208,7 +208,7 @@ async def td_brain_plan(
         "write a draft for td_brain_propose. Do not use it for trivial single-node edits."
     ),
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=False, open_world_hint=True
     ),
     meta={"anthropic/alwaysLoad": True},
     structured_output=True,
@@ -356,7 +356,7 @@ async def td_brain_ground(
         "them immediately; rejected drafts return machine-readable rejections to fix and retry."
     ),
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=False, open_world_hint=True
     ),
     meta={"anthropic/alwaysLoad": True},
     structured_output=True,
@@ -665,7 +665,7 @@ async def td_brain_propose(
         "use the legacy td_plan_patch / td_patch_* pipeline for new builds."
     ),
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+        read_only_hint=False, destructive_hint=True, idempotent_hint=False, open_world_hint=True
     ),
     structured_output=True,
 )
@@ -853,7 +853,7 @@ async def td_brain_execute(
         "Do not use the legacy td_plan_patch / td_patch_* pipeline for new builds."
     ),
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+        read_only_hint=False, destructive_hint=True, idempotent_hint=False, open_world_hint=True
     ),
     structured_output=True,
 )
@@ -922,7 +922,7 @@ async def td_transaction_apply(
         "or td_brain_execute first for authoritative data."
     ),
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
     meta={
         "ui": {"resourceUri": COCKPIT_RESOURCE_URI},

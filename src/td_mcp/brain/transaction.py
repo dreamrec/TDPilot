@@ -143,7 +143,12 @@ async def apply_transaction(
     )
     result.validation_report = validation_report
     result.validation_failed = not validation_report.ok
-    if result.validation_failed and opts.auto_repair and opts.max_repair_attempts > 0:
+    if (
+        apply_result.status != "broken"
+        and result.validation_failed
+        and opts.auto_repair
+        and opts.max_repair_attempts > 0
+    ):
         current_report = validation_report
         for _attempt_number in range(opts.max_repair_attempts):
             repaired_report = await _attempt_validation_repair(
@@ -187,7 +192,7 @@ async def apply_transaction(
         result.status = "rolled_back" if result.rollback_performed else "broken"
         return result
 
-    result.status = apply_result.status
+    result.status = "broken" if result.validation_failed else apply_result.status
     return result
 
 
@@ -1496,6 +1501,33 @@ async def _rollback(
     transaction created. We therefore refuse to claim a clean rollback whenever
     the transaction created nodes, escalating to manual recovery instead.
     """
+    native_results = []
+    if result.apply_result and result.apply_result.native_receipt:
+        native_results.append(result.apply_result.model_dump())
+    native_results.extend(
+        attempt["apply_result"]
+        for attempt in result.repair_attempts
+        if (attempt.get("apply_result") or {}).get("native_receipt")
+    )
+    if native_results:
+        proofs = []
+        for applied in reversed(native_results):
+            proof = applied.get("native_rollback")
+            if not proof or not proof.get("ok"):
+                try:
+                    proof = await td_client.request("patch/rollback", applied["native_receipt"])
+                except Exception as exc:
+                    proof = {"ok": False, "reason": str(exc)}
+            proofs.append(proof)
+            if proof.get("ok") is not True:
+                result.rollback_error = str(proof.get("reason") or "Exact rollback verification failed")
+                result.needs_manual_recovery = True
+                result.rollback_verification = {"ok": False, "method": "native_receipts", "proofs": proofs}
+                return
+        result.rollback_performed = True
+        result.rollback_verification = {"ok": True, "method": "native_receipts", "proofs": proofs}
+        return
+
     if undo_block_count <= 0:
         # No undo block was sealed (e.g. a preflight-blocked apply that returned
         # before any mutation). Nothing was changed, so rollback is a no-op
@@ -1513,8 +1545,42 @@ async def _rollback(
 
     undone = 0
     try:
-        for _ in range(undo_block_count):
-            await td_client.request("project/lifecycle", {"action": "undo"})
+        labels = []
+        if result.apply_result and result.apply_result.undo_block_opened:
+            labels.append(result.apply_result.undo_label)
+        for attempt in result.repair_attempts:
+            applied = attempt.get("apply_result") or {}
+            if applied.get("undo_block_opened"):
+                labels.append(applied.get("undo_label"))
+        if len(labels) != undo_block_count or not all(labels):
+            raise RuntimeError("Missing owned undo labels; refusing automatic undo")
+        for label in reversed(labels):
+            # TD closes dangling blocks at callback return. A successful start
+            # request is not evidence that later HTTP mutations were recorded.
+            status = await td_client.request("project/lifecycle", {"action": "status"})
+            undo = status.get("undo", {}) if isinstance(status, dict) else {}
+            stack = undo.get("undoStack")
+            if (
+                undo.get("guardedUndo") is not True
+                or not isinstance(stack, list)
+                or not stack
+                or stack[0] != label
+            ):
+                raise RuntimeError(
+                    "Owned undo block is not at the top of TD history; refusing unrelated undo"
+                )
+            response = await td_client.request(
+                "project/lifecycle",
+                {
+                    "action": "undo",
+                    "expected_undo_label": label,
+                    "expected_undo_stack": stack,
+                },
+            )
+            if not isinstance(response, dict) or response.get("success") is not True:
+                raise RuntimeError(
+                    str(response.get("error") if isinstance(response, dict) else "Undo not confirmed")
+                )
             undone += 1
     except Exception as exc:  # noqa: BLE001
         result.rollback_error = str(exc)

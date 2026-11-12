@@ -250,6 +250,68 @@ class MacroEngine:
             "warnings": warnings,
         }
 
+    def expand_macro(self, operation, *, target_root: str):
+        """Compile a macro without HTTP calls; native apply handles collisions."""
+        from td_mcp.models.patch import PatchOperation
+
+        args = operation.args
+        template = self._templates.get(args["macro_type"])
+        if template is None:
+            raise ValueError("Unknown macro type: " + args["macro_type"])
+        overrides = args.get("params") or {}
+        if set(overrides) - set(template.param_schema):
+            raise ValueError("Unknown macro parameter override")
+        values = {key: spec.default for key, spec in template.param_schema.items()}
+        values.update(overrides)
+        self._validate_param_ranges(template, values)
+        nodes, extra = self._apply_param_targets(template, values)
+        parent = operation.target or target_root
+        prefix = args.get("name_prefix") or args.get("prefix")
+        paths = {node.name: _predicted_node_path(parent, prefix, node.name) for node in nodes}
+        result = []
+        for node in nodes:
+            result.append(
+                PatchOperation(
+                    kind="create_node",
+                    target=parent,
+                    args={
+                        "op_type": node.node_type,
+                        "name": paths[node.name].rsplit("/", 1)[-1],
+                        "nodeX": int(args.get("nodeX", 0)) + node.dx,
+                        "nodeY": int(args.get("nodeY", 0)) + node.dy,
+                    },
+                )
+            )
+        writes = [(node.name, node.params) for node in nodes if node.params]
+        writes.extend(
+            (ref.node, {ref.param: paths[ref.target_node].rsplit("/", 1)[-1]})
+            for ref in template.node_references
+        )
+        writes.extend(
+            (expr.node, {expr.param: {"expr": expr.expr}}) for expr in [*template.expressions, *extra]
+        )
+        for name, params in writes:
+            adjusted, _ = self._preflight_params(
+                path=paths[name],
+                op_type=_op_type_for_logical_node(nodes, name),
+                params=params,
+                param_semantics_policy=str(args.get("param_semantics_policy") or "block"),
+            )
+            result.append(PatchOperation(kind="set_params", target=paths[name], args={"params": adjusted}))
+        for connection in template.connections:
+            result.append(
+                PatchOperation(
+                    kind="connect",
+                    args={
+                        "from": paths[connection.source],
+                        "to": paths[connection.target],
+                        "from_output": connection.source_index,
+                        "to_input": connection.target_index,
+                    },
+                )
+            )
+        return result
+
     def preflight_macro(
         self,
         *,

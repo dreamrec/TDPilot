@@ -9,15 +9,8 @@ Per-call failures DO NOT abort the batch — each result carries its own
 ok/error/result/elapsed_ms field. This matches the recipe-replay
 semantics for heterogeneous read-only lookups.
 
-Dispatch approach:
-    FastMCP-native (option a). ``mcp.call_tool(name, args)`` is a public
-    async method that handles Context injection automatically via
-    ``self.get_context()``. It returns either:
-      - ``list[ContentBlock]`` for tools annotated ``-> dict``
-      - ``tuple[list[ContentBlock], dict]`` for tools annotated ``-> str``
-    Almost every mainline tool returns a string (via ``_as_json_output``
-    or ``format_tool_error``), so the tuple path is the hot path.
-    ``_parse_content_blocks`` normalises both shapes before parsing.
+Dispatch uses MCPServer.call_tool with the caller's explicit Context. SDK 2
+returns CallToolResult; tool-level errors remain per-call failures.
 
 Hard caps:
     8 sub-calls per batch (matches the deepseek-v4 schema)
@@ -31,8 +24,8 @@ import json
 import time
 from typing import Annotated, Any
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import CallToolResult, ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle: tool_registry.py triggers this module at the end of
@@ -46,21 +39,18 @@ _SELF_NAME = "td_tool_batch"
 
 
 def _parse_content_blocks(blocks: Any) -> dict[str, Any]:
-    """Extract a dict from a FastMCP call_tool result.
-
-    FastMCP 1.26.0 returns different types depending on the dispatched
-    tool's return-type annotation:
-      - ``-> dict`` tools:  ``list[ContentBlock]``
-      - ``-> str`` tools:   ``tuple[list[ContentBlock], dict]``
-
-    Almost every mainline tool uses ``_as_json_output`` or
-    ``format_tool_error`` (both return str), so the tuple path is the
-    hot path. This function normalises both before parsing.
-
-    FastMCP serialises tool return values as JSON inside a TextContent
-    block. We take the first text block and JSON-parse it. If the payload
-    isn't JSON or the list is empty, we return the raw text as a fallback.
-    """
+    """Normalize SDK 2 results and legacy test fixtures to a payload dict."""
+    if isinstance(blocks, CallToolResult):
+        if blocks.is_error:
+            return {
+                "error": "\n".join(getattr(item, "text", "") for item in blocks.content) or "MCP tool failed"
+            }
+        if isinstance(blocks.structured_content, dict):
+            structured = blocks.structured_content
+            # SDK wraps a str return in {"result": "..."}; parse that text below.
+            if set(structured) != {"result"} or not isinstance(structured["result"], str):
+                return structured
+        blocks = blocks.content
     # Bug 1 fix: unwrap the tuple returned for str-annotated tools.
     if isinstance(blocks, tuple):
         blocks = blocks[0]
@@ -187,7 +177,7 @@ def handle_tool_batch(body: dict) -> dict:
     via the ``td_tool_batch`` MCP wrapper below.
 
     The dispatch path for recognised tool names runs
-    ``asyncio.run(mcp.call_tool(...))`` so that the async FastMCP internals
+    ``asyncio.run(mcp.call_tool(...))`` so that the async MCPServer internals
     execute correctly even when called from a synchronous context (unit
     tests, or the synchronous helper path in some TD-side scripts).
     When already inside an event loop the caller (``td_tool_batch``) uses
@@ -212,7 +202,7 @@ def handle_tool_batch(body: dict) -> dict:
 
         tool_name, tool_args = validated
 
-        # ── FastMCP-native dispatch ──────────────────────────────────────────
+        # ── MCPServer-native dispatch ──────────────────────────────────────────
         # ``mcp.call_tool`` is an async method. In unit tests this function is
         # called synchronously, so we use ``asyncio.run`` to execute the
         # coroutine in a fresh event loop. In production (inside the MCP
@@ -220,13 +210,8 @@ def handle_tool_batch(body: dict) -> dict:
         # wrapper, which calls ``_dispatch_async`` via ``await`` — that path
         # never reaches this synchronous ``asyncio.run`` branch.
         #
-        # Context threading: ``mcp.call_tool`` internally calls
-        # ``self.get_context()`` which resolves the current request context
-        # from FastMCP's internal ContextVar. Tests run outside any request
-        # context, so ``get_context()`` returns a bare Context stub — enough
-        # for tools that don't actually connect to TD (which is the case for
-        # all guard-path tests). Production sub-calls inherit the live context
-        # from the enclosing ``td_tool_batch`` request.
+        # This test/helper path uses a bare Context. Production passes the
+        # live request Context explicitly through _dispatch_async.
         t_start = time.monotonic()
         try:
             raw_result = asyncio.run(mcp.call_tool(tool_name, tool_args))
@@ -264,7 +249,7 @@ def handle_tool_batch(body: dict) -> dict:
     return {"ok": True, "count": len(results), "results": results}
 
 
-async def _dispatch_async(calls: list[dict]) -> list[dict]:
+async def _dispatch_async(calls: list[dict], ctx: Context | None = None) -> list[dict]:
     """Async version of the dispatch loop — used by the MCP tool wrapper.
 
     Runs sub-calls sequentially (TD's Python API isn't thread-safe).
@@ -282,7 +267,7 @@ async def _dispatch_async(calls: list[dict]) -> list[dict]:
 
         t_start = time.monotonic()
         try:
-            raw_result = await mcp.call_tool(tool_name, tool_args)
+            raw_result = await mcp.call_tool(tool_name, tool_args, context=ctx)
             # Bug 1 fix: unwrap tuple returned by str-annotated tools.
             result = _parse_content_blocks(raw_result)
         except Exception as exc:  # noqa: BLE001
@@ -319,7 +304,7 @@ async def _dispatch_async(calls: list[dict]) -> list[dict]:
 
 @mcp.tool(
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True
+        read_only_hint=False, destructive_hint=False, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_tool_batch(
@@ -359,5 +344,5 @@ async def td_tool_batch(
     if len(calls) > MAX_BATCH_SIZE:
         return {"error": (f"tool_batch capped at {MAX_BATCH_SIZE} sub-calls (received {len(calls)})")}
 
-    results = await _dispatch_async(calls)
+    results = await _dispatch_async(calls, ctx)
     return {"ok": True, "count": len(results), "results": results}

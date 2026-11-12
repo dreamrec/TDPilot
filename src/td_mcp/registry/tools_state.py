@@ -25,8 +25,8 @@ import time
 from datetime import datetime, timezone
 from typing import Annotated, Any
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -39,7 +39,7 @@ from td_mcp.tool_registry import mcp  # noqa: E402
 @mcp.tool(
     name="td_get_state_vector",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_get_state_vector(
@@ -100,7 +100,7 @@ async def td_get_state_vector(
 @mcp.tool(
     name="td_get_timescale_state",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_get_timescale_state(
@@ -204,7 +204,7 @@ async def _exec_focus_probe(ctx: Context) -> dict[str, Any]:
 @mcp.tool(
     name="td_get_focus",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_get_focus(
@@ -278,7 +278,7 @@ async def _navigate_to(ctx: Context, target_path: str) -> dict[str, Any]:
 @mcp.tool(
     name="td_locations",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=False, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_locations(

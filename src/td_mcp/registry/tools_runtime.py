@@ -18,8 +18,8 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -31,7 +31,7 @@ from td_mcp.tool_registry import mcp  # noqa: E402
 @mcp.tool(
     name="td_timeline",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_timeline(ctx: Context) -> str:
@@ -42,7 +42,7 @@ async def td_timeline(ctx: Context) -> str:
 @mcp.tool(
     name="td_timeline_set",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=False, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_timeline_set(
@@ -87,7 +87,7 @@ async def td_timeline_set(
 @mcp.tool(
     name="td_project_lifecycle",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+        read_only_hint=False, destructive_hint=True, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_project_lifecycle(
@@ -156,7 +156,7 @@ async def td_project_lifecycle(
 @mcp.tool(
     name="td_pulse_param",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True
+        read_only_hint=False, destructive_hint=False, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_pulse_param(
@@ -183,7 +183,7 @@ async def td_pulse_param(
 @mcp.tool(
     name="td_python_help",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_python_help(
@@ -203,7 +203,7 @@ async def td_python_help(
 @mcp.tool(
     name="td_python_classes",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_python_classes(ctx: Context) -> str:

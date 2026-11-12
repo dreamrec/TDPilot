@@ -18,8 +18,8 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -32,7 +32,7 @@ from td_mcp.tool_registry import TD_STREAM_MAX_FPS, mcp  # noqa: E402
 @mcp.tool(
     name="td_capture_and_analyze",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_capture_and_analyze(
@@ -153,7 +153,7 @@ async def td_capture_and_analyze(
 @mcp.tool(
     name="td_monitor_visual",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True
+        read_only_hint=False, destructive_hint=False, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_monitor_visual(
@@ -261,7 +261,7 @@ async def td_monitor_visual(
 @mcp.tool(
     name="td_stop_monitor_visual",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=False, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_stop_monitor_visual(
@@ -292,7 +292,7 @@ async def td_stop_monitor_visual(
 @mcp.tool(
     name="td_stream_top",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True
+        read_only_hint=False, destructive_hint=False, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_stream_top(
@@ -402,7 +402,7 @@ async def td_stream_top(
 @mcp.tool(
     name="td_stop_stream_top",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=False, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_stop_stream_top(

@@ -10,6 +10,8 @@ sibling installer DAT) and renders an "Install" + "Update" row at
 the bottom of the panel.
 """
 
+import time
+
 MCP_COMP_PATH = "./mcp_server"
 _DASH = "─" * 24
 
@@ -136,39 +138,80 @@ def _read_body_row():
     return "{:<11} {}".format("Body", status)
 
 
+def _compact(value, limit=32):
+    text = str(value).replace("\n", " ").replace("\r", " ")
+    return text if len(text) <= limit else text[: limit - 1] + "…"
+
+
+def _request_status(state):
+    if state.get("ws") == "ERROR":
+        return "ERROR — inspect activity log"
+    last = state.get("last_request_at")
+    if not isinstance(last, (int, float)):
+        return "waiting for first request"
+    age = max(0, int(time.time() - last))
+    return "{} total; last {}s ago".format(_fmt_int(state.get("request_count")), age)
+
+
+def _connection_rows():
+    rows = []
+    try:
+        rows.extend([("Project", project.name), ("Component", parent().path)])
+    except Exception:
+        pass
+    try:
+        webserver = parent().op(MCP_COMP_PATH + "/webserver")
+        address = webserver.par.localaddress.eval() or "all interfaces"
+        port = webserver.par.port.eval()
+        active = webserver.par.active.eval()
+        rows.append(("Endpoint", "{}:{}{}".format(address, port, "" if active else " (stopped)")))
+    except Exception:
+        rows.append(("Endpoint", "unavailable"))
+    try:
+        callbacks = parent().op(MCP_COMP_PATH + "/callbacks").module
+        required = callbacks._current_require_auth()
+        configured = bool(callbacks._current_shared_secret())
+        rows.append(
+            (
+                "Auth",
+                "required" if configured else "required; secret missing" if required else "disabled",
+            )
+        )
+    except Exception:
+        rows.append(("Auth", "unknown"))
+    return rows
+
+
 def render():
     s = _state()
     if s is None:
         return "TDPilot\n" + _DASH + "\n(state_cache not loaded)\n"
     build = str(s.get("build") or app.build or "--")
     version = str(s.get("version") or "--")
-    rows = [
-        ("WS", str(s.get("ws") or "--")),
-        ("Latency", _fmt_latency(s.get("latency_ms"))),
-        ("Tools", _fmt_int(s.get("tools"))),
-        ("Snapshots", _fmt_int(s.get("snapshots"))),
-        ("Memory", _fmt_int(s.get("memory"))),
-        ("Knowledge", _fmt_int(s.get("knowledge"))),
-        ("POPx", str(s.get("popx") or "--")),
+    rows = _connection_rows() + [
         ("Build", build),
+        ("Requests", _request_status(s)),
+        ("Latency", _fmt_latency(s.get("latency_ms"))),
+        ("Errors", _fmt_int(s.get("error_count"))),
+        ("POPx", str(s.get("popx") or "--")),
         ("Last call", str(s.get("last_call") or "--")),
     ]
-    body = "\n".join(f"{k:<11} {v}" for k, v in rows)
+    body = "\n".join(f"{k:<11} {_compact(v)}" for k, v in rows)
     out = f"TDPilot {version}\n{_DASH}\n{body}"
 
     # Append the install + update rows (Phase A: panel awareness of installer)
     install_row = _read_install_row()
     if install_row:
-        out += "\n" + install_row
+        out += "\n" + _compact(install_row, 44)
     update_row = _read_update_row()
     if update_row:
-        out += "\n" + update_row
+        out += "\n" + _compact(update_row, 44)
     # v1.6.10: surface body source state (pinned / frozen / external).
     # When body is "frozen" the row also nudges the user to click 'Pin
     # this project' on the Update page — closes the embedded-body class.
     body_row = _read_body_row()
     if body_row:
-        out += "\n" + body_row
+        out += "\n" + _compact(body_row, 44)
     return out
 
 
@@ -220,8 +263,8 @@ def bootstrap():
     cache_dat.module.update(
         version=version,
         build=build_str,
-        tools=106,  # keep in sync with EXPECTED_MIN_TOOL_COUNT in release_gates.py
+        tools=114,  # full tool surface; active host profile is in td_get_capabilities
         popx=_detect_popx(),
-        ws="OK",
+        ws="WAITING",
     )
     return True

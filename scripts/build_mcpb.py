@@ -157,7 +157,7 @@ def _build_manifest(version: str) -> dict:
         "compatibility": {
             "claude_desktop": ">=0.10.0",
             "platforms": ["darwin", "win32", "linux"],
-            "runtimes": {"python": ">=3.10"},
+            "runtimes": {"python": ">=3.11"},
         },
     }
 

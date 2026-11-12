@@ -1,0 +1,230 @@
+{
+  "td_build": "2025.33230",
+  "platform": "macOS",
+  "sampled_at": "2026-11-12",
+  "qualification": "Parameter names, defaults and menus only; Nuitrack sensor operation not tested.",
+  "operators": {
+    "cameraCOMP": {
+      "fov": {
+        "style": "Float",
+        "default": 45.0,
+        "menuNames": []
+      },
+      "rx": {
+        "style": "XYZW",
+        "default": 0.0,
+        "menuNames": []
+      },
+      "ry": {
+        "style": "XYZW",
+        "default": 0.0,
+        "menuNames": []
+      },
+      "rz": {
+        "style": "XYZW",
+        "default": 0.0,
+        "menuNames": []
+      },
+      "tx": {
+        "style": "XYZW",
+        "default": 0.0,
+        "menuNames": []
+      },
+      "ty": {
+        "style": "XYZW",
+        "default": 0.0,
+        "menuNames": []
+      },
+      "tz": {
+        "style": "XYZW",
+        "default": 0.0,
+        "menuNames": []
+      }
+    },
+    "noisePOP": {
+      "amp0": {
+        "style": "Float",
+        "default": 0.1,
+        "menuNames": []
+      },
+      "period": {
+        "style": "Float",
+        "default": 1.0,
+        "menuNames": []
+      }
+    },
+    "nuitrackCHOP": {
+      "active": {
+        "style": "Toggle",
+        "default": true,
+        "menuNames": []
+      },
+      "maxplayers": {
+        "style": "Int",
+        "default": 1,
+        "menuNames": []
+      },
+      "positions": {
+        "style": "Toggle",
+        "default": true,
+        "menuNames": []
+      },
+      "restart": {
+        "style": "Pulse",
+        "default": false,
+        "menuNames": []
+      },
+      "rotations": {
+        "style": "Toggle",
+        "default": true,
+        "menuNames": []
+      }
+    },
+    "nuitrackTOP": {
+      "image": {
+        "style": "Menu",
+        "default": "depth",
+        "menuNames": [
+          "depth",
+          "color",
+          "playerindex",
+          "pointcloud"
+        ]
+      },
+      "rawresolution": {
+        "style": "Toggle",
+        "default": false,
+        "menuNames": []
+      },
+      "restart": {
+        "style": "Pulse",
+        "default": false,
+        "menuNames": []
+      }
+    },
+    "particlePOP": {
+      "birthrate": {
+        "style": "Float",
+        "default": 10.0,
+        "menuNames": []
+      },
+      "life": {
+        "style": "Float",
+        "default": 10.0,
+        "menuNames": []
+      },
+      "speed": {
+        "style": "Float",
+        "default": 1.0,
+        "menuNames": []
+      }
+    },
+    "phongMAT": {
+      "diffb": {
+        "style": "RGBA",
+        "default": 0.699999988079071,
+        "menuNames": []
+      },
+      "diffg": {
+        "style": "RGBA",
+        "default": 0.699999988079071,
+        "menuNames": []
+      },
+      "diffr": {
+        "style": "RGBA",
+        "default": 0.699999988079071,
+        "menuNames": []
+      },
+      "shininess": {
+        "style": "Float",
+        "default": 100.0,
+        "menuNames": []
+      }
+    },
+    "timefilterPOP": {
+      "active": {
+        "style": "Toggle",
+        "default": true,
+        "menuNames": []
+      },
+      "alwayscook": {
+        "style": "Toggle",
+        "default": true,
+        "menuNames": []
+      },
+      "attrclass": {
+        "style": "Menu",
+        "default": "point",
+        "menuNames": [
+          "point",
+          "primitive",
+          "vertex"
+        ]
+      },
+      "attrs": {
+        "style": "StrMenu",
+        "default": "*",
+        "menuNames": [
+          "*"
+        ]
+      },
+      "cutoff": {
+        "style": "Float",
+        "default": 1.0,
+        "menuNames": []
+      },
+      "filterresetpulse": {
+        "style": "Pulse",
+        "default": false,
+        "menuNames": []
+      },
+      "filtertype": {
+        "style": "Menu",
+        "default": "gaussian",
+        "menuNames": [
+          "none",
+          "gaussian",
+          "triangle",
+          "box",
+          "oneeuro"
+        ]
+      },
+      "inc": {
+        "style": "Float",
+        "default": 1.0,
+        "menuNames": []
+      },
+      "incunit": {
+        "style": "Menu",
+        "default": "frames",
+        "menuNames": [
+          "seconds",
+          "frames"
+        ]
+      },
+      "slopecutoff": {
+        "style": "Float",
+        "default": 1.0,
+        "menuNames": []
+      },
+      "speedcoeff": {
+        "style": "Float",
+        "default": 2.0,
+        "menuNames": []
+      },
+      "width": {
+        "style": "Float",
+        "default": 1.0,
+        "menuNames": []
+      },
+      "widthunit": {
+        "style": "Menu",
+        "default": "seconds",
+        "menuNames": [
+          "seconds",
+          "frames"
+        ]
+      }
+    }
+  }
+}

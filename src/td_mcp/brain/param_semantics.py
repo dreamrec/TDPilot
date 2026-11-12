@@ -27,6 +27,10 @@ _PARAM_NAME_ALIASES: dict[tuple[str, str], str] = {
     ("noiseTOP", "harmonics"): "harmon",
     ("noiseTOP", "roughness"): "rough",
     ("noiseTOP", "amplitude"): "amp",
+    ("noisePOP", "amp"): "amp0",
+    ("noisePOP", "exp"): "exp0",
+    ("timefilterPOP", "type"): "filtertype",
+    ("nuitrackCHOP", "count"): "maxplayers",
 }
 _GLSL_ADVANCED_POP_DOCS = "https://docs.derivative.ca/GLSL_Advanced_POP"
 _DAT_EXECUTE_DOCS = "https://docs.derivative.ca/DAT_Execute_DAT"
@@ -1681,7 +1685,7 @@ _GLSL_TOP_INT_PARAMS: dict[str, tuple[str, str | None, float, str, str]] = {
 
 def load_param_semantics_registry() -> list[ParamSemantics]:
     """Return the Phase 2 seed registry for high-risk/typed parameters."""
-    return [
+    records = [
         *_level_top_semantics(),
         *_feedback_top_semantics(),
         *_composite_top_semantics(),
@@ -3519,6 +3523,17 @@ def load_param_semantics_registry() -> list[ParamSemantics]:
         *_mqtt_client_dat_semantics(),
         *_udp_in_dat_semantics(),
     ]
+
+    from td_mcp.brain.control_bindings import control_parameter_semantics
+    from td_mcp.brain.release_2025_semantics import release_parameter_semantics
+
+    existing = {(item.op_type, item.name) for item in records}
+    records.extend(
+        item
+        for item in control_parameter_semantics() + release_parameter_semantics()
+        if (item.op_type, item.name) not in existing
+    )
+    return records
 
 
 def _web_client_dat_semantics() -> list[ParamSemantics]:
@@ -7696,8 +7711,8 @@ def _noise_pop_semantics() -> list[ParamSemantics]:
                 ("period", "Period", "positive_noise_period"),
                 ("spread", "Harmonic Spread", "bounded_harmonic_spread"),
                 ("gain", "Harmonic Gain", "bounded_harmonic_gain"),
-                ("amp", "Amplitude", "bounded_noise_amplitude"),
-                ("exp", "Exponent", "bounded_noise_exponent"),
+                ("amp0", "Amplitude", "bounded_noise_amplitude"),
+                ("exp0", "Exponent", "bounded_noise_exponent"),
                 ("t4d", "Translate 4D", "numeric_fourth_dimension_offset"),
             ]
         ],
@@ -11655,7 +11670,11 @@ def _validate_semantic_value(
     created_types: dict[str, str],
 ) -> list[ValidationIssue]:
     if isinstance(value, dict) and "expr" in value:
-        if semantic.op_type == "levelTOP" and semantic.validation_rule == "numeric_level_adjustment":
+        from td_mcp.brain.control_bindings import control_target_bounds
+
+        if (semantic.op_type == "levelTOP" and semantic.validation_rule == "numeric_level_adjustment") or (
+            control_target_bounds(semantic.op_type, semantic.name) is not None
+        ):
             return _validate_chop_reference_expression(
                 path=path,
                 semantic=semantic,
@@ -11718,19 +11737,21 @@ def _validate_chop_reference_expression(
             )
         ]
     expression = value["expr"].strip()
-    match = _CHOP_REFERENCE_EXPR.fullmatch(expression)
-    if match is None:
+    from td_mcp.brain.control_bindings import control_expression_source
+
+    try:
+        ref_path = control_expression_source(expression, semantic.op_type, semantic.name)
+    except ValueError:
         return [
             _issue(
                 code="unsafe_param_expression",
                 message=(
-                    f"{path} ({semantic.op_type}) parameter {semantic.name} expression must be a direct "
-                    "single-operator CHOP channel reference."
+                    f"{path} ({semantic.op_type}) parameter {semantic.name} expression must be a "
+                    "single-operator CHOP channel reference with reviewed scaling and bounds."
                 ),
                 path=path,
             )
         ]
-    ref_path = match.group("path")
     ref_type = created_types.get(ref_path)
     if ref_type is None:
         return [

@@ -1,6 +1,6 @@
 {
-  "tox_source_hash": "b3854598fa03e8f0f951d0120c3b59b846612e25c50aa41f9b2686bffd654891",
-  "built_at": "2026-07-23T15:22:43.976234+00:00",
+  "tox_source_hash": "f39433f647160a1f4351ab7bb156341427d791c9e21874ce7455fa1ee08b5e9a",
+  "built_at": "2026-11-12T10:00:33.693710+00:00",
   "source_files": [
     "td_component/build_export_mcp_tox.py",
     "td_component/build_tdpilot_tox.py",
@@ -15,6 +15,6 @@
     "td_component/state_cache.py"
   ],
   "tox_artifact_path": "td_component/tdpilot.tox",
-  "tox_artifact_sha256": "10e39fd6ceba805772c206497683bff881b397ca8631975f1640c1f8ec1b2dde",
-  "tox_artifact_size_bytes": 59854
+  "tox_artifact_sha256": "3ffefca2abfc56ae9d7c357f1a03ca3b31950180048e81ec9e8303b02e615719",
+  "tox_artifact_size_bytes": 65686
 }

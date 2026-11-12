@@ -31,7 +31,7 @@ def _collect_snapshot() -> dict[str, Any]:
     for tool in tools:
         # Normalize — pydantic schemas have title/description that vary with
         # docstring tweaks; keep the structural shape (params, required, types).
-        schema = tool.inputSchema or {}
+        schema = tool.input_schema or {}
         properties = schema.get("properties", {})
         required = sorted(schema.get("required", []))
         snapshot[tool.name] = {

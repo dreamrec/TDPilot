@@ -24,7 +24,7 @@ from td_mcp.vision import TopStreamer, VisualMonitor
 
 @dataclass
 class ServiceContainer:
-    """Holds runtime services initialized in FastMCP lifespan."""
+    """Holds runtime services initialized in MCPServer lifespan."""
 
     td_client: TDClient
     macro_engine: MacroEngine | None = None

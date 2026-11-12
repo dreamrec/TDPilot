@@ -56,10 +56,12 @@ validation defaults, atlas-verified parameters, and fixture evidence.
 ## Bindings and semantic edges
 
 New executable control edges must carry exactly one `ControlBindingSpec`.
-TDPilot v2.4 proves one bounded cross-domain compiler path: a safe CHOP channel
-reference expression targeting registry-backed numeric `levelTOP` parameters.
-Unsupported audio-to-MAT, POP, camera, SOP, DAT-to-TOP, or arbitrary parameter
-bindings block rather than silently becoming static values.
+TDPilot v2.5 supports safe CHOP channel expressions into registry-backed numeric
+`levelTOP` parameters and reviewed `cameraCOMP`, `phongMAT`, `particlePOP`, and
+`noisePOP` parameters. The added targets always clamp within reviewed bounds;
+optional finite `output_range` narrows that interval, and optional finite `scale` and `offset` are lowered into clamped
+expressions. Unsupported parameters still block instead of becoming static
+values. See [the exact target list](UPDATE_2_5.md#bounded-controls).
 
 Reference edges must become explicit operator-reference parameters. No v2
 semantic edge may be ignored during compilation or execution.
@@ -77,7 +79,14 @@ Validation reads actual post-apply state:
 Unavailable probes are reported as unavailable, not passed. Repairs are tied to
 the failed assertion and bounded by execution mode: fast permits one repair;
 production and show-safe permit two. Unknown failures or exhausted budgets
-roll back or retain the last validated state.
+attempt verified recovery or report `needs_manual_recovery`. TD undo blocks close
+at callback return, so a block opened through one HTTP request does not cover
+later requests. Native transactions therefore execute the typed packet in one
+callback. Receipt-based rollback checks owned history and the affected after-state,
+then compares the restored graph with its exact captured before-state. DAT text
+and tables use explicit undo/redo callbacks. Parameter snapshots alone cannot
+reconstruct deleted nodes. External I/O and arbitrary callback side effects are
+outside the graph rollback contract.
 
 ## Show-safe and partial rebuilds
 

@@ -59,7 +59,7 @@ def _error_payload(code: str, message: str, details: dict | None = None) -> str:
 def format_tool_error_dict(exc: Exception) -> dict:
     """Return the machine-readable error envelope as a dict.
 
-    Use this in tools annotated ``-> dict`` that run under FastMCP
+    Use this in tools annotated ``-> dict`` that run under MCPServer
     structured_output: those wrap the return value in a DictModel and call
     model_validate, so returning the JSON *string* form (``format_tool_error``)
     raises a pydantic ValidationError on every exception path and destroys the

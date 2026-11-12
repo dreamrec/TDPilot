@@ -89,7 +89,8 @@ def test_brain_builder_teaches_reviewed_atlas_concept_to_node_workflow():
         text = (skill_root / "tdpilot-brain-builder" / "SKILL.md").read_text(encoding="utf-8")
 
         assert "Concept-to-node Atlas Workflow" in text
-        assert "659-card reviewed operator atlas" in text
+        count = len(list((ROOT / "src/td_mcp/knowledge/cards/operators").glob("*.json")))
+        assert f"{count}-card reviewed operator atlas" in text
         assert "zero-concept backlog" in text
         assert "Official Derivative" in text
         assert "choose the smallest operator chain" in text

@@ -534,3 +534,55 @@ def test_restricted_dat_content_still_blocks_python_imports():
 
     assert violation is not None
     assert "import" in violation
+
+
+def test_guarded_undo_rejects_changed_or_unrelated_history():
+    module = _load_callbacks_module()
+    module.project, module.ui = _FakeProject(), _FakeUI()
+    for expected_stack, label in [(["owned"], "owned"), (["initial"], "owned"), ([], "initial")]:
+        result = module.handle_project_lifecycle(
+            {
+                "action": "undo",
+                "expected_undo_stack": expected_stack,
+                "expected_undo_label": label,
+            }
+        )
+        assert result["success"] is False
+        assert module.ui.undo.calls == []
+    result = module.handle_project_lifecycle(
+        {
+            "action": "undo",
+            "expected_undo_stack": ["initial"],
+            "expected_undo_label": "initial",
+        }
+    )
+    assert result["success"] is True
+    assert module.ui.undo.calls == ["undo"]
+    assert result["undo"]["guardedUndo"] is True
+
+
+def test_request_traffic_refreshes_panel_without_timeline_and_is_throttled(monkeypatch):
+    from types import SimpleNamespace
+
+    module = _load_callbacks_module()
+    recorded, rendered = [], []
+    clock = [10.0]
+    panel = SimpleNamespace(module=SimpleNamespace(tick=lambda: rendered.append(True)))
+    host = SimpleNamespace(op=lambda name: panel if name == "renderer" else None)
+    bridge = SimpleNamespace(parent=lambda: host)
+    cache = SimpleNamespace(
+        parent=lambda: bridge,
+        module=SimpleNamespace(
+            record_request=lambda *args: recorded.append(args),
+        ),
+    )
+    bridge.op = lambda name: cache if name == "state_cache" else None
+    module.me = SimpleNamespace(parent=lambda: bridge)
+    monkeypatch.setattr(module.time, "monotonic", lambda: clock[0])
+    for _ in range(2):
+        module._record_request_safe("/api/info", {"statusCode": 200}, module.time.time())
+    assert len(recorded) == 2
+    assert len(rendered) == 1
+    clock[0] += 1.1
+    module._record_request_safe("/api/info", {"statusCode": 200}, module.time.time())
+    assert len(rendered) == 2

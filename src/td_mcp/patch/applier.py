@@ -169,7 +169,7 @@ async def apply_plan(
             f"call td_project_lifecycle action=end_undo_block first"
         )
 
-    block_label = label or plan.undo_label
+    block_label = f"{label or plan.undo_label} [{plan.id}]"
     result = PatchResult(plan_id=plan.id, status="clean", undo_label=block_label)
 
     effective_plan, preflight_info = await _preflight_set_param_ops(
@@ -200,6 +200,20 @@ async def apply_plan(
             result.failed_op = i
             result.failed_reason = str(exc)
             return result
+
+    if getattr(td_client, "native_transactions", False) is True:
+        from td_mcp.patch.native import apply_native
+
+        sentinel.mark_active(block_label)
+        try:
+            result = await apply_native(td_client, effective_plan, result, macro_engine=macro_engine)
+        finally:
+            sentinel.mark_inactive()
+        if auto_validate and result.status != "broken":
+            result.validation = await validate_target(td_client, plan.validation_plan)
+            if not result.validation.ok:
+                result.status = "warnings"
+        return result
 
     sentinel.mark_active(block_label)
     try:

@@ -12,8 +12,8 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -26,7 +26,7 @@ from td_mcp.tool_registry import mcp  # noqa: E402
 @mcp.tool(
     name="td_create_macro",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True
+        read_only_hint=False, destructive_hint=False, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_create_macro(
@@ -115,7 +115,7 @@ async def td_create_macro(
 @mcp.tool(
     name="td_list_macros",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_list_macros(ctx: Context) -> str:
@@ -134,7 +134,7 @@ async def td_list_macros(ctx: Context) -> str:
 @mcp.tool(
     name="td_get_macro_params",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_get_macro_params(

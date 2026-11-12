@@ -1,6 +1,6 @@
 {
   "name": "tdpilot",
-  "version": "2.4.1",
+  "version": "2.6.0",
   "description": "TDPilot for Codex: local-first TouchDesigner control with 114 tools, truthful pattern/concept routing, deterministic visual techniques, complete intent coverage, transactional execution, live validation, and bounded repair.",
   "author": {
     "name": "dreamrec",
@@ -27,7 +27,7 @@
   "interface": {
     "displayName": "TDPilot",
     "shortDescription": "Practical, validated TouchDesigner MCP control for Codex.",
-    "longDescription": "Codex-facing TDPilot wrapper with dual-route practical intelligence: exact validated patterns use deterministic planning, artistic and multi-domain concepts use grounded host authoring and proposal review, and accepted BrainPlans execute transactionally with validation and rollback. Includes the 659-card reviewed operator atlas and stays local-first.",
+    "longDescription": "Codex-facing TDPilot wrapper with dual-route practical intelligence: exact validated patterns use deterministic planning, artistic and multi-domain concepts use grounded host authoring and proposal review, and accepted BrainPlans execute transactionally with validation and rollback. Includes the 662-card reviewed operator atlas and stays local-first.",
     "developerName": "dreamrec",
     "category": "Developer Tools",
     "capabilities": [

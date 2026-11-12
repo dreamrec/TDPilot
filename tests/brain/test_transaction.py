@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import pytest
-from patch.conftest import FakeTDClient
+from patch.conftest import GuardedUndoTDClient as FakeTDClient
 
 from td_mcp.brain.transaction import _rollback, apply_transaction
 from td_mcp.models.brain import TransactionOptions, TransactionResult
 from td_mcp.models.build import ValidationAssertion, ValidationContract
-from td_mcp.models.patch import PatchOperation, PatchPlan, ValidationPlan
+from td_mcp.models.patch import PatchOperation, PatchPlan, PatchResult, ValidationPlan
 from td_mcp.patch.undo_sentinel import UndoBlockSentinel
 
 
@@ -58,7 +58,7 @@ async def test_transaction_rolls_back_when_apply_breaks():
     assert result.apply_result is not None
     assert result.apply_result.failed_op == 1
     assert result.validation_report is not None
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+    assert _undo_count(client) > 0
 
 
 @pytest.mark.asyncio
@@ -80,7 +80,7 @@ async def test_transaction_rolls_back_when_validation_fails():
     assert result.validation_failed is True
     assert result.validation_report is not None
     assert result.validation_report.ok is False
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+    assert _undo_count(client) > 0
 
 
 @pytest.mark.asyncio
@@ -113,7 +113,7 @@ async def test_transaction_uses_live_compiler_validation_contract_when_supplied(
     client = FakeTDClient()
 
     def detail(_params):
-        if ("project/lifecycle", {"action": "undo"}) in client.calls:
+        if _undo_count(client) > 0:
             return {"error": "not found"}
         return {"path": "/p/out1", "type": "nullTOP"}
 
@@ -170,20 +170,32 @@ async def test_transaction_rollback_verifies_created_node_paths_are_absent_after
     assert "created paths still exist" in (result.rollback_error or "")
 
 
-def _txn_result(**kwargs) -> TransactionResult:
+def _txn_result(client, **kwargs) -> TransactionResult:
     base = {"plan_id": "p1", "status": "broken"}
+    count = kwargs.get("undo_blocks_opened", 0)
+    labels = [f"owned:{i}" for i in range(count)]
+    client.undo_stack = list(reversed(labels))
+    if labels:
+        base["apply_result"] = PatchResult(
+            plan_id="p1", status="broken", undo_label=labels[0], undo_block_opened=True
+        )
+        base["repair_attempts"] = [
+            {"apply_result": {"undo_label": label, "undo_block_opened": True}} for label in labels[1:]
+        ]
     base.update(kwargs)
     return TransactionResult(**base)
 
 
 def _undo_count(client: FakeTDClient) -> int:
-    return len([c for c in client.calls if c == ("project/lifecycle", {"action": "undo"})])
+    return len(
+        [c for c in client.calls if c[0] == "project/lifecycle" and (c[1] or {}).get("action") == "undo"]
+    )
 
 
 @pytest.mark.asyncio
 async def test_rollback_issues_one_undo_per_sealed_block():
     client = FakeTDClient()
-    result = _txn_result(undo_blocks_opened=2)
+    result = _txn_result(client, undo_blocks_opened=2)
     await _rollback(client, result, restore_snapshot=None, undo_block_count=2)
     assert _undo_count(client) == 2
     assert result.rollback_performed is True
@@ -195,7 +207,7 @@ async def test_rollback_no_block_opened_is_noop_success_without_stray_undo():
     # A preflight-blocked apply seals no undo block; rollback must not fire a
     # stray undo that would revert an unrelated prior action.
     client = FakeTDClient()
-    result = _txn_result(undo_blocks_opened=0)
+    result = _txn_result(client, undo_blocks_opened=0)
     await _rollback(client, result, restore_snapshot=None, undo_block_count=0)
     assert _undo_count(client) == 0
     assert result.rollback_performed is True
@@ -213,7 +225,7 @@ async def test_rollback_partial_undo_failure_without_snapshot_needs_manual_recov
         return {}
 
     client = FakeTDClient(scripted={"project/lifecycle": lifecycle})
-    result = _txn_result(undo_blocks_opened=2)
+    result = _txn_result(client, undo_blocks_opened=2)
     await _rollback(client, result, restore_snapshot=None, undo_block_count=2)
     assert result.rollback_performed is False
     assert result.needs_manual_recovery is True
@@ -231,7 +243,7 @@ async def test_rollback_undo_failure_falls_back_to_snapshot_when_no_created_node
         return {}
 
     client = FakeTDClient(scripted={"project/lifecycle": undo_fails})
-    result = _txn_result(undo_blocks_opened=1, before_snapshot_id="snap1")
+    result = _txn_result(client, undo_blocks_opened=1, before_snapshot_id="snap1")
     await _rollback(client, result, restore_snapshot=restore, undo_block_count=1, created_node_paths=())
     assert result.rollback_performed is True
     assert result.rollback_error is None
@@ -251,7 +263,7 @@ async def test_rollback_undo_failure_with_created_nodes_refuses_param_only_resto
         return {}
 
     client = FakeTDClient(scripted={"project/lifecycle": undo_fails})
-    result = _txn_result(undo_blocks_opened=1, before_snapshot_id="snap1")
+    result = _txn_result(client, undo_blocks_opened=1, before_snapshot_id="snap1")
     await _rollback(
         client,
         result,
@@ -273,7 +285,7 @@ async def test_rollback_readback_detects_changed_param_still_holding_transaction
             }
         }
     )
-    result = _txn_result(undo_blocks_opened=1)
+    result = _txn_result(client, undo_blocks_opened=1)
 
     await _rollback(
         client,
@@ -300,7 +312,7 @@ async def test_rollback_readback_detects_stale_param_expression_after_undo():
             }
         }
     )
-    result = _txn_result(undo_blocks_opened=1)
+    result = _txn_result(client, undo_blocks_opened=1)
 
     await _rollback(
         client,
@@ -325,7 +337,7 @@ async def test_rollback_readback_detects_table_dat_content_still_live_after_undo
     # a still-live table-DAT mutation passed as a clean rollback.
     table = [["a", "b"], ["c", "d"]]
     client = FakeTDClient(scripted={"node/content": {"path": "/p/table", "rows": table}})
-    result = _txn_result(undo_blocks_opened=1)
+    result = _txn_result(client, undo_blocks_opened=1)
 
     await _rollback(
         client,
@@ -352,7 +364,7 @@ async def test_rollback_readback_detects_created_connection_still_present_after_
         return {"path": params.get("path"), "inputs": [], "outputs": []}
 
     client = FakeTDClient(scripted={"node/connections": connections})
-    result = _txn_result(undo_blocks_opened=1)
+    result = _txn_result(client, undo_blocks_opened=1)
 
     await _rollback(
         client,
@@ -473,4 +485,26 @@ async def test_transaction_rolls_back_when_generated_code_runtime_contract_fails
         issue.code == "generated_code_runtime_compile_state_error"
         for issue in result.validation_report.issues
     )
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+    assert _undo_count(client) > 0
+
+
+@pytest.mark.asyncio
+async def test_rollback_never_undoes_unrelated_history_after_callback_closed_block():
+    client = FakeTDClient()
+    result = _txn_result(client, undo_blocks_opened=1)
+    client.undo_stack = ["Drop Files"]
+    await _rollback(client, result, restore_snapshot=None, undo_block_count=1)
+    assert _undo_count(client) == 0
+    assert client.undo_stack == ["Drop Files"]
+    assert result.needs_manual_recovery is True
+    assert result.rollback_performed is False
+    assert "refusing unrelated undo" in result.rollback_error
+
+
+@pytest.mark.asyncio
+async def test_rollback_refuses_older_component_without_atomic_ownership_guard():
+    client = FakeTDClient(scripted={"project/lifecycle": {"undo": {"undoStack": ["owned:0"]}}})
+    result = _txn_result(client, undo_blocks_opened=1)
+    await _rollback(client, result, restore_snapshot=None, undo_block_count=1)
+    assert _undo_count(client) == 0
+    assert result.needs_manual_recovery is True

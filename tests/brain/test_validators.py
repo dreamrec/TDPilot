@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from patch.conftest import FakeTDClient
+from patch.conftest import GuardedUndoTDClient as FakeTDClient
 
 import td_mcp.brain.transaction as _transaction
 from td_mcp.brain.transaction import apply_transaction
@@ -264,8 +264,8 @@ async def test_transaction_rolls_back_when_normalized_visual_quality_fails():
     assert result.validation_report is not None
     assert result.validation_report.ok is False
     assert any(issue.code == "visual_quality_failed" for issue in result.validation_report.issues)
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+    assert any(ep == "project/lifecycle" and body.get("action") == "undo" for ep, body in client.calls)
+    assert any(ep == "project/lifecycle" and body.get("action") == "undo" for ep, body in client.calls)
 
 
 @pytest.mark.asyncio
@@ -490,7 +490,9 @@ async def test_transaction_auto_repair_then_validation_fails_reverts_both_undo_b
 
     assert result.repair_attempts and result.repair_attempts[0]["status"] == "validation_failed"
     assert result.undo_blocks_opened == 2
-    undo_calls = [call for call in client.calls if call == ("project/lifecycle", {"action": "undo"})]
+    undo_calls = [
+        call for call in client.calls if call[0] == "project/lifecycle" and call[1].get("action") == "undo"
+    ]
     assert len(undo_calls) == 2
     assert result.status == "rolled_back"
     assert result.rollback_performed is True
@@ -752,7 +754,7 @@ async def test_transaction_audio_activity_probe_rolls_back_when_chop_samples_are
     assert activity["runtime_metric_values"]["audio_analysis_channel_delta"] == 0.0
     assert result.validation_report.issues[0].code == "profile_probe_runtime_no_activity"
     assert "audio_signal_activity" in result.validation_report.issues[0].message
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+    assert any(ep == "project/lifecycle" and body.get("action") == "undo" for ep, body in client.calls)
 
 
 def test_static_profile_probe_metrics_treat_audio_source_inputs_as_alternatives():
@@ -1211,7 +1213,7 @@ async def test_transaction_render_camera_frustum_probe_rolls_back_when_refs_are_
     assert coverage["issue_code"] == "profile_probe_runtime_render_refs_unbound"
     assert result.validation_report.issues[0].code == "profile_probe_runtime_render_refs_unbound"
     assert "camera_frustum_coverage" in result.validation_report.issues[0].message
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+    assert any(ep == "project/lifecycle" and body.get("action") == "undo" for ep, body in client.calls)
 
 
 @pytest.mark.asyncio
@@ -1287,7 +1289,7 @@ async def test_transaction_expensive_render_output_probe_rolls_back_when_render_
     assert render_output["runtime_metric_values"]["render_coverage"] == 0.0
     assert result.validation_report.issues[0].code == "profile_probe_runtime_invisible_render_output"
     assert "render_top_output" in result.validation_report.issues[0].message
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+    assert any(ep == "project/lifecycle" and body.get("action") == "undo" for ep, body in client.calls)
 
 
 @pytest.mark.asyncio
@@ -1355,7 +1357,7 @@ async def test_transaction_feedback_output_probe_rolls_back_when_top_is_black():
     assert readback["runtime_metric_values"]["feedback_output_luminance_max"] == 0.0
     assert result.validation_report.issues[0].code == "profile_probe_runtime_black_feedback_output"
     assert "feedback_output_readback" in result.validation_report.issues[0].message
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+    assert any(ep == "project/lifecycle" and body.get("action") == "undo" for ep, body in client.calls)
 
 
 def test_static_profile_probe_metrics_reports_panel_state_readback_runtime_contract():
@@ -1706,7 +1708,7 @@ async def test_transaction_panel_state_readback_probe_rolls_back_when_channels_m
     assert readback["runtime_metric_values"]["panel_state_sample_count"] == 0
     assert result.validation_report.issues[0].code == "profile_probe_runtime_no_panel_state"
     assert "panel_state_readback" in result.validation_report.issues[0].message
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+    assert any(ep == "project/lifecycle" and body.get("action") == "undo" for ep, body in client.calls)
 
 
 @pytest.mark.asyncio
@@ -1830,7 +1832,7 @@ async def test_transaction_pop_bounds_probe_rolls_back_when_bounds_are_nonfinite
     assert bounds["runtime_metric_values"]["pop_bounds_finite"] is False
     assert result.validation_report.issues[0].code == "profile_probe_runtime_nonfinite_pop_bounds"
     assert "finite_pop_bounds" in result.validation_report.issues[0].message
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+    assert any(ep == "project/lifecycle" and body.get("action") == "undo" for ep, body in client.calls)
 
 
 def test_static_profile_probe_metrics_reports_pop_attribute_runtime_contract():
@@ -2012,7 +2014,7 @@ async def test_transaction_pop_attribute_probe_rolls_back_when_pop_inspect_has_n
     assert attributes["runtime_metric_values"]["pop_attribute_count_present"] is False
     assert result.validation_report.issues[0].code == "profile_probe_runtime_missing_pop_attributes"
     assert "attribute_sample_available" in result.validation_report.issues[0].message
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+    assert any(ep == "project/lifecycle" and body.get("action") == "undo" for ep, body in client.calls)
 
 
 @pytest.mark.asyncio
@@ -2129,7 +2131,7 @@ async def test_transaction_glsl_compile_probe_rolls_back_on_node_errors():
     assert compile_state["runtime_metric_values"]["shader_compile_clean"] is False
     assert result.validation_report.issues[0].code == "profile_probe_runtime_compile_state_error"
     assert "compile_state" in result.validation_report.issues[0].message
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+    assert any(ep == "project/lifecycle" and body.get("action") == "undo" for ep, body in client.calls)
 
 
 @pytest.mark.asyncio
@@ -2215,7 +2217,7 @@ async def test_transaction_dat_callback_guard_probe_rolls_back_when_guard_is_mis
     assert guard["runtime_metric_values"]["modern_table_change_callback_present"] is False
     assert result.validation_report.issues[0].code == "profile_probe_runtime_callback_guard_missing"
     assert "callback_guard_present" in result.validation_report.issues[0].message
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+    assert any(ep == "project/lifecycle" and body.get("action") == "undo" for ep, body in client.calls)
 
 
 def test_static_profile_probe_metrics_treat_stable_output_families_as_alternatives():
@@ -2670,7 +2672,7 @@ async def test_transaction_motion_delta_rolls_back_frozen_feedback_output():
     assert any(
         issue.code == "profile_probe_runtime_frozen_output" for issue in result.validation_report.issues
     )
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+    assert any(ep == "project/lifecycle" and body.get("action") == "undo" for ep, body in client.calls)
 
 
 @pytest.mark.asyncio

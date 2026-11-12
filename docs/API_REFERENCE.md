@@ -2,7 +2,7 @@
 
 <!-- BEGIN GENERATED: tool-reference (scripts/gen_api_reference.py) -->
 
-> TDPilot v2.4.1 | 114 tools | This region is **generated** from the FastMCP registry by `scripts/gen_api_reference.py` — do not edit it by hand. Regenerate with `uv run python scripts/gen_api_reference.py`; CI enforces freshness with `--check`. Sections group tools by their `src/td_mcp/registry/` module of origin.
+> TDPilot v2.6.0 | 114 tools | This region is **generated** from the MCPServer registry by `scripts/gen_api_reference.py` — do not edit it by hand. Regenerate with `uv run python scripts/gen_api_reference.py`; CI enforces freshness with `--check`. Sections group tools by their `src/td_mcp/registry/` module of origin.
 
 ## Table of Contents
 
@@ -473,3 +473,25 @@ Tools that accept `response_format` support two modes:
 | `audio_reactive` | Audio-reactive parameter modulation |
 | `particle_gpu` | POP point-field preview: source -> noise -> Null POP -> Render Simple TOP |
 | `post_processing` | Post-processing effects chain |
+
+## Native transaction HTTP endpoints (2.6)
+
+These authenticated component endpoints back existing patch/transaction tools;
+they do not add public MCP tools.
+
+- `patch/status`: capability/session discovery, or lookup by `request_id`.
+- `patch/apply`: `session`, unique `request_id`, scoped `target_root`, `undo_label`, and typed `operations`. Maximum 512 operations and 2 MiB request JSON. Reusing an ID with a different payload is rejected.
+- `patch/rollback`: `session` and `request_id`. Verifies the retained undo history and affected after-state, undoes only its owned block, then compares the exact captured before-state. Repeated rollback also checks the restored state.
+
+Packets accept create, parameter/content writes, connect/disconnect, route swap,
+layout and owned delete. Host-side macros and annotations expand into typed
+operations. Creation uses exact names; collisions are refused. Pulse parameters
+are refused because their external effects are not reversible. DAT content has
+explicit undo and redo callbacks.
+
+Receipts are retained in TD runtime storage, excluded from saved projects.
+Verification is bounded to 1,024 watched nodes, 8 MiB per state and 64 MiB of
+retained before/after states. Older state proofs can expire; their request IDs
+remain reserved against replay (4,096 per component session). Expired or changed
+state requires inspection rather than automatic undo. Rollback covers captured
+TD graph state, not external I/O, arbitrary callback side effects or process crashes.

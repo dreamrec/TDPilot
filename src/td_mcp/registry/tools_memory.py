@@ -28,8 +28,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Annotated, Any, Literal
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 from pydantic import Field
 
 # Intentional "cycle" import: ``tool_registry.py`` triggers this module at
@@ -46,7 +46,7 @@ from td_mcp import tool_registry as _tr  # noqa: E402
 from td_mcp.memory.analyzer import analyze_network
 from td_mcp.models import MemoryPreferencesInput
 
-# The shared ``mcp`` instance (FastMCP). Imported by name because the
+# The shared ``mcp`` instance (MCPServer). Imported by name because the
 # @mcp.tool decorators need it at module-definition time and it never
 # gets monkeypatched.
 from td_mcp.tool_registry import mcp  # noqa: E402
@@ -54,7 +54,7 @@ from td_mcp.tool_registry import mcp  # noqa: E402
 
 @mcp.tool(
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_memory_learn(
@@ -107,7 +107,7 @@ async def td_memory_learn(
 
 @mcp.tool(
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False
+        read_only_hint=False, destructive_hint=False, idempotent_hint=False, open_world_hint=False
     ),
 )
 async def td_memory_save(
@@ -172,7 +172,7 @@ async def td_memory_save(
 
 @mcp.tool(
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_memory_recall(
@@ -216,7 +216,7 @@ async def td_memory_recall(
 
 @mcp.tool(
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True
+        read_only_hint=False, destructive_hint=False, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_memory_replay(
@@ -870,7 +870,7 @@ def _recipe_op_type(node_info: dict) -> str:
 
 @mcp.tool(
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=False, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_memory_favorite(
@@ -910,7 +910,7 @@ async def td_memory_favorite(
 
 @mcp.tool(
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=False, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_memory_promote(
@@ -938,7 +938,7 @@ async def td_memory_promote(
 
 @mcp.tool(
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_memory_export(
@@ -956,7 +956,7 @@ async def td_memory_export(
 
 @mcp.tool(
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False
+        read_only_hint=False, destructive_hint=False, idempotent_hint=False, open_world_hint=False
     ),
 )
 async def td_memory_import(
@@ -988,7 +988,7 @@ async def td_memory_import(
 
 @mcp.tool(
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=False, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_memory_preferences(
@@ -1057,7 +1057,7 @@ async def td_memory_preferences(
 
 @mcp.tool(
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_memory_list(

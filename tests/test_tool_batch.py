@@ -58,14 +58,14 @@ def test_tool_batch_dispatch_success():
     import json
     from unittest.mock import AsyncMock, patch
 
-    from mcp.types import TextContent
+    from mcp_types import TextContent
 
     from td_mcp.registry.tools_batch import handle_tool_batch
 
     fake_payload = json.dumps({"success": True, "nodes": [{"name": "n1"}]})
     mock_block = TextContent(type="text", text=fake_payload, annotations=None, meta=None)
 
-    # String-returning tools: FastMCP returns a tuple (list[block], dict)
+    # String-returning tools: MCPServer returns a tuple (list[block], dict)
     with patch(
         "td_mcp.registry.tools_batch.mcp.call_tool",
         new=AsyncMock(return_value=([mock_block], {})),
@@ -87,7 +87,7 @@ def test_tool_batch_dispatch_partial_failure():
     import json
     from unittest.mock import patch
 
-    from mcp.types import TextContent
+    from mcp_types import TextContent
 
     from td_mcp.registry.tools_batch import handle_tool_batch
 
@@ -131,7 +131,7 @@ def test_tool_batch_dispatch_tool_reports_error_with_none_error_field():
     import json
     from unittest.mock import AsyncMock, patch
 
-    from mcp.types import TextContent
+    from mcp_types import TextContent
 
     from td_mcp.registry.tools_batch import handle_tool_batch
 
@@ -156,7 +156,7 @@ def test_tool_batch_dispatch_tool_reports_real_error():
     import json
     from unittest.mock import AsyncMock, patch
 
-    from mcp.types import TextContent
+    from mcp_types import TextContent
 
     from td_mcp.registry.tools_batch import handle_tool_batch
 
@@ -195,7 +195,7 @@ def test_tool_batch_forwards_recovery_hints_on_sub_call_failure():
     import json
     from unittest.mock import AsyncMock, patch
 
-    from mcp.types import TextContent
+    from mcp_types import TextContent
 
     from td_mcp.registry.tools_batch import handle_tool_batch
 
@@ -245,7 +245,7 @@ def test_tool_batch_omits_recovery_hints_when_absent():
     import json
     from unittest.mock import AsyncMock, patch
 
-    from mcp.types import TextContent
+    from mcp_types import TextContent
 
     from td_mcp.registry.tools_batch import handle_tool_batch
 

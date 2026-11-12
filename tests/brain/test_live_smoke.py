@@ -112,6 +112,10 @@ class _TransactionalGeneratedCodeLiveClient(_SparseLiveClient):
             path = f"{parent}/{name}".replace("//", "/")
             self.created_paths.add(path)
             return {"node": {"path": path}}
+        if endpoint == "node/delete":
+            path = payload["path"]
+            self.created_paths = {p for p in self.created_paths if p != path and not p.startswith(path + "/")}
+            return {"success": True}
         if endpoint == "node/params/set":
             return {"ok": True}
         if endpoint == "node/content/set":
@@ -159,12 +163,12 @@ class _TransactionalGeneratedCodeLiveClient(_SparseLiveClient):
 class _CompileFailGeneratedCodeLiveClient(_TransactionalGeneratedCodeLiveClient):
     async def request(self, endpoint: str, params: dict | None = None):
         payload = params or {}
-        if endpoint == "node/errors" and payload.get("path") == "/project1/tdpilot_gc_smoke_glsl":
+        if endpoint == "node/errors" and str(payload.get("path", "")).endswith("/tdpilot_gc_smoke_glsl"):
             self.calls.append((endpoint, payload))
             return {
                 "issues": [
                     {
-                        "path": "/project1/tdpilot_gc_smoke_glsl",
+                        "path": payload["path"],
                         "message": "shader compile failed",
                     }
                 ]
@@ -172,34 +176,18 @@ class _CompileFailGeneratedCodeLiveClient(_TransactionalGeneratedCodeLiveClient)
         return await super().request(endpoint, params)
 
 
-class _UndoNoopGeneratedCodeLiveClient(_TransactionalGeneratedCodeLiveClient):
-    async def request(self, endpoint: str, params: dict | None = None):
-        payload = params or {}
-        if endpoint == "project/lifecycle":
-            self.calls.append((endpoint, payload))
-            return {"ok": True}
-        if endpoint == "node/delete":
-            self.calls.append((endpoint, payload))
-            self.created_paths.discard(str(payload.get("path") or ""))
-            return {"success": True}
-        return await super().request(endpoint, params)
-
-
-class _CleanupReadbackFailGeneratedCodeLiveClient(_UndoNoopGeneratedCodeLiveClient):
+class _CleanupReadbackFailGeneratedCodeLiveClient(_TransactionalGeneratedCodeLiveClient):
     def __init__(self) -> None:
         super().__init__()
-        self.undo_seen = False
+        self.delete_seen = False
         self.failed_cleanup_readback = False
 
     async def request(self, endpoint: str, params: dict | None = None):
-        payload = params or {}
-        if endpoint == "project/lifecycle":
-            self.undo_seen = True
-            return await super().request(endpoint, params)
-        if endpoint == "nodes" and self.undo_seen and not self.failed_cleanup_readback:
-            self.calls.append((endpoint, payload))
+        if endpoint == "node/delete":
+            self.delete_seen = True
+        if endpoint == "nodes" and self.delete_seen:
             self.failed_cleanup_readback = True
-            raise RuntimeError("transient cleanup nodes readback failed")
+            raise RuntimeError("cleanup nodes readback failed")
         return await super().request(endpoint, params)
 
 
@@ -785,10 +773,11 @@ async def test_live_smoke_transactional_generated_code_smoke_is_opt_in_and_clean
     assert runtime_checks["compile_state"]["status"] == "runtime_pass"
     assert runtime_checks["callback_guard_present"]["status"] == "runtime_pass"
     assert runtime_checks["diagnostic_output_present"]["status"] == "runtime_pass"
-    assert smoke["cleanup"]["rollback_performed"] is True
+    assert smoke["cleanup"]["cleanup_performed"] is True
+    assert smoke["cleanup"]["rollback_performed"] is False
     assert smoke["cleanup"]["td_stable"] is True
     assert smoke["cleanup"]["remaining_created_paths"] == []
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+    assert not any(ep == "project/lifecycle" and body.get("action") == "undo" for ep, body in client.calls)
     assert any(call[0] == "node/create" for call in client.calls)
 
 
@@ -809,57 +798,70 @@ async def test_live_smoke_transactional_generated_code_smoke_reports_compile_fai
     assert report["ok"] is False
     assert report["mutated_td"] is True
     assert smoke["ok"] is False
-    assert smoke["transaction_status"] == "rolled_back"
+    assert smoke["transaction_status"] == "broken"
     assert smoke["validation_ok"] is False
     assert runtime_checks["compile_state"]["status"] == "runtime_fail"
-    assert smoke["cleanup"]["rollback_performed"] is True
+    assert smoke["cleanup"]["cleanup_performed"] is True
+    assert smoke["cleanup"]["rollback_performed"] is False
     assert smoke["cleanup"]["td_stable"] is True
     assert smoke["cleanup"]["remaining_created_paths"] == []
-    assert ("project/lifecycle", {"action": "undo"}) in client.calls
+    assert not any(ep == "project/lifecycle" and body.get("action") == "undo" for ep, body in client.calls)
 
 
 @pytest.mark.asyncio
-async def test_live_smoke_transactional_generated_code_cleanup_deletes_when_undo_noops():
-    client = _UndoNoopGeneratedCodeLiveClient()
-
+async def test_live_smoke_cleanup_preserves_preexisting_siblings_and_removes_generated_helpers():
+    client = _TransactionalGeneratedCodeLiveClient()
+    client.created_paths.update({"/project1/tdpilot", "/project1/tdpilot_gc_smoke_glsl"})
     report = await build_live_smoke_report(
         mode="live",
         td_client=client,
         card_index=_AllScenarioCards(),
         run_transactional_generated_code=True,
     )
-
     cleanup = report["transactional_generated_code_smoke"]["cleanup"]
-
     assert report["ok"] is True
-    assert cleanup["rollback_performed"] is True
-    assert cleanup["fallback_delete_performed"] is True
-    assert len(cleanup["fallback_deleted_paths"]) == 6
-    assert cleanup["fallback_delete_errors"] == []
-    assert cleanup["td_stable"] is True
-    assert cleanup["remaining_created_paths"] == []
-    assert any(call[0] == "node/delete" for call in client.calls)
+    assert cleanup["method"] == "owned_scratch_delete"
+    assert cleanup["cleanup_performed"] is True
+    assert cleanup["rollback_performed"] is False
+    assert client.created_paths == {"/project1/tdpilot", "/project1/tdpilot_gc_smoke_glsl"}
+    deletes = [body["path"] for ep, body in client.calls if ep == "node/delete"]
+    assert len(deletes) == 1 and deletes[0].startswith("/project1/tdpilot_gc_test_")
 
 
 @pytest.mark.asyncio
-async def test_live_smoke_transactional_generated_code_cleanup_deletes_after_readback_failure():
+async def test_live_smoke_cleanup_fails_closed_on_unverified_readback():
     client = _CleanupReadbackFailGeneratedCodeLiveClient()
-
     report = await build_live_smoke_report(
         mode="live",
         td_client=client,
         card_index=_AllScenarioCards(),
         run_transactional_generated_code=True,
     )
-
     cleanup = report["transactional_generated_code_smoke"]["cleanup"]
-
-    assert report["ok"] is True
-    assert cleanup["rollback_error"] == ""
-    assert cleanup["fallback_delete_performed"] is True
-    assert cleanup["td_stable"] is True
-    assert cleanup["remaining_created_paths"] == []
+    assert report["ok"] is False
+    assert cleanup["cleanup_performed"] is True
+    assert cleanup["td_stable"] is False
+    assert "readback failed" in cleanup["rollback_error"]
     assert client.failed_cleanup_readback is True
+
+
+@pytest.mark.asyncio
+async def test_live_smoke_failed_scratch_creation_never_deletes_existing_component():
+    class CreateFail(_TransactionalGeneratedCodeLiveClient):
+        async def request(self, endpoint, params=None):
+            if endpoint == "node/create":
+                raise RuntimeError("create denied")
+            return await super().request(endpoint, params)
+
+    client = CreateFail()
+    report = await build_live_smoke_report(
+        mode="live",
+        td_client=client,
+        card_index=_AllScenarioCards(),
+        run_transactional_generated_code=True,
+    )
+    assert report["ok"] is False
+    assert not any(ep == "node/delete" for ep, _ in client.calls)
 
 
 def test_brain_live_smoke_cli_outputs_json_report():

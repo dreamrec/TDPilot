@@ -17,8 +17,8 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 from pydantic import Field
 
 from td_mcp import tool_registry as _tr  # noqa: E402
@@ -29,7 +29,7 @@ from td_mcp.tool_registry import mcp  # noqa: E402
 @mcp.tool(
     name="td_knowledge_save",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False
+        read_only_hint=False, destructive_hint=False, idempotent_hint=False, open_world_hint=False
     ),
 )
 async def td_knowledge_save(
@@ -131,7 +131,7 @@ async def td_knowledge_save(
 @mcp.tool(
     name="td_knowledge_recall",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_knowledge_recall(
@@ -198,7 +198,7 @@ async def td_knowledge_recall(
 @mcp.tool(
     name="td_knowledge_get",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_knowledge_get(
@@ -235,7 +235,7 @@ async def td_knowledge_get(
 @mcp.tool(
     name="td_knowledge_list",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_knowledge_list(

@@ -13,8 +13,8 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -27,7 +27,7 @@ from td_mcp.tool_registry import mcp  # noqa: E402
 @mcp.tool(
     name="td_get_content",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_get_content(
@@ -44,7 +44,7 @@ async def td_get_content(
 @mcp.tool(
     name="td_set_content",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=True
+        read_only_hint=False, destructive_hint=True, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_set_content(
@@ -86,7 +86,7 @@ async def td_set_content(
 @mcp.tool(
     name="td_custom_parameters",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+        read_only_hint=False, destructive_hint=True, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_custom_parameters(
@@ -127,7 +127,7 @@ async def td_custom_parameters(
 @mcp.tool(
     name="td_exec_python",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+        read_only_hint=False, destructive_hint=True, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_exec_python(

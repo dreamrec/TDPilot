@@ -82,6 +82,12 @@ always wins if the schema has evolved.
 - The supported bounded CHOP reference shape is
   `{"mode":"chop_reference_expression","source_channel":0,"target_param":"brightness1"}`;
   a safe channel name may replace the index.
+- For reviewed cameraCOMP transforms/FOV, phongMAT diffuse/shininess,
+  particlePOP birthrate/life/speed, and noisePOP amp0/period, use a finite
+  `output_range: [low, high]` within the returned parameter policy when narrowing
+  its default bounds. Generated expressions always clamp these added targets. Optional
+  finite `scale` and `offset` map the CHOP signal before clamping. Level TOP
+  bindings retain compatibility with the direct reference shape.
 - The target parameter must be registry-backed and numeric. Resolve static
   value conflicts before proposal.
 - A reference edge requires an explicit OP-reference parameter.
@@ -106,7 +112,7 @@ substitute.
 
 ## Concept-to-node Atlas Workflow
 
-The packaged 659-card reviewed operator atlas has a zero-concept backlog across
+The packaged 662-card reviewed operator atlas has a zero-concept backlog across
 CHOP, COMP, DAT, MAT, POP, SOP, and TOP and cites Official Derivative sources.
 
 1. Name every data domain required by the complete intent.

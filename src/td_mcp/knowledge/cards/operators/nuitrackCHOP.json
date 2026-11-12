@@ -1,0 +1,58 @@
+{
+  "card_type": "operator",
+  "op_type": "nuitrackCHOP",
+  "family": "CHOP",
+  "display_name": "Nuitrack CHOP",
+  "docs_url": "https://docs.derivative.ca/Nuitrack_CHOP",
+  "summary": "Outputs skeletal joint positions and rotations from supported Nuitrack sensors.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable processing."
+    },
+    {
+      "name": "sensor",
+      "type": "Menu",
+      "note": "Select sensor."
+    },
+    {
+      "name": "restart",
+      "type": "Pulse",
+      "note": "Restart sensor."
+    },
+    {
+      "name": "positions",
+      "type": "Toggle",
+      "note": "Joint positions in meters."
+    },
+    {
+      "name": "rotations",
+      "type": "Toggle",
+      "note": "Absolute joint rotations."
+    },
+    {
+      "name": "maxplayers",
+      "type": "Int",
+      "note": "Maximum tracked users."
+    }
+  ],
+  "key_concepts": [
+    "CHOP channels carry skeleton tracking results.",
+    "Pair with Nuitrack TOP for image and depth streams."
+  ],
+  "common_gotchas": [
+    "Requires a separate Nuitrack license and compatible sensor.",
+    "Joint rotations are absolute, not parent-relative.",
+    "Node creation alone does not prove sensor tracking.",
+    "Live 2025.33230 calls the user limit maxplayers; documentation may call it count."
+  ],
+  "related_snippets": [
+    "Nuitrack_CHOP_snippets"
+  ],
+  "build_relevance": "2025.33230+",
+  "last_verified": "2026-11-12",
+  "platform_notes": [
+    "Windows only; sensor, SDK and license must be verified on the target machine."
+  ]
+}

@@ -28,8 +28,8 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -149,7 +149,7 @@ def _official_snippet_examples(
 @mcp.tool(
     name="td_recommend_official_component",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_recommend_official_component(
@@ -223,7 +223,7 @@ async def td_recommend_official_component(
 @mcp.tool(
     name="td_find_official_example",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_find_official_example(
@@ -307,7 +307,7 @@ async def td_find_official_example(
 @mcp.tool(
     name="td_explain_better_way",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_explain_better_way(

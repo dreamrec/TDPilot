@@ -44,7 +44,8 @@
     "Custom sequential blocks can create float, float2, float3, float4, and array attributes, with optional qualifiers such as color or direction.",
     "ASCII point files share one parser across txt, csv, xyz, and related extensions: delimiter and header handling can determine whether fields map correctly.",
     "The Thin and ReRange pages support import cleanup without building temporary attribute nodes, including point thinning, random seeds, and attribute value remapping.",
-    "Gaussian splat files can expose many specialized attributes, so planner output should map only the required fields rather than assuming a compact point-cloud layout."
+    "Gaussian splat files can expose many specialized attributes, so planner output should map only the required fields rather than assuming a compact point-cloud layout.",
+    "In 2025.33230+, native Gaussian Splat detection configures Sh, Scale, Rotate and Color attributes; use this path instead of the removed gsLoader palette component."
   ],
   "common_gotchas": [
     "ASCII delimiters are auto-detected; malformed headers or inconsistent delimiters can silently map fields poorly.",
@@ -53,5 +54,5 @@
   ],
   "related_snippets": ["POP_snippets"],
   "build_relevance": "2025.30000+",
-  "last_verified": "2026-06-18"
+  "last_verified": "2026-11-12"
 }

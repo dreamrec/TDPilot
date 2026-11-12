@@ -79,6 +79,9 @@ def detect_capabilities(
             caps_source = getattr(request_ctx, attr)
             break
 
+    if caps_source is None:
+        session = getattr(request_ctx, "session", None)
+        caps_source = getattr(session, "client_capabilities", None)
     caps = _as_mapping(caps_source)
     resources = _as_mapping(caps.get("resources"))
     sampling = _as_mapping(caps.get("sampling"))

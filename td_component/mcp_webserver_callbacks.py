@@ -27,7 +27,7 @@ import traceback
 # Configuration
 # ─────────────────────────────────────────────────────────────
 
-API_VERSION = "2.4.1"
+API_VERSION = "2.6.0"
 SCREENSHOT_TEMP_PATH = os.path.join(os.environ.get('TEMP', os.environ.get('TMP', '/tmp')), 'td_mcp_screenshot.jpg')
 
 # Auth + policy env is read at CALL TIME, not import time — otherwise TD's
@@ -230,6 +230,14 @@ def _record_request_safe(uri, response, t0):
         cache = me.parent().op('state_cache')
         if cache is not None:
             cache.module.record_request(tool_name, latency_ms, ok)
+            # Frame callbacks stop when the timeline is paused. Refresh the
+            # connection panel on traffic too, at most once per second.
+            now = time.monotonic()
+            if now - globals().get('_last_panel_refresh', 0.0) >= 1.0:
+                globals()['_last_panel_refresh'] = now
+                renderer = cache.parent().parent().op('renderer')
+                if renderer is not None:
+                    renderer.module.tick()
     except Exception:
         pass
 
@@ -351,6 +359,9 @@ def _onHTTPRequest_impl(webServerDAT, request, response):
             '/api/python/help':         handle_python_help,
             '/api/python/classes':      handle_python_classes,
             '/api/project/lifecycle':   handle_project_lifecycle,
+            '/api/patch/status':        handle_patch_status,
+            '/api/patch/apply':         handle_patch_apply,
+            '/api/patch/rollback':      handle_patch_rollback,
             '/api/timeline':            handle_timeline,
             '/api/timeline/set':        handle_timeline_set,
             '/api/pulse':               handle_pulse_param,
@@ -2607,6 +2618,7 @@ def _project_lifecycle_status():
             'modifiedCount': modified_count,
         },
         'undo': {
+            'guardedUndo': True,
             'state': bool(getattr(undo_obj, 'state', False)) if undo_obj is not None else False,
             'globalState': bool(getattr(undo_obj, 'globalState', False)) if undo_obj is not None else False,
             'undoStack': undo_stack,
@@ -2655,6 +2667,13 @@ def handle_project_lifecycle(body):
 
         soft_warning = None
         if action == 'undo':
+            expected_stack = body.get('expected_undo_stack')
+            expected_label = body.get('expected_undo_label')
+            if expected_stack is not None:
+                current = list(getattr(undo_obj, 'undoStack', []) or [])
+                if (current != expected_stack or not expected_label
+                        or not current or current[0] != expected_label):
+                    return {'success': False, 'error': 'Undo ownership changed; refusing to undo unrelated work'}
             undo_obj.undo()
         elif action == 'redo':
             undo_obj.redo()
@@ -3737,3 +3756,375 @@ def handle_analyze_frame(body):
             thresholds,
         )
     return result
+
+
+# Native typed transactions. All edits and ownership checks run in this one
+# WebServer callback. Receipts are session-bound and retry-safe; no arbitrary
+# Python, filesystem operations, or pulse operations are accepted here.
+import hashlib
+import uuid
+
+# TD may re-evaluate callback globals on each HTTP request. Store the receipt
+# ledger on the callback DAT, but explicitly exclude it from saved projects.
+try:
+    # fetch() registers a dependency on this DAT's own storage and causes a
+    # self-cook loop when TD evaluates the WebServer callback. Read the dict
+    # directly; receipt mutations must not participate in the cook graph.
+    _atomic_state = me.storage.get('_tdpilot_atomic_v1')
+    if _atomic_state is None:
+        _atomic_state = {'session': str(uuid.uuid4()), 'receipts': {}}
+        me.storage['_tdpilot_atomic_v1'] = _atomic_state
+        me.storeStartupValue('_tdpilot_atomic_v1', None)
+except NameError:  # ordinary Python unit-test import
+    _atomic_state = {'session': str(uuid.uuid4()), 'receipts': {}}
+_ATOMIC_SESSION = _atomic_state['session']
+_ATOMIC_RECEIPTS = _atomic_state['receipts']
+_ATOMIC_MAX_OPS = 512
+_ATOMIC_MAX_BYTES = 8 * 1024 * 1024
+
+
+def handle_patch_status(body):
+    key = body.get('request_id')
+    if key:
+        record = _ATOMIC_RECEIPTS.get(key)
+        return {'session': _ATOMIC_SESSION, 'receipt': record['response'] if record else None}
+    return {'native_atomic': 1, 'session': _ATOMIC_SESSION, 'max_operations': _ATOMIC_MAX_OPS}
+
+
+def _atomic_path(path, root):
+    if (not isinstance(path, str) or not path.startswith('/') or '//' in path
+            or any(p in ('.', '..', '') for p in path.split('/')[1:])):
+        raise ValueError('Invalid absolute path: %r' % path)
+    if path != root and not path.startswith(root + '/'):
+        raise ValueError('Path outside transaction root: ' + path)
+    # Never mutate the serving bridge, its ancestors, or its descendants.
+    bridge = me.parent().parent().path
+    if path == bridge or path.startswith(bridge + '/'):
+        raise ValueError('Transaction cannot mutate its serving bridge')
+    return path
+
+
+def _atomic_index(value):
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError('Connector index must be a non-negative integer')
+    return value
+
+
+def _atomic_value(value):
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, (tuple, list)):
+        return [_atomic_value(v) for v in value]
+    if hasattr(value, 'path'):
+        return {'op_path': value.path}
+    raise ValueError('Cannot verify parameter state of type ' + type(value).__name__)
+
+
+def _atomic_capture(watch):
+    state = {}
+    for path, spec in sorted(watch.items()):
+        node = op(path)
+        if node is None:
+            state[path] = None
+            continue
+        item = {'type': node.type}
+        if 'params' in spec:
+            names = spec['params']
+            pars = node.pars() if names is None else [getattr(node.par, n, None) for n in sorted(names)]
+            item['params'] = {}
+            for p in pars:
+                if p is None:
+                    raise ValueError('Missing parameter during state capture: ' + path)
+                if p.isPulse:
+                    continue
+                # Use stored values, not eval(): animated expressions naturally
+                # change every frame and must not invalidate a receipt.
+                item['params'][p.name] = {
+                    'val': _atomic_value(p.val), 'expr': p.expr,
+                    'bindExpr': p.bindExpr, 'mode': str(p.mode),
+                }
+        if spec.get('layout'):
+            item['layout'] = [node.nodeX, node.nodeY, node.nodeWidth, node.nodeHeight]
+        if spec.get('content') and node.isDAT:
+            item['content'] = node.text
+        if spec.get('connections'):
+            item['connections'] = handle_get_connections({'path': path})
+        if spec.get('children') and node.isCOMP:
+            item['children'] = sorted(c.path for c in node.children)
+        state[path] = item
+    if len(json.dumps(state)) > _ATOMIC_MAX_BYTES:
+        raise ValueError('Transaction state exceeds 8 MiB verification limit')
+    return state
+
+
+def _atomic_watch(body):
+    root = body['target_root']
+    if root == '/' or not op(root) or not op(root).isCOMP:
+        raise ValueError('Native transaction requires an existing scoped COMP root')
+    operations = body['operations']
+    if not isinstance(operations, list) or len(operations) > _ATOMIC_MAX_OPS:
+        raise ValueError('Too many transaction operations')
+    watch = {}
+    def add(path, **spec):
+        _atomic_path(path, root)
+        prev = watch.setdefault(path, {})
+        if 'params' in spec and 'params' in prev:
+            spec['params'] = (None if spec['params'] is None or prev['params'] is None
+                              else sorted(set(spec['params']) | set(prev['params'])))
+        prev.update(spec)
+        if len(watch) > 1024:
+            raise ValueError('Transaction exceeds 1024 watched nodes')
+    def full(node):
+        add(node.path, params=None, content=True, layout=True, connections=True, children=True)
+        if node.isCOMP:
+            for c in node.children:
+                full(c)
+    for item in operations:
+        kind, target, args = item['kind'], item.get('target'), item.get('args', {})
+        if kind == 'create_node':
+            parent_path = target or root
+            name = args['name']
+            if not isinstance(name, str) or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', name):
+                raise ValueError('Creation requires an exact, valid node name')
+            add(parent_path, children=True)
+            add(parent_path + '/' + name)
+        elif kind == 'set_params':
+            add(target, params=list(args['params']))
+        elif kind == 'set_dat_content':
+            add(target, content=True)
+        elif kind == 'layout':
+            add(target, layout=True)
+        elif kind in ('connect', 'route_swap'):
+            for key in ('from', 'to'):
+                add(args[key], connections=True)
+            _atomic_index(args.get('from_output', 0))
+            _atomic_index(args.get('to_input', 0))
+            if kind == 'route_swap':
+                add(args['old_from'], connections=True)
+                _atomic_index(args.get('old_from_output', 0))
+                if target != args['to'] or args['from'] == args['old_from']:
+                    raise ValueError('Invalid route_swap authority')
+        elif kind in ('delete_node', 'disconnect'):
+            if args.get('owned') is not True or target == root:
+                raise ValueError('Destructive operation needs descendant target and owned=true')
+            add(target, connections=True)
+            if kind == 'delete_node':
+                bridge = me.parent().parent().path
+                if bridge.startswith(target + '/'):
+                    raise ValueError('Cannot delete a bridge ancestor')
+                add(target.rsplit('/', 1)[0], children=True)
+                node = op(target)
+                if node:
+                    full(node)
+            else:
+                add(args['expected_peer'], connections=True)
+                _atomic_index(args['index'])
+                if args.get('expected_peer_index') is not None:
+                    _atomic_index(args['expected_peer_index'])
+                if args['connector_type'] not in ('input', 'output'):
+                    raise ValueError('Invalid connector type')
+        else:
+            raise ValueError('Unsupported native operation: ' + str(kind))
+    return watch
+
+
+def _atomic_require_route(path, connector_type, index, peer, peer_index=None):
+    node = op(path)
+    connectors = node.inputConnectors if connector_type == 'input' else node.outputConnectors
+    connections = list(connectors[index].connections)
+    # An output disconnect affects every destination: never silently drop fanout.
+    if len(connections) != 1 or connections[0].owner.path != peer:
+        raise ValueError('Expected route changed; refusing connector mutation')
+    if peer_index is not None and connections[0].index != peer_index:
+        raise ValueError('Expected peer connector changed')
+
+
+def _atomic_op(item, root):
+    kind, target, args = item['kind'], item.get('target'), item.get('args', {})
+    if kind == 'create_node':
+        parent_path = target or root
+        path = parent_path + '/' + args['name']
+        if op(path) is not None:
+            raise ValueError('Name collision; refusing to rename or overwrite ' + path)
+        result = handle_create_node({'parent_path': parent_path, 'node_type': args['op_type'],
+                                     'name': args['name'], 'nodeX': args.get('nodeX'), 'nodeY': args.get('nodeY')})
+        if not result.get('error') and result['node']['path'] != path:
+            raise ValueError('TouchDesigner renamed the requested node')
+    elif kind == 'set_params':
+        node = op(target)
+        if node is None:
+            raise ValueError('Node not found: ' + target)
+        for name in args['params']:
+            p = getattr(node.par, name, None)
+            if p is None or p.readOnly or p.isPulse:
+                raise ValueError('Missing, read-only or non-reversible pulse parameter: ' + name)
+        result = handle_set_params({'path': target, 'params': args['params']})
+        failed = [n for n, v in result.get('results', {}).items() if not v.get('success')]
+        if failed:
+            raise ValueError('Parameter assignment failed: ' + ', '.join(failed))
+    elif kind == 'set_dat_content':
+        node = op(target)
+        if node is None or not node.isDAT:
+            raise ValueError('DAT not found: ' + str(target))
+        old_text = node.text
+        try:
+            result = handle_set_content(dict(args, path=target))
+        finally:
+            # TD does not automatically record DAT content writes in undo.
+            # Register even a partial/failed table assignment for exact recovery.
+            ui.undo.addCallback(_atomic_dat_undo, {'path': target, 'before': old_text, 'after': node.text})
+    elif kind in ('connect', 'route_swap'):
+        if kind == 'route_swap':
+            _atomic_require_route(args['to'], 'input', args.get('to_input', 0),
+                                  args['old_from'], args.get('old_from_output', 0))
+        result = handle_connect_nodes({'source_path': args['from'], 'target_path': args['to'],
+                                       'source_index': args.get('from_output', 0), 'target_index': args.get('to_input', 0)})
+        if not result.get('error'):
+            _atomic_require_route(args['to'], 'input', args.get('to_input', 0), args['from'], args.get('from_output', 0))
+    elif kind == 'delete_node':
+        result = handle_delete_node({'path': target})
+    elif kind == 'disconnect':
+        _atomic_require_route(target, args['connector_type'], args['index'],
+                              args['expected_peer'], args.get('expected_peer_index'))
+        result = handle_disconnect_nodes(dict(args, path=target))
+    elif kind == 'layout':
+        node = op(target)
+        node.nodeX, node.nodeY = int(args['x']), int(args['y'])
+        result = {'path': target, 'success': True}
+    else:
+        raise ValueError('Unsupported operation')
+    if result.get('error') or result.get('success') is False:
+        raise ValueError(str(result.get('error') or result))
+    return result
+
+
+def _atomic_dat_undo(isUndo, info):
+    node = op(info['path'])
+    if node is None or not node.isDAT:
+        raise RuntimeError('Cannot restore DAT content at ' + info['path'])
+    node.text = info['before'] if isUndo else info['after']
+
+
+def _atomic_marker(isUndo, info):
+    # Ensure even an empty/no-op transaction has a unique owned undo entry.
+    pass
+
+
+def _atomic_rollback(record, immediate=False):
+    response = record['response']
+    if response.get('rollback', {}).get('ok'):
+        if 'watch' in record and _atomic_capture(record['watch']) == record['before']:
+            return response['rollback']
+        return {'ok': False, 'reason': 'State changed after completed rollback; undo refused'}
+    if 'watch' not in record:
+        return {'ok': False, 'reason': 'Receipt state expired; automatic undo refused'}
+    try:
+        if list(ui.undo.undoStack) != record['stack'] or not record['stack'] or record['stack'][0] != response['undo_label']:
+            raise ValueError('Undo history changed; unrelated work will not be undone')
+        if not immediate and _atomic_capture(record['watch']) != record['after']:
+            raise ValueError('Affected state changed after transaction; undo refused')
+        ui.undo.undo()
+        actual = _atomic_capture(record['watch'])
+        mismatches = [p for p in record['before'] if actual.get(p) != record['before'][p]]
+        proof = {'ok': not mismatches, 'method': 'native_undo_exact_state',
+                 'checked_nodes': len(actual), 'mismatched_paths': mismatches}
+        response['rollback'] = proof
+        response['undo_block_opened'] = False
+        response['status'] = 'rolled_back' if proof['ok'] else 'broken'
+        return proof
+    except Exception as exc:
+        return {'ok': False, 'reason': str(exc)}
+
+
+def handle_patch_rollback(body):
+    if body.get('session') != _ATOMIC_SESSION:
+        return {'ok': False, 'reason': 'Transaction session changed; undo refused'}
+    record = _ATOMIC_RECEIPTS.get(body.get('request_id'))
+    if not record:
+        return {'ok': False, 'reason': 'Unknown transaction receipt; undo refused'}
+    return _atomic_rollback(record)
+
+
+def handle_patch_apply(body):
+    if body.get('session') != _ATOMIC_SESSION:
+        return {'error': 'Atomic session changed; reconnect and inspect before resubmitting'}
+    request_id = body.get('request_id')
+    if not isinstance(request_id, str) or not 1 <= len(request_id) <= 128:
+        return {'error': 'A bounded unique request_id is required'}
+    encoded = json.dumps(body, sort_keys=True, allow_nan=False)
+    if len(encoded) > 2 * 1024 * 1024:
+        return {'error': 'Atomic request exceeds 2 MiB'}
+    digest = hashlib.sha256(encoded.encode('utf-8')).hexdigest()
+    cached = _ATOMIC_RECEIPTS.get(request_id)
+    if cached:
+        if cached['digest'] != digest:
+            return {'error': 'Request ID reused with different transaction payload'}
+        return cached['response']
+    if len(_ATOMIC_RECEIPTS) >= 4096:
+        return {'error': 'Atomic receipt session full; reconnect component before new work'}
+    if not ui.undo.globalState:
+        return {'error': 'Native transactions require global undo enabled'}
+    try:
+        watch = _atomic_watch(body)
+        before = _atomic_capture(watch)
+    except Exception as exc:
+        return {'error': 'Atomic preflight: ' + str(exc)}
+    label = str(body.get('undo_label') or 'TDPilot')[:200] + ' [' + request_id + ']'
+    response = {'request_id': request_id, 'session': _ATOMIC_SESSION, 'undo_label': label,
+                'outcomes': [], 'failed_op': None, 'failed_reason': None, 'undo_block_opened': False, 'status': 'pending'}
+    record = {'digest': digest, 'response': response, 'watch': watch, 'before': before}
+    _ATOMIC_RECEIPTS[request_id] = record  # reserve before mutation; never replay a partial request
+    ui.undo.startBlock(label)
+    try:
+        ui.undo.addCallback(_atomic_marker, None)
+        for index, item in enumerate(body['operations']):
+            try:
+                outcome = _atomic_op(item, body['target_root'])
+                response['outcomes'].append({'index': index, 'outcome': outcome})
+            except Exception as exc:
+                response['failed_op'], response['failed_reason'] = index, str(exc)
+                break
+    finally:
+        ui.undo.endBlock()
+    record['stack'] = list(ui.undo.undoStack)
+    response['undo_block_opened'] = bool(record['stack'] and record['stack'][0] == label)
+    try:
+        # TD may create implicit siblings (e.g. GLSL source DATs). Include every
+        # newly added child and its subtree in receipt verification.
+        pending = []
+        for path, spec in list(watch.items()):
+            node = op(path)
+            if spec.get('children') and node is not None and node.isCOMP:
+                old = (before.get(path) or {}).get('children', [])
+                pending.extend(c for c in node.children if c.path not in old)
+        while pending:
+            node = pending.pop()
+            path = node.path
+            watch[path] = {'params': None, 'content': True, 'layout': True, 'connections': True, 'children': True}
+            before.setdefault(path, None)
+            if node.isCOMP:
+                pending.extend(node.children)
+            if len(watch) > 1024:
+                raise ValueError('Created graph exceeds verification limit')
+        record['after'] = _atomic_capture(watch)
+        if not response['undo_block_opened']:
+            raise ValueError('Native undo block was not retained')
+        if response['failed_reason'] is not None:
+            response['rollback'] = _atomic_rollback(record, immediate=True)
+    except Exception as exc:
+        response['failed_reason'] = response['failed_reason'] or str(exc)
+        # Still inside the apply callback: no later HTTP/UI edit can intervene.
+        # Revert our guarded block even if capturing the after-state failed.
+        # Verification uses the complete before-state and child inventories.
+        response['rollback'] = _atomic_rollback(record, immediate=True)
+    response['status'] = 'broken' if response['failed_reason'] else 'clean'
+    # Retain recent full proofs; keep tombstones/results for retry deduplication.
+    retained_bytes = 0
+    for old in reversed(list(_ATOMIC_RECEIPTS.values())):
+        if 'watch' not in old:
+            continue
+        retained_bytes += len(json.dumps(old.get('before', {}))) + len(json.dumps(old.get('after', {})))
+        if retained_bytes > 64 * 1024 * 1024:
+            for key in ('watch', 'before', 'after'):
+                old.pop(key, None)
+    return response

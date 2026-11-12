@@ -39,7 +39,7 @@ jobs:
       - name: Version drift check
         run: uv run python scripts/check_versions.py
 
-      # docs/API_REFERENCE.md's tool tables are generated from the FastMCP
+      # docs/API_REFERENCE.md's tool tables are generated from the MCPServer
       # registry (audit batch E). --check regenerates in memory and fails on
       # drift — same pattern as the version drift check above.
       - name: API reference freshness check

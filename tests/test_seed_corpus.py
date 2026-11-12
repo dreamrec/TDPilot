@@ -34,7 +34,8 @@ class TestAllJsonValid:
     """Every .json file in cards/ must parse without error."""
 
     @pytest.fixture(scope="class")
-    def all_json_files(self) -> list[Path]:
+    @staticmethod
+    def all_json_files() -> list[Path]:
         return list(CARDS_DIR.rglob("*.json"))
 
     def test_at_least_one_json(self, all_json_files: list[Path]) -> None:
@@ -52,7 +53,8 @@ class TestOperatorCards:
     """Operator cards must have required fields and meet minimums."""
 
     @pytest.fixture(scope="class")
-    def operators(self) -> list[tuple[Path, dict]]:
+    @staticmethod
+    def operators() -> list[tuple[Path, dict]]:
         return _load_all_json("operators")
 
     def test_at_least_10_operator_cards(self, operators: list[tuple[Path, dict]]) -> None:
@@ -3885,7 +3887,8 @@ class TestPaletteCards:
     """Palette cards must have required fields."""
 
     @pytest.fixture(scope="class")
-    def palettes(self) -> list[tuple[Path, dict]]:
+    @staticmethod
+    def palettes() -> list[tuple[Path, dict]]:
         return _load_all_json("palette")
 
     def test_required_fields(self, palettes: list[tuple[Path, dict]]) -> None:
@@ -3912,7 +3915,8 @@ class TestSnippetCards:
     """Snippet cards must have required fields."""
 
     @pytest.fixture(scope="class")
-    def snippets(self) -> list[tuple[Path, dict]]:
+    @staticmethod
+    def snippets() -> list[tuple[Path, dict]]:
         return _load_all_json("snippets")
 
     def test_required_fields(self, snippets: list[tuple[Path, dict]]) -> None:
@@ -4130,7 +4134,8 @@ class TestArticleCards:
     """Article cards cover official learning pages that are not createable operators."""
 
     @pytest.fixture(scope="class")
-    def articles(self) -> list[tuple[Path, dict]]:
+    @staticmethod
+    def articles() -> list[tuple[Path, dict]]:
         return _load_all_json("articles")
 
     def test_required_fields(self, articles: list[tuple[Path, dict]]) -> None:

@@ -34,3 +34,28 @@ class FakeTDClient:
 @pytest.fixture
 def fake_td():
     return FakeTDClient()
+
+
+class GuardedUndoTDClient(FakeTDClient):
+    """Model a server with genuinely sealed owned undo blocks for rollback tests."""
+
+    def __init__(self, scripted=None):
+        super().__init__(scripted)
+        self.undo_stack = []
+
+    async def request(self, endpoint, params=None):
+        response = await super().request(endpoint, params)
+        if endpoint != "project/lifecycle":
+            return response
+        action = (params or {}).get("action")
+        if action == "start_undo_block":
+            self.undo_stack.insert(0, params["name"])
+        elif action == "undo":
+            assert params["expected_undo_stack"] == self.undo_stack
+            assert params["expected_undo_label"] == self.undo_stack[0]
+            self.undo_stack.pop(0)
+        return {
+            "success": True,
+            "undo": {"guardedUndo": True, "undoStack": list(self.undo_stack)},
+            **response,
+        }

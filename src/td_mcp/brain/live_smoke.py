@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -778,8 +779,40 @@ def _transactional_generated_code_not_run() -> dict[str, Any]:
 
 
 async def _run_transactional_generated_code_smoke(td_client) -> dict[str, Any]:
+    # TD undo blocks cannot span HTTP callbacks. Own a container and remove only
+    # that confirmed container, including operator-generated helper siblings.
+    owned_root = None
+    report = {"schema_version": 1, "ok": False, "status": "failed", "mutated_td": False}
+    try:
+        created = await td_client.request(
+            "node/create",
+            {
+                "parent_path": "/project1",
+                "node_type": "baseCOMP",
+                "name": "tdpilot_gc_test_" + uuid.uuid4().hex[:12],
+            },
+        )
+        confirmed = (created.get("node") or {}).get("path", "")
+        if not confirmed or confirmed.rsplit("/", 1)[0] != "/project1":
+            raise RuntimeError("Could not confirm ownership of generated-code scratch component")
+        owned_root = confirmed
+        report["mutated_td"] = True
+        report = await _execute_generated_code_smoke(td_client, owned_root)
+    except Exception as exc:  # noqa: BLE001
+        report["error"] = str(exc)
+    finally:
+        if owned_root:
+            cleanup = await _cleanup_transactional_generated_code_smoke(td_client, owned_root)
+            report["cleanup"] = cleanup
+            report["ok"] = bool(report.get("ok") and cleanup["td_stable"])
+            if report["ok"]:
+                report["status"] = "cleaned_up"
+    return report
+
+
+async def _execute_generated_code_smoke(td_client, target_root: str) -> dict[str, Any]:
     started = time.perf_counter()
-    plan = _transactional_generated_code_patch_plan()
+    plan = _transactional_generated_code_patch_plan(target_root)
     static_issues = validate_patch_plan_generated_code(plan)
     if static_issues:
         return {
@@ -806,8 +839,8 @@ async def _run_transactional_generated_code_smoke(td_client) -> dict[str, Any]:
         plan,
         options=TransactionOptions(
             snapshot_before=False,
-            rollback_on_apply_failure=True,
-            rollback_on_validation_failure=True,
+            rollback_on_apply_failure=False,
+            rollback_on_validation_failure=False,
             validation_profile="structural_visual_safe",
         ),
         sentinel=UndoBlockSentinel(),
@@ -815,22 +848,11 @@ async def _run_transactional_generated_code_smoke(td_client) -> dict[str, Any]:
         concept_profiles=["glsl"],
         param_preflight=_direct_param_preflight_callback(safety_manager=None),
     )
-    cleanup = await _cleanup_transactional_generated_code_smoke(
-        td_client,
-        plan,
-        already_rolled_back=result.rollback_performed,
-    )
     validation_report = result.validation_report
     runtime_evidence = _generated_code_runtime_evidence(result)
     validation_ok = bool(validation_report and validation_report.ok)
-    ok = (
-        result.status in {"clean", "warnings"}
-        and not result.validation_failed
-        and validation_ok
-        and bool(cleanup.get("td_stable"))
-        and not cleanup.get("remaining_created_paths")
-    )
-    status = "cleaned_up" if ok else result.status
+    ok = result.status in {"clean", "warnings"} and not result.validation_failed and validation_ok
+    status = result.status
     return {
         "schema_version": 1,
         "status": status,
@@ -850,12 +872,10 @@ async def _run_transactional_generated_code_smoke(td_client) -> dict[str, Any]:
         "generated_code_blocks": _generated_code_block_summaries(plan),
         "runtime_contracts": patch_plan_generated_code_runtime_contracts(plan),
         "runtime_evidence": runtime_evidence,
-        "cleanup": cleanup,
     }
 
 
-def _transactional_generated_code_patch_plan() -> PatchPlan:
-    target_root = "/project1"
+def _transactional_generated_code_patch_plan(target_root: str = "/project1") -> PatchPlan:
     glsl_path = f"{target_root}/tdpilot_gc_smoke_glsl"
     shader_path = f"{target_root}/tdpilot_gc_smoke_pixel"
     callback_path = f"{target_root}/tdpilot_gc_smoke_callbacks"
@@ -1021,114 +1041,46 @@ def _transactional_generated_code_patch_plan() -> PatchPlan:
     )
 
 
-async def _cleanup_transactional_generated_code_smoke(
-    td_client,
-    plan: PatchPlan,
-    *,
-    already_rolled_back: bool,
-) -> dict[str, Any]:
-    rollback_performed = bool(already_rolled_back)
-    rollback_error = ""
-    nodes_readback_error = ""
-    fallback_deleted_paths: list[str] = []
-    fallback_delete_errors: list[dict[str, str]] = []
-    if not rollback_performed:
-        try:
-            await td_client.request("project/lifecycle", {"action": "undo"})
-            rollback_performed = True
-        except Exception as exc:  # noqa: BLE001
-            rollback_error = str(exc)
-
-    remaining_created_paths: list[str] = []
+async def _cleanup_transactional_generated_code_smoke(td_client, owned_root: str) -> dict[str, Any]:
+    report = {
+        "method": "owned_scratch_delete",
+        "cleanup_performed": False,
+        "rollback_performed": False,
+        "rollback_error": "",
+        "remaining_created_paths": [owned_root],
+        "td_stable": False,
+    }
     try:
-        remaining_created_paths = await _read_remaining_transactional_paths(td_client, plan)
-    except Exception as exc:  # noqa: BLE001
-        nodes_readback_error = f"cleanup nodes readback failed: {exc}"
-        remaining_created_paths = _planned_created_paths(plan)
-    if remaining_created_paths:
-        for path in remaining_created_paths:
-            try:
-                await td_client.request("node/delete", {"path": path})
-                fallback_deleted_paths.append(path)
-            except Exception as exc:  # noqa: BLE001
-                fallback_delete_errors.append({"path": path, "error": str(exc)})
-        try:
-            remaining_created_paths = await _read_remaining_transactional_paths(td_client, plan)
-            nodes_readback_error = ""
-        except Exception as exc:  # noqa: BLE001
-            nodes_readback_error = f"cleanup nodes readback failed: {exc}"
-
-    rollback_error = rollback_error or nodes_readback_error
-
-    error_issues: list[Any] = []
-    try:
+        deleted = await td_client.request("node/delete", {"path": owned_root})
+        if not isinstance(deleted, dict) or deleted.get("success") is not True:
+            raise RuntimeError("Scratch deletion was not confirmed")
+        report["cleanup_performed"] = True
+        payload = await td_client.request("nodes", {"path": "/project1", "limit": 1000})
+        if (
+            not isinstance(payload, dict)
+            or not isinstance(payload.get("nodes"), list)
+            or payload.get("has_more")
+        ):
+            raise RuntimeError("Incomplete cleanup nodes readback")
+        report["remaining_created_paths"] = [
+            owned_root for node in payload["nodes"] if node.get("path") == owned_root
+        ]
         errors = await td_client.request(
-            "node/errors",
-            {"path": plan.target_root, "recurse": True, "max_depth": 10},
+            "node/errors", {"path": "/project1", "recurse": True, "max_depth": 10}
         )
-        error_issues = (
-            errors.get("issues", [])
-            if isinstance(errors, dict)
-            else errors
-            if isinstance(errors, list)
-            else []
+        cooking = await td_client.request("cooking", {"path": "/project1"})
+        if not isinstance(errors, dict) or not isinstance(errors.get("issues"), list):
+            raise RuntimeError("Incomplete cleanup errors readback")
+        if not isinstance(cooking, dict) or not isinstance(cooking.get("nodes"), list):
+            raise RuntimeError("Incomplete cleanup cooking readback")
+        report["error_issue_count"] = len(errors["issues"])
+        report["stuck_cook_count"] = len(cooking.get("stuck", []))
+        report["td_stable"] = not (
+            report["remaining_created_paths"] or errors["issues"] or cooking.get("stuck", [])
         )
     except Exception as exc:  # noqa: BLE001
-        rollback_error = rollback_error or f"cleanup errors readback failed: {exc}"
-
-    stuck: list[Any] = []
-    try:
-        cooking = await td_client.request("cooking", {"path": plan.target_root})
-        stuck = cooking.get("stuck", []) if isinstance(cooking, dict) else []
-    except Exception as exc:  # noqa: BLE001
-        rollback_error = rollback_error or f"cleanup cooking readback failed: {exc}"
-
-    return {
-        "rollback_performed": rollback_performed,
-        "rollback_error": rollback_error,
-        "fallback_delete_performed": bool(fallback_deleted_paths or fallback_delete_errors),
-        "fallback_deleted_paths": fallback_deleted_paths,
-        "fallback_delete_errors": fallback_delete_errors,
-        "remaining_created_paths": remaining_created_paths,
-        "td_stable": (
-            not rollback_error
-            and not fallback_delete_errors
-            and not remaining_created_paths
-            and not error_issues
-            and not stuck
-        ),
-        "error_issue_count": len(error_issues),
-        "stuck_cook_count": len(stuck),
-    }
-
-
-async def _read_remaining_transactional_paths(td_client, plan: PatchPlan) -> list[str]:
-    created_paths = _planned_created_paths(plan)
-    payload = await td_client.request("nodes", {"path": plan.target_root, "limit": 1000})
-    nodes = (
-        payload
-        if isinstance(payload, list)
-        else payload.get("nodes", [])
-        if isinstance(payload, dict)
-        else []
-    )
-    live_paths = {
-        str(node.get("path") or "") for node in nodes if isinstance(node, dict) and node.get("path")
-    }
-    return sorted(path for path in created_paths if path in live_paths)
-
-
-def _planned_created_paths(plan: PatchPlan) -> list[str]:
-    paths: list[str] = []
-    for operation in plan.operations:
-        if operation.kind != "create_node":
-            continue
-        parent = str(operation.target or plan.target_root).rstrip("/")
-        name = str(operation.args.get("name") or "")
-        if not name:
-            continue
-        paths.append(f"{parent}/{name}".replace("//", "/"))
-    return paths
+        report["rollback_error"] = str(exc)
+    return report
 
 
 def _generated_code_runtime_evidence(result) -> list[dict[str, Any]]:

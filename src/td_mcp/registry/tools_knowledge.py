@@ -26,8 +26,8 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Any
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 
 # See ``src/td_mcp/registry/__init__.py`` for why this circular-looking
 # import works. ``_tr.X(...)`` calls via module-attribute lookup so test
@@ -106,7 +106,7 @@ def _param_semantics_for_param(op_type: str, family: str, param_name: str) -> di
 @mcp.tool(
     name="td_search_official_docs",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_search_official_docs(
@@ -127,7 +127,7 @@ async def td_search_official_docs(
 @mcp.tool(
     name="td_get_operator_doc",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_get_operator_doc(
@@ -184,7 +184,7 @@ async def td_get_operator_doc(
 @mcp.tool(
     name="td_get_param_help",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_get_param_help(
@@ -275,7 +275,7 @@ async def td_get_param_help(
 @mcp.tool(
     name="td_lookup_snippets",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_lookup_snippets(
@@ -294,7 +294,7 @@ async def td_lookup_snippets(
 @mcp.tool(
     name="td_lookup_palette_component",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_lookup_palette_component(
@@ -324,7 +324,7 @@ async def td_lookup_palette_component(
 @mcp.tool(
     name="td_get_release_delta",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_get_release_delta(
@@ -350,7 +350,7 @@ async def td_get_release_delta(
 @mcp.tool(
     name="td_get_build_compatibility",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_get_build_compatibility(
@@ -380,7 +380,7 @@ def _get_popx_brain(ctx: Context):
 @mcp.tool(
     name="td_search_popx_docs",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_search_popx_docs(
@@ -408,7 +408,7 @@ async def td_search_popx_docs(
 @mcp.tool(
     name="td_get_popx_operator",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_get_popx_operator(
@@ -438,7 +438,7 @@ async def td_get_popx_operator(
 @mcp.tool(
     name="td_describe_surface",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_describe_surface(ctx: Context) -> dict[str, Any]:
@@ -450,7 +450,7 @@ async def td_describe_surface(ctx: Context) -> dict[str, Any]:
     # MCP server started before TD was reachable (N2 audit).
     td_build = svc.td_build or (await _tr._ensure_td_build(ctx))
     caps = detect_capabilities(ctx, td_build=td_build)
-    # FastMCP exposes registered tools/resources via its internal managers.
+    # MCPServer exposes registered tools/resources via its internal managers.
     # Previous attempts used ``mcp._tools``/``mcp._resources`` which don't exist,
     # so the counts always returned 0. Prefer the public-ish manager APIs and
     # fall back to 0 only if the SDK layout changes.

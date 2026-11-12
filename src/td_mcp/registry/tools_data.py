@@ -21,8 +21,8 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -36,7 +36,7 @@ from td_mcp.vision.save_path import SavePathError, validate_save_path
 @mcp.tool(
     name="td_screenshot",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_screenshot(
@@ -106,7 +106,7 @@ async def td_screenshot(
 @mcp.tool(
     name="td_chop_data",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_chop_data(
@@ -144,7 +144,7 @@ async def td_chop_data(
 @mcp.tool(
     name="td_geometry_data",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_geometry_data(
@@ -188,7 +188,7 @@ async def td_geometry_data(
 @mcp.tool(
     name="td_pop_inspect",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_pop_inspect(
@@ -289,7 +289,7 @@ async def td_pop_inspect(
 @mcp.tool(
     name="td_cooking_info",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_cooking_info(
@@ -439,7 +439,7 @@ async def _exec_param_exprs_scope(ctx: Context, query: str, path: str, limit: in
 @mcp.tool(
     name="td_search_nodes",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_search_nodes(
@@ -582,7 +582,7 @@ async def td_search_nodes(
 @mcp.tool(
     name="td_get_errors",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=True
     ),
 )
 async def td_get_errors(

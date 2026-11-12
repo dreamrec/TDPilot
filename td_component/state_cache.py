@@ -61,6 +61,7 @@ _DEFAULT_KEYS = (
     "knowledge",  # Number of knowledge entries (int)
     "popx",  # POPx install state ("installed", "missing", "unknown")
     "last_call",  # Last tool name handled
+    "last_request_at",  # Last request timestamp, not a connection heartbeat
     "request_count",  # Total requests since cache init
     "error_count",  # Total request errors since cache init
     "started_at",  # Cache init time (epoch seconds)
@@ -114,6 +115,7 @@ def record_request(tool_name, latency_ms, ok=True):
     with _lock:
         _state["last_call"] = tool_name
         _state["latency_ms"] = float(latency_ms)
+        _state["last_request_at"] = time.time()
         _state["request_count"] = int(_state.get("request_count", 0) or 0) + 1
         if not ok:
             _state["error_count"] = int(_state.get("error_count", 0) or 0) + 1

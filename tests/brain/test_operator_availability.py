@@ -159,6 +159,37 @@ class _AvailabilityInfoFallbackClient(_AvailabilityFakeClient):
 
 
 @pytest.mark.asyncio
+async def test_failed_scratch_creation_never_deletes_existing_component():
+    class Client(_AvailabilityFakeClient):
+        async def request(self, endpoint, body=None):
+            if endpoint == "node/create":
+                raise RuntimeError("creation failed")
+            return await super().request(endpoint, body)
+
+    client = Client()
+    with pytest.raises(RuntimeError, match="creation failed"):
+        await sample_operator_availability(client, [])
+    assert not any(endpoint == "node/delete" for endpoint, _ in client.calls)
+    assert client.calls[-1][0] == "close"
+
+
+@pytest.mark.asyncio
+async def test_renamed_scratch_is_used_and_cleaned_without_touching_original():
+    class Client(_AvailabilityFakeClient):
+        async def request(self, endpoint, body=None):
+            if endpoint == "node/create":
+                return {"node": {"path": "/project1/tdpilot_availability_probe1"}}
+            return await super().request(endpoint, body)
+
+    client = Client()
+    report = await sample_operator_availability(client, [])
+    assert report["cleanup_ok"]
+    assert report["scratch_path"] == "/project1/tdpilot_availability_probe1"
+    assert ("node/delete", {"path": "/project1/tdpilot_availability_probe1"}) in client.calls
+    assert ("node/delete", {"path": "/project1/tdpilot_availability_probe"}) not in client.calls
+
+
+@pytest.mark.asyncio
 async def test_sample_operator_availability_records_results_and_cleans_scratch() -> None:
     client = _AvailabilityFakeClient()
     targets = [

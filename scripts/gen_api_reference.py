@@ -3,7 +3,7 @@
 
 Why this exists (audit batch E): the API reference was hand-maintained and
 silently drifted — an audit found tools missing from the doc entirely. The
-FastMCP registry (``server.mcp.list_tools()``) is the single source of truth
+MCPServer registry (``server.mcp.list_tools()``) is the single source of truth
 for the tool surface, so the doc's tool tables are now generated from it.
 
 What is generated vs hand-written
@@ -207,7 +207,7 @@ def build_generated_region() -> str:
     lines: list[str] = [BEGIN_MARKER, ""]
     lines.append(
         f"> TDPilot v{__version__} | {len(tools)} tools | This region is **generated** from the "
-        "FastMCP registry by `scripts/gen_api_reference.py` — do not edit it by hand. "
+        "MCPServer registry by `scripts/gen_api_reference.py` — do not edit it by hand. "
         "Regenerate with `uv run python scripts/gen_api_reference.py`; CI enforces freshness "
         "with `--check`. Sections group tools by their `src/td_mcp/registry/` module of origin."
     )
@@ -239,7 +239,7 @@ def build_generated_region() -> str:
         lines.append("| Tool | Description | Parameters | Returns |")
         lines.append("|------|-------------|------------|---------|")
         for tool in sorted(by_module[stem], key=lambda t: t.name):
-            schema = tool.inputSchema or {}
+            schema = tool.input_schema or {}
             defs = schema.get("$defs", {})
             properties = schema.get("properties", {})
             required = set(schema.get("required", []))

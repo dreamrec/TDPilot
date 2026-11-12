@@ -323,7 +323,7 @@ async def audit_concurrent_calls(ctx: SimpleNamespace) -> None:
 
 
 async def audit_tool_schemas() -> None:
-    """Pydantic schemas for the new tools — make sure FastMCP knows about them."""
+    """Pydantic schemas for the new tools — make sure MCPServer knows about them."""
     tools = tr.mcp._tool_manager._tools
     for name in ("td_get_activity_log", "td_self_update"):
         t = tools.get(name)

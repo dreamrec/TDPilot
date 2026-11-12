@@ -29,8 +29,8 @@ import urllib.request
 from pathlib import Path
 from typing import Annotated, Any
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -191,7 +191,7 @@ async def _live_component_status(ctx: Context) -> dict[str, Any]:
 @mcp.tool(
     name="td_get_activity_log",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_get_activity_log(
@@ -244,7 +244,7 @@ async def td_get_activity_log(
 @mcp.tool(
     name="td_self_update",
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=False, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_self_update(
@@ -294,7 +294,7 @@ async def td_self_update(
 @mcp.tool(
     name="td_sync_status",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_sync_status(
@@ -364,7 +364,7 @@ async def td_sync_status(
 @mcp.tool(
     name="td_sync_diagnose",
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False
     ),
 )
 async def td_sync_diagnose(

@@ -4,9 +4,13 @@
       "command": "uv",
       "args": [
         "run",
+        "--no-project",
+        "--python",
+        "3.11",
         "--directory",
         "${CODEX_PLUGIN_ROOT}",
-        "tdpilot"
+        "python",
+        "scripts/launch_runtime.py"
       ],
       "env": {
         "TD_MCP_HOST": "127.0.0.1",

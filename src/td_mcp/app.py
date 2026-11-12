@@ -43,7 +43,7 @@ _apply_server_instructions()
 
 
 def create_mcp_app():
-    """Return the configured FastMCP application instance."""
+    """Return the configured MCPServer application instance."""
     return mcp
 
 

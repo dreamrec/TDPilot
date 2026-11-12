@@ -26,19 +26,19 @@ def _find_tool(name: str):
 def test_td_patch_plan_registered():
     t = _find_tool("td_patch_plan")
     # Schema should be flat (Bug-A discipline)
-    props = t.inputSchema.get("properties", {})
+    props = t.input_schema.get("properties", {})
     assert "target_root" in props
     assert list(props.keys()) != ["params"]
 
 
 def test_td_patch_preview_registered():
     t = _find_tool("td_patch_preview")
-    assert "plan" in t.inputSchema.get("properties", {})
+    assert "plan" in t.input_schema.get("properties", {})
 
 
 def test_td_patch_apply_registered():
     t = _find_tool("td_patch_apply")
-    props = t.inputSchema.get("properties", {})
+    props = t.input_schema.get("properties", {})
     assert "plan" in props
     assert "auto_validate" in props
     assert "transaction_options" in props
@@ -47,7 +47,7 @@ def test_td_patch_apply_registered():
 
 def test_td_patch_validate_registered():
     t = _find_tool("td_patch_validate")
-    props = t.inputSchema.get("properties", {})
+    props = t.input_schema.get("properties", {})
     assert "target_root" in props
     assert "capture_frames" in props
     # Flat schema — Bug A discipline
@@ -56,7 +56,7 @@ def test_td_patch_validate_registered():
 
 def test_td_patch_variations_registered():
     t = _find_tool("td_patch_variations")
-    props = t.inputSchema.get("properties", {})
+    props = t.input_schema.get("properties", {})
     assert "plan" in props
     assert "n" in props
     assert "strategies" in props
@@ -296,7 +296,7 @@ async def test_td_patch_variations_default_strategy(mcp_ctx, td_client, monkeypa
 @pytest.mark.asyncio
 async def test_td_patch_apply_returns_dict_envelope_on_td_connection_error(mcp_ctx, td_client, monkeypatch):
     """Structured-output tools (-> dict) must return a DICT error envelope, not a
-    JSON string — a string raises a FastMCP ValidationError and destroys the
+    JSON string — a string raises a MCPServer ValidationError and destroys the
     troubleshooting payload exactly on the TD-not-running path. Regression for the
     format_tool_error (str) -> format_tool_error_dict swap."""
     from td_mcp.td_client import TouchDesignerConnectionError

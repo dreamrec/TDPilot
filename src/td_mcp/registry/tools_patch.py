@@ -18,8 +18,8 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 from pydantic import Field, ValidationError
 
 from td_mcp import patch
@@ -45,7 +45,7 @@ def _direct_param_preflight(ctx: Context):
         "TouchDesigner builds, prefer td_brain_plan followed by td_brain_execute."
     ),
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_patch_plan(
@@ -109,7 +109,7 @@ async def td_patch_plan(
         "prefer td_brain_plan because it carries concept, corpus, and validation context."
     ),
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_patch_preview(
@@ -164,7 +164,7 @@ async def td_patch_preview(
         "because it is the default validated transaction path for TDPilot-authored builds."
     ),
     annotations=ToolAnnotations(
-        readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+        read_only_hint=False, destructive_hint=True, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_patch_apply(
@@ -377,7 +377,7 @@ async def _apply_patch_transaction(
         "td_brain_plan and td_brain_execute so validation is tied to the authored plan."
     ),
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_patch_validate(
@@ -422,7 +422,7 @@ async def td_patch_validate(
         "start with td_brain_plan so variants remain grounded in a BrainPlan."
     ),
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=False
+        read_only_hint=True, destructive_hint=False, idempotent_hint=False, open_world_hint=False
     ),
 )
 async def td_patch_variations(

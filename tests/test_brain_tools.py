@@ -22,11 +22,11 @@ def test_brain_tools_are_registered_with_mcp_metadata():
         # usage-oriented phrasing is preserved mid-sentence — assert on that.
         assert "use this when" in (by_name[name].description or "").lower()
 
-    assert by_name["td_brain_plan"].annotations.readOnlyHint is True
-    assert by_name["td_brain_execute"].annotations.destructiveHint is True
-    assert by_name["td_transaction_apply"].annotations.destructiveHint is True
-    assert by_name["td_cockpit_render"].annotations.readOnlyHint is True
-    assert by_name["td_cockpit_render"].annotations.destructiveHint is False
+    assert by_name["td_brain_plan"].annotations.read_only_hint is True
+    assert by_name["td_brain_execute"].annotations.destructive_hint is True
+    assert by_name["td_transaction_apply"].annotations.destructive_hint is True
+    assert by_name["td_cockpit_render"].annotations.read_only_hint is True
+    assert by_name["td_cockpit_render"].annotations.destructive_hint is False
     assert by_name["td_cockpit_render"].meta["ui"]["resourceUri"] == "ui://tdpilot/cockpit.html"
     assert by_name["td_cockpit_render"].meta["openai/outputTemplate"] == "ui://tdpilot/cockpit.html"
 
@@ -38,12 +38,12 @@ def test_legacy_patch_surfaces_guide_tool_choice_to_brain_loop():
     legacy_plan_tools = ("td_plan_patch", "td_patch_plan", "td_patch_preview")
     for name in legacy_plan_tools:
         assert "td_brain_plan" in (by_name[name].description or "")
-        assert by_name[name].annotations.readOnlyHint is True
-        assert by_name[name].annotations.destructiveHint is False
+        assert by_name[name].annotations.read_only_hint is True
+        assert by_name[name].annotations.destructive_hint is False
 
     assert "td_brain_execute" in (by_name["td_patch_apply"].description or "")
-    assert by_name["td_patch_apply"].annotations.destructiveHint is True
-    assert by_name["td_patch_apply"].annotations.readOnlyHint is False
+    assert by_name["td_patch_apply"].annotations.destructive_hint is True
+    assert by_name["td_patch_apply"].annotations.read_only_hint is False
 
 
 def test_cockpit_html_resource_is_registered_for_mcp_apps():
@@ -52,7 +52,7 @@ def test_cockpit_html_resource_is_registered_for_mcp_apps():
 
     assert "ui://tdpilot/cockpit.html" in by_uri
     resource = by_uri["ui://tdpilot/cockpit.html"]
-    assert resource.mimeType == "text/html;profile=mcp-app"
+    assert resource.mime_type == "text/html;profile=mcp-app"
     assert resource.name == "tdpilot_cockpit"
 
 

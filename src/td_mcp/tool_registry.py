@@ -12,11 +12,11 @@ import statistics
 import time
 from collections.abc import Callable
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Annotated, Any
 
-from mcp.server.fastmcp import Context, FastMCP
+from mcp.server.mcpserver import Context, MCPServer
 from pydantic import Field
 
 from td_mcp import exec_safety
@@ -228,7 +228,7 @@ def brain_is_active(active_set: set[str] | None, brain_id: str) -> bool:
 
 
 @asynccontextmanager
-async def server_lifespan(app: FastMCP):
+async def server_lifespan(app: MCPServer):
     """Initialize and clean up runtime services for the MCP server."""
     td_client = TDClient(
         host=TD_HOST,
@@ -443,10 +443,12 @@ async def server_lifespan(app: FastMCP):
         logger.info("TouchDesigner MCP server stopped")
 
 
-mcp = FastMCP(
+from td_mcp import __version__
+from td_mcp.tool_profiles import ProfiledMCPServer
+
+mcp = ProfiledMCPServer(
     "touchdesigner_mcp",
-    host=TD_HTTP_HOST,
-    port=TD_HTTP_PORT,
+    version=__version__,
     lifespan=server_lifespan,
 )
 
@@ -698,7 +700,7 @@ def _invoke_with_lifecycle(tool_name, ctx, func, *args, **kwargs):
             return _as_json_output(data)
 
     Note: a cleaner ``@tool_lifecycle(name)`` decorator that wraps the whole
-    body does NOT work with FastMCP — it reads ``inspect.get_type_hints(func)``
+    body does NOT work with MCPServer — it reads ``inspect.get_type_hints(func)``
     to build the pydantic model, and ``from __future__ import annotations``
     turns the hints into strings that don't resolve through ``functools.wraps``.
     Refactoring to eliminate the boilerplate needs either dropping
@@ -1153,7 +1155,7 @@ async def _collect_scene_state(
 
     return {
         "snapshot_schema_version": 1,
-        "captured_at": datetime.now(timezone.utc).isoformat(),
+        "captured_at": datetime.now(UTC).isoformat(),
         "root_path": root_path,
         "nodes": nodes,
         "connections": connections,
@@ -1460,7 +1462,7 @@ async def _build_state_vector(path: str, ctx: Context) -> dict[str, Any]:
 
     return {
         "schema_version": 1,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "path": path,
         "project": {
             "name": info.get("project_name"),
@@ -2376,5 +2378,6 @@ from td_mcp.registry.tools_vision import (  # noqa: E402
 
 
 def main() -> None:
-    """Run the MCP server via FastMCP."""
-    mcp.run(transport=TD_TRANSPORT)
+    """Run the MCP server via MCPServer."""
+    options = {} if TD_TRANSPORT == "stdio" else {"host": TD_HTTP_HOST, "port": TD_HTTP_PORT}
+    mcp.run(transport=TD_TRANSPORT, **options)

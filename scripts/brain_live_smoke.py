@@ -168,7 +168,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--transactional-generated-code",
         action="store_true",
-        help="With --live, apply a tiny generated-code PatchPlan transactionally and undo it.",
+        help="With --live, apply a tiny generated-code PatchPlan in an owned container and remove it.",
     )
     parser.add_argument(
         "--incident-replay-target",

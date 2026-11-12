@@ -1,13 +1,13 @@
 ---
 name: tdpilot-core
 description: >
-  Core patching discipline for TDPilot v2.4.1 — the AI assistant inside
+  Core patching discipline for TDPilot v2.6.0 — the AI assistant inside
   TouchDesigner. Use for all work through the td_ MCP tools: routing intent,
   inspecting live state, making safe edits, validating results, and recalling
   or learning local techniques.
 ---
 
-# TDPilot Core v2.4.1 — Practical Patching Discipline (114 tools)
+# TDPilot Core v2.6.0 — Practical Patching Discipline (114 tools)
 
 TDPilot works inside a real TouchDesigner project. Leave the requested scope
 more usable, readable, and stable than you found it.
@@ -81,8 +81,9 @@ unresolved plan.
 ### Direct primitive route
 
 - Prove the target node and parameter first.
-- Group related edits in one undo block. Snapshot before destructive or
-  high-risk changes.
+- Use a typed native transaction for related edits that need one undo block.
+  Separate primitive requests do not share a callback-spanning undo block.
+  Snapshot before destructive or high-risk changes.
 - Prefer `td_create_node`, `td_connect_nodes`, `td_set_params`,
   `td_custom_parameters`, and other typed tools over `td_exec_python`.
 - Make the smallest reversible edit that satisfies the request.

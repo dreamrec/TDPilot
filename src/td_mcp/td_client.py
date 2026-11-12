@@ -115,6 +115,8 @@ class TDClient:
     See module docstring for the auth resolution + 401-retry policy.
     """
 
+    native_transactions = True
+
     def __init__(
         self,
         host: str = "127.0.0.1",

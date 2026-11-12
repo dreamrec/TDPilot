@@ -2043,7 +2043,9 @@ def _transactional_cleanup_ok_value(value: Any) -> float:
         return 0.0
     if cleanup.get("td_stable") is not True:
         return 0.0
-    if cleanup.get("rollback_performed") is not True:
+    if cleanup.get("rollback_performed") is not True and not (
+        cleanup.get("method") == "owned_scratch_delete" and cleanup.get("cleanup_performed") is True
+    ):
         return 0.0
     if cleanup.get("remaining_created_paths") not in ([], None):
         return 0.0
@@ -2147,6 +2149,27 @@ def _latest_release_new_operator_coverage(report: dict[str, Any]) -> float:
     if not isinstance(results, list):
         return math.nan
     required = {"gltfinCOMP", "gltfoutCOMP", "scriptPOP"}
+    # Current samplers identify the release they tested. Validate against the
+    # bundled release card, not a fixed list from an older TD build or a list
+    # supplied by the report itself. Keep historical report compatibility.
+    sampled_build = report.get("sampled_release_build")
+    if sampled_build:
+        if not isinstance(sampled_build, str) or not all(part.isdigit() for part in sampled_build.split(".")):
+            return 0.0
+        card_path = (
+            Path(__file__).resolve().parents[1]
+            / "src/td_mcp/knowledge/cards/release"
+            / (sampled_build + ".json")
+        )
+        try:
+            card = json.loads(card_path.read_text(encoding="utf-8"))
+            required = {
+                item["type"] for item in card["new_ops"] if isinstance(item, dict) and item.get("type")
+            }
+        except (OSError, ValueError, KeyError, TypeError):
+            return 0.0
+        if not required or card.get("build") != sampled_build:
+            return 0.0
     covered = {
         str(item.get("op_type") or "")
         for item in results

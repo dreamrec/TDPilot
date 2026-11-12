@@ -2261,22 +2261,22 @@ def test_aggregate_param_value_coverage_flags_regressions():
 
     healthy = evals._aggregate_param_value_coverage(
         [
-            *[_result(f"carrying_{index}", carries=True, expected=1) for index in range(10)],
+            *[_result(f"carrying_{index}", carries=True, expected=1) for index in range(20)],
             _result("zero_param", carries=False),
             {"id": "blocked", "expected_blocked": True, "param_value_metrics": {}},
         ]
     )
     assert healthy["ok"] is True
-    assert healthy["eligible_case_count"] == 11
-    assert healthy["carrying_case_count"] == 10
-    assert healthy["coverage"] == round(10 / 11, 4)
+    assert healthy["eligible_case_count"] == 21
+    assert healthy["carrying_case_count"] == 20
+    assert healthy["coverage"] == round(20 / 21, 4)
     assert healthy["zero_param_case_ids"] == ["zero_param"]
 
     # Regression to default-gray plans: coverage collapses below the floor.
     stripped = evals._aggregate_param_value_coverage(
         [
-            *[_result(f"carrying_{index}", carries=True, expected=1) for index in range(10)],
-            *[_result(f"zero_{index}", carries=False) for index in range(10)],
+            *[_result(f"carrying_{index}", carries=True, expected=1) for index in range(20)],
+            *[_result(f"zero_{index}", carries=False) for index in range(20)],
         ]
     )
     assert stripped["ok"] is False
@@ -2284,7 +2284,7 @@ def test_aggregate_param_value_coverage_flags_regressions():
     # A pinned expected value going missing fails the gate even at coverage 1.0.
     value_drift = evals._aggregate_param_value_coverage(
         [
-            *[_result(f"carrying_{index}", carries=True, expected=1) for index in range(10)],
+            *[_result(f"carrying_{index}", carries=True, expected=1) for index in range(20)],
             _result("drifted", carries=True, expected=1, missing=1),
         ]
     )

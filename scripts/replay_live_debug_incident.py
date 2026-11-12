@@ -259,10 +259,8 @@ def _callback_source(root: str) -> str:
 
 async def _build_ten_output_library(client, target: str) -> dict[str, Any]:
     parent, name = _parent_and_name(target)
-    try:
-        await client.request("node/delete", {"path": target})
-    except Exception:
-        pass
+    # Creation may choose a new name if target already exists; use its returned
+    # path and preserve any existing project component.
     root = await _create_node(client, parent=parent, op_type="baseCOMP", name=name, x=0, y=-700)
 
     outputs: list[str] = []

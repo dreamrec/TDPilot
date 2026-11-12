@@ -120,8 +120,8 @@ class ConceptNode(BaseModel):
 class ControlBindingSpec(BaseModel):
     """One deliberately narrow cross-domain parameter binding.
 
-    v2 currently supports direct CHOP channel references into registry-backed
-    numeric Level TOP parameters. Keeping the shape explicit prevents a
+    Supports reviewed numeric targets with finite scaling and bounded output.
+    Keeping the shape explicit prevents a
     semantic ``control`` edge from disappearing during PatchPlan lowering.
     """
 
@@ -130,6 +130,18 @@ class ControlBindingSpec(BaseModel):
     mode: Literal["chop_reference_expression"] = "chop_reference_expression"
     source_channel: int | str = 0
     target_param: str = Field(min_length=1, pattern=r"^[A-Za-z][A-Za-z0-9_]*$")
+    scale: float = Field(default=1.0, allow_inf_nan=False)
+    offset: float = Field(default=0.0, allow_inf_nan=False)
+    output_range: tuple[float, float] | None = None
+
+    @field_validator("output_range")
+    @classmethod
+    def _finite_output_range(cls, value):
+        import math
+
+        if value is not None and (not all(math.isfinite(x) for x in value) or value[0] > value[1]):
+            raise ValueError("output_range must contain finite ordered bounds")
+        return value
 
     @field_validator("source_channel")
     @classmethod

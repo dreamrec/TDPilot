@@ -12,6 +12,7 @@ The CI script `scripts/check_versions.py` is the authoritative blocker.
 To convert this to a hard gate, change the final `print(json.dumps(...))`
 to set `"continue": false` and `"stopReason": "..."` and exit 2.
 """
+
 from __future__ import annotations
 
 import json

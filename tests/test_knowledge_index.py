@@ -366,7 +366,8 @@ class TestShippedCorpusRetrieval:
     """End-to-end sanity on the real shipped card corpus."""
 
     @pytest.fixture(scope="class")
-    def shipped_index(self) -> CardIndex:
+    @staticmethod
+    def shipped_index() -> CardIndex:
         cards_dir = Path(__file__).resolve().parents[1] / "src" / "td_mcp" / "knowledge" / "cards"
         return CardIndex(cards_dir)
 

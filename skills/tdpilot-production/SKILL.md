@@ -1,12 +1,12 @@
 ---
 name: tdpilot-production
 description: >
-  Production-grade TouchDesigner MCP workflow for TDPilot v2.4.1 (114 tools):
+  Production-grade TouchDesigner MCP workflow for TDPilot v2.6.0 (114 tools):
   show-safe routing, bounded inspection, staged transactions, rollback,
   performance checks, preservation assertions, and evidence-based handoff.
 ---
 
-# TDPilot Production v2.4.1
+# TDPilot Production v2.6.0
 
 Use this skill in addition to `tdpilot-core` when work is show-critical,
 performance-sensitive, destructive, broad in scope, or explicitly requested as
@@ -51,7 +51,13 @@ Brain execution already provides snapshot, undo, validation, and rollback; do
 not surround it with redundant manual wrappers. For direct primitive edits:
 
 - Snapshot before destructive or broad changes.
-- Start one named undo block around a coherent batch.
+- TD closes undo blocks at callback return. Separate start/edit/end tool calls
+  do not form one undoable batch. Preserve the old route, use owned scratch
+  components for construction, and require verified recovery evidence.
+- Native typed transactions execute in one callback and return a receipt.
+  Rollback must match history and affected state, then verify exact restoration.
+- Automatic undo must match the transaction label and current history. On
+  `needs_manual_recovery`, inspect and recover before further mutations.
 - Set bounds before modifying show-sensitive numeric controls.
 - Keep the prior active path intact until a replacement is validated.
 

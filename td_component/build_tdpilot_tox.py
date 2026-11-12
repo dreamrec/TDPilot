@@ -17,7 +17,7 @@ without ever touching Textport.
 
 What this script produces inside the dragged-in COMP:
 
-    /tdpilot                        containerCOMP, panel 520x320
+    /tdpilot                        containerCOMP, panel 520x400
         Custom param pages:
           Install   (status, action pulses, configuration toggles)
           Update    (installed/latest, check/update/rollback, auto-check)
@@ -183,7 +183,7 @@ OVERWRITE_COMPONENT = True
 # Panel default size matches the live design (520x320 was the tuned size,
 # 400x300 is the TD default). Pick the user-tuned size as our shipped default.
 PANEL_W = 520
-PANEL_H = 320
+PANEL_H = 400
 
 
 # ---------------------------------------------------------------------------
@@ -316,7 +316,7 @@ def _create_status_text_top(parent_comp, name="status_text"):
 
     Styling (v1.6.9): Courier New 14pt, left-top aligned, 16px inset,
     cyan-green text on 90%-opaque black, native panel resolution
-    (520×320 to match PANEL_W × PANEL_H — no horizontal stretch when
+    (520×400 to match PANEL_W × PANEL_H — no horizontal stretch when
     used as the containerCOMP's panel-bg TOP). The renderer DAT writes
     multi-line text into ``status_text.par.text`` once per second.
 

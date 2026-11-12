@@ -24,8 +24,8 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from mcp.server.fastmcp import Context
-from mcp.types import ToolAnnotations
+from mcp.server.mcpserver import Context
+from mcp_types import ToolAnnotations
 from pydantic import Field
 
 # Intentional cycle — see registry/__init__.py.
@@ -114,7 +114,7 @@ def _legacy_plan_dict(
         "concept-to-network TouchDesigner work, prefer td_brain_plan followed by td_brain_execute."
     ),
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_plan_patch(
@@ -215,7 +215,7 @@ async def td_plan_patch(
         "use the BrainPlan path: td_brain_plan then td_brain_execute."
     ),
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_preflight_patch(
@@ -314,7 +314,7 @@ async def td_preflight_patch(
         "requests that should become a BrainPlan."
     ),
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_validate_recipe(
@@ -656,7 +656,7 @@ _STOCK_OP_TYPES: frozenset[str] = frozenset(
         "plan-aware changes afterward."
     ),
     annotations=ToolAnnotations(
-        readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True
+        read_only_hint=True, destructive_hint=False, idempotent_hint=False, open_world_hint=True
     ),
 )
 async def td_audit_project(

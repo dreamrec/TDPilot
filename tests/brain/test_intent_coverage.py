@@ -133,7 +133,7 @@ def test_unsupported_control_target_stays_unresolved_and_is_not_lowered():
     patch = _compile_patch_plan(task, graph, set())
 
     assert not any(operation.kind == "set_params" for operation in patch.operations)
-    assert any("leveltop_targets_only" in issue for issue in semantic_edge_issues(graph, patch))
+    assert any("not_a_reviewed_numeric_parameter" in issue for issue in semantic_edge_issues(graph, patch))
 
 
 @pytest.mark.asyncio

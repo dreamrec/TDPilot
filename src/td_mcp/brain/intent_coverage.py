@@ -217,16 +217,31 @@ def control_binding_operation(
         raise ValueError("control edge requires an explicit binding")
     if not source_op_type or not source_op_type.endswith("CHOP"):
         raise ValueError("control binding source must be a CHOP concept")
-    if target_op_type != "levelTOP":
-        raise ValueError("v2 control bindings currently support levelTOP targets only")
+    from td_mcp.brain.control_bindings import control_target_bounds
+
+    bounds = control_target_bounds(target_op_type or "", binding.target_param)
+    if target_op_type != "levelTOP" and bounds is None:
+        raise ValueError("control binding target is not a reviewed numeric parameter")
     if binding.target_param in target_params:
         raise ValueError(f"control binding conflicts with static target param {binding.target_param}")
     semantic = semantics_by_op_and_param().get((target_op_type, binding.target_param))
-    if semantic is None or semantic.validation_rule != "numeric_level_adjustment":
+    if semantic is None or semantic.value_kind not in {"float", "int"}:
+        raise ValueError("control binding target must be a registry-backed numeric parameter")
+    if target_op_type == "levelTOP" and semantic.validation_rule != "numeric_level_adjustment":
         raise ValueError("control binding target must be a registry-backed numeric levelTOP parameter")
+    if binding.output_range is not None:
+        low, high = binding.output_range
+        if bounds is not None and (low < bounds[0] or high > bounds[1]):
+            raise ValueError("output_range exceeds the reviewed target bounds")
+        bounds = binding.output_range
     channel = binding.source_channel
     selector = str(channel) if isinstance(channel, int) else repr(channel)
-    return binding.target_param, {"expr": f"op({source_path!r})[{selector}]"}
+    expression = f"op({source_path!r})[{selector}]"
+    if binding.scale != 1.0 or binding.offset != 0.0:
+        expression = f"({expression} * {binding.scale!r} + {binding.offset!r})"
+    if bounds is not None:
+        expression = f"min({bounds[1]!r}, max({bounds[0]!r}, {expression}))"
+    return binding.target_param, {"expr": expression}
 
 
 def _providers_for_requirement(

@@ -1,12 +1,14 @@
 """MCP resource handlers — cached read-through context for TD state.
 
-FastMCP resource handlers in this repo avoid Context injection for SDK
+MCPServer resource handlers in this repo avoid Context injection for SDK
 compatibility, so they cannot synchronously query live TouchDesigner. Tools and
 event handlers can populate the process-local cache below; resource reads then
 return the latest known truth with an explicit ``mode`` marker.
 """
 
 from __future__ import annotations
+
+from mcp.server.mcpserver.resources import ResourceSecurity
 
 from td_mcp.brain.cockpit import COCKPIT_RESOURCE_URI, cockpit_html
 from td_mcp.events.uri import (
@@ -19,6 +21,9 @@ from td_mcp.events.uri import (
 )
 from td_mcp.tool_registry import mcp  # noqa: E402 — intentional cycle
 
+# These are TouchDesigner operator paths, not filesystem paths. Preserve SDK
+# traversal/null-byte checks while allowing an absolute TD path after decoding.
+_TD_PATH_SECURITY = ResourceSecurity(reject_absolute_paths=False)
 _RESOURCE_CACHE: dict[str, dict] = {}
 
 
@@ -96,7 +101,9 @@ async def td_resource_cockpit() -> str:
     return cockpit_html()
 
 
-@mcp.resource("td://chop/path/{encoded_path}/channel/{channel}", name="td_chop_channel")
+@mcp.resource(
+    "td://chop/path/{encoded_path}/channel/{channel}", name="td_chop_channel", security=_TD_PATH_SECURITY
+)
 async def td_resource_chop_channel(encoded_path: str, channel: str) -> str:
     fallback = {"mode": "static"}
     try:
@@ -114,7 +121,7 @@ async def td_resource_chop_channel(encoded_path: str, channel: str) -> str:
     )
 
 
-@mcp.resource("td://par/path/{encoded_path}/name/{name}", name="td_parameter")
+@mcp.resource("td://par/path/{encoded_path}/name/{name}", name="td_parameter", security=_TD_PATH_SECURITY)
 async def td_resource_parameter(encoded_path: str, name: str) -> str:
     fallback = {"mode": "static"}
     try:
@@ -132,7 +139,7 @@ async def td_resource_parameter(encoded_path: str, name: str) -> str:
     )
 
 
-@mcp.resource("td://cook/path/{encoded_path}", name="td_cook_state")
+@mcp.resource("td://cook/path/{encoded_path}", name="td_cook_state", security=_TD_PATH_SECURITY)
 async def td_resource_cook(encoded_path: str) -> str:
     fallback = {"mode": "static"}
     try:
@@ -149,7 +156,7 @@ async def td_resource_cook(encoded_path: str) -> str:
     )
 
 
-@mcp.resource("td://error/path/{encoded_path}", name="td_error_state")
+@mcp.resource("td://error/path/{encoded_path}", name="td_error_state", security=_TD_PATH_SECURITY)
 async def td_resource_error(encoded_path: str) -> str:
     fallback = {"mode": "static"}
     try:
@@ -166,7 +173,7 @@ async def td_resource_error(encoded_path: str) -> str:
     )
 
 
-@mcp.resource("td://node/path/{encoded_path}", name="td_node_context")
+@mcp.resource("td://node/path/{encoded_path}", name="td_node_context", security=_TD_PATH_SECURITY)
 async def td_resource_node(encoded_path: str) -> str:
     fallback = {"mode": "static"}
     path = decode_td_path(encoded_path)
@@ -176,7 +183,7 @@ async def td_resource_node(encoded_path: str) -> str:
     )
 
 
-@mcp.resource("td://top/path/{encoded_path}/frame", name="td_top_frame")
+@mcp.resource("td://top/path/{encoded_path}/frame", name="td_top_frame", security=_TD_PATH_SECURITY)
 async def td_resource_top_frame(encoded_path: str) -> str:
     fallback = {"mode": "static"}
     path = decode_td_path(encoded_path)
@@ -189,7 +196,7 @@ async def td_resource_top_frame(encoded_path: str) -> str:
     )
 
 
-@mcp.resource("td://top/path/{encoded_path}/analysis", name="td_top_analysis")
+@mcp.resource("td://top/path/{encoded_path}/analysis", name="td_top_analysis", security=_TD_PATH_SECURITY)
 async def td_resource_top_analysis(encoded_path: str) -> str:
     fallback = {"mode": "static"}
     path = decode_td_path(encoded_path)

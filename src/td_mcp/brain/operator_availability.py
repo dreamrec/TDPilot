@@ -480,11 +480,12 @@ async def sample_operator_availability(
     results: list[dict[str, Any]] = []
     cleanup_ok = False
     cleanup_error = ""
+    owns_scratch = False
 
     try:
         health = await td_client.health_check()
         health = await _health_with_info_fallback(td_client, health)
-        await td_client.request(
+        created = await td_client.request(
             "node/create",
             {
                 "parent_path": parent_path,
@@ -492,6 +493,15 @@ async def sample_operator_availability(
                 "name": scratch_name,
             },
         )
+        # Never clean up a name we merely requested. A failed create can mean
+        # that a user's component already owns it, and TD may rename a node.
+        created_path = _created_path(created)
+        owns_scratch = bool(created_path) and created_path.rsplit("/", 1)[0] == parent_path.rstrip("/")
+        if not owns_scratch:
+            raise RuntimeError("Scratch creation did not confirm the requested path; refusing to sample")
+        # TD chooses a new name on collisions. Work in that newly created
+        # component, never in the user's component with the requested name.
+        scratch_path = created_path
 
         for index, target in enumerate(targets):
             op_type = str(target.get("op_type") or "").strip()
@@ -531,11 +541,14 @@ async def sample_operator_availability(
             results.append(result)
 
     finally:
-        try:
-            await td_client.request("node/delete", {"path": scratch_path})
-            cleanup_ok = True
-        except Exception as exc:  # noqa: BLE001 - cleanup status belongs in report.
-            cleanup_error = str(exc)
+        if owns_scratch:
+            try:
+                deleted = await td_client.request("node/delete", {"path": scratch_path})
+                cleanup_ok = deleted.get("success") is True
+                if not cleanup_ok:
+                    cleanup_error = "Scratch deletion was not confirmed"
+            except Exception as exc:  # noqa: BLE001 - cleanup status belongs in report.
+                cleanup_error = str(exc)
         close = getattr(td_client, "close", None)
         if close is not None:
             await close()

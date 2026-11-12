@@ -28,6 +28,12 @@ Do not continue building. Stabilize and recover.
 
 1. If the transaction already rolled back cleanly, verify the root and report.
 2. If rollback used TD undo, confirm the intended nodes are gone or restored.
+   Never issue a blind undo to clean up a failed transaction: TD closes blocks
+   at callback return, and the newest history entry may belong to the user.
+   Native transactions return `native_receipt` and `native_rollback` proofs.
+   Prefer receipt-based recovery: it checks the owned undo history and exact
+   affected state. A changed/expired receipt is not permission for blind undo.
+   Only delete scratch paths whose creation response confirmed ownership.
 3. If snapshot restore is needed, use the snapshot id from the transaction.
 4. If `needs_manual_recovery=true`, stop automatic mutation and report:
    - snapshot id

@@ -1,0 +1,61 @@
+{
+  "card_type": "operator",
+  "op_type": "timefilterPOP",
+  "family": "POP",
+  "display_name": "Time Filter POP",
+  "docs_url": "https://docs.derivative.ca/Time_Filter_POP",
+  "summary": "Smooths time-varying point, primitive or vertex attributes with filtering, lag and freeze stages.",
+  "key_params": [
+    {
+      "name": "active",
+      "type": "Toggle",
+      "note": "Enable history updates."
+    },
+    {
+      "name": "attrs",
+      "type": "Str",
+      "note": "Attributes to smooth."
+    },
+    {
+      "name": "attrclass",
+      "type": "Menu",
+      "note": "Point, primitive or vertex."
+    },
+    {
+      "name": "filtertype",
+      "type": "Menu",
+      "note": "Window filters or adaptive One Euro filtering."
+    },
+    {
+      "name": "width",
+      "type": "Float",
+      "note": "Window duration; pair with widthunit."
+    },
+    {
+      "name": "widthunit",
+      "type": "Menu",
+      "note": "Time unit for width."
+    },
+    {
+      "name": "alwayscook",
+      "type": "Toggle",
+      "note": "Advance every frame."
+    }
+  ],
+  "key_concepts": [
+    "One Euro filtering trades jitter reduction against response time.",
+    "Per-point maps can vary smoothing.",
+    "Stable particle IDs associate changing point sets across frames."
+  ],
+  "common_gotchas": [
+    "Use PartId when particle membership or ordering changes.",
+    "Long history windows increase memory; Increment reduces stored history.",
+    "Verify temporal response rather than only checking output existence.",
+    "Live 2025.33230 uses filtertype, although the docs label it type; inspect the current build before writing."
+  ],
+  "related_snippets": [
+    "Time_Filter_POP_snippets"
+  ],
+  "build_relevance": "2025.33230+",
+  "last_verified": "2026-11-12"
+}
